@@ -1,0 +1,453 @@
+Dode								,Description
+C00.0       ,External upper lip
+C00.1       ,External lower lip
+C00.2       ,"External lip, unspecified"
+C00.3       ,"Upper lip, inner aspect"
+C00.4       ,"Lower lip, inner aspect"
+C00.5      ,"Lip, unspecified, inner aspect"
+C00.6       ,Commissure of lip
+C00.8       ,Overlapping lesion of lip
+C00.9       ,"Lip, unspecified"
+C01   ,Malignant neoplasm of base of tongue
+C02.0       ,Dorsal surface of tongue
+C02.1       ,Border of tongue
+C02.2       ,Ventral surface of tongue
+C02.3       ,"Anterior two-thirds of tongue, part unspecified"
+C02.4       ,Lingual tonsil
+C02.8       ,Overlapping lesion of tongue
+C02.9       ,"Tongue, unspecified"
+C03.0       ,Upper gum
+C03.1       ,Lower gum
+C03.9       ,"Gum, unspecified"
+C04.0       ,Anterior floor of mouth
+C04.1       ,Lateral floor of mouth
+C04.8       ,Overlapping lesion of floor of mouth
+C04.9       ,"Floor of mouth, unspecified"
+C05.0       ,Hard palate
+C05.1       ,Soft palate
+C05.2       ,Uvula
+C05.8       ,Overlapping lesion of palate
+C05.9       ,"Palate, unspecified"
+C06.0       ,Cheek mucosa
+C06.1       ,Vestibule of mouth
+C06.2       ,Retromolar area
+C06.8       ,Overlapping lesion of other and unspecified parts of mouth
+C06.9       ,"Mouth, unspecified"
+C07   ,Malignant neoplasm of parotid gland
+C08.0       ,Submandibular gland
+C08.1      ,Sublingual gland
+C08.8       ,Overlapping lesion of major salivary glands
+C08.9       ,"Major salivary gland, unspecified"
+C09.0       ,Tonsillar fossa
+C09.1       ,Tonsillar pillar (anterior) (posterior)
+C09.8       ,Overlapping lesion of tonsil
+C09.9       ,"Tonsil, unspecified"
+C10.0       ,Vallecula
+C10.1       ,Anterior surface of epiglottis
+C10.2       ,Lateral wall of oropharynx
+C10.3       ,Posterior wall of oropharynx
+C10.4       ,Branchial cleft
+C10.8       ,Overlapping lesion of oropharynx
+C10.9       ,"Oropharynx, unspecified"
+C11.0       ,Superior wall of nasopharynx
+C11.1       ,Posterior wall of nasopharynx
+C11.2       ,Lateral wall of nasopharynx
+C11.3       ,Anterior wall of nasopharynx
+C11.8       ,Overlapping lesion of nasopharynx
+C11.9       ,"Nasopharynx, unspecified"
+C12   ,Malignant neoplasm of pyriform sinus
+C13.0       ,Postcricoid region
+C13.1       ,"Aryepiglottic fold, hypopharyngeal aspect"
+C13.2       ,Posterior wall of hypopharynx
+C13.8       ,Overlapping lesion of hypopharynx
+C13.9       ,"Hypopharynx, unspecified"
+C14.0       ,"Pharynx, unspecified"
+C14.2       ,Waldeyer's ring
+C14.8       ,"Overlapping lesion of lip, oral cavity and pharynx"
+C15.0       ,Cervical part of oesophagus
+C15.1       ,Thoracic part of oesophagus
+C15.2       ,Abdominal part of oesophagus
+C15.3       ,Upper third of oesophagus
+C15.4       ,Middle third of oesophagus
+C15.5       ,Lower third of oesophagus
+C15.8       ,Overlapping lesion of oesophagus
+C15.9       ,"Oesophagus, unspecified"
+C16.0       ,Cardia
+C16.1       ,Fundus of stomach
+C16.2       ,Body of stomach
+C16.3       ,Pyloric antrum
+C16.4       ,Pylorus
+C16.5       ,"Lesser curvature of stomach, unspecified"
+C16.6       ,"Greater curvature of stomach, unspecified"
+C16.8       ,Overlapping lesion of stomach
+C16.9       ,"Stomach, unspecified"
+C17.0       ,Duodenum
+C17.1       ,Jejunum
+C17.2       ,Ileum
+C17.3       ,Meckel's diverticulum
+C17.8       ,Overlapping lesion of small intestine
+C17.9       ,"Small intestine, unspecified"
+C18.0       ,Caecum
+C18.1       ,Appendix
+C18.2       ,Ascending colon
+C18.3       ,Hepatic flexure
+C18.4       ,Transverse colon
+C18.5       ,Splenic flexure
+C18.6       ,Descending colon
+C18.7       ,Sigmoid colon
+C18.8       ,Overlapping lesion of colon
+C18.9       ,"Colon, unspecified"
+C19   ,Malignant neoplasm of rectosigmoid junction
+C20   ,Malignant neoplasm of rectum
+C21.0       ,"Anus, unspecified"
+C21.1       ,Anal canal
+C21.2       ,Cloacogenic zone
+C21.8       ,"Overlapping lesion of rectum, anus and anal canal"
+C22.0       ,Liver cell carcinoma
+C22.1      ,Intrahepatic bile duct carcinoma
+C22.2       ,Hepatoblastoma
+C22.3       ,Angiosarcoma of liver
+C22.4       ,Other sarcomas of liver
+C22.7       ,Other specified carcinomas of liver
+C22.9       ,"Liver, unspecified"
+C23   ,Malignant neoplasm of gallbladder
+C24.0       ,Extrahepatic bile duct
+C24.1       ,Ampulla of Vater
+C24.8       ,Overlapping lesion of biliary tract
+C24.9       ,"Biliary tract, unspecified"
+C25.0       ,Head of pancreas
+C25.1       ,Body of pancreas
+C25.2       ,Tail of pancreas
+C25.3       ,Pancreatic duct
+C25.4       ,Endocrine pancreas
+C25.7       ,Other parts of pancreas
+C25.8       ,Overlapping lesion of pancreas
+C25.9       ,"Pancreas, unspecified"
+C26.0       ,"Intestinal tract, part unspecified"
+C26.1       ,Spleen
+C26.8       ,Overlapping lesion of digestive system
+C26.9       ,Ill-defined sites within the digestive system
+C30.0       ,Nasal cavity
+C30.1       ,Middle ear
+C31.0       ,Maxillary sinus
+C31.1       ,Ethmoidal sinus
+C31.2       ,Frontal sinus
+C31.3       ,Sphenoidal sinus
+C31.8       ,Overlapping lesion of accessory sinuses
+C31.9       ,"Accessory sinus, unspecified"
+C32.0       ,Glottis
+C32.1       ,Supraglottis
+C32.2       ,Subglottis
+C32.3       ,Laryngeal cartilage
+C32.8       ,Overlapping lesion of larynx
+C32.9       ,"Larynx, unspecified"
+C33   ,Malignant neoplasm of trachea
+C34.0       ,Main bronchus
+C34.1       ,"Upper lobe, bronchus or lung"
+C34.2       ,"Middle lobe, bronchus or lung"
+C34.3       ,"Lower lobe, bronchus or lung"
+C34.8       ,Overlapping lesion of bronchus and lung
+C34.9       ,"Bronchus or lung, unspecified"
+C37   ,Malignant neoplasm of thymus
+C38.0       ,Heart
+C38.1       ,Anterior mediastinum
+C38.2       ,Posterior mediastinum
+C38.3       ,"Mediastinum, part unspecified"
+C38.4       ,Pleura
+C38.8       ,"Overlapping lesion of heart, mediastinum and pleura"
+C39.0       ,"Upper respiratory tract, part unspecified"
+C39.8       ,Overlapping lesion of respiratory and intrathoracic organs
+C39.9       ,Ill-defined sites within the respiratory system
+C40.0       ,Scapula and long bones of upper limb
+C40.1       ,Short bones of upper limb
+C40.2       ,Long bones of lower limb
+C40.3       ,Short bones of lower limb
+C40.8       ,Overlapping lesion of bone and articular cartilage of limbs
+C40.9       ,"Bone and articular cartilage of limb, unspecified"
+C41.0       ,Bones of skull and face
+C41.1       ,Mandible
+C41.2       ,Vertebral column
+C41.3       ,"Ribs, sternum and clavicle"
+C41.4       ,"Pelvic bones, sacrum and coccyx"
+C41.8       ,Overlapping lesion of bone and articular cartilage
+C41.9       ,"Bone and articular cartilage, unspecified"
+C43.0       ,Malignant melanoma of lip
+C43.1       ,"Malignant melanoma of eyelid, including canthus"
+C43.2       ,Malignant melanoma of ear and external auricular canal
+C43.3       ,Malignant melanoma of other and unspecified parts of face
+C43.4       ,Malignant melanoma of scalp and neck
+C43.5       ,Malignant melanoma of trunk
+C43.6       ,"Malignant melanoma of upper limb, including shoulder"
+C43.7       ,"Malignant melanoma of lower limb, including hip"
+C43.8       ,Overlapping malignant melanoma of skin
+C43.9       ,"Malignant melanoma of skin, unspecified"
+C44.0       ,Skin of lip
+C44.1       ,"Skin of eyelid, including canthus"
+C44.2       ,Skin of ear and external auricular canal
+C44.3       ,Skin of other and unspecified parts of face
+C44.4       ,Skin of scalp and neck
+C44.5       ,Skin of trunk
+C44.6       ,"Skin of upper limb, including shoulder"
+C44.7       ,"Skin of lower limb, including hip"
+C44.8       ,Overlapping lesion of skin
+C44.9       ,"Malignant neoplasm of skin, unspecified"
+C45.0       ,Mesothelioma of pleura
+C45.1       ,Mesothelioma of peritoneum
+C45.2       ,Mesothelioma of pericardium
+C45.7       ,Mesothelioma of other sites
+C45.9       ,"Mesothelioma, unspecified"
+C46.0       ,Kaposi's sarcoma of skin
+C46.1       ,Kaposi's sarcoma of soft tissue
+C46.2       ,Kaposi's sarcoma of palate
+C46.3       ,Kaposi's sarcoma of lymph nodes
+C46.7       ,Kaposi's sarcoma of other sites
+C46.8       ,Kaposi's sarcoma of multiple organs
+C46.9       ,"Kaposi's sarcoma, unspecified"
+C47.0       ,"Peripheral nerves of head, face and neck"
+C47.1       ,"Peripheral nerves of upper limb, including shoulder"
+C47.2       ,"Peripheral nerves of lower limb, including hip"
+C47.3       ,Peripheral nerves of thorax
+C47.4       ,Peripheral nerves of abdomen
+C47.5       ,Peripheral nerves of pelvis
+C47.6       ,"Peripheral nerves of trunk, unspecified"
+C47.8       ,Overlapping lesion of peripheral nerves and autonomic nervous system
+C47.9       ,"Peripheral nerves and autonomic nervous system, unspecified"
+C48.0       ,Retroperitoneum
+C48.1       ,Specified parts of peritoneum
+C48.2       ,"Peritoneum, unspecified"
+C48.8       ,Overlapping lesion of retroperitoneum and peritoneum
+C49.0       ,"Connective and soft tissue of head, face and neck"
+C49.1       ,"Connective and soft tissue of upper limb, including shoulder"
+C49.2       ,"Connective and soft tissue of lower limb, including hip"
+C49.3       ,Connective and soft tissue of thorax
+C49.4       ,Connective and soft tissue of abdomen
+C49.5       ,Connective and soft tissue of pelvis
+C49.6       ,"Connective and soft tissue of trunk, unspecified"
+C49.8       ,Overlapping lesion of connective and soft tissue
+C49.9       ,"Connective and soft tissue, unspecified"
+C50.0       ,Nipple and areola
+C50.1       ,Central portion of breast
+C50.2       ,Upper-inner quadrant of breast
+C50.3       ,Lower-inner quadrant of breast
+C50.4       ,Upper-outer quadrant of breast
+C50.5       ,Lower-outer quadrant of breast
+C50.6       ,Axillary tail of breast
+C50.8       ,Overlapping lesion of breast
+C50.9       ,"Breast, unspecified"
+C51.0       ,Labium majus
+C51.1       ,Labium minus
+C51.2       ,Clitoris
+C51.8       ,Overlapping lesion of vulva
+C51.9       ,"Vulva, unspecified"
+C52   ,Malignant neoplasm of vagina
+C53.0       ,Endocervix
+C53.1       ,Exocervix
+C53.8       ,Overlapping lesion of cervix uteri
+C53.9       ,"Cervix uteri, unspecified"
+C54.0      ,Isthmus uteri
+C54.1       ,Endometrium
+C54.2       ,Myometrium
+C54.3       ,Fundus uteri
+C54.8       ,Overlapping lesion of corpus uteri
+C54.9       ,"Corpus uteri, unspecified"
+C55   ,"Malignant neoplasm of uterus, part unspecified"
+C56   ,Malignant neoplasm of ovary
+C57.0       ,Fallopian tube
+C57.1       ,Broad ligament
+C57.2       ,Round ligament
+C57.3       ,Parametrium
+C57.4       ,"Uterine adnexa, unspecified"
+C57.7       ,Other specified female genital organs
+C57.8       ,Overlapping lesion of female genital organs
+C57.9       ,"Female genital organ, unspecified"
+C58   ,Malignant neoplasm of placenta
+C60.0       ,Prepuce
+C60.1       ,Glans penis
+C60.2       ,Body of penis
+C60.8       ,Overlapping lesion of penis
+C60.9       ,"Penis, unspecified"
+C61   ,Malignant neoplasm of prostate
+C62.0       ,Undescended testis
+C62.1       ,Descended testis
+C62.9       ,"Testis, unspecified"
+C63.0       ,Epididymis
+C63.1       ,Spermatic cord
+C63.2       ,Scrotum
+C63.7       ,Other specified male genital organs
+C63.8       ,Overlapping lesion of male genital organs
+C63.9       ,"Male genital organ, unspecified"
+C64   ,"Malignant neoplasm of kidney, except renal pelvis"
+C65   ,Malignant neoplasm of renal pelvis
+C66   ,Malignant neoplasm of ureter
+C67.0       ,Trigone of bladder
+C67.1       ,Dome of bladder
+C67.2       ,Lateral wall of bladder
+C67.3       ,Anterior wall of bladder
+C67.4       ,Posterior wall of bladder
+C67.5       ,Bladder neck
+C67.6       ,Ureteric orifice
+C67.7       ,Urachus
+C67.8       ,Overlapping lesion of bladder
+C67.9       ,"Bladder, unspecified"
+C68.0       ,Urethra
+C68.1       ,Paraurethral glands
+C68.8       ,Overlapping lesion of urinary organs
+C68.9       ,"Urinary organ, unspecified"
+C69.0       ,Conjunctiva
+C69.1       ,Cornea
+C69.2       ,Retina
+C69.3       ,Choroid
+C69.4       ,Ciliary body
+C69.5       ,Lachrymal gland and duct
+C69.6       ,Orbit
+C69.8       ,Overlapping lesion of eye and adnexa
+C69.9       ,"Eye, unspecified"
+C70.0       ,Cerebral meninges
+C70.1       ,Spinal meninges
+C70.9       ,"Meninges, unspecified"
+C71.0       ,"Cerebrum, except lobes and ventricles"
+C71.1       ,Frontal lobe
+C71.2       ,Temporal lobe
+C71.3       ,Parietal lobe
+C71.4       ,Occipital lobe
+C71.5       ,Cerebral ventricle
+C71.6       ,Cerebellum
+C71.7       ,Brain stem
+C71.8       ,Overlapping lesion of brain
+C71.9       ,"Brain, unspecified"
+C72.0       ,Spinal cord
+C72.1       ,Cauda equina
+C72.2       ,Olfactory nerve
+C72.3       ,Optic nerve
+C72.4       ,Acoustic nerve
+C72.5       ,Other and unspecified cranial nerves
+C72.8       ,Overlapping lesion of brain and other parts of central nervous system
+C72.9       ,"Central nervous system, unspecified"
+C73   ,Malignant neoplasm of thyroid gland
+C74   ,Malignant neoplasm of adrenal gland
+C74.0       ,Cortex of adrenal gland
+C74.1       ,Medulla of adrenal gland
+C74.9       ,"Adrenal gland, unspecified"
+C75.0       ,Parathyroid gland
+C75.1       ,Pituitary gland
+C75.2       ,Craniopharyngeal duct
+C75.3       ,Pineal gland
+C75.4       ,Carotid body
+C75.5       ,Aortic body and other paraganglia
+C75.8       ,"Pluriglandular involvement, unspecified"
+C75.9       ,"Endocrine gland, unspecified"
+C76.0       ,"Head, face and neck"
+C76.1       ,Thorax
+C76.2       ,Abdomen
+C76.3       ,Pelvis
+C76.4       ,Upper limb
+C76.5       ,Lower limb
+C76.7       ,Other ill-defined sites
+C76.8       ,Overlapping lesion of other and ill-defined sites
+C77.0       ,"Lymph nodes of head, face and neck"
+C77.1      ,Intrathoracic lymph nodes
+C77.2       ,Intra-abdominal lymph nodes
+C77.3       ,Axillary and upper limb lymph nodes
+C77.4       ,Inguinal and lower limb lymph nodes
+C77.5       ,Intrapelvic lymph nodes
+C77.8       ,Lymph nodes of multiple regions
+C77.9       ,"Lymph node, unspecified"
+C78.0       ,Secondary malignant neoplasm of lung
+C78.1       ,Secondary malignant neoplasm of mediastinum
+C78.2       ,Secondary malignant neoplasm of pleura
+C78.3       ,Secondary malignant neoplasm of other and unspecified respiratory organs
+C78.4       ,Secondary malignant neoplasm of small intestine
+C78.5       ,Secondary malignant neoplasm of large intestine and rectum
+C78.6       ,Secondary malignant neoplasm of retroperitoneum and peritoneum
+C78.7       ,Secondary malignant neoplasm of liver
+C78.8       ,Secondary malignant neoplasm of other and unspecified digestive organs
+C79.0       ,Secondary malignant neoplasm of kidney and renal pelvis
+C79.1       ,Secondary malignant neoplasm of bladder and other and unspecified urinary organs
+C79.2       ,Secondary malignant neoplasm of skin
+C79.3       ,Secondary malignant neoplasm of brain and cerebral meninges
+C79.4       ,Secondary malignant neoplasm of other and unspecified parts of nervous system
+C79.5       ,Secondary malignant neoplasm of bone and bone marrow
+C79.6       ,Secondary malignant neoplasm of ovary
+C79.7       ,Secondary malignant neoplasm of adrenal gland
+C79.8       ,Secondary malignant neoplasm of other specified sites
+C80   ,Malignant neoplasm without specification of site
+C81.0       ,Lymphocytic predominance
+C81.1       ,Nodular sclerosis
+C81.2       ,Mixed cellularity
+C81.3       ,Lymphocytic depletion
+C81.7       ,Other Hodgkin's disease
+C81.9       ,"Hodgkin's disease, unspecified"
+C82.0       ,"Small cleaved cell, follicular"
+C82.1       ,"Mixed small cleaved and large cell, follicular"
+C82.2       ,"Large cell, follicular"
+C82.7       ,Other types of follicular non-Hodgkin's lymphoma
+C82.9       ,"Follicular non-Hodgkin's lymphoma, unspecified"
+C83.0       ,Small cell (diffuse)
+C83.1       ,Small cleaved cell (diffuse)
+C83.2       ,Mixed small and large cell (diffuse)
+C83.3       ,Large cell (diffuse)
+C83.4       ,Immunoblastic (diffuse)
+C83.5       ,Lymphoblastic (diffuse)
+C83.6       ,Undifferentiated (diffuse)
+C83.7       ,Burkitt's tumour
+C83.8       ,Other types of diffuse non-Hodgkin's lymphoma
+C83.9       ,"Diffuse non-Hodgkin's lymphoma, unspecified"
+C84.0       ,Mycosis fungoides
+C84.1       ,Sazary's disease
+C84.2       ,T-zone lymphoma
+C84.3       ,Lymphoepithelioid lymphoma
+C84.4       ,Peripheral T-cell lymphoma
+C84.5       ,Other and unspecified T-cell lymphomas
+C85.0       ,Lymphosarcoma
+C85.1       ,"B-cell lymphoma, unspecified"
+C85.7       ,Other specified types of non-Hodgkin's lymphoma
+C85.9       ,"Non-Hodgkin's lymphoma, unspecified type"
+C88.0       ,Waldenstram's macroglobulinaemia
+C88.1       ,Alpha heavy chain disease
+C88.2       ,Gamma heavy chain disease
+C88.3      ,Immunoproliferative small intestinal disease
+C88.7       ,Other malignant immunoproliferative diseases
+C88.9       ,"Malignant immunoproliferative disease, unspecified"
+C90.0       ,Multiple myeloma
+C90.1       ,Plasma cell leukaemia
+C90.2       ,"Plasmacytoma, extramedullary"
+C91.0       ,Acute lymphoblastic leukaemia
+C91.1       ,Chronic lymphocytic leukaemia
+C91.2       ,Subacute lymphocytic leukaemia
+C91.3       ,Prolymphocytic leukaemia
+C91.4       ,Hairy-cell leukaemia
+C91.5       ,Adult T-cell leukaemia
+C91.7       ,Other lymphoid leukaemia
+C91.9       ,"Lymphoid leukaemia, unspecified"
+C92.0       ,Acute myeloid leukaemia
+C92.1       ,Chronic myeloid leukaemia
+C92.2       ,Subacute myeloid leukaemia
+C92.3       ,Myeloid sarcoma
+C92.4       ,Acute promyelocytic leukaemia
+C92.5       ,Acute myelomonocytic leukaemia
+C92.7       ,Other myeloid leukaemia
+C92.9       ,"Myeloid leukaemia, unspecified"
+C93.0       ,Acute monocytic leukaemia
+C93.1       ,Chronic monocytic leukaemia
+C93.2       ,Subacute monocytic leukaemia
+C93.7       ,Other monocytic leukaemia
+C93.9       ,"Monocytic leukaemia, unspecified"
+C94.0       ,Acute erythraemia and erythroleukaemia
+C94.1       ,Chronic erythraemia
+C94.2       ,Acute megakaryoblastic leukaemia
+C94.3       ,Mast cell leukaemia
+C94.4       ,Acute panmyelosis
+C94.5       ,Acute myelofibrosis
+C94.7       ,Other specified leukaemias
+C95.0       ,Acute leukaemia of unspecified cell type
+C95.1       ,Chronic leukaemia of unspecified cell type
+C95.2       ,Subacute leukaemia of unspecified cell type
+C95.7       ,Other leukaemia of unspecified cell type
+C95.9       ,"Leukaemia, unspecified"
+C96.0       ,Letterer-Siwe disease
+C96.1       ,Malignant histiocytosis
+C96.2       ,Malignant mast cell tumour
+C96.3       ,True histiocytic lymphoma
+C96.7       ,"Other specified malignant neoplasms of lymphoid, haematopoietic and related tissue"
+C96.9       ,"Malignant neoplasms of lymphoid, haematopoietic and related tissue, unspecified"
+C97   ,Malignant neoplasms of independent (primary) multiple sites

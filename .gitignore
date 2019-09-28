@@ -1,0 +1,8 @@
+# Ignore venv
+venv/
+
+# Ignore .idea
+.idea/
+
+# Ignore .pyc
+*.pyc

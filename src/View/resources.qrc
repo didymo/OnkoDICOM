@@ -1,0 +1,17 @@
+<RCC>
+  <qresource prefix="images">
+    <file>../Icon/export.png</file>
+    <file>../Icon/info.png</file>
+    <file>../Icon/management.png</file>
+    <file>../Icon/minus.png</file>
+    <file>../Icon/open_patient.png</file>
+    <file>../Icon/patient.png</file>
+    <file>../Icon/plus.png</file>
+    <file>../Icon/ROI_Brush.png</file>
+    <file>../Icon/ROI_Isodose.png</file>
+    <file>../Icon/save_all.png</file>
+    <file>../Icon/transect.png</file>
+    <file>../Icon/windowing.png</file>
+    <file>../Icon/logo.png</file>
+  </qresource>
+</RCC>
