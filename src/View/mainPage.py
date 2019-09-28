@@ -1162,9 +1162,8 @@ class Ui_MainWindow(object):
 
                 DICOM_image_label = QtWidgets.QLabel()
                 DICOM_image_label.setPixmap(pixmap)
-                DICOM_image_scene = QtWidgets.QGraphicsScene()
-                DICOM_image_scene.addWidget(DICOM_image_label)
-                self.DICOM_view.setScene(DICOM_image_scene)
+                self.DICOM_image_scene.addWidget(DICOM_image_label)
+                self.DICOM_view.setScene(self.DICOM_image_scene)
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
             img_data = deepcopy(self.pixel_values)
             self.pixmaps = get_pixmaps(img_data, self.window, self.level)
@@ -1309,9 +1308,8 @@ class Ui_MainWindow(object):
 
         DICOM_image_label = QtWidgets.QLabel()
         DICOM_image_label.setPixmap(pixmap)
-        DICOM_image_scene = QtWidgets.QGraphicsScene()
-        DICOM_image_scene.addWidget(DICOM_image_label)
-        self.DICOM_view.setScene(DICOM_image_scene)
+        self.DICOM_image_scene.addWidget(DICOM_image_label)
+        self.DICOM_view.setScene(self.DICOM_image_scene)
 
         self.pixmaps = get_pixmaps(img_data, self.window, self.level)
 
