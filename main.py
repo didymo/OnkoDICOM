@@ -1,7 +1,6 @@
-import sys
 import warnings
 warnings.filterwarnings("ignore")
-
+import sys
 from src.Controller.mainPageController import *
 from src.Controller.interPageController import Controller
 
