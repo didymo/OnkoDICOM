@@ -813,7 +813,7 @@ class MainPage:
         pyradiomics(self.path, self.filepaths)
 
     def runAnonymization(self):
-        anonymize(self.path)
+        anonymize(self.path, self.datasets, self.filepaths)
 
     def display_cd_form(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataForm(tabWindow, file_path)

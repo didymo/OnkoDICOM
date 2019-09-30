@@ -9,6 +9,7 @@ import uuid
 import csv
 import pandas as pd
 
+
 #========================================ANONYMIZation code ===================================
 
 
@@ -20,7 +21,7 @@ def hasattribute(keyword, ds):
 
 ## ===================================HASH Function================================================
 
-def Hash_identifiers(file_to_write, ds_rtss):
+def Hash_identifiers(file_no, ds_rtss):
 
     # ------------------------------------Sha1 hash for patient name-------------------------------------
 
@@ -88,7 +89,7 @@ def Hash_identifiers(file_to_write, ds_rtss):
 
      # used to reture flag = 1 to indicate the first file is used for saving the hash in 
      # hash_CSV file so CSV function will not be performed for rest of the files.   
-    if file_to_write == "rtss.dcm":
+    if file_no == 1:
         if hasattribute("PatientID", ds_rtss):
             P_name_ID = patient_name + " + " + patient_ID
             print("Pname and ID=   ", P_name_ID)
@@ -218,14 +219,15 @@ def Print_identifiers(ds_rtss):
 
 
 # loading the dicom file 
-def LOAD_DCM(Dicom_folder_path,Dicom_filename):
+def LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key):
     # Dicom_folder_path = self.path  # Getting and storing the Folder path of rtss.dcm file
     print("\n\nIn Load_DCM function: PATH of the dicom file is:-----", Dicom_folder_path)
 
     # concatinating the folder path and the filename
     Full_dicom_filepath = (Dicom_folder_path + "/" + Dicom_filename)
     print("In Load_DCM function: FULL PATH of dicom file is:----", Full_dicom_filepath)
-    ds_rtss = pydicom.dcmread(Full_dicom_filepath)
+    # ds_rtss = pydicom.dcmread(Full_dicom_filepath)
+    ds_rtss = new_dict_dataset[key]
     print("In Load DCM function:",Dicom_filename,"loaded in ds_rtss")
     return ds_rtss
 
@@ -241,28 +243,39 @@ def Check_if_folder(file_path):
 
 # ==============Check in patient identifiers are already hashed===========
 
-def check_file_hashed(file_name):
+def check_file_hashed(file_name, new_dict_dataset, key):
     if ("Hashed" in file_name):
-        return True
+        hash_value = new_dict_dataset[key].PatientName
+        return True,hash_value
     else:
-        return False   
+        return False,0
 
 # ##==========================================Anon Function==========================================
-def anon_call(path):
+def anon_call(path, new_dict_dataset, all_filepaths):
     
     print("\n\n====Anon Called====")
     Dicom_folder_path = path
 
-    All_dcm = get_All_files(Dicom_folder_path)
-    print("ALL files: in main \n\n")
+    # All_dcm = get_All_files(Dicom_folder_path)
+    # print("ALL files: in main \n\n")
 
-    count = 0 
-    for eachFile in All_dcm:
-        count += 1
+    # count = 0 
+    # for eachFile in All_dcm:
+    #     count += 1
 
-        Dicom_filename = eachFile       # store the name of each dcm file in a variable
-        print("\n\nHASHING FILE === ",Dicom_filename)
 
+    count = 0
+    for key in new_dict_dataset:
+        count +=1
+
+        # store the name of each dcm file in a variable
+        Dicom_filename = os.path.basename(all_filepaths[key])     
+        print("\n\nHASHING FILE ::::::=== ",Dicom_filename)
+
+        # ds_rtss = new_dict_dataset[key]
+
+        # print("\nMOdality is:   ", ds_rtss.Modality)
+        # print("\nInstance Number is:   ", ds_rtss.InstanceNumber)
 
         # concatinating the folder path and the filename
         Full_dicom_filepath = (Dicom_folder_path + "/" + Dicom_filename)
@@ -271,19 +284,24 @@ def anon_call(path):
         file_type = Check_if_folder(Full_dicom_filepath)
 
         if file_type != True:
-            Is_hashed = check_file_hashed(Dicom_filename) 
+
+            print("The file {} is Directory {}".format(Dicom_filename,file_type))
+
+            Is_hashed, hash_value = check_file_hashed(Dicom_filename, new_dict_dataset, key) 
+
+            
 
             if Is_hashed != True:
 
-                print("The file {} is regular file {}".format(Dicom_filename,file_type))
-
+                print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
                 # loading the dicom file content into the dataframe.
-                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename)
+                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
                 print("\n\nloaded in ds_rtss:============ ", Dicom_filename)
 
                 # calling the HASH function and it returns the (Pname + PID), (hashvalue) and
                 # (flag = 1  will be used to restrict only one hash value per patient in the CSV file)
-                pname_ID, sha1_pname, flag = Hash_identifiers(Dicom_filename, ds_rtss)
+                pname_ID, sha1_pname, flag = Hash_identifiers(count, ds_rtss)
+                print(" In main Pname and ID=  {} and SHA1_name: {}".format(pname_ID, sha1_pname))
 
                 if flag == 1:   #(flag = 1 that will be used to restrict only one hash per patient in the CSV file)
                     print("\n\nFLAG --1111111111111111111111111")
@@ -303,6 +321,7 @@ def anon_call(path):
                     # write_hash_dcm(sha1_pname, Dicom_filename)
                     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
             else:
+                print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
                 print("Patient Identifiers already hashed") 
                 count = 0
                 break  
@@ -312,11 +331,19 @@ def anon_call(path):
     print("Total files hashed======", count)
 
 
-def anonymize(path):
+def anonymize(path, Datasets, FilePaths):
 
+    all_filepaths = FilePaths
+    new_dict_dataset = Datasets
     print("\n\nCurrent Work Directory is:  ==== ",os.getcwd())
     print("IN ANON===================")
-    print("=====Path in ANONYMIZation   ===",path)
-    anon_call(path)
+    print("\n\n\n=====Path in ANONYMIZation   ===",path)
+    # print("=====Datasets========= in ANONYMIZation   ===",Datasets)
+    print("\n\n\n=====FilePaths in ANONYMIZation   ===",all_filepaths)
+    # print("The value for CT 0 is : ", new_dict_dataset[0])
+    # for key in Datasets:
+    #     if (key != 'rtplan' and key != 'rtss' and key != 'rtdose'):
+    #         print("Values are:  ",Datasets[key])
+    anon_call(path, new_dict_dataset, all_filepaths)
 
 
