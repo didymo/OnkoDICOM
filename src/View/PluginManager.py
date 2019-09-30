@@ -123,7 +123,7 @@ class Ui_PluginManager(object):
         self.table_roi.setVisible(False)
 
         self.table_Ids = QtWidgets.QTableWidget(self.centralwidget)
-        self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 410))
+        self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_Ids.setObjectName("table_Ids")
         self.table_Ids.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_Ids.setColumnCount(2)
@@ -135,7 +135,12 @@ class Ui_PluginManager(object):
         header5.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header5.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_Ids.setVisible(False)
-
+        self.note=QtWidgets.QLabel(self.centralwidget)
+        self.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
+        self.note.setObjectName('note')
+        self.note.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
+                                        "color:rgb(255,0,0)")
+        self.note.setVisible(False)
         self.cancel_button = QtWidgets.QPushButton(self.centralwidget)
         self.cancel_button.setGeometry(QtCore.QRect(638, 554, 101, 31))
         self.cancel_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
@@ -171,6 +176,7 @@ class Ui_PluginManager(object):
         _translate = QtCore.QCoreApplication.translate
         PluginManager.setWindowTitle(_translate("PluginManager", "Plugin Manager"))
         self.optionTitle.setText(_translate("PluginManager", ""))
+        self.note.setText(_translate("PluginManager", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
         self.cancel_button.setText(_translate("PluginManager", "Cancel"))
         self.apply_button.setText(_translate("PluginManager", "Apply"))
         self.add_new_window.setText(_translate("PluginManager", "Add New Window"))

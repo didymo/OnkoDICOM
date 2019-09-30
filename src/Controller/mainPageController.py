@@ -96,7 +96,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         # setting tab order
-
+        self.setTabOrder(self.ui.Save_button, self.ui.line_LN)
         self.setTabOrder(self.ui.line_LN, self.ui.line_FN)
         self.setTabOrder(self.ui.line_FN, self.ui.date_of_birth)
         self.setTabOrder(self.ui.date_of_birth, self.ui.line_BP)
