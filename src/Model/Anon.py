@@ -239,6 +239,14 @@ def Check_if_folder(file_path):
     else:
         return False  # if not a subdirectory return False    
 
+# ==============Check in patient identifiers are already hashed===========
+
+def check_file_hashed(file_name):
+    if ("Hashed" in file_name):
+        return True
+    else:
+        return False   
+
 # ##==========================================Anon Function==========================================
 def anon_call(path):
     
@@ -263,35 +271,41 @@ def anon_call(path):
         file_type = Check_if_folder(Full_dicom_filepath)
 
         if file_type != True:
+            Is_hashed = check_file_hashed(Dicom_filename) 
 
-            print("The file {} is regular file {}".format(Dicom_filename,file_type))
+            if Is_hashed != True:
 
+                print("The file {} is regular file {}".format(Dicom_filename,file_type))
 
-            # loading the dicom file content into the dataframe.
-            ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename)
-            print("\n\nloaded in ds_rtss:============ ", Dicom_filename)
+                # loading the dicom file content into the dataframe.
+                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename)
+                print("\n\nloaded in ds_rtss:============ ", Dicom_filename)
 
-            # calling the HASH function and it returns the (Pname + PID), (hashvalue) and
-            # (flag = 1  will be used to restrict only one hash value per patient in the CSV file)
-            pname_ID, sha1_pname, flag = Hash_identifiers(Dicom_filename, ds_rtss)
+                # calling the HASH function and it returns the (Pname + PID), (hashvalue) and
+                # (flag = 1  will be used to restrict only one hash value per patient in the CSV file)
+                pname_ID, sha1_pname, flag = Hash_identifiers(Dicom_filename, ds_rtss)
 
-            if flag == 1:   #(flag = 1 that will be used to restrict only one hash per patient in the CSV file)
-                print("\n\nFLAG --1111111111111111111111111")
-                print(" In main Pname and ID=  {} and SHA1_name: {}".format(pname_ID, sha1_pname))
+                if flag == 1:   #(flag = 1 that will be used to restrict only one hash per patient in the CSV file)
+                    print("\n\nFLAG --1111111111111111111111111")
+                    print(" In main Pname and ID=  {} and SHA1_name: {}".format(pname_ID, sha1_pname))
 
-                Print_identifiers(ds_rtss)  # calling the print to show the identifiers
-                csv_filename = str("Hash_map") + ".csv"
-                # calling create CSV to store the the hashed value
-                create_hash_csv(pname_ID, sha1_pname, csv_filename) 
-                print("Calling WRITE FUNCTION when Csv called")
-                # write_hash_dcm(sha1_pname, Dicom_filename)
-                write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
+                    Print_identifiers(ds_rtss)  # calling the print to show the identifiers
+                    csv_filename = str("Hash_map") + ".csv"
+                    # calling create CSV to store the the hashed value
+                    create_hash_csv(pname_ID, sha1_pname, csv_filename) 
+                    print("Calling WRITE FUNCTION when Csv called")
+                    # write_hash_dcm(sha1_pname, Dicom_filename)
+                    write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
+                else:
+                    print("\n\nFLAG --0000000000000000000000000")
+                    print("CSV function not called")
+                    print("Calling WRITE FUNCTION when Csv not called")
+                    # write_hash_dcm(sha1_pname, Dicom_filename)
+                    write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
             else:
-                print("\n\nFLAG --0000000000000000000000000")
-                print("CSV function not called")
-                print("Calling WRITE FUNCTION when Csv not called")
-                # write_hash_dcm(sha1_pname, Dicom_filename)
-                write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
+                print("Patient Identifiers already hashed") 
+                count = 0
+                break  
         else:
             print("\n\n\n======File {} is a Folder=====".format(Dicom_filename))    #     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
             print("\n\n\n")  
