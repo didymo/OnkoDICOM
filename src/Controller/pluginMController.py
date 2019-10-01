@@ -2,6 +2,8 @@ import csv
 import sys
 from collections import deque
 
+from PyQt5.QtWidgets import QFileDialog
+
 from src.View.PluginManager import *
 from src.data.csv import *
 from src.View.InputDialogs import *
@@ -32,7 +34,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
         self.add_new_roi.clicked.connect(self.new_isodose)
-        #self.import_organ_csv.clicked.connect(self.import_organs)
+        self.import_organ_csv.clicked.connect(self.import_organs)
 
         #adding the menus
         self.table_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -413,26 +415,31 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
             self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    def convertTuple(self, tup):
-        str = ''.join(tup)
-        return str
 
-    # def import_organs(self):
-    #     #get path of file
-    #         with open( 'r') as stream:
-    #             for rowdata in csv.reader(stream):
-    #                 if len(rowdata)!=3:
-    #                     buttonReply = QMessageBox.warning(self, "Error Message",
-    #                                                       "Import a csv with 3 columns and just the data!", QMessageBox.Ok)
-    #                     if buttonReply == QMessageBox.Ok:
-    #                         pass
-    #                 else:
-    #                     row = self.table_organ.rowCount()
-    #                     self.table_organ.insertRow(row)
-    #                     self.table_organ.setColumnCount(len(rowdata))
-    #                     for column, data in enumerate(rowdata):
-    #                         item = QTableWidgetItem(data)
-    #                         self.table_organ.setItem(row, column, item)
+    def import_organs(self):
+        print("here")
+        self.check_change = False
+        path = QFileDialog.getOpenFileName(
+            self, "Open Data File", "", "CSV data files (*.csv)")[0]
+
+        if path != '':
+            with open(path, newline='') as stream:
+                for rowdata in csv.reader(stream):
+                    if len(rowdata)!= 3:
+                        buttonReply = QMessageBox.warning(self, "Error Message",
+                                                          "Import a csv with 3 columns and just the data with the displayed order!", QMessageBox.Ok)
+                        if buttonReply == QMessageBox.Ok:
+                            pass
+                    else:
+                        row = self.table_organ.rowCount()
+                        self.table_organ.insertRow(row)
+                        self.table_organ.setColumnCount(len(rowdata))
+                        for column, data in enumerate(rowdata):
+                            item = QTableWidgetItem(data)
+                            self.table_organ.setItem(row, column, item)
+
+        self.check_change = True
+
 
 class PManager:
 

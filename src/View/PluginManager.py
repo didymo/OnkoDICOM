@@ -12,11 +12,12 @@ class Ui_PluginManager(object):
         self.optionTitle.setStyleSheet("font: 57 12pt \"Ubuntu\";\n"
                                        "font-weight: bold;")
         self.optionTitle.setObjectName("optionTitle")
-        self.table_modules = QtWidgets.QTableWidget(self.centralwidget)
-        self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        self.table_modules = QtWidgets.QLabel(self.centralwidget)
+        self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 70))
         self.table_modules.setObjectName("table_modules")
-        self.table_modules.setStyleSheet("background-color: rgb(255, 255, 255);")
-
+        self.table_modules.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
+                                          "color:rgb(0,0,0);\n")
+        self.table_modules.setText(" Here are listed all the user plugins used in Onko. By using \n Plugin Manager you will be able to Add/Modify/Delete the \n settings for the displayed plugins on the left. ")
         # buttons per view
         self.add_new_window = QtWidgets.QPushButton(self.centralwidget)
         self.add_new_window.setGeometry(QtCore.QRect(598, 470, 141, 31))
@@ -162,7 +163,6 @@ class Ui_PluginManager(object):
         self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
         PluginManager.setCentralWidget(self.centralwidget)
         self.treeList.setHeaderHidden(True)
-        self.table_modules.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
@@ -175,7 +175,7 @@ class Ui_PluginManager(object):
     def retranslateUi(self, PluginManager):
         _translate = QtCore.QCoreApplication.translate
         PluginManager.setWindowTitle(_translate("PluginManager", "Plugin Manager"))
-        self.optionTitle.setText(_translate("PluginManager", ""))
+        self.optionTitle.setText(_translate("PluginManager", "User Plugins"))
         self.note.setText(_translate("PluginManager", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
         self.cancel_button.setText(_translate("PluginManager", "Cancel"))
         self.apply_button.setText(_translate("PluginManager", "Apply"))
