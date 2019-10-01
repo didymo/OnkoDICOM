@@ -20,8 +20,16 @@ class Ui_MainWindow(object):
         self.path = path
         self.dataset, self.filepaths = get_datasets(path)
 
-        self.window = self.dataset[0].WindowWidth[1]
-        self.level = self.dataset[0].WindowCenter[1]
+        if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
+            self.window = self.dataset[0].WindowWidth
+        elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
+            self.window = self.dataset[0].WindowWidth[1]
+        
+        if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):    
+            self.level = self.dataset[0].WindowCenter
+        elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
+            self.level = self.dataset[0].WindowCenter[1]
+
         self.x1, self.y1 = 256, 256
         self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], "bone": [1400, 700],
                                "brain": [180, 950],

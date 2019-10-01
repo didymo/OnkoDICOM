@@ -58,9 +58,6 @@ class Controller:
 
 
     def show_patient(self, path):
-        dataset = get_datasets(path)
-
-        window = QtWidgets.QMainWindow()
         self.patient_window = MainWindow(path)
         self.patient_window.open_patient_window.connect(self.show_patient)
         self.welcome_window.close()
