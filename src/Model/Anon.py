@@ -322,9 +322,12 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
             else:
                 print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
-                print("Patient Identifiers already hashed") 
+                print("Patient Identifiers already hashed")
+                print("Just overwriting the files without hashing")
+                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
+                write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value)
                 count = 0
-                break  
+                 
         else:
             print("\n\n\n======File {} is a Folder=====".format(Dicom_filename))    #     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
             print("\n\n\n")  

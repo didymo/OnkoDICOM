@@ -86,11 +86,12 @@ def calculate_years(year1, year2):
 class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
     open_patient_window = QtCore.pyqtSignal(str)
 
-    def __init__(self, tabWindow, path):
+    def __init__(self, tabWindow, path, ds, fn):
         QtWidgets.QWidget.__init__(self)
 
         self.path = path
-        self.dataset, self.filenames = get_datasets(self.path)
+        self.dataset = ds
+        self.filenames = fn
         self.pID = self.dataset[0].PatientID
         self.tabWindow = tabWindow
         self.ui = Ui_Form()
@@ -806,17 +807,17 @@ class MainPage:
 
     def __init__(self, path, datasets, filepaths):
         self.path = path
-        self.datasets = datasets
+        self.dataset = datasets
         self.filepaths = filepaths
 
     def runPyradiomics(self):
         pyradiomics(self.path, self.filepaths)
 
     def runAnonymization(self):
-        anonymize(self.path, self.datasets, self.filepaths)
+        anonymize(self.path, self.dataset, self.filepaths)
 
     def display_cd_form(self, tabWindow, file_path):
-        self.tab_cd = ClinicalDataForm(tabWindow, file_path)
+        self.tab_cd = ClinicalDataForm(tabWindow, file_path, self.dataset, self.filepaths)
         tabWindow.addTab(self.tab_cd, "")
 
     def display_cd_dat(self, tabWindow, file_path):
