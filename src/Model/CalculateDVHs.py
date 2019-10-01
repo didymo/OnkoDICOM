@@ -1,5 +1,5 @@
-# import numpy as np
-from dicompylercore import dvhcalc, dicomparser
+import numpy as np
+from dicompylercore import dvhcalc, dvh, dicomparser
 # import pydicom
 # import matplotlib.pyplot as plt
 # from dicompylercore.dicomparser import DicomParser
@@ -38,6 +38,41 @@ def calc_dvhs(rtss, dose, dict_roi, dose_limit=None):
         #                                   thickness=None, callback=None)
         dict_dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
     return dict_dvh
+
+
+# Deal with the case where the last value of the DVH is not 0
+# Return a dictionary of bincenters (x axis of DVH) and counts (y value of DVH)
+# Return value: dict
+# {"1": {"bincenters": bincenters ; "counts": counts}}
+# "1" is the ID of the ROI
+def converge_to_O_dvh(dict_dvh):
+    res = {}
+    zeros = np.zeros(3)
+
+    for roi in dict_dvh:
+        res[roi] = {}
+        dvh = dict_dvh[roi]
+
+        # The last value of DVH is not equal to 0
+        if dvh.counts[-1] != 0:
+            tmp_bincenters = []
+            for i in range(3):
+                tmp_bincenters.append(dvh.bincenters[-1]+i)
+
+            tmp_bincenters = np.array(tmp_bincenters)
+            tmp_bincenters = np.concatenate((dvh.bincenters.flatten(), tmp_bincenters))
+            bincenters = np.array(tmp_bincenters)
+            counts = np.concatenate((dvh.counts.flatten(), np.array(zeros)))
+
+        # The last value of DVH is equal to 0
+        else:
+            bincenters = dvh.bincenters
+            counts = dvh.counts
+
+        res[roi]['bincenters'] = bincenters
+        res[roi]['counts'] = counts
+
+    return res
 
 
 # # For the demo example
