@@ -6,3 +6,5 @@ venv/
 
 # Ignore .pyc
 *.pyc
+
+/home/tony/Onko/Hash_map.csv
