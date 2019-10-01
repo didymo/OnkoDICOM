@@ -2,7 +2,7 @@ import matplotlib.pylab as plt
 from copy import deepcopy
 from PyQt5.QtGui import QTransform
 from src.Controller.pluginMController import PManager
-from src.Model.CalculateDVHs import calc_dvhs
+from src.Model.CalculateDVHs import calc_dvhs, converge_to_O_dvh
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
 from src.Controller.mainPageController import MainPage
@@ -37,7 +37,8 @@ class Ui_MainWindow(object):
         self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
         self.selected_rois = []
-        self.dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
+        self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
+        self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
 
@@ -959,21 +960,26 @@ class Ui_MainWindow(object):
         fig.subplots_adjust(0.1, 0.15, 1, 1)
         max_xlim = 0
         for roi in self.selected_rois:
-            dvh = self.dvh[int(roi)]
+            dvh = self.raw_dvh[int(roi)]
             if dvh.volume != 0:
+                bincenters = self.dvh_x_y[roi]['bincenters']
+                counts = self.dvh_x_y[roi]['counts']
                 colorRoi = self.roiColor[roi]
                 color_R = colorRoi['R'] / 255
                 color_G = colorRoi['G'] / 255
                 color_B = colorRoi['B'] / 255
-                plt.plot(100 * dvh.bincenters, 100 * dvh.counts / dvh.volume, label=dvh.name,
+                plt.plot(100 * bincenters,
+                         100 * counts / dvh.volume,
+                         label=dvh.name,
                          color=[color_R, color_G, color_B])
-                if (100 * dvh.bincenters[-1]) > max_xlim:
-                    max_xlim = 100 * dvh.bincenters[-1]
+                if (100 * bincenters[-1]) > max_xlim:
+                    max_xlim = 100 * bincenters[-1]
                 plt.xlabel('Dose [%s]' % 'cGy')
                 plt.ylabel('Volume [%s]' % '%')
                 if dvh.name:
                     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
+        plt.close()
         ax.set_ylim([0, 105])
         ax.set_xlim([0, max_xlim + 3])
 
@@ -1010,6 +1016,8 @@ class Ui_MainWindow(object):
 
     def updateDVH_view(self):
         self.gridL_DVH.removeWidget(self.plotWidget)
+        self.plotWidget.deleteLater()
+        self.plotWidget = None
         fig = self.DVH_view()
         self.plotWidget = FigureCanvas(fig)
         self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
@@ -1380,7 +1388,8 @@ class StructureInformation(object):
     def getStructInfo(self):
         res = dict()
         for id, value in self.window.rois.items():
-            dvh = self.window.dvh[id]
+            dvh = self.window.raw_dvh[id]
+            counts = self.window.dvh_x_y[id]['counts']
 
             structInfo = dict()
             structInfo['volume'] = float("{0:.3f}".format(dvh.volume))
@@ -1393,22 +1402,29 @@ class StructureInformation(object):
 
             # The volume of the ROI is greater than 0
             else:
-                value_DVH = 100 * dvh.counts / dvh.volume
+                value_DVH = 100 * counts / dvh.volume
                 index = 0
 
                 # Get the min dose of the ROI
-                while value_DVH.item(index) == 100:
+                while index < len(value_DVH) and int(value_DVH.item(index)) == 100:
                     index += 1
+
+                # Set the min dose value
                 if index == 0:
                     structInfo['min'] = 0
                 else:
                     structInfo['min'] = index-1
 
+
                 # Get the max dose of the ROI
-                while index < len(value_DVH) and value_DVH.item(index) > 0.01:
+                while index < len(value_DVH) and value_DVH.item(index) != 0:
                     index += 1
+
+                # Set the max dose value
+                # Index at 0 cGy
                 if index == 0:
                     structInfo['max'] = 0
+                # Index > 0 cGy
                 else:
                     structInfo['max'] = index-1
 
