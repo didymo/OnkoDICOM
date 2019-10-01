@@ -5,7 +5,7 @@ from src.Model.ROI import *
 
 
 def convert_raw_data(ds):
-    non_img_list = ['rtss', 'rtdoes', 'rtplan']
+    non_img_list = ['rtss', 'rtdose', 'rtplan']
     np_pixels = []
     for key in ds:
         if key not in non_img_list:
