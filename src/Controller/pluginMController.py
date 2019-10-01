@@ -101,7 +101,6 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Volume(self, pos):
         it = self.table_volume.itemAt(pos)
-        print(pos)
         if it is None: return
         c = it.row()
         item_range = QtWidgets.QTableWidgetSelectionRange(c, 0, c, self.table_volume.columnCount() - 1)
@@ -417,7 +416,6 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
 
     def import_organs(self):
-        print("here")
         self.check_change = False
         path = QFileDialog.getOpenFileName(
             self, "Open Data File", "", "CSV data files (*.csv)")[0]
