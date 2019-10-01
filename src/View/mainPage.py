@@ -107,12 +107,14 @@ class Ui_MainWindow(object):
 
         self.tab2.addTab(self.tab2_view, "")
 
+        #######################################
+
         # Main view: DVH
         self.tab2_DVH = QtWidgets.QWidget()
         self.tab2_DVH.setObjectName("tab2_DVH")
         # DVH layout
         self.widget_DVH = QtWidgets.QWidget(self.tab2_DVH)
-        self.widget_DVH.setGeometry(QtCore.QRect(0, 0, 877, 400))
+        self.widget_DVH.setGeometry(QtCore.QRect(0, 0, 877, 470))
         self.widget_DVH.setObjectName("widget_DVH")
         self.gridL_DVH = QtWidgets.QGridLayout(self.widget_DVH)
         self.gridL_DVH.setObjectName("gridL_DVH")
@@ -121,8 +123,11 @@ class Ui_MainWindow(object):
         self.initDVH_view()
         # DVH: Export DVH Button
         self.initExportDVH()
-
+        # # DVH Legend
+        # self.initDVH_legend(self.DVH_legend)
         self.tab2.addTab(self.tab2_DVH, "")
+
+        #######################################
 
         # Main view: DICOM Tree
         self.tab2_DICOM_tree = QtWidgets.QWidget()
@@ -139,6 +144,8 @@ class Ui_MainWindow(object):
         self.initTree()
         self.initTreeParameters()
         self.tab2.addTab(self.tab2_DICOM_tree, "")
+
+        #######################################
 
         # Main view: Clinical Data
         self.tab2_clinical_data = QtWidgets.QWidget()
@@ -267,7 +274,7 @@ class Ui_MainWindow(object):
 
         self.label_3.raise_()
         self.struct_info_label.raise_()
-        self.comboBox.raise_()
+        self.comboBoxStructInfo.raise_()
         self.struct_volume_label.raise_()
         self.struct_minDose_label.raise_()
         self.struct_maxDose_label.raise_()
@@ -820,13 +827,27 @@ class Ui_MainWindow(object):
 
         self.scrollAreaStruct.setWidget(self.scrollAreaStructContents)
 
-    # Update the list of selected structures and DVH view
-    def checkedStruct(self, state, text):
+
+    # Function triggered when the state of checkbox of a structure has changed
+    #   Update the list of selected structures and DVH view
+    def checkedStruct(self, state, key):
+        # Checkbox of the structure checked
         if state:
-            self.selected_rois.append(text)
+            # Add the structure in the list of selected ROIS
+            self.selected_rois.append(key)
+            # Select the corresponding item in Structure Info selector
+            index = self.listRoisID[key]
+            self.comboBoxStructInfo.setCurrentIndex(index-1)
+            self.comboStructInfo(index-1)
+
+        # Checkbox of the structure unchecked
         else:
-            self.selected_rois.remove(text)
+            # Remove the structure from the list of selected ROIS
+            self.selected_rois.remove(key)
+
+        # Update the DVH view
         self.updateDVH_view()
+
 
     # Initialize the list of isodoses (left column of the main page)
     def initIsodColumn(self):
@@ -920,16 +941,16 @@ class Ui_MainWindow(object):
 
     # Initialize the selector for structure information
     def initStructInfoSelector(self):
-        self.comboBox = QtWidgets.QComboBox(self.frame_struct_info)
-        self.comboBox.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
+        self.comboBoxStructInfo = QtWidgets.QComboBox(self.frame_struct_info)
+        self.comboBoxStructInfo.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
                                                  "combobox-popup: 0;"
                                                  "background-color: #efefef; }")
-        self.comboBox.addItem("Select...")
+        self.comboBoxStructInfo.addItem("Select...")
         for key, value in self.rois.items():
-            self.comboBox.addItem(value['name'])
-        self.comboBox.activated.connect(self.comboStructInfo)
-        self.comboBox.setGeometry(QtCore.QRect(5, 35, 188, 31))
-        self.comboBox.setObjectName("comboBox")
+            self.comboBoxStructInfo.addItem(value['name'])
+        self.comboBoxStructInfo.activated.connect(self.comboStructInfo)
+        self.comboBoxStructInfo.setGeometry(QtCore.QRect(5, 35, 188, 31))
+        self.comboBoxStructInfo.setObjectName("comboBox")
 
     # Function triggered when an item is selected
     def comboStructInfo(self, index):
@@ -957,8 +978,9 @@ class Ui_MainWindow(object):
 
     def DVH_view(self):
         fig, ax = plt.subplots()
-        fig.subplots_adjust(0.1, 0.15, 1, 1)
+        # fig.subplots_adjust(0.1, 0.15, 1, 1)
         max_xlim = 0
+        # legend = None
         for roi in self.selected_rois:
             dvh = self.raw_dvh[int(roi)]
             if dvh.volume != 0:
@@ -977,9 +999,8 @@ class Ui_MainWindow(object):
                 plt.xlabel('Dose [%s]' % 'cGy')
                 plt.ylabel('Volume [%s]' % '%')
                 if dvh.name:
-                    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                    plt.legend(loc='lower center', bbox_to_anchor=(0, 1, 5, 5))
 
-        plt.close()
         ax.set_ylim([0, 105])
         ax.set_xlim([0, max_xlim + 3])
 
@@ -996,17 +1017,10 @@ class Ui_MainWindow(object):
         ax.grid(which='minor', alpha=0.2)
         ax.grid(which='major', alpha=0.5)
 
-        # self.export_legend(legend)
+        # self.DVH_legend = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
         return fig
 
-    # def export_legend(self, legend, filename="legend.png", expand=[-5, -5, 5, 5]):
-    #     fig = legend.figure
-    #     fig.canvas.draw()
-    #     bbox = legend.get_window_extent()
-    #     bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
-    #     bbox = bbox.transformed(fig.dpi_scale_trans.inverted())
-    #     fig.savefig(filename, dpi="figure", bbox_inches=bbox)
 
     def initDVH_view(self):
         fig = self.DVH_view()
@@ -1033,6 +1047,17 @@ class Ui_MainWindow(object):
                                             "font-weight: bold;\n")
         self.button_exportDVH.setObjectName("button_exportDVH")
         self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
+
+
+    def initDVH_legend(self, legend, expand=[-5, -5, 5, 5]):
+        fig = legend.figure
+        fig.canvas.draw()
+        bbox = legend.get_window_extent()
+        bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
+        bbox.transformed(fig.dpi_scale_trans.inverted())
+        self.legend_DVH_widget = FigureCanvas(fig)
+        fig.savefig("legend.png", dpi="figure", bbox_inches=bbox)
+        self.gridL_DVH.addWidget(self.legend_DVH_widget, 2, 0, 2, 1, QtCore.Qt.AlignCenter)
 
 
     ####################################
@@ -1184,18 +1209,18 @@ class Ui_MainWindow(object):
     ###################################
 
     def initTreeViewSelector(self):
-        self.comboBox_TreeSelector = QtWidgets.QComboBox()
-        self.comboBox_TreeSelector.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
+        self.comboBoxTree = QtWidgets.QComboBox()
+        self.comboBoxTree.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
                                                  "combobox-popup: 0;"
                                                  "background-color: #efefef; }")
-        self.comboBox_TreeSelector.addItem("Select a DICOM dataset...")
-        self.comboBox_TreeSelector.addItem("RT Dose")
-        self.comboBox_TreeSelector.addItem("RTSS")
+        self.comboBoxTree.addItem("Select a DICOM dataset...")
+        self.comboBoxTree.addItem("RT Dose")
+        self.comboBoxTree.addItem("RTSS")
         for i in range(len(self.pixmaps) - 1):
-            self.comboBox_TreeSelector.addItem("CT Image Slice " + str(i + 1))
-        self.comboBox_TreeSelector.activated.connect(self.comboTreeSelector)
-        self.comboBox_TreeSelector.setFixedSize(QtCore.QSize(180, 31))
-        self.vboxL_Tree.addWidget(self.comboBox_TreeSelector, QtCore.Qt.AlignLeft)
+            self.comboBoxTree.addItem("CT Image Slice " + str(i + 1))
+        self.comboBoxTree.activated.connect(self.comboTreeSelector)
+        self.comboBoxTree.setFixedSize(QtCore.QSize(180, 31))
+        self.vboxL_Tree.addWidget(self.comboBoxTree, QtCore.Qt.AlignLeft)
 
 
     def comboTreeSelector(self, index):
@@ -1416,6 +1441,19 @@ class StructureInformation(object):
                     structInfo['min'] = index-1
 
 
+                # Get the mean dose of the ROI
+                while index < len(value_DVH) and value_DVH.item(index) > 50:
+                    index += 1
+
+                # Set the max dose value
+                # Index at 0 cGy
+                if index == 0:
+                    structInfo['mean'] = 0
+                # Index > 0 cGy
+                else:
+                    structInfo['mean'] = index-1
+
+
                 # Get the max dose of the ROI
                 while index < len(value_DVH) and value_DVH.item(index) != 0:
                     index += 1
@@ -1428,9 +1466,6 @@ class StructureInformation(object):
                 else:
                     structInfo['max'] = index-1
 
-                # Get the mean dose of the ROI
-                mean = structInfo['min'] + structInfo['max']
-                structInfo['mean'] = mean/2
 
             res[id] = structInfo
 
