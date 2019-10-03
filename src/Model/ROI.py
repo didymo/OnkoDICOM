@@ -118,11 +118,6 @@ def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_sli
     return dict_pixels
 
 
-class ContourItem(QtWidgets.QGraphicsScene):
-    def __init__(self, dict_rois_contours, roi_selected, curr_slice):
-        super(ContourItem, self).__init__()
-        self.addPolygon()
-
 
 class Test(QWidget):
 
@@ -292,7 +287,6 @@ if __name__ == '__main__':
             break
 
 
-    print(dict_ds[1])
 
 
 
