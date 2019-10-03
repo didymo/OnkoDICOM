@@ -99,12 +99,12 @@ class Controller:
         self.welcome_window.show()
 
     def show_bar(self, path):
-        self.bar_window = ProgressBar(path)
-        self.bar_window.open_patient_window.connect(self.show_patient)
         if self.welcome_window.isVisible():
             self.welcome_window.close()
         if self.patient_window.isVisible():
             self.patient_window.close()
+        self.bar_window = ProgressBar(path)
+        self.bar_window.open_patient_window.connect(self.show_patient)
         self.bar_window.show()
 
     def show_patient(self, path):
@@ -112,8 +112,6 @@ class Controller:
         self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict, self.bar_window.ext.rois, self.bar_window.ext.raw_dvh, self.bar_window.ext.dvh_x_y)
         self.patient_window.open_patient_window.connect(self.show_bar)
         self.bar_window.close()
-        if self.patient_window.isVisible():
-            self.patient_window.close()
         self.patient_window.show()
 
 
