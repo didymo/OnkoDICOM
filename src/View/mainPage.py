@@ -438,7 +438,7 @@ class Ui_MainWindow(object):
         iconOpen.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconAnonymize_and_Save = QtGui.QIcon()
-        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/save_all.png"),
+        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/AnonButton3.png"),
                                          QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconZoom_In = QtGui.QIcon()
         iconZoom_In.addPixmap(QtGui.QPixmap(":/images/Icon/plus.png"),
