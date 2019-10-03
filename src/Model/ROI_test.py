@@ -1,11 +1,9 @@
 import collections
-import matplotlib.pyplot as plt
+
 from PyQt5.QtWidgets import QWidget, QApplication, QGraphicsScene, QGraphicsView, QLabel, QVBoxLayout, QMainWindow
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPixmap, QPen, QBrush
-from PyQt5.QtCore import Qt, QPoint
 
-from src.Model.ROI import *
-from src.Model.LoadPatients import *
+
 from src.Model.CalculateImages import *
 
 # Get raw contour data of ROI in RT Structure Set
@@ -165,68 +163,68 @@ class Test(QWidget):
         return list_polygons
 
 
-class Widget(QWidget):
+# class Widget(QWidget):
+#
+#     def __init__(self, pixmap):
+#         QWidget.__init__(self)
+#         self.pixmap = pixmap
+#         self.initUI()
+#
+#     def initUI(self):
+#         self.resize(512,512)
+#         self.setWindowTitle('DICOM')
+#         self.label = QLabel(self)
+#         self.label.setPixmap(self.pixmap)
+#         self.scene = QGraphicsScene()
+#         # Add polygon found here
+#         self.scene.addWidget(self.label)
+#         self.view = QGraphicsView()
+#         self.view.setScene(self.scene)
 
-    def __init__(self, pixmap):
-        QWidget.__init__(self)
-        self.pixmap = pixmap
-        self.initUI()
-
-    def initUI(self):
-        self.resize(512,512)
-        self.setWindowTitle('DICOM')
-        self.label = QLabel(self)
-        self.label.setPixmap(self.pixmap)
-        self.scene = QGraphicsScene()
-        # Add polygon found here
-        self.scene.addWidget(self.label)
-        self.view = QGraphicsView()
-        self.view.setScene(self.scene)
 
 
-
-class Example(QWidget):
-    def __init__(self, dict_rois_contours, roi_selected, curr_slice):
-        super().__init__()
-        self.dict_rois_contours = dict_rois_contours
-        # print(self.dict_rois_contours)
-        self.roi_selected = roi_selected
-        self.curr_slice = curr_slice
-        self.polygons = self.calcPolygonF(roi_selected[0])
-        self.initUI()
-
-    def initUI(self):
-        self.setGeometry(10, 10, 512, 512)
-        self.setWindowTitle('Multi')
-        self.show()
-
-    def paintEvent(self, e):
-        qp = QPainter()
-        qp.begin(self)
-        qp.setBrush(QColor(122, 163, 39, 128))
-        qp.setRenderHint(QPainter.Antialiasing)
-        self.drawContour(qp)
-        qp.end()
-
-    def calcPolygonF(self, curr_roi):
-        list_polygons = []
-        pixel_list = self.dict_rois_contours[curr_roi][self.curr_slice]
-        for i in range(len(pixel_list)):
-            list_qpoints = []
-            contour = pixel_list[i]
-            for point in contour:
-                curr_qpoint = QPoint(point[0], point[1])
-                list_qpoints.append(curr_qpoint)
-            curr_polygon = QPolygonF(list_qpoints)
-            list_polygons.append(curr_polygon)
-        return list_polygons
-
-    def drawContour(self, qp):
-        curr_roi = 'REST_COMMON_LUNG'
-        for i in range(len(self.polygons)):
-            painter_path = QPainterPath()
-            painter_path.addPolygon(self.polygons[i])
-            qp.drawPath(painter_path)
+# class Example(QWidget):
+#     def __init__(self, dict_rois_contours, roi_selected, curr_slice):
+#         super().__init__()
+#         self.dict_rois_contours = dict_rois_contours
+#         # print(self.dict_rois_contours)
+#         self.roi_selected = roi_selected
+#         self.curr_slice = curr_slice
+#         self.polygons = self.calcPolygonF(roi_selected[0])
+#         self.initUI()
+#
+#     def initUI(self):
+#         self.setGeometry(10, 10, 512, 512)
+#         self.setWindowTitle('Multi')
+#         self.show()
+#
+#     def paintEvent(self, e):
+#         qp = QPainter()
+#         qp.begin(self)
+#         qp.setBrush(QColor(122, 163, 39, 128))
+#         qp.setRenderHint(QPainter.Antialiasing)
+#         self.drawContour(qp)
+#         qp.end()
+#
+#     def calcPolygonF(self, curr_roi):
+#         list_polygons = []
+#         pixel_list = self.dict_rois_contours[curr_roi][self.curr_slice]
+#         for i in range(len(pixel_list)):
+#             list_qpoints = []
+#             contour = pixel_list[i]
+#             for point in contour:
+#                 curr_qpoint = QPoint(point[0], point[1])
+#                 list_qpoints.append(curr_qpoint)
+#             curr_polygon = QPolygonF(list_qpoints)
+#             list_polygons.append(curr_polygon)
+#         return list_polygons
+#
+#     def drawContour(self, qp):
+#         curr_roi = 'REST_COMMON_LUNG'
+#         for i in range(len(self.polygons)):
+#             painter_path = QPainterPath()
+#             painter_path.addPolygon(self.polygons[i])
+#             qp.drawPath(painter_path)
 
 #
 # def main():
