@@ -40,6 +40,7 @@ class Ui_MainWindow(object):
             self.dict_windowing = {}
             with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
                 next(fileInput)
+                self.dict_windowing["Normal"] = [ self.window, self.level]
                 for row in fileInput:
                     items = [item for item in row.split(',')]
                     self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
