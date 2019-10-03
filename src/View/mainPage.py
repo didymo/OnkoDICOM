@@ -54,7 +54,7 @@ class Ui_MainWindow(object):
         self.pixmapWindowing = None
         self.dict_pixluts = get_pixluts(self.dataset)
         self.dict_raw_ContourData = get_raw_ContourData(self.dataset_rtss)
-
+        self.dict_polygons = {}
 
         self.zoom = 1
 
@@ -1218,13 +1218,6 @@ class Ui_MainWindow(object):
 
 
     def ROI_display(self):
-
-        # for roi in self.selected_rois:
-
-        # self.label = QLabel()
-        # self.pixmap = pixmap
-        # self.label.setPixmap(self.pixmap)
-        # self.DICOM_image_scene.addWidget(self.label)
         self.DICOM_image_display()
         slider_id = self.slider.value()
         curr_slice = self.dict_UID[slider_id]
@@ -1233,15 +1226,28 @@ class Ui_MainWindow(object):
         for roi in self.selected_rois:
             selected_rois_name.append(self.rois[roi]['name'])
 
-        for roi in self.selected_rois:  # 1,2,4,7
+        for roi in self.selected_rois:
             roi_name = self.rois[roi]['name']
-            self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name, self.dict_pixluts, curr_slice)
-            self.polygons = self.calcPolygonF(roi_name, curr_slice)
 
+            if roi_name not in self.dict_polygons.keys():
+                self.dict_polygons[roi_name] = {}
+                self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name,
+                                                            self.dict_pixluts, curr_slice)
+                polygons = self.calcPolygonF(roi_name, curr_slice)
+                self.dict_polygons[roi_name][curr_slice] = polygons
 
-            for i in range(len(self.polygons)):
+            elif curr_slice not in self.dict_polygons[roi_name].keys():
+                self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name,
+                                                            self.dict_pixluts, curr_slice)
+                polygons = self.calcPolygonF(roi_name, curr_slice)
+                self.dict_polygons[roi_name][curr_slice] = polygons
+
+            else:
+                polygons = self.dict_polygons[roi_name][curr_slice]
+
+            for i in range(len(polygons)):
                 color = self.roiColor[roi]['QColor_ROIdisplay']
-                self.DICOM_image_scene.addPolygon(self.polygons[i], QPen(color), QBrush(color))
+                self.DICOM_image_scene.addPolygon(polygons[i], QPen(color), QBrush(color))
 
 
 
