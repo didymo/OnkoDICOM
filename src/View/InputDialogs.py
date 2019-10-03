@@ -2,7 +2,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QDialogButtonBox, QVBoxLayout, QFormLayout, QSpinBox, QLineEdit, \
     QDialog, \
-    QComboBox, QGroupBox, QMessageBox
+    QComboBox, QGroupBox, QMessageBox, QPlainTextEdit
 
 
 class Dialog_Windowing(QDialog):
@@ -139,16 +139,20 @@ class Dialog_Volume(QDialog):
 
 class Dialog_Dose(QDialog):
 
-    def __init__(self, dose):
+    def __init__(self, dose, notes):
         super(Dialog_Dose, self).__init__()
 
         self.dose = dose
+        self.notes = notes
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel,self)
         self.iso_dose = QLineEdit()
         self.iso_dose.setText(self.dose)
+        self.iso_notes = QLineEdit()
+        self.iso_notes.setText(self.notes)
 
         layout = QFormLayout(self)
         layout.addRow(QLabel("Isodose Level (cCy):"), self.iso_dose)
+        layout.addRow(QLabel("Notes:"), self.iso_notes)
         layout.addWidget(buttonBox)
         buttonBox.accepted.connect(self.accepting)
         buttonBox.rejected.connect(self.reject)
@@ -156,7 +160,7 @@ class Dialog_Dose(QDialog):
 
 
     def getInputs(self):
-        return (self.iso_dose.text(), str('ISO' + self.iso_dose.text()))
+        return (self.iso_dose.text(), str('ISO' + self.iso_dose.text()), self.iso_notes.text())
 
     def accepting(self):
         if (self.iso_dose.text()!=''):
@@ -169,6 +173,6 @@ class Dialog_Dose(QDialog):
                     pass
         else:
             buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "The field should not be empty!", QMessageBox.Ok)
+                                              "The Isodose field should not be empty!", QMessageBox.Ok)
             if buttonReply == QMessageBox.Ok:
                 pass
