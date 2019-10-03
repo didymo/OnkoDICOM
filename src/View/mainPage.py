@@ -11,14 +11,18 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, path):
+    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy):
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-
+        self.dataset = dataset
+        self.raw_dvh = raw_dvh
+        self.dvh_x_y = dvhxy
+        self.rois =rois
+        self.filepaths = filepaths
         self.path = path
-        self.dataset, self.filepaths = get_datasets(path)
+            #get_datasets(path)
 
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
             self.window = self.dataset[0].WindowWidth
@@ -42,11 +46,11 @@ class Ui_MainWindow(object):
         self.file_rtdose = self.filepaths['rtdose']
         self.dataset_rtss = pydicom.dcmread(self.file_rtss)
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
-        self.rois = get_roi_info(self.dataset_rtss)
+        # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
         self.selected_rois = []
-        self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
-        self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
+        # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
+        # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
 
