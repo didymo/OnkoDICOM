@@ -1,75 +1,43 @@
-import pydicom
-import numpy as np
-
-from src.Model.CalculateDVHs import get_roi_info
-from src.Model.LoadPatients import *
-import matplotlib.pyplot as plt
-
-import math
-import matplotlib.path
-
-from PyQt5.QtWidgets import QWidget, QApplication
-from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor
-from PyQt5.QtCore import Qt, QPoint
+import collections
 import sys
 
-# Delete ROI by name
-def delete_roi(rtss, roi_name):
-    # ROINumber
-    roi_number = -1
-    # Delete related StructureSetROISequence element
+from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QWidget, QApplication, QGraphicsScene, QGraphicsView, QLabel, QVBoxLayout, QMainWindow
+from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPixmap, QPen, QBrush
+
+
+from src.Model.CalculateImages import *
+
+# Get raw contour data of ROI in RT Structure Set
+def get_raw_ContourData(rtss):
+    # Retrieve a dictionary of ROIName & ROINumber pairs
+    dict_id = {}
     for i, elem in enumerate(rtss.StructureSetROISequence):
-        if elem.ROIName == roi_name:
-            roi_number = rtss.StructureSetROISequence[i].ROINumber
-            del rtss.StructureSetROISequence[i]
+        roi_number = elem.ROINumber
+        roi_name = elem.ROIName
+        dict_id[roi_number] = roi_name
+    print(dict_id)
 
-    # Delete related ROIContourSequence element
-    for i, elem in enumerate(rtss.ROIContourSequence):
-        if elem.ReferencedROINumber == roi_number:
-            del rtss.ROIContourSequence[i]
-
-    # Delete related RTROIObservationsSequence element
-    for i, elem in enumerate(rtss.RTROIObservationsSequence):
-        if elem.ReferencedROINumber == roi_number:
-            del rtss.RTROIObservationsSequence[i]
-
-    return rtss
-
-
-# Return a dictionary of all the contour points of the ROI, slice by slice (if exists)
-# Key: ReferencedSOPInstanceUID, Value: ContourData
-# ContourData: It looks like a list of values, but it is composed by many 3-item coordinate sets.
-# (x, y, z)
-# More Info: https://dicom.innolitics.com/ciods/rt-structure-set/roi-contour/30060039/30060040/30060050
-def get_raw_contours(rtss, roi_name):
-    # The index of the ROI
-    roi_number = -1
-    # Create a return dictionary
-    dict_contours = {}
-    # Get the ROI index, and store it for finding the related ROI contour data
-    for i, elem in enumerate(rtss.StructureSetROISequence):
-        if roi_name == rtss.StructureSetROISequence[i].ROIName:
-            roi_number = rtss.StructureSetROISequence[i].ROINumber
-            break
-    # Loop among every ROI in the ROI contour sequence
+    dict_ROI = {}
     for roi in rtss.ROIContourSequence:
-        # Find the target ROI
-        if roi.ReferencedROINumber == roi_number:
-            # For each slice which contains the ROI
-            for slice in roi.ContourSequence:
-                # Get the identifier of current slice (with the ROI)
-                # Store it, and use it as the key of the dictionary
-                for img_seq in slice.ContourImageSequence:
-                    # print(img_seq.ReferencedSOPInstanceUID)
-                    SOP_UID = img_seq.ReferencedSOPInstanceUID
-                contour_data = slice.ContourData
-                dict_contours[SOP_UID] = contour_data
+        ROIDisplayColor = roi.ROIDisplayColor
+        ReferencedROINumber = roi.ReferencedROINumber
+        ROIName = dict_id[ReferencedROINumber]
+        dict_contour = collections.defaultdict(list)
+        for slice in roi.ContourSequence:
+            for contour_img in slice.ContourImageSequence:
+                ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
+            ContourGeometricType = slice.ContourGeometricType
+            NumberOfContourPoints = slice.NumberOfContourPoints
+            ContourData = slice.ContourData
+            dict_contour[ReferencedSOPInstanceUID].append(ContourData)
+        dict_ROI[ROIName] = dict_contour
+    return dict_ROI
+    # print(dict_ROI['REST_COMMON LUNG']['1.3.12.2.1107.5.1.4.49601.30000017081104561168700001084'])
+    # print(len(dict_ROI['REST_COMMON LUNG']['1.3.12.2.1107.5.1.4.49601.30000017081104561168700001084']))
 
-    return dict_contours
 
-
-# Get the transformation matrix from a IMAGE dataset
-def get_transform_matrix(img_ds):
+def calculate_matrix(img_ds):
     # Physical distance (in mm) between the center of each image pixel, specified by a numeric pair
     # - adjacent row spacing (delimiter) adjacent column spacing.
     dist_row = img_ds.PixelSpacing[0]
@@ -85,9 +53,9 @@ def get_transform_matrix(img_ds):
     # Equation C.7.6.2.1-1.
     # https://dicom.innolitics.com/ciods/rt-structure-set/roi-contour/30060039/30060040/30060050
     matrix_M = np.matrix(
-        [[orientation[0]*dist_row, orientation[3]*dist_col, 0, position[0]],
-         [orientation[1]*dist_row, orientation[4]*dist_col, 0, position[1]],
-         [orientation[2]*dist_row, orientation[5]*dist_col, 0, position[2]],
+        [[orientation[0] * dist_row, orientation[3] * dist_col, 0, position[0]],
+         [orientation[1] * dist_row, orientation[4] * dist_col, 0, position[1]],
+         [orientation[2] * dist_row, orientation[5] * dist_col, 0, position[2]],
          [0, 0, 0, 1]]
     )
     x = []
@@ -103,373 +71,234 @@ def get_transform_matrix(img_ds):
     return (np.array(x), np.array(y))
 
 
-def get_matrices(dict_ds):
-    # Create a dictionary to store matrices of all slices
-    dict_matrices = {}
-    for key in dict_ds:
-        ds = dict_ds[key]
-        if ds.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
-            # calculate the matrix for transforming
-            pixlut = get_transform_matrix(ds)
-            # Store it in the dict with the UID of the slice as the key
-            dict_matrices[ds.SOPInstanceUID] = pixlut
-    return dict_matrices
+def get_pixluts(dict_ds):
+    dict_pixluts = {}
+    non_img_type = ['rtdose', 'rtplan', 'rtss']
+    for ds in dict_ds:
+        if ds not in non_img_type:
+            img_ds = dict_ds[ds]
+            pixlut = calculate_matrix(img_ds)
+            dict_pixluts[img_ds.SOPInstanceUID] = pixlut
+    return dict_pixluts
 
 
-def get_contour_pixel_data(pixlut, contour, prone = False, feetfirst = False):
-    contour_pixel_data = []
-
+def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
+    pixels = []
     for i in range(0, len(contour), 3):
         for x, x_val in enumerate(pixlut[0]):
-            if(x_val > contour[i] and not prone and not feetfirst):
+            if (x_val > contour[i] and not prone and not feetfirst):
                 break
             elif (x_val < contour[i]):
                 if feetfirst or prone:
                     break
         for y, y_val in enumerate(pixlut[1]):
-            if (y_val > contour[i+1] and not prone):
+            if (y_val > contour[i + 1] and not prone):
                 break
-            elif (y_val < contour[i+1] and prone):
+            elif (y_val < contour[i + 1] and prone):
                 break
-        contour_pixel_data.append([x, y])
-    return contour_pixel_data
+        pixels.append([x, y])
+    return pixels
 
 
-def get_contours(dict_ds):
-    # Get the rt-structure set dataset
-    rtss = dict_ds['rtss']
-
-    # store all the roi names in roi_list
-    roi_info = get_roi_info(rtss)
-    roi_list = []
-    for roi in roi_info:
-        roi_list.append(roi_info[roi]['name'])
-
-    # Store all the matrices in curr_matirces dictionary
-    curr_matrices = {}
-    # for every dataset
-    for key in dict_ds:
-        ds = dict_ds[key]
-        # if it is a img dataset
-        if ds.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
-            # # if the dataset is having the current roi
-            # if ds.SOPInstanceUID in curr_slice_list:
-
-            # calculate the matrix for transforming
-            pixlut = get_transform_matrix(ds)
-            # Store it in the dict with the UID of the slice as the key
-            curr_matrices[ds.SOPInstanceUID] = pixlut
-
-    # for every roi
-    for roi_name in roi_list:
-        # Get a dict of raw contour data of current roi
-        dict_curr = get_raw_contours(rtss, roi_name)
-        # Get all the UID of slices which having current ROI
-        curr_slice_list = []
-        for key in dict_curr:
-            curr_slice_list.append(key)
-        print(curr_slice_list)
-
-    # dict_raw_contours = get_raw_contours(rtss, roi_name)
+# Get pixels of contours of all rois selected within current slice
+# Return:
+# {slice: list of pixels of all contours in this slice}
+def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice):
+    dict_pixels = {}
+    pixlut = dict_pixluts[curr_slice]
+    for roi in roi_selected:
+        dict_pixels_of_roi = collections.defaultdict(list)
+        raw_contours = dict_raw_ContourData[roi]
+        number_of_contours = len(raw_contours[curr_slice])
+        for i in range(number_of_contours):
+            contour_pixels = calculate_pixels(pixlut, raw_contours[curr_slice][i])
+            dict_pixels_of_roi[curr_slice].append(contour_pixels)
+        dict_pixels[roi] = dict_pixels_of_roi
+    # print(dict_pixels)
+    return dict_pixels
 
 
-def get_roi_list(rtss):
-    roi_list = []
-    roi_info = get_roi_info(rtss)
-    for roi in roi_info:
-        roi_list.append(roi_info[roi]['name'])
-    return roi_list
-
-# get all the contours of all rois within the patient
-# {roi:
-#       {slice: raw data}
-# }
-def get_all_raw_contours(rtss, roi_list):
-    dict_raw_contours = {}
-    for roi in roi_list:
-        curr_roi = get_raw_contours(rtss, roi)
-        dict_raw_contours[roi] = curr_roi
-    return dict_raw_contours
+class ContourItem(QtWidgets.QGraphicsScene):
+    def __init__(self, dict_rois_contours, roi_selected, curr_slice):
+        super(ContourItem, self).__init__()
+        self.addPolygon()
 
 
-# get all the transformed contour points slice by slice within a given roi
-# input raw_contours is a dictionary of raw data of current roi
-# roi is the name of the selected roi
-def get_roi_contours(raw_contours, roi, dict_matrices):
-    dict_roi_contours = {}
-    curr_roi_raw_contours = raw_contours[roi]
-    for slice in curr_roi_raw_contours:
-        raw = curr_roi_raw_contours[slice]
-        pixlut = dict_matrices[slice]
-        # Transformed is a list of (x, y) coordinates
-        transformed = get_contour_pixel_data(pixlut, raw)
-        dict_roi_contours[slice] = transformed
-    return dict_roi_contours
+class Test(QWidget):
 
-def get_transformed_pixel_contours(dict_raw_contours, dict_matrices):
+    def __init__(self, pixmap, dict_rois_contours, roi_selected, curr_slice, parent=None):
+        QWidget.__init__(self, parent)
+        self.label = QLabel()
 
-    dict_transformed_pixel_contours = {}
-    for roi in dict_raw_contours:
-        dict_curr_roi = dict_raw_contours[roi]
+        self.pixmap = pixmap
+        self.dict_rois_contours = dict_rois_contours
+        self.curr_roi = roi_selected[0]
+        self.curr_slice = curr_slice
 
-        dict_curr = {}
-        for slice in dict_curr_roi:
-            raw_contour = dict_curr_roi[slice]
-            curr_pixlut = dict_matrices[slice]
-            transformed_pixel = get_contour_pixel_data(curr_pixlut, raw_contour)
-            dict_curr[slice] = transformed_pixel
-        dict_transformed_pixel_contours[roi] = dict_curr
+        self.label.setPixmap(self.pixmap)
 
-    return dict_transformed_pixel_contours
+        self.polygons = self.calcPolygonF(self.curr_roi)
 
-##########################################
-###  THIS IS FOR SLICE BY SLICE!!! #######
-##########################################
-def get_roi_in_one_slice(dict_raw_contours, roi_list, dict_matrices, slice):
-    dict_transformed_curr_slice = {}
-    for roi in roi_list:
-        dict_curr_raw_roi = dict_raw_contours[roi]
-        print(dict_curr_raw_roi)
-        curr_slice_roi = dict_curr_raw_roi[slice]
-        print(curr_slice_roi)
-        curr_slice_matrix = dict_matrices[slice]
-        curr_transformed_roi = get_contour_pixel_data(curr_slice_matrix, curr_slice_roi)
-        print(curr_transformed_roi)
-        xs = [x[0] for x in curr_transformed_roi]
-        ys = [x[1] for x in curr_transformed_roi]
-        plt.scatter(xs, ys)
-        plt.show()
-        dict_transformed_curr_slice[roi] = curr_transformed_roi
-    return dict_transformed_curr_slice
+        self.scene = QGraphicsScene()
+        self.scene.addWidget(self.label)
+        for i in range(len(self.polygons)):
+            self.scene.addPolygon(self.polygons[i], QPen(QColor(122, 163, 39, 128)), QBrush(QColor(122, 163, 39, 128)))
+        self.view = QGraphicsView(self.scene)
+        self.view.setScene(self.scene)
 
-
-def test_slicebyslice():
-    # path = '../../../dicom_sample'
-    path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
-    dict_ds, dict_path = get_datasets(path)
-    rtss = dict_ds['rtss']
-    dict_matrices = get_matrices(dict_ds)
-    roi_list = get_roi_list(rtss)
-    dict_raw_contours = get_all_raw_contours(rtss, roi_list)
-    for slice in dict_raw_contours['REST_COMMON LUNG']:
-        print(slice)
-    print(dict_raw_contours['REST_COMMON LUNG'])
-    print(roi_list)
-    roi_names_selected = ['REST_COMMON LUNG']
-
-    curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001105'
-    dict_rois_curr_slice = get_roi_in_one_slice(dict_raw_contours, roi_names_selected, dict_matrices, curr_slice)
-
-    dict_QPolygons = {}
-    for roi in dict_rois_curr_slice:
-        list_points = dict_rois_curr_slice[roi]
-        list_QPoints = []
-        for point in list_points:
-            curr_QPoint = QPoint(point[0], point[1])
-            list_QPoints.append(curr_QPoint)
-        curr_QPolygon = QPolygonF(list_QPoints)
-        dict_QPolygons[roi] = curr_QPolygon
-    return dict_QPolygons
-
-def test():
-    path = '../../../dicom_sample'
-    dict_ds, dict_path = get_datasets(path)
-    rtss = dict_ds['rtss']
-    dict_matrices = get_matrices(dict_ds)
-    roi_list = get_roi_list(rtss)
-    dict_raw_contours = get_all_raw_contours(rtss, roi_list)
-
-    ### GTVp is the 10th ROI in the sequence
-    # (3006, 0022) ROI Number                          IS: "10"
-    # (3006, 0024) Referenced Frame of Reference UID   UI: 1.3.12.2.1107.5.1.4.100020.30000018082923183405900000003
-    # (3006, 0026) ROI Name                            LO: 'GTVp'
-    # (3006, 0036) ROI Generation Algorithm            CS: 'SEMIAUTOMATIC'
-
-    # (3006, 002a) ROI Display Color IS: ['255', '0', '0']
-    # (3006, 0040) Contour Sequence 15 item(s) - ---
-    roi_name = 'GTVp'
-    GTVp_contour = get_roi_contours(dict_raw_contours, roi_name, dict_matrices)
-    print(GTVp_contour)
-
-    qpoints = []
-    for key in GTVp_contour:
-        contour = GTVp_contour[key]
-        for point in contour:
-            curr_point = QPoint(point[0], point[1])
-            qpoints.append(curr_point)
-        break
-    polygon = QPolygonF(qpoints)
-
-    return polygon
-
-    # =====================================================================================================
-
-    # xs = []
-    # ys = []
-    # for slice in GTVp_contour:
-    #     points = GTVp_contour[slice]
-    #     for point in points:
-    #         xs.append(point[0])
-    #         ys.append(511 - point[1])
-    #     break
-    # plt.scatter(xs, ys)
-    # plt.show()
-    #
-    #
-    # temp_list = []
-    # for x, y in zip(xs, ys):
-    #     temp_list.append([x, y])
-    #
-    # polygon = np.array(temp_list)
-    # left = np.min(polygon, axis=0)
-    # right = np.max(polygon, axis=0)
-    # x = np.arange(math.ceil(left[0]), math.floor(right[0]) + 1)
-    # y = np.arange(math.ceil(left[1]), math.floor(right[1]) + 1)
-    # xv, yv = np.meshgrid(x, y, indexing='xy')
-    # points = np.hstack((xv.reshape((-1, 1)), yv.reshape((-1, 1))))
-    #
-    # path = matplotlib.path.Path(polygon)
-    # mask = path.contains_points(points)
-    # mask.shape = xv.shape
-    #
-    # plt.plot(xs, ys)
-    # plt.show()
-    # plt.imshow(mask)
-    # plt.show()
-
-
-# class Example2():
-
-class Example(QWidget):
-
-    def __init__(self, polygon):
-        super().__init__()
-        self.polygon = polygon
-        self.initUI()
-
-    def initUI(self):
-        self.setGeometry(10, 10, 512, 512)
-        self.setWindowTitle('Hi')
+        layout = QVBoxLayout()
+        layout.addWidget(self.view)
+        self.setLayout(layout)
         self.show()
 
-    def paintEvent(self, e):
-        qp = QPainter()
-        qp.begin(self)
-        qp.setBrush(QColor(122, 163, 39, 128))
-        qp.setRenderHint(QPainter.Antialiasing)
-        self.drawContour(qp)
-        qp.end()
-
-    def drawContour(self, qp):
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        path.moveTo(30, 30)
-        # path.cubicTo(30, 30, 200, 350, 350, 30)
-
-        qp.drawPath(path)
+    def calcPolygonF(self, curr_roi):
+        list_polygons = []
+        pixel_list = self.dict_rois_contours[curr_roi][self.curr_slice]
+        for i in range(len(pixel_list)):
+            list_qpoints = []
+            contour = pixel_list[i]
+            for point in contour:
+                curr_qpoint = QPoint(point[0], point[1])
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+        return list_polygons
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    dict_QPolygonF = test_slicebyslice()
-    print(dict_QPolygonF)
+# class Widget(QWidget):
+#
+#     def __init__(self, pixmap):
+#         QWidget.__init__(self)
+#         self.pixmap = pixmap
+#         self.initUI()
+#
+#     def initUI(self):
+#         self.resize(512,512)
+#         self.setWindowTitle('DICOM')
+#         self.label = QLabel(self)
+#         self.label.setPixmap(self.pixmap)
+#         self.scene = QGraphicsScene()
+#         # Add polygon found here
+#         self.scene.addWidget(self.label)
+#         self.view = QGraphicsView()
+#         self.view.setScene(self.scene)
 
-    ex1 = Example(dict_QPolygonF['REST_COMMON LUNG'])
-    # ex2 = Example(dict_QPolygonF['EYE_R'])
-    # polygon = test()
-    # ex = Example(polygon)
-
-    sys.exit(app.exec_())
 
 
+# class Example(QWidget):
+#     def __init__(self, dict_rois_contours, roi_selected, curr_slice):
+#         super().__init__()
+#         self.dict_rois_contours = dict_rois_contours
+#         # print(self.dict_rois_contours)
+#         self.roi_selected = roi_selected
+#         self.curr_slice = curr_slice
+#         self.polygons = self.calcPolygonF(roi_selected[0])
+#         self.initUI()
+#
+#     def initUI(self):
+#         self.setGeometry(10, 10, 512, 512)
+#         self.setWindowTitle('Multi')
+#         self.show()
+#
+#     def paintEvent(self, e):
+#         qp = QPainter()
+#         qp.begin(self)
+#         qp.setBrush(QColor(122, 163, 39, 128))
+#         qp.setRenderHint(QPainter.Antialiasing)
+#         self.drawContour(qp)
+#         qp.end()
+#
+#     def calcPolygonF(self, curr_roi):
+#         list_polygons = []
+#         pixel_list = self.dict_rois_contours[curr_roi][self.curr_slice]
+#         for i in range(len(pixel_list)):
+#             list_qpoints = []
+#             contour = pixel_list[i]
+#             for point in contour:
+#                 curr_qpoint = QPoint(point[0], point[1])
+#                 list_qpoints.append(curr_qpoint)
+#             curr_polygon = QPolygonF(list_qpoints)
+#             list_polygons.append(curr_polygon)
+#         return list_polygons
+#
+#     def drawContour(self, qp):
+#         curr_roi = 'REST_COMMON_LUNG'
+#         for i in range(len(self.polygons)):
+#             painter_path = QPainterPath()
+#             painter_path.addPolygon(self.polygons[i])
+#             qp.drawPath(painter_path)
 
-# # This is for get all roi at one time
-# # Sooooo slowwwwwww
+#
 # def main():
-#     path = '../../../dicom_sample'
-#     dict_ds, path = get_datasets(path)
+#     path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
+#     dict_ds, dict_path = get_datasets(path)
 #     rtss = dict_ds['rtss']
-#     dict_matrices = get_matrices(dict_ds)
-#     roi_list = get_roi_list(rtss)
-#     dict_raw_contours = get_all_raw_contours(rtss, roi_list)
-#     dict_contours = get_transformed_pixel_contours(dict_raw_contours, dict_matrices)
-#     # print(roi_list)
-#
-#     f = open("/home/xudong/Desktop/dict.txt", "w")
-#     f.write(str(dict_contours))
-#     f.close()
-#
-
-
-# def main():
-#     path = '../../../dicom_sample'
-#     dict_ds, path = get_datasets(path)
-#     rtss = dict_ds['rtss']
-#
-#     get_contours(dict_ds)
-#     ### GTVp is the 10th ROI in the sequence
-#     # (3006, 0022) ROI Number                          IS: "10"
-#     # (3006, 0024) Referenced Frame of Reference UID   UI: 1.3.12.2.1107.5.1.4.100020.30000018082923183405900000003
-#     # (3006, 0026) ROI Name                            LO: 'GTVp'
-#     # (3006, 0036) ROI Generation Algorithm            CS: 'SEMIAUTOMATIC'
-#
-#     # (3006, 002a) ROI Display Color IS: ['255', '0', '0']
-#     # (3006, 0040) Contour Sequence 15 item(s) - ---
-#
-#     roi_name = 'EYE_L'
-#
-#     dict_contours = get_raw_contours(rtss, roi_name)
-#
-#     roi_slice_list = []
-#
-#     # Get all the slice UID which contains the ROI
-#     for key in dict_contours:
-#         roi_slice_list.append(key)
-#         # print(key)
-#
-#     dict_transform_matrices = {}
-#
-#     for key in dict_ds:
-#         ds = dict_ds[key]
-#         if ds.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
-#             if ds.SOPInstanceUID in roi_slice_list:
-#                 pixlut = get_transform_matrix(ds)
-#                 dict_transform_matrices[ds.SOPInstanceUID] = pixlut
-#
-#     pixel_contours = []
-#     for key in dict_transform_matrices:
-#         contour = dict_contours[key]
-#         pixlut = dict_transform_matrices[key]
-#         contour_pixel_data = get_contour_pixel_data(pixlut, contour)
-#         # print(contour_pixel_data)
-#         pixel_contours.append(contour_pixel_data)
-#     print(len(pixel_contours))
+#     dict_raw_ContourData = get_raw_ContourData(rtss)
+#     dict_pixluts = get_pixluts(dict_ds)
+#     roi_selected = ['REST_COMMON LUNG']
+#     curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115'
+#     # Contours of selected ROIs within current slice
+#     dict_rois_contours = get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice)
 #     xs = []
 #     ys = []
-#     for point in pixel_contours[8]:
-#         xs.append(point[0])
-#         ys.append(511 - point[1])
+#     for roi in roi_selected:
+#         lists = dict_rois_contours[roi][curr_slice]
+#         print(len(lists))
+#         for list in lists:
+#             print(list)
+#             for point in list:
+#                 xs.append(point[0])
+#                 ys.append(point[1])
 #     plt.scatter(xs, ys)
 #     plt.show()
 #
 #
-#     temp_list = []
-#     for x, y in zip(xs, ys):
-#         temp_list.append([x, y])
-#
-#     polygon = np.array(temp_list)
-#     left = np.min(polygon, axis=0)
-#     right = np.max(polygon, axis=0)
-#     x = np.arange(math.ceil(left[0]), math.floor(right[0]) + 1)
-#     y = np.arange(math.ceil(left[1]), math.floor(right[1]) + 1)
-#     xv, yv = np.meshgrid(x, y, indexing='xy')
-#     points = np.hstack((xv.reshape((-1, 1)), yv.reshape((-1, 1))))
-#
-#     path = matplotlib.path.Path(polygon)
-#     mask = path.contains_points(points)
-#     mask.shape = xv.shape
-#
-#     plt.plot(xs, ys)
-#     plt.show()
-#     plt.imshow(mask)
-#     plt.show()
+#     app = QApplication(sys.argv)
+#     ex1 = Example(dict_rois_contours, roi_selected, curr_slice)
+#     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
+    dict_ds, dict_path = get_datasets(path)
+    rtss = dict_ds['rtss']
+    dict_raw_ContourData = get_raw_ContourData(rtss)
+    dict_pixluts = get_pixluts(dict_ds)
+    roi_selected = ['REST_COMMON LUNG']
+    curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115'
+    # Contours of selected ROIs within current slice
+    dict_rois_contours = get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice)
+    # xs = []
+    # ys = []
+    # for roi in roi_selected:
+    #     lists = dict_rois_contours[roi][curr_slice]
+    #     print(len(lists))
+    #     for list in lists:
+    #         print(list)
+    #         for point in list:
+    #             xs.append(point[0])
+    #             ys.append(point[1])
+    # plt.scatter(xs, ys)
+    # plt.show()
+
+    app = QApplication(sys.argv)
+
+    for key in dict_ds:
+        ds = dict_ds[key]
+        if ds.SOPInstanceUID == '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115':
+            ds.convert_pixel_data()
+            np_pixels = ds._pixel_array
+            print('HIT')
+            pixmap = scaled_pixmap(np_pixels, 1500, 400)
+            break
+
+
+    print(dict_ds[1])
+
+
+
+    # app = QApplication(sys.argv)
+    # ex1 = Example(dict_rois_contours, roi_selected, curr_slice)
+    # app.exec_()
+
+    w = Test(pixmap, dict_rois_contours, roi_selected, curr_slice)
+    app.exec_()
