@@ -251,6 +251,30 @@ def check_file_hashed(file_name, new_dict_dataset, key):
         return False,0
 
 
+
+
+# #######################   Create the NEw folder   #########################
+
+def Create_New_Folder(new_patient_folder_name, Dicom_folder_path):
+
+    
+    # getting the current working directory
+    # Dicom_file_dir = os.getcwd()
+    # Dicom_folder_path = self.path
+    SecondLastDir = os.path.dirname(Dicom_folder_path) # getting path till the second last Folder
+    # concatinating the full path of the folder to store hashed files 
+    Full_Path_Patient_folder_new = SecondLastDir + "/" + new_patient_folder_name
+    print("Full path patient new folder======", Full_Path_Patient_folder_new)
+
+    # creating the new folder
+    os.makedirs(Full_Path_Patient_folder_new)  # creating the new folder for New hashed files
+
+    print("==================NEW FOLDER CREATED=========",Full_Path_Patient_folder_new)
+    print("\n\n")
+    # src_files = os.listdir(source_path)
+
+
+
 #========================CHECK if hashed FOLDER exist=======================================
 
 def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path):
@@ -295,7 +319,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
 
     if Exist_folder == 0:
         print("Status of folder==========", Exist_folder)
-        # Create_New_Folder(new_patient_folder_name) # calling create_folder function
+        Create_New_Folder(new_patient_folder_name, Dicom_folder_path) # calling create_folder function
     
     else:
         print("Warning ::: The files for this folder is already Hashed")
