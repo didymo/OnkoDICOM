@@ -2,9 +2,10 @@ import matplotlib.pylab as plt
 from copy import deepcopy
 from PyQt5.QtGui import QTransform
 from src.Controller.pluginMController import PManager
-from src.Model.CalculateDVHs import calc_dvhs, converge_to_O_dvh
+from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
+from src.Model.ROI import *
 from src.Controller.mainPageController import MainPage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -44,12 +45,16 @@ class Ui_MainWindow(object):
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
         self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
+        self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
         self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
+        self.dict_pixluts = get_pixluts(self.dataset)
+        self.dict_raw_ContourData = get_raw_ContourData(self.dataset_rtss)
+
 
         self.zoom = 1
 
@@ -777,6 +782,7 @@ class Ui_MainWindow(object):
             RGB_dict['G'] = RGB_list[1]
             RGB_dict['B'] = RGB_list[2]
             RGB_dict['QColor'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
+            RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 128)
             roiColor[roi_id] = RGB_dict
         return roiColor
 
@@ -1139,6 +1145,7 @@ class Ui_MainWindow(object):
         DICOM_image_label.setPixmap(DICOM_image)
         self.DICOM_image_scene = QtWidgets.QGraphicsScene()
         self.DICOM_image_scene.addWidget(DICOM_image_label)
+        # TODO Comment?
         self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
@@ -1211,14 +1218,45 @@ class Ui_MainWindow(object):
 
 
     def ROI_display(self):
-        test_str = " ".join([str(roi) for roi in self.selected_rois])
-        test = QtWidgets.QGraphicsTextItem()
-        test.adjustSize()
-        test.setPos(QtCore.QPoint(250, 235))
-        test.setPlainText(test_str)
-        test.setDefaultTextColor(QtGui.QColor(255, 255, 255))
 
-        # self.DICOM_image_scene.addItem(test)
+        # for roi in self.selected_rois:
+
+        # self.label = QLabel()
+        # self.pixmap = pixmap
+        # self.label.setPixmap(self.pixmap)
+        # self.DICOM_image_scene.addWidget(self.label)
+        self.DICOM_image_display()
+        slider_id = self.slider.value()
+        curr_slice = self.dict_UID[slider_id]
+
+        selected_rois_name = []
+        for roi in self.selected_rois:
+            selected_rois_name.append(self.rois[roi]['name'])
+
+        for roi in self.selected_rois:  # 1,2,4,7
+            roi_name = self.rois[roi]['name']
+            self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name, self.dict_pixluts, curr_slice)
+            self.polygons = self.calcPolygonF(roi_name, curr_slice)
+
+
+            for i in range(len(self.polygons)):
+                color = self.roiColor[roi]['QColor_ROIdisplay']
+                self.DICOM_image_scene.addPolygon(self.polygons[i], QPen(color), QBrush(color))
+
+
+
+    def calcPolygonF(self, curr_roi, curr_slice):
+        list_polygons = []
+        pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
+        for i in range(len(pixel_list)):
+            list_qpoints = []
+            contour = pixel_list[i]
+            for point in contour:
+                curr_qpoint = QPoint(point[0], point[1])
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+        return list_polygons
 
 
     # When the value of the slider in the DICOM View changes
