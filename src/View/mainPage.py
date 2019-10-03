@@ -23,8 +23,13 @@ class Ui_MainWindow(object):
         self.rois =rois
         self.filepaths = filepaths
         self.path = path
-            #get_datasets(path)
 
+
+        # WindowWidth and WindowCenter values in the DICOM file can be either 
+        # a list or a float. The following lines of code check what instance 
+        # the values belong to and sets the window and level values accordingly
+        # The values are converted from the type pydicom.valuerep.DSfloat to
+        # int for processing later on in the program
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
             self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
@@ -35,15 +40,22 @@ class Ui_MainWindow(object):
         elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
             self.level = int(self.dataset[0].WindowCenter[1])
 
+        # Variables to check for the mouse position when altering the window and 
+        # level values
         self.x1, self.y1 = 256, 256
+
+        # Check to see if the imageWindowing.csv file exists
         if os.path.exists('src/data/csv/imageWindowing.csv'):
+            # If it exists, read data from file into the self.dict_windowing variable
             self.dict_windowing = {}
             with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
-                next(fileInput)
+                next(fileInput) # Skip headers
                 for row in fileInput:
+                    # Format: Organ - Scan - Window - Level
                     items = [item for item in row.split(',')]
                     self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
-        else:       
+        else:
+            # If csv does not exist, initialize dictionary with default values       
             self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], 
                                 "bone": [1400, 700], "brain": [160, 950],
                                "soft tissue": [400, 800], "head and neck": [275, 900]}
@@ -55,10 +67,12 @@ class Ui_MainWindow(object):
         self.file_rtdose = self.filepaths['rtdose']
         self.dataset_rtss = pydicom.dcmread(self.file_rtss)
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
+        
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
@@ -1122,7 +1136,7 @@ class Ui_MainWindow(object):
         self.DICOM_view.setBackgroundBrush(background_brush)
         self.DICOM_view.setGeometry(QtCore.QRect(0, 0, 877, 517))
         self.DICOM_view.setObjectName("DICOM_view")
-        self.DICOM_view.viewport().installEventFilter(self)
+        self.DICOM_view.viewport().installEventFilter(self) # Set event filter on the dicom_view area
 
 
     def updateDICOM_view(self, zoomChange=False, windowingChange=False):
@@ -1138,11 +1152,10 @@ class Ui_MainWindow(object):
 
         # Update settings on DICOM View
         self.textOnDICOM_View()
+        
         # Add ROI contours
         self.ROI_display()
         self.DICOM_view.setScene(self.DICOM_image_scene)
-
-
 
 
     # Display the DICOM image on the DICOM View tab
@@ -1190,30 +1203,35 @@ class Ui_MainWindow(object):
         text_imageID.setPos(QtCore.QPoint(-140, 0))
         text_imageID.setPlainText("Image: " + str(current_slice) + " / " + str(total_slices))
         text_imageID.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Position: {position_slice} mm"
         text_imagePos = QtWidgets.QGraphicsTextItem()
         text_imagePos.adjustSize()
         text_imagePos.setPos(QtCore.QPoint(-140, 20))
         text_imagePos.setPlainText("Position: " + str(slice_pos) + " mm")
         text_imagePos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "W/L: {window} / {level}" (for windowing functionality)
         text_WL = QtWidgets.QGraphicsTextItem()
         text_WL.adjustSize()
         text_WL.setPos(QtCore.QPoint(535, 0))
         text_WL.setPlainText("W/L: " + str(self.window) + "/" + str(self.level))
         text_WL.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Image size: {total_row}x{total_col} px"
         text_imageSize = QtWidgets.QGraphicsTextItem()
         text_imageSize.adjustSize()
         text_imageSize.setPos(QtCore.QPoint(-140, 450))
         text_imageSize.setPlainText("Image Size: " + str(row_image) + "x" + str(col_image) + "px")
         text_imageSize.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Zoom: {zoom}:{zoom}"
         text_zoom = QtWidgets.QGraphicsTextItem()
         text_zoom.adjustSize()
         text_zoom.setPos(QtCore.QPoint(-140, 470))
         text_zoom.setPlainText("Zoom: " + str(zoom) + ":" + str(zoom))
         text_zoom.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Patient Position: {patient_position}"
         text_patientPos = QtWidgets.QGraphicsTextItem()
         text_patientPos.adjustSize()
@@ -1280,29 +1298,48 @@ class Ui_MainWindow(object):
     # When the value of the slider in the DICOM View changes
     def valueChangeSlider(self):
         self.updateDICOM_view()
-        pass
 
-
+    # Handles mouse movement and button press events in the dicom_view area
     def eventFilter(self, source, event):
+        # If mouse moved while the right mouse button was pressed, change window and level values
         if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
             if event.buttons() == QtCore.Qt.RightButton:
+                
+                # Values of x increase from left to right
+                # Window value should increase when mouse pointer moved to right, decrease when moved to left 
+                # If the x value of the new mouse position is greater than the x value of
+                # the previous position, then increment the window value by 5, 
+                # otherwise decrement it by 5
                 if event.x() > self.x1:
                     self.window += 5
                 elif event.x() < self.x1:
                     self.window -= 5
 
+                # Values of y increase from top to bottom
+                # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
+                # If the y value of the new mouse position is greater than the y value of 
+                # the previous position then decrement the level value by 5, 
+                # otherwise increment it by 5
                 if event.y() > self.y1:
                     self.level -= 5
                 elif event.y() < self.y1:
                     self.level += 5
 
+                # Update previous position values
                 self.x1 = event.x()
                 self.y1 = event.y()
 
+                # Get id of current slice
                 id = self.slider.value()
+
+                # Create a deep copy as the pixel values are a list of list
                 np_pixels = deepcopy(self.pixel_values[id])
+
+                # Update current image based on new window and level values
                 self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
                 self.updateDICOM_view(windowingChange=True)
+        
+        # When mouse button released, update all the slices based on the new values
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
             img_data = deepcopy(self.pixel_values)
             self.pixmaps = get_pixmaps(img_data, self.window, self.level)
@@ -1437,6 +1474,7 @@ class Ui_MainWindow(object):
             self.menuWindowing.addAction(actionWindowingItem)
             actionWindowingItem.setText(_translate("MainWindow", text))
 
+    # Run pyradiomics
     def pyradiomicsHandler(self):
         self.callClass.runPyradiomics()
 
@@ -1444,16 +1482,25 @@ class Ui_MainWindow(object):
         self.callClass.runAnonymization()
 
     def setWindowingLimits(self, state, text):
+        # Get the values for window and level from the dict
         windowing_limits = self.dict_windowing[text]
+
+        # Set window and level to the new values
         self.window = windowing_limits[0]
         self.level = windowing_limits[1]
+
+        # Create a deep copy of the pixel values as they are a list of list
         img_data = deepcopy(self.pixel_values)
 
+        # Get id of current slice
         id = self.slider.value()
         np_pixels = img_data[id]
+
+        # Update current slice with the new window and level values
         self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
         self.updateDICOM_view(windowingChange=True)
 
+        # Update all the pixmaps with the updated window and level values
         self.pixmaps = get_pixmaps(img_data, self.window, self.level)
 
     def transectHandler(self):
