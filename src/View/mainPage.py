@@ -48,7 +48,6 @@ class Ui_MainWindow(object):
                                 "bone": [1400, 700], "brain": [160, 950],
                                "soft tissue": [400, 800], "head and neck": [275, 900]}
 
-        print(self.dict_windowing)
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 
