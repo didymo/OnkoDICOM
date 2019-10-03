@@ -60,6 +60,7 @@ class Ui_MainWindow(object):
         self.dicomTree_rtdose = DicomTree(self.file_rtdose)
         self.dictDicomTree_rtdose = self.dicomTree_rtdose.dict
 
+        self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths)
         self.callManager = PManager()
 
@@ -122,7 +123,7 @@ class Ui_MainWindow(object):
         self.tab2_DVH.setObjectName("tab2_DVH")
         # DVH layout
         self.widget_DVH = QtWidgets.QWidget(self.tab2_DVH)
-        self.widget_DVH.setGeometry(QtCore.QRect(0, 0, 877, 470))
+        self.widget_DVH.setGeometry(QtCore.QRect(0, 0, 877, 520))
         self.widget_DVH.setObjectName("widget_DVH")
         self.gridL_DVH = QtWidgets.QGridLayout(self.widget_DVH)
         self.gridL_DVH.setObjectName("gridL_DVH")
@@ -131,8 +132,6 @@ class Ui_MainWindow(object):
         self.initDVH_view()
         # DVH: Export DVH Button
         self.addExportDVH_button()
-        # # DVH Legend
-        # self.initDVH_legend(self.DVH_legend)
         self.tab2.addTab(self.tab2_DVH, "")
 
         #######################################
@@ -775,20 +774,35 @@ class Ui_MainWindow(object):
 
     # Initialization of colors for ROIs
     def initRoiColor(self):
-        self.allColor = HexaColor()
-        self.roiColor = dict()
+        roiColor = dict()
+
+        # ROI Display color from RTSS file
+        roiContourInfo = self.dictDicomTree_rtss['ROI Contour Sequence']
+        # for item, roi_dict in roiContourInfo.items():
+        #     id = item.split()[1]
+        #     roi_id = self.listRoisID[int(id)]
+        #     RGB_dict = dict()
+        #     RGB_list = roiContourInfo[item]['ROI Display Color'][0]
+        #     RGB_dict['R'] = RGB_list[0]
+        #     RGB_dict['G'] = RGB_list[1]
+        #     RGB_dict['B'] = RGB_list[2]
+        #     RGB_dict['QColor'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
+        #     roiColor[roi_id] = RGB_dict
+        # return roiColor
+
+        allColor = HexaColor()
         index = 0
         for key, val in self.rois.items():
             value = dict()
-            value['R'], value['G'], value['B'] = self.allColor.getHexaColor(index)
+            value['R'], value['G'], value['B'] = allColor.getHexaColor(index)
             value['QColor'] = QtGui.QColor(value['R'], value['G'], value['B'])
-            self.roiColor[key] = value
+            roiColor[key] = value
             index += 1
+        return roiColor
+
 
     # Initialization of the list of structures (left column of the main page)
     def initStructCol(self):
-        # Color squares initialization for each ROI
-        self.initRoiColor()
         # Scroll Area
         self.tab1_structures = QtWidgets.QWidget()
         self.tab1_structures.setObjectName("tab1_structures")
@@ -811,6 +825,7 @@ class Ui_MainWindow(object):
     def updateStructCol(self):
         index = 0
         for key, value in self.rois.items():
+
             # Color Square
             colorSquareLabel = QtWidgets.QLabel()
             colorSquarePix = QtGui.QPixmap(15, 15)
@@ -993,9 +1008,8 @@ class Ui_MainWindow(object):
     # Return the DVH plot 
     def DVH_view(self):
         fig, ax = plt.subplots()
-        # fig.subplots_adjust(0.1, 0.15, 1, 1)
+        fig.subplots_adjust(0.1, 0.15, 1, 1)
         max_xlim = 0
-        # legend = None
         for roi in self.selected_rois:
             dvh = self.raw_dvh[int(roi)]
             if dvh.volume != 0:
@@ -1032,7 +1046,10 @@ class Ui_MainWindow(object):
         ax.grid(which='minor', alpha=0.2)
         ax.grid(which='major', alpha=0.5)
 
-        # self.DVH_legend = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        if len(self.selected_rois) != 0:
+            ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
+
+        plt.subplots_adjust(bottom=0.3)
 
         return fig
 
@@ -1065,17 +1082,6 @@ class Ui_MainWindow(object):
                                             "font-weight: bold;\n")
         self.button_exportDVH.setObjectName("button_exportDVH")
         self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
-
-
-    def initDVH_legend(self, legend, expand=[-5, -5, 5, 5]):
-        fig = legend.figure
-        fig.canvas.draw()
-        bbox = legend.get_window_extent()
-        bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
-        bbox.transformed(fig.dpi_scale_trans.inverted())
-        self.legend_DVH_widget = FigureCanvas(fig)
-        fig.savefig("legend.png", dpi="figure", bbox_inches=bbox)
-        self.gridL_DVH.addWidget(self.legend_DVH_widget, 2, 0, 2, 1, QtCore.Qt.AlignCenter)
 
 
     ####################################
