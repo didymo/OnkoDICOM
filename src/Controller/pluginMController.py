@@ -306,6 +306,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
     def fillTables(self):
         with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
+            next(fileInput)
             i=0;
             for row in fileInput:
                 items = [
