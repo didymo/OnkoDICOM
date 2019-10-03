@@ -14,6 +14,7 @@ def convert_raw_data(ds):
             np_pixels.append(np_tmp._pixel_array)
     return np_pixels
 
+
 def get_img(pixel_array):
     dict_img = {}
     for i, np_pixels in enumerate(pixel_array):
