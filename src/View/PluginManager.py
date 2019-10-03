@@ -3,7 +3,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_PluginManager(object):
     def setupUi(self, PluginManager):
         PluginManager.setObjectName("PluginManager")
-        PluginManager.resize(766, 600)
+        PluginManager.setMinimumSize(766, 600)
+        PluginManager.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
         PluginManager.setStyleSheet("")
         self.centralwidget = QtWidgets.QWidget(PluginManager)
         self.centralwidget.setObjectName("centralwidget")
@@ -113,14 +114,16 @@ class Ui_PluginManager(object):
         self.table_roi.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_roi.setObjectName("table_roi")
         self.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.table_roi.setColumnCount(2)
+        self.table_roi.setColumnCount(3)
         self.table_roi.verticalHeader().hide()
-        self.table_roi.setHorizontalHeaderLabels([" Isodose Level (cGy) ", " ROI Name "])
+        self.table_roi.setHorizontalHeaderLabels([" Isodose Level (cGy) ", " ROI Name ", " Notes "])
         self.table_roi.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
         self.table_roi.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_roi.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
         header4 = self.table_roi.horizontalHeader()
         header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         self.table_roi.setVisible(False)
 
         self.table_Ids = QtWidgets.QTableWidget(self.centralwidget)

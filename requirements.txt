@@ -1,0 +1,9 @@
+matplotlib
+PyQt5
+pandas
+SimpleTK
+pydicom
+featureextractor
+pyradiomics
+dicompyler_core
+country-list

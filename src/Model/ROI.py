@@ -8,6 +8,28 @@ from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPi
 
 from src.Model.CalculateImages import *
 
+# Delete ROI by name
+def delete_roi(rtss, roi_name):
+    # ROINumber
+    roi_number = -1
+    # Delete related StructureSetROISequence element
+    for i, elem in enumerate(rtss.StructureSetROISequence):
+        if elem.ROIName == roi_name:
+            roi_number = rtss.StructureSetROISequence[i].ROINumber
+            del rtss.StructureSetROISequence[i]
+
+    # Delete related ROIContourSequence element
+    for i, elem in enumerate(rtss.ROIContourSequence):
+        if elem.ReferencedROINumber == roi_number:
+            del rtss.ROIContourSequence[i]
+
+    # Delete related RTROIObservationsSequence element
+    for i, elem in enumerate(rtss.RTROIObservationsSequence):
+        if elem.ReferencedROINumber == roi_number:
+            del rtss.RTROIObservationsSequence[i]
+
+    return rtss
+
 # Get raw contour data of ROI in RT Structure Set
 def get_raw_ContourData(rtss):
     # Retrieve a dictionary of ROIName & ROINumber pairs
@@ -16,7 +38,6 @@ def get_raw_ContourData(rtss):
         roi_number = elem.ROINumber
         roi_name = elem.ROIName
         dict_id[roi_number] = roi_name
-    print(dict_id)
 
     dict_ROI = {}
     for roi in rtss.ROIContourSequence:
@@ -117,11 +138,6 @@ def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_sli
     # print(dict_pixels)
     return dict_pixels
 
-
-class ContourItem(QtWidgets.QGraphicsScene):
-    def __init__(self, dict_rois_contours, roi_selected, curr_slice):
-        super(ContourItem, self).__init__()
-        self.addPolygon()
 
 
 class Test(QWidget):
@@ -292,7 +308,6 @@ if __name__ == '__main__':
             break
 
 
-    print(dict_ds[1])
 
 
 

@@ -2,9 +2,10 @@ import matplotlib.pylab as plt
 from copy import deepcopy
 from PyQt5.QtGui import QTransform
 from src.Controller.pluginMController import PManager
-from src.Model.CalculateDVHs import calc_dvhs, converge_to_O_dvh
+from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
+from src.Model.ROI import *
 from src.Controller.mainPageController import MainPage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -22,8 +23,13 @@ class Ui_MainWindow(object):
         self.rois =rois
         self.filepaths = filepaths
         self.path = path
-            #get_datasets(path)
 
+
+        # WindowWidth and WindowCenter values in the DICOM file can be either 
+        # a list or a float. The following lines of code check what instance 
+        # the values belong to and sets the window and level values accordingly
+        # The values are converted from the type pydicom.valuerep.DSfloat to
+        # int for processing later on in the program
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
             self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
@@ -34,20 +40,27 @@ class Ui_MainWindow(object):
         elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
             self.level = int(self.dataset[0].WindowCenter[1])
 
+        # Variables to check for the mouse position when altering the window and 
+        # level values
         self.x1, self.y1 = 256, 256
+
+        # Check to see if the imageWindowing.csv file exists
         if os.path.exists('src/data/csv/imageWindowing.csv'):
+            # If it exists, read data from file into the self.dict_windowing variable
             self.dict_windowing = {}
             with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
                 next(fileInput)
+                self.dict_windowing["Normal"] = [ self.window, self.level]
                 for row in fileInput:
+                    # Format: Organ - Scan - Window - Level
                     items = [item for item in row.split(',')]
                     self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
-        else:       
+        else:
+            # If csv does not exist, initialize dictionary with default values       
             self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], 
                                 "bone": [1400, 700], "brain": [160, 950],
                                "soft tissue": [400, 800], "head and neck": [275, 900]}
 
-        print(self.dict_windowing)
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 
@@ -55,13 +68,20 @@ class Ui_MainWindow(object):
         self.file_rtdose = self.filepaths['rtdose']
         self.dataset_rtss = pydicom.dcmread(self.file_rtss)
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
+        self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
+        
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
+        self.pixmapWindowing = None
+        self.dict_pixluts = get_pixluts(self.dataset)
+        self.dict_raw_ContourData = get_raw_ContourData(self.dataset_rtss)
+        self.dict_polygons = {}
 
         self.zoom = 1
 
@@ -84,8 +104,8 @@ class Ui_MainWindow(object):
 
         # Main Window
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1080, 700)
-
+        MainWindow.setMinimumSize(1080, 700)
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
         # Central Layer
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -122,11 +142,8 @@ class Ui_MainWindow(object):
         self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
         # DICOM image processing
         self.initDICOM_view()
-        self.DICOM_image_display()
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        self.updateDICOM_view()
         self.gridLayout_view.addWidget(self.DICOM_view, 0, 0, 1, 1)
-
         self.tab2.addTab(self.tab2_view, "")
 
         #######################################
@@ -763,22 +780,14 @@ class Ui_MainWindow(object):
     def zoomIn(self):
 
         self.zoom *= 1.05
-        self.updateViewAfterZoom()
+        self.updateDICOM_view(zoomChange=True)
 
 
     # DICOM Image Zoom Out
     def zoomOut(self):
 
         self.zoom /= 1.05
-        self.updateViewAfterZoom()
-
-
-    # Update DICOM Image view after zooming
-    def updateViewAfterZoom(self):
-        self.DICOM_image_display()
-        self.DICOM_view.setTransform(QTransform().scale(self.zoom, self.zoom))
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        self.updateDICOM_view(zoomChange=True)
 
 
     #################################################
@@ -800,6 +809,7 @@ class Ui_MainWindow(object):
             RGB_dict['G'] = RGB_list[1]
             RGB_dict['B'] = RGB_list[2]
             RGB_dict['QColor'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
+            RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 128)
             roiColor[roi_id] = RGB_dict
         return roiColor
 
@@ -888,6 +898,7 @@ class Ui_MainWindow(object):
 
         # Update the DVH view
         self.updateDVH_view()
+        self.updateDICOM_view()
 
 
     # Initialize the list of isodoses (left column of the main page)
@@ -1126,18 +1137,41 @@ class Ui_MainWindow(object):
         self.DICOM_view.setBackgroundBrush(background_brush)
         self.DICOM_view.setGeometry(QtCore.QRect(0, 0, 877, 517))
         self.DICOM_view.setObjectName("DICOM_view")
-        self.DICOM_view.viewport().installEventFilter(self)
+        self.DICOM_view.viewport().installEventFilter(self) # Set event filter on the dicom_view area
+
+
+    def updateDICOM_view(self, zoomChange=False, windowingChange=False):
+        # Display DICOM image
+        if windowingChange:
+            self.DICOM_image_display(windowingChange=True)
+        else:
+            self.DICOM_image_display()
+
+        # Change zoom if needed
+        if zoomChange:
+            self.DICOM_view.setTransform(QTransform().scale(self.zoom, self.zoom))
+
+        # Update settings on DICOM View
+        self.textOnDICOM_View()
+        
+        # Add ROI contours
+        self.ROI_display()
+        self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
     # Display the DICOM image on the DICOM View tab
-    def DICOM_image_display(self):
+    def DICOM_image_display(self, windowingChange=False):
         slider_id = self.slider.value()
-        DICOM_image = self.pixmaps[slider_id]
+        if windowingChange:
+            DICOM_image = self.pixmapWindowing
+        else:
+            DICOM_image = self.pixmaps[slider_id]
         DICOM_image = DICOM_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         DICOM_image_label = QtWidgets.QLabel()
         DICOM_image_label.setPixmap(DICOM_image)
         self.DICOM_image_scene = QtWidgets.QGraphicsScene()
         self.DICOM_image_scene.addWidget(DICOM_image_label)
+        # TODO Comment?
         self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
@@ -1170,30 +1204,35 @@ class Ui_MainWindow(object):
         text_imageID.setPos(QtCore.QPoint(-140, 0))
         text_imageID.setPlainText("Image: " + str(current_slice) + " / " + str(total_slices))
         text_imageID.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Position: {position_slice} mm"
         text_imagePos = QtWidgets.QGraphicsTextItem()
         text_imagePos.adjustSize()
         text_imagePos.setPos(QtCore.QPoint(-140, 20))
         text_imagePos.setPlainText("Position: " + str(slice_pos) + " mm")
         text_imagePos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "W/L: {window} / {level}" (for windowing functionality)
         text_WL = QtWidgets.QGraphicsTextItem()
         text_WL.adjustSize()
         text_WL.setPos(QtCore.QPoint(535, 0))
         text_WL.setPlainText("W/L: " + str(self.window) + "/" + str(self.level))
         text_WL.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Image size: {total_row}x{total_col} px"
         text_imageSize = QtWidgets.QGraphicsTextItem()
         text_imageSize.adjustSize()
         text_imageSize.setPos(QtCore.QPoint(-140, 450))
         text_imageSize.setPlainText("Image Size: " + str(row_image) + "x" + str(col_image) + "px")
         text_imageSize.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Zoom: {zoom}:{zoom}"
         text_zoom = QtWidgets.QGraphicsTextItem()
         text_zoom.adjustSize()
         text_zoom.setPos(QtCore.QPoint(-140, 470))
         text_zoom.setPlainText("Zoom: " + str(zoom) + ":" + str(zoom))
         text_zoom.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Patient Position: {patient_position}"
         text_patientPos = QtWidgets.QGraphicsTextItem()
         text_patientPos.adjustSize()
@@ -1209,40 +1248,99 @@ class Ui_MainWindow(object):
         self.DICOM_image_scene.addItem(text_zoom)
 
 
+    def ROI_display(self):
+        self.DICOM_image_display()
+        slider_id = self.slider.value()
+        curr_slice = self.dict_UID[slider_id]
+
+        selected_rois_name = []
+        for roi in self.selected_rois:
+            selected_rois_name.append(self.rois[roi]['name'])
+
+        for roi in self.selected_rois:
+            roi_name = self.rois[roi]['name']
+
+            if roi_name not in self.dict_polygons.keys():
+                self.dict_polygons[roi_name] = {}
+                self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name,
+                                                            self.dict_pixluts, curr_slice)
+                polygons = self.calcPolygonF(roi_name, curr_slice)
+                self.dict_polygons[roi_name][curr_slice] = polygons
+
+            elif curr_slice not in self.dict_polygons[roi_name].keys():
+                self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name,
+                                                            self.dict_pixluts, curr_slice)
+                polygons = self.calcPolygonF(roi_name, curr_slice)
+                self.dict_polygons[roi_name][curr_slice] = polygons
+
+            else:
+                polygons = self.dict_polygons[roi_name][curr_slice]
+
+            for i in range(len(polygons)):
+                color = self.roiColor[roi]['QColor_ROIdisplay']
+                self.DICOM_image_scene.addPolygon(polygons[i], QPen(color), QBrush(color))
+
+
+
+    def calcPolygonF(self, curr_roi, curr_slice):
+        list_polygons = []
+        pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
+        for i in range(len(pixel_list)):
+            list_qpoints = []
+            contour = pixel_list[i]
+            for point in contour:
+                curr_qpoint = QPoint(point[0], point[1])
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+        return list_polygons
+
+
     # When the value of the slider in the DICOM View changes
     def valueChangeSlider(self):
-        self.DICOM_image_display()
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
-        pass
+        self.updateDICOM_view()
 
-
+    # Handles mouse movement and button press events in the dicom_view area
     def eventFilter(self, source, event):
+        # If mouse moved while the right mouse button was pressed, change window and level values
         if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
             if event.buttons() == QtCore.Qt.RightButton:
+                
+                # Values of x increase from left to right
+                # Window value should increase when mouse pointer moved to right, decrease when moved to left 
+                # If the x value of the new mouse position is greater than the x value of
+                # the previous position, then increment the window value by 5, 
+                # otherwise decrement it by 5
                 if event.x() > self.x1:
                     self.window += 5
                 elif event.x() < self.x1:
                     self.window -= 5
 
+                # Values of y increase from top to bottom
+                # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
+                # If the y value of the new mouse position is greater than the y value of 
+                # the previous position then decrement the level value by 5, 
+                # otherwise increment it by 5
                 if event.y() > self.y1:
                     self.level -= 5
                 elif event.y() < self.y1:
                     self.level += 5
 
+                # Update previous position values
                 self.x1 = event.x()
                 self.y1 = event.y()
 
+                # Get id of current slice
                 id = self.slider.value()
-                np_pixels = deepcopy(self.pixel_values[id])
-                pixmap = scaled_pixmap(np_pixels, self.window, self.level)
 
-                DICOM_image_label = QtWidgets.QLabel()
-                DICOM_image_label.setPixmap(pixmap)
-                self.DICOM_image_scene = QtWidgets.QGraphicsScene()
-                self.DICOM_image_scene.addWidget(DICOM_image_label)
-                self.textOnDICOM_View()
-                self.DICOM_view.setScene(self.DICOM_image_scene)
+                # Create a deep copy as the pixel values are a list of list
+                np_pixels = deepcopy(self.pixel_values[id])
+
+                # Update current image based on new window and level values
+                self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
+                self.updateDICOM_view(windowingChange=True)
+        
+        # When mouse button released, update all the slices based on the new values
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
             img_data = deepcopy(self.pixel_values)
             self.pixmaps = get_pixmaps(img_data, self.window, self.level)
@@ -1377,6 +1475,7 @@ class Ui_MainWindow(object):
             self.menuWindowing.addAction(actionWindowingItem)
             actionWindowingItem.setText(_translate("MainWindow", text))
 
+    # Run pyradiomics
     def pyradiomicsHandler(self):
         self.callClass.runPyradiomics()
 
@@ -1384,22 +1483,25 @@ class Ui_MainWindow(object):
         self.callClass.runAnonymization()
 
     def setWindowingLimits(self, state, text):
+        # Get the values for window and level from the dict
         windowing_limits = self.dict_windowing[text]
+
+        # Set window and level to the new values
         self.window = windowing_limits[0]
         self.level = windowing_limits[1]
+
+        # Create a deep copy of the pixel values as they are a list of list
         img_data = deepcopy(self.pixel_values)
 
+        # Get id of current slice
         id = self.slider.value()
         np_pixels = img_data[id]
-        pixmap = scaled_pixmap(np_pixels, self.window, self.level)
 
-        DICOM_image_label = QtWidgets.QLabel()
-        DICOM_image_label.setPixmap(pixmap)
-        self.DICOM_image_scene = QtWidgets.QGraphicsScene()
-        self.DICOM_image_scene.addWidget(DICOM_image_label)
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        # Update current slice with the new window and level values
+        self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
+        self.updateDICOM_view(windowingChange=True)
 
+        # Update all the pixmaps with the updated window and level values
         self.pixmaps = get_pixmaps(img_data, self.window, self.level)
 
     def transectHandler(self):

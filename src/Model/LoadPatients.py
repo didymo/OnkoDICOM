@@ -11,15 +11,12 @@ import re
 import logging
 import pydicom
 import os
-
+from PyQt5 import QtCore, QtWidgets
 
 
 # For sorting dicom file names by numbers
 # Input is a list of dcm file names.
 # Return the sorted list of all file names.
-from PyQt5 import QtCore, QtWidgets
-
-
 def natural_sort(file_list):
     # Logger info
     print('Natural Sorting...')
@@ -28,6 +25,7 @@ def natural_sort(file_list):
     return sorted(file_list, key=alphanum_key)
 
 
+# 
 def get_datasets(path):
     """
     :param path: str
@@ -51,19 +49,27 @@ def get_datasets(path):
     for file in dcm_files:
         # If file exists and the first two letters in the name are CT, RD, RP, RS, or RT
         if os.path.isfile(file) and os.path.basename(file)[0:2].upper() in ['CT', 'RD', 'RP', 'RS', 'RT']:
-            read_file = pydicom.dcmread(file)
-            if read_file.Modality == 'CT':
-                read_data_dict[i] = read_file
-                file_names_dict[i] = file
-                i += 1
-            elif read_file.Modality == 'RTSTRUCT':
-                read_data_dict['rtss'] = read_file
-                file_names_dict['rtss'] = file
-            elif read_file.Modality == 'RTDOSE':
-                read_data_dict['rtdose'] = read_file
-                file_names_dict['rtdose'] = file
-            elif read_file.Modality == 'RTPLAN':
-                read_data_dict['rtplan'] = read_file
-                file_names_dict['rtplan'] = file
+            try:
+                read_file = pydicom.dcmread(file)
+            except:
+                print('ERROR: Cannot read file ' + file)
+            else:
+                if read_file.Modality == 'CT':
+                    read_data_dict[i] = read_file
+                    file_names_dict[i] = file
+                    i += 1
+                elif read_file.Modality == 'RTSTRUCT':
+                    read_data_dict['rtss'] = read_file
+                    file_names_dict['rtss'] = file
+                elif read_file.Modality == 'RTDOSE':
+                    read_data_dict['rtdose'] = read_file
+                    file_names_dict['rtdose'] = file
+                elif read_file.Modality == 'RTPLAN':
+                    read_data_dict['rtplan'] = read_file
+                    file_names_dict['rtplan'] = file
 
     return read_data_dict, file_names_dict
+
+if __name__ == '__main__':
+    file = '/home/sohaib/992/test'
+    get_datasets(file)
