@@ -17,13 +17,14 @@ import os
 # For sorting dicom file names by numbers
 # Input is a list of dcm file names.
 # Return the sorted list of all file names.
+from PyQt5 import QtCore, QtWidgets
 
 
 def natural_sort(file_list):
     # Logger info
     print('Natural Sorting...')
     convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
     return sorted(file_list, key=alphanum_key)
 
 
@@ -44,7 +45,7 @@ def get_datasets(path):
 
     # Sort files based on name
     dcm_files = natural_sort(glob.glob(path + '/*'))
-    i = 0 # For key values for ct images
+    i = 0  # For key values for ct images
 
     # For each file in path
     for file in dcm_files:
