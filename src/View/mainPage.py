@@ -90,8 +90,8 @@ class Ui_MainWindow(object):
 
         # Main Window
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1080, 700)
-
+        MainWindow.setMinimumSize(1080, 700)
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
         # Central Layer
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")

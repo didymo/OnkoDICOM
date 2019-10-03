@@ -3,7 +3,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_PluginManager(object):
     def setupUi(self, PluginManager):
         PluginManager.setObjectName("PluginManager")
-        PluginManager.resize(766, 600)
+        PluginManager.setMinimumSize(766, 600)
+        PluginManager.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
         PluginManager.setStyleSheet("")
         self.centralwidget = QtWidgets.QWidget(PluginManager)
         self.centralwidget.setObjectName("centralwidget")

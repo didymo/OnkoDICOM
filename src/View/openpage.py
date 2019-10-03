@@ -14,7 +14,8 @@ class WelcomePage(object):
 
     def setupUi(self, WelcomePage):
         WelcomePage.setObjectName("WelcomePage")
-        WelcomePage.resize(844, 528)
+        WelcomePage.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
+        WelcomePage.setMinimumSize(844, 528)
         WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
         self.centralwidget.setObjectName("centralwidget")
@@ -42,13 +43,7 @@ class WelcomePage(object):
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
         WelcomePage.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(WelcomePage)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 844, 22))
-        self.menubar.setObjectName("menubar")
-        WelcomePage.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(WelcomePage)
-        self.statusbar.setObjectName("statusbar")
-        WelcomePage.setStatusBar(self.statusbar)
+       # self.centralwidget.resizeEvent()
 
         self.retranslateUi(WelcomePage)
         QtCore.QMetaObject.connectSlotsByName(WelcomePage)
