@@ -689,7 +689,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 ######################################################
 
 class Transect(QtWidgets.QGraphicsScene):
-    def __init__(self, imagetoPaint, dataset, rowS, colS, tabWindow):
+    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
         super(Transect, self).__init__()
 
         self.addItem(QGraphicsPixmapItem(imagetoPaint))
@@ -705,6 +705,7 @@ class Transect(QtWidgets.QGraphicsScene):
         self.pos2 = QPoint()
         self.points = []
         self.tabWindow = tabWindow
+        self.mainWindow = mainWindow
 
     def mousePressEvent(self, event):
         if self.drawing == True:
@@ -773,13 +774,9 @@ class Transect(QtWidgets.QGraphicsScene):
     def on_close(self, event):
 
         plt1.close()
-        pixmap = self.img
-        pixmap = pixmap.scaled(512, 512, QtCore.Qt.KeepAspectRatio)
-        DICOM_image_label = QtWidgets.QLabel()
-        DICOM_image_label.setPixmap(pixmap)
-        DICOM_image_scene = QtWidgets.QGraphicsScene()
-        DICOM_image_scene.addWidget(DICOM_image_label)
-        self.tabWindow.setScene(DICOM_image_scene)
+        self.mainWindow.DICOM_image_display()
+        self.mainWindow.textOnDICOM_View()
+        self.tabWindow.setScene(self.mainWindow.DICOM_image_scene)
         event.canvas.figure.axes[0].has_been_closed = True
 
     def plotResult(self):
@@ -824,6 +821,6 @@ class MainPage:
         self.tab_cd = ClinicalDataDisplay(tabWindow, file_path)
         tabWindow.addTab(self.tab_cd, "")
 
-    def runTransect(self, tabWindow, imagetoPaint, dataset, rowS, colS):
-        self.tab_ct = Transect(imagetoPaint, dataset, rowS, colS, tabWindow)
+    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
+        self.tab_ct = Transect(mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow)
         tabWindow.setScene(self.tab_ct)
