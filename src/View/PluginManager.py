@@ -12,11 +12,12 @@ class Ui_PluginManager(object):
         self.optionTitle.setStyleSheet("font: 57 12pt \"Ubuntu\";\n"
                                        "font-weight: bold;")
         self.optionTitle.setObjectName("optionTitle")
-        self.table_modules = QtWidgets.QTableWidget(self.centralwidget)
-        self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        self.table_modules = QtWidgets.QLabel(self.centralwidget)
+        self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 70))
         self.table_modules.setObjectName("table_modules")
-        self.table_modules.setStyleSheet("background-color: rgb(255, 255, 255);")
-
+        self.table_modules.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
+                                          "color:rgb(0,0,0);\n")
+        self.table_modules.setText(" Here are listed all the user plugins used in Onko. By using \n Plugin Manager you will be able to Add/Modify/Delete the \n settings for the displayed plugins on the left. ")
         # buttons per view
         self.add_new_window = QtWidgets.QPushButton(self.centralwidget)
         self.add_new_window.setGeometry(QtCore.QRect(598, 470, 141, 31))
@@ -123,7 +124,7 @@ class Ui_PluginManager(object):
         self.table_roi.setVisible(False)
 
         self.table_Ids = QtWidgets.QTableWidget(self.centralwidget)
-        self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 410))
+        self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_Ids.setObjectName("table_Ids")
         self.table_Ids.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_Ids.setColumnCount(2)
@@ -135,7 +136,12 @@ class Ui_PluginManager(object):
         header5.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header5.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_Ids.setVisible(False)
-
+        self.note=QtWidgets.QLabel(self.centralwidget)
+        self.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
+        self.note.setObjectName('note')
+        self.note.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
+                                        "color:rgb(255,0,0)")
+        self.note.setVisible(False)
         self.cancel_button = QtWidgets.QPushButton(self.centralwidget)
         self.cancel_button.setGeometry(QtCore.QRect(638, 554, 101, 31))
         self.cancel_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
@@ -157,7 +163,6 @@ class Ui_PluginManager(object):
         self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
         PluginManager.setCentralWidget(self.centralwidget)
         self.treeList.setHeaderHidden(True)
-        self.table_modules.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
@@ -170,7 +175,8 @@ class Ui_PluginManager(object):
     def retranslateUi(self, PluginManager):
         _translate = QtCore.QCoreApplication.translate
         PluginManager.setWindowTitle(_translate("PluginManager", "Plugin Manager"))
-        self.optionTitle.setText(_translate("PluginManager", ""))
+        self.optionTitle.setText(_translate("PluginManager", "User Plugins"))
+        self.note.setText(_translate("PluginManager", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
         self.cancel_button.setText(_translate("PluginManager", "Cancel"))
         self.apply_button.setText(_translate("PluginManager", "Apply"))
         self.add_new_window.setText(_translate("PluginManager", "Add New Window"))
