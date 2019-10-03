@@ -52,6 +52,19 @@ def get_basic_info(ds):
     return dict_basic_info
 
 
+# Return a dictionary where key = index of the slice and value is the Instance UID
+def dict_instanceUID(dict_ds):
+    res = {}
+    non_img_type = ['rtdose', 'rtplan', 'rtss']
+
+    for ds in dict_ds:
+        if ds not in non_img_type:
+            index = int(ds)
+            img_ds = dict_ds[ds]
+            res[index] = img_ds.SOPInstanceUID
+    return res
+
+
 # =========   This is a class for DICOM TREE   ===============
 class DicomTree(object):
     def __init__(self, filename):
