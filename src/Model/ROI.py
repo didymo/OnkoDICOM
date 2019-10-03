@@ -16,7 +16,6 @@ def get_raw_ContourData(rtss):
         roi_number = elem.ROINumber
         roi_name = elem.ROIName
         dict_id[roi_number] = roi_name
-    print(dict_id)
 
     dict_ROI = {}
     for roi in rtss.ROIContourSequence:

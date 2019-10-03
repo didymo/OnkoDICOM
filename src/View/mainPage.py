@@ -2,9 +2,10 @@ import matplotlib.pylab as plt
 from copy import deepcopy
 from PyQt5.QtGui import QTransform
 from src.Controller.pluginMController import PManager
-from src.Model.CalculateDVHs import calc_dvhs, converge_to_O_dvh
+from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
+from src.Model.ROI import *
 from src.Controller.mainPageController import MainPage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -57,11 +58,16 @@ class Ui_MainWindow(object):
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
+        self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
+        self.pixmapWindowing = None
+        self.dict_pixluts = get_pixluts(self.dataset)
+        self.dict_raw_ContourData = get_raw_ContourData(self.dataset_rtss)
+
 
         self.zoom = 1
 
@@ -122,11 +128,8 @@ class Ui_MainWindow(object):
         self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
         # DICOM image processing
         self.initDICOM_view()
-        self.DICOM_image_display()
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        self.updateDICOM_view()
         self.gridLayout_view.addWidget(self.DICOM_view, 0, 0, 1, 1)
-
         self.tab2.addTab(self.tab2_view, "")
 
         #######################################
@@ -763,22 +766,14 @@ class Ui_MainWindow(object):
     def zoomIn(self):
 
         self.zoom *= 1.05
-        self.updateViewAfterZoom()
+        self.updateDICOM_view(zoomChange=True)
 
 
     # DICOM Image Zoom Out
     def zoomOut(self):
 
         self.zoom /= 1.05
-        self.updateViewAfterZoom()
-
-
-    # Update DICOM Image view after zooming
-    def updateViewAfterZoom(self):
-        self.DICOM_image_display()
-        self.DICOM_view.setTransform(QTransform().scale(self.zoom, self.zoom))
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        self.updateDICOM_view(zoomChange=True)
 
 
     #################################################
@@ -800,6 +795,7 @@ class Ui_MainWindow(object):
             RGB_dict['G'] = RGB_list[1]
             RGB_dict['B'] = RGB_list[2]
             RGB_dict['QColor'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
+            RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 128)
             roiColor[roi_id] = RGB_dict
         return roiColor
 
@@ -888,6 +884,7 @@ class Ui_MainWindow(object):
 
         # Update the DVH view
         self.updateDVH_view()
+        self.updateDICOM_view()
 
 
     # Initialize the list of isodoses (left column of the main page)
@@ -1129,15 +1126,39 @@ class Ui_MainWindow(object):
         self.DICOM_view.viewport().installEventFilter(self)
 
 
+    def updateDICOM_view(self, zoomChange=False, windowingChange=False):
+        # Display DICOM image
+        if windowingChange:
+            self.DICOM_image_display(windowingChange=True)
+        else:
+            self.DICOM_image_display()
+
+        # Change zoom if needed
+        if zoomChange:
+            self.DICOM_view.setTransform(QTransform().scale(self.zoom, self.zoom))
+
+        # Update settings on DICOM View
+        self.textOnDICOM_View()
+        # Add ROI contours
+        self.ROI_display()
+        self.DICOM_view.setScene(self.DICOM_image_scene)
+
+
+
+
     # Display the DICOM image on the DICOM View tab
-    def DICOM_image_display(self):
+    def DICOM_image_display(self, windowingChange=False):
         slider_id = self.slider.value()
-        DICOM_image = self.pixmaps[slider_id]
+        if windowingChange:
+            DICOM_image = self.pixmapWindowing
+        else:
+            DICOM_image = self.pixmaps[slider_id]
         DICOM_image = DICOM_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         DICOM_image_label = QtWidgets.QLabel()
         DICOM_image_label.setPixmap(DICOM_image)
         self.DICOM_image_scene = QtWidgets.QGraphicsScene()
         self.DICOM_image_scene.addWidget(DICOM_image_label)
+        # TODO Comment?
         self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
@@ -1209,11 +1230,51 @@ class Ui_MainWindow(object):
         self.DICOM_image_scene.addItem(text_zoom)
 
 
+    def ROI_display(self):
+
+        # for roi in self.selected_rois:
+
+        # self.label = QLabel()
+        # self.pixmap = pixmap
+        # self.label.setPixmap(self.pixmap)
+        # self.DICOM_image_scene.addWidget(self.label)
+        self.DICOM_image_display()
+        slider_id = self.slider.value()
+        curr_slice = self.dict_UID[slider_id]
+
+        selected_rois_name = []
+        for roi in self.selected_rois:
+            selected_rois_name.append(self.rois[roi]['name'])
+
+        for roi in self.selected_rois:  # 1,2,4,7
+            roi_name = self.rois[roi]['name']
+            self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name, self.dict_pixluts, curr_slice)
+            self.polygons = self.calcPolygonF(roi_name, curr_slice)
+
+
+            for i in range(len(self.polygons)):
+                color = self.roiColor[roi]['QColor_ROIdisplay']
+                self.DICOM_image_scene.addPolygon(self.polygons[i], QPen(color), QBrush(color))
+
+
+
+    def calcPolygonF(self, curr_roi, curr_slice):
+        list_polygons = []
+        pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
+        for i in range(len(pixel_list)):
+            list_qpoints = []
+            contour = pixel_list[i]
+            for point in contour:
+                curr_qpoint = QPoint(point[0], point[1])
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+        return list_polygons
+
+
     # When the value of the slider in the DICOM View changes
     def valueChangeSlider(self):
-        self.DICOM_image_display()
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        self.updateDICOM_view()
         pass
 
 
@@ -1235,14 +1296,8 @@ class Ui_MainWindow(object):
 
                 id = self.slider.value()
                 np_pixels = deepcopy(self.pixel_values[id])
-                pixmap = scaled_pixmap(np_pixels, self.window, self.level)
-
-                DICOM_image_label = QtWidgets.QLabel()
-                DICOM_image_label.setPixmap(pixmap)
-                self.DICOM_image_scene = QtWidgets.QGraphicsScene()
-                self.DICOM_image_scene.addWidget(DICOM_image_label)
-                self.textOnDICOM_View()
-                self.DICOM_view.setScene(self.DICOM_image_scene)
+                self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
+                self.updateDICOM_view(windowingChange=True)
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
             img_data = deepcopy(self.pixel_values)
             self.pixmaps = get_pixmaps(img_data, self.window, self.level)
@@ -1391,14 +1446,8 @@ class Ui_MainWindow(object):
 
         id = self.slider.value()
         np_pixels = img_data[id]
-        pixmap = scaled_pixmap(np_pixels, self.window, self.level)
-
-        DICOM_image_label = QtWidgets.QLabel()
-        DICOM_image_label.setPixmap(pixmap)
-        self.DICOM_image_scene = QtWidgets.QGraphicsScene()
-        self.DICOM_image_scene.addWidget(DICOM_image_label)
-        self.textOnDICOM_View()
-        self.DICOM_view.setScene(self.DICOM_image_scene)
+        self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
+        self.updateDICOM_view(windowingChange=True)
 
         self.pixmaps = get_pixmaps(img_data, self.window, self.level)
 
