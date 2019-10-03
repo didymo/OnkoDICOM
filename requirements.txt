@@ -1,1 +1,9 @@
-pip3 install country-list
+matplotlib
+PyQt5
+pandas
+SimpleTK
+pydicom
+featureextractor
+pyradiomics
+dicompyler_core
+country-list
