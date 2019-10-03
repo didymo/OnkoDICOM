@@ -778,27 +778,27 @@ class Ui_MainWindow(object):
 
         # ROI Display color from RTSS file
         roiContourInfo = self.dictDicomTree_rtss['ROI Contour Sequence']
-        # for item, roi_dict in roiContourInfo.items():
-        #     id = item.split()[1]
-        #     roi_id = self.listRoisID[int(id)]
-        #     RGB_dict = dict()
-        #     RGB_list = roiContourInfo[item]['ROI Display Color'][0]
-        #     RGB_dict['R'] = RGB_list[0]
-        #     RGB_dict['G'] = RGB_list[1]
-        #     RGB_dict['B'] = RGB_list[2]
-        #     RGB_dict['QColor'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
-        #     roiColor[roi_id] = RGB_dict
-        # return roiColor
-
-        allColor = HexaColor()
-        index = 0
-        for key, val in self.rois.items():
-            value = dict()
-            value['R'], value['G'], value['B'] = allColor.getHexaColor(index)
-            value['QColor'] = QtGui.QColor(value['R'], value['G'], value['B'])
-            roiColor[key] = value
-            index += 1
+        for item, roi_dict in roiContourInfo.items():
+            id = item.split()[1]
+            roi_id = self.listRoisID[int(id)]
+            RGB_dict = dict()
+            RGB_list = roiContourInfo[item]['ROI Display Color'][0]
+            RGB_dict['R'] = RGB_list[0]
+            RGB_dict['G'] = RGB_list[1]
+            RGB_dict['B'] = RGB_list[2]
+            RGB_dict['QColor'] = QtGui.QColor(RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
+            roiColor[roi_id] = RGB_dict
         return roiColor
+
+        # allColor = HexaColor()
+        # index = 0
+        # for key, val in self.rois.items():
+        #     value = dict()
+        #     value['R'], value['G'], value['B'] = allColor.getHexaColor(index)
+        #     value['QColor'] = QtGui.QColor(value['R'], value['G'], value['B'])
+        #     roiColor[key] = value
+        #     index += 1
+        # return roiColor
 
 
     # Initialization of the list of structures (left column of the main page)
