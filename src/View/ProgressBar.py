@@ -43,7 +43,7 @@ class Extended(QtCore.QThread):
 
 
     def my_callback(self, temp_file_size):
-        percent = int(temp_file_size/self.file_size*30)
+        percent = int(temp_file_size/self.file_size*10)
         if percent < self.previous or percent == 100:
             percent = self.previous
         elif percent == self.previous and percent < 98:
