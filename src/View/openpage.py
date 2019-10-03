@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
 
 class WelcomePage(object):
@@ -15,7 +15,7 @@ class WelcomePage(object):
     def setupUi(self, WelcomePage):
         WelcomePage.setObjectName("WelcomePage")
         WelcomePage.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
-        WelcomePage.setMinimumSize(844, 528)
+        WelcomePage.setFixedSize(844, 528)
         WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
         self.centralwidget.setObjectName("centralwidget")
@@ -42,6 +42,8 @@ class WelcomePage(object):
         self.logo.setPixmap(QtGui.QPixmap("src/Icon/logo.png"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
+
+
         WelcomePage.setCentralWidget(self.centralwidget)
        # self.centralwidget.resizeEvent()
 
