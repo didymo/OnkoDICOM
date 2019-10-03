@@ -21,20 +21,29 @@ class Ui_MainWindow(object):
         self.dataset, self.filepaths = get_datasets(path)
 
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
-            self.window = self.dataset[0].WindowWidth
+            self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
-            self.window = self.dataset[0].WindowWidth[1]
+            self.window = int(self.dataset[0].WindowWidth[1])
         
         if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):    
-            self.level = self.dataset[0].WindowCenter
+            self.level = int(self.dataset[0].WindowCenter)
         elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            self.level = self.dataset[0].WindowCenter[1]
+            self.level = int(self.dataset[0].WindowCenter[1])
 
         self.x1, self.y1 = 256, 256
-        self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], "bone": [1400, 700],
-                               "brain": [180, 950],
+        if os.path.exists('src/data/csv/imageWindowing.csv'):
+            self.dict_windowing = {}
+            with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
+                next(fileInput)
+                for row in fileInput:
+                    items = [item for item in row.split(',')]
+                    self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
+        else:       
+            self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], 
+                                "bone": [1400, 700], "brain": [160, 950],
                                "soft tissue": [400, 800], "head and neck": [275, 900]}
 
+        print(self.dict_windowing)
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 

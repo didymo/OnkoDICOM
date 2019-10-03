@@ -31,7 +31,7 @@ class Ui_PluginManager(object):
         self.table_view.setObjectName("table_view")
         self.table_view.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_view.setColumnCount(4)
-        self.table_view.setHorizontalHeaderLabels([" Window Name ", " Scan ", " Upper Value ", " Lower Value "])
+        self.table_view.setHorizontalHeaderLabels([" Window Name ", " Scan ", " Window ", " Level "])
         self.table_view.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
         self.table_view.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
         self.table_view.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)

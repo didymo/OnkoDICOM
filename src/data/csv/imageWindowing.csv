@@ -1,1 +1,6 @@
-Lung,CT,2152,52Bone,CT,1401,500Soft Tissue,CT,1680,34
+Organ,,Window,Level
+Lung,CT,1600,-300
+Bone,CT,1401,700
+Soft Tissue,CT,440,800
+Brain,CT,160,950
+Head & Neck,CT,275,900
