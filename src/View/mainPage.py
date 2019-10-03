@@ -12,30 +12,43 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, path):
+    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy):
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-
+        self.dataset = dataset
+        self.raw_dvh = raw_dvh
+        self.dvh_x_y = dvhxy
+        self.rois =rois
+        self.filepaths = filepaths
         self.path = path
-        self.dataset, self.filepaths = get_datasets(path)
+            #get_datasets(path)
 
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
-            self.window = self.dataset[0].WindowWidth
+            self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
-            self.window = self.dataset[0].WindowWidth[1]
+            self.window = int(self.dataset[0].WindowWidth[1])
         
         if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):    
-            self.level = self.dataset[0].WindowCenter
+            self.level = int(self.dataset[0].WindowCenter)
         elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            self.level = self.dataset[0].WindowCenter[1]
+            self.level = int(self.dataset[0].WindowCenter[1])
 
         self.x1, self.y1 = 256, 256
-        self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], "bone": [1400, 700],
-                               "brain": [180, 950],
+        if os.path.exists('src/data/csv/imageWindowing.csv'):
+            self.dict_windowing = {}
+            with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
+                next(fileInput)
+                for row in fileInput:
+                    items = [item for item in row.split(',')]
+                    self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
+        else:       
+            self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], 
+                                "bone": [1400, 700], "brain": [160, 950],
                                "soft tissue": [400, 800], "head and neck": [275, 900]}
 
+        print(self.dict_windowing)
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 
@@ -43,12 +56,12 @@ class Ui_MainWindow(object):
         self.file_rtdose = self.filepaths['rtdose']
         self.dataset_rtss = pydicom.dcmread(self.file_rtss)
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
-        self.rois = get_roi_info(self.dataset_rtss)
+        # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
-        self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
-        self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
+        # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
+        # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
