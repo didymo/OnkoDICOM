@@ -14,7 +14,9 @@ class Extended(QtCore.QThread):
     For running copy operation
     """
 
-    copied_percent_signal= QtCore.pyqtSignal(int)
+    copied_percent_signal = QtCore.pyqtSignal(int)
+    incorrect_directory_signal = QtCore.pyqtSignal()
+    missing_files_signal = QtCore.pyqtSignal(str)
 
     def __init__(self, path):
         super().__init__()
@@ -30,16 +32,26 @@ class Extended(QtCore.QThread):
 
     def run(self):
         self.get_datasets(self.path, self.my_callback)
-        self.file_rtss = self.file_names_dict['rtss']
-        self.file_rtdose = self.file_names_dict['rtdose']
-        self.dataset_rtss = pydicom.dcmread(self.file_rtss)
-        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
-        self.rois = self.get_roi_info(self.dataset_rtss, self.my_callback)
-        self.raw_dvh = self.calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
-        self.dvh_x_y = self.converge_to_O_dvh(self.raw_dvh, self.my_callback)
-        if self.previous <100:
-            for i in range(self.previous,101):
-                self.copied_percent_signal.emit(i)
+
+        if not self.file_names_dict:
+            self.incorrect_directory_signal.emit()
+
+        elif 'rtss' not in self.file_names_dict:
+            if 'rtdose' not in self.file_names_dict:
+                self.missing_files_signal.emit('RTStruct and RTDose files not found in selected directory')
+            else:
+                self.missing_files_signal.emit('RTStruct file not found in selected directory')
+        else:
+            self.file_rtss = self.file_names_dict['rtss']
+            self.file_rtdose = self.file_names_dict['rtdose']
+            self.dataset_rtss = pydicom.dcmread(self.file_rtss)
+            self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+            self.rois = self.get_roi_info(self.dataset_rtss, self.my_callback)
+            self.raw_dvh = self.calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
+            self.dvh_x_y = self.converge_to_O_dvh(self.raw_dvh, self.my_callback)
+            if self.previous <100:
+                for i in range(self.previous,101):
+                    self.copied_percent_signal.emit(i)
 
 
     def my_callback(self, temp_file_size):
@@ -84,22 +96,26 @@ class Extended(QtCore.QThread):
         for file in dcm_files:
             # If file exists and the first two letters in the name are CT, RD, RP, RS, or RT
             if os.path.isfile(file) and os.path.basename(file)[0:2].upper() in ['CT', 'RD', 'RP', 'RS', 'RT']:
-                read_file = pydicom.dcmread(file)
-                if read_file.Modality == 'CT':
-                    self.read_data_dict[i] = read_file
-                    self.file_names_dict[i] = file
-                    i += 1
-                elif read_file.Modality == 'RTSTRUCT':
-                    self.read_data_dict['rtss'] = read_file
-                    self.file_names_dict['rtss'] = file
-                elif read_file.Modality == 'RTDOSE':
-                    self.read_data_dict['rtdose'] = read_file
-                    self.file_names_dict['rtdose'] = file
-                elif read_file.Modality == 'RTPLAN':
-                    self.read_data_dict['rtplan'] = read_file
-                    self.file_names_dict['rtplan'] = file
-                self.copied += len(read_file)
-                callback(self.copied)
+                try:
+                    read_file = pydicom.dcmread(file)
+                except:
+                    pass
+                else:    
+                    if read_file.Modality == 'CT':
+                        self.read_data_dict[i] = read_file
+                        self.file_names_dict[i] = file
+                        i += 1
+                    elif read_file.Modality == 'RTSTRUCT':
+                        self.read_data_dict['rtss'] = read_file
+                        self.file_names_dict['rtss'] = file
+                    elif read_file.Modality == 'RTDOSE':
+                        self.read_data_dict['rtdose'] = read_file
+                        self.file_names_dict['rtdose'] = file
+                    elif read_file.Modality == 'RTPLAN':
+                        self.read_data_dict['rtplan'] = read_file
+                        self.file_names_dict['rtplan'] = file
+                    self.copied += len(read_file)
+                    callback(self.copied)
 
         return self.read_data_dict, self.file_names_dict
 
