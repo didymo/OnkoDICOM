@@ -131,7 +131,7 @@ def get_contour_pixel_data(pixlut, contour, prone = False, feetfirst = False):
                 break
             elif (y_val < contour[i+1] and prone):
                 break
-        contour_pixel_data.append((x, y))
+        contour_pixel_data.append([x, y])
     return contour_pixel_data
 
 
@@ -223,32 +223,41 @@ def get_transformed_pixel_contours(dict_raw_contours, dict_matrices):
     return dict_transformed_pixel_contours
 
 ##########################################
-### THIS IS FOR SLICE BY SLICE!!! ########
+###  THIS IS FOR SLICE BY SLICE!!! #######
 ##########################################
 def get_roi_in_one_slice(dict_raw_contours, roi_list, dict_matrices, slice):
     dict_transformed_curr_slice = {}
     for roi in roi_list:
         dict_curr_raw_roi = dict_raw_contours[roi]
+        print(dict_curr_raw_roi)
         curr_slice_roi = dict_curr_raw_roi[slice]
+        print(curr_slice_roi)
         curr_slice_matrix = dict_matrices[slice]
         curr_transformed_roi = get_contour_pixel_data(curr_slice_matrix, curr_slice_roi)
+        print(curr_transformed_roi)
+        xs = [x[0] for x in curr_transformed_roi]
+        ys = [x[1] for x in curr_transformed_roi]
+        plt.scatter(xs, ys)
+        plt.show()
         dict_transformed_curr_slice[roi] = curr_transformed_roi
     return dict_transformed_curr_slice
 
 
 def test_slicebyslice():
-    path = '../../../dicom_sample'
+    # path = '../../../dicom_sample'
+    path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
     dict_ds, dict_path = get_datasets(path)
     rtss = dict_ds['rtss']
     dict_matrices = get_matrices(dict_ds)
     roi_list = get_roi_list(rtss)
     dict_raw_contours = get_all_raw_contours(rtss, roi_list)
-    # for slice in dict_raw_contours['EYE_L']:
-    #     if slice in dict_raw_contours['EYE_R'].keys():
-    #         print(slice)
-    # print(roi_list)
-    roi_names_selected = ['EYE_L', 'EYE_R']
-    curr_slice = '1.3.12.2.1107.5.1.4.100020.30000018082921110179700000200'
+    for slice in dict_raw_contours['REST_COMMON LUNG']:
+        print(slice)
+    print(dict_raw_contours['REST_COMMON LUNG'])
+    print(roi_list)
+    roi_names_selected = ['REST_COMMON LUNG']
+
+    curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001105'
     dict_rois_curr_slice = get_roi_in_one_slice(dict_raw_contours, roi_names_selected, dict_matrices, curr_slice)
 
     dict_QPolygons = {}
@@ -269,8 +278,6 @@ def test():
     dict_matrices = get_matrices(dict_ds)
     roi_list = get_roi_list(rtss)
     dict_raw_contours = get_all_raw_contours(rtss, roi_list)
-    for key in dict_raw_contours:
-        print(key)
 
     ### GTVp is the 10th ROI in the sequence
     # (3006, 0022) ROI Number                          IS: "10"
@@ -331,6 +338,8 @@ def test():
     # plt.show()
 
 
+# class Example2():
+
 class Example(QWidget):
 
     def __init__(self, polygon):
@@ -365,8 +374,8 @@ if __name__ == '__main__':
     dict_QPolygonF = test_slicebyslice()
     print(dict_QPolygonF)
 
-    ex1 = Example(dict_QPolygonF['EYE_L'])
-    ex2 = Example(dict_QPolygonF['EYE_R'])
+    ex1 = Example(dict_QPolygonF['REST_COMMON LUNG'])
+    # ex2 = Example(dict_QPolygonF['EYE_R'])
     # polygon = test()
     # ex = Example(polygon)
 
