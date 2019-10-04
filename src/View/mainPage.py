@@ -50,16 +50,16 @@ class Ui_MainWindow(object):
             self.dict_windowing = {}
             with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
                 next(fileInput)
-                self.dict_windowing["Normal"] = [ self.window, self.level]
+                self.dict_windowing["Normal"] = [self.window, self.level]
                 for row in fileInput:
                     # Format: Organ - Scan - Window - Level
                     items = [item for item in row.split(',')]
                     self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
         else:
             # If csv does not exist, initialize dictionary with default values       
-            self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], 
-                                "bone": [1400, 700], "brain": [160, 950],
-                               "soft tissue": [400, 800], "head and neck": [275, 900]}
+            self.dict_windowing = {"Normal": [self.window, self.level], "Lung": [1600, -300],
+                                "Bone": [1400, 700], "Brain": [160, 950],
+                               "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
 
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
@@ -1151,11 +1151,12 @@ class Ui_MainWindow(object):
         if zoomChange:
             self.DICOM_view.setTransform(QTransform().scale(self.zoom, self.zoom))
 
-        # Update settings on DICOM View
-        self.textOnDICOM_View()
-        
         # Add ROI contours
         self.ROI_display()
+
+        # Update settings on DICOM View
+        self.textOnDICOM_View()
+
         self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
@@ -1171,8 +1172,6 @@ class Ui_MainWindow(object):
         DICOM_image_label.setPixmap(DICOM_image)
         self.DICOM_image_scene = QtWidgets.QGraphicsScene()
         self.DICOM_image_scene.addWidget(DICOM_image_label)
-        # TODO Comment?
-        self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
     # Display the settings on the DICOM View tab
@@ -1249,7 +1248,6 @@ class Ui_MainWindow(object):
 
 
     def ROI_display(self):
-        self.DICOM_image_display()
         slider_id = self.slider.value()
         curr_slice = self.dict_UID[slider_id]
 
@@ -1467,11 +1465,19 @@ class Ui_MainWindow(object):
     def initWindowingMenu(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
 
-        for key, value in self.dict_windowing.items():
-            text = str(key)
+        # Get the right order for windowing names
+        names_ordered = sorted(self.dict_windowing.keys())
+        if 'Normal' in self.dict_windowing.keys():
+            old_index = names_ordered.index('Normal')
+            names_ordered.insert(0, names_ordered.pop(old_index))
+
+        # Create actions for each windowing items
+        for name in names_ordered:
+            text = str(name)
+            print(text)
             actionWindowingItem = QtWidgets.QAction(MainWindow)
             actionWindowingItem.triggered.connect(
-                lambda state, text=key: self.setWindowingLimits(state, text))
+                lambda state, text=name: self.setWindowingLimits(state, text))
             self.menuWindowing.addAction(actionWindowingItem)
             actionWindowingItem.setText(_translate("MainWindow", text))
 
