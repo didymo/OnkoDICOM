@@ -1476,7 +1476,6 @@ class Ui_MainWindow(object):
         # Create actions for each windowing items
         for name in names_ordered:
             text = str(name)
-            print(text)
             actionWindowingItem = QtWidgets.QAction(MainWindow)
             actionWindowingItem.triggered.connect(
                 lambda state, text=name: self.setWindowingLimits(state, text))
