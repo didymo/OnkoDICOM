@@ -1133,6 +1133,8 @@ class Ui_MainWindow(object):
     # Initialize the widget on which the DICOM image will be set
     def initDICOM_view(self):
         self.DICOM_view = QtWidgets.QGraphicsView(self.tab2_view)
+        # Add antialiasing and smoothing when zooming in
+        self.DICOM_view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.DICOM_view.setBackgroundBrush(background_brush)
         self.DICOM_view.setGeometry(QtCore.QRect(0, 0, 877, 517))

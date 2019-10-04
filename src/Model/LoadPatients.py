@@ -25,7 +25,6 @@ def natural_sort(file_list):
     return sorted(file_list, key=alphanum_key)
 
 
-# 
 def get_datasets(path):
     """
     :param path: str
@@ -69,7 +68,3 @@ def get_datasets(path):
                     file_names_dict['rtplan'] = file
 
     return read_data_dict, file_names_dict
-
-if __name__ == '__main__':
-    file = '/home/sohaib/992/test'
-    get_datasets(file)
