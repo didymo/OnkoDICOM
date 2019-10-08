@@ -430,6 +430,7 @@ class Ui_Form(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         #MainWindow.setWindowTitle(_translate("MainWindow", "Clinical Data Form"))
+
         self.label_LN.setText(_translate("MainWindow", "Last Name:"))
         self.label_FN.setText(_translate("MainWindow", "First Name:"))
         self.label_3.setText(_translate("MainWindow", "Gender:"))
