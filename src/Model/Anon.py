@@ -107,17 +107,18 @@ def Hash_identifiers(file_no, ds_rtss):
 def checkFileExist(fileName):
     print("file name:-- ", fileName)  # printing file name
 
-    if (fileName == "Hash_map.csv"):
+    if (fileName == "patientHash.csv"):
+        data_folder_path = "/src/data/csv/"
         cwd = os.getcwd()  # getting the current working directory
-        file_path = cwd + "/" + fileName  # concatenating the current working directory with the csv filename
+        file_path = cwd + data_folder_path + fileName  # concatenating the current working directory with the csv filename
         print("Full path :  ===========", file_path)  # print the full csv file path
         print("file exist: ", os.path.isfile(file_path))  # check if the file exist in the folder
         if (os.path.isfile(file_path)) == True:  # if file exist return True
             print("returning true-----------------------")
-            return True
+            return True, file_path
         else:
             print("returning false----------------------")  # if file not exist return false
-            return False
+            return False, file_path
 
 
  ## ===================================CTEATE CSV FILE================================================
@@ -125,8 +126,11 @@ def checkFileExist(fileName):
 def create_hash_csv(pname, sha1_pname, csv_filename):
 
     # print("Csv file name is : ",csv_filename)
-    # csv_filename = str("Hash_map") + ".csv"
-    if (checkFileExist(csv_filename)) == False:
+    # chcek if the patientHash.csv exist
+    Csv_Exist, csv_filePath = checkFileExist(csv_filename)
+
+    # if the csv doent exist create a new CSV and export the Hash to that. 
+    if (Csv_Exist == False):
         print("-----Creating CSV------")
 
         csv_header = []
@@ -141,7 +145,7 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
         df_identifier_csv.to_csv(csv_filename, index=False) # creating the CVS
 
         row = [pname, sha1_pname]
-        with open(csv_filename, 'a') as csvFile:  # inserting the hash values
+        with open(csv_filePath, 'a') as csvFile:  # inserting the hash values
             writer = csv.writer(csvFile)
             writer.writerow(row)
             csvFile.close()
@@ -153,7 +157,7 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
     else:
         print("updating csv")
         row = [pname, sha1_pname]
-        with open(csv_filename, 'a') as csvFile: # updating the CVS with hash values
+        with open(csv_filePath, 'a') as csvFile: # updating the CVS with hash values
             writer = csv.writer(csvFile)
             writer.writerow(row)
             csvFile.close()
@@ -391,7 +395,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                         print(" In main Pname and ID=  {} and SHA1_name: {}".format(pname_ID, sha1_pname))
 
                         Print_identifiers(ds_rtss)  # calling the print to show the identifiers
-                        csv_filename = str("Hash_map") + ".csv"
+                        csv_filename = str("patientHash") + ".csv"
                         # calling create CSV to store the the hashed value
                         create_hash_csv(pname_ID, sha1_pname, csv_filename) 
                         print("Calling WRITE FUNCTION when Csv called")
