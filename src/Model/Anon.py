@@ -286,7 +286,7 @@ def Create_New_Folder(new_patient_folder_name, Dicom_folder_path):
 def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File_hash_status):
 
     first_file = os.path.basename(all_filepaths[0])
-    
+    # print("THE PATH IN THE CHECK FOLDER::::::::::", all_filepaths[0] )
     if File_hash_status == 0:
         
         ds_rtss= LOAD_DCM(Dicom_folder_path,first_file, new_dict_dataset, 0)
@@ -306,7 +306,7 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File
         print("Original patient name = =======================================", str(ds_rtss.PatientBirthDate))
         print("Original patient name = =======================================", str(ds_rtss.PatientSex))
 
-        new_patient_folder_name = hash_patient_name_sha1_first +"_"+"Dicom"
+        new_patient_folder_name = hash_patient_name_sha1_first
         print("New patient folder==", new_patient_folder_name)
 
         SecondLastDir = os.path.dirname(Dicom_folder_path)  # getting path till the second last Folder
@@ -321,7 +321,7 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File
 
         ds_rtss= LOAD_DCM(Dicom_folder_path,first_file, new_dict_dataset, 0)
 
-        new_patient_folder_name = str(ds_rtss.PatientName) +"_"+"Dicom"
+        new_patient_folder_name = str(ds_rtss.PatientName)
 
         # check if the hashed Folder name exist in the Specified folder
         if new_patient_folder_name in os.listdir(SecondLastDir):
@@ -411,7 +411,8 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 else:
                     print("\n\n\n======File {} is a Folder=====".format(Dicom_filename))    #     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
                     print("\n\n\n")
-
+        else:
+            Print("File are already hashed and Hashed folder exist")            
         print("Total files hashed======", count)            
     
     else:
@@ -434,6 +435,8 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 # loading the dicom file content into the dataframe.
                 ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
                 write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
+                count = 0
+                print("Total files hashed======", count)
             else:
                 print("Status of folder==========", Exist_folder)
                 Dicom_filename = os.path.basename(all_filepaths[key])
