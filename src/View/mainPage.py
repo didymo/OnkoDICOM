@@ -1,5 +1,7 @@
 import matplotlib.pylab as plt
 from copy import deepcopy
+
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTransform
 from src.Controller.pluginMController import PManager
 from src.Model.CalculateDVHs import *
@@ -23,8 +25,13 @@ class Ui_MainWindow(object):
         self.rois =rois
         self.filepaths = filepaths
         self.path = path
-            #get_datasets(path)
 
+
+        # WindowWidth and WindowCenter values in the DICOM file can be either 
+        # a list or a float. The following lines of code check what instance 
+        # the values belong to and sets the window and level values accordingly
+        # The values are converted from the type pydicom.valuerep.DSfloat to
+        # int for processing later on in the program
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
             self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
@@ -35,18 +42,26 @@ class Ui_MainWindow(object):
         elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
             self.level = int(self.dataset[0].WindowCenter[1])
 
+        # Variables to check for the mouse position when altering the window and 
+        # level values
         self.x1, self.y1 = 256, 256
+
+        # Check to see if the imageWindowing.csv file exists
         if os.path.exists('src/data/csv/imageWindowing.csv'):
+            # If it exists, read data from file into the self.dict_windowing variable
             self.dict_windowing = {}
             with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
                 next(fileInput)
+                self.dict_windowing["Normal"] = [self.window, self.level]
                 for row in fileInput:
+                    # Format: Organ - Scan - Window - Level
                     items = [item for item in row.split(',')]
                     self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
-        else:       
-            self.dict_windowing = {"normal": [self.window, self.level], "lung": [1600, -300], 
-                                "bone": [1400, 700], "brain": [160, 950],
-                               "soft tissue": [400, 800], "head and neck": [275, 900]}
+        else:
+            # If csv does not exist, initialize dictionary with default values       
+            self.dict_windowing = {"Normal": [self.window, self.level], "Lung": [1600, -300],
+                                "Bone": [1400, 700], "Brain": [160, 950],
+                               "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
 
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
@@ -55,10 +70,12 @@ class Ui_MainWindow(object):
         self.file_rtdose = self.filepaths['rtdose']
         self.dataset_rtss = pydicom.dcmread(self.file_rtss)
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
+        
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
@@ -89,14 +106,16 @@ class Ui_MainWindow(object):
 
         # Main Window
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1080, 700)
-
+        MainWindow.setMinimumSize(1080, 700)
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
         # Central Layer
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setFocusPolicy(Qt.NoFocus)
 
         # Left Column
         self.tab1 = QtWidgets.QTabWidget(self.centralwidget)
+        self.tab1.setFocusPolicy(Qt.NoFocus)
         self.tab1.setGeometry(QtCore.QRect(0, 40, 200, 361))
         self.tab1.setObjectName("tab1")
 
@@ -117,6 +136,7 @@ class Ui_MainWindow(object):
 
         # Main view: DICOM View
         self.tab2_view = QtWidgets.QWidget()
+        self.tab2_view.setFocusPolicy(Qt.NoFocus)
         self.tab2_view.setObjectName("tab2_view")
         self.gridLayout_view = QtWidgets.QGridLayout(self.tab2_view)
         self.gridLayout_view.setContentsMargins(0, 0, 0, 0)
@@ -124,6 +144,7 @@ class Ui_MainWindow(object):
 
         # Vertical Slider
         self.initSlider()
+        self.slider.setFocusPolicy(Qt.NoFocus)
         self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
         # DICOM image processing
         self.initDICOM_view()
@@ -136,12 +157,14 @@ class Ui_MainWindow(object):
         # Main view: DVH
         self.tab2_DVH = QtWidgets.QWidget()
         self.tab2_DVH.setObjectName("tab2_DVH")
+        self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
         # DVH layout
         self.widget_DVH = QtWidgets.QWidget(self.tab2_DVH)
         self.widget_DVH.setGeometry(QtCore.QRect(0, 0, 877, 520))
         self.widget_DVH.setObjectName("widget_DVH")
         self.gridL_DVH = QtWidgets.QGridLayout(self.widget_DVH)
         self.gridL_DVH.setObjectName("gridL_DVH")
+        self.widget_DVH.setFocusPolicy(Qt.NoFocus)
 
         # DVH Processing
         self.initDVH_view()
@@ -154,15 +177,16 @@ class Ui_MainWindow(object):
         # Main view: DICOM Tree
         self.tab2_DICOM_tree = QtWidgets.QWidget()
         self.tab2_DICOM_tree.setObjectName("tab2_DICOM_tree")
+        self.tab2_DICOM_tree.setFocusPolicy(Qt.NoFocus)
         # Tree View tab grid layout
         self.vboxL_Tree = QtWidgets.QVBoxLayout(self.tab2_DICOM_tree)
         self.vboxL_Tree.setObjectName("vboxL_Tree")
         self.vboxL_Tree.setContentsMargins(0, 0, 0, 0)
-
         # Tree view selector
         self.initTreeViewSelector()
         # Creation of the Tree View
         self.treeView = QtWidgets.QTreeView(self.tab2_DICOM_tree)
+        self.treeView.setFocusPolicy(Qt.NoFocus)
         self.initTree()
         self.initTreeParameters()
         self.tab2.addTab(self.tab2_DICOM_tree, "")
@@ -171,25 +195,28 @@ class Ui_MainWindow(object):
 
         # Main view: Clinical Data
         self.tab2_clinical_data = QtWidgets.QWidget()
+        self.tab2_clinical_data.setFocusPolicy(Qt.NoFocus)
         # check for csv data
         reg = '/[clinicaldata]*[.csv]'
         if not glob.glob(self.path + reg):
             self.callClass.display_cd_form(self.tab2, self.path)
         else:
             self.callClass.display_cd_dat(self.tab2, self.path)
-
+        self.tab2.setFocusPolicy(Qt.NoFocus)
         # Bottom Layer
         self.frame_bottom = QtWidgets.QFrame(self.centralwidget)
         self.frame_bottom.setGeometry(QtCore.QRect(0, 600, 1080, 27))
         self.frame_bottom.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_bottom.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_bottom.setObjectName("frame_bottom")
+        self.frame_bottom.setFocusPolicy(Qt.NoFocus)
 
         # Bottom Layer: "@Onko2019" label
         self.label = QtWidgets.QLabel(self.frame_bottom)
         self.label.setGeometry(QtCore.QRect(1000, 0, 91, 29))
         self.label.setStyleSheet("font: 9pt \"Laksaman\";")
         self.label.setObjectName("label")
+        self.label.setFocusPolicy(Qt.NoFocus)
 
         # Left Column: Structure Information
         self.frame_struct_info = QtWidgets.QFrame(self.centralwidget)
@@ -197,6 +224,7 @@ class Ui_MainWindow(object):
         self.frame_struct_info.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_struct_info.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_struct_info.setObjectName("frame_struct_info")
+        self.frame_struct_info.setFocusPolicy(Qt.NoFocus)
 
         # Structure Information: "Select Structure" combobox
         self.initStructInfoSelector()
@@ -275,6 +303,7 @@ class Ui_MainWindow(object):
 
         # Layout Icon and Text "Structure Information"
         self.widget = QtWidgets.QWidget(self.frame_struct_info)
+        self.widget.setFocusPolicy(Qt.NoFocus)
         self.widget.setGeometry(QtCore.QRect(5, 5, 160, 28))
         self.widget.setObjectName("widget")
         self.gridL_StructInfo = QtWidgets.QGridLayout(self.widget)
@@ -326,6 +355,7 @@ class Ui_MainWindow(object):
         self.gridLayout_name = QtWidgets.QGridLayout(self.widget3)
         self.gridLayout_name.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_name.setObjectName("gridLayout_name")
+        self.widget3.setFocusPolicy(Qt.NoFocus)
 
         # Name Patient (label)
         self.patient_name = QtWidgets.QLabel(self.widget3)
@@ -347,6 +377,7 @@ class Ui_MainWindow(object):
         self.gridLayout_ID = QtWidgets.QGridLayout(self.widget4)
         self.gridLayout_ID.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_ID.setObjectName("gridLayout_ID")
+        self.widget4.setFocusPolicy(Qt.NoFocus)
 
         # Patient ID (label)
         self.patient_ID = QtWidgets.QLabel(self.widget4)
@@ -364,6 +395,7 @@ class Ui_MainWindow(object):
         self.widget2 = QtWidgets.QWidget(self.centralwidget)
         self.widget2.setGeometry(QtCore.QRect(830, 5, 111, 31))
         self.widget2.setObjectName("widget2")
+        self.widget2.setFocusPolicy(Qt.NoFocus)
         self.gridLayout_gender = QtWidgets.QGridLayout(self.widget2)
         self.gridLayout_gender.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_gender.setObjectName("gridLayout_gender")
@@ -384,6 +416,7 @@ class Ui_MainWindow(object):
         self.widget1 = QtWidgets.QWidget(self.centralwidget)
         self.widget1.setGeometry(QtCore.QRect(950, 5, 95, 31))
         self.widget1.setObjectName("widget1")
+        self.widget1.setFocusPolicy(Qt.NoFocus)
         self.gridLayout_DOB = QtWidgets.QGridLayout(self.widget1)
         self.gridLayout_DOB.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_DOB.setObjectName("gridLayout_DOB")
@@ -424,6 +457,7 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 901, 35))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
+        self.menubar.setFocusPolicy(Qt.NoFocus)
 
         # Menu Bar: File, Edit, Tools, Help
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -440,7 +474,7 @@ class Ui_MainWindow(object):
         iconOpen.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconAnonymize_and_Save = QtGui.QIcon()
-        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/save_all.png"),
+        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/AnonButton3.png"),
                                          QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconZoom_In = QtGui.QIcon()
         iconZoom_In.addPixmap(QtGui.QPixmap(":/images/Icon/plus.png"),
@@ -476,6 +510,7 @@ class Ui_MainWindow(object):
         self.menuExport = QtWidgets.QMenu(self.menuTools)
         self.menuExport.setIcon(iconExport)
         self.menuExport.setObjectName("menuExport")
+
 
         # Set Tool Bar
         self.toolBar = QtWidgets.QToolBar(MainWindow)
@@ -619,12 +654,14 @@ class Ui_MainWindow(object):
         self.windowingButton.setMenu(self.menuWindowing)
         self.windowingButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.windowingButton.setIcon(iconWindowing)
+        self.windowingButton.setFocusPolicy(Qt.NoFocus)
 
         # Export Button drop-down list on toolbar
         self.exportButton = QtWidgets.QToolButton()
         self.exportButton.setMenu(self.menuExport)
         self.exportButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.exportButton.setIcon(iconExport)
+        self.exportButton.setFocusPolicy(Qt.NoFocus)
 
         # Build toolbar
         self.menuTools.addAction(self.actionZoom_In)
@@ -636,13 +673,16 @@ class Ui_MainWindow(object):
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menuExport.menuAction())
         self.menuTools.addAction(self.actionAnonymize_and_Save)
+        self.menuTools.setFocusPolicy(Qt.NoFocus)
 
         # To create a space in the toolbar
         self.toolbar_spacer = QtWidgets.QWidget()
         self.toolbar_spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.toolbar_spacer.setFocusPolicy(Qt.NoFocus)
         # To create a space in the toolbar
         self.right_spacer = QtWidgets.QWidget()
         self.right_spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.right_spacer.setFocusPolicy(Qt.NoFocus)
 
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addSeparator()
@@ -814,14 +854,17 @@ class Ui_MainWindow(object):
         # Scroll Area
         self.tab1_structures = QtWidgets.QWidget()
         self.tab1_structures.setObjectName("tab1_structures")
+        self.tab1_structures.setFocusPolicy(Qt.NoFocus)
         self.structColumnWidget = QtWidgets.QWidget(self.tab1_structures)
         self.scrollAreaStruct = QtWidgets.QScrollArea(self.structColumnWidget)
         self.scrollAreaStruct.setGeometry(QtCore.QRect(0, 0, 198, 320))
         self.scrollAreaStruct.setWidgetResizable(True)
+        self.scrollAreaStruct.setFocusPolicy(Qt.NoFocus)
         # Scroll Area Content
         self.scrollAreaStructContents = QtWidgets.QWidget(self.scrollAreaStruct)
         self.scrollAreaStructContents.setGeometry(QtCore.QRect(0, 0, 198, 550))
         self.scrollAreaStruct.ensureWidgetVisible(self.scrollAreaStructContents)
+        self.scrollAreaStructContents.setFocusPolicy(Qt.NoFocus)
         # Grid Layout containing the color squares and the checkboxes
         self.gridL_StructColumn = QtWidgets.QGridLayout(self.scrollAreaStructContents)
         self.gridL_StructColumn.setContentsMargins(5, 5, 5, 5)
@@ -843,6 +886,7 @@ class Ui_MainWindow(object):
             # QCheckbox
             text = value['name']
             checkBoxStruct = QtWidgets.QCheckBox()
+            checkBoxStruct.setFocusPolicy(Qt.NoFocus)
             checkBoxStruct.clicked.connect(
                 lambda state, text=key: self.checkedStruct(state, text))
             checkBoxStruct.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -889,6 +933,7 @@ class Ui_MainWindow(object):
     # Initialize the list of isodoses (left column of the main page)
     def initIsodColumn(self):
         self.tab1_isodoses = QtWidgets.QWidget()
+        self.tab1_isodoses.setFocusPolicy(Qt.NoFocus)
         self.tab1_isodoses.setGeometry(QtCore.QRect(0, 0, 198, 320))
         self.gridL_IsodCol = QtWidgets.QGridLayout(self.tab1_isodoses)
         self.gridL_IsodCol.setContentsMargins(5, 1, 0, 0)
@@ -938,6 +983,17 @@ class Ui_MainWindow(object):
         self.box8_isod = QtWidgets.QCheckBox("60 % / " + str(val_isod8) + " cGy")
         self.box9_isod = QtWidgets.QCheckBox("30 % / " + str(val_isod9) + " cGy")
         self.box10_isod = QtWidgets.QCheckBox("10 % / " + str(val_isod10) + " cGy")
+        self.box1_isod.setFocusPolicy(Qt.NoFocus)
+        self.box2_isod.setFocusPolicy(Qt.NoFocus)
+        self.box3_isod.setFocusPolicy(Qt.NoFocus)
+        self.box4_isod.setFocusPolicy(Qt.NoFocus)
+        self.box5_isod.setFocusPolicy(Qt.NoFocus)
+        self.box6_isod.setFocusPolicy(Qt.NoFocus)
+        self.box7_isod.setFocusPolicy(Qt.NoFocus)
+        self.box8_isod.setFocusPolicy(Qt.NoFocus)
+        self.box9_isod.setFocusPolicy(Qt.NoFocus)
+        self.box10_isod.setFocusPolicy(Qt.NoFocus)
+
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box3_isod.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -988,6 +1044,7 @@ class Ui_MainWindow(object):
         self.comboBoxStructInfo.activated.connect(self.comboStructInfo)
         self.comboBoxStructInfo.setGeometry(QtCore.QRect(5, 35, 188, 31))
         self.comboBoxStructInfo.setObjectName("comboBox")
+        self.comboBoxStructInfo.setFocusPolicy(Qt.NoFocus)
 
 
     # Function triggered when an item is selected
@@ -1083,6 +1140,7 @@ class Ui_MainWindow(object):
     # Add "Export DVH" button to the DVH tab
     def addExportDVH_button(self):
         self.button_exportDVH = QtWidgets.QPushButton()
+        self.button_exportDVH.setFocusPolicy(Qt.NoFocus)
         self.button_exportDVH.setFixedSize(QtCore.QSize(100, 39))
         self.button_exportDVH.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.button_exportDVH.setStyleSheet("background-color: rgb(238, 238, 236);\n"
@@ -1118,11 +1176,13 @@ class Ui_MainWindow(object):
     # Initialize the widget on which the DICOM image will be set
     def initDICOM_view(self):
         self.DICOM_view = QtWidgets.QGraphicsView(self.tab2_view)
+        # Add antialiasing and smoothing when zooming in
+        self.DICOM_view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.DICOM_view.setBackgroundBrush(background_brush)
         self.DICOM_view.setGeometry(QtCore.QRect(0, 0, 877, 517))
         self.DICOM_view.setObjectName("DICOM_view")
-        self.DICOM_view.viewport().installEventFilter(self)
+        self.DICOM_view.viewport().installEventFilter(self) # Set event filter on the dicom_view area
 
 
     def updateDICOM_view(self, zoomChange=False, windowingChange=False):
@@ -1136,13 +1196,13 @@ class Ui_MainWindow(object):
         if zoomChange:
             self.DICOM_view.setTransform(QTransform().scale(self.zoom, self.zoom))
 
-        # Update settings on DICOM View
-        self.textOnDICOM_View()
         # Add ROI contours
         self.ROI_display()
+
+        # Update settings on DICOM View
+        self.textOnDICOM_View()
+
         self.DICOM_view.setScene(self.DICOM_image_scene)
-
-
 
 
     # Display the DICOM image on the DICOM View tab
@@ -1157,8 +1217,6 @@ class Ui_MainWindow(object):
         DICOM_image_label.setPixmap(DICOM_image)
         self.DICOM_image_scene = QtWidgets.QGraphicsScene()
         self.DICOM_image_scene.addWidget(DICOM_image_label)
-        # TODO Comment?
-        self.DICOM_view.setScene(self.DICOM_image_scene)
 
 
     # Display the settings on the DICOM View tab
@@ -1190,30 +1248,35 @@ class Ui_MainWindow(object):
         text_imageID.setPos(QtCore.QPoint(-140, 0))
         text_imageID.setPlainText("Image: " + str(current_slice) + " / " + str(total_slices))
         text_imageID.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Position: {position_slice} mm"
         text_imagePos = QtWidgets.QGraphicsTextItem()
         text_imagePos.adjustSize()
         text_imagePos.setPos(QtCore.QPoint(-140, 20))
         text_imagePos.setPlainText("Position: " + str(slice_pos) + " mm")
         text_imagePos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "W/L: {window} / {level}" (for windowing functionality)
         text_WL = QtWidgets.QGraphicsTextItem()
         text_WL.adjustSize()
         text_WL.setPos(QtCore.QPoint(535, 0))
         text_WL.setPlainText("W/L: " + str(self.window) + "/" + str(self.level))
         text_WL.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Image size: {total_row}x{total_col} px"
         text_imageSize = QtWidgets.QGraphicsTextItem()
         text_imageSize.adjustSize()
         text_imageSize.setPos(QtCore.QPoint(-140, 450))
         text_imageSize.setPlainText("Image Size: " + str(row_image) + "x" + str(col_image) + "px")
         text_imageSize.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Zoom: {zoom}:{zoom}"
         text_zoom = QtWidgets.QGraphicsTextItem()
         text_zoom.adjustSize()
         text_zoom.setPos(QtCore.QPoint(-140, 470))
         text_zoom.setPlainText("Zoom: " + str(zoom) + ":" + str(zoom))
         text_zoom.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        
         # Text: "Patient Position: {patient_position}"
         text_patientPos = QtWidgets.QGraphicsTextItem()
         text_patientPos.adjustSize()
@@ -1230,7 +1293,6 @@ class Ui_MainWindow(object):
 
 
     def ROI_display(self):
-        self.DICOM_image_display()
         slider_id = self.slider.value()
         curr_slice = self.dict_UID[slider_id]
 
@@ -1280,29 +1342,48 @@ class Ui_MainWindow(object):
     # When the value of the slider in the DICOM View changes
     def valueChangeSlider(self):
         self.updateDICOM_view()
-        pass
 
-
+    # Handles mouse movement and button press events in the dicom_view area
     def eventFilter(self, source, event):
+        # If mouse moved while the right mouse button was pressed, change window and level values
         if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
             if event.buttons() == QtCore.Qt.RightButton:
+                
+                # Values of x increase from left to right
+                # Window value should increase when mouse pointer moved to right, decrease when moved to left 
+                # If the x value of the new mouse position is greater than the x value of
+                # the previous position, then increment the window value by 5, 
+                # otherwise decrement it by 5
                 if event.x() > self.x1:
                     self.window += 5
                 elif event.x() < self.x1:
                     self.window -= 5
 
+                # Values of y increase from top to bottom
+                # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
+                # If the y value of the new mouse position is greater than the y value of 
+                # the previous position then decrement the level value by 5, 
+                # otherwise increment it by 5
                 if event.y() > self.y1:
                     self.level -= 5
                 elif event.y() < self.y1:
                     self.level += 5
 
+                # Update previous position values
                 self.x1 = event.x()
                 self.y1 = event.y()
 
+                # Get id of current slice
                 id = self.slider.value()
+
+                # Create a deep copy as the pixel values are a list of list
                 np_pixels = deepcopy(self.pixel_values[id])
+
+                # Update current image based on new window and level values
                 self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
                 self.updateDICOM_view(windowingChange=True)
+        
+        # When mouse button released, update all the slices based on the new values
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
             img_data = deepcopy(self.pixel_values)
             self.pixmaps = get_pixmaps(img_data, self.window, self.level)
@@ -1317,6 +1398,7 @@ class Ui_MainWindow(object):
     # Add combobox to select a DICOM Tree from a dataset
     def initTreeViewSelector(self):
         self.comboBoxTree = QtWidgets.QComboBox()
+        self.comboBoxTree.setFocusPolicy(Qt.NoFocus)
         self.comboBoxTree.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
                                                  "combobox-popup: 0;"
                                                  "background-color: #efefef; }")
@@ -1429,14 +1511,22 @@ class Ui_MainWindow(object):
     def initWindowingMenu(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
 
-        for key, value in self.dict_windowing.items():
-            text = str(key)
+        # Get the right order for windowing names
+        names_ordered = sorted(self.dict_windowing.keys())
+        if 'Normal' in self.dict_windowing.keys():
+            old_index = names_ordered.index('Normal')
+            names_ordered.insert(0, names_ordered.pop(old_index))
+
+        # Create actions for each windowing items
+        for name in names_ordered:
+            text = str(name)
             actionWindowingItem = QtWidgets.QAction(MainWindow)
             actionWindowingItem.triggered.connect(
-                lambda state, text=key: self.setWindowingLimits(state, text))
+                lambda state, text=name: self.setWindowingLimits(state, text))
             self.menuWindowing.addAction(actionWindowingItem)
             actionWindowingItem.setText(_translate("MainWindow", text))
 
+    # Run pyradiomics
     def pyradiomicsHandler(self):
         self.callClass.runPyradiomics()
 
@@ -1444,16 +1534,25 @@ class Ui_MainWindow(object):
         self.callClass.runAnonymization()
 
     def setWindowingLimits(self, state, text):
+        # Get the values for window and level from the dict
         windowing_limits = self.dict_windowing[text]
+
+        # Set window and level to the new values
         self.window = windowing_limits[0]
         self.level = windowing_limits[1]
+
+        # Create a deep copy of the pixel values as they are a list of list
         img_data = deepcopy(self.pixel_values)
 
+        # Get id of current slice
         id = self.slider.value()
         np_pixels = img_data[id]
+
+        # Update current slice with the new window and level values
         self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
         self.updateDICOM_view(windowingChange=True)
 
+        # Update all the pixmaps with the updated window and level values
         self.pixmaps = get_pixmaps(img_data, self.window, self.level)
 
     def transectHandler(self):

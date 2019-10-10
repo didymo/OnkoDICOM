@@ -137,11 +137,12 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         if action == delete_row_action:
             self.table_roi.removeRow(c)
         if action == modify_row_action:
-            dialog = Dialog_Dose(self.table_roi.item(c, 0).text())
+            dialog = Dialog_Dose(self.table_roi.item(c, 0).text(), self.table_roi.item(c,2).text())
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
+                self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
 
 
     def importData(self, data, root=None):
@@ -170,6 +171,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         #starting save
         with open('src/data/csv/imageWindowing.csv', 'w') as stream:
             writer = csv.writer(stream)
+            writer.writerow(["Organ","Scan","Window","Level"])
             for row in range(self.table_view.rowCount()):
                 rowdata = []
                 for column in range(self.table_view.columnCount()):
@@ -182,6 +184,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
         with open('src/data/csv/organName.csv', 'w') as stream:
             writer = csv.writer(stream)
+            writer.writerow(["Standard Name","FMA ID","Organ"])
             for row in range(self.table_organ.rowCount()):
                 rowdata = []
                 for column in range(self.table_organ.columnCount()):
@@ -323,6 +326,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
         #organ names
         with open('src/data/csv/organName.csv', "r") as fileInput:
+            next(fileInput)
             i = 0;
             for row in fileInput:
                 items = [
@@ -361,6 +365,8 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_roi.insertRow(i)
                 self.table_roi.setItem(i, 0, items[0])
                 self.table_roi.setItem(i, 1, items[1])
+                if len(items) > 2 :
+                    self.table_roi.setItem(i, 2, items[2])
                 i += 1
         #patient hash
         with open('src/data/csv/patientHash.csv', "r") as fileInput:
@@ -423,10 +429,11 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
         if path != '':
             with open(path, newline='') as stream:
+                next(stream)
                 for rowdata in csv.reader(stream):
                     if len(rowdata)!= 3:
                         buttonReply = QMessageBox.warning(self, "Error Message",
-                                                          "Import a csv with 3 columns and just the data with the displayed order!", QMessageBox.Ok)
+                                                          "Import a csv with 3 columns and the data with the displayed order!", QMessageBox.Ok)
                         if buttonReply == QMessageBox.Ok:
                             pass
                     else:

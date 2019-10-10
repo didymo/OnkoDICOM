@@ -107,17 +107,18 @@ def Hash_identifiers(file_no, ds_rtss):
 def checkFileExist(fileName):
     print("file name:-- ", fileName)  # printing file name
 
-    if (fileName == "Hash_map.csv"):
+    if (fileName == "patientHash.csv"):
+        data_folder_path = "/src/data/csv/"
         cwd = os.getcwd()  # getting the current working directory
-        file_path = cwd + "/" + fileName  # concatenating the current working directory with the csv filename
+        file_path = cwd + data_folder_path + fileName  # concatenating the current working directory with the csv filename
         print("Full path :  ===========", file_path)  # print the full csv file path
         print("file exist: ", os.path.isfile(file_path))  # check if the file exist in the folder
         if (os.path.isfile(file_path)) == True:  # if file exist return True
             print("returning true-----------------------")
-            return True
+            return True, file_path
         else:
             print("returning false----------------------")  # if file not exist return false
-            return False
+            return False, file_path
 
 
  ## ===================================CTEATE CSV FILE================================================
@@ -125,8 +126,11 @@ def checkFileExist(fileName):
 def create_hash_csv(pname, sha1_pname, csv_filename):
 
     # print("Csv file name is : ",csv_filename)
-    # csv_filename = str("Hash_map") + ".csv"
-    if (checkFileExist(csv_filename)) == False:
+    # chcek if the patientHash.csv exist
+    Csv_Exist, csv_filePath = checkFileExist(csv_filename)
+
+    # if the csv doent exist create a new CSV and export the Hash to that. 
+    if (Csv_Exist == False):
         print("-----Creating CSV------")
 
         csv_header = []
@@ -141,7 +145,7 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
         df_identifier_csv.to_csv(csv_filename, index=False) # creating the CVS
 
         row = [pname, sha1_pname]
-        with open(csv_filename, 'a') as csvFile:  # inserting the hash values
+        with open(csv_filePath, 'a') as csvFile:  # inserting the hash values
             writer = csv.writer(csvFile)
             writer.writerow(row)
             csvFile.close()
@@ -153,7 +157,7 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
     else:
         print("updating csv")
         row = [pname, sha1_pname]
-        with open(csv_filename, 'a') as csvFile: # updating the CVS with hash values
+        with open(csv_filePath, 'a') as csvFile: # updating the CVS with hash values
             writer = csv.writer(csvFile)
             writer.writerow(row)
             csvFile.close()
@@ -279,7 +283,7 @@ def Create_New_Folder(new_patient_folder_name, Dicom_folder_path):
 
 #========================CHECK if hashed FOLDER exist=======================================
 
-def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, File_hash_status):
+def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File_hash_status):
 
     first_file = os.path.basename(all_filepaths[0])
     
@@ -296,6 +300,11 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, File_
             hash_patient_name_sha1_first = str(hash_patient_name_sha1_first)
         else:
             print("NO patient Name found")
+
+        print("Original patient name = =======================================", str(ds_rtss.PatientName))   
+        print("Original patient ID = =======================================", str(ds_rtss.PatientID))
+        print("Original patient name = =======================================", str(ds_rtss.PatientBirthDate))
+        print("Original patient name = =======================================", str(ds_rtss.PatientSex))
 
         new_patient_folder_name = hash_patient_name_sha1_first +"_"+"Dicom"
         print("New patient folder==", new_patient_folder_name)
@@ -318,7 +327,7 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, File_
         if new_patient_folder_name in os.listdir(SecondLastDir):
             return 1, new_patient_folder_name
         else:
-            return 0, new_patient_folder_name  
+            return 0, new_patient_folder_name 
 
 # ##==========================================Anon Function==========================================
 def anon_call(path, new_dict_dataset, all_filepaths):
@@ -337,13 +346,11 @@ def anon_call(path, new_dict_dataset, all_filepaths):
     text = "Hashed"
     Is_hashed, hash_value = check_file_hashed(First_Dicom_file, new_dict_dataset, 0, text)
 
-  
-
     if Is_hashed != True:
 
         print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
         Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 0)
-
+    
         if Exist_folder == 0 :
 
             print("Status of folder==========", Exist_folder)
@@ -388,7 +395,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                         print(" In main Pname and ID=  {} and SHA1_name: {}".format(pname_ID, sha1_pname))
 
                         Print_identifiers(ds_rtss)  # calling the print to show the identifiers
-                        csv_filename = str("Hash_map") + ".csv"
+                        csv_filename = str("patientHash") + ".csv"
                         # calling create CSV to store the the hashed value
                         create_hash_csv(pname_ID, sha1_pname, csv_filename) 
                         print("Calling WRITE FUNCTION when Csv called")
@@ -405,10 +412,10 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                     print("\n\n\n======File {} is a Folder=====".format(Dicom_filename))    #     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
                     print("\n\n\n")
 
-        print("Total files hashed======", count)
-
-
+        print("Total files hashed======", count)            
+    
     else:
+
         print("The files are already Hashed, need to export to the existing New patient folder")
         
         for key in new_dict_dataset:
@@ -418,12 +425,22 @@ def anon_call(path, new_dict_dataset, all_filepaths):
             print("Just overwriting the files without hashing")
 
             Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
+            
 
-            Dicom_filename = os.path.basename(all_filepaths[key])
-            ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
-            write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
-            count = 0
-            print("Total files hashed======", count)
+            if Exist_folder == 0:
+                print("Status of folder==========", Exist_folder)
+                Create_New_Folder(new_patient_folder_name, Dicom_folder_path) # calling create_folder function
+                Dicom_filename = os.path.basename(all_filepaths[key]) 
+                # loading the dicom file content into the dataframe.
+                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
+                write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
+            else:
+                print("Status of folder==========", Exist_folder)
+                Dicom_filename = os.path.basename(all_filepaths[key])
+                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
+                write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
+                count = 0
+                print("Total files hashed======", count)
 
 
 def anonymize(path, Datasets, FilePaths):
