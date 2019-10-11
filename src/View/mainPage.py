@@ -82,7 +82,7 @@ class Ui_MainWindow(object):
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
         self.dict_pixluts = get_pixluts(self.dataset)
-        self.dict_raw_ContourData = get_raw_ContourData(self.dataset_rtss)
+        self.dict_raw_ContourData, self.dict_NumPoints = get_raw_ContourData(self.dataset_rtss)
         self.dict_polygons = {}
 
         self.zoom = 1

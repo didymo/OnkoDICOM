@@ -5,7 +5,7 @@ import time
 from PyQt5.QtCore import QPoint
 from PyQt5.QtWidgets import QWidget, QApplication, QGraphicsScene, QGraphicsView, QLabel, QVBoxLayout, QMainWindow
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPixmap, QPen, QBrush
-
+import numpy as np
 
 from src.Model.CalculateImages import *
 
@@ -110,19 +110,70 @@ def get_pixluts(dict_ds):
 
 def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     pixels = []
-    for i in range(0, len(contour), 3):
-        for x, x_val in enumerate(pixlut[0]):
-            if (x_val > contour[i] and not prone and not feetfirst):
-                break
-            elif (x_val < contour[i]):
-                if feetfirst or prone:
-                    break
-        for y, y_val in enumerate(pixlut[1]):
-            if (y_val > contour[i + 1] and not prone):
-                break
-            elif (y_val < contour[i + 1] and prone):
-                break
-        pixels.append([x, y])
+
+    ## Optimization 1: Reduce unnecessary IF STATEMENTS
+    ## Time used: 488.194700717926
+    # if (not prone and not feetfirst):
+    #     for i in range(0, len(contour), 3):
+    #         for x, x_val in enumerate(pixlut[0]):
+    #             if x_val > contour[i]:
+    #                 break
+    #         for y, y_val in enumerate(pixlut[1]):
+    #             if y_val > contour[i+1]:
+    #                 break
+    #         pixels.append([x, y])
+
+    ### Optimization 2: Using Numpy Matrix
+    ### Time used: 5.099231481552124
+    # np_x = np.array(pixlut[0])
+    # np_y = np.array(pixlut[1])
+    # for i in range(0, len(contour), 3):
+    #     con_x = contour[i]
+    #     con_y = contour[i+1]
+    #     x = np.argmax(np_x > con_x)
+    #     y = np.argmax(np_y > con_y)
+    #     pixels.append([x, y])
+
+    ### Opitimazation 1 & 2
+    np_x = np.array(pixlut[0])
+    np_y = np.array(pixlut[1])
+    if (not feetfirst and not prone):
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i+1]
+            x = np.argmax(np_x > con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if (feetfirst and not prone):
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i+1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmin(np_y < con_y)
+            pixels.append([x, y])
+
+    ### Original Slowwwwwwww One
+    ### Time used: 895.787469625473
+    # for i in range(0, len(contour), 3):
+    #     for x, x_val in enumerate(pixlut[0]):
+    #         if (x_val > contour[i] and not prone and not feetfirst):
+    #             break
+    #         elif (x_val < contour[i]):
+    #             if feetfirst or prone:
+    #                 break
+    #     for y, y_val in enumerate(pixlut[1]):
+    #         if (y_val > contour[i + 1] and not prone):
+    #             break
+    #         elif (y_val < contour[i + 1] and prone):
+    #             break
+    #     pixels.append([x, y])
     return pixels
 
 
@@ -147,6 +198,7 @@ def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_sli
 def get_roi_contour_pixel(dict_raw_ContourData, roi_list, dict_pixluts):
     dict_pixels = {}
     for roi in roi_list:
+        print("PROCESSING:", roi)
         dict_pixels_of_roi = collections.defaultdict(list)
         raw_contour = dict_raw_ContourData[roi]
         for slice in raw_contour:
