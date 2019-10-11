@@ -87,6 +87,63 @@ def Hash_identifiers(file_no, ds_rtss):
         print("Patient Sex not found")
 
 
+    #----------instance creation------------
+
+    if 'InstanceCreationDate' in ds_rtss:
+        Instance_creation_Date= str(ds_rtss.InstanceCreationDate)
+        # print("Patient Sex - ", patient_sex)
+        # MD 5 hashing
+        hash_Instance_creation_Date_MD5 = uuid.uuid5(uuid.NAMESPACE_URL, Instance_creation_Date)
+        # Hashing the MD5 hash again using SHA1
+        hash_Instance_creation_Date_sha1 = uuid.uuid3(uuid.NAMESPACE_URL, str(hash_Instance_creation_Date_MD5))
+        # storing the hash to dataset
+        ds_rtss.InstanceCreationDate = str(hash_Instance_creation_Date_sha1)
+    else:
+        print("Instance Creation date not found")
+
+
+    #-----------STUDY date--------------
+    if 'StudyDate' in ds_rtss:
+        Study_Date = str(ds_rtss.StudyDate)
+        # print("Patient Sex - ", patient_sex)
+        # MD 5 hashing
+        hash_Study_Date_MD5 = uuid.uuid5(uuid.NAMESPACE_URL, Study_Date)
+        # Hashing the MD5 hash again using SHA1
+        hash_Study_Date_sha1 = uuid.uuid3(uuid.NAMESPACE_URL, str(hash_Study_Date_MD5))
+        # storing the hash to dataset
+        ds_rtss.StudyDate = str(hash_Study_Date_sha1)
+    else:
+        print("Patient Study_Date not found")
+
+    #-----------------content date date-----------
+    if 'ContentDate' in ds_rtss:
+        Content_Date = str(ds_rtss.ContentDate)
+        # print("Patient Sex - ", patient_sex)
+        # MD 5 hashing
+        hash_Content_Date_MD5 = uuid.uuid5(uuid.NAMESPACE_URL, Content_Date)
+        # Hashing the MD5 hash again using SHA1
+        hash_Content_Date_sha1 = uuid.uuid3(uuid.NAMESPACE_URL, str(hash_Content_Date_MD5))
+        # storing the hash to dataset
+        ds_rtss.ContentDate = str(hash_Content_Date_sha1)
+    else:
+        print("Patient Content_Date not found")    
+
+
+    #------------------Structure set date-----------------
+
+    if 'StructureSetDate' in ds_rtss:
+        Structure_Set_Date = str(ds_rtss.StructureSetDate)
+        # print("Patient Sex - ", patient_sex)
+        # MD 5 hashing
+        hash_Structure_Set_Date_MD5 = uuid.uuid5(uuid.NAMESPACE_URL, Structure_Set_Date)
+        # Hashing the MD5 hash again using SHA1
+        hash_Structure_Set_Date_sha1 = uuid.uuid3(uuid.NAMESPACE_URL, str(hash_Structure_Set_Date_MD5))
+        # storing the hash to dataset
+        ds_rtss.StructureSetDate = str(hash_Structure_Set_Date_sha1)
+    else:
+        print("Patient Content_Date not found")  
+
+
      # used to reture flag = 1 to indicate the first file is used for saving the hash in 
      # hash_CSV file so CSV function will not be performed for rest of the files.   
     if file_no == 1:
@@ -335,12 +392,22 @@ def anon_call(path, new_dict_dataset, all_filepaths):
     print("\n\n====Anon Called====")
     Dicom_folder_path = path
 
+
+
+    # for key in new_dict_dataset:
+    #     if key == 0:
+    #         print("The values are : ", new_dict_dataset[key])
+
     # All_dcm = get_All_files(Dicom_folder_path)
     # print("ALL files: in main \n\n")
 
     # count = 0 
     # for eachFile in All_dcm:
     #     count += 1
+
+
+
+
     First_Dicom_file = os.path.basename(all_filepaths[0])  
 
     text = "Hashed"
