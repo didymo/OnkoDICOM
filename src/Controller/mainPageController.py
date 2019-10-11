@@ -97,7 +97,6 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         # setting tab order
-        self.setTabOrder(self.ui.Save_button, self.ui.line_LN)
         self.setTabOrder(self.ui.line_LN, self.ui.line_FN)
         self.setTabOrder(self.ui.line_FN, self.ui.date_of_birth)
         self.setTabOrder(self.ui.date_of_birth, self.ui.line_BP)
@@ -126,7 +125,6 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.setTabOrder(self.ui.Dt_REgional_failure, self.ui.Distant_Control)
         self.setTabOrder(self.ui.Distant_Control, self.ui.Dt_Distant_Failure)
         self.setTabOrder(self.ui.Dt_Distant_Failure, self.ui.Save_button)
-        self.setTabOrder(self.ui.Save_button, self.ui.line_LN)
 
         self.ui.Local_control.activated.connect(self.LocalControl_Failure)
         self.ui.Regional_Control.activated.connect(self.RegionalControl_Failure)
