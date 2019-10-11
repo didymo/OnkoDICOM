@@ -1,10 +1,11 @@
 import collections
 import sys
+import time
 
 from PyQt5.QtCore import QPoint
 from PyQt5.QtWidgets import QWidget, QApplication, QGraphicsScene, QGraphicsView, QLabel, QVBoxLayout, QMainWindow
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPixmap, QPen, QBrush
-
+import numpy as np
 
 from src.Model.CalculateImages import *
 
@@ -40,20 +41,24 @@ def get_raw_ContourData(rtss):
         dict_id[roi_number] = roi_name
 
     dict_ROI = {}
+    dict_NumPoints = {}
     for roi in rtss.ROIContourSequence:
         ROIDisplayColor = roi.ROIDisplayColor
         ReferencedROINumber = roi.ReferencedROINumber
         ROIName = dict_id[ReferencedROINumber]
         dict_contour = collections.defaultdict(list)
+        roi_points_count = 0
         for slice in roi.ContourSequence:
             for contour_img in slice.ContourImageSequence:
                 ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
             ContourGeometricType = slice.ContourGeometricType
             NumberOfContourPoints = slice.NumberOfContourPoints
+            roi_points_count += int(NumberOfContourPoints)
             ContourData = slice.ContourData
             dict_contour[ReferencedSOPInstanceUID].append(ContourData)
         dict_ROI[ROIName] = dict_contour
-    return dict_ROI
+        dict_NumPoints[ROIName] = roi_points_count
+    return dict_ROI, dict_NumPoints
     # print(dict_ROI['REST_COMMON LUNG']['1.3.12.2.1107.5.1.4.49601.30000017081104561168700001084'])
     # print(len(dict_ROI['REST_COMMON LUNG']['1.3.12.2.1107.5.1.4.49601.30000017081104561168700001084']))
 
@@ -105,19 +110,70 @@ def get_pixluts(dict_ds):
 
 def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     pixels = []
-    for i in range(0, len(contour), 3):
-        for x, x_val in enumerate(pixlut[0]):
-            if (x_val > contour[i] and not prone and not feetfirst):
-                break
-            elif (x_val < contour[i]):
-                if feetfirst or prone:
-                    break
-        for y, y_val in enumerate(pixlut[1]):
-            if (y_val > contour[i + 1] and not prone):
-                break
-            elif (y_val < contour[i + 1] and prone):
-                break
-        pixels.append([x, y])
+
+    ## Optimization 1: Reduce unnecessary IF STATEMENTS
+    ## Time used: 488.194700717926
+    # if (not prone and not feetfirst):
+    #     for i in range(0, len(contour), 3):
+    #         for x, x_val in enumerate(pixlut[0]):
+    #             if x_val > contour[i]:
+    #                 break
+    #         for y, y_val in enumerate(pixlut[1]):
+    #             if y_val > contour[i+1]:
+    #                 break
+    #         pixels.append([x, y])
+
+    ### Optimization 2: Using Numpy Matrix
+    ### Time used: 5.099231481552124
+    # np_x = np.array(pixlut[0])
+    # np_y = np.array(pixlut[1])
+    # for i in range(0, len(contour), 3):
+    #     con_x = contour[i]
+    #     con_y = contour[i+1]
+    #     x = np.argmax(np_x > con_x)
+    #     y = np.argmax(np_y > con_y)
+    #     pixels.append([x, y])
+
+    ### Opitimazation 1 & 2
+    np_x = np.array(pixlut[0])
+    np_y = np.array(pixlut[1])
+    if (not feetfirst and not prone):
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i+1]
+            x = np.argmax(np_x > con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if (feetfirst and not prone):
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i+1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmin(np_y < con_y)
+            pixels.append([x, y])
+
+    ### Original Slowwwwwwww One
+    ### Time used: 895.787469625473
+    # for i in range(0, len(contour), 3):
+    #     for x, x_val in enumerate(pixlut[0]):
+    #         if (x_val > contour[i] and not prone and not feetfirst):
+    #             break
+    #         elif (x_val < contour[i]):
+    #             if feetfirst or prone:
+    #                 break
+    #     for y, y_val in enumerate(pixlut[1]):
+    #         if (y_val > contour[i + 1] and not prone):
+    #             break
+    #         elif (y_val < contour[i + 1] and prone):
+    #             break
+    #     pixels.append([x, y])
     return pixels
 
 
@@ -136,6 +192,22 @@ def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_sli
             dict_pixels_of_roi[curr_slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
     # print(dict_pixels)
+    return dict_pixels
+
+
+def get_roi_contour_pixel(dict_raw_ContourData, roi_list, dict_pixluts):
+    dict_pixels = {}
+    for roi in roi_list:
+        print("PROCESSING:", roi)
+        dict_pixels_of_roi = collections.defaultdict(list)
+        raw_contour = dict_raw_ContourData[roi]
+        for slice in raw_contour:
+            pixlut = dict_pixluts[slice]
+            number_of_contours = len(raw_contour[slice])
+            for i in range(number_of_contours):
+                contour_pixels = calculate_pixels(pixlut, raw_contour[slice][i])
+                dict_pixels_of_roi[slice].append(contour_pixels)
+        dict_pixels[roi] = dict_pixels_of_roi
     return dict_pixels
 
 
@@ -277,12 +349,20 @@ if __name__ == '__main__':
     path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
     dict_ds, dict_path = get_datasets(path)
     rtss = dict_ds['rtss']
-    dict_raw_ContourData = get_raw_ContourData(rtss)
+    start_time = time.time()
+    dict_raw_ContourData, dict_NumPoints = get_raw_ContourData(rtss)
+    contourdata_time = time.time()
+    print('time of read raw contour data = ', contourdata_time - start_time)
     dict_pixluts = get_pixluts(dict_ds)
-    roi_selected = ['REST_COMMON LUNG']
+    pixluts_time = time.time()
+    print('time of pixluts = ', pixluts_time - contourdata_time)
+    roi_selected = ['REST_COMMON LUNG', 'rt lung', 'lt lung']
     curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115'
     # Contours of selected ROIs within current slice
+
     dict_rois_contours = get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice)
+    pixel_time = time.time()
+    print('time of pixels', pixel_time - pixluts_time)
     # xs = []
     # ys = []
     # for roi in roi_selected:
@@ -315,5 +395,7 @@ if __name__ == '__main__':
     # ex1 = Example(dict_rois_contours, roi_selected, curr_slice)
     # app.exec_()
 
+    start_time = time.time()
     w = Test(pixmap, dict_rois_contours, roi_selected, curr_slice)
+    print('time of display = ', time.time() - start_time)
     app.exec_()
