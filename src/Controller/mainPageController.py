@@ -773,7 +773,7 @@ class Transect(QtWidgets.QGraphicsScene):
 
         plt1.close()
         self.mainWindow.DICOM_image_display()
-        self.mainWindow.textOnDICOM_View()
+        self.mainWindow.updateText_View()
         self.tabWindow.setScene(self.mainWindow.DICOM_image_scene)
         event.canvas.figure.axes[0].has_been_closed = True
 

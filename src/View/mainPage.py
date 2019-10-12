@@ -1,4 +1,5 @@
 import matplotlib.pylab as plt
+import src.View.resources_rc
 from copy import deepcopy
 
 from PyQt5.QtCore import Qt
@@ -1194,6 +1195,28 @@ class Ui_MainWindow(object):
         self.DICOM_view.setObjectName("DICOM_view")
         self.DICOM_view.viewport().installEventFilter(self) # Set event filter on the dicom_view area
 
+        # Initialize text on DICOM View
+        self.text_imageID = QtWidgets.QLabel(self.DICOM_view)
+        self.text_imagePos = QtWidgets.QLabel(self.DICOM_view)
+        self.text_WL = QtWidgets.QLabel(self.DICOM_view)
+        self.text_imageSize = QtWidgets.QLabel(self.DICOM_view)
+        self.text_zoom = QtWidgets.QLabel(self.DICOM_view)
+        self.text_patientPos = QtWidgets.QLabel(self.DICOM_view)
+        # Position of the texts on DICOM View
+        self.text_imageID.setGeometry(QtCore.QRect(30, 20, 300, 29))
+        self.text_imagePos.setGeometry(QtCore.QRect(30, 40, 300, 29))
+        self.text_WL.setGeometry(QtCore.QRect(720, 20, 200, 29))
+        self.text_imageSize.setGeometry(QtCore.QRect(30, 450, 300, 29))
+        self.text_zoom.setGeometry(QtCore.QRect(30, 470, 300, 29))
+        self.text_patientPos.setGeometry(QtCore.QRect(680, 470, 500, 29))
+        # Set all the texts in white
+        self.text_imageID.setStyleSheet("QLabel { color : white; }")
+        self.text_imagePos.setStyleSheet("QLabel { color : white; }")
+        self.text_WL.setStyleSheet("QLabel { color : white; }")
+        self.text_imageSize.setStyleSheet("QLabel { color : white; }")
+        self.text_zoom.setStyleSheet("QLabel { color : white; }")
+        self.text_patientPos.setStyleSheet("QLabel { color : white; }")
+
 
     def updateDICOM_view(self, zoomChange=False, windowingChange=False):
         # Display DICOM image
@@ -1210,7 +1233,7 @@ class Ui_MainWindow(object):
         self.ROI_display()
 
         # Update settings on DICOM View
-        self.textOnDICOM_View()
+        self.updateText_View()
 
         self.DICOM_view.setScene(self.DICOM_image_scene)
 
@@ -1231,7 +1254,9 @@ class Ui_MainWindow(object):
 
 
     # Display the settings on the DICOM View tab
-    def textOnDICOM_View(self):
+    def updateText_View(self):
+        _translate = QtCore.QCoreApplication.translate
+
         # Dictionary from the dataset associated to the slice
         id = self.slider.value()
         filename = self.filepaths[id]
@@ -1254,65 +1279,18 @@ class Ui_MainWindow(object):
 
         # Add text on DICOM View
         # Text: "Image: {current_slice} / {total_slices}"
-        text_imageID = QtWidgets.QGraphicsTextItem()
-        text_imageID.setParent(self.DICOM_view)
-        text_imageID.setFlag(QtWidgets.QGraphicsItem.ItemIgnoresTransformations, True)
-        text_imageID.adjustSize()
-        text_imageID.setPos(QtCore.QPoint(-140, 0))
-        text_imageID.setPlainText("Image: " + str(current_slice) + " / " + str(total_slices))
-        text_imageID.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-
+        self.text_imageID.setText(_translate("MainWindow", "Image: " + str(current_slice) + " / " + str(total_slices)))
         # Text: "Position: {position_slice} mm"
-        text_imagePos = QtWidgets.QGraphicsTextItem()
-        text_imagePos.setParent(self.DICOM_view)
-        text_imagePos.setFlag(QtWidgets.QGraphicsItem.ItemIgnoresTransformations, True)
-        text_imagePos.adjustSize()
-        text_imagePos.setPos(QtCore.QPoint(-140, 20))
-        text_imagePos.setPlainText("Position: " + str(slice_pos) + " mm")
-        text_imagePos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-
+        self.text_imagePos.setText(_translate("MainWindow", "Position: " + str(slice_pos) + " mm"))
         # Text: "W/L: {window} / {level}" (for windowing functionality)
-        text_WL = QtWidgets.QGraphicsTextItem()
-        text_WL.setParent(self.DICOM_view)
-        text_WL.setFlag(QtWidgets.QGraphicsItem.ItemIgnoresTransformations, True)
-        text_WL.adjustSize()
-        text_WL.setPos(QtCore.QPoint(535, 0))
-        text_WL.setPlainText("W/L: " + str(self.window) + "/" + str(self.level))
-        text_WL.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-
+        self.text_WL.setText(_translate("MainWindow", "W/L: " + str(self.window) + "/" + str(self.level)))
         # Text: "Image size: {total_row}x{total_col} px"
-        text_imageSize = QtWidgets.QGraphicsTextItem()
-        text_imageSize.setParent(self.DICOM_view)
-        text_imageSize.setFlag(QtWidgets.QGraphicsItem.ItemIgnoresTransformations, True)
-        text_imageSize.adjustSize()
-        text_imageSize.setPos(QtCore.QPoint(-140, 450))
-        text_imageSize.setPlainText("Image Size: " + str(row_image) + "x" + str(col_image) + "px")
-        text_imageSize.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-
+        self.text_imageSize.setText(_translate("MainWindow", "Image Size: " + str(row_image) + "x" + str(col_image) + "px"))
         # Text: "Zoom: {zoom}:{zoom}"
-        text_zoom = QtWidgets.QGraphicsTextItem()
-        text_zoom.setParent(self.DICOM_view)
-        text_zoom.setFlag(QtWidgets.QGraphicsItem.ItemIgnoresTransformations, True)
-        text_zoom.adjustSize()
-        text_zoom.setPos(QtCore.QPoint(-140, 470))
-        text_zoom.setPlainText("Zoom: " + str(zoom) + ":" + str(zoom))
-        text_zoom.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-
+        self.text_zoom.setText(_translate("MainWindow", "Zoom: " + str(zoom) + ":" + str(zoom)))
         # Text: "Patient Position: {patient_position}"
-        text_patientPos = QtWidgets.QGraphicsTextItem()
-        text_patientPos.setParent(self.DICOM_view)
-        text_patientPos.setFlag(QtWidgets.QGraphicsItem.ItemIgnoresTransformations, True)
-        text_patientPos.adjustSize()
-        text_patientPos.setPos(QtCore.QPoint(495, 470))
-        text_patientPos.setPlainText("Patient Position: " + patient_pos)
-        text_patientPos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
+        self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
 
-        self.DICOM_image_scene.addItem(text_imageID)
-        self.DICOM_image_scene.addItem(text_imagePos)
-        self.DICOM_image_scene.addItem(text_WL)
-        self.DICOM_image_scene.addItem(text_imageSize)
-        self.DICOM_image_scene.addItem(text_patientPos)
-        self.DICOM_image_scene.addItem(text_zoom)
 
 
     def ROI_display(self):
@@ -1590,50 +1568,6 @@ class Ui_MainWindow(object):
     def pluginManagerHandler(self):
         self.callManager.show_plugin_manager()
 
-
-import src.View.resources_rc
-
-
-class HexaColor(object):
-    def __init__(self):
-        self.listColor = self.hexaVersionColor()
-
-    def getHexaColor(self, index):
-        return self.listColor[index][0], self.listColor[index][1], self.listColor[index][2]
-
-
-    def hexaVersionColor(self):
-        colors = [color.rstrip('\n') for color in open('src/View/color.txt')]
-        res = []
-        for color in colors:
-            hex_R = self.convertHexaToDec(color[:2])
-            hex_G = self.convertHexaToDec(color[2:4])
-            hex_B = self.convertHexaToDec(color[-2:])
-            res.append([hex_R, hex_G, hex_B])
-        return res
-
-
-    def convertHexaToDec(self, number):
-        digit1 = self.convertHexaLetterToNumber(number[:1])
-        digit2 = self.convertHexaLetterToNumber(number[-1:])
-        return int(digit1) * 16 + int(digit2)
-
-
-    def convertHexaLetterToNumber(self, digit):
-        if digit == 'A':
-            return 10
-        elif digit == 'B':
-            return 11
-        elif digit == 'C':
-            return 12
-        elif digit == 'D':
-            return 13
-        elif digit == 'E':
-            return 14
-        elif digit == 'F':
-            return 15
-        else:
-            return digit
 
 
 class StructureInformation(object):
