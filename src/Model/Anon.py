@@ -421,6 +421,8 @@ def anon_call(path, new_dict_dataset, all_filepaths):
         if Exist_folder == 0 :
 
             print("Status of folder==========", Exist_folder)
+            print("The hashed folder does not exist")
+            print("======Creating the new Hashed patient Folder=======")
             Create_New_Folder(new_patient_folder_name, Dicom_folder_path) # calling create_folder function
             # print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
 
@@ -474,17 +476,18 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                         print("Calling WRITE FUNCTION when Csv not called")
                         # write_hash_dcm(sha1_pname, Dicom_filename)
                         write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname, new_patient_folder_name)
-
                 else:
                     print("\n\n\n======File {} is a Folder=====".format(Dicom_filename))    #     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
                     print("\n\n\n")
+            print("Total files hashed======", count)  
         else:
-            Print("File are already hashed and Hashed folder exist")            
-        print("Total files hashed======", count)            
-    
+            print("This directory have already been hashed, it is directory ({}).".format(new_patient_folder_name))
+                
     else:
 
         print("The files are already Hashed, need to export to the existing New patient folder")
+
+        Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
         
         for key in new_dict_dataset:
 
@@ -492,11 +495,13 @@ def anon_call(path, new_dict_dataset, all_filepaths):
             print("Patient Identifiers already hashed")
             print("Just overwriting the files without hashing")
 
-            Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
+            # Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
             
 
             if Exist_folder == 0:
                 print("Status of folder==========", Exist_folder)
+                print("The hashed folder does not exist")
+                print("======Creating the new Hashed patient Folder=======")
                 Create_New_Folder(new_patient_folder_name, Dicom_folder_path) # calling create_folder function
                 Dicom_filename = os.path.basename(all_filepaths[key]) 
                 # loading the dicom file content into the dataframe.
@@ -506,6 +511,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 print("Total files hashed======", count)
             else:
                 print("Status of folder==========", Exist_folder)
+                print("The hashed folder exist")
                 Dicom_filename = os.path.basename(all_filepaths[key])
                 ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
                 write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)

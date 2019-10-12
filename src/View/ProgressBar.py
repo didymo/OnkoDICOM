@@ -146,7 +146,7 @@ class Extended(QtCore.QThread):
             #                                   interpolation_resolution=None, interpolation_segments_between_planes=0,
             #                                   thickness=None, callback=None)
             dict_dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
-            self.copied += 0.01*self.file_size
+            self.copied += 0.1*self.file_size
             callback(self.copied)
         return dict_dvh
 
