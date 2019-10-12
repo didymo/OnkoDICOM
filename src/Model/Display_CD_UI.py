@@ -177,7 +177,7 @@ class Ui_CD_Display(object):
         self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
         self.label_4.setStyleSheet("font: 57 11pt \"Ubuntu\";\n"
-                                   "color: red ")
+                                   "color: rgb(0,0,0) ")
         self.label_4.setObjectName("label_4")
         self.Tx_intent = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
         self.Tx_intent.setGeometry(QtCore.QRect(150, 320, 171, 25))
@@ -424,7 +424,7 @@ class Ui_CD_Display(object):
         self.label_Dx_year.setText(_translate("MainWindow", "Dx_Year:"))
         self.label_AD.setText(_translate("MainWindow", "Age of Diagnosis:"))
         self.label_3.setText(_translate("MainWindow", "Gender:"))
-        self.label_4.setText(_translate("MainWindow", "The following Clinical Data was found for this patient."))
+        self.label_4.setText(_translate("MainWindow", "Note: The following Clinical Data was found for this patient."))
         self.label_BP.setText(_translate("MainWindow", "Birth Country:"))
         self.label_SD.setText(_translate("MainWindow", "Survival Duration:"))
         self.label_LCD.setText(_translate("MainWindow", "LC Duration:"))

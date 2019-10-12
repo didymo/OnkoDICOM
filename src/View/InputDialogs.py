@@ -58,12 +58,13 @@ class Dialog_Windowing(QDialog):
 
 class Dialog_Organ(QDialog):
 
-    def __init__(self, Name,id,organ):
+    def __init__(self, Name, id, organ, url):
         super(Dialog_Organ, self).__init__()
 
         self.name = Name
         self.id = id
         self.org = organ
+        self.url = url
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel,self)
         self.S_name = QLineEdit()
         self.S_name.setText(self.name)
@@ -71,12 +72,15 @@ class Dialog_Organ(QDialog):
         self.oID.setText(self.id)
         self.organ = QLineEdit()
         self.organ.setText(self.org)
+        self._url = QLineEdit()
+        self._url.setText(self.url)
 
 
         layout = QFormLayout(self)
         layout.addRow(QLabel("Standard Name:"), self.S_name)
         layout.addRow(QLabel("FMA ID:"), self.oID)
         layout.addRow(QLabel("Organ:"), self.organ)
+        layout.addRow(QLabel("Url:"), self._url)
         layout.addWidget(buttonBox)
         buttonBox.accepted.connect(self.accepting)
         buttonBox.rejected.connect(self.reject)
@@ -84,7 +88,7 @@ class Dialog_Organ(QDialog):
 
 
     def getInputs(self):
-        return (self.S_name.text(), self.oID.text(), self.organ.text())
+        return (self.S_name.text(), self.oID.text(), self.organ.text(), self._url.text())
 
     def accepting(self):
         if (self.S_name.text()!='' and self.oID.text()!='' and self.organ.text()!= '' ):
