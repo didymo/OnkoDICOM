@@ -3,7 +3,7 @@ from dicompylercore import dvhcalc, dvh, dicomparser
 # import pydicom
 # import matplotlib.pyplot as plt
 # from dicompylercore.dicomparser import DicomParser
-
+import multiprocessing
 
 # Retrieve a dictionary of basic info of all ROIs
 # Return value: dict
@@ -29,14 +29,47 @@ def get_roi_info(ds_rtss):
 # "1" is the ID of the ROI
 # dvh is a data type defined in dicompyler-core
 # For dvh plotting example with matplotlib, see: dvh_plot()
-def calc_dvhs(rtss, dose, dict_roi, dose_limit=None):
+# def calc_dvhs(rtss, dose, dict_roi, dose_limit=None):
+#     dict_dvh = {}
+#     for roi in dict_roi:
+#         # dicompylercore.dvhcalc.get_dvh(structure, dose, roi,
+#         #                                   limit=None, calculate_full_volume=True, use_structure_extents=False,
+#         #                                   interpolation_resolution=None, interpolation_segments_between_planes=0,
+#         #                                   thickness=None, callback=None)
+#         dict_dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+#     return dict_dvh
+
+
+### MultiProcessing Calculation of DVHs
+
+def multi_get_dvhs(rtss, dose, roi, queue, dose_limit=None):
+    dvh = {}
+    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+
+    print("This is", roi)
+    queue.put(dvh)
+
+def calc_dvhs(rtss, rtdose, dict_roi, dose_limit=None):
+    queue = multiprocessing.Queue()
+    processes = []
     dict_dvh = {}
-    for roi in dict_roi:
-        # dicompylercore.dvhcalc.get_dvh(structure, dose, roi,
-        #                                   limit=None, calculate_full_volume=True, use_structure_extents=False,
-        #                                   interpolation_resolution=None, interpolation_segments_between_planes=0,
-        #                                   thickness=None, callback=None)
-        dict_dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+
+    roi_list = []
+    for key in dict_roi:
+        roi_list.append(key)
+
+    for i in range(len(roi_list)):
+        p = multiprocessing.Process(target=multi_get_dvhs, args=(rtss, rtdose, roi_list[i], queue))
+        processes.append(p)
+        p.start()
+
+    for proc in processes:
+        dvh = queue.get()
+        dict_dvh.update(dvh)
+
+    for proc in processes:
+        proc.join()
+
     return dict_dvh
 
 

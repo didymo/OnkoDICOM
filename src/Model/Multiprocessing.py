@@ -1,58 +1,42 @@
 import multiprocessing
 import time
 import sys
+from src.Model.CalculateDVHs import *
+from src.Model.LoadPatients import *
 
-# def worker():
-#     name = multiprocessing.current_process().name
-#     print(name, 'Starting')
-#     time.sleep(1)
-#     print(name, 'Exiting')
-#     return
-#
-# def my_service():
-#     name = multiprocessing.current_process().name
-#     print(name, 'Starting')
-#     time.sleep(10)
-#     print(name, 'Exiting')
-#     return
-#
-#
-# if __name__ == '__main__':
-#     service = multiprocessing.Process(name='my_service', target=my_service)
-#     worker_1 = multiprocessing.Process(name='worker 1', target=worker)
-#     worker_2 = multiprocessing.Process(target=worker)
-#
-#     worker_1.start()
-#     worker_2.start()
-#     service.start()
+def test_calc_dvhs(rtss, dose, roi, queue, dose_limit=None):
+    dvh = {}
+    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+
+    print("This is", roi)
+    queue.put(dvh)
 
 
+path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
+dict_ds, dict_path = get_datasets(path)
+rtss = dict_ds['rtss']
+rtdose = dict_ds['rtdose']
 
-def daemon():
-    p = multiprocessing.current_process()
-    print('Starting:', p.name, p.pid)
-    sys.stdout.flush()
-    time.sleep(2)
-    print("Exiting:", p.name, p.pid)
-    sys.stdout.flush()
+roi_info = get_roi_info(rtss)
 
-def non_daemon():
-    p = multiprocessing.current_process()
-    print('Starting:', p.name, p.pid)
-    sys.stdout.flush()
-    print("Exiting:", p.name, p.pid)
-    sys.stdout.flush()
+roi_list = []
+for key in roi_info:
+    roi_list.append(key)
 
-if __name__ == '__main__':
-    d = multiprocessing.Process(name='daemon', target=daemon)
-    d.daemon = True
 
-    n = multiprocessing.Process(name='non-daemon', target=non_daemon)
-    n.daemon = False
+### Without multiprocessing
+start = time.time()
+dvhs = calc_dvhs(rtss, rtdose, roi_info)
+end = time.time()
+print(dvhs)
+print("Single Processing: ", end-start)
 
-    d.start()
-    time.sleep(1)
-    n.start()
+### Multiprocessing
+start = time.time()
 
-    d.join()
-    n.join()
+dict_dvh = multi_calc_dvhs(rtss, rtdose, roi_info)
+
+end = time.time()
+print("Multi Processing: ", end-start)
+print(dvhs)
+

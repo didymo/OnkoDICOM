@@ -71,9 +71,9 @@ if __name__ == '__main__':
     start_time = time.time()
 
     calc_1 = multiprocessing.Process(name='core_1', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[0], dict_pixluts))
-    calc_2 = multiprocessing.Process(name='core_1', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[1], dict_pixluts))
-    calc_3 = multiprocessing.Process(name='core_1', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[2], dict_pixluts))
-    calc_4 = multiprocessing.Process(name='core_1', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[3], dict_pixluts))
+    calc_2 = multiprocessing.Process(name='core_2', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[1], dict_pixluts))
+    calc_3 = multiprocessing.Process(name='core_3', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[2], dict_pixluts))
+    calc_4 = multiprocessing.Process(name='core_4', target=get_roi_contour_pixel, args=(dict_raw_ContourData, name_list[3], dict_pixluts))
 
     calc_1.start()
     calc_2.start()
