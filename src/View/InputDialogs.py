@@ -180,3 +180,34 @@ class Dialog_Dose(QDialog):
                                               "The Isodose field should not be empty!", QMessageBox.Ok)
             if buttonReply == QMessageBox.Ok:
                 pass
+
+class Rxdose_Check(QDialog):
+
+    def __init__(self, rxdose):
+        super(Rxdose_Check, self).__init__()
+
+        self.rxdose = rxdose
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel,self)
+        self.rxdose_display = QLineEdit()
+        self.rxdose_display.setText(str(self.rxdose))
+       
+        layout = QFormLayout(self)
+        layout.addRow(QLabel("RxDose: "), self.rxdose_display)
+        layout.addWidget(buttonBox)
+        buttonBox.accepted.connect(self.accepting)
+        buttonBox.rejected.connect(self.reject)
+        self.setWindowTitle("Verify RxDose")
+
+
+    def get_dose(self):
+        return self.rxdose
+
+    def accepting(self):
+        if (self.rxdose_display.text != '' and self.rxdose_display.text().isdigit()):
+            self.rxdose = int(self.rxdose_display.text())
+            self.accept()
+        else:
+            buttonReply = QMessageBox.warning(self, "Error Message",
+                                              "RxDose must be a positive number!", QMessageBox.Ok)
+            if buttonReply == QMessageBox.Ok:
+                pass

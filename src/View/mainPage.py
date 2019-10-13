@@ -1,4 +1,5 @@
 import matplotlib.pylab as plt
+from matplotlib import _cntr as cntr
 import src.View.resources_rc
 from copy import deepcopy
 
@@ -9,6 +10,8 @@ from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
 from src.Model.ROI import *
+from src.Model.Isodose import *
+from src.View.InputDialogs import Rxdose_Check
 from src.Controller.mainPageController import MainPage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -27,6 +30,26 @@ class Ui_MainWindow(object):
         self.filepaths = filepaths
         self.path = path
 
+        self.dose_pixluts = get_dose_pixluts(self.dataset)
+
+        self.rxdose = 1
+        if self.dataset['rtplan']:
+            if 'DoseReferenceSequence' in self.dataset['rtplan']:
+                if self.dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType:
+                    self.rxdose = self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
+            elif self.dataset['rtplan'].FractionGroupSequence:
+                fraction_group = self.dataset['rtplan'].FractionGroupSequence[0]
+                if ("NumberOfFractionsPlanned" in fraction_group) and \
+                        ("ReferencedBeamSequence" in fraction_group):
+                    beams = fraction_group.ReferencedBeamSequence
+                    number_of_fractions = fraction_group.NumberOfFractionsPlanned
+                    for beam in beams:
+                        if "BeamDose" in beam:
+                            self.rxdose += beam.BeamDose * number_of_fractions * 100
+        self.rxdose = round(self.rxdose)
+        dose_check_dialog = Rxdose_Check(self.rxdose)
+        dose_check_dialog.exec()
+        self.rxdose = dose_check_dialog.get_dose()
 
         # WindowWidth and WindowCenter values in the DICOM file can be either
         # a list or a float. The following lines of code check what instance
@@ -76,6 +99,7 @@ class Ui_MainWindow(object):
         self.listRoisID = self.orderedListRoiID()
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
+        self.selected_doses = []
 
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
@@ -1000,6 +1024,27 @@ class Ui_MainWindow(object):
         self.box8_isod.setFocusPolicy(Qt.NoFocus)
         self.box9_isod.setFocusPolicy(Qt.NoFocus)
         self.box10_isod.setFocusPolicy(Qt.NoFocus)
+        self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(
+            131, 0, 0, 128)]: self.checked_dose(state, text))
+        self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(
+            185, 0, 0, 128)]: self.checked_dose(state, text))
+        self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(
+            255, 46, 0, 128)]: self.checked_dose(state, text))
+        self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(
+            255, 161, 0, 128)]: self.checked_dose(state, text))
+        self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(
+            253, 255, 0, 128)]: self.checked_dose(state, text))
+        self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(
+            0, 255, 0, 128)]: self.checked_dose(state, text))
+        self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(
+            0, 143, 0, 128)]: self.checked_dose(state, text))
+        self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(
+            0, 255, 255, 128)]: self.checked_dose(state, text))
+        self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(
+            33, 0, 255, 128)]: self.checked_dose(state, text))
+        self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(
+            11, 0, 134, 128)]: self.checked_dose(state, text))
+
 
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -1025,6 +1070,18 @@ class Ui_MainWindow(object):
         vspacer = QtWidgets.QSpacerItem(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.gridL_IsodCol.addItem(vspacer, 10, 0, 2, -1)
+
+    # Function triggered when a dose level selected
+    # Updates the list of selected isodoses and dicom view
+    def checked_dose(self, state, key):
+        if state:
+            # Add the dose to the list of selected doses
+            self.selected_doses.append(key)
+        else:
+            # Remove dose from list of previously selected doses
+            self.selected_doses.remove(key)
+        # Update the dicom view
+        self.updateDICOM_view()
 
     # Draw color squares
     def colorSquareDraw(self, a, b, c):
@@ -1232,6 +1289,11 @@ class Ui_MainWindow(object):
         # Add ROI contours
         self.ROI_display()
 
+        # If a dose value selected
+        if self.selected_doses:
+            # Display dose value
+            self.isodose_display()
+
         # Update settings on DICOM View
         self.updateText_View()
 
@@ -1291,8 +1353,6 @@ class Ui_MainWindow(object):
         # Text: "Patient Position: {patient_position}"
         self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
 
-
-
     def ROI_display(self):
         slider_id = self.slider.value()
         curr_slice = self.dict_UID[slider_id]
@@ -1324,8 +1384,6 @@ class Ui_MainWindow(object):
                 color = self.roiColor[roi]['QColor_ROIdisplay']
                 self.DICOM_image_scene.addPolygon(polygons[i], QPen(color), QBrush(color))
 
-
-
     def calcPolygonF(self, curr_roi, curr_slice):
         list_polygons = []
         pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
@@ -1339,50 +1397,93 @@ class Ui_MainWindow(object):
             list_polygons.append(curr_polygon)
         return list_polygons
 
+    def isodose_display(self):
+        slider_id = self.slider.value()
+        curr_slice_uid = self.dict_UID[slider_id]
+        z = self.dataset[slider_id].ImagePositionPatient[2]
+        grid = get_dose_grid(self.dataset['rtdose'], float(z))
+
+        if not (grid == []):
+            x, y = np.meshgrid(
+                np.arange(grid.shape[1]), np.arange(grid.shape[0]))
+
+            # Instantiate the isodose generator for this slice
+            isodosegen = cntr.Cntr(x, y, grid)
+
+            for sd in self.selected_doses:
+                dose_level = sd[0] * self.rxdose / \
+                    (self.dataset['rtdose'].DoseGridScaling * 10000)
+                contours = isodosegen.trace(dose_level)
+                contours = contours[:len(contours)//2]
+                print(grid)
+                print('\n\n')
+
+                polygons = self.calc_dose_polygon(
+                    self.dose_pixluts[curr_slice_uid], contours)
+
+                for i in range(len(polygons)):
+                    color = sd[1]
+                    #color = self.roiColor['body']['QColor_ROIdisplay']
+                    self.DICOM_image_scene.addPolygon(
+                        polygons[i], QPen(color), QBrush(color))
+
+    # Calculate polygons for isodose display
+    def calc_dose_polygon(self, dose_pixluts, contours):
+        list_polygons = []
+        for contour in contours:
+            list_qpoints = []
+            for point in contour[::3]:
+                curr_qpoint = QPoint(
+                    dose_pixluts[0][int(point[0])], dose_pixluts[1][int(point[1])])
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+        return list_polygons
+
 
     # When the value of the slider in the DICOM View changes
     def valueChangeSlider(self):
         self.updateDICOM_view()
 
     # Handles mouse movement and button press events in the dicom_view area
+    # Used for altering window and level values
     def eventFilter(self, source, event):
         # If mouse moved while the right mouse button was pressed, change window and level values
-        if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
-            if event.buttons() == QtCore.Qt.RightButton:
+        # if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
+        if event.type() == QtCore.QEvent.MouseMove and event.buttons() == QtCore.Qt.RightButton:
+            # Values of x increase from left to right
+            # Window value should increase when mouse pointer moved to right, decrease when moved to left
+            # If the x value of the new mouse position is greater than the x value of
+            # the previous position, then increment the window value by 5,
+            # otherwise decrement it by 5
+            if event.x() > self.x1:
+                self.window += 1
+            elif event.x() < self.x1:
+                self.window -= 1
 
-                # Values of x increase from left to right
-                # Window value should increase when mouse pointer moved to right, decrease when moved to left
-                # If the x value of the new mouse position is greater than the x value of
-                # the previous position, then increment the window value by 5,
-                # otherwise decrement it by 5
-                if event.x() > self.x1:
-                    self.window += 5
-                elif event.x() < self.x1:
-                    self.window -= 5
+            # Values of y increase from top to bottom
+            # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
+            # If the y value of the new mouse position is greater than the y value of
+            # the previous position then decrement the level value by 5,
+            # otherwise increment it by 5
+            if event.y() > self.y1:
+                self.level -= 1
+            elif event.y() < self.y1:
+                self.level += 1
 
-                # Values of y increase from top to bottom
-                # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
-                # If the y value of the new mouse position is greater than the y value of
-                # the previous position then decrement the level value by 5,
-                # otherwise increment it by 5
-                if event.y() > self.y1:
-                    self.level -= 5
-                elif event.y() < self.y1:
-                    self.level += 5
+            # Update previous position values
+            self.x1 = event.x()
+            self.y1 = event.y()
 
-                # Update previous position values
-                self.x1 = event.x()
-                self.y1 = event.y()
+            # Get id of current slice
+            id = self.slider.value()
 
-                # Get id of current slice
-                id = self.slider.value()
+            # Create a deep copy as the pixel values are a list of list
+            np_pixels = deepcopy(self.pixel_values[id])
 
-                # Create a deep copy as the pixel values are a list of list
-                np_pixels = deepcopy(self.pixel_values[id])
-
-                # Update current image based on new window and level values
-                self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
-                self.updateDICOM_view(windowingChange=True)
+            # Update current image based on new window and level values
+            self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
+            self.updateDICOM_view(windowingChange=True)
 
         # When mouse button released, update all the slices based on the new values
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
