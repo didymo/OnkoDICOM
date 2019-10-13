@@ -481,7 +481,17 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                     print("\n\n\n")
             print("Total files hashed======", count)  
         else:
-            print("This directory have already been hashed, it is directory ({}).".format(new_patient_folder_name))
+            print("This directory have already been hashed, it is directory ({}). Have overwritten that directory with the new files.".format(new_patient_folder_name))      
+            count = 1
+            for key in new_dict_dataset:
+
+                Dicom_filename = os.path.basename(all_filepaths[key])
+                ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
+                pname_ID, sha1_pname, flag = Hash_identifiers(count, ds_rtss)
+                write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
+                
+            print("Total files hashed======", count)  
+            print("\n\n============Overwrite complete==================")
                 
     else:
 
