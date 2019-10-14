@@ -20,12 +20,12 @@ class WelcomePage(object):
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
         self.centralwidget.setObjectName("centralwidget")
         self.welcomeLabel = QtWidgets.QLabel(self.centralwidget)
-        self.welcomeLabel.setGeometry(QtCore.QRect(310, 310, 201, 41))
+        self.welcomeLabel.setGeometry(QtCore.QRect(270, 310, 351, 41))
         self.welcomeLabel.setStyleSheet("font: 57 18pt \"Ubuntu\";\n"
         "font: 57 18pt \"Ubuntu\";")
         self.welcomeLabel.setObjectName("welcomeLabel")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(150, 360, 521, 21))
+        self.label_2.setGeometry(QtCore.QRect(80, 360, 671, 21))
         self.label_2.setStyleSheet("font: 57 12pt \"Ubuntu\";")
         self.label_2.setObjectName("label_2")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
@@ -52,8 +52,8 @@ class WelcomePage(object):
 
     def retranslateUi(self, WelcomePage):
         _translate = QtCore.QCoreApplication.translate
-        WelcomePage.setWindowTitle(_translate("WelcomePage", "Onko"))
-        self.welcomeLabel.setText(_translate("WelcomePage", "Welcome to Onko!"))
-        self.label_2.setText(_translate("WelcomePage", "To get started, upload a patient file and a clinical spreadsheet (optional)."))
+        WelcomePage.setWindowTitle(_translate("WelcomePage", "OnkoDICOM"))
+        self.welcomeLabel.setText(_translate("WelcomePage", "Welcome to OnkoDICOM!"))
+        self.label_2.setText(_translate("WelcomePage", "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
         self.pushButton.setText(_translate("WelcomePage", "Open Patient"))
 

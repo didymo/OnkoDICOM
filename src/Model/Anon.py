@@ -368,11 +368,13 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File
 
         SecondLastDir = os.path.dirname(Dicom_folder_path)  # getting path till the second last Folder
 
+        Full_Patient_Path_New_folder  = SecondLastDir + "/" + new_patient_folder_name
+
         # check if the hashed Folder name exist in the Specified folder
         if new_patient_folder_name in os.listdir(SecondLastDir):
-            return 1, new_patient_folder_name
+            return 1, new_patient_folder_name, Full_Patient_Path_New_folder
         else:
-            return 0, new_patient_folder_name 
+            return 0, new_patient_folder_name, Full_Patient_Path_New_folder 
     else:
         SecondLastDir = os.path.dirname(Dicom_folder_path)  # getting path till the second last Folder
 
@@ -380,11 +382,13 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File
 
         new_patient_folder_name = str(ds_rtss.PatientName)
 
+        Full_Patient_Path_New_folder  = SecondLastDir + "/" + new_patient_folder_name
+
         # check if the hashed Folder name exist in the Specified folder
         if new_patient_folder_name in os.listdir(SecondLastDir):
-            return 1, new_patient_folder_name
+            return 1, new_patient_folder_name, Full_Patient_Path_New_folder
         else:
-            return 0, new_patient_folder_name 
+            return 0, new_patient_folder_name, Full_Patient_Path_New_folder
 
 # ##==========================================Anon Function==========================================
 def anon_call(path, new_dict_dataset, all_filepaths):
@@ -416,7 +420,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
     if Is_hashed != True:
 
         print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
-        Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 0)
+        Exist_folder, new_patient_folder_name, Full_Patient_Path_New_folder = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 0)
     
         if Exist_folder == 0 :
 
@@ -480,6 +484,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                     print("\n\n\n======File {} is a Folder=====".format(Dicom_filename))    #     write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, sha1_pname)
                     print("\n\n\n")
             print("Total files hashed======", count)  
+            return Full_Patient_Path_New_folder
         else:
             print("This directory have already been hashed, it is directory ({}). Have overwritten that directory with the new files.".format(new_patient_folder_name))      
             count = 1
@@ -492,12 +497,12 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 
             print("Total files hashed======", count)  
             print("\n\n============Overwrite complete==================")
-                
+            return Full_Patient_Path_New_folder
     else:
 
         print("The files are already Hashed, need to export to the existing New patient folder")
 
-        Exist_folder, new_patient_folder_name = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
+        Exist_folder, new_patient_folder_name, Full_Patient_Path_New_folder = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
         
         for key in new_dict_dataset:
 
@@ -527,6 +532,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
                 count = 0
                 print("Total files hashed======", count)
+        return Full_Patient_Path_New_folder
 
 
 def anonymize(path, Datasets, FilePaths):
@@ -542,6 +548,8 @@ def anonymize(path, Datasets, FilePaths):
     # for key in Datasets:
     #     if (key != 'rtplan' and key != 'rtss' and key != 'rtdose'):
     #         print("Values are:  ",Datasets[key])
-    anon_call(path, new_dict_dataset, all_filepaths)
+    Full_Patient_Path_New_folder = anon_call(path, new_dict_dataset, all_filepaths)
+    print("The New patient folder path is : ", Full_Patient_Path_New_folder)
+
 
 

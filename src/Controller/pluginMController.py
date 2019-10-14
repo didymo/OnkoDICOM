@@ -3,6 +3,7 @@ import sys
 import webbrowser
 from collections import deque
 
+from PyQt5.QtGui import QTextCharFormat
 from PyQt5.QtWidgets import QFileDialog
 
 from src.View.PluginManager import *
@@ -51,7 +52,10 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
     def OpenLink(self, item):
         if item.column() == 3 and item.text() != '':
-            webbrowser.open_new('http://' + item.text())
+            if 'http://' in item.text():
+                webbrowser.open_new(item.text())
+            else:
+                webbrowser.open_new('http://' + item.text())
 
     # windowing
     @QtCore.pyqtSlot(QtCore.QPoint)
@@ -347,7 +351,6 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_organ.setItem(i, 2, items[2])
                 if len(items) > 3:
                     self.table_organ.setItem(i, 3, items[3])
-
                 i += 1
 
         # volume name
