@@ -180,7 +180,7 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
 # Get pixels of contours of all rois selected within current slice
 # Return:
 # {slice: list of pixels of all contours in this slice}
-def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice):
+def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice, prone=False, feetfirst=False):
     dict_pixels = {}
     pixlut = dict_pixluts[curr_slice]
     for roi in roi_selected:
@@ -188,7 +188,7 @@ def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_sli
         raw_contours = dict_raw_ContourData[roi]
         number_of_contours = len(raw_contours[curr_slice])
         for i in range(number_of_contours):
-            contour_pixels = calculate_pixels(pixlut, raw_contours[curr_slice][i])
+            contour_pixels = calculate_pixels(pixlut, raw_contours[curr_slice][i], prone, feetfirst)
             dict_pixels_of_roi[curr_slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
     # print(dict_pixels)

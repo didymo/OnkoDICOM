@@ -34,7 +34,7 @@ print("Single Processing: ", end-start)
 ### Multiprocessing
 start = time.time()
 
-dict_dvh = multi_calc_dvhs(rtss, rtdose, roi_info)
+dict_dvh = multi_get_dvhs(rtss, rtdose, roi_info)
 
 end = time.time()
 print("Multi Processing: ", end-start)
