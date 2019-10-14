@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-        self.dataset = dataset
+        self.dataset =set
         self.raw_dvh = raw_dvh
         self.dvh_x_y = dvhxy
         self.rois =rois
@@ -1380,9 +1380,21 @@ class Ui_MainWindow(object):
             else:
                 polygons = self.dict_polygons[roi_name][curr_slice]
 
+            color = self.roiColor[roi]['QColor_ROIdisplay']
+            pen = get_qpen(color, 2)
             for i in range(len(polygons)):
-                color = self.roiColor[roi]['QColor_ROIdisplay']
                 self.DICOM_image_scene.addPolygon(polygons[i], QPen(color), QBrush(color))
+
+    # Different Types of
+    def get_qpen(self, color, style=1, widthF=1):
+        pen = QPen(color)
+        # Style List:
+        # NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3
+        # DashDotLine: 4  DashDotDotLine: 5
+        pen.setStyle(style)
+        pen.setWidthF(widthF)
+        return pen
+
 
     def calcPolygonF(self, curr_roi, curr_slice):
         list_polygons = []
