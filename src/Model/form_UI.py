@@ -88,7 +88,7 @@ class Ui_Form(object):
         self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
         self.label_4.setStyleSheet("font: 57 11pt \"Ubuntu\";\n"
-                                       "color: red ")
+                                       "color: rgb(0,0,0) ")
         self.label_4.setObjectName("label_4")
         self.label_DB = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_DB.setGeometry(QtCore.QRect(20, 120, 101, 21))
@@ -434,7 +434,7 @@ class Ui_Form(object):
         self.label_LN.setText(_translate("MainWindow", "Last Name:"))
         self.label_FN.setText(_translate("MainWindow", "First Name:"))
         self.label_3.setText(_translate("MainWindow", "Gender:"))
-        self.label_4.setText(_translate("MainWindow", "*There was no csv file containing \"clinical data\" in its name located in the directory."))
+        self.label_4.setText(_translate("MainWindow", "Note: There was no csv file containing \"clinical data\" in its name located in the directory."))
         self.label_DB.setText(_translate("MainWindow", "Date of Birth:"))
         self.label_BP.setText(_translate("MainWindow", "Birth Country:"))
         self.label_7.setText(_translate("MainWindow", "Date of Diagnosis:"))

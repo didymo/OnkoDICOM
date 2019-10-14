@@ -1,4 +1,6 @@
 import matplotlib.pylab as plt
+from matplotlib import _cntr as cntr
+import src.View.resources_rc
 from copy import deepcopy
 
 from PyQt5.QtCore import Qt
@@ -8,6 +10,8 @@ from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
 from src.Model.ROI import *
+from src.Model.Isodose import *
+from src.View.InputDialogs import Rxdose_Check
 from src.Controller.mainPageController import MainPage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -26,23 +30,43 @@ class Ui_MainWindow(object):
         self.filepaths = filepaths
         self.path = path
 
+        self.dose_pixluts = get_dose_pixluts(self.dataset)
 
-        # WindowWidth and WindowCenter values in the DICOM file can be either 
-        # a list or a float. The following lines of code check what instance 
+        self.rxdose = 1
+        if self.dataset['rtplan']:
+            if 'DoseReferenceSequence' in self.dataset['rtplan']:
+                if self.dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType:
+                    self.rxdose = self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
+            elif self.dataset['rtplan'].FractionGroupSequence:
+                fraction_group = self.dataset['rtplan'].FractionGroupSequence[0]
+                if ("NumberOfFractionsPlanned" in fraction_group) and \
+                        ("ReferencedBeamSequence" in fraction_group):
+                    beams = fraction_group.ReferencedBeamSequence
+                    number_of_fractions = fraction_group.NumberOfFractionsPlanned
+                    for beam in beams:
+                        if "BeamDose" in beam:
+                            self.rxdose += beam.BeamDose * number_of_fractions * 100
+        self.rxdose = round(self.rxdose)
+        dose_check_dialog = Rxdose_Check(self.rxdose)
+        dose_check_dialog.exec()
+        self.rxdose = dose_check_dialog.get_dose()
+
+        # WindowWidth and WindowCenter values in the DICOM file can be either
+        # a list or a float. The following lines of code check what instance
         # the values belong to and sets the window and level values accordingly
         # The values are converted from the type pydicom.valuerep.DSfloat to
         # int for processing later on in the program
-        if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):    
+        if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
             self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
             self.window = int(self.dataset[0].WindowWidth[1])
-        
-        if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):    
+
+        if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
             self.level = int(self.dataset[0].WindowCenter)
         elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
             self.level = int(self.dataset[0].WindowCenter[1])
 
-        # Variables to check for the mouse position when altering the window and 
+        # Variables to check for the mouse position when altering the window and
         # level values
         self.x1, self.y1 = 256, 256
 
@@ -58,7 +82,7 @@ class Ui_MainWindow(object):
                     items = [item for item in row.split(',')]
                     self.dict_windowing[items[0]] = [int(items[2]), int(items[3])]
         else:
-            # If csv does not exist, initialize dictionary with default values       
+            # If csv does not exist, initialize dictionary with default values
             self.dict_windowing = {"Normal": [self.window, self.level], "Lung": [1600, -300],
                                 "Bone": [1400, 700], "Brain": [160, 950],
                                "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
@@ -75,7 +99,8 @@ class Ui_MainWindow(object):
         self.listRoisID = self.orderedListRoiID()
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
-        
+        self.selected_doses = []
+
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
@@ -94,6 +119,12 @@ class Ui_MainWindow(object):
         # DICOM Tree for RT Dose file
         self.dicomTree_rtdose = DicomTree(self.file_rtdose)
         self.dictDicomTree_rtdose = self.dicomTree_rtdose.dict
+
+        # Patient Position
+        filename_CT0 = self.filepaths[0]
+        dicomTreeSlice_CT0 = DicomTree(filename_CT0)
+        dictSlice_CT0 = dicomTreeSlice_CT0.dict
+        self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths)
@@ -993,6 +1024,27 @@ class Ui_MainWindow(object):
         self.box8_isod.setFocusPolicy(Qt.NoFocus)
         self.box9_isod.setFocusPolicy(Qt.NoFocus)
         self.box10_isod.setFocusPolicy(Qt.NoFocus)
+        self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(
+            131, 0, 0, 128)]: self.checked_dose(state, text))
+        self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(
+            185, 0, 0, 128)]: self.checked_dose(state, text))
+        self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(
+            255, 46, 0, 128)]: self.checked_dose(state, text))
+        self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(
+            255, 161, 0, 128)]: self.checked_dose(state, text))
+        self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(
+            253, 255, 0, 128)]: self.checked_dose(state, text))
+        self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(
+            0, 255, 0, 128)]: self.checked_dose(state, text))
+        self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(
+            0, 143, 0, 128)]: self.checked_dose(state, text))
+        self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(
+            0, 255, 255, 128)]: self.checked_dose(state, text))
+        self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(
+            33, 0, 255, 128)]: self.checked_dose(state, text))
+        self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(
+            11, 0, 134, 128)]: self.checked_dose(state, text))
+
 
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -1018,6 +1070,18 @@ class Ui_MainWindow(object):
         vspacer = QtWidgets.QSpacerItem(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.gridL_IsodCol.addItem(vspacer, 10, 0, 2, -1)
+
+    # Function triggered when a dose level selected
+    # Updates the list of selected isodoses and dicom view
+    def checked_dose(self, state, key):
+        if state:
+            # Add the dose to the list of selected doses
+            self.selected_doses.append(key)
+        else:
+            # Remove dose from list of previously selected doses
+            self.selected_doses.remove(key)
+        # Update the dicom view
+        self.updateDICOM_view()
 
     # Draw color squares
     def colorSquareDraw(self, a, b, c):
@@ -1071,7 +1135,7 @@ class Ui_MainWindow(object):
     #  DVH FUNCTIONALITY  #
     #######################
 
-    # Return the DVH plot 
+    # Return the DVH plot
     def DVH_view(self):
         fig, ax = plt.subplots()
         fig.subplots_adjust(0.1, 0.15, 1, 1)
@@ -1160,11 +1224,15 @@ class Ui_MainWindow(object):
         self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(self.pixmaps) - 1)
+        if self.patient_HFS:
+            self.slider.setInvertedControls(True)
+            self.slider.setInvertedAppearance(True)
         self.slider.setValue(int(len(self.pixmaps) / 2))
         self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.slider.setTickInterval(1)
         self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
                                   "y2:1, stop:0 #fff, stop:1 #ddd);border: 1px solid #444;border-radius: 4px;}")
+
         # self.slider.setAutoFillBackground(True)
         # p = self.slider.palette()
         # p.setColor(self.slider.backgroundRole(), QtCore.Qt.black)
@@ -1184,6 +1252,28 @@ class Ui_MainWindow(object):
         self.DICOM_view.setObjectName("DICOM_view")
         self.DICOM_view.viewport().installEventFilter(self) # Set event filter on the dicom_view area
 
+        # Initialize text on DICOM View
+        self.text_imageID = QtWidgets.QLabel(self.DICOM_view)
+        self.text_imagePos = QtWidgets.QLabel(self.DICOM_view)
+        self.text_WL = QtWidgets.QLabel(self.DICOM_view)
+        self.text_imageSize = QtWidgets.QLabel(self.DICOM_view)
+        self.text_zoom = QtWidgets.QLabel(self.DICOM_view)
+        self.text_patientPos = QtWidgets.QLabel(self.DICOM_view)
+        # Position of the texts on DICOM View
+        self.text_imageID.setGeometry(QtCore.QRect(30, 20, 300, 29))
+        self.text_imagePos.setGeometry(QtCore.QRect(30, 40, 300, 29))
+        self.text_WL.setGeometry(QtCore.QRect(720, 20, 200, 29))
+        self.text_imageSize.setGeometry(QtCore.QRect(30, 450, 300, 29))
+        self.text_zoom.setGeometry(QtCore.QRect(30, 470, 300, 29))
+        self.text_patientPos.setGeometry(QtCore.QRect(680, 470, 500, 29))
+        # Set all the texts in white
+        self.text_imageID.setStyleSheet("QLabel { color : white; }")
+        self.text_imagePos.setStyleSheet("QLabel { color : white; }")
+        self.text_WL.setStyleSheet("QLabel { color : white; }")
+        self.text_imageSize.setStyleSheet("QLabel { color : white; }")
+        self.text_zoom.setStyleSheet("QLabel { color : white; }")
+        self.text_patientPos.setStyleSheet("QLabel { color : white; }")
+
 
     def updateDICOM_view(self, zoomChange=False, windowingChange=False):
         # Display DICOM image
@@ -1199,8 +1289,13 @@ class Ui_MainWindow(object):
         # Add ROI contours
         self.ROI_display()
 
+        # If a dose value selected
+        if self.selected_doses:
+            # Display dose value
+            self.isodose_display()
+
         # Update settings on DICOM View
-        self.textOnDICOM_View()
+        self.updateText_View()
 
         self.DICOM_view.setScene(self.DICOM_image_scene)
 
@@ -1219,8 +1314,11 @@ class Ui_MainWindow(object):
         self.DICOM_image_scene.addWidget(DICOM_image_label)
 
 
+
     # Display the settings on the DICOM View tab
-    def textOnDICOM_View(self):
+    def updateText_View(self):
+        _translate = QtCore.QCoreApplication.translate
+
         # Dictionary from the dataset associated to the slice
         id = self.slider.value()
         filename = self.filepaths[id]
@@ -1243,54 +1341,17 @@ class Ui_MainWindow(object):
 
         # Add text on DICOM View
         # Text: "Image: {current_slice} / {total_slices}"
-        text_imageID = QtWidgets.QGraphicsTextItem()
-        text_imageID.adjustSize()
-        text_imageID.setPos(QtCore.QPoint(-140, 0))
-        text_imageID.setPlainText("Image: " + str(current_slice) + " / " + str(total_slices))
-        text_imageID.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-        
+        self.text_imageID.setText(_translate("MainWindow", "Image: " + str(current_slice) + " / " + str(total_slices)))
         # Text: "Position: {position_slice} mm"
-        text_imagePos = QtWidgets.QGraphicsTextItem()
-        text_imagePos.adjustSize()
-        text_imagePos.setPos(QtCore.QPoint(-140, 20))
-        text_imagePos.setPlainText("Position: " + str(slice_pos) + " mm")
-        text_imagePos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-        
+        self.text_imagePos.setText(_translate("MainWindow", "Position: " + str(slice_pos) + " mm"))
         # Text: "W/L: {window} / {level}" (for windowing functionality)
-        text_WL = QtWidgets.QGraphicsTextItem()
-        text_WL.adjustSize()
-        text_WL.setPos(QtCore.QPoint(535, 0))
-        text_WL.setPlainText("W/L: " + str(self.window) + "/" + str(self.level))
-        text_WL.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-        
+        self.text_WL.setText(_translate("MainWindow", "W/L: " + str(self.window) + "/" + str(self.level)))
         # Text: "Image size: {total_row}x{total_col} px"
-        text_imageSize = QtWidgets.QGraphicsTextItem()
-        text_imageSize.adjustSize()
-        text_imageSize.setPos(QtCore.QPoint(-140, 450))
-        text_imageSize.setPlainText("Image Size: " + str(row_image) + "x" + str(col_image) + "px")
-        text_imageSize.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-        
+        self.text_imageSize.setText(_translate("MainWindow", "Image Size: " + str(row_image) + "x" + str(col_image) + "px"))
         # Text: "Zoom: {zoom}:{zoom}"
-        text_zoom = QtWidgets.QGraphicsTextItem()
-        text_zoom.adjustSize()
-        text_zoom.setPos(QtCore.QPoint(-140, 470))
-        text_zoom.setPlainText("Zoom: " + str(zoom) + ":" + str(zoom))
-        text_zoom.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-        
+        self.text_zoom.setText(_translate("MainWindow", "Zoom: " + str(zoom) + ":" + str(zoom)))
         # Text: "Patient Position: {patient_position}"
-        text_patientPos = QtWidgets.QGraphicsTextItem()
-        text_patientPos.adjustSize()
-        text_patientPos.setPos(QtCore.QPoint(495, 470))
-        text_patientPos.setPlainText("Patient Position: " + patient_pos)
-        text_patientPos.setDefaultTextColor(QtGui.QColor(255, 255, 255))
-
-        self.DICOM_image_scene.addItem(text_imageID)
-        self.DICOM_image_scene.addItem(text_imagePos)
-        self.DICOM_image_scene.addItem(text_WL)
-        self.DICOM_image_scene.addItem(text_imageSize)
-        self.DICOM_image_scene.addItem(text_patientPos)
-        self.DICOM_image_scene.addItem(text_zoom)
-
+        self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
 
     def ROI_display(self):
         slider_id = self.slider.value()
@@ -1323,8 +1384,6 @@ class Ui_MainWindow(object):
                 color = self.roiColor[roi]['QColor_ROIdisplay']
                 self.DICOM_image_scene.addPolygon(polygons[i], QPen(color), QBrush(color))
 
-
-
     def calcPolygonF(self, curr_roi, curr_slice):
         list_polygons = []
         pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
@@ -1338,51 +1397,94 @@ class Ui_MainWindow(object):
             list_polygons.append(curr_polygon)
         return list_polygons
 
+    def isodose_display(self):
+        slider_id = self.slider.value()
+        curr_slice_uid = self.dict_UID[slider_id]
+        z = self.dataset[slider_id].ImagePositionPatient[2]
+        grid = get_dose_grid(self.dataset['rtdose'], float(z))
+
+        if not (grid == []):
+            x, y = np.meshgrid(
+                np.arange(grid.shape[1]), np.arange(grid.shape[0]))
+
+            # Instantiate the isodose generator for this slice
+            isodosegen = cntr.Cntr(x, y, grid)
+
+            for sd in self.selected_doses:
+                dose_level = sd[0] * self.rxdose / \
+                    (self.dataset['rtdose'].DoseGridScaling * 10000)
+                contours = isodosegen.trace(dose_level)
+                contours = contours[:len(contours)//2]
+                print(grid)
+                print('\n\n')
+
+                polygons = self.calc_dose_polygon(
+                    self.dose_pixluts[curr_slice_uid], contours)
+
+                for i in range(len(polygons)):
+                    color = sd[1]
+                    #color = self.roiColor['body']['QColor_ROIdisplay']
+                    self.DICOM_image_scene.addPolygon(
+                        polygons[i], QPen(color), QBrush(color))
+
+    # Calculate polygons for isodose display
+    def calc_dose_polygon(self, dose_pixluts, contours):
+        list_polygons = []
+        for contour in contours:
+            list_qpoints = []
+            for point in contour[::3]:
+                curr_qpoint = QPoint(
+                    dose_pixluts[0][int(point[0])], dose_pixluts[1][int(point[1])])
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+        return list_polygons
+
 
     # When the value of the slider in the DICOM View changes
     def valueChangeSlider(self):
         self.updateDICOM_view()
 
     # Handles mouse movement and button press events in the dicom_view area
+    # Used for altering window and level values
     def eventFilter(self, source, event):
         # If mouse moved while the right mouse button was pressed, change window and level values
-        if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
-            if event.buttons() == QtCore.Qt.RightButton:
-                
-                # Values of x increase from left to right
-                # Window value should increase when mouse pointer moved to right, decrease when moved to left 
-                # If the x value of the new mouse position is greater than the x value of
-                # the previous position, then increment the window value by 5, 
-                # otherwise decrement it by 5
-                if event.x() > self.x1:
-                    self.window += 5
-                elif event.x() < self.x1:
-                    self.window -= 5
+        # if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
+        if event.type() == QtCore.QEvent.MouseMove and event.buttons() == QtCore.Qt.RightButton:
+            # Values of x increase from left to right
+            # Window value should increase when mouse pointer moved to right, decrease when moved to left
+            # If the x value of the new mouse position is greater than the x value of
+            # the previous position, then increment the window value by 5,
+            # otherwise decrement it by 5
+            if event.x() > self.x1:
+                self.window += 1
+            elif event.x() < self.x1:
+                self.window -= 1
 
-                # Values of y increase from top to bottom
-                # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
-                # If the y value of the new mouse position is greater than the y value of 
-                # the previous position then decrement the level value by 5, 
-                # otherwise increment it by 5
-                if event.y() > self.y1:
-                    self.level -= 5
-                elif event.y() < self.y1:
-                    self.level += 5
+            # Values of y increase from top to bottom
+            # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
+            # If the y value of the new mouse position is greater than the y value of
+            # the previous position then decrement the level value by 5,
+            # otherwise increment it by 5
+            if event.y() > self.y1:
+                self.level -= 1
+            elif event.y() < self.y1:
+                self.level += 1
 
-                # Update previous position values
-                self.x1 = event.x()
-                self.y1 = event.y()
+            # Update previous position values
+            self.x1 = event.x()
+            self.y1 = event.y()
 
-                # Get id of current slice
-                id = self.slider.value()
+            # Get id of current slice
+            id = self.slider.value()
 
-                # Create a deep copy as the pixel values are a list of list
-                np_pixels = deepcopy(self.pixel_values[id])
+            # Create a deep copy as the pixel values are a list of list
+            np_pixels = deepcopy(self.pixel_values[id])
 
-                # Update current image based on new window and level values
-                self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
-                self.updateDICOM_view(windowingChange=True)
-        
+            # Update current image based on new window and level values
+            self.pixmapWindowing = scaled_pixmap(np_pixels, self.window, self.level)
+            self.updateDICOM_view(windowingChange=True)
+
         # When mouse button released, update all the slices based on the new values
         elif event.type() == QtCore.QEvent.MouseButtonRelease:
             img_data = deepcopy(self.pixel_values)
@@ -1567,50 +1669,6 @@ class Ui_MainWindow(object):
     def pluginManagerHandler(self):
         self.callManager.show_plugin_manager()
 
-
-import src.View.resources_rc
-
-
-class HexaColor(object):
-    def __init__(self):
-        self.listColor = self.hexaVersionColor()
-
-    def getHexaColor(self, index):
-        return self.listColor[index][0], self.listColor[index][1], self.listColor[index][2]
-
-
-    def hexaVersionColor(self):
-        colors = [color.rstrip('\n') for color in open('src/View/color.txt')]
-        res = []
-        for color in colors:
-            hex_R = self.convertHexaToDec(color[:2])
-            hex_G = self.convertHexaToDec(color[2:4])
-            hex_B = self.convertHexaToDec(color[-2:])
-            res.append([hex_R, hex_G, hex_B])
-        return res
-
-
-    def convertHexaToDec(self, number):
-        digit1 = self.convertHexaLetterToNumber(number[:1])
-        digit2 = self.convertHexaLetterToNumber(number[-1:])
-        return int(digit1) * 16 + int(digit2)
-
-
-    def convertHexaLetterToNumber(self, digit):
-        if digit == 'A':
-            return 10
-        elif digit == 'B':
-            return 11
-        elif digit == 'C':
-            return 12
-        elif digit == 'D':
-            return 13
-        elif digit == 'E':
-            return 14
-        elif digit == 'F':
-            return 15
-        else:
-            return digit
 
 
 class StructureInformation(object):

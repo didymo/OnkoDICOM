@@ -1,5 +1,6 @@
 import csv
 import sys
+import webbrowser
 from collections import deque
 
 from PyQt5.QtWidgets import QFileDialog
@@ -7,6 +8,7 @@ from PyQt5.QtWidgets import QFileDialog
 from src.View.PluginManager import *
 from src.data.csv import *
 from src.View.InputDialogs import *
+
 
 class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
@@ -36,7 +38,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         self.add_new_roi.clicked.connect(self.new_isodose)
         self.import_organ_csv.clicked.connect(self.import_organs)
 
-        #adding the menus
+        # adding the menus
         self.table_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.on_customContextMenuRequested_Window)
         self.table_organ.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -45,15 +47,19 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         self.table_volume.customContextMenuRequested.connect(self.on_customContextMenuRequested_Volume)
         self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
+        self.table_organ.itemDoubleClicked.connect(self.OpenLink)
 
+    def OpenLink(self, item):
+        if item.column() == 3 and item.text() != '':
+            webbrowser.open_new('http://' + item.text())
 
-    #windowing
+    # windowing
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Window(self, pos):
         it = self.table_view.itemAt(pos)
         if it is None: return
         c = it.row()
-        item_range = QtWidgets.QTableWidgetSelectionRange(c,0,c,self.table_view.columnCount()-1)
+        item_range = QtWidgets.QTableWidgetSelectionRange(c, 0, c, self.table_view.columnCount() - 1)
         self.table_view.setRangeSelected(item_range, True)
 
         menu = QtWidgets.QMenu()
@@ -64,15 +70,16 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         if action == delete_row_action:
             self.table_view.removeRow(c)
         if action == modify_row_action:
-            dialog = Dialog_Windowing(self.table_view.item(c,0).text(),self.table_view.item(c,1).text(),self.table_view.item(c,2).text(),self.table_view.item(c,3).text())
+            dialog = Dialog_Windowing(self.table_view.item(c, 0).text(), self.table_view.item(c, 1).text(),
+                                      self.table_view.item(c, 2).text(), self.table_view.item(c, 3).text())
             if dialog.exec():
                 new_data = dialog.getInputs()
-                self.table_view.setItem(c,0, QTableWidgetItem(new_data[0]))
+                self.table_view.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_view.setItem(c, 1, QTableWidgetItem(new_data[1]))
                 self.table_view.setItem(c, 2, QTableWidgetItem(new_data[2]))
                 self.table_view.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
-    #organ
+    # organ
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Organ(self, pos):
         it = self.table_organ.itemAt(pos)
@@ -90,14 +97,15 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             self.table_organ.removeRow(c)
         if action == modify_row_action:
             dialog = Dialog_Organ(self.table_organ.item(c, 0).text(), self.table_organ.item(c, 1).text(),
-                                      self.table_organ.item(c, 2).text())
+                                  self.table_organ.item(c, 2).text(), self.table_organ.item(c, 3).text()) #, self.table_organ.item(c, 3).text()
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_organ.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_organ.setItem(c, 1, QTableWidgetItem(new_data[1]))
                 self.table_organ.setItem(c, 2, QTableWidgetItem(new_data[2]))
+                self.table_organ.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
-    #volume
+    # volume
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Volume(self, pos):
         it = self.table_volume.itemAt(pos)
@@ -120,7 +128,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_volume.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_volume.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    #ROI
+    # ROI
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Roi(self, pos):
         it = self.table_roi.itemAt(pos)
@@ -137,13 +145,12 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         if action == delete_row_action:
             self.table_roi.removeRow(c)
         if action == modify_row_action:
-            dialog = Dialog_Dose(self.table_roi.item(c, 0).text(), self.table_roi.item(c,2).text())
+            dialog = Dialog_Dose(self.table_roi.item(c, 0).text(), self.table_roi.item(c, 2).text())
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
                 self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
-
 
     def importData(self, data, root=None):
         self.model.setRowCount(0)
@@ -168,10 +175,10 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
     def applyChanges(self):
-        #starting save
+        # starting save
         with open('src/data/csv/imageWindowing.csv', 'w') as stream:
             writer = csv.writer(stream)
-            writer.writerow(["Organ","Scan","Window","Level"])
+            writer.writerow(["Organ", "Scan", "Window", "Level"])
             for row in range(self.table_view.rowCount()):
                 rowdata = []
                 for column in range(self.table_view.columnCount()):
@@ -184,7 +191,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
 
         with open('src/data/csv/organName.csv', 'w') as stream:
             writer = csv.writer(stream)
-            writer.writerow(["Standard Name","FMA ID","Organ"])
+            writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
             for row in range(self.table_organ.rowCount()):
                 rowdata = []
                 for column in range(self.table_organ.columnCount()):
@@ -310,7 +317,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
     def fillTables(self):
         with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
             next(fileInput)
-            i=0;
+            i = 0;
             for row in fileInput:
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
@@ -322,9 +329,9 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_view.setItem(i, 1, items[1])
                 self.table_view.setItem(i, 2, items[2])
                 self.table_view.setItem(i, 3, items[3])
-                i+=1
+                i += 1
 
-        #organ names
+        # organ names
         with open('src/data/csv/organName.csv', "r") as fileInput:
             next(fileInput)
             i = 0;
@@ -338,9 +345,12 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_organ.setItem(i, 0, items[0])
                 self.table_organ.setItem(i, 1, items[1])
                 self.table_organ.setItem(i, 2, items[2])
+                if len(items) > 3:
+                    self.table_organ.setItem(i, 3, items[3])
+
                 i += 1
 
-        #volume name
+        # volume name
         with open('src/data/csv/volumeName.csv', "r") as fileInput:
             i = 0;
             for row in fileInput:
@@ -353,7 +363,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_volume.setItem(i, 1, items[1])
                 i += 1
 
-        #roi isodose
+        # roi isodose
         with open('src/data/csv/isodoseRoi.csv', "r") as fileInput:
             i = 0;
             for row in fileInput:
@@ -365,10 +375,10 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 self.table_roi.insertRow(i)
                 self.table_roi.setItem(i, 0, items[0])
                 self.table_roi.setItem(i, 1, items[1])
-                if len(items) > 2 :
+                if len(items) > 2:
                     self.table_roi.setItem(i, 2, items[2])
                 i += 1
-        #patient hash
+        # patient hash
         with open('src/data/csv/patientHash.csv', "r") as fileInput:
             i = 0;
             for row in fileInput:
@@ -383,7 +393,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
                 i += 1
 
     def new_windowing(self):
-        dialog = Dialog_Windowing('','','','')
+        dialog = Dialog_Windowing('', '', '', '')
         c = self.table_view.rowCount()
         if dialog.exec():
             new_data = dialog.getInputs()
@@ -394,7 +404,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             self.table_view.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     def new_organ(self):
-        dialog = Dialog_Organ('','','')
+        dialog = Dialog_Organ('', '', '', '')
         c = self.table_organ.rowCount()
         if dialog.exec():
             new_data = dialog.getInputs()
@@ -402,9 +412,10 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             self.table_organ.setItem(c, 0, QTableWidgetItem(new_data[0]))
             self.table_organ.setItem(c, 1, QTableWidgetItem(new_data[1]))
             self.table_organ.setItem(c, 2, QTableWidgetItem(new_data[2]))
+            self.table_organ.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     def new_volume(self):
-        dialog = Dialog_Volume('','')
+        dialog = Dialog_Volume('', '')
         c = self.table_volume.rowCount()
         if dialog.exec():
             new_data = dialog.getInputs()
@@ -421,7 +432,6 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
             self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-
     def import_organs(self):
         self.check_change = False
         path = QFileDialog.getOpenFileName(
@@ -431,9 +441,10 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             with open(path, newline='') as stream:
                 next(stream)
                 for rowdata in csv.reader(stream):
-                    if len(rowdata)!= 3:
+                    if len(rowdata) != 3 or len(rowdata) != 4:
                         buttonReply = QMessageBox.warning(self, "Error Message",
-                                                          "Import a csv with 3 columns and the data with the displayed order!", QMessageBox.Ok)
+                                                          "Import a csv with 3 or 4 columns and the data with the displayed order!",
+                                                          QMessageBox.Ok)
                         if buttonReply == QMessageBox.Ok:
                             pass
                     else:
