@@ -1,5 +1,8 @@
 import matplotlib.pylab as plt
-from matplotlib import _cntr as cntr
+try:
+    from matplotlib import _cntr as cntr
+except ImportError:
+    import legacycontour._cntr as cntr
 import src.View.resources_rc
 from copy import deepcopy
 
@@ -23,13 +26,13 @@ class Ui_MainWindow(object):
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-        self.dataset =set
+        self.dataset = dataset
         self.raw_dvh = raw_dvh
         self.dvh_x_y = dvhxy
-        self.rois =rois
+        self.rois = rois
         self.filepaths = filepaths
         self.path = path
-
+        dataset = self.dataset
         self.dose_pixluts = get_dose_pixluts(self.dataset)
 
         self.rxdose = 1
@@ -1353,6 +1356,16 @@ class Ui_MainWindow(object):
         # Text: "Patient Position: {patient_position}"
         self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
 
+    # Different Types of
+    def get_qpen(self, color, style=1, widthF=1):
+        pen = QPen(color)
+        # Style List:
+        # NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3
+        # DashDotLine: 4  DashDotDotLine: 5
+        pen.setStyle(style)
+        pen.setWidthF(widthF)
+        return pen
+
     def ROI_display(self):
         slider_id = self.slider.value()
         curr_slice = self.dict_UID[slider_id]
@@ -1381,19 +1394,9 @@ class Ui_MainWindow(object):
                 polygons = self.dict_polygons[roi_name][curr_slice]
 
             color = self.roiColor[roi]['QColor_ROIdisplay']
-            pen = get_qpen(color, 2)
+            pen = self.get_qpen(color, 3, 1)
             for i in range(len(polygons)):
-                self.DICOM_image_scene.addPolygon(polygons[i], QPen(color), QBrush(color))
-
-    # Different Types of
-    def get_qpen(self, color, style=1, widthF=1):
-        pen = QPen(color)
-        # Style List:
-        # NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3
-        # DashDotLine: 4  DashDotDotLine: 5
-        pen.setStyle(style)
-        pen.setWidthF(widthF)
-        return pen
+                self.DICOM_image_scene.addPolygon(polygons[i], pen, QBrush(color))
 
 
     def calcPolygonF(self, curr_roi, curr_slice):
@@ -1433,11 +1436,12 @@ class Ui_MainWindow(object):
                 polygons = self.calc_dose_polygon(
                     self.dose_pixluts[curr_slice_uid], contours)
 
+                color = sd[1]
+                pen = self.get_qpen(color, 3, 1)
                 for i in range(len(polygons)):
-                    color = sd[1]
                     #color = self.roiColor['body']['QColor_ROIdisplay']
                     self.DICOM_image_scene.addPolygon(
-                        polygons[i], QPen(color), QBrush(color))
+                        polygons[i], pen, QBrush(color))
 
     # Calculate polygons for isodose display
     def calc_dose_polygon(self, dose_pixluts, contours):
