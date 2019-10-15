@@ -1,9 +1,11 @@
+import os
 import numpy as np
 from dicompylercore import dvhcalc, dvh, dicomparser
-# import pydicom
+import pydicom
 # import matplotlib.pyplot as plt
 # from dicompylercore.dicomparser import DicomParser
 import multiprocessing
+import pandas as pd
 
 # Retrieve a dictionary of basic info of all ROIs
 # Return value: dict
@@ -34,7 +36,24 @@ def get_roi_info(ds_rtss):
 #     for roi in dict_roi:
 #         # dicompylercore.dvhcalc.get_dvh(structure, dose, roi,
 #         #                                   limit=None, calculate_full_volume=True, use_structure_extents=False,
-#         #                                   interpolation_resolution=None, interpolation_segments_between_planes=0,
+#         #                # # Example of usage
+# if __name__ == '__main__':
+#     path = '/home/xudong/dicom_sample/'
+#     rtss_path = path + 'rtss.dcm'
+#     rtdose_path = path + 'rtdose.dcm'
+#
+#     ds_rtdose = pydicom.dcmread(rtdose_path)
+#     ds_rtss = pydicom.dcmread(rtss_path)
+#
+#     rois = get_roi_info(ds_rtss)
+#     print(rois)
+#
+#     # for roi in rois:
+#     #     print(rois[roi]['name'])
+#
+#     dvhs = calc_dvhs(ds_rtss, ds_rtdose, rois)
+#     for i in dvhs:
+#         print(dvhs[i])                   interpolation_resolution=None, interpolation_segments_between_planes=0,
 #         #                                   thickness=None, callback=None)
 #         dict_dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
 #     return dict_dvh
@@ -107,19 +126,46 @@ def converge_to_O_dvh(dict_dvh):
 
     return res
 
+def dvh2csv(dict_dvh, path, csv_name, patientID):
+    tar_path = path + csv_name + '.csv'
+    dvh_csv_list = []
 
-# # For the demo example
-# def dvh_plot(dvh):
-#     plt.plot(dvh.bincenters, 100*dvh.counts/dvh.volume, label=dvh.name,
-#              color=None if not isinstance(dvh.color, np.ndarray) else
-#              (dvh.color / 255))
-#     plt.xlabel('Dose [%s]' % dvh.dose_units)
-#     plt.ylabel('Volume [%s]' % '%')
-#     if dvh.name:
-#         plt.legend(loc='best')
-#     plt.show()
-#
-#
+    csv_header = []
+    csv_header.append('Patient ID')
+    csv_header.append('ROI')
+    csv_header.append('Volume (mL)')
+
+    max_roi_dose = 0
+
+    for i in dict_dvh:
+        dvh_roi_list = []
+        dvh = dict_dvh[i]
+        name = dvh.name
+        volume = dvh.volume
+        dvh_roi_list.append(patientID)
+        dvh_roi_list.append(name)
+        dvh_roi_list.append(volume)
+        dose = dvh.relative_volume.counts
+
+        for i in range(0, len(dose), 10):
+            dvh_roi_list.append(dose[i])
+            if i > max_roi_dose:
+                max_roi_dose = i
+
+        dvh_csv_list.append(dvh_roi_list)
+
+    for i in range(0, max_roi_dose + 1, 10):
+        csv_header.append(str(i) + 'cGy')
+
+    pddf_csv = pd.DataFrame(dvh_csv_list, columns=csv_header).round(2)
+    pddf_csv.fillna(0.0, inplace=True)
+    pddf_csv.set_index('Patient ID', inplace=True)
+
+    pddf_csv.to_csv(tar_path)
+
+
+
+
 # # Example of usage
 # if __name__ == '__main__':
 #     path = '/home/xudong/dicom_sample/'
@@ -135,6 +181,8 @@ def converge_to_O_dvh(dict_dvh):
 #     # for roi in rois:
 #     #     print(rois[roi]['name'])
 #
-#     dvhs = calc_dvhs(ds_rtss, ds_rtdose, rois)
-#     for i in dvhs:
-#         print(dvhs[i])
+#     dict_dvh = calc_dvhs(ds_rtss, ds_rtdose, rois)
+#
+#     csv_name = 'hahahahaha'
+#     patientID = '007'
+#     dvh2csv(dict_dvh, path, csv_name, patientID)

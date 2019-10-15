@@ -229,8 +229,11 @@ class Test(QWidget):
 
         self.scene = QGraphicsScene()
         self.scene.addWidget(self.label)
+        self.pen = QPen(QColor(122, 163, 39, 128))
+        self.pen.setStyle(3)
+        self.pen.setWidth(1)
         for i in range(len(self.polygons)):
-            self.scene.addPolygon(self.polygons[i], QPen(QColor(122, 163, 39, 128)), QBrush(QColor(122, 163, 39, 128)))
+            self.scene.addPolygon(self.polygons[i], self.pen, QBrush(QColor(122, 163, 39, 128)))
         self.view = QGraphicsView(self.scene)
         self.view.setScene(self.scene)
 
