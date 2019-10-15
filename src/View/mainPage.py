@@ -1213,6 +1213,10 @@ class Ui_MainWindow(object):
                                             "font-weight: bold;\n")
         self.button_exportDVH.setObjectName("button_exportDVH")
         self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
+        self.button_exportDVH.activated.connect(self.exportDVHcsv)
+
+    def exportDVHcsv (self):
+        dvh2csv(self.raw_dvh)
 
 
     ####################################
