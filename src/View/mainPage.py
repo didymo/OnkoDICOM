@@ -896,7 +896,7 @@ class Ui_MainWindow(object):
             RGB_dict['QColor'] = QtGui.QColor(
                 RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
             RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
-                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 128)
+                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 26)
             roiColor[roi_id] = RGB_dict
         return roiColor
 
@@ -1071,25 +1071,25 @@ class Ui_MainWindow(object):
         self.box9_isod.setFocusPolicy(Qt.NoFocus)
         self.box10_isod.setFocusPolicy(Qt.NoFocus)
         self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(
-            131, 0, 0, 128)]: self.checked_dose(state, text))
+            131, 0, 0, 13)]: self.checked_dose(state, text))
         self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(
-            185, 0, 0, 128)]: self.checked_dose(state, text))
+            185, 0, 0, 13)]: self.checked_dose(state, text))
         self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(
-            255, 46, 0, 128)]: self.checked_dose(state, text))
+            255, 46, 0, 13)]: self.checked_dose(state, text))
         self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(
-            255, 161, 0, 128)]: self.checked_dose(state, text))
+            255, 161, 0, 13)]: self.checked_dose(state, text))
         self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(
-            253, 255, 0, 128)]: self.checked_dose(state, text))
+            253, 255, 0, 13)]: self.checked_dose(state, text))
         self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(
-            0, 255, 0, 128)]: self.checked_dose(state, text))
+            0, 255, 0, 13)]: self.checked_dose(state, text))
         self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(
-            0, 143, 0, 128)]: self.checked_dose(state, text))
+            0, 143, 0, 13)]: self.checked_dose(state, text))
         self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(
-            0, 255, 255, 128)]: self.checked_dose(state, text))
+            0, 255, 255, 13)]: self.checked_dose(state, text))
         self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(
-            33, 0, 255, 128)]: self.checked_dose(state, text))
+            33, 0, 255, 13)]: self.checked_dose(state, text))
         self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(
-            11, 0, 134, 128)]: self.checked_dose(state, text))
+            11, 0, 134, 13)]: self.checked_dose(state, text))
 
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -1450,11 +1450,13 @@ class Ui_MainWindow(object):
             else:
                 polygons = self.dict_polygons[roi_name][curr_slice]
 
-            color = self.roiColor[roi]['QColor_ROIdisplay']
-            pen = self.get_qpen(color, 3, 1)
+            brush_color = self.roiColor[roi]['QColor_ROIdisplay']
+            pen_color = QtGui.QColor(
+                brush_color.red(), brush_color.green(), brush_color.blue())
+            pen = self.get_qpen(pen_color, 1, 2)
             for i in range(len(polygons)):
                 self.DICOM_image_scene.addPolygon(
-                    polygons[i], pen, QBrush(color))
+                    polygons[i], pen, QBrush(brush_color))
 
     def calcPolygonF(self, curr_roi, curr_slice):
         list_polygons = []
@@ -1487,18 +1489,18 @@ class Ui_MainWindow(object):
                     (self.dataset['rtdose'].DoseGridScaling * 10000)
                 contours = isodosegen.trace(dose_level)
                 contours = contours[:len(contours)//2]
-                print(grid)
-                print('\n\n')
 
                 polygons = self.calc_dose_polygon(
                     self.dose_pixluts[curr_slice_uid], contours)
 
-                color = sd[1]
-                pen = self.get_qpen(color, 3, 1)
+                brush_color = sd[1]
+                pen_color = QtGui.QColor(
+                    brush_color.red(), brush_color.green(), brush_color.blue())
+                pen = self.get_qpen(pen_color, 2, 2)
                 for i in range(len(polygons)):
                     #color = self.roiColor['body']['QColor_ROIdisplay']
                     self.DICOM_image_scene.addPolygon(
-                        polygons[i], pen, QBrush(color))
+                        polygons[i], pen, QBrush(brush_color))
 
     # Calculate polygons for isodose display
     def calc_dose_polygon(self, dose_pixluts, contours):
