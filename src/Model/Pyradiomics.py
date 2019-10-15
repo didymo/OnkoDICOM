@@ -7,19 +7,44 @@ import pandas as pd
 import SimpleITK as sitk
 from pydicom import dcmread
 from radiomics import featureextractor
+from LoadPatients import get_datasets
 
 
-def pyradiomics(path, filepaths):
+# def convert_to_nrrd():
+
+
+# def convert_rois_to_nrrd():
+
+
+# def get_radiomics_df():
+
+
+# def convert_df_to_csv():
+
+
+def pyradiomics(path, filepaths, target_path=None):
     """Generate pyradiomics spreadsheet."""
 
     ct_file = dcmread(filepaths[0])
-    patient_hash = os.path.basename(ct_file.PatientID)
-
     rtss_path = filepaths['rtss']
 
-    converted_file_name = patient_hash + '.nrrd'  # Name of nrrd file
-    converted_file_location = path + '/nrrd/'  # Location of folder where nrrd file saved
-    converted_file_path = converted_file_location + converted_file_name  # Complete path of converted file
+    if target_path == None:
+        patient_hash = os.path.basename(ct_file.PatientID)
+        converted_file_name = patient_hash + '.nrrd'  # Name of nrrd file
+        # Location of folder where nrrd file saved
+        converted_file_location = path + '/nrrd/'
+        # Location of folder where pyradiomics output saved
+        csv_location = path + '/CSV/'
+    else:
+        patient_hash = os.path.basename(target_path)
+        converted_file_name = patient_hash + '.nrrd'  # Name of nrrd file
+        # Location of folder where nrrd file saved
+        converted_file_location = target_path + '/nrrd/'
+        # Location of folder where pyradiomics output saved
+        csv_location = target_path + '/CSV/'
+
+    converted_file_path = converted_file_location + \
+        converted_file_name  # Complete path of converted file
 
     if not os.path.exists(converted_file_location):  # If folder does not exist
         os.makedirs(converted_file_location)  # Create folder
@@ -35,8 +60,11 @@ def pyradiomics(path, filepaths):
 
     # Convert rtstruct to nrrd
     # Each ROI is saved in separate nrrd files
-    converted_struct_location = converted_file_location + 'structures'  # Location of folder where converted masks saved
-    cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + ' --output-prefix ' + converted_struct_location + ' --prefix-format nrrd --referenced-ct ' + path + ' 1>' + path + '/NUL'
+    converted_struct_location = converted_file_location + \
+        'structures'  # Location of folder where converted masks saved
+    cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + ' --output-prefix ' + \
+        converted_struct_location + ' --prefix-format nrrd --referenced-ct ' + \
+        path + ' 1>' + path + '/NUL'
     cmd_del_nul = 'rm ' + path + '/NUL'
     os.system(cmd_for_segmask)
     os.system(cmd_del_nul)
@@ -92,17 +120,19 @@ def pyradiomics(path, filepaths):
 
     radiomics_df.set_index('Hash ID', inplace=True)
 
-    if not os.path.exists(path + '/CSV'):  # If folder does not exist
-        os.makedirs(path + '/CSV')  # Create folder
+    if not os.path.exists(csv_location):  # If folder does not exist
+        os.makedirs(csv_location)  # Create folder
 
     # Export dataframe as csv
-    radiomics_df.to_csv(path + '/CSV/' + 'Pyradiomics_' + patient_hash + '.csv')
+    radiomics_df.to_csv(csv_location + 'Pyradiomics_' +
+                        patient_hash + '.csv')
 
     print('\n' + 'Pyradiomics csv generated.')
 
     return
 
-
-if __name__ == '__main__':
-    path = '/home/sohaib/992/DICOM/OK.please.anonymise'
-    pyradiomics(path)
+# For test purposes
+# if __name__ == '__main__':
+#     path = *file_path*
+#     d, p = get_datasets(path)
+#     pyradiomics(path, p)
