@@ -7,7 +7,7 @@ import pandas as pd
 import SimpleITK as sitk
 from pydicom import dcmread
 from radiomics import featureextractor
-from LoadPatients import get_datasets
+from src.Model.LoadPatients import get_datasets
 
 
 # def convert_to_nrrd():
