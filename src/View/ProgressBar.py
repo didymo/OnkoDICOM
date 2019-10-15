@@ -5,7 +5,9 @@ import numpy as np
 from PyQt5.QtCore import QFileInfo
 from dicompylercore import dvhcalc, dvh, dicomparser
 import pydicom
+import collections
 from PyQt5 import QtCore
+from src.Model.ROI import *
 
 
 
@@ -49,7 +51,7 @@ class Extended(QtCore.QThread):
             self.rois = self.get_roi_info(self.dataset_rtss, self.my_callback)
             self.raw_dvh = self.calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
             self.dvh_x_y = self.converge_to_O_dvh(self.raw_dvh, self.my_callback)
-            if self.previous <100:
+            if self.previous < 100:
                 for i in range(self.previous,101):
                     self.copied_percent_signal.emit(i)
 
@@ -184,4 +186,3 @@ class Extended(QtCore.QThread):
         self.copied += len(res)
         callback(self.copied)
         return res
-
