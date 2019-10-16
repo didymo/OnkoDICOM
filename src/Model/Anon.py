@@ -8,7 +8,7 @@ import pydicom
 import uuid
 import csv
 import pandas as pd
-
+from src.Model.Pyradiomics import pyradiomics
 
 #========================================ANONYMIZation code ===================================
 
@@ -197,9 +197,12 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
 
         # hash_dictionary =  {patient_ID : hash_patient_ID}
         # print("dictionary values",hash_dictionary)
-
+        
         df_identifier_csv = pd.DataFrame(columns=csv_header).round(2)
-        df_identifier_csv.to_csv(csv_filename, index=False) # creating the CVS
+
+        print("The CSV dataframe is:::",df_identifier_csv)
+
+        df_identifier_csv.to_csv(csv_filePath, index=False) # creating the CVS
 
         row = [pname, sha1_pname]
         with open(csv_filePath, 'a') as csvFile:  # inserting the hash values
@@ -572,7 +575,7 @@ def anonymize(path, Datasets, FilePaths):
     else:
         print(":::The CSV folder exist:::")
 
-
+   
 
 
 
