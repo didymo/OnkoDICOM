@@ -390,6 +390,9 @@ def check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path , File
         else:
             return 0, new_patient_folder_name, Full_Patient_Path_New_folder
 
+
+
+
 # ##==========================================Anon Function==========================================
 def anon_call(path, new_dict_dataset, all_filepaths):
     
@@ -494,7 +497,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 ds_rtss= LOAD_DCM(Dicom_folder_path,Dicom_filename, new_dict_dataset, key)
                 pname_ID, sha1_pname, flag = Hash_identifiers(count, ds_rtss)
                 write_hash_dcm(ds_rtss, Dicom_folder_path , Dicom_filename, hash_value, new_patient_folder_name)
-                
+            count = 0
             print("Total files hashed======", count)  
             print("\n\n============Overwrite complete==================")
             return Full_Patient_Path_New_folder
@@ -534,6 +537,13 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 print("Total files hashed======", count)
         return Full_Patient_Path_New_folder
 
+def check_CSV_folder_exist(Full_Patient_Path_New_folder):
+
+    if "CSV" in os.listdir(Full_Patient_Path_New_folder):
+        return 1
+    else:
+        return 0
+
 
 def anonymize(path, Datasets, FilePaths):
 
@@ -550,6 +560,19 @@ def anonymize(path, Datasets, FilePaths):
     #         print("Values are:  ",Datasets[key])
     Full_Patient_Path_New_folder = anon_call(path, new_dict_dataset, all_filepaths)
     print("The New patient folder path is : ", Full_Patient_Path_New_folder)
+
+    Full_Csv_Folder_Path = Full_Patient_Path_New_folder + "/" + "CSV"
+
+    CSV_Folder_exist = check_CSV_folder_exist(Full_Patient_Path_New_folder)
+
+    if CSV_Folder_exist == 0:
+        print("The CSV folder path is : ", Full_Csv_Folder_Path)
+        os.makedirs(Full_Csv_Folder_Path)
+        print("---CSV folder created---")
+    else:
+        print(":::The CSV folder exist:::")
+
+
 
 
 

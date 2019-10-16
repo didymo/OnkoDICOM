@@ -1,12 +1,12 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_PluginManager(object):
-    def setupUi(self, PluginManager):
-        PluginManager.setObjectName("PluginManager")
-        PluginManager.setMinimumSize(766, 600)
-        PluginManager.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
-        PluginManager.setStyleSheet("")
-        self.centralwidget = QtWidgets.QWidget(PluginManager)
+class Ui_Add_On_Options(object):
+    def setupUi(self, Add_On_Options):
+        Add_On_Options.setObjectName("Add_On_Options")
+        Add_On_Options.setMinimumSize(766, 600)
+        Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
+        Add_On_Options.setStyleSheet("")
+        self.centralwidget = QtWidgets.QWidget(Add_On_Options)
         self.centralwidget.setObjectName("centralwidget")
         self.optionTitle = QtWidgets.QLabel(self.centralwidget)
         self.optionTitle.setGeometry(QtCore.QRect(290, 50, 281, 31))
@@ -18,10 +18,12 @@ class Ui_PluginManager(object):
         self.table_modules.setObjectName("table_modules")
         self.table_modules.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
                                           "color:rgb(0,0,0);\n")
-        self.table_modules.setText(" Here are listed all the user plugins used in Onko. By using \n Plugin Manager you will be able to Add/Modify/Delete the \n settings for the displayed plugins on the left. ")
+        self.table_modules.setText(" Here are listed all the user options used in Onko. By using \n Add-On Options you will be able to Add/Modify/Delete the \n settings for the displayed options on the left. ")
         # buttons per view
         self.add_new_window = QtWidgets.QPushButton(self.centralwidget)
         self.add_new_window.setGeometry(QtCore.QRect(598, 470, 141, 31))
+        self.add_new_window.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.add_new_window.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                           "font: 57 11pt \\\"Ubuntu\\\";\n"
                                           "color:rgb(75,0,130);\n"
@@ -48,6 +50,8 @@ class Ui_PluginManager(object):
         # organ
         self.add_standard_organ_name = QtWidgets.QPushButton(self.centralwidget)
         self.add_standard_organ_name.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        self.add_standard_organ_name.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.add_standard_organ_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                                    "font: 57 11pt \\\"Ubuntu\\\";\n"
                                                    "color:rgb(75,0,130);\n"
@@ -73,6 +77,8 @@ class Ui_PluginManager(object):
         self.add_standard_organ_name.setVisible(False)
 
         self.import_organ_csv = QtWidgets.QPushButton(self.centralwidget)
+        self.import_organ_csv.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.import_organ_csv.setGeometry(QtCore.QRect(406, 470, 161, 31))
         self.import_organ_csv.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                             "font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -83,6 +89,8 @@ class Ui_PluginManager(object):
 
         # volume
         self.add_standard_volume_name = QtWidgets.QPushButton(self.centralwidget)
+        self.add_standard_volume_name.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.add_standard_volume_name.setGeometry(QtCore.QRect(578, 470, 161, 31))
         self.add_standard_volume_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                                     "font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -105,6 +113,8 @@ class Ui_PluginManager(object):
         self.table_volume.setVisible(False)
         # roi
         self.add_new_roi = QtWidgets.QPushButton(self.centralwidget)
+        self.add_new_roi.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.add_new_roi.setGeometry(QtCore.QRect(578, 470, 161, 31))
         self.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                        "font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -148,6 +158,8 @@ class Ui_PluginManager(object):
                                         "color:rgb(0,0,0)")
         self.note.setVisible(False)
         self.cancel_button = QtWidgets.QPushButton(self.centralwidget)
+        self.cancel_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.cancel_button.setGeometry(QtCore.QRect(638, 554, 101, 31))
         self.cancel_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                          " font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -156,6 +168,8 @@ class Ui_PluginManager(object):
                                          "color: rgb(85, 87, 83);")
         self.cancel_button.setObjectName("cancel_button")
         self.apply_button = QtWidgets.QPushButton(self.centralwidget)
+        self.apply_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.apply_button.setGeometry(QtCore.QRect(510, 554, 111, 31))
         self.apply_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                         "font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -166,7 +180,7 @@ class Ui_PluginManager(object):
         self.treeList.setGeometry(QtCore.QRect(10, 40, 256, 461))
         self.treeList.setObjectName("treeList")
         self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
-        PluginManager.setCentralWidget(self.centralwidget)
+        Add_On_Options.setCentralWidget(self.centralwidget)
         self.treeList.setHeaderHidden(True)
         self.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
@@ -174,29 +188,29 @@ class Ui_PluginManager(object):
         self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
-        self.retranslateUi(PluginManager)
-        QtCore.QMetaObject.connectSlotsByName(PluginManager)
+        self.retranslateUi(Add_On_Options)
+        QtCore.QMetaObject.connectSlotsByName(Add_On_Options)
 
-    def retranslateUi(self, PluginManager):
+    def retranslateUi(self, Add_On_Options):
         _translate = QtCore.QCoreApplication.translate
-        PluginManager.setWindowTitle(_translate("PluginManager", "Plugin Manager"))
-        self.optionTitle.setText(_translate("PluginManager", "User Plugins"))
-        self.note.setText(_translate("PluginManager", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
-        self.cancel_button.setText(_translate("PluginManager", "Cancel"))
-        self.apply_button.setText(_translate("PluginManager", "Apply"))
-        self.add_new_window.setText(_translate("PluginManager", "Add New Window"))
-        self.add_standard_organ_name.setText(_translate("PluginManager", "Add Standard Name"))
-        self.add_standard_volume_name.setText(_translate("PluginManager", "Add Standard Name"))
-        self.import_organ_csv.setText(_translate("PluginManager", "Import Spreadsheet"))
-        self.add_new_roi.setText(_translate("PluginManager", "Add new Isodose"))
+        Add_On_Options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))
+        self.optionTitle.setText(_translate("Add_On_Options", "User Options"))
+        self.note.setText(_translate("Add_On_Options", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
+        self.cancel_button.setText(_translate("Add_On_Options", "Cancel"))
+        self.apply_button.setText(_translate("Add_On_Options", "Apply"))
+        self.add_new_window.setText(_translate("Add_On_Options", "Add New Window"))
+        self.add_standard_organ_name.setText(_translate("Add_On_Options", "Add Standard Name"))
+        self.add_standard_volume_name.setText(_translate("Add_On_Options", "Add Standard Name"))
+        self.import_organ_csv.setText(_translate("Add_On_Options", "Import Spreadsheet"))
+        self.add_new_roi.setText(_translate("Add_On_Options", "Add new Isodose"))
 
 
 if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    PluginManager = QtWidgets.QMainWindow()
-    ui = Ui_PluginManager()
-    ui.setupUi(PluginManager)
-    PluginManager.show()
+    Add_On_Options = QtWidgets.QMainWindow()
+    ui = Ui_Add_On_Options()
+    ui.setupUi(Add_On_Options)
+    Add_On_Options.show()
     sys.exit(app.exec_())

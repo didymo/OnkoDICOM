@@ -1,8 +1,4 @@
 import numpy as np
-try:
-    from matplotlib import _cntr as cntr
-except ImportError:
-    import legacycontour._cntr as cntr
 from src.Model.ROI import calculate_matrix
 
 def get_dose_pixels(pixlut, doselut, img_ds):
