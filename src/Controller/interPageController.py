@@ -106,9 +106,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal(str)
 
-    def __init__(self, path, dataset, filepaths, rois, raw_dvh, dvhxy):
+    def __init__(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
         QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh, dvhxy )
+        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh, dvhxy,  raw_contour, num_points, pixluts)
         self.actionOpen.triggered.connect(self.patientHandler)
 
     def patientHandler(self):
@@ -147,7 +147,7 @@ class Controller:
 
     # Display patient data 
     def show_patient(self, path):
-        self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict, self.bar_window.ext.rois, self.bar_window.ext.raw_dvh, self.bar_window.ext.dvh_x_y)
+        self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict, self.bar_window.ext.rois, self.bar_window.ext.raw_dvh, self.bar_window.ext.dvh_x_y, self.bar_window.ext.dict_raw_ContourData, self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
         self.patient_window.open_patient_window.connect(self.show_bar)
         self.bar_window.close() 
         self.patient_window.show()
