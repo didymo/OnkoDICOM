@@ -575,6 +575,9 @@ def anonymize(path, Datasets, FilePaths):
     else:
         print(":::The CSV folder exist:::")
 
+    print("=====Calling Pyradiomics function====")
+    pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
+    print("Pyradiomics function finished")
    
 
 
