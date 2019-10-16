@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Add_On_Options(object):
     def setupUi(self, Add_On_Options):
         Add_On_Options.setObjectName("Add_On_Options")
@@ -17,8 +18,9 @@ class Ui_Add_On_Options(object):
         self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 70))
         self.table_modules.setObjectName("table_modules")
         self.table_modules.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
-                                          "color:rgb(0,0,0);\n")
-        self.table_modules.setText(" Here are listed all the user options used in Onko. By using \n Add-On Options you will be able to Add/Modify/Delete the \n settings for the displayed options on the left. ")
+                                         "color:rgb(0,0,0);\n")
+        self.table_modules.setText(
+            " Here are listed all the user options used in Onko. By using \n Add-On Options you will be able to Add/Modify/Delete the \n settings for the displayed options on the left. ")
         # buttons per view
         self.add_new_window = QtWidgets.QPushButton(self.centralwidget)
         self.add_new_window.setGeometry(QtCore.QRect(598, 470, 141, 31))
@@ -35,11 +37,16 @@ class Ui_Add_On_Options(object):
         self.table_view.setObjectName("table_view")
         self.table_view.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_view.setColumnCount(4)
-        self.table_view.setHorizontalHeaderLabels([" Window Name ", " Scan ", " Window ", " Level "])
-        self.table_view.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_view.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_view.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_view.horizontalHeaderItem(3).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_view.setHorizontalHeaderLabels(
+            [" Window Name ", " Scan ", " Window ", " Level "])
+        self.table_view.horizontalHeaderItem(
+            0).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_view.horizontalHeaderItem(
+            1).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_view.horizontalHeaderItem(
+            2).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_view.horizontalHeaderItem(
+            3).setTextAlignment(QtCore.Qt.AlignLeft)
         self.table_view.verticalHeader().hide()
         header1 = self.table_view.horizontalHeader()
         header1.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -48,8 +55,10 @@ class Ui_Add_On_Options(object):
         header1.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.table_view.setVisible(False)
         # organ
-        self.add_standard_organ_name = QtWidgets.QPushButton(self.centralwidget)
-        self.add_standard_organ_name.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        self.add_standard_organ_name = QtWidgets.QPushButton(
+            self.centralwidget)
+        self.add_standard_organ_name.setGeometry(
+            QtCore.QRect(578, 470, 161, 31))
         self.add_standard_organ_name.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.add_standard_organ_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
@@ -62,11 +71,16 @@ class Ui_Add_On_Options(object):
         self.table_organ.setObjectName("table_organ")
         self.table_organ.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_organ.setColumnCount(4)
-        self.table_organ.setHorizontalHeaderLabels([" Standard Name ", " FMA ID ", " Organ ", " Url "])
-        self.table_organ.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_organ.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_organ.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_organ.horizontalHeaderItem(3).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_organ.setHorizontalHeaderLabels(
+            [" Standard Name ", " FMA ID ", " Organ ", " Url "])
+        self.table_organ.horizontalHeaderItem(
+            0).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_organ.horizontalHeaderItem(
+            1).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_organ.horizontalHeaderItem(
+            2).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_organ.horizontalHeaderItem(
+            3).setTextAlignment(QtCore.Qt.AlignLeft)
         header2 = self.table_organ.horizontalHeader()
         header2.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header2.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -88,10 +102,12 @@ class Ui_Add_On_Options(object):
         self.import_organ_csv.setVisible(False)
 
         # volume
-        self.add_standard_volume_name = QtWidgets.QPushButton(self.centralwidget)
+        self.add_standard_volume_name = QtWidgets.QPushButton(
+            self.centralwidget)
         self.add_standard_volume_name.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.add_standard_volume_name.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        self.add_standard_volume_name.setGeometry(
+            QtCore.QRect(578, 470, 161, 31))
         self.add_standard_volume_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                                     "font: 57 11pt \\\"Ubuntu\\\";\n"
                                                     "color:rgb(75,0,130);\n"
@@ -101,11 +117,15 @@ class Ui_Add_On_Options(object):
         self.table_volume = QtWidgets.QTableWidget(self.centralwidget)
         self.table_volume.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_volume.setObjectName("table_volume")
-        self.table_volume.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.table_volume.setStyleSheet(
+            "background-color: rgb(255, 255, 255);")
         self.table_volume.setColumnCount(2)
-        self.table_volume.setHorizontalHeaderLabels([" Standard Name ", " Volume Name"])
-        self.table_volume.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_volume.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_volume.setHorizontalHeaderLabels(
+            [" Standard Name ", " Volume Name"])
+        self.table_volume.horizontalHeaderItem(
+            0).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_volume.horizontalHeaderItem(
+            1).setTextAlignment(QtCore.Qt.AlignLeft)
         header3 = self.table_volume.horizontalHeader()
         self.table_volume.verticalHeader().hide()
         header3.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -128,10 +148,14 @@ class Ui_Add_On_Options(object):
         self.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_roi.setColumnCount(3)
         self.table_roi.verticalHeader().hide()
-        self.table_roi.setHorizontalHeaderLabels([" Isodose Level (cGy) ", " ROI Name ", " Notes "])
-        self.table_roi.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_roi.setHorizontalHeaderLabels(
+            [" Isodose Level (cGy) ", " ROI Name ", " Notes "])
+        self.table_roi.horizontalHeaderItem(
+            0).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_roi.horizontalHeaderItem(
+            1).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_roi.horizontalHeaderItem(
+            2).setTextAlignment(QtCore.Qt.AlignLeft)
         header4 = self.table_roi.horizontalHeader()
         header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -144,18 +168,20 @@ class Ui_Add_On_Options(object):
         self.table_Ids.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.table_Ids.setColumnCount(2)
         self.table_Ids.setHorizontalHeaderLabels([" Patient ID ", " Hash ID "])
-        self.table_Ids.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_Ids.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_Ids.horizontalHeaderItem(
+            0).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.table_Ids.horizontalHeaderItem(
+            1).setTextAlignment(QtCore.Qt.AlignLeft)
         header5 = self.table_Ids.horizontalHeader()
         self.table_Ids.verticalHeader().hide()
         header5.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header5.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_Ids.setVisible(False)
-        self.note=QtWidgets.QLabel(self.centralwidget)
+        self.note = QtWidgets.QLabel(self.centralwidget)
         self.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
         self.note.setObjectName('note')
         self.note.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
-                                        "color:rgb(0,0,0)")
+                                "color:rgb(0,0,0)")
         self.note.setVisible(False)
         self.cancel_button = QtWidgets.QPushButton(self.centralwidget)
         self.cancel_button.setCursor(
@@ -193,16 +219,23 @@ class Ui_Add_On_Options(object):
 
     def retranslateUi(self, Add_On_Options):
         _translate = QtCore.QCoreApplication.translate
-        Add_On_Options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))
+        Add_On_Options.setWindowTitle(
+            _translate("Add_On_Options", "Add-On Options"))
         self.optionTitle.setText(_translate("Add_On_Options", "User Options"))
-        self.note.setText(_translate("Add_On_Options", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
+        self.note.setText(_translate(
+            "Add_On_Options", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
         self.cancel_button.setText(_translate("Add_On_Options", "Cancel"))
         self.apply_button.setText(_translate("Add_On_Options", "Apply"))
-        self.add_new_window.setText(_translate("Add_On_Options", "Add New Window"))
-        self.add_standard_organ_name.setText(_translate("Add_On_Options", "Add Standard Name"))
-        self.add_standard_volume_name.setText(_translate("Add_On_Options", "Add Standard Name"))
-        self.import_organ_csv.setText(_translate("Add_On_Options", "Import Spreadsheet"))
-        self.add_new_roi.setText(_translate("Add_On_Options", "Add new Isodose"))
+        self.add_new_window.setText(_translate(
+            "Add_On_Options", "Add New Window"))
+        self.add_standard_organ_name.setText(
+            _translate("Add_On_Options", "Add Standard Name"))
+        self.add_standard_volume_name.setText(
+            _translate("Add_On_Options", "Add Standard Name"))
+        self.import_organ_csv.setText(_translate(
+            "Add_On_Options", "Import Spreadsheet"))
+        self.add_new_roi.setText(_translate(
+            "Add_On_Options", "Add new Isodose"))
 
 
 if __name__ == "__main__":
