@@ -6,18 +6,18 @@ from collections import deque
 from PyQt5.QtGui import QTextCharFormat
 from PyQt5.QtWidgets import QFileDialog
 
-from src.View.PluginManager import *
+from src.View.Add_On_Options import *
 from src.data.csv import *
 from src.View.InputDialogs import *
 
 
-class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
+class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
     def __init__(self):
-        super(PluginManager, self).__init__()
+        super(Add_On_Options, self).__init__()
         self.setupUi(self)
         data = [
-            {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'User Plugins'},
+            {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'User Options'},
             {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': 'Image Windowing'},
             {'level': 1, 'dbID': 556, 'parent_ID': 442, 'short_name': 'Standard Organ Names'},
             {'level': 1, 'dbID': 527, 'parent_ID': 442, 'short_name': 'Standard Volume Names'},
@@ -304,7 +304,7 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(True)
-        elif type == "User Plugins":
+        elif type == "User Options":
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
@@ -461,11 +461,11 @@ class PluginManager(QtWidgets.QMainWindow, Ui_PluginManager):
         self.check_change = True
 
 
-class PManager:
+class AddOptions:
 
     def __init__(self):
         pass
 
-    def show_plugin_manager(self):
-        self.plugin_window = PluginManager()
-        self.plugin_window.show()
+    def show_add_on_options(self):
+        self.options_window = Add_On_Options()
+        self.options_window.show()

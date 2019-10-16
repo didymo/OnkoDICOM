@@ -1,4 +1,6 @@
 import matplotlib.pylab as plt
+from PyQt5.QtWidgets import QMessageBox
+
 try:
     from matplotlib import _cntr as cntr
 except ImportError:
@@ -8,7 +10,7 @@ from copy import deepcopy
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTransform
-from src.Controller.pluginMController import PManager
+from src.Controller.Add_On_OController import AddOptions
 from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
@@ -21,7 +23,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy):
+    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
@@ -110,9 +112,11 @@ class Ui_MainWindow(object):
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
-        self.dict_pixluts = get_pixluts(self.dataset)
-        self.dict_raw_ContourData, self.dict_NumPoints = get_raw_ContourData(
-            self.dataset_rtss)
+
+        self.dict_pixluts = pixluts
+        self.dict_raw_ContourData = raw_contour
+        self.dict_NumPoints = num_points
+
         self.dict_polygons = {}
 
         self.zoom = 1
@@ -133,7 +137,7 @@ class Ui_MainWindow(object):
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths)
-        self.callManager = PManager()
+        self.callManager = AddOptions()
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -535,8 +539,8 @@ class Ui_MainWindow(object):
         iconIsodose = QtGui.QIcon()
         iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"),
                               QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconPlugin_Manager = QtGui.QIcon()
-        iconPlugin_Manager.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"),
+        iconadd_on_options = QtGui.QIcon()
+        iconadd_on_options.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"),
                                      QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconExport = QtGui.QIcon()
         iconExport.addPixmap(QtGui.QPixmap(":/images/Icon/export.png"),
@@ -638,12 +642,12 @@ class Ui_MainWindow(object):
         self.actionIsodose.setIconVisibleInMenu(True)
         self.actionIsodose.setObjectName("actionIsodose")
 
-        # Plugin Manager Action
-        self.actionPlugin_Manager = QtWidgets.QAction(MainWindow)
-        self.actionPlugin_Manager.setIcon(iconPlugin_Manager)
-        self.actionPlugin_Manager.setIconVisibleInMenu(True)
-        self.actionPlugin_Manager.setObjectName("actionPlugin_Manager")
-        self.actionPlugin_Manager.triggered.connect(self.pluginManagerHandler)
+        # Add-On Options Action
+        self.actionadd_on_options = QtWidgets.QAction(MainWindow)
+        self.actionadd_on_options.setIcon(iconadd_on_options)
+        self.actionadd_on_options.setIconVisibleInMenu(True)
+        self.actionadd_on_options.setObjectName("actionadd_on_options")
+        self.actionadd_on_options.triggered.connect(self.AddOnOptionsHandler)
 
         # Anonymize and Save Action
         self.actionAnonymize_and_Save = QtWidgets.QAction(MainWindow)
@@ -710,7 +714,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.menuWindowing.menuAction())
         self.menuTools.addAction(self.actionTransect)
         self.menuTools.addAction(self.menuROI_Creation.menuAction())
-        self.menuTools.addAction(self.actionPlugin_Manager)
+        self.menuTools.addAction(self.actionadd_on_options)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menuExport.menuAction())
         self.menuTools.addAction(self.actionAnonymize_and_Save)
@@ -739,7 +743,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionBrush)
         self.toolBar.addAction(self.actionIsodose)
         self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionPlugin_Manager)
+        self.toolBar.addAction(self.actionadd_on_options)
         self.toolBar.addWidget(self.toolbar_spacer)
         self.toolBar.addWidget(self.exportButton)
         self.toolBar.addAction(self.actionAnonymize_and_Save)
@@ -841,8 +845,8 @@ class Ui_MainWindow(object):
         self.actionTransect.setText(_translate("MainWindow", "Transect"))
         self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
         self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
-        self.actionPlugin_Manager.setText(
-            _translate("MainWindow", "Plugin Manager..."))
+        self.actionadd_on_options.setText(
+            _translate("MainWindow", "Add-On Options..."))
         self.actionAnonymize_and_Save.setText(
             _translate("MainWindow", "Anonymize and Save"))
         self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
@@ -896,7 +900,7 @@ class Ui_MainWindow(object):
             RGB_dict['QColor'] = QtGui.QColor(
                 RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
             RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
-                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 128)
+                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 26)
             roiColor[roi_id] = RGB_dict
         return roiColor
 
@@ -1071,25 +1075,25 @@ class Ui_MainWindow(object):
         self.box9_isod.setFocusPolicy(Qt.NoFocus)
         self.box10_isod.setFocusPolicy(Qt.NoFocus)
         self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(
-            131, 0, 0, 128)]: self.checked_dose(state, text))
+            131, 0, 0, 13)]: self.checked_dose(state, text))
         self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(
-            185, 0, 0, 128)]: self.checked_dose(state, text))
+            185, 0, 0, 13)]: self.checked_dose(state, text))
         self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(
-            255, 46, 0, 128)]: self.checked_dose(state, text))
+            255, 46, 0, 13)]: self.checked_dose(state, text))
         self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(
-            255, 161, 0, 128)]: self.checked_dose(state, text))
+            255, 161, 0, 13)]: self.checked_dose(state, text))
         self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(
-            253, 255, 0, 128)]: self.checked_dose(state, text))
+            253, 255, 0, 13)]: self.checked_dose(state, text))
         self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(
-            0, 255, 0, 128)]: self.checked_dose(state, text))
+            0, 255, 0, 13)]: self.checked_dose(state, text))
         self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(
-            0, 143, 0, 128)]: self.checked_dose(state, text))
+            0, 143, 0, 13)]: self.checked_dose(state, text))
         self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(
-            0, 255, 255, 128)]: self.checked_dose(state, text))
+            0, 255, 255, 13)]: self.checked_dose(state, text))
         self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(
-            33, 0, 255, 128)]: self.checked_dose(state, text))
+            33, 0, 255, 13)]: self.checked_dose(state, text))
         self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(
-            11, 0, 134, 128)]: self.checked_dose(state, text))
+            11, 0, 134, 13)]: self.checked_dose(state, text))
 
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -1262,8 +1266,17 @@ class Ui_MainWindow(object):
                                             "color:rgb(75,0,130);\n"
                                             "font-weight: bold;\n")
         self.button_exportDVH.setObjectName("button_exportDVH")
-        self.gridL_DVH.addWidget(
-            self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
+        self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
+        self.button_exportDVH.clicked.connect(self.exportDVHcsv)
+
+    def exportDVHcsv (self):
+        dvh2csv(self.raw_dvh,self.path,'DVH',self.dataset[0].PatientID)
+        SaveReply = QMessageBox.information(self, "Message",
+                                            "The DVH Data was saved successfully in your directory!",
+                                            QMessageBox.Ok)
+        if SaveReply == QMessageBox.Ok:
+            pass
+
 
     ####################################
     #  DICOM IMAGE VIEW FUNCTIONALITY  #
@@ -1450,11 +1463,13 @@ class Ui_MainWindow(object):
             else:
                 polygons = self.dict_polygons[roi_name][curr_slice]
 
-            color = self.roiColor[roi]['QColor_ROIdisplay']
-            pen = self.get_qpen(color, 3, 1)
+            brush_color = self.roiColor[roi]['QColor_ROIdisplay']
+            pen_color = QtGui.QColor(
+                brush_color.red(), brush_color.green(), brush_color.blue())
+            pen = self.get_qpen(pen_color, 1, 2)
             for i in range(len(polygons)):
                 self.DICOM_image_scene.addPolygon(
-                    polygons[i], pen, QBrush(color))
+                    polygons[i], pen, QBrush(brush_color))
 
     def calcPolygonF(self, curr_roi, curr_slice):
         list_polygons = []
@@ -1487,18 +1502,18 @@ class Ui_MainWindow(object):
                     (self.dataset['rtdose'].DoseGridScaling * 10000)
                 contours = isodosegen.trace(dose_level)
                 contours = contours[:len(contours)//2]
-                print(grid)
-                print('\n\n')
 
                 polygons = self.calc_dose_polygon(
                     self.dose_pixluts[curr_slice_uid], contours)
 
-                color = sd[1]
-                pen = self.get_qpen(color, 3, 1)
+                brush_color = sd[1]
+                pen_color = QtGui.QColor(
+                    brush_color.red(), brush_color.green(), brush_color.blue())
+                pen = self.get_qpen(pen_color, 2, 2)
                 for i in range(len(polygons)):
                     #color = self.roiColor['body']['QColor_ROIdisplay']
                     self.DICOM_image_scene.addPolygon(
-                        polygons[i], pen, QBrush(color))
+                        polygons[i], pen, QBrush(brush_color))
 
     # Calculate polygons for isodose display
     def calc_dose_polygon(self, dose_pixluts, contours):
@@ -1744,8 +1759,8 @@ class Ui_MainWindow(object):
         self.callClass.runTransect(
             self, self.DICOM_view, self.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 
-    def pluginManagerHandler(self):
-        self.callManager.show_plugin_manager()
+    def AddOnOptionsHandler(self):
+        self.callManager.show_add_on_options()
 
 
 class StructureInformation(object):
