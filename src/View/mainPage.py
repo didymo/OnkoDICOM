@@ -1,4 +1,6 @@
 import matplotlib.pylab as plt
+from PyQt5.QtWidgets import QMessageBox
+
 try:
     from matplotlib import _cntr as cntr
 except ImportError:
@@ -1263,10 +1265,15 @@ class Ui_MainWindow(object):
                                             "font-weight: bold;\n")
         self.button_exportDVH.setObjectName("button_exportDVH")
         self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
-        self.button_exportDVH.activated.connect(self.exportDVHcsv)
+        self.button_exportDVH.clicked.connect(self.exportDVHcsv)
 
     def exportDVHcsv (self):
-        dvh2csv(self.raw_dvh)
+        dvh2csv(self.raw_dvh,self.path,'DVH',self.dataset[0].PatientID)
+        SaveReply = QMessageBox.information(self, "Message",
+                                            "The DVH Data was saved successfully in your directory!",
+                                            QMessageBox.Ok)
+        if SaveReply == QMessageBox.Ok:
+            pass
 
 
     ####################################
