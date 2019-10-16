@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTransform
-from src.Controller.pluginMController import PManager
+from src.Controller.Add_On_OController import AddOptions
 from src.Model.CalculateDVHs import *
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
@@ -135,7 +135,7 @@ class Ui_MainWindow(object):
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths)
-        self.callManager = PManager()
+        self.callManager = AddOptions()
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -537,8 +537,8 @@ class Ui_MainWindow(object):
         iconIsodose = QtGui.QIcon()
         iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"),
                               QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconPlugin_Manager = QtGui.QIcon()
-        iconPlugin_Manager.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"),
+        iconadd_on_options = QtGui.QIcon()
+        iconadd_on_options.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"),
                                      QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconExport = QtGui.QIcon()
         iconExport.addPixmap(QtGui.QPixmap(":/images/Icon/export.png"),
@@ -640,12 +640,12 @@ class Ui_MainWindow(object):
         self.actionIsodose.setIconVisibleInMenu(True)
         self.actionIsodose.setObjectName("actionIsodose")
 
-        # Plugin Manager Action
-        self.actionPlugin_Manager = QtWidgets.QAction(MainWindow)
-        self.actionPlugin_Manager.setIcon(iconPlugin_Manager)
-        self.actionPlugin_Manager.setIconVisibleInMenu(True)
-        self.actionPlugin_Manager.setObjectName("actionPlugin_Manager")
-        self.actionPlugin_Manager.triggered.connect(self.pluginManagerHandler)
+        # Add-On Options Action
+        self.actionadd_on_options = QtWidgets.QAction(MainWindow)
+        self.actionadd_on_options.setIcon(iconadd_on_options)
+        self.actionadd_on_options.setIconVisibleInMenu(True)
+        self.actionadd_on_options.setObjectName("actionadd_on_options")
+        self.actionadd_on_options.triggered.connect(self.AddOnOptionsHandler)
 
         # Anonymize and Save Action
         self.actionAnonymize_and_Save = QtWidgets.QAction(MainWindow)
@@ -712,7 +712,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.menuWindowing.menuAction())
         self.menuTools.addAction(self.actionTransect)
         self.menuTools.addAction(self.menuROI_Creation.menuAction())
-        self.menuTools.addAction(self.actionPlugin_Manager)
+        self.menuTools.addAction(self.actionadd_on_options)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menuExport.menuAction())
         self.menuTools.addAction(self.actionAnonymize_and_Save)
@@ -741,7 +741,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionBrush)
         self.toolBar.addAction(self.actionIsodose)
         self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionPlugin_Manager)
+        self.toolBar.addAction(self.actionadd_on_options)
         self.toolBar.addWidget(self.toolbar_spacer)
         self.toolBar.addWidget(self.exportButton)
         self.toolBar.addAction(self.actionAnonymize_and_Save)
@@ -843,8 +843,8 @@ class Ui_MainWindow(object):
         self.actionTransect.setText(_translate("MainWindow", "Transect"))
         self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
         self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
-        self.actionPlugin_Manager.setText(
-            _translate("MainWindow", "Plugin Manager..."))
+        self.actionadd_on_options.setText(
+            _translate("MainWindow", "Add-On Options..."))
         self.actionAnonymize_and_Save.setText(
             _translate("MainWindow", "Anonymize and Save"))
         self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
@@ -1757,8 +1757,8 @@ class Ui_MainWindow(object):
         self.callClass.runTransect(
             self, self.DICOM_view, self.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 
-    def pluginManagerHandler(self):
-        self.callManager.show_plugin_manager()
+    def AddOnOptionsHandler(self):
+        self.callManager.show_add_on_options()
 
 
 class StructureInformation(object):
