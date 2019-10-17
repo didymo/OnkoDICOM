@@ -135,7 +135,11 @@ class Ui_MainWindow(object):
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths)
-        self.callManager = AddOptions()
+        self.callManager = AddOptions(1,10,1,5)
+        self.roi_line = 1
+        self.roi_opacity = 10
+        self.iso_line = 1
+        self.iso_opacity = 5
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -144,7 +148,7 @@ class Ui_MainWindow(object):
         # Main Window
         MainWindow.setObjectName("MainWindow")
         MainWindow.setMinimumSize(1080, 700)
-        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.jpg"))
         # Central Layer
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -1268,7 +1272,7 @@ class Ui_MainWindow(object):
         self.button_exportDVH.clicked.connect(self.exportDVHcsv)
 
     def exportDVHcsv (self):
-        dvh2csv(self.raw_dvh,self.path,'DVH',self.dataset[0].PatientID)
+        dvh2csv(self.raw_dvh,self.path + "/",'DVH',self.dataset[0].PatientID)
         SaveReply = QMessageBox.information(self, "Message",
                                             "The DVH Data was saved successfully in your directory!",
                                             QMessageBox.Ok)
@@ -1758,7 +1762,15 @@ class Ui_MainWindow(object):
             self, self.DICOM_view, self.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 
     def AddOnOptionsHandler(self):
-        self.callManager.show_add_on_options()
+        options = self.callManager.show_add_on_options()
+        if options.isVisible() == False :
+            new_data = options.getInputs()
+            self.roi_line = new_data[0]
+            self.roi_opacity = new_data[1]
+            self.iso_line = new_data[2]
+            self.iso_opacity = new_data[3]
+            print("new",new_data)
+
 
 
 class StructureInformation(object):
