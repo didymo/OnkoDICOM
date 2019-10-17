@@ -1,7 +1,7 @@
 import pydicom
 from pydicom.dataelem import DataElement_from_raw
 
-ds = pydicom.dcmread("../../dicom_sample/ct.0.dcm")
+ds = pydicom.dcmread("../../dicom_sample/ct.0.dcm", force=True)
 
 # Iterating through the entire Dataset (including Sequences)
 # content = []
@@ -48,6 +48,6 @@ def myprint(dataset, indent=0):
 
 
 filename = get_testdata_files('MR_small.dcm')[0]
-ds = pydicom.dcmread(filename)
+ds = pydicom.dcmread(filename, force=True)
 
 myprint(ds)

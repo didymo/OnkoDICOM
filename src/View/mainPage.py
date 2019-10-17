@@ -23,7 +23,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy):
+    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
@@ -98,8 +98,8 @@ class Ui_MainWindow(object):
 
         self.file_rtss = self.filepaths['rtss']
         self.file_rtdose = self.filepaths['rtdose']
-        self.dataset_rtss = pydicom.dcmread(self.file_rtss)
-        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+        self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
+        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
 
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
@@ -112,9 +112,11 @@ class Ui_MainWindow(object):
         self.roi_info = StructureInformation(self)
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
-        self.dict_pixluts = get_pixluts(self.dataset)
-        self.dict_raw_ContourData, self.dict_NumPoints = get_raw_ContourData(
-            self.dataset_rtss)
+
+        self.dict_pixluts = pixluts
+        self.dict_raw_ContourData = raw_contour
+        self.dict_NumPoints = num_points
+
         self.dict_polygons = {}
 
         self.zoom = 1

@@ -46,25 +46,23 @@ def get_datasets(path):
 
     # For each file in path
     for file in dcm_files:
-        # If file exists and the first two letters in the name are CT, RD, RP, RS, or RT
-        if os.path.isfile(file) and os.path.basename(file)[0:2].upper() in ['CT', 'RD', 'RP', 'RS', 'RT']:
-            try:
-                read_file = pydicom.dcmread(file)
-            except:
-                print('ERROR: Cannot read file ' + file)
-            else:
-                if read_file.Modality == 'CT':
-                    read_data_dict[i] = read_file
-                    file_names_dict[i] = file
-                    i += 1
-                elif read_file.Modality == 'RTSTRUCT':
-                    read_data_dict['rtss'] = read_file
-                    file_names_dict['rtss'] = file
-                elif read_file.Modality == 'RTDOSE':
-                    read_data_dict['rtdose'] = read_file
-                    file_names_dict['rtdose'] = file
-                elif read_file.Modality == 'RTPLAN':
-                    read_data_dict['rtplan'] = read_file
-                    file_names_dict['rtplan'] = file
-
+        try:
+            read_file = pydicom.dcmread(file, force=True)
+        except:
+            pass
+        else:
+            if read_file.Modality == 'CT':
+                self.read_data_dict[i] = read_file
+                self.file_names_dict[i] = file
+                i += 1
+            elif read_file.Modality == 'RTSTRUCT':
+                self.read_data_dict['rtss'] = read_file
+                self.file_names_dict['rtss'] = file
+            elif read_file.Modality == 'RTDOSE':
+                self.read_data_dict['rtdose'] = read_file
+                self.file_names_dict['rtdose'] = file
+            elif read_file.Modality == 'RTPLAN':
+                self.read_data_dict['rtplan'] = read_file
+                self.file_names_dict['rtplan'] = file
+            
     return read_data_dict, file_names_dict

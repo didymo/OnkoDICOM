@@ -6,6 +6,7 @@ from PyQt5.QtCore import QPoint
 from PyQt5.QtWidgets import QWidget, QApplication, QGraphicsScene, QGraphicsView, QLabel, QVBoxLayout, QMainWindow
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPixmap, QPen, QBrush
 import numpy as np
+import multiprocessing
 
 from src.Model.CalculateImages import *
 

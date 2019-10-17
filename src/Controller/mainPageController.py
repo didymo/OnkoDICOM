@@ -1,29 +1,24 @@
+import matplotlib.cbook
+from src.Model.ROI import *
+from src.Model.CalculateImages import *
+from src.Model.Anon import *
+from dateutil.relativedelta import relativedelta
+from pathlib import Path
+from src.Model.GetPatientInfo import *
+from src.Model.Display_CD_UI import *
+from src.Model.form_UI import *
+from src.Model.Pyradiomics import pyradiomics
+from PyQt5.QtWidgets import QMessageBox
+import math
+from PyQt5.QtWidgets import QGraphicsPixmapItem
+from PyQt5.QtCore import Qt, QPoint, QPointF, QRectF
+import matplotlib.pyplot as plt1
 import glob
 import sys
 
 import warnings
 warnings.filterwarnings("ignore")
 
-import matplotlib.pyplot as plt1
-from PyQt5.QtCore import Qt, QPoint, QPointF, QRectF
-from PyQt5.QtWidgets import QGraphicsPixmapItem
-
-import math
-from PyQt5.QtWidgets import QMessageBox
-
-from src.Model.Pyradiomics import pyradiomics
-
-from src.Model.form_UI import *
-from src.Model.Display_CD_UI import *
-from src.Model.GetPatientInfo import *
-
-from pathlib import Path
-from dateutil.relativedelta import relativedelta
-from src.Model.Anon import *
-from src.Model.CalculateImages import *
-from src.Model.ROI import *
-
-import matplotlib.cbook
 
 matplotlib.cbook.handle_exceptions = "print"  # default
 
@@ -76,9 +71,11 @@ for items in hist:
 
 def calculate_years(year1, year2):
     difference_years = relativedelta(year2.toPyDate(), year1.toPyDate()).years
-    difference_months = relativedelta(year2.toPyDate(), year1.toPyDate()).months
+    difference_months = relativedelta(
+        year2.toPyDate(), year1.toPyDate()).months
     difference_in_days = relativedelta(year2.toPyDate(), year1.toPyDate()).days
-    value = difference_years + (difference_months / 12) + (difference_in_days / 365)
+    value = difference_years + \
+        (difference_months / 12) + (difference_in_days / 365)
     return ("%.2f" % value)
     # return float(year2.year() - year1.year() - ((year2.month(), year2.day()) < (year1.month(), year1.day())))
 
@@ -127,7 +124,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.setTabOrder(self.ui.Dt_Distant_Failure, self.ui.Save_button)
 
         self.ui.Local_control.activated.connect(self.LocalControl_Failure)
-        self.ui.Regional_Control.activated.connect(self.RegionalControl_Failure)
+        self.ui.Regional_Control.activated.connect(
+            self.RegionalControl_Failure)
         self.ui.Distant_Control.activated.connect(self.DistantControl_Failure)
         self.ui.Tx_intent.activated.connect(self.Tx_Intent_Refused)
         self.ui.Death.activated.connect(self.PatientDead)
@@ -137,7 +135,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
     # show survival
     def show_survival(self):
-        Survival_years = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+        Survival_years = str(calculate_years(
+            self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
         self.ui.Survival_dt.setText("Survival Length: " + Survival_years)
         self.ui.Survival_dt.setVisible(True)
 
@@ -332,54 +331,67 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             if status == "Dead":
                 CancerDeath = str(self.ui.Cancer_death.currentText())
 
-            ageAtDiagnosis = round(float(calculate_years(self.ui.date_of_birth.date(), self.ui.dateEdit_2.date())))
+            ageAtDiagnosis = round(float(calculate_years(
+                self.ui.date_of_birth.date(), self.ui.dateEdit_2.date())))
 
             # get the local failure duration
             local_failure = str(self.ui.Local_control.currentText())
             if (local_failure == "Control"):
-                Lc_duration = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                Lc_duration = str(calculate_years(
+                    self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
                 Lc_date = ''
             elif (local_failure == "Failure"):
-                Lc_duration = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_local_failure.date()))
+                Lc_duration = str(calculate_years(
+                    self.ui.dateEdit_2.date(), self.ui.Dt_local_failure.date()))
                 Lc_date = self.ui.Dt_local_failure.date().toString("dd/MM/yyyy")
 
             # get the regional failure duration
             regional_failure = str(self.ui.Regional_Control.currentText())
             if (regional_failure == "Control"):
-                Rc_Duration = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                Rc_Duration = str(calculate_years(
+                    self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
                 Rc_date = ''
             elif (regional_failure == "Failure"):
-                Rc_Duration = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_REgional_failure.date()))
+                Rc_Duration = str(calculate_years(
+                    self.ui.dateEdit_2.date(), self.ui.Dt_REgional_failure.date()))
                 Rc_date = self.ui.Dt_REgional_failure.date().toString("dd/MM/yyyy")
 
             # get the sistant failure duration
             distant_failure = str(self.ui.Distant_Control.currentText())
             if (distant_failure == "Control"):
-                Dc_Duration = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                Dc_Duration = str(calculate_years(
+                    self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
                 Dc_date = ''
             elif (distant_failure == "Failure"):
-                Dc_Duration = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_Distant_Failure.date()))
+                Dc_Duration = str(calculate_years(
+                    self.ui.dateEdit_2.date(), self.ui.Dt_Distant_Failure.date()))
                 Dc_date = self.ui.Dt_Distant_Failure.date().toString("dd/MM/yyyy")
 
-            Survival_years = str(calculate_years(self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+            Survival_years = str(calculate_years(
+                self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
 
             dataRow = [self.pID, self.ui.gender.currentText(), self.ui.line_BP.text(),
                        ageAtDiagnosis, self.ui.dateEdit_2.date().year(),
-                       self.getDeseaseCode(self.ui.line_histology.text()), self.getDeseaseCode(self.ui.line_icd.text()),
+                       self.getDeseaseCode(self.ui.line_histology.text(
+                       )), self.getDeseaseCode(self.ui.line_icd.text()),
                        self.ui.T_stage.currentText(),
                        self.ui.N_stage.currentText(), self.ui.M_stage.currentText(),
                        self.ui.Overall_Stage.currentText(),
                        self.ui.Tx_intent.currentText(), self.getCode(self.ui.Surgery.currentText()),
                        self.getCode(self.ui.Rad.currentText()),
-                       self.getCode(self.ui.Chemo.currentText()), self.getCode(self.ui.Immuno.currentText()),
+                       self.getCode(self.ui.Chemo.currentText()), self.getCode(
+                           self.ui.Immuno.currentText()),
                        self.getCode(self.ui.Branchy.currentText()),
-                       self.getCode(self.ui.Hormone.currentText()), self.codeAlive(self.ui.Death.currentText()),
+                       self.getCode(self.ui.Hormone.currentText()), self.codeAlive(
+                           self.ui.Death.currentText()),
                        self.codeCancerDeath(CancerDeath), Survival_years,
                        self.codeControl(self.ui.Local_control.currentText()),
                        Lc_date,
-                       Lc_duration, self.codeControl(self.ui.Regional_Control.currentText()),
+                       Lc_duration, self.codeControl(
+                           self.ui.Regional_Control.currentText()),
                        Rc_date, Rc_Duration,
-                       self.codeControl(self.ui.Distant_Control.currentText()), Dc_date,
+                       self.codeControl(
+                           self.ui.Distant_Control.currentText()), Dc_date,
                        Dc_Duration]
 
             with f:
@@ -400,9 +412,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 check = False
                 for i in new_df.index:
                     if new_df.at[i, 'PID'] == self.pID:
-                        new_df.at[i, 'DOB'] = self.ui.date_of_birth.date().toString("dd/MM/yyyy")
-                        new_df.at[i, 'DOD'] = self.ui.dateEdit_2.date().toString("dd/MM/yyyy")
-                        new_df.at[i, 'DOLE'] = self.ui.Dt_Last_Existence.date().toString("dd/MM/yyyy")
+                        new_df.at[i, 'DOB'] = self.ui.date_of_birth.date().toString(
+                            "dd/MM/yyyy")
+                        new_df.at[i, 'DOD'] = self.ui.dateEdit_2.date().toString(
+                            "dd/MM/yyyy")
+                        new_df.at[i, 'DOLE'] = self.ui.Dt_Last_Existence.date().toString(
+                            "dd/MM/yyyy")
                         check = True
 
                 if check:
@@ -417,7 +432,6 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                                                 QMessageBox.Ok)
             if SaveReply == QMessageBox.Ok:
                 self.display_cd_dat()
-
 
         else:
             buttonReply = QMessageBox.warning(self, "Error Message",
@@ -475,17 +489,20 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
 
-        self.ui.label_4.setText("You are editing the last known Clinical Data for this patient.")
+        self.ui.label_4.setText(
+            "You are editing the last known Clinical Data for this patient.")
         self.ui.line_FN.setVisible(False)
         self.ui.line_LN.setVisible(False)
         self.ui.line_FN.setText("...")
         self.ui.line_LN.setText("...")
         self.ui.date_of_birth.setVisible(False)
-        self.ui.gender.setCurrentIndex(self.ui.gender.findText(clinical_data[1], QtCore.Qt.MatchFixedString))
+        self.ui.gender.setCurrentIndex(self.ui.gender.findText(
+            clinical_data[1], QtCore.Qt.MatchFixedString))
         self.ui.line_BP.setText(clinical_data[2])
         self.ui.line_histology.setText(self.completerFill(0, clinical_data[5]))
         self.ui.line_icd.setText(self.completerFill(1, clinical_data[6]))
-        self.ui.T_stage.setCurrentIndex(self.ui.T_stage.findText(clinical_data[7], QtCore.Qt.MatchFixedString))
+        self.ui.T_stage.setCurrentIndex(self.ui.T_stage.findText(
+            clinical_data[7], QtCore.Qt.MatchFixedString))
         self.ui.N_stage.setCurrentText(clinical_data[8])
         self.ui.M_stage.setCurrentText(clinical_data[9])
         self.ui.Overall_Stage.setCurrentText(clinical_data[10])
@@ -493,36 +510,50 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         if clinical_data[11] == "Refused":
             self.Tx_Intent_Refused()
         else:
-            self.ui.Surgery.setCurrentText(self.getCodeReverse(clinical_data[12]))
+            self.ui.Surgery.setCurrentText(
+                self.getCodeReverse(clinical_data[12]))
             self.ui.Rad.setCurrentText(self.getCodeReverse(clinical_data[13]))
-            self.ui.Chemo.setCurrentText(self.getCodeReverse(clinical_data[14]))
-            self.ui.Immuno.setCurrentText(self.getCodeReverse(clinical_data[15]))
-            self.ui.Branchy.setCurrentText(self.getCodeReverse(clinical_data[16]))
-            self.ui.Hormone.setCurrentText(self.getCodeReverse(clinical_data[17]))
+            self.ui.Chemo.setCurrentText(
+                self.getCodeReverse(clinical_data[14]))
+            self.ui.Immuno.setCurrentText(
+                self.getCodeReverse(clinical_data[15]))
+            self.ui.Branchy.setCurrentText(
+                self.getCodeReverse(clinical_data[16]))
+            self.ui.Hormone.setCurrentText(
+                self.getCodeReverse(clinical_data[17]))
 
         self.ui.Death.setCurrentIndex(int(int(clinical_data[18]) + 1))
         if clinical_data[19] == '':
             self.ui.Cancer_death.setCurrentIndex(0)
             self.ui.Cancer_death.setDisabled(True)
         else:
-            self.ui.Cancer_death.setCurrentText(int(int(clinical_data[19]) + 1))
+            self.ui.Cancer_death.setCurrentText(
+                int(int(clinical_data[19]) + 1))
         self.ui.Survival_dt.setText("Survival Length: " + clinical_data[20])
         self.ui.Survival_dt.setVisible(True)
         self.ui.Local_control.setCurrentIndex(int(1 + int(clinical_data[21])))
         if clinical_data[22] == '':
-            self.ui.Dt_local_failure.setDate(QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
+            self.ui.Dt_local_failure.setDate(
+                QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
         else:
-            self.ui.Dt_local_failure.setDate(QtCore.QDate.fromString(clinical_data[22], "dd/MM/yyyy"))
-        self.ui.Regional_Control.setCurrentIndex(int(1 + int(clinical_data[24])))
+            self.ui.Dt_local_failure.setDate(
+                QtCore.QDate.fromString(clinical_data[22], "dd/MM/yyyy"))
+        self.ui.Regional_Control.setCurrentIndex(
+            int(1 + int(clinical_data[24])))
         if clinical_data[25] == '':
-            self.ui.Dt_REgional_failure.setDate(QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
+            self.ui.Dt_REgional_failure.setDate(
+                QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
         else:
-            self.ui.Dt_REgional_failure.setDate(QtCore.QDate.fromString(clinical_data[25], "dd/MM/yyyy"))
-        self.ui.Distant_Control.setCurrentIndex(int(1 + int(clinical_data[27])))
+            self.ui.Dt_REgional_failure.setDate(
+                QtCore.QDate.fromString(clinical_data[25], "dd/MM/yyyy"))
+        self.ui.Distant_Control.setCurrentIndex(
+            int(1 + int(clinical_data[27])))
         if clinical_data[28] == '':
-            self.ui.Dt_Distant_Failure.setDate(QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
+            self.ui.Dt_Distant_Failure.setDate(
+                QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
         else:
-            self.ui.Dt_Distant_Failure.setDate(QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
+            self.ui.Dt_Distant_Failure.setDate(
+                QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
 
         # add the sensitive data of dates from the binary file
         # date of birth
@@ -532,9 +563,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         df = pd.read_pickle('src/data/records.pkl')
         for i in df.index:
             if df.at[i, 'PID'] == self.pID:
-                self.ui.date_of_birth.setDate(QtCore.QDate.fromString(df.at[i, 'DOB'], "dd/MM/yyyy"))
-                self.ui.dateEdit_2.setDate(QtCore.QDate.fromString(df.at[i, 'DOD'], "dd/MM/yyyy"))
-                self.ui.Dt_Last_Existence.setDate(QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
+                self.ui.date_of_birth.setDate(
+                    QtCore.QDate.fromString(df.at[i, 'DOB'], "dd/MM/yyyy"))
+                self.ui.dateEdit_2.setDate(
+                    QtCore.QDate.fromString(df.at[i, 'DOD'], "dd/MM/yyyy"))
+                self.ui.Dt_Last_Existence.setDate(
+                    QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
 
     def on_click(self):
         self.save_ClinicalData()
@@ -569,7 +603,8 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
 
-        self.ui.gender.setCurrentIndex(self.ui.gender.findText(clinical_data[1], QtCore.Qt.MatchFixedString))
+        self.ui.gender.setCurrentIndex(self.ui.gender.findText(
+            clinical_data[1], QtCore.Qt.MatchFixedString))
         self.ui.gender.setDisabled(True)
         self.ui.line_BP.setText(clinical_data[2])
         self.ui.line_BP.setDisabled(True)
@@ -581,7 +616,8 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.ui.line_histology.setDisabled(True)
         self.ui.line_icd.setText(self.completerFill(1, clinical_data[6]))
         self.ui.line_icd.setDisabled(True)
-        self.ui.T_stage.setCurrentIndex(self.ui.T_stage.findText(clinical_data[7], QtCore.Qt.MatchFixedString))
+        self.ui.T_stage.setCurrentIndex(self.ui.T_stage.findText(
+            clinical_data[7], QtCore.Qt.MatchFixedString))
         self.ui.T_stage.setDisabled(True)
         self.ui.N_stage.setCurrentText(clinical_data[8])
         self.ui.N_stage.setDisabled(True)
@@ -608,32 +644,41 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         if clinical_data[19] == '':
             self.ui.Cancer_death.setCurrentIndex(-1)
         else:
-            self.ui.Cancer_death.setCurrentIndex(int(1 + int(clinical_data[19])))
+            self.ui.Cancer_death.setCurrentIndex(
+                int(1 + int(clinical_data[19])))
         self.ui.Cancer_death.setDisabled(True)
         self.ui.survival_duration.setText(clinical_data[20])
         self.ui.survival_duration.setDisabled(True)
         self.ui.Local_control.setCurrentIndex(int(1 + int(clinical_data[21])))
         self.ui.Local_control.setDisabled(True)
         if clinical_data[22] == '':
-            self.ui.Dt_local_failure.setDate(QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
+            self.ui.Dt_local_failure.setDate(
+                QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
         else:
-            self.ui.Dt_local_failure.setDate(QtCore.QDate.fromString(clinical_data[22], "dd/MM/yyyy"))
+            self.ui.Dt_local_failure.setDate(
+                QtCore.QDate.fromString(clinical_data[22], "dd/MM/yyyy"))
         self.ui.LC_duration.setText(clinical_data[23])
         self.ui.LC_duration.setDisabled(True)
-        self.ui.Regional_Control.setCurrentIndex(int(1 + int(clinical_data[24])))
+        self.ui.Regional_Control.setCurrentIndex(
+            int(1 + int(clinical_data[24])))
         self.ui.Regional_Control.setDisabled(True)
         if clinical_data[25] == '':
-            self.ui.Dt_REgional_failure.setDate(QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
+            self.ui.Dt_REgional_failure.setDate(
+                QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
         else:
-            self.ui.Dt_REgional_failure.setDate(QtCore.QDate.fromString(clinical_data[25], "dd/MM/yyyy"))
+            self.ui.Dt_REgional_failure.setDate(
+                QtCore.QDate.fromString(clinical_data[25], "dd/MM/yyyy"))
         self.ui.RC_duration.setText(clinical_data[26])
         self.ui.RC_duration.setDisabled(True)
-        self.ui.Distant_Control.setCurrentIndex(int(1 + int(clinical_data[27])))
+        self.ui.Distant_Control.setCurrentIndex(
+            int(1 + int(clinical_data[27])))
         self.ui.Distant_Control.setDisabled(True)
         if clinical_data[28] == '':
-            self.ui.Dt_Distant_Failure.setDate(QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
+            self.ui.Dt_Distant_Failure.setDate(
+                QtCore.QDate.fromString('01/01/1900', "dd/MM/yyyy"))
         else:
-            self.ui.Dt_Distant_Failure.setDate(QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
+            self.ui.Dt_Distant_Failure.setDate(
+                QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
         self.ui.DC_duration.setText(clinical_data[29])
         self.ui.DC_duration.setDisabled(True)
 
@@ -710,7 +755,8 @@ class Transect(QtWidgets.QGraphicsScene):
             self.pos1 = event.scenePos()
             self._current_rect_item = QtWidgets.QGraphicsLineItem()
             self._current_rect_item.setPen(QtCore.Qt.red)
-            self._current_rect_item.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, False)
+            self._current_rect_item.setFlag(
+                QtWidgets.QGraphicsItem.ItemIsMovable, False)
             self.addItem(self._current_rect_item)
             self._start = event.scenePos()
             r = QtCore.QLineF(self._start, self._start)
@@ -728,7 +774,8 @@ class Transect(QtWidgets.QGraphicsScene):
             # print("pos1:", self.pos1.x(), self.pos1.y())
             self.pos2 = event.scenePos()
             # print("pos2:", self.pos2.x(), self.pos2.y())
-            self.drawDDA(round(self.pos1.x()), round(self.pos1.y()), round(self.pos2.x()), round(self.pos2.y()))
+            self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
+                         round(self.pos2.x()), round(self.pos2.y()))
             # print(self.calculateDistance(round(self.pos1.x()), round(self.pos1.y()), round(self.pos2.x()), round(self.pos2.y())))
 
             self.drawing = False
@@ -765,7 +812,8 @@ class Transect(QtWidgets.QGraphicsScene):
     def getDistances(self):
         for i, j in self.points:
             if i in range(512) and j in range(512):
-                self.distances.append(self.calculateDistance(i, j, round(self.pos2.x()), round(self.pos2.y())))
+                self.distances.append(self.calculateDistance(
+                    i, j, round(self.pos2.x()), round(self.pos2.y())))
         self.distances.reverse()
         # print(self.distances)
 
@@ -812,7 +860,8 @@ class MainPage:
         anonymize(self.path, self.dataset, self.filepaths)
 
     def display_cd_form(self, tabWindow, file_path):
-        self.tab_cd = ClinicalDataForm(tabWindow, file_path, self.dataset, self.filepaths)
+        self.tab_cd = ClinicalDataForm(
+            tabWindow, file_path, self.dataset, self.filepaths)
         tabWindow.addTab(self.tab_cd, "")
 
     def display_cd_dat(self, tabWindow, file_path):
@@ -820,5 +869,6 @@ class MainPage:
         tabWindow.addTab(self.tab_cd, "")
 
     def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
-        self.tab_ct = Transect(mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow)
+        self.tab_ct = Transect(mainWindow, imagetoPaint,
+                               dataset, rowS, colS, tabWindow)
         tabWindow.setScene(self.tab_ct)
