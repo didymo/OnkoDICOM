@@ -137,11 +137,8 @@ class Ui_MainWindow(object):
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths)
-        self.callManager = AddOptions(1,10,1,5)
-        self.roi_line = 1
-        self.roi_opacity = 10
-        self.iso_line = 1
-        self.iso_opacity = 5
+        self.callManager = AddOptions()
+
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -1765,14 +1762,6 @@ class Ui_MainWindow(object):
 
     def AddOnOptionsHandler(self):
         options = self.callManager.show_add_on_options()
-        if options.isVisible() == False :
-            new_data = options.getInputs()
-            self.roi_line = new_data[0]
-            self.roi_opacity = new_data[1]
-            self.iso_line = new_data[2]
-            self.iso_opacity = new_data[3]
-            print("new",new_data)
-
 
 
 class StructureInformation(object):
