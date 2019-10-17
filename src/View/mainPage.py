@@ -98,8 +98,8 @@ class Ui_MainWindow(object):
 
         self.file_rtss = self.filepaths['rtss']
         self.file_rtdose = self.filepaths['rtdose']
-        self.dataset_rtss = pydicom.dcmread(self.file_rtss)
-        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+        self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
+        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
 
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()

@@ -14,6 +14,8 @@ import pandas as pd
 # 'uid' is ReferencedFrameOfReferenceUID
 # 'name' is ROIName (Name of the ROI)
 # 'algorithm' is ROIGenerationAlgorithm
+
+
 def get_roi_info(ds_rtss):
     dict_roi = {}
     for sequence in ds_rtss.StructureSetROISequence:
@@ -42,8 +44,8 @@ def get_roi_info(ds_rtss):
 #     rtss_path = path + 'rtss.dcm'
 #     rtdose_path = path + 'rtdose.dcm'
 #
-#     ds_rtdose = pydicom.dcmread(rtdose_path)
-#     ds_rtss = pydicom.dcmread(rtss_path)
+#     ds_rtdose = pydicom.dcmread(rtdose_path, force = True)
+#     ds_rtss = pydicom.dcmread(rtss_path, force = True)
 #
 #     rois = get_roi_info(ds_rtss)
 #     print(rois)
@@ -59,7 +61,7 @@ def get_roi_info(ds_rtss):
 #     return dict_dvh
 
 
-### MultiProcessing Calculation of DVHs
+# MultiProcessing Calculation of DVHs
 
 def multi_get_dvhs(rtss, dose, roi, queue, dose_limit=None):
     dvh = {}
@@ -67,6 +69,7 @@ def multi_get_dvhs(rtss, dose, roi, queue, dose_limit=None):
 
     print("This is", roi)
     queue.put(dvh)
+
 
 def calc_dvhs(rtss, rtdose, dict_roi, dose_limit=None):
     queue = multiprocessing.Queue()
@@ -78,7 +81,8 @@ def calc_dvhs(rtss, rtdose, dict_roi, dose_limit=None):
         roi_list.append(key)
 
     for i in range(len(roi_list)):
-        p = multiprocessing.Process(target=multi_get_dvhs, args=(rtss, rtdose, roi_list[i], queue))
+        p = multiprocessing.Process(
+            target=multi_get_dvhs, args=(rtss, rtdose, roi_list[i], queue))
         processes.append(p)
         p.start()
 
@@ -112,7 +116,8 @@ def converge_to_O_dvh(dict_dvh):
                 tmp_bincenters.append(dvh.bincenters[-1]+i)
 
             tmp_bincenters = np.array(tmp_bincenters)
-            tmp_bincenters = np.concatenate((dvh.bincenters.flatten(), tmp_bincenters))
+            tmp_bincenters = np.concatenate(
+                (dvh.bincenters.flatten(), tmp_bincenters))
             bincenters = np.array(tmp_bincenters)
             counts = np.concatenate((dvh.counts.flatten(), np.array(zeros)))
 
@@ -125,6 +130,7 @@ def converge_to_O_dvh(dict_dvh):
         res[roi]['counts'] = counts
 
     return res
+
 
 def dvh2csv(dict_dvh, path, csv_name, patientID):
     tar_path = path + csv_name + '.csv'
@@ -164,16 +170,14 @@ def dvh2csv(dict_dvh, path, csv_name, patientID):
     pddf_csv.to_csv(tar_path)
 
 
-
-
 # # Example of usage
 # if __name__ == '__main__':
 #     path = '/home/xudong/dicom_sample/'
 #     rtss_path = path + 'rtss.dcm'
 #     rtdose_path = path + 'rtdose.dcm'
 #
-#     ds_rtdose = pydicom.dcmread(rtdose_path)
-#     ds_rtss = pydicom.dcmread(rtss_path)
+#     ds_rtdose = pydicom.dcmread(rtdose_path, force = True)
+#     ds_rtss = pydicom.dcmread(rtss_path, force = True)
 #
 #     rois = get_roi_info(ds_rtss)
 #     print(rois)

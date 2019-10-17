@@ -11,7 +11,6 @@ from src.Model.ROI import *
 import multiprocessing
 
 
-
 class Extended(QtCore.QThread):
     """
     For running copy operation
@@ -34,38 +33,43 @@ class Extended(QtCore.QThread):
         self.previous = 0
 
     def run(self):
-        self.dataset, self.file_names_dict = self.get_datasets(self.path, self.my_callback)
+        self.dataset, self.file_names_dict = self.get_datasets(
+            self.path, self.my_callback)
 
         if not self.file_names_dict:
             self.incorrect_directory_signal.emit()
 
         elif 'rtss' not in self.file_names_dict:
             if 'rtdose' not in self.file_names_dict:
-                self.missing_files_signal.emit('RTStruct and RTDose files not found in selected directory')
+                self.missing_files_signal.emit(
+                    'RTStruct and RTDose files not found in selected directory')
             else:
-                self.missing_files_signal.emit('RTStruct file not found in selected directory')
+                self.missing_files_signal.emit(
+                    'RTStruct file not found in selected directory')
         else:
             self.file_rtss = self.file_names_dict['rtss']
             self.file_rtdose = self.file_names_dict['rtdose']
-            self.dataset_rtss = pydicom.dcmread(self.file_rtss)
-            self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+            self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True, defer_size=100)
+            self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True, defer_size=100)
             self.rois = self.get_roi_info(self.dataset_rtss, self.my_callback)
-            self.raw_dvh = self.calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
-            self.dvh_x_y = self.converge_to_O_dvh(self.raw_dvh, self.my_callback)
-            self.dict_raw_ContourData, self.dict_NumPoints = self.get_raw_ContourData(self.dataset_rtss)
+            self.raw_dvh = self.calc_dvhs(
+                self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
+            self.dvh_x_y = self.converge_to_O_dvh(
+                self.raw_dvh, self.my_callback)
+            self.dict_raw_ContourData, self.dict_NumPoints = self.get_raw_ContourData(
+                self.dataset_rtss)
             self.dict_pixluts = self.get_pixluts(self.dataset)
 
             if self.previous < 100:
-                for i in range(self.previous,101):
+                for i in range(self.previous, 101):
                     self.copied_percent_signal.emit(int(i))
-
 
     def my_callback(self, temp_file_size):
         percent = int(temp_file_size/self.file_size*10)
         if percent < self.previous or percent == 100:
             percent = self.previous
         elif percent == self.previous and percent < 98:
-            percent +=1
+            percent += 1
         elif percent == self.previous:
             percent += 1
 
@@ -73,14 +77,14 @@ class Extended(QtCore.QThread):
         print("here", percent)
         self.previous = percent
 
-    def natural_sort(self,file_list):
+    def natural_sort(self, file_list):
         # Logger info
-        convert = lambda text: int(text) if text.isdigit() else text.lower()
-        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+        def convert(text): return int(text) if text.isdigit() else text.lower()
+        def alphanum_key(key): return [convert(c)
+                                       for c in re.split('([0-9]+)', key)]
         return sorted(file_list, key=alphanum_key)
 
-
-    def get_datasets(self,path, callback):
+    def get_datasets(self, path, callback):
         """
         :param path: str
         :return read_data_dict: dict
@@ -97,33 +101,30 @@ class Extended(QtCore.QThread):
 
         # Sort files based on name
         dcm_files = self.natural_sort(glob.glob(path + '/*'))
-        i = 0 # For key values for ct images
+        i = 0  # For key values for ct images
 
         # For each file in path
-
         for file in dcm_files:
-            # If file exists and the first two letters in the name are CT, RD, RP, RS, or RT
-            if os.path.isfile(file) and os.path.basename(file)[0:2].upper() in ['CT', 'RD', 'RP', 'RS', 'RT']:
-                try:
-                    read_file = pydicom.dcmread(file)
-                except:
-                    pass
-                else:    
-                    if read_file.Modality == 'CT':
-                        self.read_data_dict[i] = read_file
-                        self.file_names_dict[i] = file
-                        i += 1
-                    elif read_file.Modality == 'RTSTRUCT':
-                        self.read_data_dict['rtss'] = read_file
-                        self.file_names_dict['rtss'] = file
-                    elif read_file.Modality == 'RTDOSE':
-                        self.read_data_dict['rtdose'] = read_file
-                        self.file_names_dict['rtdose'] = file
-                    elif read_file.Modality == 'RTPLAN':
-                        self.read_data_dict['rtplan'] = read_file
-                        self.file_names_dict['rtplan'] = file
-                    self.copied += len(read_file)
-                    callback(self.copied)
+            try:
+                read_file = pydicom.dcmread(file, force=True)
+            except:
+                pass
+            else:
+                if read_file.Modality == 'CT':
+                    self.read_data_dict[i] = read_file
+                    self.file_names_dict[i] = file
+                    i += 1
+                elif read_file.Modality == 'RTSTRUCT':
+                    self.read_data_dict['rtss'] = read_file
+                    self.file_names_dict['rtss'] = file
+                elif read_file.Modality == 'RTDOSE':
+                    self.read_data_dict['rtdose'] = read_file
+                    self.file_names_dict['rtdose'] = file
+                elif read_file.Modality == 'RTPLAN':
+                    self.read_data_dict['rtplan'] = read_file
+                    self.file_names_dict['rtplan'] = file
+                self.copied += len(read_file)
+                callback(self.copied)
 
         return self.read_data_dict, self.file_names_dict
 
@@ -135,12 +136,12 @@ class Extended(QtCore.QThread):
             dict_temp['name'] = sequence.ROIName
             dict_temp['algorithm'] = sequence.ROIGenerationAlgorithm
             dict_roi[sequence.ROINumber] = dict_temp
-            self.copied += len( dict_roi[sequence.ROINumber])
+            self.copied += len(dict_roi[sequence.ROINumber])
             callback(self.copied)
         return dict_roi
 
     # Multiprocessing dvh
-    def multi_get_dvhs(self, rtss, dose, roi, queue,callback, dose_limit=None):
+    def multi_get_dvhs(self, rtss, dose, roi, queue, callback, dose_limit=None):
         dvh = {}
         dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
 
@@ -168,12 +169,12 @@ class Extended(QtCore.QThread):
             callback(self.copied)
 
         for i in range(len(roi_list)):
-            p = multiprocessing.Process(target=self.multi_get_dvhs, args=(rtss, rtdose, roi_list[i], queue, callback))
+            p = multiprocessing.Process(target=self.multi_get_dvhs, args=(
+                rtss, rtdose, roi_list[i], queue, callback))
             processes.append(p)
             self.copied += len(processes)
             callback(self.copied)
             p.start()
-
 
         for proc in processes:
             dvh = queue.get()
@@ -188,12 +189,12 @@ class Extended(QtCore.QThread):
 
         return dict_dvh
 
-
     # Deal with the case where the last value of the DVH is not 0
     # Return a dictionary of bincenters (x axis of DVH) and counts (y value of DVH)
     # Return value: dict
     # {"1": {"bincenters": bincenters ; "counts": counts}}
     # "1" is the ID of the ROI
+
     def converge_to_O_dvh(self, dict_dvh, callback):
         res = {}
         zeros = np.zeros(3)
@@ -208,9 +209,11 @@ class Extended(QtCore.QThread):
                     tmp_bincenters.append(dvh.bincenters[-1]+i)
 
                 tmp_bincenters = np.array(tmp_bincenters)
-                tmp_bincenters = np.concatenate((dvh.bincenters.flatten(), tmp_bincenters))
+                tmp_bincenters = np.concatenate(
+                    (dvh.bincenters.flatten(), tmp_bincenters))
                 bincenters = np.array(tmp_bincenters)
-                counts = np.concatenate((dvh.counts.flatten(), np.array(zeros)))
+                counts = np.concatenate(
+                    (dvh.counts.flatten(), np.array(zeros)))
 
             # The last value of DVH is equal to 0
             else:
@@ -223,8 +226,8 @@ class Extended(QtCore.QThread):
         callback(self.copied)
         return res
 
-
     # Get raw contour data of ROI in RT Structure Set
+
     def get_raw_ContourData(self, rtss):
         # Retrieve a dictionary of ROIName & ROINumber pairs
         dict_id = {}
@@ -252,7 +255,6 @@ class Extended(QtCore.QThread):
             dict_ROI[ROIName] = dict_contour
             dict_NumPoints[ROIName] = roi_points_count
         return dict_ROI, dict_NumPoints
-
 
     def calculate_matrix(self, img_ds):
         # Physical distance (in mm) between the center of each image pixel, specified by a numeric pair
@@ -286,7 +288,6 @@ class Extended(QtCore.QThread):
             y.append(float(j_mat[1]))
 
         return (np.array(x), np.array(y))
-
 
     def get_pixluts(self, dict_ds):
         dict_pixluts = {}

@@ -95,7 +95,7 @@ def convert_df_to_csv(radiomics_df, patient_hash, csv_path):
 def pyradiomics(path, filepaths, target_path=None):
     """Generate pyradiomics spreadsheet."""
 
-    ct_file = dcmread(filepaths[0])
+    ct_file = dcmread(filepaths[0], force=True)
     rtss_path = filepaths['rtss']
 
     if target_path is None:
