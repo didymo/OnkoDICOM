@@ -136,7 +136,7 @@ class Ui_MainWindow(object):
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
-        self.callClass = MainPage(self.path, self.dataset, self.filepaths)
+        self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions()
 
         ##########################################
@@ -1724,7 +1724,7 @@ class Ui_MainWindow(object):
         self.callClass.runPyradiomics()
 
     def HandleAnonymization(self):
-        self.callClass.runAnonymization()
+        self.callClass.runAnonymization(self)
 
     def setWindowingLimits(self, state, text):
         # Get the values for window and level from the dict

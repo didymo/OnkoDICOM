@@ -800,16 +800,17 @@ class Transect(QtWidgets.QGraphicsScene):
 ######################################################
 class MainPage:
 
-    def __init__(self, path, datasets, filepaths):
+    def __init__(self, path, datasets, filepaths,raw_dvh):
         self.path = path
         self.dataset = datasets
-        self.filepaths = filepaths
+        self.filepaths = filepaths 
+        self.raw_dvh = raw_dvh
 
     def runPyradiomics(self):
         pyradiomics(self.path, self.filepaths)
 
-    def runAnonymization(self):
-        anonymize(self.path, self.dataset, self.filepaths)
+    def runAnonymization(self, raw_dvh):
+        anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
 
     def display_cd_form(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataForm(tabWindow, file_path, self.dataset, self.filepaths)
