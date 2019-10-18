@@ -61,10 +61,13 @@ class Ui_CD_Display(object):
         self.scrollArea_cd.setGeometry(QtCore.QRect(0, 0, 875, 527))
         self.scrollArea_cd.setWidgetResizable(False)
         self.scrollArea_cd.setObjectName("scrollArea_cd")
-        self.scrollArea_cd.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scrollArea_cd.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scrollArea_cd.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea_cd.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff)
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1000, 900))
+        self.scrollAreaWidgetContents.setGeometry(
+            QtCore.QRect(0, 0, 1000, 900))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         # self.scrollArea_cd.setLayout(self.scrollAreaWidgetContents)
         self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
@@ -90,7 +93,8 @@ class Ui_CD_Display(object):
         self.label_AD = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_AD.setGeometry(QtCore.QRect(20, 120, 121, 21))
         self.label_AD.setObjectName("label_AD")
-        self.age_at_diagnosis = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        self.age_at_diagnosis = QtWidgets.QLineEdit(
+            self.scrollAreaWidgetContents)
         self.age_at_diagnosis.setGeometry(QtCore.QRect(150, 115, 171, 31))
         self.age_at_diagnosis.setObjectName("age_at_diagnosis")
         self.label_Dx_year = QtWidgets.QLabel(self.scrollAreaWidgetContents)
@@ -112,7 +116,8 @@ class Ui_CD_Display(object):
         completer_5.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         completer_5.setFilterMode(QtCore.Qt.MatchContains)
         self.line_icd.setCompleter(completer_5)
-        self.line_histology = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        self.line_histology = QtWidgets.QLineEdit(
+            self.scrollAreaWidgetContents)
         self.line_histology.setGeometry(QtCore.QRect(150, 220, 601, 25))
         self.line_histology.setObjectName("line_histology")
         completer_4 = QCompleter(new_hist, self.line_histology)
@@ -149,7 +154,8 @@ class Ui_CD_Display(object):
         self.M_stage.addItem("")
         self.M_stage.addItem("")
         self.M_stage.addItem("")
-        self.label_Overall_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_Overall_Stage = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
         self.label_Overall_Stage.setGeometry(QtCore.QRect(560, 270, 101, 21))
         self.label_Overall_Stage.setObjectName("label_Overall_Stage")
         self.Overall_Stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
@@ -308,10 +314,12 @@ class Ui_CD_Display(object):
         self.label_SD = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_SD.setGeometry(QtCore.QRect(20, 520, 121, 21))
         self.label_SD.setObjectName("label_SD")
-        self.survival_duration = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        self.survival_duration = QtWidgets.QLineEdit(
+            self.scrollAreaWidgetContents)
         self.survival_duration.setGeometry(QtCore.QRect(150, 520, 171, 25))
         self.survival_duration.setObjectName("survival_duration")
-        self.label_Cancer_death = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_Cancer_death = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
         self.label_Cancer_death.setGeometry(QtCore.QRect(350, 565, 121, 21))
         self.label_Cancer_death.setObjectName("label_Cancer_death")
         self.label_Death = QtWidgets.QLabel(self.scrollAreaWidgetContents)
@@ -349,13 +357,16 @@ class Ui_CD_Display(object):
         self.DC_duration.setGeometry(QtCore.QRect(670, 620, 101, 25))
         self.DC_duration.setObjectName("DC_duration")
 
-        self.label_Regional_control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_Regional_control = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
         self.label_Regional_control.setGeometry(QtCore.QRect(20, 720, 121, 21))
         self.label_Regional_control.setObjectName("label_Regional_control")
-        self.label_Distant_Control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_Distant_Control = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
         self.label_Distant_Control.setGeometry(QtCore.QRect(20, 770, 121, 21))
         self.label_Distant_Control.setObjectName("label_Distant_Control")
-        self.label_Local_control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_Local_control = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
         self.label_Local_control.setGeometry(QtCore.QRect(20, 670, 101, 21))
         self.label_Local_control.setObjectName("label_Local_control")
         self.Edit_button = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
@@ -372,45 +383,57 @@ class Ui_CD_Display(object):
         self.Local_control.addItem("")
         self.Local_control.addItem("")
         self.Local_control.addItem("")
-        self.Regional_Control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        self.Regional_Control = QtWidgets.QComboBox(
+            self.scrollAreaWidgetContents)
         self.Regional_Control.setGeometry(QtCore.QRect(150, 720, 171, 25))
         self.Regional_Control.setObjectName("Regional_Control")
         self.Regional_Control.addItem("")
         self.Regional_Control.addItem("")
         self.Regional_Control.addItem("")
-        self.Distant_Control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        self.Distant_Control = QtWidgets.QComboBox(
+            self.scrollAreaWidgetContents)
         self.Distant_Control.setGeometry(QtCore.QRect(150, 770, 171, 25))
         self.Distant_Control.setObjectName("Distant_Control")
         self.Distant_Control.addItem("")
         self.Distant_Control.addItem("")
         self.Distant_Control.addItem("")
-        self.label_Dt_Local_failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Dt_Local_failure.setGeometry(QtCore.QRect(350, 675, 151, 21))
+        self.label_Dt_Local_failure = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
+        self.label_Dt_Local_failure.setGeometry(
+            QtCore.QRect(350, 675, 151, 21))
         self.label_Dt_Local_failure.setObjectName("label_Dt_Local_failure")
-        self.Dt_local_failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.Dt_local_failure = QtWidgets.QDateEdit(
+            self.scrollAreaWidgetContents)
         self.Dt_local_failure.setDisplayFormat("dd/MM/yyyy")
         self.Dt_local_failure.setGeometry(QtCore.QRect(530, 670, 171, 31))
         self.Dt_local_failure.setObjectName("Dt_local_failure")
         self.Dt_local_failure.setCalendarPopup(True)
         self.Dt_local_failure.setDisabled(True)
-        self.label_Dt_Regional_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Dt_Regional_Failure.setGeometry(QtCore.QRect(350, 725, 171, 21))
-        self.label_Dt_Regional_Failure.setObjectName("label_Dt_Regional_Failure")
-        self.Dt_REgional_failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.label_Dt_Regional_Failure = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
+        self.label_Dt_Regional_Failure.setGeometry(
+            QtCore.QRect(350, 725, 171, 21))
+        self.label_Dt_Regional_Failure.setObjectName(
+            "label_Dt_Regional_Failure")
+        self.Dt_REgional_failure = QtWidgets.QDateEdit(
+            self.scrollAreaWidgetContents)
         self.Dt_REgional_failure.setDisplayFormat("dd/MM/yyyy")
         self.Dt_REgional_failure.setGeometry(QtCore.QRect(530, 720, 171, 31))
         self.Dt_REgional_failure.setObjectName("Dt_REgional_failure")
         self.Dt_REgional_failure.setCalendarPopup(True)
         self.Dt_REgional_failure.setDisabled(True)
-        self.Dt_Distant_Failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.Dt_Distant_Failure = QtWidgets.QDateEdit(
+            self.scrollAreaWidgetContents)
         self.Dt_Distant_Failure.setDisplayFormat("dd/MM/yyyy")
         self.Dt_Distant_Failure.setGeometry(QtCore.QRect(530, 765, 171, 31))
         self.Dt_Distant_Failure.setObjectName("Dt_Distant_Failure")
         self.Dt_Distant_Failure.setCalendarPopup(True)
         self.Dt_Distant_Failure.setDisabled(True)
         # self.Dt_Distant_Failure.setReadOnly(True)
-        self.label_Dt_Distant_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Dt_Distant_Failure.setGeometry(QtCore.QRect(350, 770, 171, 21))
+        self.label_Dt_Distant_Failure = QtWidgets.QLabel(
+            self.scrollAreaWidgetContents)
+        self.label_Dt_Distant_Failure.setGeometry(
+            QtCore.QRect(350, 770, 171, 21))
         self.label_Dt_Distant_Failure.setObjectName("label_Dt_Distant_Failure")
 
         self.scrollArea_cd.setWidget(self.scrollAreaWidgetContents)
@@ -424,7 +447,8 @@ class Ui_CD_Display(object):
         self.label_Dx_year.setText(_translate("MainWindow", "Dx_Year:"))
         self.label_AD.setText(_translate("MainWindow", "Age of Diagnosis:"))
         self.label_3.setText(_translate("MainWindow", "Gender:"))
-        self.label_4.setText(_translate("MainWindow", "Note: The following Clinical Data was found for this patient."))
+        self.label_4.setText(_translate(
+            "MainWindow", "Note: The following Clinical Data was found for this patient."))
         self.label_BP.setText(_translate("MainWindow", "Birth Country:"))
         self.label_SD.setText(_translate("MainWindow", "Survival Duration:"))
         self.label_LCD.setText(_translate("MainWindow", "LC Duration:"))
@@ -449,8 +473,10 @@ class Ui_CD_Display(object):
         self.M_stage.setItemText(0, _translate("MainWindow", "Select..."))
         self.M_stage.setItemText(1, _translate("MainWindow", "M0"))
         self.M_stage.setItemText(2, _translate("MainWindow", "M1"))
-        self.label_Overall_Stage.setText(_translate("MainWindow", "Overall Stage:"))
-        self.Overall_Stage.setItemText(0, _translate("MainWindow", "Select..."))
+        self.label_Overall_Stage.setText(
+            _translate("MainWindow", "Overall Stage:"))
+        self.Overall_Stage.setItemText(
+            0, _translate("MainWindow", "Select..."))
         self.Overall_Stage.setItemText(1, _translate("MainWindow", "O"))
         self.Overall_Stage.setItemText(2, _translate("MainWindow", "I"))
         self.Overall_Stage.setItemText(3, _translate("MainWindow", "IA"))
@@ -481,8 +507,10 @@ class Ui_CD_Display(object):
         self.Surgery.setItemText(3, _translate("MainWindow", "Refused (Ref)"))
         self.Surgery.setItemText(4, _translate("MainWindow", "Denied (Den)"))
         self.Surgery.setItemText(5, _translate("MainWindow", "DiedB4 (Die)"))
-        self.Surgery.setItemText(6, _translate("MainWindow", "Neoadjuvant (Neo)"))
-        self.Surgery.setItemText(7, _translate("MainWindow", "Concurrent (Con)"))
+        self.Surgery.setItemText(6, _translate(
+            "MainWindow", "Neoadjuvant (Neo)"))
+        self.Surgery.setItemText(7, _translate(
+            "MainWindow", "Concurrent (Con)"))
         self.Surgery.setItemText(8, _translate("MainWindow", "Adjuvant (Adj)"))
         self.Surgery.setItemText(9, _translate("MainWindow", "Neo&Con"))
         self.Surgery.setItemText(10, _translate("MainWindow", "Neo&Adj"))
@@ -497,34 +525,48 @@ class Ui_CD_Display(object):
         self.gender.setItemText(1, _translate("MainWindow", "Female"))
         self.gender.setItemText(2, _translate("MainWindow", "Male"))
         self.gender.setItemText(3, _translate("MainWindow", "Other"))
-        self.label_Cancer_death.setText(_translate("MainWindow", "Cancer Death:"))
+        self.label_Cancer_death.setText(
+            _translate("MainWindow", "Cancer Death:"))
         self.label_Death.setText(_translate("MainWindow", "Death:"))
-        self.label_Regional_control.setText(_translate("MainWindow", "Regional Control:"))
-        self.label_Distant_Control.setText(_translate("MainWindow", "Distant Control:"))
-        self.label_Local_control.setText(_translate("MainWindow", "Local Control:"))
+        self.label_Regional_control.setText(
+            _translate("MainWindow", "Regional Control:"))
+        self.label_Distant_Control.setText(
+            _translate("MainWindow", "Distant Control:"))
+        self.label_Local_control.setText(
+            _translate("MainWindow", "Local Control:"))
         self.Edit_button.setText(_translate("MainWindow", "Edit"))
         self.Death.setItemText(0, _translate("MainWindow", "Select..."))
         self.Death.setItemText(1, _translate("MainWindow", "Alive"))
         self.Death.setItemText(2, _translate("MainWindow", "Dead"))
         self.Cancer_death.setItemText(0, _translate("MainWindow", "Select..."))
-        self.Cancer_death.setItemText(1, _translate("MainWindow", "Non-cancer death"))
-        self.Cancer_death.setItemText(2, _translate("MainWindow", "Cancer death"))
-        self.Local_control.setItemText(0, _translate("MainWindow", "Select..."))
+        self.Cancer_death.setItemText(
+            1, _translate("MainWindow", "Non-cancer death"))
+        self.Cancer_death.setItemText(
+            2, _translate("MainWindow", "Cancer death"))
+        self.Local_control.setItemText(
+            0, _translate("MainWindow", "Select..."))
         self.Local_control.setItemText(1, _translate("MainWindow", "Control"))
         self.Local_control.setItemText(2, _translate("MainWindow", "Failure"))
-        self.Regional_Control.setItemText(0, _translate("MainWindow", "Select..."))
-        self.Regional_Control.setItemText(1, _translate("MainWindow", "Control"))
-        self.Regional_Control.setItemText(2, _translate("MainWindow", "Failure"))
-        self.Distant_Control.setItemText(0, _translate("MainWindow", "Select..."))
-        self.Distant_Control.setItemText(1, _translate("MainWindow", "Control"))
-        self.Distant_Control.setItemText(2, _translate("MainWindow", "Failure"))
+        self.Regional_Control.setItemText(
+            0, _translate("MainWindow", "Select..."))
+        self.Regional_Control.setItemText(
+            1, _translate("MainWindow", "Control"))
+        self.Regional_Control.setItemText(
+            2, _translate("MainWindow", "Failure"))
+        self.Distant_Control.setItemText(
+            0, _translate("MainWindow", "Select..."))
+        self.Distant_Control.setItemText(
+            1, _translate("MainWindow", "Control"))
+        self.Distant_Control.setItemText(
+            2, _translate("MainWindow", "Failure"))
         self.Chemo.setItemText(0, _translate("MainWindow", "Select..."))
         self.Chemo.setItemText(1, _translate("MainWindow", "No"))
         self.Chemo.setItemText(2, _translate("MainWindow", "Primary (Pri)"))
         self.Chemo.setItemText(3, _translate("MainWindow", "Refused (Ref)"))
         self.Chemo.setItemText(4, _translate("MainWindow", "Denied (Den)"))
         self.Chemo.setItemText(5, _translate("MainWindow", "DiedB4 (Die)"))
-        self.Chemo.setItemText(6, _translate("MainWindow", "Neoadjuvant (Neo)"))
+        self.Chemo.setItemText(6, _translate(
+            "MainWindow", "Neoadjuvant (Neo)"))
         self.Chemo.setItemText(7, _translate("MainWindow", "Concurrent (Con)"))
         self.Chemo.setItemText(8, _translate("MainWindow", "Adjuvant (Adj)"))
         self.Chemo.setItemText(9, _translate("MainWindow", "Neo&Con"))
@@ -537,8 +579,10 @@ class Ui_CD_Display(object):
         self.Branchy.setItemText(3, _translate("MainWindow", "Refused (Ref)"))
         self.Branchy.setItemText(4, _translate("MainWindow", "Denied (Den)"))
         self.Branchy.setItemText(5, _translate("MainWindow", "DiedB4 (Die)"))
-        self.Branchy.setItemText(6, _translate("MainWindow", "Neoadjuvant (Neo)"))
-        self.Branchy.setItemText(7, _translate("MainWindow", "Concurrent (Con)"))
+        self.Branchy.setItemText(6, _translate(
+            "MainWindow", "Neoadjuvant (Neo)"))
+        self.Branchy.setItemText(7, _translate(
+            "MainWindow", "Concurrent (Con)"))
         self.Branchy.setItemText(8, _translate("MainWindow", "Adjuvant (Adj)"))
         self.Branchy.setItemText(9, _translate("MainWindow", "Neo&Con"))
         self.Branchy.setItemText(10, _translate("MainWindow", "Neo&Adj"))
@@ -563,8 +607,10 @@ class Ui_CD_Display(object):
         self.Immuno.setItemText(3, _translate("MainWindow", "Refused (Ref)"))
         self.Immuno.setItemText(4, _translate("MainWindow", "Denied (Den)"))
         self.Immuno.setItemText(5, _translate("MainWindow", "DiedB4 (Die)"))
-        self.Immuno.setItemText(6, _translate("MainWindow", "Neoadjuvant (Neo)"))
-        self.Immuno.setItemText(7, _translate("MainWindow", "Concurrent (Con)"))
+        self.Immuno.setItemText(6, _translate(
+            "MainWindow", "Neoadjuvant (Neo)"))
+        self.Immuno.setItemText(7, _translate(
+            "MainWindow", "Concurrent (Con)"))
         self.Immuno.setItemText(8, _translate("MainWindow", "Adjuvant (Adj)"))
         self.Immuno.setItemText(9, _translate("MainWindow", "Neo&Con"))
         self.Immuno.setItemText(10, _translate("MainWindow", "Neo&Adj"))
@@ -576,14 +622,18 @@ class Ui_CD_Display(object):
         self.Hormone.setItemText(3, _translate("MainWindow", "Refused (Ref)"))
         self.Hormone.setItemText(4, _translate("MainWindow", "Denied (Den)"))
         self.Hormone.setItemText(5, _translate("MainWindow", "DiedB4 (Die)"))
-        self.Hormone.setItemText(6, _translate("MainWindow", "Neoadjuvant (Neo)"))
-        self.Hormone.setItemText(7, _translate("MainWindow", "Concurrent (Con)"))
+        self.Hormone.setItemText(6, _translate(
+            "MainWindow", "Neoadjuvant (Neo)"))
+        self.Hormone.setItemText(7, _translate(
+            "MainWindow", "Concurrent (Con)"))
         self.Hormone.setItemText(8, _translate("MainWindow", "Adjuvant (Adj)"))
         self.Hormone.setItemText(9, _translate("MainWindow", "Neo&Con"))
         self.Hormone.setItemText(10, _translate("MainWindow", "Neo&Adj"))
         self.Hormone.setItemText(11, _translate("MainWindow", "Con&Adj"))
         self.Hormone.setItemText(12, _translate("MainWindow", "Neo&Con&Adj"))
-        self.label_Dt_Local_failure.setText(_translate("MainWindow", "Date of Local Failure:"))
-        self.label_Dt_Regional_Failure.setText(_translate("MainWindow", "Date of Regional Failure:"))
-        self.label_Dt_Distant_Failure.setText(_translate("MainWindow", "Date of Distant Failure:"))
-
+        self.label_Dt_Local_failure.setText(
+            _translate("MainWindow", "Date of Local Failure:"))
+        self.label_Dt_Regional_Failure.setText(
+            _translate("MainWindow", "Date of Regional Failure:"))
+        self.label_Dt_Distant_Failure.setText(
+            _translate("MainWindow", "Date of Distant Failure:"))

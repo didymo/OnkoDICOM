@@ -13,14 +13,16 @@ from src.View.ProgressBar import *
 
 message = ""
 
+
 def calculate_years(year1, year2):
     return year2.year() - year1.year() - ((year2.month(), year2.day()) < (year1.month(), year1.day()))
+
 
 class ProgressBar(QtWidgets.QWidget):
     open_patient_window = QtCore.pyqtSignal(str)
     open_welcome_window = QtCore.pyqtSignal()
 
-    def __init__(self,path):
+    def __init__(self, path):
         super().__init__()
 
         # Instance attribute defined later in on_button_click()
@@ -35,25 +37,25 @@ class ProgressBar(QtWidgets.QWidget):
 
         self.setGeometry(300, 300, 360, 100)
         self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(30,15,300,20)
+        self.label.setGeometry(30, 15, 300, 20)
         self.progress_bar = QtWidgets.QProgressBar(self)
         self.progress_bar.setGeometry(30, 40, 300, 25)
         self.progress_bar.setMaximum(100)
         self.ext = Extended(path)
         self.ext.copied_percent_signal.connect(self.on_count_change)
         self.ext.missing_files_signal.connect(self.on_missing_files)
-        self.ext.incorrect_directory_signal.connect(self.on_incorrect_directory)
+        self.ext.incorrect_directory_signal.connect(
+            self.on_incorrect_directory)
         self.ext.start()
 
-
     def on_count_change(self, value):
-        if value in range(0,30):
+        if value in range(0, 30):
             self.label.setText("Importing patient data...")
-        elif value in range(30,70):
+        elif value in range(30, 70):
             self.label.setText("Calculating the DVH...")
-        elif value in range (70,85):
+        elif value in range(70, 85):
             self.label.setText("Loading patient...")
-        elif value in range (85,100):
+        elif value in range(85, 100):
             self.label.setText("Preparing the work space...")
         self.progress_bar.setValue(value)
         if value == 100:
@@ -64,14 +66,14 @@ class ProgressBar(QtWidgets.QWidget):
         # Open welcome window
         self.open_welcome_window.emit()
 
-        # Display error message 
+        # Display error message
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
         msg.setInformativeText('Invalid directory, no DICOM files found')
         msg.setWindowTitle("Error")
         msg.exec_()
-        
+
     # If RTSS and RTDose files missing
     def on_missing_files(self, error):
         # Open welcome window
@@ -98,7 +100,8 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
 
     def patientHandler(self):
         # Browse directories
-        path = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
+        path = QtWidgets.QFileDialog.getExistingDirectory(
+            None, 'Select patient folder...', '')
         self.open_patient_window.emit(path)
 
 
@@ -108,13 +111,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
         QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh, dvhxy,  raw_contour, num_points, pixluts)
+        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh,
+                     dvhxy,  raw_contour, num_points, pixluts)
         self.actionOpen.triggered.connect(self.patientHandler)
 
     def patientHandler(self):
-        path = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '/home')
+        path = QtWidgets.QFileDialog.getExistingDirectory(
+            None, 'Select patient folder...', '/home')
         self.open_patient_window.emit(path)
-
 
 
 class Controller:
@@ -126,7 +130,7 @@ class Controller:
 
     # Display welcome page
     def show_welcome(self):
-        # If an error was displayed, close existing progress bar window 
+        # If an error was displayed, close existing progress bar window
         if self.bar_window.isVisible():
             self.bar_window.close()
         self.welcome_window = Welcome()
@@ -145,11 +149,10 @@ class Controller:
         self.bar_window.open_welcome_window.connect(self.show_welcome)
         self.bar_window.show()
 
-    # Display patient data 
+    # Display patient data
     def show_patient(self, path):
-        self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict, self.bar_window.ext.rois, self.bar_window.ext.raw_dvh, self.bar_window.ext.dvh_x_y, self.bar_window.ext.dict_raw_ContourData, self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
+        self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict, self.bar_window.ext.rois, self.bar_window.ext.raw_dvh,
+                                         self.bar_window.ext.dvh_x_y, self.bar_window.ext.dict_raw_ContourData, self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
         self.patient_window.open_patient_window.connect(self.show_bar)
-        self.bar_window.close() 
+        self.bar_window.close()
         self.patient_window.show()
-
-

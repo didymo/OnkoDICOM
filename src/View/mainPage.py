@@ -98,8 +98,8 @@ class Ui_MainWindow(object):
 
         self.file_rtss = self.filepaths['rtss']
         self.file_rtdose = self.filepaths['rtdose']
-        self.dataset_rtss = pydicom.dcmread(self.file_rtss)
-        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose)
+        self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
+        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
 
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
@@ -139,6 +139,7 @@ class Ui_MainWindow(object):
         self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions()
 
+
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
@@ -146,7 +147,7 @@ class Ui_MainWindow(object):
         # Main Window
         MainWindow.setObjectName("MainWindow")
         MainWindow.setMinimumSize(1080, 700)
-        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.jpg"))
         # Central Layer
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -897,10 +898,24 @@ class Ui_MainWindow(object):
             RGB_dict['R'] = RGB_list[0]
             RGB_dict['G'] = RGB_list[1]
             RGB_dict['B'] = RGB_list[2]
+            with open('src/data/line&fill_configuration', 'r') as stream:
+                elements = stream.readlines()
+                if len(elements) > 0:
+                    roi_line = int(elements[0].replace('\n', ''))
+                    roi_opacity = int(elements[1].replace('\n', ''))
+                    iso_line = int(elements[2].replace('\n', ''))
+                    iso_opacity = int(elements[3].replace('\n', ''))
+                else:
+                    roi_line = 1
+                    roi_opacity = 10
+                    iso_line = 2
+                    iso_opacity = 5
+                stream.close()
+            roi_opacity = int((roi_opacity / 100) * 255)
             RGB_dict['QColor'] = QtGui.QColor(
                 RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
             RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
-                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], 26)
+                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
             roiColor[roi_id] = RGB_dict
         return roiColor
 
@@ -1074,26 +1089,40 @@ class Ui_MainWindow(object):
         self.box8_isod.setFocusPolicy(Qt.NoFocus)
         self.box9_isod.setFocusPolicy(Qt.NoFocus)
         self.box10_isod.setFocusPolicy(Qt.NoFocus)
+        with open('src/data/line&fill_configuration', 'r') as stream:
+            elements = stream.readlines()
+            if len(elements) > 0:
+                roi_line = int(elements[0].replace('\n', ''))
+                roi_opacity = int(elements[1].replace('\n', ''))
+                iso_line = int(elements[2].replace('\n', ''))
+                iso_opacity = int(elements[3].replace('\n', ''))
+            else:
+                roi_line = 1
+                roi_opacity = 10
+                iso_line = 2
+                iso_opacity = 5
+            stream.close()
+        iso_opacity = int((iso_opacity / 100) * 255)
         self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(
-            131, 0, 0, 13)]: self.checked_dose(state, text))
+            131, 0, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(
-            185, 0, 0, 13)]: self.checked_dose(state, text))
+            185, 0, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(
-            255, 46, 0, 13)]: self.checked_dose(state, text))
+            255, 46, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(
-            255, 161, 0, 13)]: self.checked_dose(state, text))
+            255, 161, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(
-            253, 255, 0, 13)]: self.checked_dose(state, text))
+            253, 255, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(
-            0, 255, 0, 13)]: self.checked_dose(state, text))
+            0, 255, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(
-            0, 143, 0, 13)]: self.checked_dose(state, text))
+            0, 143, 0, iso_opacity)]: self.checked_dose(state, text))
         self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(
-            0, 255, 255, 13)]: self.checked_dose(state, text))
+            0, 255, 255, iso_opacity)]: self.checked_dose(state, text))
         self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(
-            33, 0, 255, 13)]: self.checked_dose(state, text))
+            33, 0, 255, iso_opacity)]: self.checked_dose(state, text))
         self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(
-            11, 0, 134, 13)]: self.checked_dose(state, text))
+            11, 0, 134, iso_opacity)]: self.checked_dose(state, text))
 
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -1270,7 +1299,7 @@ class Ui_MainWindow(object):
         self.button_exportDVH.clicked.connect(self.exportDVHcsv)
 
     def exportDVHcsv (self):
-        dvh2csv(self.raw_dvh,self.path,'DVH',self.dataset[0].PatientID)
+        dvh2csv(self.raw_dvh,self.path + "/",'DVH',self.dataset[0].PatientID)
         SaveReply = QMessageBox.information(self, "Message",
                                             "The DVH Data was saved successfully in your directory!",
                                             QMessageBox.Ok)
@@ -1464,9 +1493,24 @@ class Ui_MainWindow(object):
                 polygons = self.dict_polygons[roi_name][curr_slice]
 
             brush_color = self.roiColor[roi]['QColor_ROIdisplay']
+            with open('src/data/line&fill_configuration', 'r') as stream:
+                elements = stream.readlines()
+                if len(elements) > 0:
+                    roi_line = int(elements[0].replace('\n', ''))
+                    roi_opacity = int(elements[1].replace('\n', ''))
+                    iso_line = int(elements[2].replace('\n', ''))
+                    iso_opacity = int(elements[3].replace('\n', ''))
+                else:
+                    roi_line = 1
+                    roi_opacity = 10
+                    iso_line = 2
+                    iso_opacity = 5
+                stream.close()
+            roi_opacity = int((roi_opacity/100)*255)
+            brush_color.setAlpha(roi_opacity)
             pen_color = QtGui.QColor(
                 brush_color.red(), brush_color.green(), brush_color.blue())
-            pen = self.get_qpen(pen_color, 1, 2)
+            pen = self.get_qpen(pen_color, roi_line, 2)
             for i in range(len(polygons)):
                 self.DICOM_image_scene.addPolygon(
                     polygons[i], pen, QBrush(brush_color))
@@ -1507,9 +1551,24 @@ class Ui_MainWindow(object):
                     self.dose_pixluts[curr_slice_uid], contours)
 
                 brush_color = sd[1]
+                with open('src/data/line&fill_configuration', 'r') as stream:
+                    elements = stream.readlines()
+                    if len(elements) > 0:
+                        roi_line = int(elements[0].replace('\n', ''))
+                        roi_opacity = int(elements[1].replace('\n', ''))
+                        iso_line = int(elements[2].replace('\n', ''))
+                        iso_opacity = int(elements[3].replace('\n', ''))
+                    else:
+                        roi_line = 1
+                        roi_opacity = 10
+                        iso_line = 2
+                        iso_opacity = 5
+                    stream.close()
+                iso_opacity = int((iso_opacity/100)*255)
+                brush_color.setAlpha(iso_opacity)
                 pen_color = QtGui.QColor(
                     brush_color.red(), brush_color.green(), brush_color.blue())
-                pen = self.get_qpen(pen_color, 2, 2)
+                pen = self.get_qpen(pen_color, iso_line, 2)
                 for i in range(len(polygons)):
                     #color = self.roiColor['body']['QColor_ROIdisplay']
                     self.DICOM_image_scene.addPolygon(
@@ -1760,7 +1819,7 @@ class Ui_MainWindow(object):
             self, self.DICOM_view, self.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 
     def AddOnOptionsHandler(self):
-        self.callManager.show_add_on_options()
+        options = self.callManager.show_add_on_options()
 
 
 class StructureInformation(object):
