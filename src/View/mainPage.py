@@ -1507,8 +1507,9 @@ class Ui_MainWindow(object):
                     iso_opacity = 5
                 stream.close()
             roi_opacity = int((roi_opacity/100)*255)
+            brush_color.setAlpha(roi_opacity)
             pen_color = QtGui.QColor(
-                brush_color.red(), brush_color.green(), brush_color.blue(),roi_opacity)
+                brush_color.red(), brush_color.green(), brush_color.blue())
             pen = self.get_qpen(pen_color, roi_line, 2)
             for i in range(len(polygons)):
                 self.DICOM_image_scene.addPolygon(
@@ -1564,8 +1565,9 @@ class Ui_MainWindow(object):
                         iso_opacity = 5
                     stream.close()
                 iso_opacity = int((iso_opacity/100)*255)
+                brush_color.setAlpha(iso_opacity)
                 pen_color = QtGui.QColor(
-                    brush_color.red(), brush_color.green(), brush_color.blue(),iso_opacity)
+                    brush_color.red(), brush_color.green(), brush_color.blue())
                 pen = self.get_qpen(pen_color, iso_line, 2)
                 for i in range(len(polygons)):
                     #color = self.roiColor['body']['QColor_ROIdisplay']
