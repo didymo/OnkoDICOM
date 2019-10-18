@@ -593,14 +593,17 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
 
     Dicom_filename = os.path.basename(all_filepaths[1])
     ds_rtss = LOAD_DCM(path,Dicom_filename, new_dict_dataset, 1)
+    # P_ID = ds_rtss.PatientID
 
-    P_ID = ds_rtss.PatientID
-    print("The patient ID is ::::",P_ID)
+    P_HashID = patient_hash_dvh
+
+    print("The patient ID is ::::",P_HashID)
+    
     dvh_csv_hash_name = "DVH_" + patient_hash_dvh
 
     #Calling dvh2csv() function after Anonymization is complete.
     print("CAlling DVH_csv export function")
-    dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_ID)
+    dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
     print("DVH_csv export function finished")     
 
     #Calling Pyradiomics after Anonymization is complete.
