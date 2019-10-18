@@ -26,7 +26,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             else:
                 roi_line = 1
                 roi_opacity = 10
-                iso_line = 1
+                iso_line = 2
                 iso_opacity = 5
             stream.close()
         self.setupUi(self,roi_line,roi_opacity, iso_line, iso_opacity)
