@@ -31,6 +31,7 @@ class Extended(QtCore.QThread):
         # Key is int for ct images and str (rtdose, rtss, rtplan) for RT files
         self.file_names_dict = {}
         self.previous = 0
+        self.count =0
 
     def run(self):
         self.dataset, self.file_names_dict = self.get_datasets(
@@ -57,24 +58,26 @@ class Extended(QtCore.QThread):
             self.dvh_x_y = self.converge_to_O_dvh(
                 self.raw_dvh, self.my_callback)
             self.dict_raw_ContourData, self.dict_NumPoints = self.get_raw_ContourData(
-                self.dataset_rtss)
-            self.dict_pixluts = self.get_pixluts(self.dataset)
+                self.dataset_rtss, self.my_callback)
+            self.dict_pixluts = self.get_pixluts(self.dataset, self.my_callback)
 
             if self.previous < 100:
-                for i in range(self.previous, 101):
+                for i in range(int(self.previous), 101):
                     self.copied_percent_signal.emit(int(i))
 
     def my_callback(self, temp_file_size):
         percent = int(temp_file_size/self.file_size*10)
         if percent < self.previous or percent == 100:
             percent = self.previous
+            self.count += 1
         elif percent == self.previous and percent < 98:
             percent += 1
+            self.count += 1
         elif percent == self.previous:
             percent += 1
-
+        if self.count > 20 and percent < 99:
+            percent += 0.2
         self.copied_percent_signal.emit(percent)
-        print("here", percent)
         self.previous = percent
 
     def natural_sort(self, file_list):
@@ -147,8 +150,6 @@ class Extended(QtCore.QThread):
 
         self.copied += roi
         callback(self.copied)
-        print(self.copied)
-        print("This is", roi)
         queue.put(dvh)
 
     # Return a dictionary of all the DVHs of all the ROIs of the patient
@@ -228,7 +229,7 @@ class Extended(QtCore.QThread):
 
     # Get raw contour data of ROI in RT Structure Set
 
-    def get_raw_ContourData(self, rtss):
+    def get_raw_ContourData(self, rtss, callback):
         # Retrieve a dictionary of ROIName & ROINumber pairs
         dict_id = {}
         for i, elem in enumerate(rtss.StructureSetROISequence):
@@ -236,6 +237,8 @@ class Extended(QtCore.QThread):
             roi_name = elem.ROIName
             dict_id[roi_number] = roi_name
 
+        self.copied += len(dict_id)
+        callback(self.copied)
         dict_ROI = {}
         dict_NumPoints = {}
         for roi in rtss.ROIContourSequence:
@@ -254,9 +257,11 @@ class Extended(QtCore.QThread):
                 dict_contour[ReferencedSOPInstanceUID].append(ContourData)
             dict_ROI[ROIName] = dict_contour
             dict_NumPoints[ROIName] = roi_points_count
+            self.copied += len(dict_NumPoints)
+            callback(self.copied)
         return dict_ROI, dict_NumPoints
 
-    def calculate_matrix(self, img_ds):
+    def calculate_matrix(self, img_ds, callback):
         # Physical distance (in mm) between the center of each image pixel, specified by a numeric pair
         # - adjacent row spacing (delimiter) adjacent column spacing.
         dist_row = img_ds.PixelSpacing[0]
@@ -283,13 +288,19 @@ class Extended(QtCore.QThread):
             i_mat = matrix_M * np.matrix([[i], [0], [0], [1]])
             x.append(float(i_mat[0]))
 
+            self.copied += len(x)
+            callback(self.copied)
+
+
         for j in range(0, img_ds.Rows):
             j_mat = matrix_M * np.matrix([[0], [j], [0], [1]])
             y.append(float(j_mat[1]))
 
+            self.copied += len(y)
+            callback(self.copied)
         return (np.array(x), np.array(y))
 
-    def get_pixluts(self, dict_ds):
+    def get_pixluts(self, dict_ds, callback):
         dict_pixluts = {}
         non_img_type = ['rtdose', 'rtplan', 'rtss']
         for ds in dict_ds:
@@ -297,4 +308,6 @@ class Extended(QtCore.QThread):
                 img_ds = dict_ds[ds]
                 pixlut = calculate_matrix(img_ds)
                 dict_pixluts[img_ds.SOPInstanceUID] = pixlut
+                self.copied += len(dict_pixluts)
+                callback(self.copied)
         return dict_pixluts
