@@ -4,7 +4,7 @@ import webbrowser
 from collections import deque
 
 from PyQt5.QtGui import QTextCharFormat
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QAction
 
 from src.View.Add_On_Options import *
 from src.data.csv import *
@@ -15,14 +15,29 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
     def __init__(self):
         super(Add_On_Options, self).__init__()
-        self.setupUi(self)
+        # read configuration file
+        with open('src/data/line&fill_configuration', 'r') as stream:
+            elements = stream.readlines()
+            if len(elements) > 0:
+                roi_line = int(elements[0].replace('\n', ''))
+                roi_opacity = int(elements[1].replace('\n', ''))
+                iso_line = int(elements[2].replace('\n', ''))
+                iso_opacity = int(elements[3].replace('\n', ''))
+            else:
+                roi_line = 1
+                roi_opacity = 10
+                iso_line = 2
+                iso_opacity = 5
+            stream.close()
+        self.setupUi(self,roi_line,roi_opacity, iso_line, iso_opacity)
         data = [
             {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'User Options'},
             {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': 'Image Windowing'},
             {'level': 1, 'dbID': 556, 'parent_ID': 442, 'short_name': 'Standard Organ Names'},
             {'level': 1, 'dbID': 527, 'parent_ID': 442, 'short_name': 'Standard Volume Names'},
             {'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name': 'Create ROI from Isodose'},
-            {'level': 1, 'dbID': 520, 'parent_ID': 442, 'short_name': 'Patient ID - Hash ID'}
+            {'level': 1, 'dbID': 520, 'parent_ID': 442, 'short_name': 'Patient ID - Hash ID'},
+            {'level': 1, 'dbID': 523, 'parent_ID': 442, 'short_name': 'Line & Fill configuration'}
         ]
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
@@ -31,7 +46,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         self.fillTables()
         self.treeList.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.cancel_button.clicked.connect(self.close)
-        self.apply_button.clicked.connect(self.applyChanges)
+        self.apply_button.clicked.connect(self.accepting)
         self.treeList.clicked.connect(self.display)
         self.add_new_window.clicked.connect(self.new_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
@@ -178,7 +193,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             ])
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
-    def applyChanges(self):
+    def accepting(self):
         # starting save
         with open('src/data/csv/imageWindowing.csv', 'w') as stream:
             writer = csv.writer(stream)
@@ -230,6 +245,18 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                         rowdata.append('')
                 writer.writerow(rowdata)
 
+        #save configuration file
+        with open('src/data/line&fill_configuration', 'w') as stream:
+            stream.write(str(self.line_style_ROI.currentIndex()))
+            stream.write("\n")
+            stream.write(str(self.opacity_ROI.value()))
+            stream.write("\n")
+            stream.write(str(self.line_style_ISO.currentIndex()))
+            stream.write("\n")
+            stream.write(str(self.opacity_ISO.value()))
+            stream.write("\n")
+            stream.close()
+
         self.close()
 
     def display(self, index):
@@ -252,6 +279,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
+            self.fill_options.setVisible(False)
         elif type == "Standard Organ Names":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -265,6 +293,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
             self.note.setVisible(False)
+            self.fill_options.setVisible(False)
         elif type == "Standard Volume Names":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -278,6 +307,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
+            self.fill_options.setVisible(False)
         elif type == "Create ROI from Isodose":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -291,6 +321,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
+            self.fill_options.setVisible(False)
         elif type == "Patient ID - Hash ID":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -304,6 +335,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(True)
+            self.fill_options.setVisible(False)
         elif type == "User Options":
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
@@ -317,6 +349,21 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_roi.setVisible(False)
             self.table_Ids.setVisible(False)
             self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+        elif type == 'Line & Fill configuration':
+            self.add_new_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(True)
 
     def fillTables(self):
         with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
@@ -383,6 +430,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 i += 1
         # patient hash
         with open('src/data/csv/patientHash.csv', "r") as fileInput:
+            next(fileInput)
             i = 0;
             for row in fileInput:
                 items = [
@@ -394,6 +442,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 self.table_Ids.setItem(i, 0, items[0])
                 self.table_Ids.setItem(i, 1, items[1])
                 i += 1
+
 
     def new_windowing(self):
         dialog = Dialog_Windowing('', '', '', '')
@@ -464,7 +513,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 class AddOptions:
 
     def __init__(self):
-        pass
+       pass
 
     def show_add_on_options(self):
         self.options_window = Add_On_Options()

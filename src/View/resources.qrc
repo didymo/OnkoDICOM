@@ -14,5 +14,7 @@
     <file>../Icon/windowing.png</file>
     <file>../Icon/logo.png</file>
     <file>../Icon/AnonButton3.png</file>
+    <file>../Icon/LOGOT.png</file>
+    <file>../Icon/DONE.png</file>
   </qresource>
 </RCC>

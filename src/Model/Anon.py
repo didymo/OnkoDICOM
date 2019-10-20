@@ -9,6 +9,7 @@ import uuid
 import csv
 import pandas as pd
 from src.Model.Pyradiomics import pyradiomics
+from src.Model.CalculateDVHs import dvh2csv
 
 #========================================ANONYMIZation code ===================================
 
@@ -540,6 +541,8 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 print("Total files hashed======", count)
         return Full_Patient_Path_New_folder
 
+# ===================== Check if the CSV folder exist in hashed patient directory =========== 
+
 def check_CSV_folder_exist(Full_Patient_Path_New_folder):
 
     if "CSV" in os.listdir(Full_Patient_Path_New_folder):
@@ -548,7 +551,9 @@ def check_CSV_folder_exist(Full_Patient_Path_New_folder):
         return 0
 
 
-def anonymize(path, Datasets, FilePaths):
+#====================== Initiate the Automation sequence ==========================
+
+def anonymize(path, Datasets, FilePaths,rawdvh):
 
     all_filepaths = FilePaths
     new_dict_dataset = Datasets
@@ -561,21 +566,53 @@ def anonymize(path, Datasets, FilePaths):
     # for key in Datasets:
     #     if (key != 'rtplan' and key != 'rtss' and key != 'rtdose'):
     #         print("Values are:  ",Datasets[key])
+
+
     Full_Patient_Path_New_folder = anon_call(path, new_dict_dataset, all_filepaths)
-    print("The New patient folder path is : ", Full_Patient_Path_New_folder)
+    print("\n\nThe New patient folder path is : ", Full_Patient_Path_New_folder)
+
+    patient_hash_dvh = os.path.basename(Full_Patient_Path_New_folder)
+    print("The HashID for DVh.hash is ::::", patient_hash_dvh)
 
     Full_Csv_Folder_Path = Full_Patient_Path_New_folder + "/" + "CSV"
-
+    # check if CSV folder exist
     CSV_Folder_exist = check_CSV_folder_exist(Full_Patient_Path_New_folder)
-
+    # if CSV folder does not exist create one
     if CSV_Folder_exist == 0:
         print("The CSV folder path is : ", Full_Csv_Folder_Path)
         os.makedirs(Full_Csv_Folder_Path)
         print("---CSV folder created---")
     else:
-        print(":::The CSV folder exist:::")
+        print(":::The CSV folder exist:::")    
 
-   
+    # SecondLastDir = os.path.dirname(path)  # getting path till the second last Folder
+    # Full_Patient_Path_New_folder = SecondLastDir + "/" + "64246859-067c-3079-9703-7e71b6869232" + "/" + "CSV" + "/"
+
+    Full_dvhCsv_Folder_Path_ = Full_Patient_Path_New_folder + "/" + "CSV" + "/"
+    print("The path for dvh is::::::::::::::::  ",Full_dvhCsv_Folder_Path_)
+
+    Dicom_filename = os.path.basename(all_filepaths[1])
+    ds_rtss = LOAD_DCM(path,Dicom_filename, new_dict_dataset, 1)
+    # P_ID = ds_rtss.PatientID
+
+    P_HashID = patient_hash_dvh
+
+    print("The patient ID is ::::",P_HashID)
+    
+    dvh_csv_hash_name = "DVH_" + patient_hash_dvh
+
+    #Calling dvh2csv() function after Anonymization is complete.
+    print("CAlling DVH_csv export function")
+    dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
+    print("DVH_csv export function finished")     
+
+    #Calling Pyradiomics after Anonymization is complete.
+    print("=====Calling Pyradiomics function====")
+    pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
+    print("Pyradiomics function finished")
+
+    
+    
 
 
 

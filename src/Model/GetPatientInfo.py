@@ -74,7 +74,7 @@ class DicomTree(object):
 
     # Read dicom file to dataset
     def read_dcm(self, filename):
-        dataset = pydicom.dcmread(filename)
+        dataset = pydicom.dcmread(filename, force=True)
         return dataset
 
     def show_tree(self):
@@ -179,7 +179,7 @@ class DicomTree(object):
 #
 # if __name__ == '__main__':
 #     path = 'dicom_sample/ct.0.dcm'
-#     ds = pydicom.dcmread(path)
+#     ds = pydicom.dcmread(path, force=True)
 #     # ls = get_tree(ds, 0)
 #     # for i in ls:
 #     #     print(i)

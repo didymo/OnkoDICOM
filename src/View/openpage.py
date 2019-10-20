@@ -14,22 +14,22 @@ class WelcomePage(object):
 
     def setupUi(self, WelcomePage):
         WelcomePage.setObjectName("WelcomePage")
-        WelcomePage.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
+        WelcomePage.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         WelcomePage.setFixedSize(844, 528)
         WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
         self.centralwidget.setObjectName("centralwidget")
         self.welcomeLabel = QtWidgets.QLabel(self.centralwidget)
-        self.welcomeLabel.setGeometry(QtCore.QRect(270, 310, 351, 41))
+        self.welcomeLabel.setGeometry(QtCore.QRect(270, 340, 351, 41))
         self.welcomeLabel.setStyleSheet("font: 57 18pt \"Ubuntu\";\n"
         "font: 57 18pt \"Ubuntu\";")
         self.welcomeLabel.setObjectName("welcomeLabel")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(80, 360, 671, 21))
+        self.label_2.setGeometry(QtCore.QRect(80, 390, 671, 21))
         self.label_2.setStyleSheet("font: 57 12pt \"Ubuntu\";")
         self.label_2.setObjectName("label_2")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(350, 410, 121, 31))
+        self.pushButton.setGeometry(QtCore.QRect(350, 440, 121, 31))
         self.pushButton.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                        "font: 57 12pt \"Ubuntu\";\n"
                                        "color:rgb(75,0,130);\n"
@@ -37,9 +37,9 @@ class WelcomePage(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.logo = QtWidgets.QLabel(self.centralwidget)
-        self.logo.setGeometry(QtCore.QRect(185, 30, 480, 261))
+        self.logo.setGeometry(QtCore.QRect(185, 60, 480, 261))
         self.logo.setText("")
-        self.logo.setPixmap(QtGui.QPixmap("src/Icon/logo.png"))
+        self.logo.setPixmap(QtGui.QPixmap("src/Icon/LOGOT.png"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
 
