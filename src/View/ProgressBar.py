@@ -113,21 +113,22 @@ class Extended(QtCore.QThread):
             except:
                 pass
             else:
-                if read_file.Modality == 'CT':
-                    self.read_data_dict[i] = read_file
-                    self.file_names_dict[i] = file
-                    i += 1
-                elif read_file.Modality == 'RTSTRUCT':
-                    self.read_data_dict['rtss'] = read_file
-                    self.file_names_dict['rtss'] = file
-                elif read_file.Modality == 'RTDOSE':
-                    self.read_data_dict['rtdose'] = read_file
-                    self.file_names_dict['rtdose'] = file
-                elif read_file.Modality == 'RTPLAN':
-                    self.read_data_dict['rtplan'] = read_file
-                    self.file_names_dict['rtplan'] = file
-                self.copied += len(read_file)
-                callback(self.copied)
+                if 'SOPClassUID' in read_file:
+                    if read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
+                        self.read_data_dict[i] = read_file
+                        self.file_names_dict[i] = file
+                        i += 1
+                    elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.3':
+                        self.read_data_dict['rtss'] = read_file
+                        self.file_names_dict['rtss'] = file
+                    elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.2':
+                        self.read_data_dict['rtdose'] = read_file
+                        self.file_names_dict['rtdose'] = file
+                    elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.5':
+                        self.read_data_dict['rtplan'] = read_file
+                        self.file_names_dict['rtplan'] = file
+                    self.copied += len(read_file)
+                    callback(self.copied)
 
         return self.read_data_dict, self.file_names_dict
 

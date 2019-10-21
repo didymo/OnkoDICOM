@@ -2,9 +2,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QLabel
 
 
-
 class Ui_Add_On_Options(object):
-    def setupUi(self, Add_On_Options, roi_line,roi_opacity, iso_line, iso_opacity):
+    def setupUi(self, Add_On_Options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         Add_On_Options.setObjectName("Add_On_Options")
         Add_On_Options.setMinimumSize(766, 600)
         Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
@@ -224,14 +223,17 @@ class Ui_Add_On_Options(object):
         self.line_style_ROI.addItem("Dot Line")
         self.line_style_ROI.addItem("Dash-Dot Line")
         self.line_style_ROI.addItem("Dash-Dot-Dot Line")
-        self.opacity_ROI = QtWidgets.QSlider(QtCore.Qt.Horizontal)
 
+        self.opacity_ROI = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.opacity_ROI.setMinimum(0)
         self.opacity_ROI.setMaximum(100)
         self.opacity_ROI.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.opacity_ROI.setTickInterval(10)
         self.opacity_ROI.setValue(roi_opacity)
-        self.opacityLabel_ROI = QtWidgets.QLabel("ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+        self.opacity_ROI.valueChanged.connect(self.update_ROI_opacity)
+        self.opacityLabel_ROI = QtWidgets.QLabel(
+            "ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+
         self.line_style_ISO = QtWidgets.QComboBox(self.fill_options)
         self.line_style_ISO.addItem("No Pen")
         self.line_style_ISO.addItem("Solid Line")
@@ -239,27 +241,40 @@ class Ui_Add_On_Options(object):
         self.line_style_ISO.addItem("Dot Line")
         self.line_style_ISO.addItem("Dash-Dot Line")
         self.line_style_ISO.addItem("Dash-Dot-Dot Line")
-        self.opacity_ISO = QtWidgets.QSlider(QtCore.Qt.Horizontal)
 
+        self.opacity_ISO = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.opacity_ISO.setMinimum(0)
         self.opacity_ISO.setMaximum(100)
         self.opacity_ISO.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.opacity_ISO.setTickInterval(10)
         self.opacity_ISO.setValue(iso_opacity)
-        self.opacityLabel_ISO = QtWidgets.QLabel("ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
         self.opacity_ISO.valueChanged.connect(self.update_ISO_opacity)
-        self.fill_layout.addRow(QLabel("ROI Line Style: "), self.line_style_ROI)
+        self.opacityLabel_ISO = QtWidgets.QLabel(
+            "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
+
+        self.line_width = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.line_width.setMinimum(1)
+        self.line_width.setMaximum(5)
+        self.line_width.setTickPosition(QtWidgets.QSlider.TicksLeft)
+        self.line_width.setTickInterval(1)
+        self.line_width.setValue(line_width)
+        self.line_width.valueChanged.connect(self.update_line_width)
+        self.line_width_label = QtWidgets.QLabel(
+            "Line Width: \t {}%".format(int(self.line_width.value())))
+
+        self.fill_layout.addRow(
+            QLabel("ROI Line Style: "), self.line_style_ROI)
         self.fill_layout.addRow(QLabel(""))
         self.fill_layout.addRow(self.opacityLabel_ROI, self.opacity_ROI)
         self.fill_layout.addRow(QLabel(""))
-        self.opacity_ROI.valueChanged.connect(self.update_ROI_opacity)
-        self.fill_layout.addRow(QLabel("ISO Line Style: "), self.line_style_ISO)
+        self.fill_layout.addRow(
+            QLabel("ISO Line Style: "), self.line_style_ISO)
         self.fill_layout.addRow(QLabel(""))
-        self.fill_layout.addRow(self.opacityLabel_ISO,self.opacity_ISO)
+        self.fill_layout.addRow(self.opacityLabel_ISO, self.opacity_ISO)
+        self.fill_layout.addRow(QLabel(""))
+        self.fill_layout.addRow(self.line_width_label, self.line_width)
         self.line_style_ROI.setCurrentIndex(roi_line)
         self.line_style_ISO.setCurrentIndex(iso_line)
-
-
 
         self.fill_options.setLayout(self.fill_layout)
 
@@ -267,14 +282,20 @@ class Ui_Add_On_Options(object):
         self.fill_options.setVisible(False)
         self.fill_options.setObjectName('fill_options')
 
-
         self.retranslateUi(Add_On_Options)
         QtCore.QMetaObject.connectSlotsByName(Add_On_Options)
 
     def update_ROI_opacity(self):
-        self.opacityLabel_ROI.setText("ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+        self.opacityLabel_ROI.setText(
+            "ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+
     def update_ISO_opacity(self):
-        self.opacityLabel_ISO.setText("ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
+        self.opacityLabel_ISO.setText(
+            "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
+
+    def update_line_width(self):
+        self.line_width_label.setText(
+            "Line Width: \t {}%".format(int(self.line_width.value())))
 
     def retranslateUi(self, Add_On_Options):
         _translate = QtCore.QCoreApplication.translate

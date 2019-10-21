@@ -136,7 +136,7 @@ class Ui_MainWindow(object):
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
         self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
-        self.callClass = MainPage(self.path, self.dataset, self.filepaths)
+        self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions()
 
 
@@ -1500,16 +1500,19 @@ class Ui_MainWindow(object):
                     roi_opacity = int(elements[1].replace('\n', ''))
                     iso_line = int(elements[2].replace('\n', ''))
                     iso_opacity = int(elements[3].replace('\n', ''))
+                    line_width = int(elements[4].replace('\n', ''))
                 else:
                     roi_line = 1
                     roi_opacity = 10
                     iso_line = 2
                     iso_opacity = 5
+                    line_width = 2
                 stream.close()
             roi_opacity = int((roi_opacity/100)*255)
+            brush_color.setAlpha(roi_opacity)
             pen_color = QtGui.QColor(
-                brush_color.red(), brush_color.green(), brush_color.blue(),roi_opacity)
-            pen = self.get_qpen(pen_color, roi_line, 2)
+                brush_color.red(), brush_color.green(), brush_color.blue())
+            pen = self.get_qpen(pen_color, roi_line, line_width)
             for i in range(len(polygons)):
                 self.DICOM_image_scene.addPolygon(
                     polygons[i], pen, QBrush(brush_color))
@@ -1557,16 +1560,19 @@ class Ui_MainWindow(object):
                         roi_opacity = int(elements[1].replace('\n', ''))
                         iso_line = int(elements[2].replace('\n', ''))
                         iso_opacity = int(elements[3].replace('\n', ''))
+                        line_width = int(elements[4].replace('\n', ''))
                     else:
                         roi_line = 1
                         roi_opacity = 10
                         iso_line = 2
                         iso_opacity = 5
+                        line_width = 2
                     stream.close()
                 iso_opacity = int((iso_opacity/100)*255)
+                brush_color.setAlpha(iso_opacity)
                 pen_color = QtGui.QColor(
-                    brush_color.red(), brush_color.green(), brush_color.blue(),iso_opacity)
-                pen = self.get_qpen(pen_color, iso_line, 2)
+                    brush_color.red(), brush_color.green(), brush_color.blue())
+                pen = self.get_qpen(pen_color, iso_line, line_width)
                 for i in range(len(polygons)):
                     #color = self.roiColor['body']['QColor_ROIdisplay']
                     self.DICOM_image_scene.addPolygon(
@@ -1781,7 +1787,7 @@ class Ui_MainWindow(object):
         self.callClass.runPyradiomics()
 
     def HandleAnonymization(self):
-        self.callClass.runAnonymization()
+        self.callClass.runAnonymization(self)
 
     def setWindowingLimits(self, state, text):
         # Get the values for window and level from the dict
