@@ -23,12 +23,13 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 roi_opacity = int(elements[1].replace('\n', ''))
                 iso_line = int(elements[2].replace('\n', ''))
                 iso_opacity = int(elements[3].replace('\n', ''))
-                line_width = int(elements[4].replace('\n', ''))
+                line_width = float(elements[4].replace('\n', ''))
             else:
                 roi_line = 1
                 roi_opacity = 10
                 iso_line = 2
                 iso_opacity = 5
+                line_width = 2.0
             stream.close()
         self.setupUi(self, roi_line, roi_opacity,
                      iso_line, iso_opacity, line_width)
@@ -277,7 +278,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             stream.write("\n")
             stream.write(str(self.opacity_ISO.value()))
             stream.write("\n")
-            stream.write(str(self.line_width.value()))
+            stream.write(str(self.line_width.currentText()))
             stream.write("\n")
             stream.close()
 

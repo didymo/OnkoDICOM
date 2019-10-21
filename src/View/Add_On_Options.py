@@ -216,6 +216,7 @@ class Ui_Add_On_Options(object):
         self.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.fill_layout = QtWidgets.QFormLayout(self.centralwidget)
         self.fill_options = QtWidgets.QWidget(self.centralwidget)
+        
         self.line_style_ROI = QtWidgets.QComboBox(self.fill_options)
         self.line_style_ROI.addItem("No Pen")
         self.line_style_ROI.addItem("Solid Line")
@@ -252,15 +253,12 @@ class Ui_Add_On_Options(object):
         self.opacityLabel_ISO = QtWidgets.QLabel(
             "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
 
-        self.line_width = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.line_width.setMinimum(1)
-        self.line_width.setMaximum(5)
-        self.line_width.setTickPosition(QtWidgets.QSlider.TicksLeft)
-        self.line_width.setTickInterval(1)
-        self.line_width.setValue(line_width)
-        self.line_width.valueChanged.connect(self.update_line_width)
-        self.line_width_label = QtWidgets.QLabel(
-            "Line Width: \t {}%".format(int(self.line_width.value())))
+        self.line_width = QtWidgets.QComboBox(self.fill_options)
+        self.line_width.addItem("0.5")
+        self.line_width.addItem("1")
+        self.line_width.addItem("1.5")
+        self.line_width.addItem("2")
+        self.line_width.addItem("2.5")
 
         self.fill_layout.addRow(
             QLabel("ROI Line Style: "), self.line_style_ROI)
@@ -272,9 +270,11 @@ class Ui_Add_On_Options(object):
         self.fill_layout.addRow(QLabel(""))
         self.fill_layout.addRow(self.opacityLabel_ISO, self.opacity_ISO)
         self.fill_layout.addRow(QLabel(""))
-        self.fill_layout.addRow(self.line_width_label, self.line_width)
+        self.fill_layout.addRow(
+            QLabel("Line Width: "), self.line_width)
         self.line_style_ROI.setCurrentIndex(roi_line)
         self.line_style_ISO.setCurrentIndex(iso_line)
+        self.line_width.setCurrentText(str(line_width))
 
         self.fill_options.setLayout(self.fill_layout)
 
@@ -292,10 +292,6 @@ class Ui_Add_On_Options(object):
     def update_ISO_opacity(self):
         self.opacityLabel_ISO.setText(
             "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
-
-    def update_line_width(self):
-        self.line_width_label.setText(
-            "Line Width: \t {}%".format(int(self.line_width.value())))
 
     def retranslateUi(self, Add_On_Options):
         _translate = QtCore.QCoreApplication.translate

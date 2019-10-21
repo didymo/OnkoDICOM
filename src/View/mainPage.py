@@ -1500,13 +1500,13 @@ class Ui_MainWindow(object):
                     roi_opacity = int(elements[1].replace('\n', ''))
                     iso_line = int(elements[2].replace('\n', ''))
                     iso_opacity = int(elements[3].replace('\n', ''))
-                    line_width = int(elements[4].replace('\n', ''))
+                    line_width = float(elements[4].replace('\n', ''))
                 else:
                     roi_line = 1
                     roi_opacity = 10
                     iso_line = 2
                     iso_opacity = 5
-                    line_width = 2
+                    line_width = 2.0
                 stream.close()
             roi_opacity = int((roi_opacity/100)*255)
             brush_color.setAlpha(roi_opacity)
@@ -1560,13 +1560,13 @@ class Ui_MainWindow(object):
                         roi_opacity = int(elements[1].replace('\n', ''))
                         iso_line = int(elements[2].replace('\n', ''))
                         iso_opacity = int(elements[3].replace('\n', ''))
-                        line_width = int(elements[4].replace('\n', ''))
+                        line_width = float(elements[4].replace('\n', ''))
                     else:
                         roi_line = 1
                         roi_opacity = 10
                         iso_line = 2
                         iso_opacity = 5
-                        line_width = 2
+                        line_width = 2.0
                     stream.close()
                 iso_opacity = int((iso_opacity/100)*255)
                 brush_color.setAlpha(iso_opacity)
