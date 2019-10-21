@@ -23,21 +23,29 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 roi_opacity = int(elements[1].replace('\n', ''))
                 iso_line = int(elements[2].replace('\n', ''))
                 iso_opacity = int(elements[3].replace('\n', ''))
+                line_width = int(elements[4].replace('\n', ''))
             else:
                 roi_line = 1
                 roi_opacity = 10
                 iso_line = 2
                 iso_opacity = 5
             stream.close()
-        self.setupUi(self,roi_line,roi_opacity, iso_line, iso_opacity)
+        self.setupUi(self, roi_line, roi_opacity,
+                     iso_line, iso_opacity, line_width)
         data = [
             {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'User Options'},
-            {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': 'Image Windowing'},
-            {'level': 1, 'dbID': 556, 'parent_ID': 442, 'short_name': 'Standard Organ Names'},
-            {'level': 1, 'dbID': 527, 'parent_ID': 442, 'short_name': 'Standard Volume Names'},
-            {'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name': 'Create ROI from Isodose'},
-            {'level': 1, 'dbID': 520, 'parent_ID': 442, 'short_name': 'Patient ID - Hash ID'},
-            {'level': 1, 'dbID': 523, 'parent_ID': 442, 'short_name': 'Line & Fill configuration'}
+            {'level': 1, 'dbID': 522, 'parent_ID': 442,
+                'short_name': 'Image Windowing'},
+            {'level': 1, 'dbID': 556, 'parent_ID': 442,
+                'short_name': 'Standard Organ Names'},
+            {'level': 1, 'dbID': 527, 'parent_ID': 442,
+                'short_name': 'Standard Volume Names'},
+            {'level': 1, 'dbID': 528, 'parent_ID': 442,
+                'short_name': 'Create ROI from Isodose'},
+            {'level': 1, 'dbID': 520, 'parent_ID': 442,
+                'short_name': 'Patient ID - Hash ID'},
+            {'level': 1, 'dbID': 523, 'parent_ID': 442,
+                'short_name': 'Line & Fill configuration'}
         ]
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
@@ -56,13 +64,17 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
         # adding the menus
         self.table_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_view.customContextMenuRequested.connect(self.on_customContextMenuRequested_Window)
+        self.table_view.customContextMenuRequested.connect(
+            self.on_customContextMenuRequested_Window)
         self.table_organ.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_organ.customContextMenuRequested.connect(self.on_customContextMenuRequested_Organ)
+        self.table_organ.customContextMenuRequested.connect(
+            self.on_customContextMenuRequested_Organ)
         self.table_volume.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_volume.customContextMenuRequested.connect(self.on_customContextMenuRequested_Volume)
+        self.table_volume.customContextMenuRequested.connect(
+            self.on_customContextMenuRequested_Volume)
         self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
+        self.table_roi.customContextMenuRequested.connect(
+            self.on_customContextMenuRequested_Roi)
         self.table_organ.itemDoubleClicked.connect(self.OpenLink)
 
     def OpenLink(self, item):
@@ -76,9 +88,11 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Window(self, pos):
         it = self.table_view.itemAt(pos)
-        if it is None: return
+        if it is None:
+            return
         c = it.row()
-        item_range = QtWidgets.QTableWidgetSelectionRange(c, 0, c, self.table_view.columnCount() - 1)
+        item_range = QtWidgets.QTableWidgetSelectionRange(
+            c, 0, c, self.table_view.columnCount() - 1)
         self.table_view.setRangeSelected(item_range, True)
 
         menu = QtWidgets.QMenu()
@@ -102,9 +116,11 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Organ(self, pos):
         it = self.table_organ.itemAt(pos)
-        if it is None: return
+        if it is None:
+            return
         c = it.row()
-        item_range = QtWidgets.QTableWidgetSelectionRange(c, 0, c, self.table_organ.columnCount() - 1)
+        item_range = QtWidgets.QTableWidgetSelectionRange(
+            c, 0, c, self.table_organ.columnCount() - 1)
         self.table_organ.setRangeSelected(item_range, True)
 
         menu = QtWidgets.QMenu()
@@ -116,7 +132,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_organ.removeRow(c)
         if action == modify_row_action:
             dialog = Dialog_Organ(self.table_organ.item(c, 0).text(), self.table_organ.item(c, 1).text(),
-                                  self.table_organ.item(c, 2).text(), self.table_organ.item(c, 3).text()) #, self.table_organ.item(c, 3).text()
+                                  self.table_organ.item(c, 2).text(), self.table_organ.item(c, 3).text())  # , self.table_organ.item(c, 3).text()
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_organ.setItem(c, 0, QTableWidgetItem(new_data[0]))
@@ -128,9 +144,11 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Volume(self, pos):
         it = self.table_volume.itemAt(pos)
-        if it is None: return
+        if it is None:
+            return
         c = it.row()
-        item_range = QtWidgets.QTableWidgetSelectionRange(c, 0, c, self.table_volume.columnCount() - 1)
+        item_range = QtWidgets.QTableWidgetSelectionRange(
+            c, 0, c, self.table_volume.columnCount() - 1)
         self.table_volume.setRangeSelected(item_range, True)
 
         menu = QtWidgets.QMenu()
@@ -141,7 +159,8 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         if action == delete_row_action:
             self.table_volume.removeRow(c)
         if action == modify_row_action:
-            dialog = Dialog_Volume(self.table_volume.item(c, 0).text(), self.table_volume.item(c, 1).text())
+            dialog = Dialog_Volume(self.table_volume.item(
+                c, 0).text(), self.table_volume.item(c, 1).text())
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_volume.setItem(c, 0, QTableWidgetItem(new_data[0]))
@@ -151,9 +170,11 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     @QtCore.pyqtSlot(QtCore.QPoint)
     def on_customContextMenuRequested_Roi(self, pos):
         it = self.table_roi.itemAt(pos)
-        if it is None: return
+        if it is None:
+            return
         c = it.row()
-        item_range = QtWidgets.QTableWidgetSelectionRange(c, 0, c, self.table_roi.columnCount() - 1)
+        item_range = QtWidgets.QTableWidgetSelectionRange(
+            c, 0, c, self.table_roi.columnCount() - 1)
         self.table_roi.setRangeSelected(item_range, True)
 
         menu = QtWidgets.QMenu()
@@ -164,7 +185,8 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         if action == delete_row_action:
             self.table_roi.removeRow(c)
         if action == modify_row_action:
-            dialog = Dialog_Dose(self.table_roi.item(c, 0).text(), self.table_roi.item(c, 2).text())
+            dialog = Dialog_Dose(self.table_roi.item(
+                c, 0).text(), self.table_roi.item(c, 2).text())
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
@@ -245,7 +267,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                         rowdata.append('')
                 writer.writerow(rowdata)
 
-        #save configuration file
+        # save configuration file
         with open('src/data/line&fill_configuration', 'w') as stream:
             stream.write(str(self.line_style_ROI.currentIndex()))
             stream.write("\n")
@@ -254,6 +276,8 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             stream.write(str(self.line_style_ISO.currentIndex()))
             stream.write("\n")
             stream.write(str(self.opacity_ISO.value()))
+            stream.write("\n")
+            stream.write(str(self.line_width.value()))
             stream.write("\n")
             stream.close()
 
@@ -368,7 +392,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     def fillTables(self):
         with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
             next(fileInput)
-            i = 0;
+            i = 0
             for row in fileInput:
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
@@ -385,7 +409,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         # organ names
         with open('src/data/csv/organName.csv', "r") as fileInput:
             next(fileInput)
-            i = 0;
+            i = 0
             for row in fileInput:
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
@@ -402,7 +426,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
         # volume name
         with open('src/data/csv/volumeName.csv', "r") as fileInput:
-            i = 0;
+            i = 0
             for row in fileInput:
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
@@ -415,7 +439,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
         # roi isodose
         with open('src/data/csv/isodoseRoi.csv', "r") as fileInput:
-            i = 0;
+            i = 0
             for row in fileInput:
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
@@ -431,7 +455,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         # patient hash
         with open('src/data/csv/patientHash.csv', "r") as fileInput:
             next(fileInput)
-            i = 0;
+            i = 0
             for row in fileInput:
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
@@ -442,7 +466,6 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 self.table_Ids.setItem(i, 0, items[0])
                 self.table_Ids.setItem(i, 1, items[1])
                 i += 1
-
 
     def new_windowing(self):
         dialog = Dialog_Windowing('', '', '', '')
@@ -513,7 +536,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 class AddOptions:
 
     def __init__(self):
-       pass
+        pass
 
     def show_add_on_options(self):
         self.options_window = Add_On_Options()

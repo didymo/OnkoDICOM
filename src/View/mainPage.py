@@ -1500,17 +1500,19 @@ class Ui_MainWindow(object):
                     roi_opacity = int(elements[1].replace('\n', ''))
                     iso_line = int(elements[2].replace('\n', ''))
                     iso_opacity = int(elements[3].replace('\n', ''))
+                    line_width = int(elements[4].replace('\n', ''))
                 else:
                     roi_line = 1
                     roi_opacity = 10
                     iso_line = 2
                     iso_opacity = 5
+                    line_width = 2
                 stream.close()
             roi_opacity = int((roi_opacity/100)*255)
             brush_color.setAlpha(roi_opacity)
             pen_color = QtGui.QColor(
                 brush_color.red(), brush_color.green(), brush_color.blue())
-            pen = self.get_qpen(pen_color, roi_line, 2)
+            pen = self.get_qpen(pen_color, roi_line, line_width)
             for i in range(len(polygons)):
                 self.DICOM_image_scene.addPolygon(
                     polygons[i], pen, QBrush(brush_color))
@@ -1558,17 +1560,19 @@ class Ui_MainWindow(object):
                         roi_opacity = int(elements[1].replace('\n', ''))
                         iso_line = int(elements[2].replace('\n', ''))
                         iso_opacity = int(elements[3].replace('\n', ''))
+                        line_width = int(elements[4].replace('\n', ''))
                     else:
                         roi_line = 1
                         roi_opacity = 10
                         iso_line = 2
                         iso_opacity = 5
+                        line_width = 2
                     stream.close()
                 iso_opacity = int((iso_opacity/100)*255)
                 brush_color.setAlpha(iso_opacity)
                 pen_color = QtGui.QColor(
                     brush_color.red(), brush_color.green(), brush_color.blue())
-                pen = self.get_qpen(pen_color, iso_line, 2)
+                pen = self.get_qpen(pen_color, iso_line, line_width)
                 for i in range(len(polygons)):
                     #color = self.roiColor['body']['QColor_ROIdisplay']
                     self.DICOM_image_scene.addPolygon(
