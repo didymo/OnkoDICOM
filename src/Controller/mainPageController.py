@@ -317,9 +317,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.form_Validation()
         if (len(message.strip()) == 0):
             # write csv file...
-            new_file = os.path.join(str(self.path), 'clinicaldata.csv')
+            if not os.path.isdir(os.path.join(str(self.path), 'CSV')):
+                os.mkdir(os.path.join(str(self.path), 'CSV'))
+            new_file = os.path.join(str(self.path), 'CSV/ClinicalData_' + self.pID +'.csv')
             f = open(new_file, 'w')
-            columnNames = ['MD5Hash', 'Gender', 'Country_of_Birth',
+            columnNames = ['PatientID', 'Gender', 'Country_of_Birth',
                            'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10', 'T_Stage',
                            'N_Stage', 'M_Stage', 'OverallStage', 'Tx_Intent', 'Surgery', 'Rad', 'Chemo',
                            'Immuno', 'Brachy', 'Hormone', 'Death', 'CancerDeath',
@@ -441,7 +443,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 pass
 
     def display_cd_dat(self):
-        self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path)
+        self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path, self.dataset, self.filenames)
         self.tabWindow.removeTab(3)
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
         self.tabWindow.setCurrentIndex(3)
@@ -485,7 +487,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             return result[0]
 
     def editing_mode(self):
-        reg = '/[clinicaldata]*[.csv]'
+        reg = '/CSV/ClinicalData*[.csv]'
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
 
@@ -581,11 +583,13 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
     open_patient_window = QtCore.pyqtSignal(str)
 
-    def __init__(self, tabWindow, path):
+    def __init__(self, tabWindow, path, ds, fn):
         QtWidgets.QWidget.__init__(self)
 
         self.path = path
         self.tabWindow = tabWindow
+        self.dataset = ds
+        self.filenames = fn
         self.ui = Ui_CD_Display()
         self.ui.setupUi(self)
         self.load_cd()
@@ -599,7 +603,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
             self.on_click()
 
     def load_cd(self):
-        reg = '/[clinicaldata]*[.csv]'
+        reg = '/CSV/ClinicalData*[.csv]'
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
 
@@ -720,7 +724,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
             return theChoice
 
     def edit_mode(self):
-        self.tab_cd = ClinicalDataForm(self.tabWindow, self.path)
+        self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
         self.tab_cd.editing_mode()
         self.tabWindow.removeTab(3)
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
@@ -866,7 +870,7 @@ class MainPage:
         tabWindow.addTab(self.tab_cd, "")
 
     def display_cd_dat(self, tabWindow, file_path):
-        self.tab_cd = ClinicalDataDisplay(tabWindow, file_path)
+        self.tab_cd = ClinicalDataDisplay(tabWindow, file_path, self.dataset, self.filepaths)
         tabWindow.addTab(self.tab_cd, "")
 
     def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):

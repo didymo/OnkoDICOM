@@ -237,7 +237,7 @@ class Ui_MainWindow(object):
         self.tab2_clinical_data = QtWidgets.QWidget()
         self.tab2_clinical_data.setFocusPolicy(Qt.NoFocus)
         # check for csv data
-        reg = '/[clinicaldata]*[.csv]'
+        reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(self.path + reg):
             self.callClass.display_cd_form(self.tab2, self.path)
         else:
@@ -661,10 +661,12 @@ class Ui_MainWindow(object):
         # Export DVH Spreadsheet Action
         self.actionDVH_Spreadsheet = QtWidgets.QAction(MainWindow)
         self.actionDVH_Spreadsheet.setObjectName("actionDVH_Spreadsheet")
+        self.actionDVH_Spreadsheet.triggered.connect(self.exportDVHcsv)
 
         # Export Clinical Data Action
         self.actionClinical_Data = QtWidgets.QAction(MainWindow)
         self.actionClinical_Data.setObjectName("actionClinical_Data")
+        self.actionClinical_Data.triggered.connect(self.clinicalDataCheck)
 
         # Export Pyradiomics Action
         self.actionPyradiomics = QtWidgets.QAction(MainWindow)
@@ -1299,12 +1301,29 @@ class Ui_MainWindow(object):
         self.button_exportDVH.clicked.connect(self.exportDVHcsv)
 
     def exportDVHcsv (self):
-        dvh2csv(self.raw_dvh,self.path + "/",'DVH',self.dataset[0].PatientID)
+        if not os.path.isdir(self.path + '/CSV'):
+            os.mkdir(self.path + '/CSV')
+        dvh2csv(self.raw_dvh,self.path + "/CSV/",'DVH_'+ self.basicInfo['id'],self.dataset[0].PatientID)
         SaveReply = QMessageBox.information(self, "Message",
                                             "The DVH Data was saved successfully in your directory!",
                                             QMessageBox.Ok)
         if SaveReply == QMessageBox.Ok:
             pass
+
+    def clinicalDataCheck(self):
+        reg = '/CSV/ClinicalData*[.csv]'
+        if not glob.glob(self.path + reg):
+            SaveReply = QMessageBox.warning(self, "Message",
+                                                "You need to complete the Clinical Data form for this patient!",
+                                                QMessageBox.Ok)
+            if SaveReply == QMessageBox.Ok:
+                self.tab2.setCurrentIndex(3)
+        else:
+            SaveReply = QMessageBox.information(self, "Message",
+                                                "A Clinical Data file exists for this patient! If you wish \nto update it you can do so in the Clinical Data tab.",
+                                                QMessageBox.Ok)
+            if SaveReply == QMessageBox.Ok:
+                pass
 
 
     ####################################
