@@ -35,18 +35,14 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                      iso_line, iso_opacity, line_width)
         data = [
             {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'User Options'},
-            {'level': 1, 'dbID': 522, 'parent_ID': 442,
-                'short_name': 'Image Windowing'},
-            {'level': 1, 'dbID': 556, 'parent_ID': 442,
-                'short_name': 'Standard Organ Names'},
-            {'level': 1, 'dbID': 527, 'parent_ID': 442,
-                'short_name': 'Standard Volume Names'},
-            {'level': 1, 'dbID': 528, 'parent_ID': 442,
-                'short_name': 'Create ROI from Isodose'},
-            {'level': 1, 'dbID': 520, 'parent_ID': 442,
-                'short_name': 'Patient ID - Hash ID'},
-            {'level': 1, 'dbID': 523, 'parent_ID': 442,
-                'short_name': 'Line & Fill configuration'}
+
+            {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': 'Image Windowing'},
+            {'level': 1, 'dbID': 556, 'parent_ID': 442, 'short_name': 'Standard Organ Names'},
+            {'level': 1, 'dbID': 527, 'parent_ID': 442, 'short_name': 'Standard Volume Names'},
+            #{'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name': 'Create ROI from Isodose'},
+            {'level': 1, 'dbID': 520, 'parent_ID': 442, 'short_name': 'Patient ID - Hash ID'},
+            {'level': 1, 'dbID': 523, 'parent_ID': 442, 'short_name': 'Line & Fill configuration'}
+
         ]
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
@@ -60,7 +56,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         self.add_new_window.clicked.connect(self.new_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
-        self.add_new_roi.clicked.connect(self.new_isodose)
+       # self.add_new_roi.clicked.connect(self.new_isodose)
         self.import_organ_csv.clicked.connect(self.import_organs)
 
         # adding the menus
@@ -71,11 +67,9 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         self.table_organ.customContextMenuRequested.connect(
             self.on_customContextMenuRequested_Organ)
         self.table_volume.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_volume.customContextMenuRequested.connect(
-            self.on_customContextMenuRequested_Volume)
-        self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_roi.customContextMenuRequested.connect(
-            self.on_customContextMenuRequested_Roi)
+        self.table_volume.customContextMenuRequested.connect(self.on_customContextMenuRequested_Volume)
+        # self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        # self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
         self.table_organ.itemDoubleClicked.connect(self.OpenLink)
 
     def OpenLink(self, item):
@@ -255,18 +249,18 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                     else:
                         rowdata.append('')
                 writer.writerow(rowdata)
-
-        with open('src/data/csv/isodoseRoi.csv', 'w') as stream:
-            writer = csv.writer(stream)
-            for row in range(self.table_roi.rowCount()):
-                rowdata = []
-                for column in range(self.table_roi.columnCount()):
-                    item = self.table_roi.item(row, column)
-                    if item is not None:
-                        rowdata.append(item.text())
-                    else:
-                        rowdata.append('')
-                writer.writerow(rowdata)
+        #saves the new ROI from Isodoses
+        # with open('src/data/csv/isodoseRoi.csv', 'w') as stream:
+        #     writer = csv.writer(stream)
+        #     for row in range(self.table_roi.rowCount()):
+        #         rowdata = []
+        #         for column in range(self.table_roi.columnCount()):
+        #             item = self.table_roi.item(row, column)
+        #             if item is not None:
+        #                 rowdata.append(item.text())
+        #             else:
+        #                 rowdata.append('')
+        #         writer.writerow(rowdata)
 
         # save configuration file
         with open('src/data/line&fill_configuration', 'w') as stream:
@@ -296,10 +290,10 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_view.setVisible(True)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
+            #self.table_roi.setVisible(False)
             self.table_Ids.setVisible(False)
             self.add_new_window.setVisible(True)
-            self.add_new_roi.setVisible(False)
+            #self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -310,10 +304,10 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(True)
             self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
+            #self.table_roi.setVisible(False)
             self.table_Ids.setVisible(False)
             self.add_new_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
+            #self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
@@ -324,38 +318,38 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(True)
-            self.table_roi.setVisible(False)
+            #self.table_roi.setVisible(False)
             self.table_Ids.setVisible(False)
             self.add_new_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
+            #self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(True)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
-        elif type == "Create ROI from Isodose":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(True)
-            self.table_Ids.setVisible(False)
-            self.add_new_window.setVisible(False)
-            self.add_new_roi.setVisible(True)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
+        # elif type == "Create ROI from Isodose":
+        #     self.table_modules.setVisible(False)
+        #     self.table_view.setVisible(False)
+        #     self.table_organ.setVisible(False)
+        #     self.table_volume.setVisible(False)
+        #     self.table_roi.setVisible(True)
+        #     self.table_Ids.setVisible(False)
+        #     self.add_new_window.setVisible(False)
+        #     self.add_new_roi.setVisible(True)
+        #     self.add_standard_volume_name.setVisible(False)
+        #     self.add_standard_organ_name.setVisible(False)
+        #     self.import_organ_csv.setVisible(False)
+        #     self.note.setVisible(False)
+        #     self.fill_options.setVisible(False)
         elif type == "Patient ID - Hash ID":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
+            #self.table_roi.setVisible(False)
             self.table_Ids.setVisible(True)
             self.add_new_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
+            #self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -363,7 +357,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.fill_options.setVisible(False)
         elif type == "User Options":
             self.add_new_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
+            #self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -371,13 +365,13 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
+           # self.table_roi.setVisible(False)
             self.table_Ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
         elif type == 'Line & Fill configuration':
             self.add_new_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
+            #self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -385,7 +379,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
+            #self.table_roi.setVisible(False)
             self.table_Ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(True)
@@ -439,20 +433,21 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 i += 1
 
         # roi isodose
-        with open('src/data/csv/isodoseRoi.csv', "r") as fileInput:
-            i = 0
-            for row in fileInput:
-                items = [
-                    QTableWidgetItem(str(item.replace('\n', '')))
-                    for item in row.split(',')
-                ]
 
-                self.table_roi.insertRow(i)
-                self.table_roi.setItem(i, 0, items[0])
-                self.table_roi.setItem(i, 1, items[1])
-                if len(items) > 2:
-                    self.table_roi.setItem(i, 2, items[2])
-                i += 1
+        # with open('src/data/csv/isodoseRoi.csv', "r") as fileInput:
+        #     i = 0;
+        #     for row in fileInput:
+        #         items = [
+        #             QTableWidgetItem(str(item.replace('\n', '')))
+        #             for item in row.split(',')
+        #         ]
+        #
+        #         self.table_roi.insertRow(i)
+        #         self.table_roi.setItem(i, 0, items[0])
+        #         self.table_roi.setItem(i, 1, items[1])
+        #         if len(items) > 2:
+        #             self.table_roi.setItem(i, 2, items[2])
+        #         i += 1
         # patient hash
         with open('src/data/csv/patientHash.csv', "r") as fileInput:
             next(fileInput)
@@ -499,14 +494,14 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             self.table_volume.setItem(c, 0, QTableWidgetItem(new_data[0]))
             self.table_volume.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    def new_isodose(self):
-        dialog = Dialog_Dose('')
-        c = self.table_roi.rowCount()
-        if dialog.exec():
-            new_data = dialog.getInputs()
-            self.table_roi.insertRow(c)
-            self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
-            self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
+    # def new_isodose(self):
+    #     dialog = Dialog_Dose('')
+    #     c = self.table_roi.rowCount()
+    #     if dialog.exec():
+    #         new_data = dialog.getInputs()
+    #         self.table_roi.insertRow(c)
+    #         self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
+    #         self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
     def import_organs(self):
         self.check_change = False

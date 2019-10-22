@@ -133,35 +133,36 @@ class Ui_Add_On_Options(object):
         header3.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_volume.setVisible(False)
         # roi
-        self.add_new_roi = QtWidgets.QPushButton(self.centralwidget)
-        self.add_new_roi.setCursor(
-            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.add_new_roi.setGeometry(QtCore.QRect(578, 470, 161, 31))
-        self.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                       "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                       "color:rgb(75,0,130);\n"
-                                       "font-weight: bold;")
-        self.add_new_roi.setObjectName("add_new_roi")
-        self.add_new_roi.setVisible(False)
-        self.table_roi = QtWidgets.QTableWidget(self.centralwidget)
-        self.table_roi.setGeometry(QtCore.QRect(290, 90, 451, 370))
-        self.table_roi.setObjectName("table_roi")
-        self.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.table_roi.setColumnCount(3)
-        self.table_roi.verticalHeader().hide()
-        self.table_roi.setHorizontalHeaderLabels(
-            [" Isodose Level (cGy) ", " ROI Name ", " Notes "])
-        self.table_roi.horizontalHeaderItem(
-            0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(
-            1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(
-            2).setTextAlignment(QtCore.Qt.AlignLeft)
-        header4 = self.table_roi.horizontalHeader()
-        header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        self.table_roi.setVisible(False)
+        #The following code is commented out as it contains the possibility to create ROI from isodoses which is not yet supported
+        # self.add_new_roi = QtWidgets.QPushButton(self.centralwidget)
+        # self.add_new_roi.setCursor(
+        #     QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        # self.add_new_roi.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        # self.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
+        #                                "font: 57 11pt \\\"Ubuntu\\\";\n"
+        #                                "color:rgb(75,0,130);\n"
+        #                                "font-weight: bold;")
+        # self.add_new_roi.setObjectName("add_new_roi")
+        # self.add_new_roi.setVisible(False)
+        # self.table_roi = QtWidgets.QTableWidget(self.centralwidget)
+        # self.table_roi.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.table_roi.setObjectName("table_roi")
+        # self.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.table_roi.setColumnCount(3)
+        # self.table_roi.verticalHeader().hide()
+        # self.table_roi.setHorizontalHeaderLabels(
+        #     [" Isodose Level (cGy) ", " ROI Name ", " Notes "])
+        # self.table_roi.horizontalHeaderItem(
+        #     0).setTextAlignment(QtCore.Qt.AlignLeft)
+        # self.table_roi.horizontalHeaderItem(
+        #     1).setTextAlignment(QtCore.Qt.AlignLeft)
+        # self.table_roi.horizontalHeaderItem(
+        #     2).setTextAlignment(QtCore.Qt.AlignLeft)
+        # header4 = self.table_roi.horizontalHeader()
+        # header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        # header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        # header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        # self.table_roi.setVisible(False)
 
         self.table_Ids = QtWidgets.QTableWidget(self.centralwidget)
         self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 370))
@@ -212,7 +213,7 @@ class Ui_Add_On_Options(object):
         self.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        #self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.fill_layout = QtWidgets.QFormLayout(self.centralwidget)
         self.fill_options = QtWidgets.QWidget(self.centralwidget)
@@ -310,8 +311,8 @@ class Ui_Add_On_Options(object):
             _translate("Add_On_Options", "Add Standard Name"))
         self.import_organ_csv.setText(_translate(
             "Add_On_Options", "Import Spreadsheet"))
-        self.add_new_roi.setText(_translate(
-            "Add_On_Options", "Add new Isodose"))
+        # self.add_new_roi.setText(_translate(
+        #     "Add_On_Options", "Add new Isodose"))
 
 
 # if __name__ == "__main__":

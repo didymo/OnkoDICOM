@@ -508,8 +508,8 @@ class Ui_MainWindow(object):
         # Menu Bar: File, Edit, Tools, Help
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
-        self.menuEdit = QtWidgets.QMenu(self.menubar)
-        self.menuEdit.setObjectName("menuEdit")
+        # self.menuEdit = QtWidgets.QMenu(self.menubar)
+        # self.menuEdit.setObjectName("menuEdit")
         self.menuTools = QtWidgets.QMenu(self.menubar)
         self.menuTools.setObjectName("menuTools")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
@@ -520,7 +520,7 @@ class Ui_MainWindow(object):
         iconOpen.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconAnonymize_and_Save = QtGui.QIcon()
-        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/AnonButton3.png"),
+        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/lock.png"),
                                          QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconZoom_In = QtGui.QIcon()
         iconZoom_In.addPixmap(QtGui.QPixmap(":/images/Icon/plus.png"),
@@ -534,12 +534,13 @@ class Ui_MainWindow(object):
         iconTransect = QtGui.QIcon()
         iconTransect.addPixmap(QtGui.QPixmap(":/images/Icon/transect.png"),
                                QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconBrush = QtGui.QIcon()
-        iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"),
-                            QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconIsodose = QtGui.QIcon()
-        iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"),
-                              QtGui.QIcon.Normal, QtGui.QIcon.On)
+        #Icons for creating ROIS
+        # iconBrush = QtGui.QIcon()
+        # iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"),
+        #                     QtGui.QIcon.Normal, QtGui.QIcon.On)
+        # iconIsodose = QtGui.QIcon()
+        # iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"),
+        #                       QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconadd_on_options = QtGui.QIcon()
         iconadd_on_options.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"),
                                      QtGui.QIcon.Normal, QtGui.QIcon.On)
@@ -551,8 +552,8 @@ class Ui_MainWindow(object):
         self.menuWindowing = QtWidgets.QMenu(self.menuTools)
         self.menuWindowing.setObjectName("menuWindowing")
         self.menuWindowing.setIcon(iconWindowing)
-        self.menuROI_Creation = QtWidgets.QMenu(self.menuTools)
-        self.menuROI_Creation.setObjectName("menuROI_Creation")
+        # self.menuROI_Creation = QtWidgets.QMenu(self.menuTools)
+        # self.menuROI_Creation.setObjectName("menuROI_Creation")
         self.menuExport = QtWidgets.QMenu(self.menuTools)
         self.menuExport.setIcon(iconExport)
         self.menuExport.setObjectName("menuExport")
@@ -570,13 +571,13 @@ class Ui_MainWindow(object):
         self.actionOpen.setIconVisibleInMenu(True)
         self.actionOpen.setObjectName("actionOpen")
 
-        # Import Action
-        self.actionImport = QtWidgets.QAction(MainWindow)
-        self.actionImport.setObjectName("actionImport")
-
-        # Save Action
-        self.actionSave = QtWidgets.QAction(MainWindow)
-        self.actionSave.setObjectName("actionSave")
+        # # Import Action
+        # self.actionImport = QtWidgets.QAction(MainWindow)
+        # self.actionImport.setObjectName("actionImport")
+        #
+        # # Save Action
+        # self.actionSave = QtWidgets.QAction(MainWindow)
+        # self.actionSave.setObjectName("actionSave")
 
         # Save as Anonymous Action
         self.actionSave_as_Anonymous = QtWidgets.QAction(MainWindow)
@@ -586,21 +587,22 @@ class Ui_MainWindow(object):
         self.actionExit = QtWidgets.QAction(MainWindow)
         self.actionExit.setObjectName("actionExit")
 
-        # Undo Action
-        self.actionUndo = QtWidgets.QAction(MainWindow)
-        self.actionUndo.setObjectName("actionUndo")
-
-        # Redo Action
-        self.actionRedo = QtWidgets.QAction(MainWindow)
-        self.actionRedo.setObjectName("actionRedo")
-
-        # Rename ROI Action
-        self.actionRename_ROI = QtWidgets.QAction(MainWindow)
-        self.actionRename_ROI.setObjectName("actionRename_ROI")
-
-        # Delete ROI Action
-        self.actionDelete_ROI = QtWidgets.QAction(MainWindow)
-        self.actionDelete_ROI.setObjectName("actionDelete_ROI")
+        #All the Edit actions
+        # # Undo Action
+        # self.actionUndo = QtWidgets.QAction(MainWindow)
+        # self.actionUndo.setObjectName("actionUndo")
+        #
+        # # Redo Action
+        # self.actionRedo = QtWidgets.QAction(MainWindow)
+        # self.actionRedo.setObjectName("actionRedo")
+        #
+        # # Rename ROI Action
+        # self.actionRename_ROI = QtWidgets.QAction(MainWindow)
+        # self.actionRename_ROI.setObjectName("actionRename_ROI")
+        #
+        # # Delete ROI Action
+        # self.actionDelete_ROI = QtWidgets.QAction(MainWindow)
+        # self.actionDelete_ROI.setObjectName("actionDelete_ROI")
 
         # Zoom In Action
         self.actionZoom_In = QtWidgets.QAction(MainWindow)
@@ -631,17 +633,17 @@ class Ui_MainWindow(object):
         self.actionTransect.setObjectName("actionTransect")
         self.actionTransect.triggered.connect(self.transectHandler)
 
-        # ROI by brush Action
-        self.actionBrush = QtWidgets.QAction(MainWindow)
-        self.actionBrush.setIcon(iconBrush)
-        self.actionBrush.setIconVisibleInMenu(True)
-        self.actionBrush.setObjectName("actionBrush")
-
-        # ROI by Isodose Action
-        self.actionIsodose = QtWidgets.QAction(MainWindow)
-        self.actionIsodose.setIcon(iconIsodose)
-        self.actionIsodose.setIconVisibleInMenu(True)
-        self.actionIsodose.setObjectName("actionIsodose")
+        # # ROI by brush Action
+        # self.actionBrush = QtWidgets.QAction(MainWindow)
+        # self.actionBrush.setIcon(iconBrush)
+        # self.actionBrush.setIconVisibleInMenu(True)
+        # self.actionBrush.setObjectName("actionBrush")
+        #
+        # # ROI by Isodose Action
+        # self.actionIsodose = QtWidgets.QAction(MainWindow)
+        # self.actionIsodose.setIcon(iconIsodose)
+        # self.actionIsodose.setIconVisibleInMenu(True)
+        # self.actionIsodose.setObjectName("actionIsodose")
 
         # Add-On Options Action
         self.actionadd_on_options = QtWidgets.QAction(MainWindow)
@@ -675,25 +677,25 @@ class Ui_MainWindow(object):
 
         # Build menu bar
         self.menuFile.addAction(self.actionOpen)
-        self.menuFile.addAction(self.actionImport)
+        # self.menuFile.addAction(self.actionImport)
         self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionSave)
+        # self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_as_Anonymous)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionExit)
-        self.menuEdit.addAction(self.actionUndo)
-        self.menuEdit.addAction(self.actionRedo)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionRename_ROI)
-        self.menuEdit.addAction(self.actionDelete_ROI)
-        self.menuROI_Creation.addAction(self.actionBrush)
-        self.menuROI_Creation.addAction(self.actionIsodose)
+        # self.menuEdit.addAction(self.actionUndo)
+        # self.menuEdit.addAction(self.actionRedo)
+        # self.menuEdit.addSeparator()
+        # self.menuEdit.addAction(self.actionRename_ROI)
+        # self.menuEdit.addAction(self.actionDelete_ROI)
+        # self.menuROI_Creation.addAction(self.actionBrush)
+        # self.menuROI_Creation.addAction(self.actionIsodose)
         self.menuExport.addAction(self.actionDVH_Spreadsheet)
         self.menuExport.addAction(self.actionClinical_Data)
         self.menuExport.addAction(self.actionPyradiomics)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
+        #self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
@@ -716,7 +718,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionZoom_Out)
         self.menuTools.addAction(self.menuWindowing.menuAction())
         self.menuTools.addAction(self.actionTransect)
-        self.menuTools.addAction(self.menuROI_Creation.menuAction())
+        # self.menuTools.addAction(self.menuROI_Creation.menuAction())
         self.menuTools.addAction(self.actionadd_on_options)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menuExport.menuAction())
@@ -743,9 +745,9 @@ class Ui_MainWindow(object):
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionTransect)
         self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionBrush)
-        self.toolBar.addAction(self.actionIsodose)
-        self.toolBar.addSeparator()
+        # self.toolBar.addAction(self.actionBrush)
+        # self.toolBar.addAction(self.actionIsodose)
+        # self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionadd_on_options)
         self.toolBar.addWidget(self.toolbar_spacer)
         self.toolBar.addWidget(self.exportButton)
@@ -819,35 +821,35 @@ class Ui_MainWindow(object):
 
         # Set menu labels
         self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
-        self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
+        # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
+        # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
         self.menuWindowing.setTitle(_translate("MainWindow", "Windowing"))
-        self.menuROI_Creation.setTitle(
-            _translate("MainWindow", "ROI Creation"))
+        # self.menuROI_Creation.setTitle(
+        #     _translate("MainWindow", "ROI Creation"))
         self.menuExport.setTitle(_translate("MainWindow", "Export"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
 
         # Set action labels (menu and tool bars)
         self.actionOpen.setText(_translate("MainWindow", "Open Patient..."))
-        self.actionImport.setText(_translate("MainWindow", "Import..."))
-        self.actionSave.setText(_translate("MainWindow", "Save"))
+        # self.actionImport.setText(_translate("MainWindow", "Import..."))
+        # self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSave_as_Anonymous.setText(
             _translate("MainWindow", "Save as Anonymous..."))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
-        self.actionUndo.setText(_translate("MainWindow", "Undo"))
-        self.actionRedo.setText(_translate("MainWindow", "Redo"))
-        self.actionRename_ROI.setText(
-            _translate("MainWindow", "Rename ROI..."))
-        self.actionDelete_ROI.setText(
-            _translate("MainWindow", "Delete ROI..."))
+        # self.actionUndo.setText(_translate("MainWindow", "Undo"))
+        # self.actionRedo.setText(_translate("MainWindow", "Redo"))
+        # self.actionRename_ROI.setText(
+        #     _translate("MainWindow", "Rename ROI..."))
+        # self.actionDelete_ROI.setText(
+        #     _translate("MainWindow", "Delete ROI..."))
         self.actionZoom_In.setText(_translate("MainWindow", "Zoom In"))
         self.actionZoom_Out.setText(_translate("MainWindow", "Zoom Out"))
         self.actionWindowing.setText(_translate("MainWindow", "Windowing"))
         self.actionTransect.setText(_translate("MainWindow", "Transect"))
-        self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
-        self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
+        # self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
+        # self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
         self.actionadd_on_options.setText(
             _translate("MainWindow", "Add-On Options..."))
         self.actionAnonymize_and_Save.setText(
