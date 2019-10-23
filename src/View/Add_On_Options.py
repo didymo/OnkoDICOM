@@ -2,9 +2,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QLabel
 
 
-
 class Ui_Add_On_Options(object):
-    def setupUi(self, Add_On_Options, roi_line,roi_opacity, iso_line, iso_opacity):
+    def setupUi(self, Add_On_Options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         Add_On_Options.setObjectName("Add_On_Options")
         Add_On_Options.setMinimumSize(766, 600)
         Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
@@ -134,35 +133,36 @@ class Ui_Add_On_Options(object):
         header3.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_volume.setVisible(False)
         # roi
-        self.add_new_roi = QtWidgets.QPushButton(self.centralwidget)
-        self.add_new_roi.setCursor(
-            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.add_new_roi.setGeometry(QtCore.QRect(578, 470, 161, 31))
-        self.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                       "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                       "color:rgb(75,0,130);\n"
-                                       "font-weight: bold;")
-        self.add_new_roi.setObjectName("add_new_roi")
-        self.add_new_roi.setVisible(False)
-        self.table_roi = QtWidgets.QTableWidget(self.centralwidget)
-        self.table_roi.setGeometry(QtCore.QRect(290, 90, 451, 370))
-        self.table_roi.setObjectName("table_roi")
-        self.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.table_roi.setColumnCount(3)
-        self.table_roi.verticalHeader().hide()
-        self.table_roi.setHorizontalHeaderLabels(
-            [" Isodose Level (cGy) ", " ROI Name ", " Notes "])
-        self.table_roi.horizontalHeaderItem(
-            0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(
-            1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(
-            2).setTextAlignment(QtCore.Qt.AlignLeft)
-        header4 = self.table_roi.horizontalHeader()
-        header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        self.table_roi.setVisible(False)
+        #The following code is commented out as it contains the possibility to create ROI from isodoses which is not yet supported
+        # self.add_new_roi = QtWidgets.QPushButton(self.centralwidget)
+        # self.add_new_roi.setCursor(
+        #     QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        # self.add_new_roi.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        # self.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
+        #                                "font: 57 11pt \\\"Ubuntu\\\";\n"
+        #                                "color:rgb(75,0,130);\n"
+        #                                "font-weight: bold;")
+        # self.add_new_roi.setObjectName("add_new_roi")
+        # self.add_new_roi.setVisible(False)
+        # self.table_roi = QtWidgets.QTableWidget(self.centralwidget)
+        # self.table_roi.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.table_roi.setObjectName("table_roi")
+        # self.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.table_roi.setColumnCount(3)
+        # self.table_roi.verticalHeader().hide()
+        # self.table_roi.setHorizontalHeaderLabels(
+        #     [" Isodose Level (cGy) ", " ROI Name ", " Notes "])
+        # self.table_roi.horizontalHeaderItem(
+        #     0).setTextAlignment(QtCore.Qt.AlignLeft)
+        # self.table_roi.horizontalHeaderItem(
+        #     1).setTextAlignment(QtCore.Qt.AlignLeft)
+        # self.table_roi.horizontalHeaderItem(
+        #     2).setTextAlignment(QtCore.Qt.AlignLeft)
+        # header4 = self.table_roi.horizontalHeader()
+        # header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        # header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        # header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        # self.table_roi.setVisible(False)
 
         self.table_Ids = QtWidgets.QTableWidget(self.centralwidget)
         self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 370))
@@ -213,10 +213,11 @@ class Ui_Add_On_Options(object):
         self.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        #self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.fill_layout = QtWidgets.QFormLayout(self.centralwidget)
         self.fill_options = QtWidgets.QWidget(self.centralwidget)
+        
         self.line_style_ROI = QtWidgets.QComboBox(self.fill_options)
         self.line_style_ROI.addItem("No Pen")
         self.line_style_ROI.addItem("Solid Line")
@@ -224,14 +225,17 @@ class Ui_Add_On_Options(object):
         self.line_style_ROI.addItem("Dot Line")
         self.line_style_ROI.addItem("Dash-Dot Line")
         self.line_style_ROI.addItem("Dash-Dot-Dot Line")
-        self.opacity_ROI = QtWidgets.QSlider(QtCore.Qt.Horizontal)
 
+        self.opacity_ROI = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.opacity_ROI.setMinimum(0)
         self.opacity_ROI.setMaximum(100)
         self.opacity_ROI.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.opacity_ROI.setTickInterval(10)
         self.opacity_ROI.setValue(roi_opacity)
-        self.opacityLabel_ROI = QtWidgets.QLabel("ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+        self.opacity_ROI.valueChanged.connect(self.update_ROI_opacity)
+        self.opacityLabel_ROI = QtWidgets.QLabel(
+            "ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+
         self.line_style_ISO = QtWidgets.QComboBox(self.fill_options)
         self.line_style_ISO.addItem("No Pen")
         self.line_style_ISO.addItem("Solid Line")
@@ -239,27 +243,39 @@ class Ui_Add_On_Options(object):
         self.line_style_ISO.addItem("Dot Line")
         self.line_style_ISO.addItem("Dash-Dot Line")
         self.line_style_ISO.addItem("Dash-Dot-Dot Line")
-        self.opacity_ISO = QtWidgets.QSlider(QtCore.Qt.Horizontal)
 
+        self.opacity_ISO = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.opacity_ISO.setMinimum(0)
         self.opacity_ISO.setMaximum(100)
         self.opacity_ISO.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.opacity_ISO.setTickInterval(10)
         self.opacity_ISO.setValue(iso_opacity)
-        self.opacityLabel_ISO = QtWidgets.QLabel("ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
         self.opacity_ISO.valueChanged.connect(self.update_ISO_opacity)
-        self.fill_layout.addRow(QLabel("ROI Line Style: "), self.line_style_ROI)
+        self.opacityLabel_ISO = QtWidgets.QLabel(
+            "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
+
+        self.line_width = QtWidgets.QComboBox(self.fill_options)
+        self.line_width.addItem("0.5")
+        self.line_width.addItem("1")
+        self.line_width.addItem("1.5")
+        self.line_width.addItem("2")
+        self.line_width.addItem("2.5")
+
+        self.fill_layout.addRow(
+            QLabel("ROI Line Style: "), self.line_style_ROI)
         self.fill_layout.addRow(QLabel(""))
         self.fill_layout.addRow(self.opacityLabel_ROI, self.opacity_ROI)
         self.fill_layout.addRow(QLabel(""))
-        self.opacity_ROI.valueChanged.connect(self.update_ROI_opacity)
-        self.fill_layout.addRow(QLabel("ISO Line Style: "), self.line_style_ISO)
+        self.fill_layout.addRow(
+            QLabel("ISO Line Style: "), self.line_style_ISO)
         self.fill_layout.addRow(QLabel(""))
-        self.fill_layout.addRow(self.opacityLabel_ISO,self.opacity_ISO)
+        self.fill_layout.addRow(self.opacityLabel_ISO, self.opacity_ISO)
+        self.fill_layout.addRow(QLabel(""))
+        self.fill_layout.addRow(
+            QLabel("Line Width: "), self.line_width)
         self.line_style_ROI.setCurrentIndex(roi_line)
         self.line_style_ISO.setCurrentIndex(iso_line)
-
-
+        self.line_width.setCurrentText(str(line_width))
 
         self.fill_options.setLayout(self.fill_layout)
 
@@ -267,14 +283,16 @@ class Ui_Add_On_Options(object):
         self.fill_options.setVisible(False)
         self.fill_options.setObjectName('fill_options')
 
-
         self.retranslateUi(Add_On_Options)
         QtCore.QMetaObject.connectSlotsByName(Add_On_Options)
 
     def update_ROI_opacity(self):
-        self.opacityLabel_ROI.setText("ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+        self.opacityLabel_ROI.setText(
+            "ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
+
     def update_ISO_opacity(self):
-        self.opacityLabel_ISO.setText("ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
+        self.opacityLabel_ISO.setText(
+            "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
 
     def retranslateUi(self, Add_On_Options):
         _translate = QtCore.QCoreApplication.translate
@@ -293,8 +311,8 @@ class Ui_Add_On_Options(object):
             _translate("Add_On_Options", "Add Standard Name"))
         self.import_organ_csv.setText(_translate(
             "Add_On_Options", "Import Spreadsheet"))
-        self.add_new_roi.setText(_translate(
-            "Add_On_Options", "Add new Isodose"))
+        # self.add_new_roi.setText(_translate(
+        #     "Add_On_Options", "Add new Isodose"))
 
 
 # if __name__ == "__main__":
