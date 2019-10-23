@@ -284,7 +284,7 @@ class Ui_MainWindow(object):
 
         # Left Column
         self.left_widget = QtWidgets.QWidget(self.mainWidget)
-        self.vLayout_left = QtWidgets.QHBoxLayout(self.left_widget)
+        self.vLayout_left = QtWidgets.QVBoxLayout(self.left_widget)
 
         #######################################
         
@@ -305,34 +305,39 @@ class Ui_MainWindow(object):
 
         # Left Bottom Column: Structure Information
         self.structInfo_widget = QtWidgets.QWidget(self.left_widget)
-        self.vLayout_StructInfo = QtWidgets.QHBoxLayout(self.structInfo_widget)
-        self.vLayout_StructInfo.setContentsMargins(0, 0, 0, 0)
-        self.vLayout_StructInfo.setObjectName("vLayout_StructInfo")
+        self.gridLayout_StructInfo = QtWidgets.QGridLayout(self.structInfo_widget)
+        self.gridLayout_StructInfo.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_StructInfo.setObjectName("vLayout_StructInfo")
 
-        self.frame_struct_info = QtWidgets.QFrame(self.mainWidget)
-        self.frame_struct_info.setGeometry(QtCore.QRect(0, 400, 200, 201))
-        self.frame_struct_info.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_struct_info.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_struct_info.setObjectName("frame_struct_info")
-        self.frame_struct_info.setFocusPolicy(Qt.NoFocus)
+        # self.frame_struct_info = QtWidgets.QFrame(self.left_widget)
+        # self.frame_struct_info.setGeometry(QtCore.QRect(0, 400, 200, 201))
+        # self.frame_struct_info.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        # self.frame_struct_info.setFrameShadow(QtWidgets.QFrame.Raised)
+        # self.frame_struct_info.setObjectName("frame_struct_info")
+        # self.frame_struct_info.setFocusPolicy(Qt.NoFocus)
 
-        # Layout Icon and Text "Structure Information"
-        self.structInfo_label_widget = QtWidgets.QWidget(self.frame_struct_info)
-        self.structInfo_label_widget.setFocusPolicy(Qt.NoFocus)
-        self.structInfo_label_widget.setGeometry(QtCore.QRect(5, 5, 160, 28))
-        self.structInfo_label_widget.setObjectName("structInfo_label_widget")
+        # Helene this is the new container, fix the edit later
+        # self.
+
+        # # Layout Icon and Text "Structure Information"
+        # self.structInfo_label_widget = QtWidgets.QWidget(self.structInfo_widget)
+        # self.structInfo_label_widget.setFocusPolicy(Qt.NoFocus)
+        # self.structInfo_label_widget.setGeometry(QtCore.QRect(5, 5, 160, 28))
+        # self.structInfo_label_widget.setObjectName("structInfo_label_widget")
 
         # Structure Information: Information Icon
-        self.structInfo_icon = QtWidgets.QLabel(self.structInfo_label_widget)
+        self.structInfo_icon = QtWidgets.QLabel(self.structInfo_widget)
         self.structInfo_icon.setText("")
         self.structInfo_icon.setPixmap(QtGui.QPixmap(":/images/Icon/info.png"))
         self.structInfo_icon.setObjectName("structInfo_icon")
+        self.gridLayout_StructInfo.addWidget(self.structInfo_icon, 0, 0, 1, 1)
 
         # Structure Information: Structure Information Label
-        self.structInfo_label = QtWidgets.QLabel(self.structInfo_label_widget)
+        self.structInfo_label = QtWidgets.QLabel(self.structInfo_widget)
         self.structInfo_label.setFont(QtGui.QFont(
             "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
         self.structInfo_label.setObjectName("structInfo_label")
+        self.gridLayout_StructInfo.addWidget(self.structInfo_label, 0, 1, 1, 2)
         
         # Structure Information: "Select Structure" combobox
         self.initStructInfoSelector()
@@ -340,70 +345,82 @@ class Ui_MainWindow(object):
         # Structure Information: "Volume"
         # self.struct_volume_widget = QtWidgets.QWidget(self.mainWidget)
         # "Volume" label
-        self.struct_volume_label = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_volume_label = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_volume_label.setGeometry(QtCore.QRect(10, 70, 68, 29))
         self.struct_volume_label.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_volume_label.setObjectName("struct_volume_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_label, 2, 0, 1, 1)
         # "Volume" box
-        self.struct_volume_box = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_volume_box = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_volume_box.setGeometry(QtCore.QRect(95, 70, 81, 31))
         self.struct_volume_box.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_volume_box.setObjectName("struct_volume_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_box, 2, 1, 1, 1)
         # "Volume" unit
-        self.struct_volume_unit = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_volume_unit = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_volume_unit.setGeometry(QtCore.QRect(160, 70, 81, 31))
         self.struct_volume_unit.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_volume_unit.setObjectName("struct_volume_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_unit, 2, 2, 1, 1)
 
         # Structure Information: "Min Dose" label
-        self.struct_minDose_label = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_minDose_label = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_minDose_label.setGeometry(QtCore.QRect(10, 100, 68, 31))
         self.struct_minDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_minDose_label.setObjectName("struct_minDose_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_label, 3, 0, 1, 1)
         # Structure Information: "Min Dose" box
-        self.struct_minDose_box = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_minDose_box = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_minDose_box.setGeometry(QtCore.QRect(95, 100, 81, 31))
         self.struct_minDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_minDose_box.setObjectName("struct_minDose_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_box, 3, 1, 1, 1)
         # Structure Information: "Min Dose" unit
-        self.struct_minDose_unit = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_minDose_unit = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_minDose_unit.setGeometry(QtCore.QRect(160, 100, 81, 31))
         self.struct_minDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_minDose_unit.setObjectName("struct_minDose_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_unit, 3, 2, 1, 1)
 
         # Structure Information: "Max Dose" label
-        self.struct_maxDose_label = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_maxDose_label = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_maxDose_label.setGeometry(QtCore.QRect(10, 130, 68, 31))
         self.struct_maxDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_maxDose_label.setObjectName("struct_maxDose_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_label, 4, 0, 1, 1)
         # Structure Information: "Max Dose" box
-        self.struct_maxDose_box = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_maxDose_box = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_maxDose_box.setGeometry(QtCore.QRect(95, 130, 81, 31))
         self.struct_maxDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_maxDose_box.setObjectName("struct_maxDose_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_box, 4, 1, 1, 1)
         # Structure Information: "Max Dose" unit
-        self.struct_maxDose_unit = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_maxDose_unit = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_maxDose_unit.setGeometry(QtCore.QRect(160, 130, 81, 31))
         self.struct_maxDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_maxDose_unit.setObjectName("struct_maxDose_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_unit, 4, 2, 1, 1)
 
         # Structure Information: "Mean Dose" label
-        self.struct_meanDose_label = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_meanDose_label = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_meanDose_label.setGeometry(QtCore.QRect(10, 160, 81, 31))
         self.struct_meanDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_meanDose_label.setObjectName("struct_meanDose_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_label, 5, 0, 1, 1)
         # Structure Information: "Mean Dose" box
-        self.struct_meanDose_box = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_meanDose_box = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_meanDose_box.setGeometry(QtCore.QRect(95, 160, 81, 31))
         self.struct_meanDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_meanDose_box.setObjectName("struct_meanDose_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_box, 5, 1, 1, 1)
         # Structure Information: "Mean Dose" unit
-        self.struct_meanDose_unit = QtWidgets.QLabel(self.frame_struct_info)
+        self.struct_meanDose_unit = QtWidgets.QLabel(self.structInfo_widget)
         self.struct_meanDose_unit.setGeometry(QtCore.QRect(160, 160, 81, 31))
         self.struct_meanDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
         self.struct_meanDose_unit.setObjectName("struct_meanDose_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_unit, 5, 2, 1, 1)
 
-        self.frame_struct_info.setLayout(self.vLayout_StructInfo)
+        # self.frame_struct_info.setLayout(self.vLayout_StructInfo)
         self.vLayout_left.addWidget(self.tab1)
         self.vLayout_left.addWidget(self.structInfo_widget)
 
@@ -509,7 +526,7 @@ class Ui_MainWindow(object):
         self.struct_meanDose_unit.raise_()
         self.tab1.raise_()
         self.tab2.raise_()
-        self.frame_struct_info.raise_()
+        self.structInfo_widget.raise_()
 
         # Bottom Layer
         self.bottom_widget = QtWidgets.QWidget(self.mainWidget)
@@ -1214,7 +1231,7 @@ class Ui_MainWindow(object):
     # Initialize the selector for structure information
 
     def initStructInfoSelector(self):
-        self.comboBoxStructInfo = QtWidgets.QComboBox(self.frame_struct_info)
+        self.comboBoxStructInfo = QtWidgets.QComboBox(self.structInfo_widget)
         self.comboBoxStructInfo.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
                                               "combobox-popup: 0;"
                                               "background-color: #efefef; }")
@@ -1225,6 +1242,8 @@ class Ui_MainWindow(object):
         self.comboBoxStructInfo.setGeometry(QtCore.QRect(5, 35, 188, 31))
         self.comboBoxStructInfo.setObjectName("comboBox")
         self.comboBoxStructInfo.setFocusPolicy(Qt.NoFocus)
+        self.gridLayout_StructInfo.addWidget(self.comboBoxStructInfo, 1, 0, 1, 3)
+
 
     # Function triggered when an item is selected
 
