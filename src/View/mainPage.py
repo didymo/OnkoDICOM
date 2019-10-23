@@ -285,6 +285,7 @@ class Ui_MainWindow(object):
         # Left Column
         self.left_widget = QtWidgets.QWidget(self.mainWidget)
         self.vLayout_left = QtWidgets.QVBoxLayout(self.left_widget)
+        self.left_widget.setMaximumWidth(250)
 
         #######################################
         
