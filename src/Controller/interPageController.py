@@ -122,7 +122,8 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
         # Browse directories
         path = QtWidgets.QFileDialog.getExistingDirectory(
             None, 'Select patient folder...', '')
-        self.open_patient_window.emit(path)
+        if (path != ''):
+            self.open_patient_window.emit(path)
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -145,7 +146,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def patientHandler(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(
             None, 'Select patient folder...', '/home')
-        self.open_patient_window.emit(path)
+        if (path != ''):
+            self.open_patient_window.emit(path)
 
 #####################################################################################################################
 #                                                                                                                   #
