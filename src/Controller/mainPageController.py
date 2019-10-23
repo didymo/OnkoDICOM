@@ -34,7 +34,7 @@ matplotlib.cbook.handle_exceptions = "ignore"
 
 #####################################################################################################################
 #                                                                                                                   #
-#   The following code are global functions and data/variables used by both Clinical Data for and Display classes   #
+#   The following code are global functions and data/variables used by both Clinical Data form and Display classes  #
 #                                                                                                                   #
 #####################################################################################################################
 
