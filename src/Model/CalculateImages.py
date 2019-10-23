@@ -4,11 +4,13 @@ from src.Model.LoadPatients import *
 from src.Model.ROI import *
 
 
+# Convert the pixel data in every image dataset
 def convert_raw_data(ds):
     non_img_list = ['rtss', 'rtdose', 'rtplan']
     np_pixels = []
     for key in ds:
         if key not in non_img_list:
+            # dataset of current slice
             np_tmp = ds[key]
             np_tmp.convert_pixel_data()
             np_pixels.append(np_tmp._pixel_array)
@@ -26,6 +28,7 @@ def get_img(pixel_array):
             np_pixels = np_pixels.astype("int8")
             dict_img[i] = np_pixels
     return dict_img
+
 
 def scaled_pixmap(np_pixels, window, level):
 

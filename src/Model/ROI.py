@@ -257,98 +257,6 @@ class Test(QWidget):
         return list_polygons
 
 
-# class Widget(QWidget):
-#
-#     def __init__(self, pixmap):
-#         QWidget.__init__(self)
-#         self.pixmap = pixmap
-#         self.initUI()
-#
-#     def initUI(self):
-#         self.resize(512,512)
-#         self.setWindowTitle('DICOM')
-#         self.label = QLabel(self)
-#         self.label.setPixmap(self.pixmap)
-#         self.scene = QGraphicsScene()
-#         # Add polygon found here
-#         self.scene.addWidget(self.label)
-#         self.view = QGraphicsView()
-#         self.view.setScene(self.scene)
-
-
-
-# class Example(QWidget):
-#     def __init__(self, dict_rois_contours, roi_selected, curr_slice):
-#         super().__init__()
-#         self.dict_rois_contours = dict_rois_contours
-#         # print(self.dict_rois_contours)
-#         self.roi_selected = roi_selected
-#         self.curr_slice = curr_slice
-#         self.polygons = self.calcPolygonF(roi_selected[0])
-#         self.initUI()
-#
-#     def initUI(self):
-#         self.setGeometry(10, 10, 512, 512)
-#         self.setWindowTitle('Multi')
-#         self.show()
-#
-#     def paintEvent(self, e):
-#         qp = QPainter()
-#         qp.begin(self)
-#         qp.setBrush(QColor(122, 163, 39, 128))
-#         qp.setRenderHint(QPainter.Antialiasing)
-#         self.drawContour(qp)
-#         qp.end()
-#
-#     def calcPolygonF(self, curr_roi):
-#         list_polygons = []
-#         pixel_list = self.dict_rois_contours[curr_roi][self.curr_slice]
-#         for i in range(len(pixel_list)):
-#             list_qpoints = []
-#             contour = pixel_list[i]
-#             for point in contour:
-#                 curr_qpoint = QPoint(point[0], point[1])
-#                 list_qpoints.append(curr_qpoint)
-#             curr_polygon = QPolygonF(list_qpoints)
-#             list_polygons.append(curr_polygon)
-#         return list_polygons
-#
-#     def drawContour(self, qp):
-#         curr_roi = 'REST_COMMON_LUNG'
-#         for i in range(len(self.polygons)):
-#             painter_path = QPainterPath()
-#             painter_path.addPolygon(self.polygons[i])
-#             qp.drawPath(painter_path)
-
-#
-# def main():
-#     path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
-#     dict_ds, dict_path = get_datasets(path)
-#     rtss = dict_ds['rtss']
-#     dict_raw_ContourData = get_raw_ContourData(rtss)
-#     dict_pixluts = get_pixluts(dict_ds)
-#     roi_selected = ['REST_COMMON LUNG']
-#     curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115'
-#     # Contours of selected ROIs within current slice
-#     dict_rois_contours = get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice)
-#     xs = []
-#     ys = []
-#     for roi in roi_selected:
-#         lists = dict_rois_contours[roi][curr_slice]
-#         print(len(lists))
-#         for list in lists:
-#             print(list)
-#             for point in list:
-#                 xs.append(point[0])
-#                 ys.append(point[1])
-#     plt.scatter(xs, ys)
-#     plt.show()
-#
-#
-#     app = QApplication(sys.argv)
-#     ex1 = Example(dict_rois_contours, roi_selected, curr_slice)
-#     sys.exit(app.exec_())
-
 if __name__ == '__main__':
     path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
     dict_ds, dict_path = get_datasets(path)
@@ -367,18 +275,6 @@ if __name__ == '__main__':
     dict_rois_contours = get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice)
     pixel_time = time.time()
     print('time of pixels', pixel_time - pixluts_time)
-    # xs = []
-    # ys = []
-    # for roi in roi_selected:
-    #     lists = dict_rois_contours[roi][curr_slice]
-    #     print(len(lists))
-    #     for list in lists:
-    #         print(list)
-    #         for point in list:
-    #             xs.append(point[0])
-    #             ys.append(point[1])
-    # plt.scatter(xs, ys)
-    # plt.show()
 
     app = QApplication(sys.argv)
 
@@ -391,13 +287,6 @@ if __name__ == '__main__':
             pixmap = scaled_pixmap(np_pixels, 1500, 400)
             break
 
-
-
-
-
-    # app = QApplication(sys.argv)
-    # ex1 = Example(dict_rois_contours, roi_selected, curr_slice)
-    # app.exec_()
 
     start_time = time.time()
     w = Test(pixmap, dict_rois_contours, roi_selected, curr_slice)
