@@ -15,6 +15,49 @@ from src.Model.CalculateImages import *
 from src.Model.LoadPatients import *
 from src.Model.form_UI import *
 from src.View.ProgressBar import *
+from src.View.PyradiProgressBar import *
+
+
+#####################################################################################################################
+#                                                                                                                   #
+#   This class creates an instance of the progress bar that is used while running pyradiomics                       #
+#                                                                                                                   #
+#####################################################################################################################
+
+class PyradiProgressBar(QtWidgets.QWidget):
+    progress_complete = QtCore.pyqtSignal()
+
+    def __init__(self, path, filepaths):
+        super().__init__()
+
+        self.w = QtWidgets.QWidget()
+        self.setWindowTitle("Running Pyradiomics")
+        qtRectangle = self.w.frameGeometry()
+        centerPoint = QDesktopWidget().availableGeometry().center()
+        qtRectangle.moveCenter(centerPoint)
+        self.w.move(qtRectangle.topLeft())
+
+        self.setGeometry(300, 300, 360, 100)
+        self.label = QtWidgets.QLabel(self)
+        self.label.setGeometry(30, 15, 300, 20)
+        self.progress_bar = QtWidgets.QProgressBar(self)
+        self.progress_bar.setGeometry(30, 40, 300, 25)
+        self.progress_bar.setMaximum(100)
+        self.ext = PyradiExtended(path, filepaths)
+        self.ext.copied_percent_signal.connect(self.on_update)
+        self.ext.start()
+        
+    def on_update(self, value, text=''):
+        if value == 0:
+            self.label.setText("Generating nrrd file")
+        elif value == 25:
+            self.label.setText("Generating segmentation masks")
+        elif value in range(50, 100):
+            self.label.setText("Calculating features for " + text)
+        self.progress_bar.setValue(value)
+        if value == 100:
+            self.progress_complete.emit() 
+
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -125,6 +168,7 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
         if (path != ''):
             self.open_patient_window.emit(path)
 
+
 #####################################################################################################################
 #                                                                                                                   #
 #   This class creates an instance of the Main Window Page of OnkoDICOM                                             #
@@ -134,6 +178,7 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal(str)
+    run_pyradiomics = QtCore.pyqtSignal(str, dict)
 
     # Initialising the main window and setting up the UI
     def __init__(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
@@ -141,6 +186,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self, path, dataset, filepaths, rois, raw_dvh,
                      dvhxy, raw_contour, num_points, pixluts)
         self.actionOpen.triggered.connect(self.patientHandler)
+        self.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
 
     # Function to handle the Open patient button being clicked
     def patientHandler(self):
@@ -148,6 +194,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             None, 'Select patient folder...', '/home')
         if (path != ''):
             self.open_patient_window.emit(path)
+    
+    def pyradiomicsHandler(self):
+        self.run_pyradiomics.emit(self.path, self.filepaths)
+
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -162,6 +212,7 @@ class Controller:
         self.welcome_window = QtWidgets.QMainWindow()
         self.patient_window = QtWidgets.QMainWindow()
         self.bar_window = QtWidgets.QWidget()
+        self.pyradi_progressbar = QtWidgets.QWidget()
 
     # Display welcome page
     def show_welcome(self):
@@ -194,5 +245,14 @@ class Controller:
                                          self.bar_window.ext.dvh_x_y, self.bar_window.ext.dict_raw_ContourData,
                                          self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
         self.patient_window.open_patient_window.connect(self.show_bar)
+        self.patient_window.run_pyradiomics.connect(self.show_pyradi_progress)
         self.bar_window.close()
         self.patient_window.show()
+
+    def show_pyradi_progress(self, path, filepaths):
+        self.pyradi_progressbar = PyradiProgressBar(path, filepaths)
+        self.pyradi_progressbar.progress_complete.connect(self.close_pyradi_progress)
+        self.pyradi_progressbar.show()
+    
+    def close_pyradi_progress(self):
+        self.pyradi_progressbar.close()

@@ -730,7 +730,6 @@ class Ui_MainWindow(object):
         # Export Pyradiomics Action
         self.actionPyradiomics = QtWidgets.QAction(MainWindow)
         self.actionPyradiomics.setObjectName("actionPyradiomics")
-        self.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
 
         # Build menu bar
         self.menuFile.addAction(self.actionOpen)
@@ -1814,10 +1813,6 @@ class Ui_MainWindow(object):
                 lambda state, text=name: self.setWindowingLimits(state, text))
             self.menuWindowing.addAction(actionWindowingItem)
             actionWindowingItem.setText(_translate("MainWindow", text))
-
-    # Run pyradiomics
-    def pyradiomicsHandler(self):
-        self.callClass.runPyradiomics()
 
     def HandleAnonymization(self):
         self.callClass.runAnonymization(self)
