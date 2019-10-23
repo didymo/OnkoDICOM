@@ -149,27 +149,287 @@ class Ui_MainWindow(object):
         MainWindow.setMinimumSize(1080, 700)
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.jpg"))
         # Central Layer
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.centralwidget.setFocusPolicy(Qt.NoFocus)
+        self.mainWidget = QtWidgets.QWidget(MainWindow)
+        self.mainWidget.setObjectName("mainWidget")
+        self.mainWidget.setFocusPolicy(Qt.NoFocus)
+        self.main_vLayout = QtWidgets.QVBoxLayout(self.mainWidget)
+
+        #######################################
+        #######################################
+
+        # Patient Bar
+        self.patient_widget = QtWidgets.QWidget(self.mainWidget)
+        self.hLayout_patient = QtWidgets.QHBoxLayout(self.patient_widget)
+
+        # Patient Icon
+        self.patient_icon = QtWidgets.QLabel(self.patient_widget)
+        self.patient_icon.setGeometry(QtCore.QRect(10, 5, 30, 30))
+        self.patient_icon.setText("")
+        self.patient_icon.setPixmap(QtGui.QPixmap(":/images/Icon/patient.png"))
+        self.patient_icon.setObjectName("patient_icon")
+
+        # Name Patient (layout)
+        self.patient_name_widget = QtWidgets.QWidget(self.patient_widget)
+        self.patient_name_widget.setGeometry(QtCore.QRect(50, 5, 370, 31))
+        self.patient_name_widget.setObjectName("widget3")
+        self.hLayout_name = QtWidgets.QHBoxLayout(self.patient_name_widget)
+        self.hLayout_name.setContentsMargins(0, 0, 0, 0)
+        self.hLayout_name.setObjectName("hLayout_name")
+        self.patient_name_widget.setFocusPolicy(Qt.NoFocus)
+        # Name Patient (label)
+        self.patient_name = QtWidgets.QLabel(self.patient_name_widget)
+        self.patient_name.setObjectName("patient_name")
+        self.patient_name.setFont(QtGui.QFont(
+            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+        self.hLayout_name.addWidget(self.patient_name)
+        # Name Patient (box)
+        self.patient_name_box = QtWidgets.QLabel(self.patient_name_widget)
+        self.patient_name_box.setObjectName("patient_name_box")
+        self.patient_name_box.setAlignment(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.patient_name_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
+        self.hLayout_name.addWidget(self.patient_name_box)
+
+        # Patient ID (layout)
+        self.patient_ID_widget = QtWidgets.QWidget(self.patient_widget)
+        self.patient_ID_widget.setGeometry(QtCore.QRect(500, 5, 280, 31))
+        self.patient_ID_widget.setObjectName("widget4")
+        self.hLayout_ID = QtWidgets.QHBoxLayout(self.patient_ID_widget)
+        self.hLayout_ID.setContentsMargins(0, 0, 0, 0)
+        self.hLayout_ID.setObjectName("hLayout_ID")
+        self.patient_ID_widget.setFocusPolicy(Qt.NoFocus)
+        # Patient ID (label)
+        self.patient_ID = QtWidgets.QLabel(self.patient_ID_widget)
+        self.patient_ID.setObjectName("patient_ID")
+        self.patient_ID.setFont(QtGui.QFont(
+            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+        self.hLayout_ID.addWidget(self.patient_ID)
+        # Patient ID (box)
+        self.patient_ID_box = QtWidgets.QLabel(self.patient_ID_widget)
+        self.patient_ID_box.setObjectName("patient_ID_box")
+        self.patient_ID_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
+        self.hLayout_ID.addWidget(self.patient_ID_box)
+
+        # Gender (layout)
+        self.patient_gender_widget = QtWidgets.QWidget(self.patient_widget)
+        self.patient_gender_widget.setGeometry(QtCore.QRect(830, 5, 111, 31))
+        self.patient_gender_widget.setObjectName("widget2")
+        self.patient_gender_widget.setFocusPolicy(Qt.NoFocus)
+        self.hLayout_gender = QtWidgets.QHBoxLayout(self.patient_gender_widget)
+        self.hLayout_gender.setContentsMargins(0, 0, 0, 0)
+        self.hLayout_gender.setObjectName("hLayout_gender")
+        # Gender (label)
+        self.patient_gender = QtWidgets.QLabel(self.patient_gender_widget)
+        self.patient_gender.setObjectName("patient_gender")
+        self.patient_gender.setFont(QtGui.QFont(
+            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+        self.hLayout_gender.addWidget(self.patient_gender)
+        # Gender (box)
+        self.patient_gender_box = QtWidgets.QLabel(self.patient_gender_widget)
+        self.patient_gender_box.setObjectName("patient_gender_box")
+        self.patient_gender_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
+        self.hLayout_gender.addWidget(self.patient_gender_box)
+
+        # Date of Birth (layout)
+        self.patient_DOB_widget = QtWidgets.QWidget(self.patient_widget)
+        self.patient_DOB_widget.setGeometry(QtCore.QRect(950, 5, 95, 31))
+        self.patient_DOB_widget.setObjectName("widget1")
+        self.patient_DOB_widget.setFocusPolicy(Qt.NoFocus)
+        self.hLayout_DOB = QtWidgets.QHBoxLayout(self.patient_DOB_widget)
+        self.hLayout_DOB.setContentsMargins(0, 0, 0, 0)
+        self.hLayout_DOB.setObjectName("hLayout_DOB")
+        # Date of Birth (label)
+        self.patient_DOB = QtWidgets.QLabel(self.patient_DOB_widget)
+        self.patient_DOB.setObjectName("patient_DOB")
+        self.patient_DOB.setFont(QtGui.QFont(
+            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+        self.hLayout_DOB.addWidget(self.patient_DOB)
+        # Date of Birth (box)
+        self.patient_DOB_box = QtWidgets.QLabel(self.patient_DOB_widget)
+        self.patient_DOB_box.setObjectName("patient_DOB_box")
+        self.patient_DOB_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
+        self.hLayout_DOB.addWidget(self.patient_DOB_box)
+
+        self.hLayout_patient.addWidget(self.patient_icon)
+        self.hLayout_patient.addWidget(self.patient_name_widget)
+        self.hLayout_patient.addWidget(self.patient_ID_widget)
+        self.hLayout_patient.addWidget(self.patient_gender_widget)
+        self.hLayout_patient.addWidget(self.patient_DOB_widget)
+
+        self.main_vLayout.addWidget(self.patient_widget)
+
+        self.patient_icon.raise_()
+        self.patient_name.raise_()
+        self.patient_name_box.raise_()
+        self.patient_ID.raise_()
+        self.patient_ID_box.raise_()
+        self.patient_gender_box.raise_()
+        self.patient_DOB_box.raise_()
+        self.patient_gender.raise_()
+        self.patient_DOB.raise_()
+        self.patient_gender_box.raise_()
+        self.patient_gender.raise_()
+        self.patient_DOB_box.raise_()
+        self.patient_gender_box.raise_()
+
+
+        #######################################
+        #######################################
+
+
+        self.mainView_widget = QtWidgets.QWidget(MainWindow)
+        self.mainView_widget.setObjectName("mainView_widget")
+        self.mainView_widget.setFocusPolicy(Qt.NoFocus)
+        self.hLayout_mainView = QtWidgets.QHBoxLayout(self.mainView_widget)
 
         # Left Column
-        self.tab1 = QtWidgets.QTabWidget(self.centralwidget)
+        self.left_widget = QtWidgets.QWidget(self.mainWidget)
+        self.vLayout_left = QtWidgets.QVBoxLayout(self.left_widget)
+        self.left_widget.setMaximumWidth(250)
+
+        #######################################
+        
+        # Left Top Column: Structure and Isodoses Tabs
+        self.tab1 = QtWidgets.QTabWidget(self.left_widget)
         self.tab1.setFocusPolicy(Qt.NoFocus)
         self.tab1.setGeometry(QtCore.QRect(0, 40, 200, 361))
         self.tab1.setObjectName("tab1")
-
         # Left Column: Structures tab
         self.initStructCol()
         self.updateStructCol()
         self.tab1.addTab(self.tab1_structures, "")
-
         # Left Column: Isodoses tab
         self.initIsodColumn()
         self.tab1.addTab(self.tab1_isodoses, "")
 
+        #######################################
+
+        # Left Bottom Column: Structure Information
+        self.structInfo_widget = QtWidgets.QWidget(self.left_widget)
+        self.gridLayout_StructInfo = QtWidgets.QGridLayout(self.structInfo_widget)
+        self.gridLayout_StructInfo.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_StructInfo.setObjectName("vLayout_StructInfo")
+
+        # self.frame_struct_info = QtWidgets.QFrame(self.left_widget)
+        # self.frame_struct_info.setGeometry(QtCore.QRect(0, 400, 200, 201))
+        # self.frame_struct_info.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        # self.frame_struct_info.setFrameShadow(QtWidgets.QFrame.Raised)
+        # self.frame_struct_info.setObjectName("frame_struct_info")
+        # self.frame_struct_info.setFocusPolicy(Qt.NoFocus)
+
+        # Helene this is the new container, fix the edit later
+        # self.
+
+        # # Layout Icon and Text "Structure Information"
+        # self.structInfo_label_widget = QtWidgets.QWidget(self.structInfo_widget)
+        # self.structInfo_label_widget.setFocusPolicy(Qt.NoFocus)
+        # self.structInfo_label_widget.setGeometry(QtCore.QRect(5, 5, 160, 28))
+        # self.structInfo_label_widget.setObjectName("structInfo_label_widget")
+
+        # Structure Information: Information Icon
+        self.structInfo_icon = QtWidgets.QLabel(self.structInfo_widget)
+        self.structInfo_icon.setText("")
+        self.structInfo_icon.setPixmap(QtGui.QPixmap(":/images/Icon/info.png"))
+        self.structInfo_icon.setObjectName("structInfo_icon")
+        self.gridLayout_StructInfo.addWidget(self.structInfo_icon, 0, 0, 1, 1)
+
+        # Structure Information: Structure Information Label
+        self.structInfo_label = QtWidgets.QLabel(self.structInfo_widget)
+        self.structInfo_label.setFont(QtGui.QFont(
+            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+        self.structInfo_label.setObjectName("structInfo_label")
+        self.gridLayout_StructInfo.addWidget(self.structInfo_label, 0, 1, 1, 2)
+        
+        # Structure Information: "Select Structure" combobox
+        self.initStructInfoSelector()
+
+        # Structure Information: "Volume"
+        # self.struct_volume_widget = QtWidgets.QWidget(self.mainWidget)
+        # "Volume" label
+        self.struct_volume_label = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_volume_label.setGeometry(QtCore.QRect(10, 70, 68, 29))
+        self.struct_volume_label.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_volume_label.setObjectName("struct_volume_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_label, 2, 0, 1, 1)
+        # "Volume" box
+        self.struct_volume_box = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_volume_box.setGeometry(QtCore.QRect(95, 70, 81, 31))
+        self.struct_volume_box.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_volume_box.setObjectName("struct_volume_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_box, 2, 1, 1, 1)
+        # "Volume" unit
+        self.struct_volume_unit = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_volume_unit.setGeometry(QtCore.QRect(160, 70, 81, 31))
+        self.struct_volume_unit.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_volume_unit.setObjectName("struct_volume_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_unit, 2, 2, 1, 1)
+
+        # Structure Information: "Min Dose" label
+        self.struct_minDose_label = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_minDose_label.setGeometry(QtCore.QRect(10, 100, 68, 31))
+        self.struct_minDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_minDose_label.setObjectName("struct_minDose_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_label, 3, 0, 1, 1)
+        # Structure Information: "Min Dose" box
+        self.struct_minDose_box = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_minDose_box.setGeometry(QtCore.QRect(95, 100, 81, 31))
+        self.struct_minDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_minDose_box.setObjectName("struct_minDose_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_box, 3, 1, 1, 1)
+        # Structure Information: "Min Dose" unit
+        self.struct_minDose_unit = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_minDose_unit.setGeometry(QtCore.QRect(160, 100, 81, 31))
+        self.struct_minDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_minDose_unit.setObjectName("struct_minDose_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_unit, 3, 2, 1, 1)
+
+        # Structure Information: "Max Dose" label
+        self.struct_maxDose_label = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_maxDose_label.setGeometry(QtCore.QRect(10, 130, 68, 31))
+        self.struct_maxDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_maxDose_label.setObjectName("struct_maxDose_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_label, 4, 0, 1, 1)
+        # Structure Information: "Max Dose" box
+        self.struct_maxDose_box = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_maxDose_box.setGeometry(QtCore.QRect(95, 130, 81, 31))
+        self.struct_maxDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_maxDose_box.setObjectName("struct_maxDose_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_box, 4, 1, 1, 1)
+        # Structure Information: "Max Dose" unit
+        self.struct_maxDose_unit = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_maxDose_unit.setGeometry(QtCore.QRect(160, 130, 81, 31))
+        self.struct_maxDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_maxDose_unit.setObjectName("struct_maxDose_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_unit, 4, 2, 1, 1)
+
+        # Structure Information: "Mean Dose" label
+        self.struct_meanDose_label = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_meanDose_label.setGeometry(QtCore.QRect(10, 160, 81, 31))
+        self.struct_meanDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_meanDose_label.setObjectName("struct_meanDose_label")
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_label, 5, 0, 1, 1)
+        # Structure Information: "Mean Dose" box
+        self.struct_meanDose_box = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_meanDose_box.setGeometry(QtCore.QRect(95, 160, 81, 31))
+        self.struct_meanDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_meanDose_box.setObjectName("struct_meanDose_box")
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_box, 5, 1, 1, 1)
+        # Structure Information: "Mean Dose" unit
+        self.struct_meanDose_unit = QtWidgets.QLabel(self.structInfo_widget)
+        self.struct_meanDose_unit.setGeometry(QtCore.QRect(160, 160, 81, 31))
+        self.struct_meanDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.struct_meanDose_unit.setObjectName("struct_meanDose_unit")
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_unit, 5, 2, 1, 1)
+
+        # self.frame_struct_info.setLayout(self.vLayout_StructInfo)
+        self.vLayout_left.addWidget(self.tab1)
+        self.vLayout_left.addWidget(self.structInfo_widget)
+
+        ############################################
+        ############################################
+
         # Main view
-        self.tab2 = QtWidgets.QTabWidget(self.centralwidget)
+        self.tab2 = QtWidgets.QTabWidget(self.mainWidget)
         self.tab2.setGeometry(QtCore.QRect(200, 40, 880, 561))
         self.tab2.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.tab2.setObjectName("tab2")
@@ -243,129 +503,15 @@ class Ui_MainWindow(object):
         else:
             self.callClass.display_cd_dat(self.tab2, self.path)
         self.tab2.setFocusPolicy(Qt.NoFocus)
-        # Bottom Layer
-        self.frame_bottom = QtWidgets.QFrame(self.centralwidget)
-        self.frame_bottom.setGeometry(QtCore.QRect(0, 600, 1080, 27))
-        self.frame_bottom.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_bottom.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_bottom.setObjectName("frame_bottom")
-        self.frame_bottom.setFocusPolicy(Qt.NoFocus)
 
-        # Bottom Layer: "@Onko2019" label
-        self.label = QtWidgets.QLabel(self.frame_bottom)
-        self.label.setGeometry(QtCore.QRect(1000, 0, 91, 29))
-        self.label.setStyleSheet("font: 9pt \"Laksaman\";")
-        self.label.setObjectName("label")
-        self.label.setFocusPolicy(Qt.NoFocus)
 
-        # Left Column: Structure Information
-        self.frame_struct_info = QtWidgets.QFrame(self.centralwidget)
-        self.frame_struct_info.setGeometry(QtCore.QRect(0, 400, 200, 201))
-        self.frame_struct_info.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_struct_info.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_struct_info.setObjectName("frame_struct_info")
-        self.frame_struct_info.setFocusPolicy(Qt.NoFocus)
+        self.hLayout_mainView.addWidget(self.left_widget)
+        self.hLayout_mainView.addWidget(self.tab2)
 
-        # Structure Information: "Select Structure" combobox
-        self.initStructInfoSelector()
+        self.main_vLayout.addWidget(self.mainView_widget)
 
-        # Structure Information: "Volume" label
-        self.struct_volume_label = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_volume_label.setGeometry(QtCore.QRect(10, 70, 68, 29))
-        self.struct_volume_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_volume_label.setObjectName("struct_volume_label")
-
-        # Structure Information: "Min Dose" label
-        self.struct_minDose_label = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_minDose_label.setGeometry(QtCore.QRect(10, 100, 68, 31))
-        self.struct_minDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_minDose_label.setObjectName("struct_minDose_label")
-
-        # Structure Information: "Max Dose" label
-        self.struct_maxDose_label = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_maxDose_label.setGeometry(QtCore.QRect(10, 130, 68, 31))
-        self.struct_maxDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_maxDose_label.setObjectName("struct_maxDose_label")
-
-        # Structure Information: "Mean Dose" label
-        self.struct_meanDose_label = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_meanDose_label.setGeometry(QtCore.QRect(10, 160, 81, 31))
-        self.struct_meanDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_meanDose_label.setObjectName("struct_meanDose_label")
-
-        # Structure Information: "Volume" box
-        self.struct_volume_box = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_volume_box.setGeometry(QtCore.QRect(95, 70, 81, 31))
-        self.struct_volume_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_volume_box.setObjectName("struct_volume_box")
-
-        # Structure Information: "Min Dose" box
-        self.struct_minDose_box = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_minDose_box.setGeometry(QtCore.QRect(95, 100, 81, 31))
-        self.struct_minDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_minDose_box.setObjectName("struct_minDose_box")
-
-        # Structure Information: "Max Dose" box
-        self.struct_maxDose_box = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_maxDose_box.setGeometry(QtCore.QRect(95, 130, 81, 31))
-        self.struct_maxDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_maxDose_box.setObjectName("struct_maxDose_box")
-
-        # Structure Information: "Mean Dose" box
-        self.struct_meanDose_box = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_meanDose_box.setGeometry(QtCore.QRect(95, 160, 81, 31))
-        self.struct_meanDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_meanDose_box.setObjectName("struct_meanDose_box")
-
-        # Structure Information: "Volume" unit
-        self.struct_volume_unit = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_volume_unit.setGeometry(QtCore.QRect(160, 70, 81, 31))
-        self.struct_volume_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_volume_unit.setObjectName("struct_volume_unit")
-
-        # Structure Information: "Min Dose" unit
-        self.struct_minDose_unit = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_minDose_unit.setGeometry(QtCore.QRect(160, 100, 81, 31))
-        self.struct_minDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_minDose_unit.setObjectName("struct_minDose_unit")
-
-        # Structure Information: "Max Dose" unit
-        self.struct_maxDose_unit = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_maxDose_unit.setGeometry(QtCore.QRect(160, 130, 81, 31))
-        self.struct_maxDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_maxDose_unit.setObjectName("struct_maxDose_unit")
-
-        # Structure Information: "Mean Dose" unit
-        self.struct_meanDose_unit = QtWidgets.QLabel(self.frame_struct_info)
-        self.struct_meanDose_unit.setGeometry(QtCore.QRect(160, 160, 81, 31))
-        self.struct_meanDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_meanDose_unit.setObjectName("struct_meanDose_unit")
-
-        # Layout Icon and Text "Structure Information"
-        self.widget = QtWidgets.QWidget(self.frame_struct_info)
-        self.widget.setFocusPolicy(Qt.NoFocus)
-        self.widget.setGeometry(QtCore.QRect(5, 5, 160, 28))
-        self.widget.setObjectName("widget")
-        self.gridL_StructInfo = QtWidgets.QGridLayout(self.widget)
-        self.gridL_StructInfo.setContentsMargins(0, 0, 0, 0)
-        self.gridL_StructInfo.setObjectName("gridL_StructInfo")
-
-        # Structure Information: Information Icon
-        self.label_3 = QtWidgets.QLabel(self.widget)
-        self.label_3.setText("")
-        self.label_3.setPixmap(QtGui.QPixmap(":/images/Icon/info.png"))
-        self.label_3.setObjectName("label_3")
-        self.gridL_StructInfo.addWidget(self.label_3, 1, 0, 1, 1)
-
-        # Structure Information: Structure Information Label
-        self.struct_info_label = QtWidgets.QLabel(self.widget)
-        self.struct_info_label.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.struct_info_label.setObjectName("struct_info_label")
-        self.gridL_StructInfo.addWidget(self.struct_info_label, 1, 1, 1, 1)
-
-        self.label_3.raise_()
-        self.struct_info_label.raise_()
+        self.structInfo_icon.raise_()
+        self.structInfo_label.raise_()
         self.comboBoxStructInfo.raise_()
         self.struct_volume_label.raise_()
         self.struct_minDose_label.raise_()
@@ -379,124 +525,35 @@ class Ui_MainWindow(object):
         self.struct_minDose_unit.raise_()
         self.struct_maxDose_unit.raise_()
         self.struct_meanDose_unit.raise_()
-
-        # Patient Bar
-
-        # Patient Icon
-        self.patient_icon = QtWidgets.QLabel(self.centralwidget)
-        self.patient_icon.setGeometry(QtCore.QRect(10, 5, 30, 30))
-        self.patient_icon.setText("")
-        self.patient_icon.setPixmap(QtGui.QPixmap(":/images/Icon/patient.png"))
-        self.patient_icon.setObjectName("patient_icon")
-
-        # Name Patient (layout)
-        self.widget3 = QtWidgets.QWidget(self.centralwidget)
-        self.widget3.setGeometry(QtCore.QRect(50, 5, 370, 31))
-        self.widget3.setObjectName("widget3")
-        self.gridLayout_name = QtWidgets.QGridLayout(self.widget3)
-        self.gridLayout_name.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_name.setObjectName("gridLayout_name")
-        self.widget3.setFocusPolicy(Qt.NoFocus)
-
-        # Name Patient (label)
-        self.patient_name = QtWidgets.QLabel(self.widget3)
-        self.patient_name.setObjectName("patient_name")
-        self.patient_name.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.gridLayout_name.addWidget(self.patient_name, 0, 0, 1, 1)
-
-        # Name Patient (box)
-        self.patient_name_box = QtWidgets.QLabel(self.widget3)
-        self.patient_name_box.setObjectName("patient_name_box")
-        self.patient_name_box.setAlignment(
-            QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.patient_name_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.gridLayout_name.addWidget(self.patient_name_box, 0, 1, 1, 1)
-
-        # Patient ID (layout)
-        self.widget4 = QtWidgets.QWidget(self.centralwidget)
-        self.widget4.setGeometry(QtCore.QRect(500, 5, 280, 31))
-        self.widget4.setObjectName("widget4")
-        self.gridLayout_ID = QtWidgets.QGridLayout(self.widget4)
-        self.gridLayout_ID.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_ID.setObjectName("gridLayout_ID")
-        self.widget4.setFocusPolicy(Qt.NoFocus)
-
-        # Patient ID (label)
-        self.patient_ID = QtWidgets.QLabel(self.widget4)
-        self.patient_ID.setObjectName("patient_ID")
-        self.patient_ID.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.gridLayout_ID.addWidget(self.patient_ID, 0, 0, 1, 1)
-
-        # Patient ID (box)
-        self.patient_ID_box = QtWidgets.QLabel(self.widget4)
-        self.patient_ID_box.setObjectName("patient_ID_box")
-        self.patient_ID_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.gridLayout_ID.addWidget(self.patient_ID_box, 0, 1, 1, 1)
-
-        # Gender (layout)
-        self.widget2 = QtWidgets.QWidget(self.centralwidget)
-        self.widget2.setGeometry(QtCore.QRect(830, 5, 111, 31))
-        self.widget2.setObjectName("widget2")
-        self.widget2.setFocusPolicy(Qt.NoFocus)
-        self.gridLayout_gender = QtWidgets.QGridLayout(self.widget2)
-        self.gridLayout_gender.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_gender.setObjectName("gridLayout_gender")
-
-        # Gender (label)
-        self.patient_gender = QtWidgets.QLabel(self.widget2)
-        self.patient_gender.setObjectName("patient_gender")
-        self.patient_gender.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.gridLayout_gender.addWidget(self.patient_gender, 0, 0, 1, 1)
-
-        # Gender (box)
-        self.patient_gender_box = QtWidgets.QLabel(self.widget2)
-        self.patient_gender_box.setObjectName("patient_gender_box")
-        self.patient_gender_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.gridLayout_gender.addWidget(self.patient_gender_box, 0, 1, 1, 1)
-
-        # Date of Birth (layout)
-        self.widget1 = QtWidgets.QWidget(self.centralwidget)
-        self.widget1.setGeometry(QtCore.QRect(950, 5, 95, 31))
-        self.widget1.setObjectName("widget1")
-        self.widget1.setFocusPolicy(Qt.NoFocus)
-        self.gridLayout_DOB = QtWidgets.QGridLayout(self.widget1)
-        self.gridLayout_DOB.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_DOB.setObjectName("gridLayout_DOB")
-
-        # Date of Birth (label)
-        self.patient_DOB = QtWidgets.QLabel(self.widget1)
-        self.patient_DOB.setObjectName("patient_DOB")
-        self.patient_DOB.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.gridLayout_DOB.addWidget(self.patient_DOB, 0, 0, 1, 1)
-
-        # Date of Birth (box)
-        self.patient_DOB_box = QtWidgets.QLabel(self.widget1)
-        self.patient_DOB_box.setObjectName("patient_DOB_box")
-        self.patient_DOB_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.gridLayout_DOB.addWidget(self.patient_DOB_box, 0, 1, 1, 1)
-
-        self.patient_icon.raise_()
-        self.patient_name.raise_()
-        self.patient_name_box.raise_()
-        self.patient_ID.raise_()
-        self.patient_ID_box.raise_()
-        self.patient_gender_box.raise_()
-        self.patient_DOB_box.raise_()
-        self.patient_gender.raise_()
-        self.patient_DOB.raise_()
-        self.patient_gender_box.raise_()
-        self.patient_gender.raise_()
-        self.patient_DOB_box.raise_()
-        self.patient_gender_box.raise_()
         self.tab1.raise_()
         self.tab2.raise_()
+        self.structInfo_widget.raise_()
+
+        # Bottom Layer
+        self.bottom_widget = QtWidgets.QWidget(self.mainWidget)
+        self.frame_bottom = QtWidgets.QFrame(self.mainWidget)
+        self.frame_bottom.setGeometry(QtCore.QRect(0, 600, 1080, 27))
+        self.frame_bottom.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_bottom.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_bottom.setObjectName("frame_bottom")
+        self.frame_bottom.setFocusPolicy(Qt.NoFocus)
+        self.hLayout_bottom = QtWidgets.QHBoxLayout(self.frame_bottom)
+
+        # Bottom Layer: "@Onko2019" label
+        self.label = QtWidgets.QLabel(self.frame_bottom)
+        self.label.setGeometry(QtCore.QRect(1000, 0, 91, 29))
+        self.label.setStyleSheet("font: 9pt \"Laksaman\";")
+        self.label.setObjectName("label")
+        self.label.setFocusPolicy(Qt.NoFocus)
+        self.hLayout_bottom.addWidget(self.label)
+
+        self.main_vLayout.addWidget(self.frame_bottom)
         self.frame_bottom.raise_()
-        self.frame_struct_info.raise_()
-        MainWindow.setCentralWidget(self.centralwidget)
+
+        MainWindow.setCentralWidget(self.mainWidget)
+
+        #######################################
+        #######################################
 
         # Menu Bar
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -794,7 +851,7 @@ class Ui_MainWindow(object):
             _translate("MainWindow", "Max Dose:"))
         self.struct_meanDose_label.setText(
             _translate("MainWindow", "Mean Dose:"))
-        self.struct_info_label.setText(_translate(
+        self.structInfo_label.setText(_translate(
             "MainWindow", "Structure Information"))
 
         # # Set structure information units
@@ -1052,17 +1109,16 @@ class Ui_MainWindow(object):
         self.gridL_IsodCol.addWidget(self.color9_isod, 8, 0, 1, 1)
         self.gridL_IsodCol.addWidget(self.color10_isod, 9, 0, 1, 1)
         # Checkboxes
-        self.isodose_patient = 7000  # TODO Calculate the value from DICOM Tree
-        val_isod1 = int(1.07 * self.isodose_patient)
-        val_isod2 = int(1.05 * self.isodose_patient)
-        val_isod3 = int(1.00 * self.isodose_patient)
-        val_isod4 = int(0.95 * self.isodose_patient)
-        val_isod5 = int(0.90 * self.isodose_patient)
-        val_isod6 = int(0.80 * self.isodose_patient)
-        val_isod7 = int(0.70 * self.isodose_patient)
-        val_isod8 = int(0.60 * self.isodose_patient)
-        val_isod9 = int(0.30 * self.isodose_patient)
-        val_isod10 = int(0.10 * self.isodose_patient)
+        val_isod1 = int(1.07 * self.rxdose)
+        val_isod2 = int(1.05 * self.rxdose)
+        val_isod3 = int(1.00 * self.rxdose)
+        val_isod4 = int(0.95 * self.rxdose)
+        val_isod5 = int(0.90 * self.rxdose)
+        val_isod6 = int(0.80 * self.rxdose)
+        val_isod7 = int(0.70 * self.rxdose)
+        val_isod8 = int(0.60 * self.rxdose)
+        val_isod9 = int(0.30 * self.rxdose)
+        val_isod10 = int(0.10 * self.rxdose)
         self.box1_isod = QtWidgets.QCheckBox(
             "107 % / " + str(val_isod1) + " cGy [Max]")
         self.box2_isod = QtWidgets.QCheckBox(
@@ -1180,7 +1236,7 @@ class Ui_MainWindow(object):
     # Initialize the selector for structure information
 
     def initStructInfoSelector(self):
-        self.comboBoxStructInfo = QtWidgets.QComboBox(self.frame_struct_info)
+        self.comboBoxStructInfo = QtWidgets.QComboBox(self.structInfo_widget)
         self.comboBoxStructInfo.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
                                               "combobox-popup: 0;"
                                               "background-color: #efefef; }")
@@ -1191,6 +1247,8 @@ class Ui_MainWindow(object):
         self.comboBoxStructInfo.setGeometry(QtCore.QRect(5, 35, 188, 31))
         self.comboBoxStructInfo.setObjectName("comboBox")
         self.comboBoxStructInfo.setFocusPolicy(Qt.NoFocus)
+        self.gridLayout_StructInfo.addWidget(self.comboBoxStructInfo, 1, 0, 1, 3)
+
 
     # Function triggered when an item is selected
 
@@ -1220,59 +1278,11 @@ class Ui_MainWindow(object):
     #  DVH FUNCTIONALITY  #
     #######################
 
-    # Return the DVH plot
-
-    def DVH_view(self):
-        fig, ax = plt.subplots()
-        fig.subplots_adjust(0.1, 0.15, 1, 1)
-        max_xlim = 0
-        for roi in self.selected_rois:
-            dvh = self.raw_dvh[int(roi)]
-            if dvh.volume != 0:
-                bincenters = self.dvh_x_y[roi]['bincenters']
-                counts = self.dvh_x_y[roi]['counts']
-                colorRoi = self.roiColor[roi]
-                color_R = colorRoi['R'] / 255
-                color_G = colorRoi['G'] / 255
-                color_B = colorRoi['B'] / 255
-                plt.plot(100 * bincenters,
-                         100 * counts / dvh.volume,
-                         label=dvh.name,
-                         color=[color_R, color_G, color_B])
-                if (100 * bincenters[-1]) > max_xlim:
-                    max_xlim = 100 * bincenters[-1]
-                plt.xlabel('Dose [%s]' % 'cGy')
-                plt.ylabel('Volume [%s]' % '%')
-                if dvh.name:
-                    plt.legend(loc='lower center', bbox_to_anchor=(0, 1, 5, 5))
-
-        ax.set_ylim([0, 105])
-        ax.set_xlim([0, max_xlim + 3])
-
-        major_ticks_y = np.arange(0, 105, 20)
-        minor_ticks_y = np.arange(0, 105, 5)
-        major_ticks_x = np.arange(0, max_xlim + 250, 1000)
-        minor_ticks_x = np.arange(0, max_xlim + 250, 250)
-
-        ax.set_xticks(major_ticks_x)
-        ax.set_xticks(minor_ticks_x, minor=True)
-        ax.set_yticks(major_ticks_y)
-        ax.set_yticks(minor_ticks_y, minor=True)
-
-        ax.grid(which='minor', alpha=0.2)
-        ax.grid(which='major', alpha=0.5)
-
-        if len(self.selected_rois) != 0:
-            ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
-
-        plt.subplots_adjust(bottom=0.3)
-
-        return fig
-
     # Initialize the DVH plot and add to the DVH tab
 
     def initDVH_view(self):
-        fig = self.DVH_view()
+        dvh = DVH_plot(self)
+        fig = dvh.plot
         self.plotWidget = FigureCanvas(fig)
         self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
 
@@ -1282,7 +1292,8 @@ class Ui_MainWindow(object):
         self.gridL_DVH.removeWidget(self.plotWidget)
         self.plotWidget.deleteLater()
         self.plotWidget = None
-        fig = self.DVH_view()
+        dvh = DVH_plot(self)
+        fig = dvh.plot
         self.plotWidget = FigureCanvas(fig)
         self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
 
@@ -1676,9 +1687,10 @@ class Ui_MainWindow(object):
     def initTreeViewSelector(self):
         self.comboBoxTree = QtWidgets.QComboBox()
         self.comboBoxTree.setFocusPolicy(Qt.NoFocus)
-        self.comboBoxTree.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
+        self.comboBoxTree.setStyleSheet("QComboBox {font: 75 \"Laksaman\";"
                                         "combobox-popup: 0;"
-                                        "background-color: #efefef; }")
+                                        "background-color: #efefef; }"
+                                        )
         self.comboBoxTree.addItem("Select a DICOM dataset...")
         self.comboBoxTree.addItem("RT Dose")
         self.comboBoxTree.addItem("RTSS")
@@ -1845,6 +1857,75 @@ class Ui_MainWindow(object):
 
     def AddOnOptionsHandler(self):
         options = self.callManager.show_add_on_options()
+
+
+
+class DVH_plot(object):
+    def __init__(self, mainWindow):
+        self.window = mainWindow
+        self.selected_rois = mainWindow.selected_rois
+        self.raw_dvh = mainWindow.raw_dvh
+        self.dvh_x_y = mainWindow.dvh_x_y
+        self.roiColor = mainWindow.roiColor
+        self.plot = self.DVH_view()
+
+
+    # Return the DVH plot
+
+    def DVH_view(self):
+        fig, ax = plt.subplots()
+        fig.subplots_adjust(0.1, 0.15, 1, 1)
+        max_xlim = 0
+        for roi in self.selected_rois:
+            dvh = self.raw_dvh[int(roi)]
+            if dvh.volume != 0:
+                bincenters = self.dvh_x_y[roi]['bincenters']
+                counts = self.dvh_x_y[roi]['counts']
+                colorRoi = self.roiColor[roi]
+                color_R = colorRoi['R'] / 255
+                color_G = colorRoi['G'] / 255
+                color_B = colorRoi['B'] / 255
+                plt.plot(100 * bincenters,
+                         100 * counts / dvh.volume,
+                         label=dvh.name,
+                         color=[color_R, color_G, color_B])
+                if (100 * bincenters[-1]) > max_xlim:
+                    max_xlim = 100 * bincenters[-1]
+                plt.xlabel('Dose [%s]' % 'cGy')
+                plt.ylabel('Volume [%s]' % '%')
+                if dvh.name:
+                    plt.legend(loc='lower center', bbox_to_anchor=(0, 1, 5, 5))
+
+        ax.set_ylim([0, 105])
+        ax.set_xlim([0, max_xlim + 3])
+
+        major_ticks_y = np.arange(0, 105, 20)
+        minor_ticks_y = np.arange(0, 105, 5)
+        major_ticks_x = np.arange(0, max_xlim + 250, 1000)
+        minor_ticks_x = np.arange(0, max_xlim + 250, 250)
+
+        ax.set_xticks(major_ticks_x)
+        ax.set_xticks(minor_ticks_x, minor=True)
+        ax.set_yticks(major_ticks_y)
+        ax.set_yticks(minor_ticks_y, minor=True)
+
+        ax.grid(which='minor', alpha=0.2)
+        ax.grid(which='major', alpha=0.5)
+
+        if len(self.selected_rois) != 0:
+            ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
+
+        # fig.canvas.mpl_connect('figure_enter_event', self.enter_figure)
+
+        plt.subplots_adjust(bottom=0.3)
+
+        return fig
+
+
+    def enter_figure(self, event):
+        print('enter_figure', event.canvas.figure)
+        plt.axvline(x=1000, ymin=0, ymax=105, color='r')
+        event.canvas.draw()
 
 
 class StructureInformation(object):

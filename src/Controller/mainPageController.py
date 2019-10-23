@@ -1,3 +1,9 @@
+#####################################################################################################################
+#                                                                                                                   #
+#   This file handles all the processes within the Main page window of the software                                 #
+#                                                                                                                   #
+#####################################################################################################################
+
 import matplotlib.cbook
 from src.Model.ROI import *
 from src.Model.CalculateImages import *
@@ -16,23 +22,26 @@ import matplotlib.pyplot as plt1
 import glob
 import sys
 
+# removing warnings
 import warnings
+
 warnings.filterwarnings("ignore")
-
-
 matplotlib.cbook.handle_exceptions = "print"  # default
-
 matplotlib.cbook.handle_exceptions = "raise"
 matplotlib.cbook.handle_exceptions = "ignore"
 
-
 # matplotlib.cobook.handle_exceptions = my_logger  # will be called with exception as argument
 
-######################################################
-#               CLINICAL DATA CODE                   #
-######################################################
+#####################################################################################################################
+#                                                                                                                   #
+#   The following code are global functions and data/variables used by both Clinical Data for and Display classes   #
+#                                                                                                                   #
+#####################################################################################################################
+
+# This variable holds the errors messages of the Clinical data form
 message = ""
 
+# reading the csv files containing the available diseases
 with open('src/data/ICD10_Topography.csv', 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
@@ -46,6 +55,7 @@ with open('src/data/ICD10_Morphology.csv', 'r') as f:
     hist = list(reader)
     hist.pop(0)
 
+# Creating the arrays containing the above data and formatting them appropriately
 new_icd = []
 new_hist = []
 strg = ''
@@ -68,21 +78,26 @@ for items in hist:
     new_hist.append(strg)
     strg = ''
 
-
+# This function return the difference of two dates in decimal years
 def calculate_years(year1, year2):
     difference_years = relativedelta(year2.toPyDate(), year1.toPyDate()).years
     difference_months = relativedelta(
         year2.toPyDate(), year1.toPyDate()).months
     difference_in_days = relativedelta(year2.toPyDate(), year1.toPyDate()).days
     value = difference_years + \
-        (difference_months / 12) + (difference_in_days / 365)
+            (difference_months / 12) + (difference_in_days / 365)
     return ("%.2f" % value)
-    # return float(year2.year() - year1.year() - ((year2.month(), year2.day()) < (year1.month(), year1.day())))
 
+#####################################################################################################################
+#                                                                                                                   #
+#   This Class handles the Clinical Data Form display in both new mode and editing mode of clinical data            #
+#                                                                                                                   #
+#####################################################################################################################
 
 class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
     open_patient_window = QtCore.pyqtSignal(str)
 
+    # Initialisation function of the form's UI
     def __init__(self, tabWindow, path, ds, fn):
         QtWidgets.QWidget.__init__(self)
 
@@ -122,7 +137,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.setTabOrder(self.ui.Dt_REgional_failure, self.ui.Distant_Control)
         self.setTabOrder(self.ui.Distant_Control, self.ui.Dt_Distant_Failure)
         self.setTabOrder(self.ui.Dt_Distant_Failure, self.ui.Save_button)
-
+        # Linking different aspects of the form with each other since different options cause other options to change
         self.ui.Local_control.activated.connect(self.LocalControl_Failure)
         self.ui.Regional_Control.activated.connect(
             self.RegionalControl_Failure)
@@ -130,10 +145,68 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.ui.Tx_intent.activated.connect(self.Tx_Intent_Refused)
         self.ui.Death.activated.connect(self.PatientDead)
         self.ui.Death.activated.connect(self.show_survival)
+        # Save button to activate csv creation
         self.ui.Save_button.clicked.connect(self.on_click)
-        # self.ui.line_LN.setFocus(QtCore.Qt.TabFocusReason)
 
-    # show survival
+#####################################################################################################################
+#                                                                                                                   #
+#   The following functions retrieve the corresponding codes of the selected options                                #
+#                                                                                                                   #
+#####################################################################################################################
+
+    # get code for Surgery/Rad/Chemo/Immuno/Btrachy/Hormone
+    def getCode(self, theChoice):
+        if (theChoice == "Primary (Pri)"):
+            return "Pri"
+        elif (theChoice == "Refused (Ref)"):
+            return "Ref"
+        elif (theChoice == "Denied (Den)"):
+            return "Den"
+        elif (theChoice == "DiedB4 (Die)"):
+            return "Die"
+        elif (theChoice == "Neoadjuvant (Neo)"):
+            return "Neo"
+        elif (theChoice == "Concurrent (Con)"):
+            return "Con"
+        elif (theChoice == "Adjuvant (Adj)"):
+            return "Adj"
+        else:
+            return theChoice
+
+    # get the code for when saving the Alive option
+    def codeAlive(self, choice):
+        if choice == "Alive":
+            return 0
+        else:
+            return 1
+
+    # get code for when saving the Control option
+    def codeControl(self, choice):
+        if choice == "Control":
+            return 0
+        else:
+            return 1
+
+    # get code for when saving the Cancer Death option
+    def codeCancerDeath(self, choice):
+        if choice == "Non-cancer death":
+            return 0
+        elif choice == "Cancer death":
+            return 1
+        else:
+            return ""
+
+    # get the code for the selected desease
+    def getDeseaseCode(self, string):
+        return string[:string.index(" ")]
+
+#####################################################################################################################
+#                                                                                                                   #
+#   The following functions handle changes on the form based on selected otions of some elements                    #
+#                                                                                                                   #
+#####################################################################################################################
+
+    # This function shows the survival of a patient without cancer since last diagnosed
     def show_survival(self):
         Survival_years = str(calculate_years(
             self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
@@ -178,45 +251,6 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             self.ui.Branchy.setCurrentIndex(0)
             self.ui.Hormone.setCurrentIndex(0)
 
-    # get code for Surgery/Rad/Chemo/Immuno/Btrachy/Hormone
-    def getCode(self, theChoice):
-        if (theChoice == "Primary (Pri)"):
-            return "Pri"
-        elif (theChoice == "Refused (Ref)"):
-            return "Ref"
-        elif (theChoice == "Denied (Den)"):
-            return "Den"
-        elif (theChoice == "DiedB4 (Die)"):
-            return "Die"
-        elif (theChoice == "Neoadjuvant (Neo)"):
-            return "Neo"
-        elif (theChoice == "Concurrent (Con)"):
-            return "Con"
-        elif (theChoice == "Adjuvant (Adj)"):
-            return "Adj"
-        else:
-            return theChoice
-
-    def codeAlive(self, choice):
-        if choice == "Alive":
-            return 0
-        else:
-            return 1
-
-    def codeControl(self, choice):
-        if choice == "Control":
-            return 0
-        else:
-            return 1
-
-    def codeCancerDeath(self, choice):
-        if choice == "Non-cancer death":
-            return 0
-        elif choice == "Cancer death":
-            return 1
-        else:
-            return ""
-
     # handles the change in the date of local failure according on the option selected at the local failure combo box
     def LocalControl_Failure(self):
         local_failure = str(self.ui.Local_control.currentText())
@@ -250,8 +284,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         elif (distant_failure == "Select..."):
             self.ui.Dt_Distant_Failure.setDisabled(True)
 
-    def getDeseaseCode(self, string):
-        return string[:string.index(" ")]
+#####################################################################################################################
+#                                                                                                                   #
+# The following function function performs some form validations before saving and records them for display if any  #
+#                                                                                                                   #
+#####################################################################################################################
 
     # validating the data in the form
     def form_Validation(self):
@@ -311,16 +348,24 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         if (self.ui.Dt_Distant_Failure.date() > QDate.currentDate()):
             message = message + "Patient's date of distant failure cannot be in the future. \n"
 
+#####################################################################################################################
+#                                                                                                                   #
+#   The following function performs the saving of the clinical data csv in the directory                            #
+#                                                                                                                   #
+#####################################################################################################################
     # here handles the event of the button save being pressed
     def save_ClinicalData(self):
         global message
+        # performs validation
         self.form_Validation()
         if (len(message.strip()) == 0):
-            # write csv file...
+            # check if the CSV directory exists and if not create it
             if not os.path.isdir(os.path.join(str(self.path), 'CSV')):
                 os.mkdir(os.path.join(str(self.path), 'CSV'))
-            new_file = os.path.join(str(self.path), 'CSV/ClinicalData_' + self.pID +'.csv')
+            new_file = os.path.join(str(self.path), 'CSV/ClinicalData_' + self.pID + '.csv')
+            # open the file to save the clinical data in
             f = open(new_file, 'w')
+            # The headers of the file
             columnNames = ['PatientID', 'Gender', 'Country_of_Birth',
                            'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10', 'T_Stage',
                            'N_Stage', 'M_Stage', 'OverallStage', 'Tx_Intent', 'Surgery', 'Rad', 'Chemo',
@@ -328,11 +373,14 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                            'Survival_Duration', 'LocalControl', 'DateOfLocalFailure', 'LC_Duration',
                            'RegionalControl', 'DateOfRegionalFailure', 'RC_Duration', 'DistantControl',
                            'DateOfDistantFailure', 'DC_Duration']
+
+            # get the cancer death option and if alive leave empty
             CancerDeath = ''
             status = self.ui.Death.currentText()
             if status == "Dead":
                 CancerDeath = str(self.ui.Cancer_death.currentText())
 
+            # get the age of the patient
             ageAtDiagnosis = round(float(calculate_years(
                 self.ui.date_of_birth.date(), self.ui.dateEdit_2.date())))
 
@@ -358,7 +406,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                     self.ui.dateEdit_2.date(), self.ui.Dt_REgional_failure.date()))
                 Rc_date = self.ui.Dt_REgional_failure.date().toString("dd/MM/yyyy")
 
-            # get the sistant failure duration
+            # get the distant failure duration
             distant_failure = str(self.ui.Distant_Control.currentText())
             if (distant_failure == "Control"):
                 Dc_Duration = str(calculate_years(
@@ -369,9 +417,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                     self.ui.dateEdit_2.date(), self.ui.Dt_Distant_Failure.date()))
                 Dc_date = self.ui.Dt_Distant_Failure.date().toString("dd/MM/yyyy")
 
+            # get the survival duration
             Survival_years = str(calculate_years(
                 self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
 
+            # the data array to be entered in the file
             dataRow = [self.pID, self.ui.gender.currentText(), self.ui.line_BP.text(),
                        ageAtDiagnosis, self.ui.dateEdit_2.date().year(),
                        self.getDeseaseCode(self.ui.line_histology.text(
@@ -382,38 +432,42 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                        self.ui.Tx_intent.currentText(), self.getCode(self.ui.Surgery.currentText()),
                        self.getCode(self.ui.Rad.currentText()),
                        self.getCode(self.ui.Chemo.currentText()), self.getCode(
-                           self.ui.Immuno.currentText()),
+                    self.ui.Immuno.currentText()),
                        self.getCode(self.ui.Branchy.currentText()),
                        self.getCode(self.ui.Hormone.currentText()), self.codeAlive(
-                           self.ui.Death.currentText()),
+                    self.ui.Death.currentText()),
                        self.codeCancerDeath(CancerDeath), Survival_years,
                        self.codeControl(self.ui.Local_control.currentText()),
                        Lc_date,
                        Lc_duration, self.codeControl(
-                           self.ui.Regional_Control.currentText()),
+                    self.ui.Regional_Control.currentText()),
                        Rc_date, Rc_Duration,
                        self.codeControl(
                            self.ui.Distant_Control.currentText()), Dc_date,
                        Dc_Duration]
 
+            # Insert the header array and data array into the file
             with f:
                 writer = csv.writer(f)
                 writer.writerow(columnNames)
                 writer.writerow(dataRow)
 
-            # save the dates in binary file with patient ID/MDHash5
+            # save the dates in binary file with patient ID, for future editing
             fileName = Path('src/data/records.pkl')
             df = pd.DataFrame(columns=['PID', 'DOB', 'DOD', 'DOLE'])
             dt = [self.pID, self.ui.date_of_birth.date().toString("dd/MM/yyyy"),
                   self.ui.dateEdit_2.date().toString("dd/MM/yyyy"),
                   self.ui.Dt_Last_Existence.date().toString("dd/MM/yyyy")]
             df.loc[0] = dt
+            #check if the file is already created
             if fileName.exists():
 
+                # Check to see if this patient has had a record saved in this file before
                 new_df = pd.read_pickle('src/data/records.pkl')
                 check = False
                 for i in new_df.index:
                     if new_df.at[i, 'PID'] == self.pID:
+                        # get the new records
                         new_df.at[i, 'DOB'] = self.ui.date_of_birth.date().toString(
                             "dd/MM/yyyy")
                         new_df.at[i, 'DOD'] = self.ui.dateEdit_2.date().toString(
@@ -423,31 +477,43 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                         check = True
 
                 if check:
+                    #save under the same PID
                     new_df.append(df, ignore_index=True)
                     new_df.to_pickle('src/data/records.pkl')
             else:
+                #save new row of credentials
                 open('src/data/records.pkl', 'w+')
                 df.to_pickle('src/data/records.pkl')
-
+            # display the successful saving message pop up
             SaveReply = QMessageBox.information(self, "Message",
                                                 "The Clinical Data was saved successfully in your directory!",
                                                 QMessageBox.Ok)
             if SaveReply == QMessageBox.Ok:
+                # when they press okay on the pop up, display the clinical data entries
                 self.display_cd_dat()
 
         else:
+            # the form did not pass the validation so display the corresponding errors to be fixed, no csv created
             buttonReply = QMessageBox.warning(self, "Error Message",
                                               "The following issues need to be addressed: \n" + message, QMessageBox.Ok)
             if buttonReply == QMessageBox.Ok:
                 message = ""
                 pass
 
+    # After saving the clinical data is displayed
     def display_cd_dat(self):
         self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path, self.dataset, self.filenames)
         self.tabWindow.removeTab(3)
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
         self.tabWindow.setCurrentIndex(3)
 
+#####################################################################################################################
+#                                                                                                                   #
+#   The following functions are used when the form is in editing mode of the clinical data                          #
+#                                                                                                                   #
+#####################################################################################################################
+
+    #reads the information from the csv
     def load_Data(self, filename):
         with open(filename, 'rt')as f:
             data = csv.reader(f)
@@ -458,8 +524,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 li.append(i)
             return li
 
-        # get code for Surgery/Rad/Chemo/Immuno/Btrachy/Hormone
-
+    # get code for Surgery/Rad/Chemo/Immuno/Btrachy/Hormone
     def getCodeReverse(self, theChoice):
         if (theChoice == "Pri"):
             return "Primary (Pri)"
@@ -478,6 +543,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         else:
             return theChoice
 
+    #get the desease name based on the code in the csv
     def completerFill(self, type, code):
         if type == 0:  # hist
             result = [i for i in new_hist if i.startswith(code)]
@@ -486,11 +552,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             result = [i for i in new_icd if i.startswith(code)]
             return result[0]
 
+    #This function alters the form UI and enters the corresponding data in the specific fields
     def editing_mode(self):
         reg = '/CSV/ClinicalData*[.csv]'
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
-
         self.ui.label_4.setText(
             "You are editing the last known Clinical Data for this patient.")
         self.ui.line_FN.setVisible(False)
@@ -572,6 +638,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 self.ui.Dt_Last_Existence.setDate(
                     QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
 
+    #the following function anable the Enter keyboard button to act as an activator of the button save
     def on_click(self):
         self.save_ClinicalData()
 
@@ -579,10 +646,16 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         if event.key() == QtCore.Qt.Key_Return:
             self.on_click()
 
+#####################################################################################################################
+#                                                                                                                   #
+#   This Class handles the Clinical Data display of information from a csv file                                     #
+#                                                                                                                   #
+#####################################################################################################################
 
 class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
     open_patient_window = QtCore.pyqtSignal(str)
 
+    # Initialisation function of the display of the clinical data of the patient
     def __init__(self, tabWindow, path, ds, fn):
         QtWidgets.QWidget.__init__(self)
 
@@ -595,12 +668,19 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.load_cd()
         self.ui.Edit_button.clicked.connect(self.on_click)
 
+    # the following function anable the Enter keyboard button to act as an activator of the button edit
     def on_click(self):
         self.edit_mode()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return:
             self.on_click()
+
+#####################################################################################################################
+#                                                                                                                   #
+# This function will load the data from the csv into the software and make it uneditable as it is only for display  #
+#                                                                                                                   #
+#####################################################################################################################
 
     def load_cd(self):
         reg = '/CSV/ClinicalData*[.csv]'
@@ -686,6 +766,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.ui.DC_duration.setText(clinical_data[29])
         self.ui.DC_duration.setDisabled(True)
 
+    # this function get the data from the csv into a list
     def load_Data(self, filename):
         with open(filename, 'rt')as f:
             data = csv.reader(f)
@@ -696,6 +777,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 li.append(i)
             return li
 
+    # this function converts the code into a full name desease
     def completerFill(self, type, code):
         if type == 0:  # hist
             result = [i for i in new_hist if i.startswith(code)]
@@ -723,6 +805,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         else:
             return theChoice
 
+    #call edit mode when the edit button is pressed
     def edit_mode(self):
         self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
         self.tab_cd.editing_mode()
@@ -731,14 +814,19 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.tabWindow.setCurrentIndex(3)
 
 
-######################################################
-#             TRANSECT CLASS CODE                    #
-######################################################
+#####################################################################################################################
+#                                                                                                                   #
+#  This Class handles the Transect functionality                                                                    #
+#                                                                                                                   #
+#####################################################################################################################
 
 class Transect(QtWidgets.QGraphicsScene):
+
+    # Initialisation function  of the class
     def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
         super(Transect, self).__init__()
 
+        #create the canvas to draw the line on and all its necessary components
         self.addItem(QGraphicsPixmapItem(imagetoPaint))
         self.img = imagetoPaint
         self.values = []
@@ -754,7 +842,9 @@ class Transect(QtWidgets.QGraphicsScene):
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
 
+    # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
+        # If is the first time we can draw as we want a line per button press
         if self.drawing == True:
             self.pos1 = event.scenePos()
             self._current_rect_item = QtWidgets.QGraphicsLineItem()
@@ -765,28 +855,24 @@ class Transect(QtWidgets.QGraphicsScene):
             self._start = event.scenePos()
             r = QtCore.QLineF(self._start, self._start)
             self._current_rect_item.setLine(r)
-        # super(Transect, self).mousePressEvent(event)
 
+    # This function tracks the mouse and draws the line from the original press point
     def mouseMoveEvent(self, event):
         if self._current_rect_item is not None and self.drawing == True:
-            r = QtCore.QLineF(self._start, event.scenePos())  # .normalized()
+            r = QtCore.QLineF(self._start, event.scenePos())
             self._current_rect_item.setLine(r)
-        # super(Transect, self).mouseMoveEvent(event)
 
+    # This function terminates the line drawing and initiates the plot
     def mouseReleaseEvent(self, event):
         if self.drawing == True:
-            # print("pos1:", self.pos1.x(), self.pos1.y())
             self.pos2 = event.scenePos()
-            # print("pos2:", self.pos2.x(), self.pos2.y())
             self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
                          round(self.pos2.x()), round(self.pos2.y()))
-            # print(self.calculateDistance(round(self.pos1.x()), round(self.pos1.y()), round(self.pos2.x()), round(self.pos2.y())))
-
             self.drawing = False
             self.plotResult()
             self._current_rect_item = None
-        # super(Transect, self).mouseReleaseEvent(event)
 
+    # This function performs the DDA algorithm that locates all the points in the drawn line
     def drawDDA(self, x1, y1, x2, y2):
         x, y = x1, y1
         length = abs(x2 - x1) if abs(x2 - x1) > abs(y2 - y1) else abs(y2 - y1)
@@ -798,37 +884,41 @@ class Transect(QtWidgets.QGraphicsScene):
             x += dx
             y += dy
             self.points.append((round(x), round(y)))
-        # print(self.points)
+
+        # get the values of these points from the dataset
         self.getValues()
+        # get their distances for the plot
         self.getDistances()
 
+    # This function calculates the distance between two points
     def calculateDistance(self, x1, y1, x2, y2):
         dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
         return dist
 
+    # This function gets the corresponding values of all the points in the drawn line from the dataset
     def getValues(self):
         for i, j in self.points:
             if i in range(512) and j in range(512):
                 self.values.append(self.data[i][j])
 
-        # print(self.values)
-
+    # Get the distance of each point from the end of the line
     def getDistances(self):
         for i, j in self.points:
             if i in range(512) and j in range(512):
                 self.distances.append(self.calculateDistance(
                     i, j, round(self.pos2.x()), round(self.pos2.y())))
         self.distances.reverse()
-        # print(self.distances)
 
+    # This function handles the closing event of the transect graph
     def on_close(self, event):
-
         plt1.close()
+        #returns the main page back to a non-drawing environment
         self.mainWindow.DICOM_image_display()
         self.mainWindow.updateText_View()
         self.tabWindow.setScene(self.mainWindow.DICOM_image_scene)
         event.canvas.figure.axes[0].has_been_closed = True
 
+    # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
         newList = [(x * self.pixSpacing) for x in self.distances]
@@ -847,32 +937,41 @@ class Transect(QtWidgets.QGraphicsScene):
         plt1.show()
 
 
-######################################################
-#              MAIN PAGE CONTROLLER                  #
-######################################################
+#####################################################################################################################
+#                                                                                                                   #
+#  This is the main page Controller class that handles all the activity in the main page                            #
+#                                                                                                                   #
+#####################################################################################################################
+
 class MainPage:
 
-    def __init__(self, path, datasets, filepaths,raw_dvh):
+    # Initialisation function of the controller
+    def __init__(self, path, datasets, filepaths, raw_dvh):
         self.path = path
         self.dataset = datasets
-        self.filepaths = filepaths 
+        self.filepaths = filepaths
         self.raw_dvh = raw_dvh
 
+    # This function runs pyradiomics on button click
     def runPyradiomics(self):
         pyradiomics(self.path, self.filepaths)
 
+    #This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
         anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
 
+    # This function displays the clinical data form
     def display_cd_form(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataForm(
             tabWindow, file_path, self.dataset, self.filepaths)
         tabWindow.addTab(self.tab_cd, "")
 
+    # This function displays the clinical data entries in view mode
     def display_cd_dat(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataDisplay(tabWindow, file_path, self.dataset, self.filepaths)
         tabWindow.addTab(self.tab_cd, "")
 
+    # This function runs Transect on button click
     def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
                                dataset, rowS, colS, tabWindow)

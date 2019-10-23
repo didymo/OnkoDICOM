@@ -567,6 +567,7 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
     #     if (key != 'rtplan' and key != 'rtss' and key != 'rtdose'):
     #         print("Values are:  ",Datasets[key])
 
+    Original_P_ID = new_dict_dataset[1].PatientID
 
     Full_Patient_Path_New_folder = anon_call(path, new_dict_dataset, all_filepaths)
     print("\n\nThe New patient folder path is : ", Full_Patient_Path_New_folder)
@@ -603,16 +604,33 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
 
     #Calling dvh2csv() function after Anonymization is complete.
     print("CAlling DVH_csv export function")
-    dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
-    print("DVH_csv export function finished")     
+    # dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
+    print("DVH_csv export function finished\n\n")     
 
     #Calling Pyradiomics after Anonymization is complete.
     print("=====Calling Pyradiomics function====")
-    pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
-    print("Pyradiomics function finished")
+    # pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
+    print("Pyradiomics function finished\n\n")
 
     
+    print("=======Calling Clinical data Export ==========")
+    Clinical_data_file_name = "ClinicalData_" + Original_P_ID + ".csv"
+    print("Clinical data file name to check: ",Clinical_data_file_name )
+    Clinical_data_csv_Full_file_path = path + "/" + "CSV" + "/" + Clinical_data_file_name
+    print("The full path of clinical Data file to check:",Clinical_data_csv_Full_file_path)
+
+    clinical_data_CSV_origianl_path = path + "/" + "CSV"
+
+    Clinical_data_hash_file_name = "ClinicalData_" + P_HashID + ".csv"
+    Clinical_data_hash_csv_Full_file = Full_Csv_Folder_Path + "/" + Clinical_data_hash_file_name
     
+    if ( "CSV" in os.listdir(path)):
+        print("The CSV folder Exist")
+        if (Clinical_data_file_name in os.listdir(clinical_data_CSV_origianl_path)):
+            print("Need to hash the Clinical data file")
+        else:
+            print("The Clinical data file not yet exported")
+    else:
+        print("The clinical data directory not Exist")
 
-
-
+    print("Clinical data function finished")
