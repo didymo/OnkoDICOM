@@ -48,13 +48,28 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.ext.start()
         
     def on_update(self, value, text=''):
+        """ 
+        Update percentage and text of progress bar. 
+        
+        :param value:   Percentage value to be displayed
+        
+        :param text:    To display what ROI currently being processed
+        """ 
+
+        # When generating the nrrd file, the percentage starts at 0
+        # and reaches 25
         if value == 0:
             self.label.setText("Generating nrrd file")
+        # The segmentation masks are generated between the range 25 and 50 
         elif value == 25:
             self.label.setText("Generating segmentation masks")
+        # Above 50, pyradiomics analysis is carried out over each segmentation mask
         elif value in range(50, 100):
             self.label.setText("Calculating features for " + text)
+        # Set the percentage value
         self.progress_bar.setValue(value)
+        
+        # When the percentage reaches 100, send a signal to close progress bar
         if value == 100:
             self.progress_complete.emit() 
 
@@ -103,8 +118,10 @@ class ProgressBar(QtWidgets.QWidget):
         #start the loading of the patient
         self.ext.start()
 
-    # this function is responsible for updating the bar % and the label
     def on_count_change(self, value):
+        """
+        Function responsible for updating the bar percentage and the label
+        """
         if value in range(0, 30):
             self.label.setText("Importing patient data...")
         elif value in range(30, 70):
@@ -117,8 +134,10 @@ class ProgressBar(QtWidgets.QWidget):
         if value == 100:
             self.open_patient_window.emit(self.path)
 
-    # If selected directory does not contain DICOM files
     def on_incorrect_directory(self):
+        """
+        Displays an error if no valid DICOM files found
+        """
         # Open welcome window
         self.open_welcome_window.emit()
 
@@ -132,6 +151,9 @@ class ProgressBar(QtWidgets.QWidget):
 
     # If RTSS and RTDose files missing
     def on_missing_files(self, error):
+        """
+        Displays an error when the RT-Struct and RT-Dose files are missing from the patient directory
+        """
         # Open welcome window
         self.open_welcome_window.emit()
 
@@ -160,8 +182,10 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
         self.setupUi(self)
         self.pushButton.clicked.connect(self.patientHandler)
 
-    # Function to handle the Open patient button being clicked
     def patientHandler(self):
+        """
+        Function to handle the Open patient button being clicked
+        """
         # Browse directories
         path = QtWidgets.QFileDialog.getExistingDirectory(
             None, 'Select patient folder...', '')
@@ -178,6 +202,7 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal(str)
+    # When the pyradiomics button is pressed
     run_pyradiomics = QtCore.pyqtSignal(str, dict)
 
     # Initialising the main window and setting up the UI
@@ -188,14 +213,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionOpen.triggered.connect(self.patientHandler)
         self.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
 
-    # Function to handle the Open patient button being clicked
     def patientHandler(self):
+        """
+        Function to handle the Open patient button being clicked
+        """
         path = QtWidgets.QFileDialog.getExistingDirectory(
             None, 'Select patient folder...', '/home')
         if (path != ''):
             self.open_patient_window.emit(path)
     
     def pyradiomicsHandler(self):
+        """
+        Sends signal to initiate pyradiomics analysis
+        """
         self.run_pyradiomics.emit(self.path, self.filepaths)
 
 
@@ -214,8 +244,10 @@ class Controller:
         self.bar_window = QtWidgets.QWidget()
         self.pyradi_progressbar = QtWidgets.QWidget()
 
-    # Display welcome page
     def show_welcome(self):
+        """
+        Display welcome page
+        """
         # If an error was displayed, close existing progress bar window
         if self.bar_window.isVisible():
             self.bar_window.close()
@@ -224,8 +256,10 @@ class Controller:
         self.welcome_window.open_patient_window.connect(self.show_bar)
         self.welcome_window.show()
 
-    # Display progress bar
     def show_bar(self, path):
+        """
+        Display progress bar
+        """
         # Close all other open windows
         if self.welcome_window.isVisible():
             self.welcome_window.close()
@@ -237,8 +271,10 @@ class Controller:
         self.bar_window.open_welcome_window.connect(self.show_welcome)
         self.bar_window.show()
 
-    # Display patient data
     def show_patient(self, path):
+        """
+        Display patient data
+        """
         #Loads the main window  by providing the necessary data obtained by the progress bar
         self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict,
                                          self.bar_window.ext.rois, self.bar_window.ext.raw_dvh,
@@ -250,9 +286,15 @@ class Controller:
         self.patient_window.show()
 
     def show_pyradi_progress(self, path, filepaths):
+        """
+        Display pyradiomics progress bar
+        """
         self.pyradi_progressbar = PyradiProgressBar(path, filepaths)
         self.pyradi_progressbar.progress_complete.connect(self.close_pyradi_progress)
         self.pyradi_progressbar.show()
     
     def close_pyradi_progress(self):
+        """
+        Close pyradiomics progress bar
+        """
         self.pyradi_progressbar.close()

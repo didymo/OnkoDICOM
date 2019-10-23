@@ -11,7 +11,13 @@ from src.Model.LoadPatients import get_datasets
 
 
 def convert_to_nrrd(path, nrrd_file_path):
-    # Convert dicom files to nrrd
+    """ 
+    Convert dicom files to nrrd.
+    
+    :param path:            Path to patient directory (str)
+    
+    :param nrrd_file_path:  Path to nrrd folder (str)
+    """
     cmd_for_nrrd = 'plastimatch convert --input ' + path + \
         ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
     cmd_del_nul = 'rm ' + path + '/NUL'
@@ -25,7 +31,15 @@ def convert_to_nrrd(path, nrrd_file_path):
 
 
 def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
-    # Convert rtstruct to nrrd
+    """ 
+    Convert rtstruct to nrrd
+
+    :param path:                Path to patient directory (str)
+    
+    :param rtss_path:           Path to RT-Struct file (str)
+
+    :param mask_folder_path:    Folder to which the segmentation masks will be saved(str)
+    """
     # Each ROI is saved in separate nrrd files
     cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + ' --output-prefix ' + \
         mask_folder_path + ' --prefix-format nrrd --referenced-ct ' + \
@@ -49,20 +63,26 @@ def get_radiomics_df(path, patient_hash, nrrd_file_path, mask_folder_path):
 
     print("Calculating features")
 
-    all_features = []  # Contains the features for all the ROI
-    radiomics_headers = []  # CSV headers
+    # Contains the features for all the ROI
+    all_features = []  
+    # CSV headers
+    radiomics_headers = []  
     feature_vector = ''
 
     for file in os.listdir(mask_folder_path):
-        roi_features = []  # Contains features for current ROI
+        # Contains features for current ROI
+        roi_features = []  
         roi_features.append(patient_hash)
         roi_features.append(path)
-        mask_name = mask_folder_path + '/' + file  # Full path of ROI nrrd file
-        image_id = file.split('.')[0]  # Name of ROI
+        # Full path of ROI nrrd file
+        mask_name = mask_folder_path + '/' + file  
+        # Name of ROI
+        image_id = file.split('.')[0]  
         feature_vector = extractor.execute(nrrd_file_path, mask_name)
         roi_features.append(image_id)
 
-        for feature_name in feature_vector.keys():  # Add first order features to list
+        # Add first order features to list
+        for feature_name in feature_vector.keys():  
             roi_features.append(feature_vector[feature_name])
 
         all_features.append(roi_features)
@@ -84,8 +104,10 @@ def get_radiomics_df(path, patient_hash, nrrd_file_path, mask_folder_path):
 
 
 def convert_df_to_csv(radiomics_df, patient_hash, csv_path):
-    if not os.path.exists(csv_path):  # If folder does not exist
-        os.makedirs(csv_path)  # Create folder
+    # If folder does not exist
+    if not os.path.exists(csv_path):  
+        # Create folder
+        os.makedirs(csv_path)  
 
     # Export dataframe as csv
     radiomics_df.to_csv(csv_path + 'Pyradiomics_' +
@@ -93,37 +115,45 @@ def convert_df_to_csv(radiomics_df, patient_hash, csv_path):
 
 
 def pyradiomics(path, filepaths, target_path=None):
-    """Generate pyradiomics spreadsheet."""
+    """
+    Generate pyradiomics spreadsheet
+    """
 
     ct_file = dcmread(filepaths[0], force=True)
     rtss_path = filepaths['rtss']
 
     if target_path is None:
         patient_hash = os.path.basename(ct_file.PatientID)
-        nrrd_file_name = patient_hash + '.nrrd'  # Name of nrrd file
+        # Name of nrrd file
+        nrrd_file_name = patient_hash + '.nrrd'  
         # Location of folder where nrrd file saved
         nrrd_folder_path = path + '/nrrd/'
         # Location of folder where pyradiomics output saved
         csv_path = path + '/CSV/'
     else:
         patient_hash = os.path.basename(target_path)
-        nrrd_file_name = patient_hash + '.nrrd'  # Name of nrrd file
+        # Name of nrrd file
+        nrrd_file_name = patient_hash + '.nrrd'  
         # Location of folder where nrrd file saved
         nrrd_folder_path = target_path + '/nrrd/'
         # Location of folder where pyradiomics output saved
         csv_path = target_path + '/CSV/'
 
+    # Complete path of converted file
     nrrd_file_path = nrrd_folder_path + \
-        nrrd_file_name  # Complete path of converted file
+        nrrd_file_name  
 
-    if not os.path.exists(nrrd_folder_path):  # If folder does not exist
-        os.makedirs(nrrd_folder_path)  # Create folder
+    # If folder does not exist
+    if not os.path.exists(nrrd_folder_path):  
+        # Create folder
+        os.makedirs(nrrd_folder_path)  
 
     convert_to_nrrd(path, nrrd_file_path)
     print('DICOM to nrrd completed')
 
+    # Location of folder where converted masks saved
     mask_folder_path = nrrd_folder_path + \
-        'structures'  # Location of folder where converted masks saved
+        'structures'  
     convert_rois_to_nrrd(path, rtss_path, mask_folder_path)
     print('Segmentation masks converted')
 
