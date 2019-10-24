@@ -300,7 +300,7 @@ class Ui_MainWindow(object):
         self.left_widget = QtWidgets.QWidget(self.mainWidget)
         self.vLayout_left = QtWidgets.QVBoxLayout(self.left_widget)
         self.vLayout_left.setContentsMargins(0, 0, 0, 0)
-        self.left_widget.setMaximumWidth(250)
+        self.left_widget.setMaximumWidth(230)
 
         #######################################
         
@@ -459,12 +459,9 @@ class Ui_MainWindow(object):
         self.tab2_DVH.setObjectName("tab2_DVH")
         self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
         # DVH layout
-        self.widget_DVH = QtWidgets.QWidget(self.tab2_DVH)
-        self.widget_DVH.setGeometry(QtCore.QRect(0, 0, 877, 520))
-        self.widget_DVH.setObjectName("widget_DVH")
-        self.gridL_DVH = QtWidgets.QGridLayout(self.widget_DVH)
+        self.gridL_DVH = QtWidgets.QGridLayout(self.tab2_DVH)
         self.gridL_DVH.setObjectName("gridL_DVH")
-        self.widget_DVH.setFocusPolicy(Qt.NoFocus)
+        self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
 
         # DVH Processing
         self.initDVH_view()
@@ -992,25 +989,28 @@ class Ui_MainWindow(object):
         self.tab1_structures = QtWidgets.QWidget()
         self.tab1_structures.setObjectName("tab1_structures")
         self.tab1_structures.setFocusPolicy(Qt.NoFocus)
+
         self.structColumnWidget = QtWidgets.QWidget(self.tab1_structures)
         self.scrollAreaStruct = QtWidgets.QScrollArea(self.structColumnWidget)
-        self.scrollAreaStruct.setGeometry(QtCore.QRect(0, 0, 198, 320))
+        self.hLayout_structures = QtWidgets.QHBoxLayout(self.structColumnWidget)
+        self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
+
+        # self.scrollAreaStruct.setGeometry(QtCore.QRect(0, 0, 198, 320))
         self.scrollAreaStruct.setWidgetResizable(True)
         self.scrollAreaStruct.setFocusPolicy(Qt.NoFocus)
         # Scroll Area Content
-        self.scrollAreaStructContents = QtWidgets.QWidget(
-            self.scrollAreaStruct)
-        self.scrollAreaStructContents.setGeometry(QtCore.QRect(0, 0, 198, 550))
-        self.scrollAreaStruct.ensureWidgetVisible(
-            self.scrollAreaStructContents)
+        self.scrollAreaStructContents = QtWidgets.QWidget(self.scrollAreaStruct)
+        # self.scrollAreaStructContents.setGeometry(QtCore.QRect(0, 0, 198, 550))
+        self.scrollAreaStruct.ensureWidgetVisible(self.scrollAreaStructContents)
         self.scrollAreaStructContents.setFocusPolicy(Qt.NoFocus)
         # Grid Layout containing the color squares and the checkboxes
-        self.gridL_StructColumn = QtWidgets.QGridLayout(
-            self.scrollAreaStructContents)
+        self.gridL_StructColumn = QtWidgets.QGridLayout(self.scrollAreaStructContents)
         self.gridL_StructColumn.setContentsMargins(5, 5, 5, 5)
         self.gridL_StructColumn.setVerticalSpacing(0)
         self.gridL_StructColumn.setHorizontalSpacing(10)
         self.gridL_StructColumn.setObjectName("gridL_StructColumn")
+
+        self.hLayout_structures.addWidget(self.scrollAreaStruct)
 
     # Add the contents in the list of structures (left column of the main page)
     def updateStructCol(self):
@@ -1386,16 +1386,10 @@ class Ui_MainWindow(object):
         # # Position of the texts on DICOM View
         self.text_imageID.setAlignment(QtCore.Qt.AlignTop)
         self.text_imagePos.setAlignment(QtCore.Qt.AlignTop)
-        self.text_WL.setAlignment(QtCore.Qt.AlignHCenter)
+        self.text_WL.setAlignment(QtCore.Qt.AlignRight)
         self.text_imageSize.setAlignment(QtCore.Qt.AlignBottom)
         self.text_zoom.setAlignment(QtCore.Qt.AlignBottom)
-        self.text_patientPos.setAlignment(QtCore.Qt.AlignLeft)
-        # self.text_imageID.setGeometry(QtCore.QRect(30, 20, 300, 29))
-        # self.text_imagePos.setGeometry(QtCore.QRect(30, 40, 300, 29))
-        # self.text_WL.setGeometry(QtCore.QRect(720, 20, 200, 29))
-        # self.text_imageSize.setGeometry(QtCore.QRect(30, 450, 300, 29))
-        # self.text_zoom.setGeometry(QtCore.QRect(30, 470, 300, 29))
-        # self.text_patientPos.setGeometry(QtCore.QRect(680, 470, 500, 29))
+        self.text_patientPos.setAlignment(QtCore.Qt.AlignRight)
         # Set all the texts in white
         self.text_imageID.setStyleSheet("QLabel { color : white; }")
         self.text_imagePos.setStyleSheet("QLabel { color : white; }")
@@ -1410,18 +1404,22 @@ class Ui_MainWindow(object):
         self.DICOM_vspacer = QtWidgets.QSpacerItem(100, 10,
                                                    hPolicy=QtWidgets.QSizePolicy.Expanding,
                                                    vPolicy=QtWidgets.QSizePolicy.Expanding)
-        # self.DICOM_hspacer.setFocusPolicy(Qt.NoFocus)
+        self.DICOM_spacer_scrollbar = QtWidgets.QSpacerItem(13, 15,
+                                                   hPolicy=QtWidgets.QSizePolicy.Fixed,
+                                                   vPolicy=QtWidgets.QSizePolicy.Fixed)
 
         # Add texts in layout
         self.gridL_DICOM_view.addWidget(self.text_imageID, 0, 0, 1, 1)
         self.gridL_DICOM_view.addWidget(self.text_imagePos, 1, 0, 1, 1)
-        self.gridL_DICOM_view.addItem(self.DICOM_vspacer, 2, 0, 1, 3)
+        self.gridL_DICOM_view.addItem(self.DICOM_vspacer, 2, 0, 1, 4)
         self.gridL_DICOM_view.addWidget(self.text_imageSize, 3, 0, 1, 1)
         self.gridL_DICOM_view.addWidget(self.text_zoom, 4, 0, 1, 1)
+        self.gridL_DICOM_view.addItem(self.DICOM_spacer_scrollbar, 5, 0, 1, 4)
 
-        self.gridL_DICOM_view.addItem(self.DICOM_hspacer, 0, 1, 5, 1)
+        self.gridL_DICOM_view.addItem(self.DICOM_hspacer, 0, 1, 6, 1)
         self.gridL_DICOM_view.addWidget(self.text_WL, 0, 2, 1, 1)
         self.gridL_DICOM_view.addWidget(self.text_patientPos, 4, 2, 1, 1)
+        self.gridL_DICOM_view.addItem(self.DICOM_spacer_scrollbar, 0, 3, 6, 1)
 
     def updateDICOM_view(self, zoomChange=False, windowingChange=False):
         # Display DICOM image
@@ -1718,7 +1716,7 @@ class Ui_MainWindow(object):
         for i in range(len(self.pixmaps) - 1):
             self.comboBoxTree.addItem("CT Image Slice " + str(i + 1))
         self.comboBoxTree.activated.connect(self.comboTreeSelector)
-        self.comboBoxTree.setFixedSize(QtCore.QSize(180, 31))
+        self.comboBoxTree.setFixedSize(QtCore.QSize(200, 31))
         self.vboxL_Tree.addWidget(self.comboBoxTree, QtCore.Qt.AlignLeft)
 
     # Function triggered when another item of the combobox is selected
@@ -1750,8 +1748,8 @@ class Ui_MainWindow(object):
     # Set the parameters of the widget DICOM Tree View
     def initTreeParameters(self):
         # Set parameters for the Tree View
-        self.treeView.header().resizeSection(0, 280)
-        self.treeView.header().resizeSection(1, 380)
+        self.treeView.header().resizeSection(0, 250)
+        self.treeView.header().resizeSection(1, 350)
         self.treeView.header().resizeSection(2, 100)
         self.treeView.header().resizeSection(3, 50)
         self.treeView.header().resizeSection(4, 50)
@@ -1759,7 +1757,7 @@ class Ui_MainWindow(object):
         self.treeView.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
         self.treeView.setAlternatingRowColors(True)
-        self.treeView.setGeometry(QtCore.QRect(0, 0, 877, 517))
+        # self.treeView.setGeometry(QtCore.QRect(0, 0, 877, 517))
         self.treeView.expandAll()
         self.treeView.setObjectName("treeView")
         self.vboxL_Tree.addWidget(self.treeView)
