@@ -515,10 +515,10 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                     QTableWidgetItem(str(item.replace('\n', '')))
                     for item in row.split(',')
                 ]
-
-                self.table_Ids.insertRow(i)
-                self.table_Ids.setItem(i, 0, items[0])
-                self.table_Ids.setItem(i, 1, items[1])
+                if len(items) > 2:
+                    self.table_Ids.insertRow(i)
+                    self.table_Ids.setItem(i, 0, items[0])
+                    self.table_Ids.setItem(i, 1, items[1])
                 i += 1
 
 ###################################################################################################################

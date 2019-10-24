@@ -631,6 +631,7 @@ class Ui_MainWindow(object):
         # Save as Anonymous Action
         self.actionSave_as_Anonymous = QtWidgets.QAction(MainWindow)
         self.actionSave_as_Anonymous.setObjectName("actionSave_as_Anonymous")
+        self.actionSave_as_Anonymous.triggered.connect(self.HandleAnonymization)
 
         # Exit Action
         self.actionExit = QtWidgets.QAction(MainWindow)
@@ -1834,7 +1835,13 @@ class Ui_MainWindow(object):
             actionWindowingItem.setText(_translate("MainWindow", text))
 
     def HandleAnonymization(self):
-        self.callClass.runAnonymization(self)
+        SaveReply = QMessageBox.information(self, "Confirmation",
+                                            "Are you sure you want to perform anonymization?",
+                                            QMessageBox.Yes, QMessageBox.No)
+        if SaveReply == QMessageBox.Yes:
+            self.callClass.runAnonymization(self)
+        if SaveReply == QMessageBox.No:
+            pass
 
     def setWindowingLimits(self, state, text):
         # Get the values for window and level from the dict

@@ -8,6 +8,8 @@ import pydicom
 import uuid
 import csv
 import pandas as pd
+from PyQt5.QtWidgets import QMessageBox
+
 from src.Model.Pyradiomics import pyradiomics
 from src.Model.CalculateDVHs import dvh2csv
 
@@ -652,3 +654,9 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
         print("The CSV directory not Exist, and clinical data file is not exported")
 
     print("Clinical data function finished")
+
+    SaveReply = QMessageBox.information(None, "Message",
+                                        "Your patient files was anonymized successfully! The new \ndirectory is under the same path as the original one.",
+                                        QMessageBox.Ok)
+    if SaveReply == QMessageBox.Ok:
+        pass

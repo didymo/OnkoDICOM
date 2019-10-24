@@ -7,5 +7,5 @@ venv/
 # Ignore .pyc
 *.pyc
 *.pkl
-
-/home/tony/Onko/Hash_map.csv
+src/data/csv/patientHash.csv
+Hash_map.csv

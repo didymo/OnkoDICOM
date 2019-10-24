@@ -93,6 +93,7 @@ class ProgressBar(QtWidgets.QWidget):
         # Instance attribute defined later in on_button_click()
         self.ext = None
         self.path = path
+        self.value = 0
         # Creating the UI of the progress bar
         self.w = QtWidgets.QWidget()
         self.setWindowTitle("Opening patient")
@@ -168,8 +169,9 @@ class ProgressBar(QtWidgets.QWidget):
 
     #handles close event of progress bar mid processing 
     def closeEvent(self, event):
-        self.ext.quit()
-        self.open_welcome_window.emit()
+        if self.progress_bar.value() < 100:
+            self.ext.terminate()
+            self.open_welcome_window.emit()
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -287,7 +289,10 @@ class Controller:
                                          self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
         self.patient_window.open_patient_window.connect(self.show_bar)
         self.patient_window.run_pyradiomics.connect(self.show_pyradi_progress)
+        self.patient_window.actionExit.triggered.connect(self.patient_window.close)
         self.bar_window.close()
+        if self.welcome_window.isVisible():
+            self.welcome_window.close()
         self.patient_window.show()
 
     def show_pyradi_progress(self, path, filepaths):
