@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'untitled.ui'
-#
-# Created by: PyQt5 UI code generator 5.10.1
-#
-# WARNING! All changes made in this file will be lost!
-
+#####################################################################################################################
+#                                                                                                                   #
+# This file contains the Clinical Data Display UI for this software                                                 #
+#                                                                                                                   #
+#####################################################################################################################
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 from PyQt5.QtCore import QStringListModel
 from PyQt5.QtWidgets import QCompleter, QLineEdit
@@ -14,11 +11,19 @@ from array import *
 import numpy as np
 import csv
 
+#####################################################################################################################
+#                                                                                                                   #
+#   The following code are global data/variables used by Clinical Data Display class                                #
+#                                                                                                                   #
+#####################################################################################################################
+
+# Load the list of countries
 countries = dict(countries_for_language('en'))
 data = []
 for i, v in enumerate(countries):
     data.append(countries[v])
 
+# Load the diseases and format them
 with open('src/data/ICD10_Topography.csv', 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
@@ -55,7 +60,15 @@ for items in hist:
     strg = ''
 
 
+#####################################################################################################################
+#                                                                                                                   #
+#   The following code builds the UI od Clinical data in display mode                                               #
+#                                                                                                                   #
+#####################################################################################################################
+
 class Ui_CD_Display(object):
+
+    # set up the ui
     def setupUi(self, MainWindow):
         self.scrollArea_cd = QtWidgets.QScrollArea(MainWindow)
         self.scrollArea_cd.setGeometry(QtCore.QRect(0, 0, 875, 527))
@@ -69,7 +82,6 @@ class Ui_CD_Display(object):
         self.scrollAreaWidgetContents.setGeometry(
             QtCore.QRect(0, 0, 1000, 900))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
-        # self.scrollArea_cd.setLayout(self.scrollAreaWidgetContents)
         self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
         self.label_3 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_3.setGeometry(QtCore.QRect(20, 70, 81, 21))
@@ -337,7 +349,7 @@ class Ui_CD_Display(object):
         self.Cancer_death.addItem("")
         self.Cancer_death.addItem("")
         self.Cancer_death.addItem("")
-        #addthe durations
+        # addthe durations
         self.label_LCD = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_LCD.setGeometry(QtCore.QRect(20, 620, 101, 21))
         self.label_LCD.setObjectName("label_LCD")
