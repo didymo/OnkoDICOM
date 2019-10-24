@@ -166,6 +166,11 @@ class ProgressBar(QtWidgets.QWidget):
         msg.setWindowTitle("Error")
         msg.exec_()
 
+    #handles close event of progress bar mid processing 
+    def closeEvent(self, event):
+        self.ext.quit()
+        self.open_welcome_window.emit()
+
 #####################################################################################################################
 #                                                                                                                   #
 #   This class creates an instance of the Welcome Page when firstly running the software                            #
