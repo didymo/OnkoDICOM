@@ -609,11 +609,6 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
     dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
     print("DVH_csv export function finished\n\n")     
 
-    #Calling Pyradiomics after Anonymization is complete.
-    print("=====Calling Pyradiomics function====")
-    pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
-    print("Pyradiomics function finished\n\n")
-
     
     print("=======Calling Clinical data Export ==========")
 
@@ -655,8 +650,4 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
 
     print("Clinical data function finished")
 
-    SaveReply = QMessageBox.information(None, "Message",
-                                        "Your patient files was anonymized successfully! The new \ndirectory is under the same path as the original one.",
-                                        QMessageBox.Ok)
-    if SaveReply == QMessageBox.Ok:
-        pass
+    return Full_Patient_Path_New_folder

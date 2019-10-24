@@ -952,10 +952,6 @@ class MainPage:
         self.filepaths = filepaths
         self.raw_dvh = raw_dvh
 
-    # This function runs pyradiomics on button click
-    def runPyradiomics(self):
-        pyradiomics(self.path, self.filepaths)
-
     #This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
         anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)

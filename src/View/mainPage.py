@@ -23,6 +23,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class Ui_MainWindow(object):
 
+    # To initiate progress bar for pyradiomics through anonymization
+    pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
+
     def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
 
         ##############################
@@ -36,6 +39,7 @@ class Ui_MainWindow(object):
         self.path = path
         dataset = self.dataset
         self.dose_pixluts = get_dose_pixluts(self.dataset)
+        self.hashed_path = ''     # Path to hashed patient directory
 
         self.rxdose = 1
         if self.dataset['rtplan']:
@@ -1839,7 +1843,8 @@ class Ui_MainWindow(object):
                                             "Are you sure you want to perform anonymization?",
                                             QMessageBox.Yes, QMessageBox.No)
         if SaveReply == QMessageBox.Yes:
-            self.callClass.runAnonymization(self)
+            self.hashed_path = self.callClass.runAnonymization(self)
+            self.pyradi_trigger.emit(self.path, self.filepaths, self.hashed_path) 
         if SaveReply == QMessageBox.No:
             pass
 

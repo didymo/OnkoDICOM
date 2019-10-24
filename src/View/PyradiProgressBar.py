@@ -13,10 +13,11 @@ import radiomics
 class PyradiExtended(QtCore.QThread):
     copied_percent_signal = QtCore.pyqtSignal(int, str)
     
-    def __init__(self, path, filepaths):
+    def __init__(self, path, filepaths, target_path):
         super().__init__()
         self.path = path 
         self.filepaths = filepaths
+        self.target_path = target_path
         
     def run(self):
         """
@@ -29,14 +30,22 @@ class PyradiExtended(QtCore.QThread):
         # Read RT-Struct file
         rtss_path = self.filepaths['rtss']
 
-        # Obtain patient hash 
-        patient_hash = os.path.basename(ct_file.PatientID)
-        # Name of nrrd file
-        nrrd_file_name = patient_hash + '.nrrd'  
-        # Location of folder where nrrd file saved
-        nrrd_folder_path = self.path + '/nrrd/'
-        # Location of folder where pyradiomics output saved
-        csv_path = self.path + '/CSV/'
+        if self.target_path == '':
+            patient_hash = os.path.basename(ct_file.PatientID)
+            # Name of nrrd file
+            nrrd_file_name = patient_hash + '.nrrd'  
+            # Location of folder where nrrd file saved
+            nrrd_folder_path = self.path + '/nrrd/'
+            # Location of folder where pyradiomics output saved
+            csv_path = self.path + '/CSV/'
+        else:
+            patient_hash = os.path.basename(self.target_path)
+            # Name of nrrd file
+            nrrd_file_name = patient_hash + '.nrrd'  
+            # Location of folder where nrrd file saved
+            nrrd_folder_path = self.target_path + '/nrrd/'
+            # Location of folder where pyradiomics output saved
+            csv_path = self.target_path + '/CSV/'
     
         # Complete path of converted file
         nrrd_file_path = nrrd_folder_path + \
