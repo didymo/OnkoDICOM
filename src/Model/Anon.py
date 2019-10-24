@@ -604,33 +604,51 @@ def anonymize(path, Datasets, FilePaths,rawdvh):
 
     #Calling dvh2csv() function after Anonymization is complete.
     print("CAlling DVH_csv export function")
-    # dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
+    dvh2csv(rawdvh, Full_dvhCsv_Folder_Path_, dvh_csv_hash_name, P_HashID)
     print("DVH_csv export function finished\n\n")     
 
     #Calling Pyradiomics after Anonymization is complete.
     print("=====Calling Pyradiomics function====")
-    # pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
+    pyradiomics(path, all_filepaths, Full_Patient_Path_New_folder)
     print("Pyradiomics function finished\n\n")
 
     
     print("=======Calling Clinical data Export ==========")
-    Clinical_data_file_name = "ClinicalData_" + Original_P_ID + ".csv"
-    print("Clinical data file name to check: ",Clinical_data_file_name )
-    Clinical_data_csv_Full_file_path = path + "/" + "CSV" + "/" + Clinical_data_file_name
-    print("The full path of clinical Data file to check:",Clinical_data_csv_Full_file_path)
+
+    Clinical_data_original_file_name = "ClinicalData_" + Original_P_ID + ".csv"
+    print("Clinical data file name to check: ",Clinical_data_original_file_name )
 
     clinical_data_CSV_origianl_path = path + "/" + "CSV"
 
+    Clinical_data_csv_Full_file_path_orig = clinical_data_CSV_origianl_path + "/" + Clinical_data_original_file_name
+    print("The full path of clinical Data file to check:",Clinical_data_csv_Full_file_path_orig)
+
     Clinical_data_hash_file_name = "ClinicalData_" + P_HashID + ".csv"
-    Clinical_data_hash_csv_Full_file = Full_Csv_Folder_Path + "/" + Clinical_data_hash_file_name
+    Clinical_data_hash_csv_Full_file_path = Full_Csv_Folder_Path + "/" + Clinical_data_hash_file_name
     
     if ( "CSV" in os.listdir(path)):
         print("The CSV folder Exist")
-        if (Clinical_data_file_name in os.listdir(clinical_data_CSV_origianl_path)):
+        if (Clinical_data_original_file_name in os.listdir(clinical_data_CSV_origianl_path)):
             print("Need to hash the Clinical data file")
+
+            ClinicalData_DF = pd.read_csv (Clinical_data_csv_Full_file_path_orig)
+            print("The ClinicalData Dataframe is :::\n\n",ClinicalData_DF)
+
+            P_count = ClinicalData_DF['PatientID'].count()
+            print("The count of PatientId is ::::", P_count)
+
+            for i in range(0,P_count):
+               # ClinicalData_DF[]
+               print(ClinicalData_DF.iloc[i,0])
+               print("Changing the value in dataframe")
+               ClinicalData_DF.iloc[i,0] = P_HashID
+            print("The ClinicalData Dataframe after change is :::\n\n",ClinicalData_DF)
+            ClinicalData_DF.to_csv(Clinical_data_hash_csv_Full_file_path, index=False) # creating the Hashed clinical data CSV
+            print("====Clinical data hash CSV Exported=====")
+
         else:
             print("The Clinical data file not yet exported")
     else:
-        print("The clinical data directory not Exist")
+        print("The CSV directory not Exist, and clinical data file is not exported")
 
     print("Clinical data function finished")

@@ -81,6 +81,13 @@ class Extended(QtCore.QThread):
         self.previous = percent
 
     def natural_sort(self, file_list):
+        """
+        Sort filenames.
+
+        :param file_list:   List of dcm file names.
+        
+        :return:            Sorted list of all file names.
+        """
         # Logger info
         def convert(text): return int(text) if text.isdigit() else text.lower()
         def alphanum_key(key): return [convert(c)
@@ -89,9 +96,13 @@ class Extended(QtCore.QThread):
 
     def get_datasets(self, path, callback):
         """
-        :param path: str
-        :return read_data_dict: dict
-        :return file_names_dict: dict
+        Read patient directory and return dictionary of read data and file names.
+
+        :param path: str, path of patient directory
+        
+        :return read_data_dict: dict, data read from files in patient directory
+        
+        :return file_names_dict: dict, the paths of all files read
         """
 
         # Data contains data read from files

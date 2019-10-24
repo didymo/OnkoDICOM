@@ -14,10 +14,15 @@ import os
 from PyQt5 import QtCore, QtWidgets
 
 
-# For sorting dicom file names by numbers
-# Input is a list of dcm file names.
-# Return the sorted list of all file names.
+
 def natural_sort(file_list):
+    """
+    Sort filenames.
+
+    :param file_list:   List of dcm file names.
+    
+    :return:            Sorted list of all file names.
+    """
     # Logger info
     print('Natural Sorting...')
     convert = lambda text: int(text) if text.isdigit() else text.lower()
@@ -27,9 +32,13 @@ def natural_sort(file_list):
 
 def get_datasets(path):
     """
-    :param path: str
-    :return read_data_dict: dict
-    :return file_names_dict: dict
+    Read patient directory and return dictionary of read data and file names.
+
+    :param path: str, path of patient directory
+    
+    :return read_data_dict: dict, data read from files in patient directory
+    
+    :return file_names_dict: dict, the paths to all files read
     """
 
     # Data contains data read from files
@@ -53,17 +62,17 @@ def get_datasets(path):
         else:
             if 'SOPClassUID' in read_file:
                 if read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
-                    self.read_data_dict[i] = read_file
-                    self.file_names_dict[i] = file
+                    read_data_dict[i] = read_file
+                    file_names_dict[i] = file
                     i += 1
                 elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.3':
-                    self.read_data_dict['rtss'] = read_file
-                    self.file_names_dict['rtss'] = file
+                    read_data_dict['rtss'] = read_file
+                    file_names_dict['rtss'] = file
                 elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.2':
-                    self.read_data_dict['rtdose'] = read_file
-                    self.file_names_dict['rtdose'] = file
+                    read_data_dict['rtdose'] = read_file
+                    file_names_dict['rtdose'] = file
                 elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.5':
-                    self.read_data_dict['rtplan'] = read_file
-                    self.file_names_dict['rtplan'] = file
+                    read_data_dict['rtplan'] = read_file
+                    file_names_dict['rtplan'] = file
             
     return read_data_dict, file_names_dict
