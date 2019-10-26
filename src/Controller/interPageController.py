@@ -35,7 +35,6 @@ class PyradiProgressBar(QtWidgets.QWidget):
             QtCore.Qt.Window |
             QtCore.Qt.CustomizeWindowHint |
             QtCore.Qt.WindowTitleHint |
-            QtCore.Qt.WindowStaysOnTopHint |
             QtCore.Qt.WindowMinimizeButtonHint)
         qtRectangle = self.w.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()

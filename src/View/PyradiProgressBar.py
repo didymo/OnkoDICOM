@@ -92,6 +92,8 @@ class PyradiExtended(QtCore.QThread):
         
         :param callback:        Function to update progress bar
         """
+        path = '"' + path + '"'
+        nrrd_file_path = '"' + nrrd_file_path + '"'
         cmd_for_nrrd = 'plastimatch convert --input ' + path + \
             ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
         cmd_del_nul = 'rm ' + path + '/NUL'
@@ -118,6 +120,9 @@ class PyradiExtended(QtCore.QThread):
         
         :param callback:            Function to update progress bar
         """
+        path = '"' + path + '"'
+        mask_folder_path = '"' + mask_folder_path + '"'
+        rtss_path = '"' + rtss_path + '"'
         # Each ROI is saved in separate nrrd files
         cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + ' --output-prefix ' + \
             mask_folder_path + ' --prefix-format nrrd --referenced-ct ' + \
