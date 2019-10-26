@@ -1,3 +1,9 @@
+###################################################################################################################
+#                                                                                                                 #
+#   This file handles all the processes done when performing Pyradiomics and shows a progress bar while doing it  #
+#                                                                                                                 #
+###################################################################################################################
+
 import os
 import sys
 import pandas as pd
@@ -5,7 +11,7 @@ import SimpleITK as sitk
 from pydicom import dcmread
 from radiomics import featureextractor
 from src.Model.LoadPatients import get_datasets
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget
 import radiomics
 

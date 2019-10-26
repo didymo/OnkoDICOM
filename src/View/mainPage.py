@@ -911,7 +911,7 @@ class Ui_MainWindow(object):
         self.actionClinical_Data.setText(
             _translate("MainWindow", "Clinical Data"))
         self.actionPyradiomics.setText(_translate("MainWindow", "Pyradiomics"))
-
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         MainWindow.update()
 
     def orderedListRoiID(self):

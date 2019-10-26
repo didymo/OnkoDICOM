@@ -194,7 +194,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         elif choice == "Cancer death":
             return 1
         else:
-            return ""
+            return 0
 
     # get the code for the selected desease
     def getDeseaseCode(self, string):
@@ -307,8 +307,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Patient's date of diagnosis cannot be in the future. \n"
         if (len(self.ui.line_icd.text()) == 0):
             message = message + "Input patient's ICD 10. \n"
+        if self.ui.line_icd.text() not in new_icd:
+            message = message + "The ICD 10 value needs to be from the completer options. \n"
         if (len(self.ui.line_histology.text()) == 0):
             message = message + "Input patient's Histology. \n"
+        if self.ui.line_histology.text() not in new_hist:
+            message = message + "The Histology value needs to be from the completer options. \n"
         if (str(self.ui.T_stage.currentText()) == "Select..."):
             message = message + "Select patient's T Stage. \n"
         if (str(self.ui.N_stage.currentText()) == "Select..."):
@@ -554,6 +558,21 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
     #This function alters the form UI and enters the corresponding data in the specific fields
     def editing_mode(self):
+        # add the sensitive data of dates from the binary file
+        # date of birth
+        # date of diagnosis
+        # date of last existence
+        # Create a dtype with the binary data format and the desired column names
+        df = pd.read_pickle('src/data/records.pkl')
+        for i in df.index:
+            if df.at[i, 'PID'] == self.pID:
+                self.ui.date_of_birth.setDate(
+                    QtCore.QDate.fromString(df.at[i, 'DOB'], "dd/MM/yyyy"))
+                self.ui.dateEdit_2.setDate(
+                    QtCore.QDate.fromString(df.at[i, 'DOD'], "dd/MM/yyyy"))
+                self.ui.Dt_Last_Existence.setDate(
+                    QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
+       # read the clinical data
         reg = '/CSV/ClinicalData*[.csv]'
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
@@ -591,7 +610,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 self.getCodeReverse(clinical_data[17]))
 
         self.ui.Death.setCurrentIndex(int(int(clinical_data[18]) + 1))
-        if clinical_data[19] == '':
+        if int(clinical_data[18]) == 0:
             self.ui.Cancer_death.setCurrentIndex(0)
             self.ui.Cancer_death.setDisabled(True)
         else:
@@ -623,21 +642,6 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             self.ui.Dt_Distant_Failure.setDate(
                 QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
 
-        # add the sensitive data of dates from the binary file
-        # date of birth
-        # date of diagnosis
-        # date of last existence
-        # Create a dtype with the binary data format and the desired column names
-        df = pd.read_pickle('src/data/records.pkl')
-        for i in df.index:
-            if df.at[i, 'PID'] == self.pID:
-                self.ui.date_of_birth.setDate(
-                    QtCore.QDate.fromString(df.at[i, 'DOB'], "dd/MM/yyyy"))
-                self.ui.dateEdit_2.setDate(
-                    QtCore.QDate.fromString(df.at[i, 'DOD'], "dd/MM/yyyy"))
-                self.ui.Dt_Last_Existence.setDate(
-                    QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
-
     #the following function anable the Enter keyboard button to act as an activator of the button save
     def on_click(self):
         self.save_ClinicalData()
@@ -668,7 +672,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.load_cd()
         self.ui.Edit_button.clicked.connect(self.on_click)
 
-    # the following function anable the Enter keyboard button to act as an activator of the button edit
+    # the following function enables the Enter keyboard button to act as an activator of the button edit
     def on_click(self):
         self.edit_mode()
 
@@ -725,7 +729,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.ui.Hormone.setDisabled(True)
         self.ui.Death.setCurrentIndex(int(1 + int(clinical_data[18])))
         self.ui.Death.setDisabled(True)
-        if clinical_data[19] == '':
+        if int(clinical_data[18]) == 0:
             self.ui.Cancer_death.setCurrentIndex(-1)
         else:
             self.ui.Cancer_death.setCurrentIndex(
@@ -807,11 +811,40 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 
     #call edit mode when the edit button is pressed
     def edit_mode(self):
-        self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
-        self.tab_cd.editing_mode()
-        self.tabWindow.removeTab(3)
-        self.tabWindow.addTab(self.tab_cd, "Clinical Data")
-        self.tabWindow.setCurrentIndex(3)
+        #check if the sensitive data is saved to enable editing
+        if os.path.exists('src/data/records.pkl'):
+            df = pd.read_pickle('src/data/records.pkl')
+            check = False
+            for i in df.index:
+                if df.at[i, 'PID'] == self.dataset[0].PatientID:
+                    check = True
+            if not check:
+                # the sensitive data for this patient is missing so no editing can be performed
+                buttonReply = QMessageBox.warning(self, "Error Message",
+                                                  "The software has no previous records of this patient.\n"
+                                                  "If you wish, you can create a new clinical data file by \n"
+                                                  "deleting the current one from the directory and reloading \n"
+                                                  "the patient files."
+                                                  , QMessageBox.Ok)
+                if buttonReply == QMessageBox.Ok:
+                    pass
+            else:
+                self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
+                self.tab_cd.editing_mode()
+                self.tabWindow.removeTab(3)
+                self.tabWindow.addTab(self.tab_cd, "Clinical Data")
+                self.tabWindow.setCurrentIndex(3)
+        else:
+            # the sensitive data file is missing so no editing can be performed
+            buttonReply = QMessageBox.warning(self, "Error Message",
+                                              "The software has no previous records of this patient.\n"
+                                              "If you wish, you can create a new clinical data file by \n"
+                                              "deleting the current one from the directory and reloading \n"
+                                              "the patient files."
+                                              , QMessageBox.Ok)
+            if buttonReply == QMessageBox.Ok:
+                pass
+
 
 
 #####################################################################################################################

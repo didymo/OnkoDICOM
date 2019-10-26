@@ -1,3 +1,9 @@
+###################################################################################################################################
+#                                                                                                                                 #
+#   This file handles all the processes done when opening a new patient and updates the progressbar (multiprocessing/ threading)  #
+#                                                                                                                                 #
+###################################################################################################################################
+
 import glob
 import os
 import re
@@ -6,7 +12,7 @@ from PyQt5.QtCore import QFileInfo
 from dicompylercore import dvhcalc, dvh, dicomparser
 import pydicom
 import collections
-from PyQt5 import QtCore
+from PyQt5 import QtCore,QtGui
 from src.Model.ROI import *
 import multiprocessing
 
@@ -23,7 +29,7 @@ class Extended(QtCore.QThread):
     def __init__(self, path):
         super().__init__()
         self.copied = 0
-        self.file_size = QFileInfo(path).size()
+        self.file_size = (QFileInfo(path).size()) + 10 #for avoiding divided by zero issues
         self.path = path
         self.read_data_dict = {}
 
@@ -33,6 +39,7 @@ class Extended(QtCore.QThread):
         self.previous = 0
         self.count =0
 
+    # this function runs all the necessary processes for opening a patient file
     def run(self):
         self.dataset, self.file_names_dict = self.get_datasets(
             self.path, self.my_callback)
@@ -65,8 +72,12 @@ class Extended(QtCore.QThread):
                 for i in range(int(self.previous), 101):
                     self.copied_percent_signal.emit(int(i))
 
+    #this function retrieves signals from the processes and updates the progress bar
     def my_callback(self, temp_file_size):
         percent = int(temp_file_size/self.file_size*10)
+
+        #making sure the bar doesn't reach 100 before finishing the processes
+        #making sure it doesn't get stuck at one value for a long time
         if percent < self.previous or percent == 100:
             percent = self.previous
             self.count += 1
@@ -78,7 +89,7 @@ class Extended(QtCore.QThread):
         if self.count > 20 and percent < 99:
             percent += 0.2
         self.copied_percent_signal.emit(percent)
-        self.previous = percent
+        self.previous = percent #keep a record of the previous value
 
     def natural_sort(self, file_list):
         """
@@ -104,7 +115,6 @@ class Extended(QtCore.QThread):
         
         :return file_names_dict: dict, the paths of all files read
         """
-
         # Data contains data read from files
         # Key is int for ct images and str (rtdose, rtss, rtplan) for RT files
         self.read_data_dict = {}
@@ -139,10 +149,11 @@ class Extended(QtCore.QThread):
                         self.read_data_dict['rtplan'] = read_file
                         self.file_names_dict['rtplan'] = file
                     self.copied += len(read_file)
-                    callback(self.copied)
+                    callback(self.copied) #update the bar
 
         return self.read_data_dict, self.file_names_dict
 
+    #this function retrieves information about patient rois
     def get_roi_info(self, ds_rtss, callback):
         dict_roi = {}
         for sequence in ds_rtss.StructureSetROISequence:
@@ -152,7 +163,7 @@ class Extended(QtCore.QThread):
             dict_temp['algorithm'] = sequence.ROIGenerationAlgorithm
             dict_roi[sequence.ROINumber] = dict_temp
             self.copied += len(dict_roi[sequence.ROINumber])
-            callback(self.copied)
+            callback(self.copied) #update the bar
         return dict_roi
 
     # Multiprocessing dvh
@@ -161,7 +172,7 @@ class Extended(QtCore.QThread):
         dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
 
         self.copied += roi
-        callback(self.copied)
+        callback(self.copied) #update the bar
         queue.put(dvh)
 
     # Return a dictionary of all the DVHs of all the ROIs of the patient
@@ -179,26 +190,26 @@ class Extended(QtCore.QThread):
         for key in dict_roi:
             roi_list.append(key)
             self.copied += len(roi_list)
-            callback(self.copied)
+            callback(self.copied) #update the bar
 
         for i in range(len(roi_list)):
             p = multiprocessing.Process(target=self.multi_get_dvhs, args=(
                 rtss, rtdose, roi_list[i], queue, callback))
             processes.append(p)
             self.copied += len(processes)
-            callback(self.copied)
+            callback(self.copied) #update the bar
             p.start()
 
         for proc in processes:
             dvh = queue.get()
             dict_dvh.update(dvh)
         self.copied += len(processes)
-        callback(self.copied)
+        callback(self.copied) #update the bar
 
         for proc in processes:
             proc.join()
         self.copied += len(processes)
-        callback(self.copied)
+        callback(self.copied) #update the bar
 
         return dict_dvh
 
@@ -236,11 +247,10 @@ class Extended(QtCore.QThread):
             res[roi]['bincenters'] = bincenters
             res[roi]['counts'] = counts
         self.copied += len(res)
-        callback(self.copied)
+        callback(self.copied) #update the bar
         return res
 
     # Get raw contour data of ROI in RT Structure Set
-
     def get_raw_ContourData(self, rtss, callback):
         # Retrieve a dictionary of ROIName & ROINumber pairs
         dict_id = {}
@@ -250,7 +260,7 @@ class Extended(QtCore.QThread):
             dict_id[roi_number] = roi_name
 
         self.copied += len(dict_id)
-        callback(self.copied)
+        callback(self.copied) #update the bar
         dict_ROI = {}
         dict_NumPoints = {}
         for roi in rtss.ROIContourSequence:
@@ -270,7 +280,7 @@ class Extended(QtCore.QThread):
             dict_ROI[ROIName] = dict_contour
             dict_NumPoints[ROIName] = roi_points_count
             self.copied += len(dict_NumPoints)
-            callback(self.copied)
+            callback(self.copied) #update the bar
         return dict_ROI, dict_NumPoints
 
     def calculate_matrix(self, img_ds, callback):
@@ -301,17 +311,17 @@ class Extended(QtCore.QThread):
             x.append(float(i_mat[0]))
 
             self.copied += len(x)
-            callback(self.copied)
-
+            callback(self.copied) #update the bar
 
         for j in range(0, img_ds.Rows):
             j_mat = matrix_M * np.matrix([[0], [j], [0], [1]])
             y.append(float(j_mat[1]))
 
             self.copied += len(y)
-            callback(self.copied)
+            callback(self.copied) #update the bar
         return (np.array(x), np.array(y))
 
+    # this function get the picluts for the transformation from 3D to 2D pixels
     def get_pixluts(self, dict_ds, callback):
         dict_pixluts = {}
         non_img_type = ['rtdose', 'rtplan', 'rtss']
@@ -321,5 +331,5 @@ class Extended(QtCore.QThread):
                 pixlut = calculate_matrix(img_ds)
                 dict_pixluts[img_ds.SOPInstanceUID] = pixlut
                 self.copied += len(dict_pixluts)
-                callback(self.copied)
+                callback(self.copied) #update the bar
         return dict_pixluts

@@ -1,20 +1,29 @@
+#####################################################################################################################
+#                                                                                                                   #
+#   This file creates all the UI components for the Add-On options window                                           #
+#                                                                                                                   #
+#####################################################################################################################
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QLabel
 
 
 class Ui_Add_On_Options(object):
+
+    # creator function
     def setupUi(self, Add_On_Options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         Add_On_Options.setObjectName("Add_On_Options")
         Add_On_Options.setMinimumSize(766, 600)
-        Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/logo.png"))
         Add_On_Options.setStyleSheet("")
+        Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         self.centralwidget = QtWidgets.QWidget(Add_On_Options)
         self.centralwidget.setObjectName("centralwidget")
+        #label that holds the chosen option from the tree
         self.optionTitle = QtWidgets.QLabel(self.centralwidget)
         self.optionTitle.setGeometry(QtCore.QRect(290, 50, 281, 31))
         self.optionTitle.setStyleSheet("font: 57 12pt \"Ubuntu\";\n"
                                        "font-weight: bold;")
         self.optionTitle.setObjectName("optionTitle")
+        #description holder widget
         self.table_modules = QtWidgets.QLabel(self.centralwidget)
         self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 70))
         self.table_modules.setObjectName("table_modules")
@@ -22,7 +31,10 @@ class Ui_Add_On_Options(object):
                                          "color:rgb(0,0,0);\n")
         self.table_modules.setText(
             " Here are listed all the user options used in Onko. By using \n Add-On Options you will be able to Add/Modify/Delete the \n settings for the displayed options on the left. ")
-        # buttons per view
+
+        ###### WINDOWING COMPONENTS ######
+
+        #adding a new window view
         self.add_new_window = QtWidgets.QPushButton(self.centralwidget)
         self.add_new_window.setGeometry(QtCore.QRect(598, 470, 141, 31))
         self.add_new_window.setCursor(
@@ -33,6 +45,7 @@ class Ui_Add_On_Options(object):
                                           "font-weight: bold;")
         self.add_new_window.setObjectName("add_new_window")
         self.add_new_window.setVisible(False)
+        #table to hold all the windowing options
         self.table_view = QtWidgets.QTableWidget(self.centralwidget)
         self.table_view.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_view.setObjectName("table_view")
@@ -55,7 +68,10 @@ class Ui_Add_On_Options(object):
         header1.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         header1.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.table_view.setVisible(False)
-        # organ
+
+        ###### STANDARD ORGAN COMPONENTS ######
+
+        # button to add a new standard organ name
         self.add_standard_organ_name = QtWidgets.QPushButton(
             self.centralwidget)
         self.add_standard_organ_name.setGeometry(
@@ -67,6 +83,7 @@ class Ui_Add_On_Options(object):
                                                    "color:rgb(75,0,130);\n"
                                                    "font-weight: bold;")
         self.add_standard_organ_name.setObjectName("add_standard_organ_name")
+        #table to hold all the entries
         self.table_organ = QtWidgets.QTableWidget(self.centralwidget)
         self.table_organ.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_organ.setObjectName("table_organ")
@@ -90,7 +107,7 @@ class Ui_Add_On_Options(object):
         self.table_organ.setVisible(False)
         self.table_organ.verticalHeader().hide()
         self.add_standard_organ_name.setVisible(False)
-
+        # button to import a csv of standard organs
         self.import_organ_csv = QtWidgets.QPushButton(self.centralwidget)
         self.import_organ_csv.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -102,7 +119,9 @@ class Ui_Add_On_Options(object):
         self.import_organ_csv.setObjectName("import_organ_csv")
         self.import_organ_csv.setVisible(False)
 
-        # volume
+        ###### STANDARD VOLUME COMPONENTS ######
+
+        # button to add a new standard volume name
         self.add_standard_volume_name = QtWidgets.QPushButton(
             self.centralwidget)
         self.add_standard_volume_name.setCursor(
@@ -115,6 +134,7 @@ class Ui_Add_On_Options(object):
                                                     "font-weight: bold;")
         self.add_standard_volume_name.setObjectName("add_standard_volume_name")
         self.add_standard_volume_name.setVisible(False)
+        #table to hold the volume entries
         self.table_volume = QtWidgets.QTableWidget(self.centralwidget)
         self.table_volume.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_volume.setObjectName("table_volume")
@@ -132,8 +152,10 @@ class Ui_Add_On_Options(object):
         header3.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header3.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_volume.setVisible(False)
-        # roi
-        #The following code is commented out as it contains the possibility to create ROI from isodoses which is not yet supported
+
+        ###### ROI FROM ISODOSE COMPONENTS ######
+
+        # The following code is commented out as it contains the possibility to create ROI from isodoses which is not yet supported
         # self.add_new_roi = QtWidgets.QPushButton(self.centralwidget)
         # self.add_new_roi.setCursor(
         #     QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -164,6 +186,9 @@ class Ui_Add_On_Options(object):
         # header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         # self.table_roi.setVisible(False)
 
+        ###### PATIENT ID - HASH ID COMPONENTS ######
+
+        # table to hold all the patients and their hash that the software has anonymised
         self.table_Ids = QtWidgets.QTableWidget(self.centralwidget)
         self.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.table_Ids.setObjectName("table_Ids")
@@ -179,12 +204,15 @@ class Ui_Add_On_Options(object):
         header5.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header5.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table_Ids.setVisible(False)
+        # Note for the user
         self.note = QtWidgets.QLabel(self.centralwidget)
         self.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
         self.note.setObjectName('note')
         self.note.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
                                 "color:rgb(0,0,0)")
         self.note.setVisible(False)
+
+        #CANCEL button for the whole window
         self.cancel_button = QtWidgets.QPushButton(self.centralwidget)
         self.cancel_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -195,6 +223,8 @@ class Ui_Add_On_Options(object):
                                          "font-weight: bold;\n"
                                          "color: rgb(85, 87, 83);")
         self.cancel_button.setObjectName("cancel_button")
+
+        #APPLY button to save all changes made
         self.apply_button = QtWidgets.QPushButton(self.centralwidget)
         self.apply_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -204,20 +234,28 @@ class Ui_Add_On_Options(object):
                                         "color:rgb(75,0,130);\n"
                                         "font-weight: bold;")
         self.apply_button.setObjectName("apply_button")
+
+        #TREE VIEW  that holds the different Options
         self.treeList = QtWidgets.QTreeView(self.centralwidget)
         self.treeList.setGeometry(QtCore.QRect(10, 40, 256, 461))
         self.treeList.setObjectName("treeList")
         self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
         Add_On_Options.setCentralWidget(self.centralwidget)
         self.treeList.setHeaderHidden(True)
+
+        #removing the ability to edit tables with immediate click
         self.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        #self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        # self.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+
+        ###### LINE AND FILL COMPONENTS ######
+
         self.fill_layout = QtWidgets.QFormLayout(self.centralwidget)
         self.fill_options = QtWidgets.QWidget(self.centralwidget)
-        
+
+        #combo bow with the available lines for ROIs
         self.line_style_ROI = QtWidgets.QComboBox(self.fill_options)
         self.line_style_ROI.addItem("No Pen")
         self.line_style_ROI.addItem("Solid Line")
@@ -226,6 +264,7 @@ class Ui_Add_On_Options(object):
         self.line_style_ROI.addItem("Dash-Dot Line")
         self.line_style_ROI.addItem("Dash-Dot-Dot Line")
 
+        #slider to determine opacity of the fill for ROIs
         self.opacity_ROI = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.opacity_ROI.setMinimum(0)
         self.opacity_ROI.setMaximum(100)
@@ -236,6 +275,7 @@ class Ui_Add_On_Options(object):
         self.opacityLabel_ROI = QtWidgets.QLabel(
             "ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
 
+        #combo bow with the available lines for ISODoses
         self.line_style_ISO = QtWidgets.QComboBox(self.fill_options)
         self.line_style_ISO.addItem("No Pen")
         self.line_style_ISO.addItem("Solid Line")
@@ -244,6 +284,7 @@ class Ui_Add_On_Options(object):
         self.line_style_ISO.addItem("Dash-Dot Line")
         self.line_style_ISO.addItem("Dash-Dot-Dot Line")
 
+        #slider to determine opacity of the fill for ISODoses
         self.opacity_ISO = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.opacity_ISO.setMinimum(0)
         self.opacity_ISO.setMaximum(100)
@@ -254,6 +295,7 @@ class Ui_Add_On_Options(object):
         self.opacityLabel_ISO = QtWidgets.QLabel(
             "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
 
+        #combo box to hold the line width options
         self.line_width = QtWidgets.QComboBox(self.fill_options)
         self.line_width.addItem("0.5")
         self.line_width.addItem("1")
@@ -261,6 +303,7 @@ class Ui_Add_On_Options(object):
         self.line_width.addItem("2")
         self.line_width.addItem("2.5")
 
+        #adding the components into a layout
         self.fill_layout.addRow(
             QLabel("ROI Line Style: "), self.line_style_ROI)
         self.fill_layout.addRow(QLabel(""))
@@ -273,34 +316,37 @@ class Ui_Add_On_Options(object):
         self.fill_layout.addRow(QLabel(""))
         self.fill_layout.addRow(
             QLabel("Line Width: "), self.line_width)
+
+        #inserting the last configuration settings on initialisation
         self.line_style_ROI.setCurrentIndex(roi_line)
         self.line_style_ISO.setCurrentIndex(iso_line)
         self.line_width.setCurrentText(str(line_width))
-
         self.fill_options.setLayout(self.fill_layout)
-
         self.fill_options.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.fill_options.setVisible(False)
         self.fill_options.setObjectName('fill_options')
-
         self.retranslateUi(Add_On_Options)
         QtCore.QMetaObject.connectSlotsByName(Add_On_Options)
 
+    #updating the % on slider change for ROIs
     def update_ROI_opacity(self):
         self.opacityLabel_ROI.setText(
             "ROI Fill Opacity: \t {}%".format(int(self.opacity_ROI.value())))
 
+    #updating the % on slider change for ISODoses
     def update_ISO_opacity(self):
         self.opacityLabel_ISO.setText(
             "ISO Fill Opacity: \t {}%".format(int(self.opacity_ISO.value())))
 
+    # this function adds the initial text into the components
     def retranslateUi(self, Add_On_Options):
         _translate = QtCore.QCoreApplication.translate
         Add_On_Options.setWindowTitle(
             _translate("Add_On_Options", "Add-On Options"))
         self.optionTitle.setText(_translate("Add_On_Options", "User Options"))
         self.note.setText(_translate(
-            "Add_On_Options", "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
+            "Add_On_Options",
+            "Note: This is a list of all the patients anonymized using Onko.\n It is your responsability to ensure their privacy."))
         self.cancel_button.setText(_translate("Add_On_Options", "Cancel"))
         self.apply_button.setText(_translate("Add_On_Options", "Apply"))
         self.add_new_window.setText(_translate(
@@ -313,14 +359,3 @@ class Ui_Add_On_Options(object):
             "Add_On_Options", "Import Spreadsheet"))
         # self.add_new_roi.setText(_translate(
         #     "Add_On_Options", "Add new Isodose"))
-
-
-# if __name__ == "__main__":
-#     import sys
-#
-#     app = QtWidgets.QApplication(sys.argv)
-#     Add_On_Options = QtWidgets.QMainWindow()
-#     ui = Ui_Add_On_Options()
-#     ui.setupUi(Add_On_Options)
-#     Add_On_Options.show()
-#     sys.exit(app.exec_())
