@@ -114,7 +114,7 @@ def convert_df_to_csv(radiomics_df, patient_hash, csv_path):
                         patient_hash + '.csv')
 
 
-def pyradiomics(path, filepaths, target_path=None):
+def pyradiomics(path, filepaths, target_path=''):
     """
     Generate pyradiomics spreadsheet
     """
@@ -122,7 +122,7 @@ def pyradiomics(path, filepaths, target_path=None):
     ct_file = dcmread(filepaths[0], force=True)
     rtss_path = filepaths['rtss']
 
-    if target_path is None:
+    if target_path is '':
         patient_hash = os.path.basename(ct_file.PatientID)
         # Name of nrrd file
         nrrd_file_name = patient_hash + '.nrrd'  

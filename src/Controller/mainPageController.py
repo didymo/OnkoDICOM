@@ -954,7 +954,8 @@ class MainPage:
 
     #This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
-        anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        target_path = anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        return target_path
 
     # This function displays the clinical data form
     def display_cd_form(self, tabWindow, file_path):
