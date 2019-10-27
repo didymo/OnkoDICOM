@@ -994,9 +994,9 @@ class Ui_MainWindow(object):
         self.tab1_structures.setObjectName("tab1_structures")
         self.tab1_structures.setFocusPolicy(Qt.NoFocus)
 
-        self.structColumnWidget = QtWidgets.QWidget(self.tab1_structures)
-        self.scrollAreaStruct = QtWidgets.QScrollArea(self.structColumnWidget)
-        self.hLayout_structures = QtWidgets.QHBoxLayout(self.structColumnWidget)
+        # self.structColumnWidget = QtWidgets.QWidget(self.tab1_structures)
+        self.scrollAreaStruct = QtWidgets.QScrollArea(self.tab1_structures)
+        self.hLayout_structures = QtWidgets.QHBoxLayout(self.tab1_structures)
         self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
 
         # self.scrollAreaStruct.setGeometry(QtCore.QRect(0, 0, 198, 320))
