@@ -994,17 +994,14 @@ class Ui_MainWindow(object):
         self.tab1_structures.setObjectName("tab1_structures")
         self.tab1_structures.setFocusPolicy(Qt.NoFocus)
 
-        # self.structColumnWidget = QtWidgets.QWidget(self.tab1_structures)
         self.scrollAreaStruct = QtWidgets.QScrollArea(self.tab1_structures)
         self.hLayout_structures = QtWidgets.QHBoxLayout(self.tab1_structures)
         self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
 
-        # self.scrollAreaStruct.setGeometry(QtCore.QRect(0, 0, 198, 320))
         self.scrollAreaStruct.setWidgetResizable(True)
         self.scrollAreaStruct.setFocusPolicy(Qt.NoFocus)
         # Scroll Area Content
         self.scrollAreaStructContents = QtWidgets.QWidget(self.scrollAreaStruct)
-        # self.scrollAreaStructContents.setGeometry(QtCore.QRect(0, 0, 198, 550))
         self.scrollAreaStruct.ensureWidgetVisible(self.scrollAreaStructContents)
         self.scrollAreaStructContents.setFocusPolicy(Qt.NoFocus)
         # Grid Layout containing the color squares and the checkboxes
