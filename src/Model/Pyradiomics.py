@@ -18,6 +18,8 @@ def convert_to_nrrd(path, nrrd_file_path):
     
     :param nrrd_file_path:  Path to nrrd folder (str)
     """
+    path = '"' + path + '"'
+    nrrd_file_path = '"' + nrrd_file_path + '"'
     cmd_for_nrrd = 'plastimatch convert --input ' + path + \
         ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
     cmd_del_nul = 'rm ' + path + '/NUL'
@@ -40,6 +42,9 @@ def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
 
     :param mask_folder_path:    Folder to which the segmentation masks will be saved(str)
     """
+    path = '"' + path + '"'
+    mask_folder_path = '"' + mask_folder_path + '"'
+    rtss_path = '"' + rtss_path +'"'
     # Each ROI is saved in separate nrrd files
     cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + ' --output-prefix ' + \
         mask_folder_path + ' --prefix-format nrrd --referenced-ct ' + \
@@ -114,7 +119,7 @@ def convert_df_to_csv(radiomics_df, patient_hash, csv_path):
                         patient_hash + '.csv')
 
 
-def pyradiomics(path, filepaths, target_path=None):
+def pyradiomics(path, filepaths, target_path=''):
     """
     Generate pyradiomics spreadsheet
     """
@@ -122,7 +127,7 @@ def pyradiomics(path, filepaths, target_path=None):
     ct_file = dcmread(filepaths[0], force=True)
     rtss_path = filepaths['rtss']
 
-    if target_path is None:
+    if target_path is '':
         patient_hash = os.path.basename(ct_file.PatientID)
         # Name of nrrd file
         nrrd_file_name = patient_hash + '.nrrd'  

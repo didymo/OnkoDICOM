@@ -17,7 +17,6 @@ from src.Model.form_UI import *
 from src.View.ProgressBar import *
 from src.View.PyradiProgressBar import *
 
-
 #####################################################################################################################
 #                                                                                                                   #
 #   This class creates an instance of the progress bar that is used while running pyradiomics                       #
@@ -32,6 +31,11 @@ class PyradiProgressBar(QtWidgets.QWidget):
 
         self.w = QtWidgets.QWidget()
         self.setWindowTitle("Running Pyradiomics")
+        self.setWindowFlags(
+            QtCore.Qt.Window |
+            QtCore.Qt.CustomizeWindowHint |
+            QtCore.Qt.WindowTitleHint |
+            QtCore.Qt.WindowMinimizeButtonHint)
         qtRectangle = self.w.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
@@ -47,41 +51,34 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.ext = PyradiExtended(path, filepaths, target_path)
         self.ext.copied_percent_signal.connect(self.on_update)
         self.ext.start()
-        
+
     def on_update(self, value, text=''):
-        """ 
+        """
         Update percentage and text of progress bar. 
-        
+
         :param value:   Percentage value to be displayed
-        
+
         :param text:    To display what ROI currently being processed
-        """ 
+        """
 
         # When generating the nrrd file, the percentage starts at 0
         # and reaches 25
         if value == 0:
             self.label.setText("Generating nrrd file")
-        # The segmentation masks are generated between the range 25 and 50 
+        # The segmentation masks are generated between the range 25 and 50
         elif value == 25:
             self.label.setText("Generating segmentation masks")
-            #self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         # Above 50, pyradiomics analysis is carried out over each segmentation mask
         elif value in range(50, 100):
             self.label.setText("Calculating features for " + text)
         # Set the percentage value
         self.progress_bar.setValue(value)
-        
+
         # When the percentage reaches 100, send a signal to close progress bar
         if value == 100:
-            self.progress_complete.emit() 
-
-    def closeEvent(self, event):
-        """ 
-        To handle user terminating the progress bar
-        """
-        self.ext.terminate()
-        self.close()
-
+            completion = QMessageBox.information(self, "Complete",
+                                                 "Task has been completed successfully")
+            self.progress_complete.emit()
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -95,7 +92,7 @@ class ProgressBar(QtWidgets.QWidget):
     open_patient_window = QtCore.pyqtSignal(str)
     open_welcome_window = QtCore.pyqtSignal()
 
-    #initialisation function
+    # initialisation function
     def __init__(self, path):
         super().__init__()
 
@@ -127,7 +124,7 @@ class ProgressBar(QtWidgets.QWidget):
         # in case the directory is not correct
         self.ext.incorrect_directory_signal.connect(
             self.on_incorrect_directory)
-        #start the loading of the patient
+        # start the loading of the patient
         self.ext.start()
 
     def on_count_change(self, value):
@@ -178,7 +175,7 @@ class ProgressBar(QtWidgets.QWidget):
         msg.setWindowTitle("Error")
         msg.exec_()
 
-    #handles close event of progress bar mid processing 
+    # handles close event of progress bar mid processing
     def closeEvent(self, event):
         if self.progress_bar.value() < 100:
             self.ext.terminate()
@@ -189,6 +186,7 @@ class ProgressBar(QtWidgets.QWidget):
 #   This class creates an instance of the Welcome Page when firstly running the software                            #
 #                                                                                                                   #
 #####################################################################################################################
+
 
 class Welcome(QtWidgets.QMainWindow, WelcomePage):
     # If patient directory selected, open patient display window
@@ -240,12 +238,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             None, 'Select patient folder...', '/home')
         if (path != ''):
             self.open_patient_window.emit(path)
-    
+
     def pyradiomicsHandler(self):
         """
         Sends signal to initiate pyradiomics analysis
         """
-        self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+        if self.hashed_path is '':
+            confirm_pyradi = QMessageBox.information(self, "Confirmation",
+                                                 "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
+                                                 QMessageBox.Yes, QMessageBox.No)
+            if confirm_pyradi == QMessageBox.Yes:
+                self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+            if confirm_pyradi == QMessageBox.No:
+                pass
+        else:
+            self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+        
 
 
 #####################################################################################################################
@@ -294,14 +302,15 @@ class Controller:
         """
         Display patient data
         """
-        #Loads the main window  by providing the necessary data obtained by the progress bar
+        # Loads the main window  by providing the necessary data obtained by the progress bar
         self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict,
                                          self.bar_window.ext.rois, self.bar_window.ext.raw_dvh,
                                          self.bar_window.ext.dvh_x_y, self.bar_window.ext.dict_raw_ContourData,
                                          self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
         self.patient_window.open_patient_window.connect(self.show_bar)
         self.patient_window.run_pyradiomics.connect(self.show_pyradi_progress)
-        self.patient_window.actionExit.triggered.connect(self.patient_window.close)
+        self.patient_window.actionExit.triggered.connect(
+            self.patient_window.close)
         self.bar_window.close()
         if self.welcome_window.isVisible():
             self.welcome_window.close()
@@ -311,10 +320,18 @@ class Controller:
         """
         Display pyradiomics progress bar
         """
-        self.pyradi_progressbar = PyradiProgressBar(path, filepaths, target_path)
-        self.pyradi_progressbar.progress_complete.connect(self.close_pyradi_progress)
+        # confirm_pyradi = QMessageBox.information(self, "Confirmation",
+        #                                          "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
+        #                                          QMessageBox.Yes, QMessageBox.No)
+        # if confirm_pyradi == QMessageBox.Yes:
+        self.pyradi_progressbar = PyradiProgressBar(
+            path, filepaths, target_path)
+        self.pyradi_progressbar.progress_complete.connect(
+            self.close_pyradi_progress)
         self.pyradi_progressbar.show()
-    
+        # if confirm_pyradi == QMessageBox.No:
+        #     pass
+
     def close_pyradi_progress(self):
         """
         Close pyradiomics progress bar
