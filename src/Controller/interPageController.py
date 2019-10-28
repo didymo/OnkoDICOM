@@ -7,6 +7,7 @@ import sys
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget
+from shutil import which
 import glob
 import re
 from src.View.mainPage import *
@@ -243,16 +244,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         Sends signal to initiate pyradiomics analysis
         """
-        if self.hashed_path is '':
-            confirm_pyradi = QMessageBox.information(self, "Confirmation",
-                                                 "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
-                                                 QMessageBox.Yes, QMessageBox.No)
-            if confirm_pyradi == QMessageBox.Yes:
+        if which('plastimatch') is not None:
+            if self.hashed_path is '':
+                confirm_pyradi = QMessageBox.information(self, "Confirmation",
+                                                    "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
+                                                    QMessageBox.Yes, QMessageBox.No)
+                if confirm_pyradi == QMessageBox.Yes:
+                    self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+                if confirm_pyradi == QMessageBox.No:
+                    pass
+            else:
                 self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
-            if confirm_pyradi == QMessageBox.No:
-                pass
         else:
-            self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+            exe_not_found = QMessageBox.information(self, "Error",
+                                                 "Plastimatch not installed. Please install Plastimatch (https://sourceforge.net/projects/plastimatch/) to carry out pyradiomics analysis.")
         
 
 
