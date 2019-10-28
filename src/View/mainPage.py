@@ -107,6 +107,7 @@ class Ui_MainWindow(object):
 
         # self.rois = get_roi_info(self.dataset_rtss)
         self.listRoisID = self.orderedListRoiID()
+        self.np_listRoisID = np.array(self.listRoisID)
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
         self.selected_doses = []
@@ -920,6 +921,8 @@ class Ui_MainWindow(object):
             res.append(id)
         return sorted(res)
 
+       # return res
+
     ########################
     #  ZOOM FUNCTIONALITY  #
     ########################
@@ -1066,7 +1069,9 @@ class Ui_MainWindow(object):
             # Add the structure in the list of selected ROIS
             self.selected_rois.append(key)
             # Select the corresponding item in Structure Info selector
-            index = self.listRoisID[key-1]
+            #select the real index from the np array since the keys differ
+            index = np.where(self.np_listRoisID == key)
+            index = index[0][0]
             self.comboBoxStructInfo.setCurrentIndex(index)
             self.comboStructInfo(index)
 

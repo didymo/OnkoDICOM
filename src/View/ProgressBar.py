@@ -68,7 +68,9 @@ class Extended(QtCore.QThread):
                 self.dataset_rtss, self.my_callback)
             self.dict_pixluts = self.get_pixluts(self.dataset, self.my_callback)
 
-            if self.previous < 100:
+            if self.previous < 100 or self.previous > 100:
+                self.previous = 99
+                self.copied_percent_signal.emit(self.previous)
                 for i in range(int(self.previous), 101):
                     self.copied_percent_signal.emit(int(i))
 
