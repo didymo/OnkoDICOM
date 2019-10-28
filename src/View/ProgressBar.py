@@ -264,23 +264,26 @@ class Extended(QtCore.QThread):
         dict_ROI = {}
         dict_NumPoints = {}
         for roi in rtss.ROIContourSequence:
-            ROIDisplayColor = roi.ROIDisplayColor
-            ReferencedROINumber = roi.ReferencedROINumber
-            ROIName = dict_id[ReferencedROINumber]
-            dict_contour = collections.defaultdict(list)
-            roi_points_count = 0
-            for slice in roi.ContourSequence:
-                for contour_img in slice.ContourImageSequence:
-                    ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
-                ContourGeometricType = slice.ContourGeometricType
-                NumberOfContourPoints = slice.NumberOfContourPoints
-                roi_points_count += int(NumberOfContourPoints)
-                ContourData = slice.ContourData
-                dict_contour[ReferencedSOPInstanceUID].append(ContourData)
-            dict_ROI[ROIName] = dict_contour
-            dict_NumPoints[ROIName] = roi_points_count
-            self.copied += len(dict_NumPoints)
-            callback(self.copied) #update the bar
+            if 'ROIDisplayColor' in roi:
+                ROIDisplayColor = roi.ROIDisplayColor
+                ReferencedROINumber = roi.ReferencedROINumber
+                ROIName = dict_id[ReferencedROINumber]
+                dict_contour = collections.defaultdict(list)
+                roi_points_count = 0
+                if 'ContourSequence' in roi:
+                    for slice in roi.ContourSequence:
+                        if 'ContourImageSequence' in slice:
+                            for contour_img in slice.ContourImageSequence:
+                                ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
+                            ContourGeometricType = slice.ContourGeometricType
+                            NumberOfContourPoints = slice.NumberOfContourPoints
+                            roi_points_count += int(NumberOfContourPoints)
+                            ContourData = slice.ContourData
+                            dict_contour[ReferencedSOPInstanceUID].append(ContourData)
+                dict_ROI[ROIName] = dict_contour
+                dict_NumPoints[ROIName] = roi_points_count
+                self.copied += len(dict_NumPoints)
+                callback(self.copied) #update the bar
         return dict_ROI, dict_NumPoints
 
     def calculate_matrix(self, img_ds, callback):

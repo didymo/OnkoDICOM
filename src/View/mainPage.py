@@ -7,7 +7,7 @@ except ImportError:
     import legacycontour._cntr as cntr
 import src.View.resources_rc
 from copy import deepcopy
-
+from random import randint,seed
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTransform
 from src.Controller.Add_On_OController import AddOptions
@@ -947,33 +947,40 @@ class Ui_MainWindow(object):
 
         # ROI Display color from RTSS file
         roiContourInfo = self.dictDicomTree_rtss['ROI Contour Sequence']
-        for item, roi_dict in roiContourInfo.items():
-            id = item.split()[1]
-            roi_id = self.listRoisID[int(id)]
-            RGB_dict = dict()
-            RGB_list = roiContourInfo[item]['ROI Display Color'][0]
-            RGB_dict['R'] = RGB_list[0]
-            RGB_dict['G'] = RGB_list[1]
-            RGB_dict['B'] = RGB_list[2]
-            with open('src/data/line&fill_configuration', 'r') as stream:
-                elements = stream.readlines()
-                if len(elements) > 0:
-                    roi_line = int(elements[0].replace('\n', ''))
-                    roi_opacity = int(elements[1].replace('\n', ''))
-                    iso_line = int(elements[2].replace('\n', ''))
-                    iso_opacity = int(elements[3].replace('\n', ''))
+        if len(roiContourInfo)>0:
+            for item, roi_dict in roiContourInfo.items():
+                id = item.split()[1]
+                roi_id = self.listRoisID[int(id)]
+                RGB_dict = dict()
+                if 'ROI Display Color' in roiContourInfo[item]:
+                    RGB_list = roiContourInfo[item]['ROI Display Color'][0]
+                    RGB_dict['R'] = RGB_list[0]
+                    RGB_dict['G'] = RGB_list[1]
+                    RGB_dict['B'] = RGB_list[2]
                 else:
-                    roi_line = 1
-                    roi_opacity = 10
-                    iso_line = 2
-                    iso_opacity = 5
-                stream.close()
-            roi_opacity = int((roi_opacity / 100) * 255)
-            RGB_dict['QColor'] = QtGui.QColor(
-                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
-            RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
-                RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
-            roiColor[roi_id] = RGB_dict
+                    seed(1)
+                    RGB_dict['R'] = randint(0,255)
+                    RGB_dict['G'] = randint(0,255)
+                    RGB_dict['B'] = randint(0,255)
+                with open('src/data/line&fill_configuration', 'r') as stream:
+                    elements = stream.readlines()
+                    if len(elements) > 0:
+                        roi_line = int(elements[0].replace('\n', ''))
+                        roi_opacity = int(elements[1].replace('\n', ''))
+                        iso_line = int(elements[2].replace('\n', ''))
+                        iso_opacity = int(elements[3].replace('\n', ''))
+                    else:
+                        roi_line = 1
+                        roi_opacity = 10
+                        iso_line = 2
+                        iso_opacity = 5
+                    stream.close()
+                roi_opacity = int((roi_opacity / 100) * 255)
+                RGB_dict['QColor'] = QtGui.QColor(
+                    RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
+                RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
+                    RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
+                roiColor[roi_id] = RGB_dict
         return roiColor
 
         # allColor = HexaColor()
