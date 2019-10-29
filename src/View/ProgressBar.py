@@ -224,7 +224,6 @@ class Extended(QtCore.QThread):
         return dict_dvh
 
     def single_calc_dvhs(self, rtss, rtdose, dict_roi, callback, dose_limit=None):
-        print("Here is windows.")
         dict_dvh = {}
         roi_list = []
         for key in dict_roi:
