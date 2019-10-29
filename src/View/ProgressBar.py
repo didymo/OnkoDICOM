@@ -6,6 +6,7 @@
 
 import glob
 import os
+import platform
 import re
 import numpy as np
 from PyQt5.QtCore import QFileInfo
@@ -60,8 +61,15 @@ class Extended(QtCore.QThread):
             self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True, defer_size=100)
             self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True, defer_size=100)
             self.rois = self.get_roi_info(self.dataset_rtss, self.my_callback)
-            self.raw_dvh = self.calc_dvhs(
-                self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
+            self.platform = platform.system()
+            if self.platform == 'Linux':
+                self.raw_dvh = self.calc_dvhs(
+                    self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
+            elif self.platform == 'Windows':
+                self.raw_dvh = self.single_calc_dvhs(
+                    self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
+            # self.raw_dvh = self.calc_dvhs(
+            #     self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
             self.dvh_x_y = self.converge_to_O_dvh(
                 self.raw_dvh, self.my_callback)
             self.dict_raw_ContourData, self.dict_NumPoints = self.get_raw_ContourData(
@@ -214,6 +222,25 @@ class Extended(QtCore.QThread):
         callback(self.copied) #update the bar
 
         return dict_dvh
+
+    def single_calc_dvhs(self, rtss, rtdose, dict_roi, callback, dose_limit=None):
+        print("Here is windows.")
+        dict_dvh = {}
+        roi_list = []
+        for key in dict_roi:
+            roi_list.append(key)
+            self.copied += len(roi_list)
+            callback(self.copied)  # update the bar
+
+        for roi in roi_list:
+            dict_dvh[roi] = dvhcalc.get_dvh(rtss, rtdose, roi, dose_limit)
+            self.copied += len(roi_list)
+            callback(self.copied)  # update the bar
+
+        return dict_dvh
+
+
+
 
     # Deal with the case where the last value of the DVH is not 0
     # Return a dictionary of bincenters (x axis of DVH) and counts (y value of DVH)
