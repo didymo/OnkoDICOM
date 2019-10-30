@@ -87,8 +87,7 @@ class Ui_CD_Display(object):
         self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
         self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
-        self.label_4.setStyleSheet("font: 57 11pt \"Ubuntu\";\n"
-                                   "color: rgb(0,0,0) ")
+        self.label_4.setStyleSheet("color: rgb(0,0,0) ")
         self.label_4.setObjectName("label_4")
         # gender components
         self.label_3 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
@@ -431,7 +430,6 @@ class Ui_CD_Display(object):
         self.Edit_button = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         self.Edit_button.setGeometry(QtCore.QRect(20, 820, 89, 25))
         self.Edit_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                       "font: 57 11pt \"Ubuntu\";\n"
                                        "color:rgb(75,0,130);\n"
                                        "font-weight: bold;\n")
         self.Edit_button.setObjectName("Edit_button")

@@ -112,8 +112,7 @@ class Ui_Form(object):
         # top note label that indicates the form state
         self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
-        self.label_4.setStyleSheet("font: 57 11pt \"Ubuntu\";\n"
-                                   "color: rgb(0,0,0) ")
+        self.label_4.setStyleSheet("color: rgb(0,0,0) ")
         self.label_4.setObjectName("label_4")
         # Date of birth
         self.label_DB = QtWidgets.QLabel(self.scrollAreaWidgetContents)
@@ -428,7 +427,6 @@ class Ui_Form(object):
         self.Save_button = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         self.Save_button.setGeometry(QtCore.QRect(20, 820, 89, 25))
         self.Save_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                       "font: 57 11pt \"Ubuntu\";\n"
                                        "color:rgb(75,0,130);\n"
                                        "font-weight: bold;\n")
         self.Save_button.setObjectName("Save_button")

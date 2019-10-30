@@ -18,19 +18,17 @@ class WelcomePage(object):
         self.centralwidget.setObjectName("centralwidget")
         self.welcomeLabel = QtWidgets.QLabel(self.centralwidget)
         self.welcomeLabel.setGeometry(QtCore.QRect(270, 340, 351, 41))
-        self.welcomeLabel.setStyleSheet("font: 57 18pt \"Ubuntu\";\n"
-                                        "font: 57 18pt \"Ubuntu\";")
+        self.welcomeLabel.setStyleSheet("font: 57 18pt;\n"
+                                        "font: 57 18pt;")
         self.welcomeLabel.setObjectName("welcomeLabel")
         # the sentence below welcome
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(80, 390, 671, 21))
-        self.label_2.setStyleSheet("font: 57 12pt \"Ubuntu\";")
         self.label_2.setObjectName("label_2")
         # button to open a patient
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(350, 440, 121, 31))
         self.pushButton.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                      "font: 57 12pt \"Ubuntu\";\n"
                                       "color:rgb(75,0,130);\n"
                                       "font-weight: bold;\n")
         self.pushButton.setObjectName("pushButton")
