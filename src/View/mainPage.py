@@ -338,8 +338,7 @@ class Ui_MainWindow(object):
 
         # Structure Information: Structure Information Label
         self.structInfo_label = QtWidgets.QLabel(self.structInfo_widget)
-        self.structInfo_label.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+        self.structInfo_label.setFont(QtGui.QFont("Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
         self.structInfo_label.setObjectName("structInfo_label")
 
         # Structure Information: "Select Structure" combobox
@@ -412,20 +411,20 @@ class Ui_MainWindow(object):
 
         # Add all the widgets of Structure Information in the grid Layout
         self.gridLayout_StructInfo.addWidget(self.structInfo_icon, 0, 0, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.structInfo_label, 0, 1, 1, 2)
-        self.gridLayout_StructInfo.addWidget(self.comboBoxStructInfo, 1, 0, 1, 3)
-        self.gridLayout_StructInfo.addWidget(self.struct_volume_label, 2, 0, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_volume_box, 2, 1, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_volume_unit, 2, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_minDose_label, 3, 0, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_minDose_box, 3, 1, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_minDose_unit, 3, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_label, 4, 0, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_box, 4, 1, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_unit, 4, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_label, 5, 0, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_box, 5, 1, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_unit, 5, 2, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.structInfo_label, 0, 1, 1, 3)
+        self.gridLayout_StructInfo.addWidget(self.comboBoxStructInfo, 1, 0, 1, 4)
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_label, 2, 0, 1, 2)
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_box, 2, 2, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_volume_unit, 2, 3, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_label, 3, 0, 1, 2)
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_box, 3, 2, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_minDose_unit, 3, 3, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_label, 4, 0, 1, 2)
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_box, 4, 2, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_unit, 4, 3, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_label, 5, 0, 1, 2)
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_box, 5, 2, 1, 1)
+        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_unit, 5, 3, 1, 1)
 
         self.vLayout_left.addWidget(self.tab1)
         self.vLayout_left.addWidget(self.structInfo_widget)
