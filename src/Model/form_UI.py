@@ -72,14 +72,15 @@ class Ui_Form(object):
 
     #this function builds the UI components of the clinical data form
     def setupUi(self, MainWindow):
-        self.scrollArea_cd = QtWidgets.QScrollArea(MainWindow)
-        self.scrollArea_cd.setGeometry(QtCore.QRect(0, 0, 875, 527))
-        self.scrollArea_cd.setWidgetResizable(False)
+        self.hLayout_structures = QtWidgets.QHBoxLayout(MainWindow)
+        self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea_cd = QtWidgets.QScrollArea()
+        self.scrollArea_cd.setWidgetResizable(True)
         self.scrollArea_cd.setObjectName("scrollArea_cd")
         self.scrollArea_cd.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scrollArea_cd.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1000, 900))
+        self.scrollAreaWidgetContents.setFixedSize(1000,900)
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
         # last name components
@@ -465,7 +466,7 @@ class Ui_Form(object):
         self.label_Dt_Distant_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_Dt_Distant_Failure.setGeometry(QtCore.QRect(350, 770, 171, 21))
         self.label_Dt_Distant_Failure.setObjectName("label_Dt_Distant_Failure")
-
+        self.hLayout_structures.addWidget(self.scrollArea_cd)
         self.scrollArea_cd.setWidget(self.scrollAreaWidgetContents)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -477,7 +478,7 @@ class Ui_Form(object):
         self.label_FN.setText(_translate("MainWindow", "First Name:"))
         self.label_3.setText(_translate("MainWindow", "Gender:"))
         self.label_4.setText(_translate("MainWindow",
-                                        "Note: There was no csv file containing \"clinical data\" in its name located in the directory."))
+                                        "Note: There was no csv file containing \"ClinicalData\" in its name located in the directory."))
         self.label_DB.setText(_translate("MainWindow", "Date of Birth:"))
         self.label_BP.setText(_translate("MainWindow", "Birth Country:"))
         self.label_7.setText(_translate("MainWindow", "Date of Diagnosis:"))

@@ -3,8 +3,9 @@
 # This file contains the Clinical Data Display UI for this software                                                 #
 #                                                                                                                   #
 #####################################################################################################################
-from PyQt5 import QtCore, QtGui, QtWidgets, Qt
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QStringListModel
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QCompleter, QLineEdit
 from country_list import countries_for_language
 from array import *
@@ -69,19 +70,26 @@ class Ui_CD_Display(object):
 
     # set up the ui
     def setupUi(self, MainWindow):
-        self.scrollArea_cd = QtWidgets.QScrollArea(MainWindow)
-        self.scrollArea_cd.setGeometry(QtCore.QRect(0, 0, 875, 527))
-        self.scrollArea_cd.setWidgetResizable(False)
+
+        self.hLayout_structures = QtWidgets.QHBoxLayout(MainWindow)
+        self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea_cd = QtWidgets.QScrollArea()
+        self.scrollArea_cd.setWidgetResizable(True)
+        self.scrollArea_cd.setFocusPolicy(Qt.NoFocus)
         self.scrollArea_cd.setObjectName("scrollArea_cd")
         self.scrollArea_cd.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOn)
         self.scrollArea_cd.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff)
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(
-            QtCore.QRect(0, 0, 1000, 900))
+        self.scrollAreaWidgetContents.setFixedSize(1000,900)
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
+        self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
+        self.label_4.setStyleSheet("font: 57 11pt \"Ubuntu\";\n"
+                                   "color: rgb(0,0,0) ")
+        self.label_4.setObjectName("label_4")
         # gender components
         self.label_3 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_3.setGeometry(QtCore.QRect(20, 70, 81, 21))
@@ -201,12 +209,6 @@ class Ui_CD_Display(object):
         self.Overall_Stage.addItem("")
         self.Overall_Stage.addItem("")
         self.Overall_Stage.addItem("")
-        # top note label that indicates the form state
-        self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
-        self.label_4.setStyleSheet("font: 57 11pt \"Ubuntu\";\n"
-                                   "color: rgb(0,0,0) ")
-        self.label_4.setObjectName("label_4")
         # Tx intent components
         self.Tx_intent = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
         self.Tx_intent.setGeometry(QtCore.QRect(150, 320, 171, 25))
@@ -474,7 +476,7 @@ class Ui_CD_Display(object):
         self.label_Dt_Distant_Failure.setGeometry(
             QtCore.QRect(350, 770, 171, 21))
         self.label_Dt_Distant_Failure.setObjectName("label_Dt_Distant_Failure")
-
+        self.hLayout_structures.addWidget(self.scrollArea_cd)
         self.scrollArea_cd.setWidget(self.scrollAreaWidgetContents)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
