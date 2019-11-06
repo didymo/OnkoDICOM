@@ -15,7 +15,7 @@ if __name__ == "__main__":
     
     # Set the font to Segoe UI, 9, when in windows OS
     if platform.system() == 'Windows':
-        # f = QFont("Segoe UI", 9)
+        f = QFont("Segoe UI", 9)
         app.setFont(f)
 
     controller = Controller()
