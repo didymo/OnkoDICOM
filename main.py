@@ -1,5 +1,8 @@
 import warnings
 
+import PyQt5
+import country_list
+
 from PyQt5.QtGui import QFont
 
 warnings.filterwarnings("ignore")
