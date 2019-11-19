@@ -23,6 +23,8 @@ Clone the Onko repository
 Enter the directory and create a virtual environment with a name of
 your choice, in this case it's envOnkoDICOM.
 
+cd OnkoDICOM
+
 `virtualenv --python=python3 envOnkoDICOM`
 
 Activate the virtual environment
