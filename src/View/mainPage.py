@@ -1487,7 +1487,14 @@ class Ui_MainWindow(object):
         # Information to display
         current_slice = self.dictSlice['Instance Number'][0]
         total_slices = len(self.pixmaps)
-        slice_pos = self.dictSlice['Slice Location'][0]
+        try:
+            slice_pos = self.dictSlice['Slice Location'][0]
+        except:
+            imagePosPatient = self.dictSlice['Image Position (Patient)']
+            # logging.error('Image Position (Patient):' + str(imagePosPatient))
+            imagePosPatientCoordinates = imagePosPatient[0]
+            # logging.error('Image Position (Patient) coordinates :' + str(imagePosPatientCoordinates))
+            slice_pos = imagePosPatientCoordinates[2]
         row_image = self.dictSlice['Rows'][0]
         col_image = self.dictSlice['Columns'][0]
         patient_pos = self.dictSlice['Patient Position'][0]
