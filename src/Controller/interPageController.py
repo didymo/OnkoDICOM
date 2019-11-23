@@ -245,7 +245,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Sends signal to initiate pyradiomics analysis
         """
         if which('plastimatch') is not None:
-            if self.hashed_path is '':
+            if self.hashed_path == '':
                 confirm_pyradi = QMessageBox.information(self, "Confirmation",
                                                     "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
                                                     QMessageBox.Yes, QMessageBox.No)

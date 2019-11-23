@@ -127,7 +127,7 @@ def pyradiomics(path, filepaths, target_path=''):
     ct_file = dcmread(filepaths[0], force=True)
     rtss_path = filepaths['rtss']
 
-    if target_path is '':
+    if target_path == '':
         patient_hash = os.path.basename(ct_file.PatientID)
         # Name of nrrd file
         nrrd_file_name = patient_hash + '.nrrd'  
