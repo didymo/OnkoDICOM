@@ -43,9 +43,20 @@ class Ui_MainWindow(object):
 
         self.rxdose = 1
         if self.dataset['rtplan']:
-            if 'DoseReferenceSequence' in self.dataset['rtplan']:
-                if self.dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType:
-                    self.rxdose = self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
+            # the TargetPrescriptionDose is type 3 (optional), so it may not be there
+            # However, it is preferable to the sum of the beam doses
+            # DoseReferenceStructureType is type 1 (value is mandatory), 
+            # but it can have a value of ORGAN_AT_RISK rather than TARGET
+            # in which case there will *not* be a TargetPrescriptionDose
+            # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose 
+            # will be encoded and have a value
+            if ('DoseReferenceSequence' in self.dataset['rtplan'] and
+                self.dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType and
+                self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose ):
+                self.rxdose = self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
+            # beam doses are to a point, not necessarily to the same point
+            # and don't necessarily add up to the prescribed dose to the target
+            # which is frequently to a SITE rather than to a POINT
             elif self.dataset['rtplan'].FractionGroupSequence:
                 fraction_group = self.dataset['rtplan'].FractionGroupSequence[0]
                 if ("NumberOfFractionsPlanned" in fraction_group) and \
