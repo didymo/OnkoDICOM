@@ -1624,7 +1624,9 @@ class Ui_MainWindow(object):
             # Instantiate the isodose generator for this slice
             isodosegen = cntr.Cntr(x, y, grid)
 
-            for sd in self.selected_doses:
+            # sort selected_doses in ascending order so that the high dose isodose washes
+            # paint over the lower dose isodose washes
+            for sd in sorted(self.selected_doses):
                 dose_level = sd[0] * self.rxdose / \
                     (self.dataset['rtdose'].DoseGridScaling * 10000)
                 contours = isodosegen.trace(dose_level)
