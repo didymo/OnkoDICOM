@@ -37,7 +37,7 @@ class Ui_MainWindow(object):
         self.rois = rois
         self.filepaths = filepaths
         self.path = path
-        dataset = self.dataset
+        # dataset = self.dataset
         self.dose_pixluts = get_dose_pixluts(self.dataset)
         self.hashed_path = ''     # Path to hashed patient directory
 
@@ -931,7 +931,6 @@ class Ui_MainWindow(object):
             res.append(id)
         return sorted(res)
 
-       # return res
 
     ########################
     #  ZOOM FUNCTIONALITY  #
@@ -1915,7 +1914,16 @@ class Ui_MainWindow(object):
 
 
 class DVH_plot(object):
+    """
+    Create the plot graph for the DVH
+    """
     def __init__(self, mainWindow):
+        """
+        Initialize the information useful for creating the DVH
+
+        :param mainWindow:
+         the window of the main page
+        """
         self.window = mainWindow
         self.selected_rois = mainWindow.selected_rois
         self.raw_dvh = mainWindow.raw_dvh
