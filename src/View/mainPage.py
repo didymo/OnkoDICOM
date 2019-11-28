@@ -126,6 +126,7 @@ class Ui_MainWindow(object):
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.roi_info = StructureInformation(self)
+        self.dict_roi_info = self.roi_info.listInfo
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
 
@@ -1282,13 +1283,13 @@ class Ui_MainWindow(object):
 
             # Set structure information boxes
             self.struct_volume_box.setText(_translate(
-                "MainWindow", str(self.roi_info.getVolume(structID))))
+                "MainWindow", str(self.dict_roi_info[structID]['volume'])))
             self.struct_minDose_box.setText(_translate(
-                "MainWindow", str(self.roi_info.getMin(structID))))
+                "MainWindow", str(self.dict_roi_info[structID]['min'])))
             self.struct_maxDose_box.setText(_translate(
-                "MainWindow", str(self.roi_info.getMax(structID))))
+                "MainWindow", str(self.dict_roi_info[structID]['max'])))
             self.struct_meanDose_box.setText(_translate(
-                "MainWindow", str(self.roi_info.getMean(structID))))
+                "MainWindow", str(self.dict_roi_info[structID]['mean'])))
 
     #######################
     #  DVH FUNCTIONALITY  #
@@ -1917,9 +1918,10 @@ class DVH_plot(object):
     """
     Create the plot graph for the DVH
     """
+
     def __init__(self, mainWindow):
         """
-        Initialize the information useful for creating the DVH
+        Initialize the information useful for creating the DVH and plot the DVH accordingly.
 
         :param mainWindow:
          the window of the main page
@@ -1929,81 +1931,115 @@ class DVH_plot(object):
         self.raw_dvh = mainWindow.raw_dvh
         self.dvh_x_y = mainWindow.dvh_x_y
         self.roiColor = mainWindow.roiColor
-        self.plot = self.DVH_view()
+        self.plot = self.dvh_view()
 
 
-    # Return the DVH plot
+    def dvh_view(self):
+        """
+        :return:
+         DVH plot using Matplotlib library.
+        """
 
-    def DVH_view(self):
+        # Initialisation of the plots
         fig, ax = plt.subplots()
         fig.subplots_adjust(0.1, 0.15, 1, 1)
+        # Maximum value for x axis
         max_xlim = 0
+
+        # Plot for all the ROIs selected in the left column of the window
         for roi in self.selected_rois:
             dvh = self.raw_dvh[int(roi)]
+
+            # Plot only the ROIs whose volume is non equal to 0
             if dvh.volume != 0:
+                # Bincenters, obtained from the dvh object, give the x axis values
+                # (Doses originally in Gy unit)
                 bincenters = self.dvh_x_y[roi]['bincenters']
+
+                # Counts, obtained from the dvh object, give the y axis values
+                # (values between 0 and dvh.volume)
                 counts = self.dvh_x_y[roi]['counts']
+
+                # Color of the line is the same as the color shown in the left column of the window
                 colorRoi = self.roiColor[roi]
                 color_R = colorRoi['R'] / 255
                 color_G = colorRoi['G'] / 255
                 color_B = colorRoi['B'] / 255
+
                 plt.plot(100 * bincenters,
                          100 * counts / dvh.volume,
                          label=dvh.name,
                          color=[color_R, color_G, color_B])
+
+                # Update the maximum value for x axis (usually different between ROIs)
                 if (100 * bincenters[-1]) > max_xlim:
                     max_xlim = 100 * bincenters[-1]
+
                 plt.xlabel('Dose [%s]' % 'cGy')
                 plt.ylabel('Volume [%s]' % '%')
                 if dvh.name:
                     plt.legend(loc='lower center', bbox_to_anchor=(0, 1, 5, 5))
 
+        # Set the range values for x and y axis
         ax.set_ylim([0, 105])
         ax.set_xlim([0, max_xlim + 3])
 
+        # Create the grids on the plot
         major_ticks_y = np.arange(0, 105, 20)
         minor_ticks_y = np.arange(0, 105, 5)
         major_ticks_x = np.arange(0, max_xlim + 250, 1000)
         minor_ticks_x = np.arange(0, max_xlim + 250, 250)
-
         ax.set_xticks(major_ticks_x)
         ax.set_xticks(minor_ticks_x, minor=True)
         ax.set_yticks(major_ticks_y)
         ax.set_yticks(minor_ticks_y, minor=True)
-
         ax.grid(which='minor', alpha=0.2)
         ax.grid(which='major', alpha=0.5)
 
+        # Add the legend at the bottom left of the graph
         if len(self.selected_rois) != 0:
             ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
-
-        # fig.canvas.mpl_connect('figure_enter_event', self.enter_figure)
 
         plt.subplots_adjust(bottom=0.3)
 
         return fig
 
 
-    def enter_figure(self, event):
-        print('enter_figure', event.canvas.figure)
-        plt.axvline(x=1000, ymin=0, ymax=105, color='r')
-        event.canvas.draw()
-
-
 class StructureInformation(object):
+    """
+    Information for all ROI structures (volume, min, max, mean doses).
+    """
+
     def __init__(self, mainWindow):
+        """
+        Retrieve informations for all ROI structures.
+
+        :param mainWindow:
+         the window of the main page
+        """
         self.window = mainWindow
         self.listInfo = self.getStructInfo()
 
-    # Return a dictionary containing volume, min, max and mean doses for all the ROIs
-    def getStructInfo(self):
-        res = dict()
-        for id, value in self.window.rois.items():
-            dvh = self.window.raw_dvh[id]
-            counts = self.window.dvh_x_y[id]['counts']
 
+    def getStructInfo(self):
+        """
+        Dictionary for all the ROI structures containing information about the volume, the min, max and mean doses.
+
+        :return:
+         Dictionary where:
+          - the key is the id of the ROI structure
+          - the value is a dictionary whose keys are volume, min, max and mean.
+        """
+
+        res = dict()
+        for roi_id, _ in self.window.rois.items():
             structInfo = dict()
+            dvh = self.window.raw_dvh[roi_id]
+            # counts is an array of values indicating the volume at each dose (in cGy)
+            counts = self.window.dvh_x_y[roi_id]['counts']
+
             structInfo['volume'] = float("{0:.3f}".format(dvh.volume))
+
 
             # The volume of the ROI is equal to 0
             if dvh.volume == 0:
@@ -2011,57 +2047,45 @@ class StructureInformation(object):
                 structInfo['max'] = '-'
                 structInfo['mean'] = '-'
 
+
             # The volume of the ROI is greater than 0
             else:
-                value_DVH = 100 * counts / dvh.volume
+                """
+                The min dose is the last dose (in cGy) where the percentage of volume
+                 receiving this dose is equal to 100%.
+                The mean dose is the last dose (in cGy) where the percentage of volume
+                 receiving this dose is greater than 50%.
+                The max dose is the last dose (in cGy) where the percentage of volume
+                 receiving this dose is greater than 0%.
+                """
+                volume_percent = 100 * counts / dvh.volume
+                # index is used as a cursor to get the min, mean and max doses.
                 index = 0
 
                 # Get the min dose of the ROI
-                while index < len(value_DVH) and int(value_DVH.item(index)) == 100:
+                while index < len(volume_percent) and int(volume_percent.item(index)) == 100:
                     index += 1
-
-                # Set the min dose value
                 if index == 0:
                     structInfo['min'] = 0
                 else:
                     structInfo['min'] = index-1
 
                 # Get the mean dose of the ROI
-                while index < len(value_DVH) and value_DVH.item(index) > 50:
+                while index < len(volume_percent) and volume_percent.item(index) > 50:
                     index += 1
-
-                # Set the max dose value
-                # Index at 0 cGy
                 if index == 0:
                     structInfo['mean'] = 0
-                # Index > 0 cGy
                 else:
                     structInfo['mean'] = index-1
 
                 # Get the max dose of the ROI
-                while index < len(value_DVH) and value_DVH.item(index) != 0:
+                while index < len(volume_percent) and volume_percent.item(index) != 0:
                     index += 1
-
-                # Set the max dose value
-                # Index at 0 cGy
                 if index == 0:
                     structInfo['max'] = 0
-                # Index > 0 cGy
                 else:
                     structInfo['max'] = index-1
 
-            res[id] = structInfo
+            res[roi_id] = structInfo
 
         return res
-
-    def getVolume(self, index):
-        return self.listInfo[index]['volume']
-
-    def getMin(self, index):
-        return self.listInfo[index]['min']
-
-    def getMax(self, index):
-        return self.listInfo[index]['max']
-
-    def getMean(self, index):
-        return self.listInfo[index]['mean']
