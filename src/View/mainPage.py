@@ -1,24 +1,18 @@
-import matplotlib.pylab as plt
-from PyQt5.QtWidgets import QMessageBox
-
 try:
     from matplotlib import _cntr as cntr
 except ImportError:
     import legacycontour._cntr as cntr
 import src.View.resources_rc
 from copy import deepcopy
-from random import randint,seed
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTransform
+from random import randint, seed
 from src.Controller.Add_On_OController import AddOptions
-from src.Model.CalculateDVHs import *
+from src.Controller.mainPageController import MainPage
 from src.Model.CalculateImages import *
 from src.Model.GetPatientInfo import *
 from src.Model.ROI import *
 from src.Model.Isodose import *
 from src.View.InputDialogs import Rxdose_Check
-from src.Controller.mainPageController import MainPage
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from src.View.DVH import *
 
 
 class Ui_MainWindow(object):
@@ -168,7 +162,7 @@ class Ui_MainWindow(object):
         # Central Layer
         self.mainWidget = QtWidgets.QWidget(MainWindow)
         self.mainWidget.setObjectName("mainWidget")
-        self.mainWidget.setFocusPolicy(Qt.NoFocus)
+        self.mainWidget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.main_vLayout = QtWidgets.QVBoxLayout(self.mainWidget)
 
         #######################################
@@ -196,7 +190,7 @@ class Ui_MainWindow(object):
         self.hLayout_name.setContentsMargins(0, 0, 0, 0)
         self.hLayout_name.setSpacing(5)
         self.hLayout_name.setObjectName("hLayout_name")
-        self.patient_name_widget.setFocusPolicy(Qt.NoFocus)
+        self.patient_name_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         # Name Patient (label)
         self.patient_name = QtWidgets.QLabel(self.patient_name_widget)
         self.patient_name.setObjectName("patient_name")
@@ -219,7 +213,7 @@ class Ui_MainWindow(object):
         self.hLayout_ID.setContentsMargins(0, 0, 0, 0)
         self.hLayout_ID.setObjectName("hLayout_ID")
         self.hLayout_ID.setSpacing(5)
-        self.patient_ID_widget.setFocusPolicy(Qt.NoFocus)
+        self.patient_ID_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         # Patient ID (label)
         self.patient_ID = QtWidgets.QLabel(self.patient_ID_widget)
         self.patient_ID.setObjectName("patient_ID")
@@ -238,7 +232,7 @@ class Ui_MainWindow(object):
         self.patient_gender_widget = QtWidgets.QWidget(self.patient_widget)
         self.patient_gender_widget.setGeometry(QtCore.QRect(830, 5, 111, 31))
         self.patient_gender_widget.setObjectName("widget2")
-        self.patient_gender_widget.setFocusPolicy(Qt.NoFocus)
+        self.patient_gender_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hLayout_gender = QtWidgets.QHBoxLayout(self.patient_gender_widget)
         self.hLayout_gender.setContentsMargins(0, 0, 0, 0)
         self.hLayout_gender.setSpacing(5)
@@ -261,7 +255,7 @@ class Ui_MainWindow(object):
         self.patient_DOB_widget = QtWidgets.QWidget(self.patient_widget)
         self.patient_DOB_widget.setGeometry(QtCore.QRect(950, 5, 95, 31))
         self.patient_DOB_widget.setObjectName("widget1")
-        self.patient_DOB_widget.setFocusPolicy(Qt.NoFocus)
+        self.patient_DOB_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hLayout_DOB = QtWidgets.QHBoxLayout(self.patient_DOB_widget)
         self.hLayout_DOB.setContentsMargins(0, 0, 0, 0)
         self.hLayout_DOB.setSpacing(5)
@@ -309,7 +303,7 @@ class Ui_MainWindow(object):
 
         self.mainView_widget = QtWidgets.QWidget(MainWindow)
         self.mainView_widget.setObjectName("mainView_widget")
-        self.mainView_widget.setFocusPolicy(Qt.NoFocus)
+        self.mainView_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hLayout_mainView = QtWidgets.QHBoxLayout(self.mainView_widget)
         self.hLayout_mainView.setContentsMargins(0, 0, 0, 0)
 
@@ -323,7 +317,7 @@ class Ui_MainWindow(object):
         
         # Left Top Column: Structure and Isodoses Tabs
         self.tab1 = QtWidgets.QTabWidget(self.left_widget)
-        self.tab1.setFocusPolicy(Qt.NoFocus)
+        self.tab1.setFocusPolicy(QtCore.Qt.NoFocus)
         self.tab1.setGeometry(QtCore.QRect(0, 40, 200, 361))
         self.tab1.setObjectName("tab1")
         # Left Column: Structures tab
@@ -452,7 +446,7 @@ class Ui_MainWindow(object):
 
         # Main view: DICOM View
         self.tab2_view = QtWidgets.QWidget()
-        self.tab2_view.setFocusPolicy(Qt.NoFocus)
+        self.tab2_view.setFocusPolicy(QtCore.Qt.NoFocus)
         self.tab2_view.setObjectName("tab2_view")
         self.gridLayout_view = QtWidgets.QGridLayout(self.tab2_view)
         self.gridLayout_view.setContentsMargins(0, 0, 0, 0)
@@ -460,7 +454,7 @@ class Ui_MainWindow(object):
 
         # Vertical Slider
         self.initSlider()
-        self.slider.setFocusPolicy(Qt.NoFocus)
+        self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
         # DICOM image processing
         self.initDICOM_view()
@@ -473,7 +467,7 @@ class Ui_MainWindow(object):
         # Main view: DVH
         self.tab2_DVH = QtWidgets.QWidget()
         self.tab2_DVH.setObjectName("tab2_DVH")
-        self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
+        self.tab2_DVH.setFocusPolicy(QtCore.Qt.NoFocus)
         # DVH Processing
         self.dvh = DVH(self)
         self.dvh.init_layout(self)
@@ -486,7 +480,7 @@ class Ui_MainWindow(object):
         # Main view: DICOM Tree
         self.tab2_DICOM_tree = QtWidgets.QWidget()
         self.tab2_DICOM_tree.setObjectName("tab2_DICOM_tree")
-        self.tab2_DICOM_tree.setFocusPolicy(Qt.NoFocus)
+        self.tab2_DICOM_tree.setFocusPolicy(QtCore.Qt.NoFocus)
         # Tree View tab grid layout
         self.vboxL_Tree = QtWidgets.QVBoxLayout(self.tab2_DICOM_tree)
         self.vboxL_Tree.setObjectName("vboxL_Tree")
@@ -495,7 +489,7 @@ class Ui_MainWindow(object):
         self.initTreeViewSelector()
         # Creation of the Tree View
         self.treeView = QtWidgets.QTreeView(self.tab2_DICOM_tree)
-        self.treeView.setFocusPolicy(Qt.NoFocus)
+        self.treeView.setFocusPolicy(QtCore.Qt.NoFocus)
         self.initTree()
         self.initTreeParameters()
         self.tab2.addTab(self.tab2_DICOM_tree, "")
@@ -504,14 +498,14 @@ class Ui_MainWindow(object):
 
         # Main view: Clinical Data
         self.tab2_clinical_data = QtWidgets.QWidget()
-        self.tab2_clinical_data.setFocusPolicy(Qt.NoFocus)
+        self.tab2_clinical_data.setFocusPolicy(QtCore.Qt.NoFocus)
         # check for csv data
         reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(self.path + reg):
             self.callClass.display_cd_form(self.tab2, self.path)
         else:
             self.callClass.display_cd_dat(self.tab2, self.path)
-        self.tab2.setFocusPolicy(Qt.NoFocus)
+        self.tab2.setFocusPolicy(QtCore.Qt.NoFocus)
 
 
         self.hLayout_mainView.addWidget(self.left_widget)
@@ -548,7 +542,7 @@ class Ui_MainWindow(object):
         self.label.setAlignment(QtCore.Qt.AlignRight)
         self.label.setStyleSheet("font: 9pt \"Laksaman\";")
         self.label.setObjectName("label")
-        self.label.setFocusPolicy(Qt.NoFocus)
+        self.label.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hLayout_bottom.addWidget(self.label)
 
         self.main_vLayout.addWidget(self.bottom_widget)
@@ -564,7 +558,7 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 901, 35))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
-        self.menubar.setFocusPolicy(Qt.NoFocus)
+        self.menubar.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Menu Bar: File, Edit, Tools, Help
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -765,14 +759,14 @@ class Ui_MainWindow(object):
         self.windowingButton.setMenu(self.menuWindowing)
         self.windowingButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.windowingButton.setIcon(iconWindowing)
-        self.windowingButton.setFocusPolicy(Qt.NoFocus)
+        self.windowingButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Export Button drop-down list on toolbar
         self.exportButton = QtWidgets.QToolButton()
         self.exportButton.setMenu(self.menuExport)
         self.exportButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.exportButton.setIcon(iconExport)
-        self.exportButton.setFocusPolicy(Qt.NoFocus)
+        self.exportButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Build toolbar
         self.menuTools.addAction(self.actionZoom_In)
@@ -784,18 +778,18 @@ class Ui_MainWindow(object):
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menuExport.menuAction())
         self.menuTools.addAction(self.actionAnonymize_and_Save)
-        self.menuTools.setFocusPolicy(Qt.NoFocus)
+        self.menuTools.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # To create a space in the toolbar
         self.toolbar_spacer = QtWidgets.QWidget()
         self.toolbar_spacer.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.toolbar_spacer.setFocusPolicy(Qt.NoFocus)
+        self.toolbar_spacer.setFocusPolicy(QtCore.Qt.NoFocus)
         # To create a space in the toolbar
         self.right_spacer = QtWidgets.QWidget()
         self.right_spacer.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.right_spacer.setFocusPolicy(Qt.NoFocus)
+        self.right_spacer.setFocusPolicy(QtCore.Qt.NoFocus)
 
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addSeparator()
@@ -1008,18 +1002,18 @@ class Ui_MainWindow(object):
         # Scroll Area
         self.tab1_structures = QtWidgets.QWidget()
         self.tab1_structures.setObjectName("tab1_structures")
-        self.tab1_structures.setFocusPolicy(Qt.NoFocus)
+        self.tab1_structures.setFocusPolicy(QtCore.Qt.NoFocus)
 
         self.scrollAreaStruct = QtWidgets.QScrollArea(self.tab1_structures)
         self.hLayout_structures = QtWidgets.QHBoxLayout(self.tab1_structures)
         self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
 
         self.scrollAreaStruct.setWidgetResizable(True)
-        self.scrollAreaStruct.setFocusPolicy(Qt.NoFocus)
+        self.scrollAreaStruct.setFocusPolicy(QtCore.Qt.NoFocus)
         # Scroll Area Content
         self.scrollAreaStructContents = QtWidgets.QWidget(self.scrollAreaStruct)
         self.scrollAreaStruct.ensureWidgetVisible(self.scrollAreaStructContents)
-        self.scrollAreaStructContents.setFocusPolicy(Qt.NoFocus)
+        self.scrollAreaStructContents.setFocusPolicy(QtCore.Qt.NoFocus)
         # Grid Layout containing the color squares and the checkboxes
         self.gridL_StructColumn = QtWidgets.QGridLayout(self.scrollAreaStructContents)
         self.gridL_StructColumn.setContentsMargins(5, 5, 5, 5)
@@ -1043,7 +1037,7 @@ class Ui_MainWindow(object):
             # QCheckbox
             text = value['name']
             checkBoxStruct = QtWidgets.QCheckBox()
-            checkBoxStruct.setFocusPolicy(Qt.NoFocus)
+            checkBoxStruct.setFocusPolicy(QtCore.Qt.NoFocus)
             checkBoxStruct.clicked.connect(
                 lambda state, text=key: self.checkedStruct(state, text))
             checkBoxStruct.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -1095,7 +1089,7 @@ class Ui_MainWindow(object):
 
     def initIsodColumn(self):
         self.tab1_isodoses = QtWidgets.QWidget()
-        self.tab1_isodoses.setFocusPolicy(Qt.NoFocus)
+        self.tab1_isodoses.setFocusPolicy(QtCore.Qt.NoFocus)
         self.tab1_isodoses.setGeometry(QtCore.QRect(0, 0, 198, 320))
         self.gridL_IsodCol = QtWidgets.QGridLayout(self.tab1_isodoses)
         self.gridL_IsodCol.setContentsMargins(5, 1, 0, 0)
@@ -1154,16 +1148,16 @@ class Ui_MainWindow(object):
             "30 % / " + str(val_isod9) + " cGy")
         self.box10_isod = QtWidgets.QCheckBox(
             "10 % / " + str(val_isod10) + " cGy")
-        self.box1_isod.setFocusPolicy(Qt.NoFocus)
-        self.box2_isod.setFocusPolicy(Qt.NoFocus)
-        self.box3_isod.setFocusPolicy(Qt.NoFocus)
-        self.box4_isod.setFocusPolicy(Qt.NoFocus)
-        self.box5_isod.setFocusPolicy(Qt.NoFocus)
-        self.box6_isod.setFocusPolicy(Qt.NoFocus)
-        self.box7_isod.setFocusPolicy(Qt.NoFocus)
-        self.box8_isod.setFocusPolicy(Qt.NoFocus)
-        self.box9_isod.setFocusPolicy(Qt.NoFocus)
-        self.box10_isod.setFocusPolicy(Qt.NoFocus)
+        self.box1_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box2_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box3_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box4_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box5_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box6_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box7_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box8_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box9_isod.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.box10_isod.setFocusPolicy(QtCore.Qt.NoFocus)
         with open('src/data/line&fill_configuration', 'r') as stream:
             elements = stream.readlines()
             if len(elements) > 0:
@@ -1261,7 +1255,7 @@ class Ui_MainWindow(object):
         self.comboBoxStructInfo.activated.connect(self.comboStructInfo)
         self.comboBoxStructInfo.setGeometry(QtCore.QRect(5, 35, 188, 31))
         self.comboBoxStructInfo.setObjectName("comboBox")
-        self.comboBoxStructInfo.setFocusPolicy(Qt.NoFocus)
+        self.comboBoxStructInfo.setFocusPolicy(QtCore.Qt.NoFocus)
 
 
     # Function triggered when an item of the selector 'Structure Information' is selected
@@ -1294,16 +1288,16 @@ class Ui_MainWindow(object):
     def clinicalDataCheck(self):
         reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(self.path + reg):
-            SaveReply = QMessageBox.warning(self, "Message",
+            SaveReply = QtWidgets.QMessageBox.warning(self, "Message",
                                                 "You need to complete the Clinical Data form for this patient!",
-                                                QMessageBox.Ok)
-            if SaveReply == QMessageBox.Ok:
+                                                QtWidgets.QMessageBox.Ok)
+            if SaveReply == QtWidgets.QMessageBox.Ok:
                 self.tab2.setCurrentIndex(3)
         else:
-            SaveReply = QMessageBox.information(self, "Message",
+            SaveReply = QtWidgets.QMessageBox.information(self, "Message",
                                                 "A Clinical Data file exists for this patient! If you wish \nto update it you can do so in the Clinical Data tab.",
-                                                QMessageBox.Ok)
-            if SaveReply == QMessageBox.Ok:
+                                                QtWidgets.QMessageBox.Ok)
+            if SaveReply == QtWidgets.QMessageBox.Ok:
                 pass
 
 
@@ -1405,7 +1399,7 @@ class Ui_MainWindow(object):
         # Change zoom if needed
         if zoomChange:
             self.DICOM_view.setTransform(
-                QTransform().scale(self.zoom, self.zoom))
+                QtGui.QTransform().scale(self.zoom, self.zoom))
 
         # Add ROI contours
         self.ROI_display()
@@ -1688,7 +1682,7 @@ class Ui_MainWindow(object):
 
     def initTreeViewSelector(self):
         self.comboBoxTree = QtWidgets.QComboBox()
-        self.comboBoxTree.setFocusPolicy(Qt.NoFocus)
+        self.comboBoxTree.setFocusPolicy(QtCore.Qt.NoFocus)
         self.comboBoxTree.setStyleSheet("QComboBox {font: 75 \"Laksaman\";"
                                         "combobox-popup: 0;"
                                         "background-color: #efefef; }"
@@ -1818,13 +1812,13 @@ class Ui_MainWindow(object):
             actionWindowingItem.setText(_translate("MainWindow", text))
 
     def HandleAnonymization(self):
-        SaveReply = QMessageBox.information(self, "Confirmation",
+        SaveReply = QtWidgets.QMessageBox.information(self, "Confirmation",
                                             "Are you sure you want to perform anonymization?",
-                                            QMessageBox.Yes, QMessageBox.No)
-        if SaveReply == QMessageBox.Yes:
+                                            QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if SaveReply == QtWidgets.QMessageBox.Yes:
             self.hashed_path = self.callClass.runAnonymization(self)
             self.pyradi_trigger.emit(self.path, self.filepaths, self.hashed_path) 
-        if SaveReply == QMessageBox.No:
+        if SaveReply == QtWidgets.QMessageBox.No:
             pass
 
     def setWindowingLimits(self, state, text):
@@ -1862,166 +1856,6 @@ class Ui_MainWindow(object):
 
     def AddOnOptionsHandler(self):
         options = self.callManager.show_add_on_options()
-
-
-
-class DVH(object):
-    """
-    Manage all functionalities related to the DVH tab.
-    - Create and update the DVH.
-    - Manage Export DVH functionality.
-    """
-
-    def __init__(self, mainWindow):
-        """
-        Initialize the information useful for creating the DVH.
-        Create the plot widget to place in the window (plotWidget) and the export DVH button.
-
-        :param mainWindow:
-         the window of the main page
-        """
-        self.window = mainWindow
-        self.selected_rois = mainWindow.selected_rois
-        self.raw_dvh = mainWindow.raw_dvh
-        self.dvh_x_y = mainWindow.dvh_x_y
-        self.roi_color = mainWindow.roiColor
-        self.plot = self.plot_dvh()
-        self.plotWidget = FigureCanvas(self.plot)
-        self.button_export = self.export_button()
-
-
-    def plot_dvh(self):
-        """
-        :return:
-         DVH plot using Matplotlib library.
-        """
-
-        # Initialisation of the plots
-        fig, ax = plt.subplots()
-        fig.subplots_adjust(0.1, 0.15, 1, 1)
-        # Maximum value for x axis
-        max_xlim = 0
-
-        # Plot for all the ROIs selected in the left column of the window
-        for roi in self.selected_rois:
-            dvh = self.raw_dvh[int(roi)]
-
-            # Plot only the ROIs whose volume is non equal to 0
-            if dvh.volume != 0:
-                # Bincenters, obtained from the dvh object, give the x axis values
-                # (Doses originally in Gy unit)
-                bincenters = self.dvh_x_y[roi]['bincenters']
-
-                # Counts, obtained from the dvh object, give the y axis values
-                # (values between 0 and dvh.volume)
-                counts = self.dvh_x_y[roi]['counts']
-
-                # Color of the line is the same as the color shown in the left column of the window
-                color = self.roi_color[roi]
-                color_R = color['R'] / 255
-                color_G = color['G'] / 255
-                color_B = color['B'] / 255
-
-                plt.plot(100 * bincenters,
-                         100 * counts / dvh.volume,
-                         label=dvh.name,
-                         color=[color_R, color_G, color_B])
-
-                # Update the maximum value for x axis (usually different between ROIs)
-                if (100 * bincenters[-1]) > max_xlim:
-                    max_xlim = 100 * bincenters[-1]
-
-                plt.xlabel('Dose [%s]' % 'cGy')
-                plt.ylabel('Volume [%s]' % '%')
-                if dvh.name:
-                    plt.legend(loc='lower center', bbox_to_anchor=(0, 1, 5, 5))
-
-        # Set the range values for x and y axis
-        ax.set_ylim([0, 105])
-        ax.set_xlim([0, max_xlim + 3])
-
-        # Create the grids on the plot
-        major_ticks_y = np.arange(0, 105, 20)
-        minor_ticks_y = np.arange(0, 105, 5)
-        major_ticks_x = np.arange(0, max_xlim + 250, 1000)
-        minor_ticks_x = np.arange(0, max_xlim + 250, 250)
-        ax.set_xticks(major_ticks_x)
-        ax.set_xticks(minor_ticks_x, minor=True)
-        ax.set_yticks(major_ticks_y)
-        ax.set_yticks(minor_ticks_y, minor=True)
-        ax.grid(which='minor', alpha=0.2)
-        ax.grid(which='major', alpha=0.5)
-
-        # Add the legend at the bottom left of the graph
-        if len(self.selected_rois) != 0:
-            ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
-
-        plt.subplots_adjust(bottom=0.3)
-
-        return fig
-
-
-    def init_layout(self, mainWindow):
-        """
-        Initialize the layout for the DVH tab.
-        Add the plot widget and the Export button in the layout.
-
-        :param mainWindow:
-         the window of the main page
-        """
-        self.layout = QtWidgets.QGridLayout(mainWindow.tab2_DVH)
-        self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
-        self.layout.addWidget(self.button_export, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
-
-
-    def update_plot(self, mainWindow):
-        """
-        Update the DVH plot.
-
-        :param mainWindow:
-         the window of the main page
-        """
-        self.layout.removeWidget(self.plotWidget)
-        self.__init__(mainWindow)
-        self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
-
-
-    def export_button(self):
-        """
-        Create a button Export DVH.
-        """
-        button = QtWidgets.QPushButton()
-        button.setFocusPolicy(Qt.NoFocus)
-        button.setFixedSize(QtCore.QSize(100, 39))
-        button.setCursor(
-            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                            "font: 57 11pt \"Ubuntu\";\n"
-                                            "color:rgb(75,0,130);\n"
-                                            "font-weight: bold;\n")
-        button.setObjectName("button_exportDVH")
-        button.clicked.connect(self.export_csv)
-
-        return button
-
-
-
-    def export_csv(self):
-        """
-        Export DVH as a CSV file in the current directory.
-        """
-        main_window = self.window
-        if not os.path.isdir(main_window.path + '/CSV'):
-            os.mkdir(main_window.path + '/CSV')
-        dvh2csv(main_window.raw_dvh,
-                main_window.path + "/CSV/",
-                'DVH_'+ main_window.basicInfo['id'],
-                main_window.dataset[0].PatientID)
-        SaveReply = QMessageBox.information(main_window, "Message",
-                                            "The DVH Data was saved successfully in your directory!",
-                                            QMessageBox.Ok)
-        if SaveReply == QMessageBox.Ok:
-            pass
 
 
 
