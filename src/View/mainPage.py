@@ -13,6 +13,7 @@ from src.Model.Isodose import *
 from src.View.InputDialogs import Rxdose_Check
 from src.View.DVH import *
 from src.View.TreeDICOM import *
+from src.View.StructureInformation import *
 
 
 class Ui_MainWindow(object):
@@ -119,8 +120,6 @@ class Ui_MainWindow(object):
 
         # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
         # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
-        self.roi_info = StructureInformation(self)
-        self.dict_roi_info = self.roi_info.listInfo
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
 
@@ -330,110 +329,11 @@ class Ui_MainWindow(object):
 
         #######################################
 
-        # Left Bottom Column: Structure Information
-        self.structInfo_widget = QtWidgets.QWidget(self.left_widget)
-        self.gridLayout_StructInfo = QtWidgets.QGridLayout(self.structInfo_widget)
-        self.gridLayout_StructInfo.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_StructInfo.setObjectName("vLayout_StructInfo")
-
-        # Structure Information: Information Icon
-        self.structInfo_icon = QtWidgets.QLabel(self.structInfo_widget)
-        self.structInfo_icon.setText("")
-        self.structInfo_icon.setPixmap(QtGui.QPixmap(":/images/Icon/info.png"))
-        self.structInfo_icon.setObjectName("structInfo_icon")
-
-        # Structure Information: Structure Information Label
-        self.structInfo_label = QtWidgets.QLabel(self.structInfo_widget)
-        self.structInfo_label.setFont(QtGui.QFont("Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.structInfo_label.setObjectName("structInfo_label")
-
-        # Structure Information: "Select Structure" combobox
-        self.initStructInfoSelector()
-
-        # Structure Information: "Volume"
-        # "Volume" label
-        self.struct_volume_label = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_volume_label.setGeometry(QtCore.QRect(10, 70, 68, 29))
-        self.struct_volume_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_volume_label.setObjectName("struct_volume_label")
-        # "Volume" box
-        self.struct_volume_box = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_volume_box.setGeometry(QtCore.QRect(95, 70, 81, 31))
-        self.struct_volume_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_volume_box.setObjectName("struct_volume_box")
-        # "Volume" unit
-        self.struct_volume_unit = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_volume_unit.setGeometry(QtCore.QRect(160, 70, 81, 31))
-        self.struct_volume_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_volume_unit.setObjectName("struct_volume_unit")
-
-        # Structure Information: "Min Dose" label
-        self.struct_minDose_label = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_minDose_label.setGeometry(QtCore.QRect(10, 100, 68, 31))
-        self.struct_minDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_minDose_label.setObjectName("struct_minDose_label")
-        # Structure Information: "Min Dose" box
-        self.struct_minDose_box = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_minDose_box.setGeometry(QtCore.QRect(95, 100, 81, 31))
-        self.struct_minDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_minDose_box.setObjectName("struct_minDose_box")
-        # Structure Information: "Min Dose" unit
-        self.struct_minDose_unit = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_minDose_unit.setGeometry(QtCore.QRect(160, 100, 81, 31))
-        self.struct_minDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_minDose_unit.setObjectName("struct_minDose_unit")
-
-        # Structure Information: "Max Dose" label
-        self.struct_maxDose_label = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_maxDose_label.setGeometry(QtCore.QRect(10, 130, 68, 31))
-        self.struct_maxDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_maxDose_label.setObjectName("struct_maxDose_label")
-        # Structure Information: "Max Dose" box
-        self.struct_maxDose_box = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_maxDose_box.setGeometry(QtCore.QRect(95, 130, 81, 31))
-        self.struct_maxDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_maxDose_box.setObjectName("struct_maxDose_box")
-        # Structure Information: "Max Dose" unit
-        self.struct_maxDose_unit = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_maxDose_unit.setGeometry(QtCore.QRect(160, 130, 81, 31))
-        self.struct_maxDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_maxDose_unit.setObjectName("struct_maxDose_unit")
-
-        # Structure Information: "Mean Dose" label
-        self.struct_meanDose_label = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_meanDose_label.setGeometry(QtCore.QRect(10, 160, 81, 31))
-        self.struct_meanDose_label.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_meanDose_label.setObjectName("struct_meanDose_label")
-        # Structure Information: "Mean Dose" box
-        self.struct_meanDose_box = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_meanDose_box.setGeometry(QtCore.QRect(95, 160, 81, 31))
-        self.struct_meanDose_box.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_meanDose_box.setObjectName("struct_meanDose_box")
-        # Structure Information: "Mean Dose" unit
-        self.struct_meanDose_unit = QtWidgets.QLabel(self.structInfo_widget)
-        self.struct_meanDose_unit.setGeometry(QtCore.QRect(160, 160, 81, 31))
-        self.struct_meanDose_unit.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.struct_meanDose_unit.setObjectName("struct_meanDose_unit")
-
-        # Add all the widgets of Structure Information in the grid Layout
-        self.gridLayout_StructInfo.addWidget(self.structInfo_icon, 0, 0, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.structInfo_label, 0, 1, 1, 3)
-        self.gridLayout_StructInfo.addWidget(self.comboBoxStructInfo, 1, 0, 1, 4)
-        self.gridLayout_StructInfo.addWidget(self.struct_volume_label, 2, 0, 1, 2)
-        self.gridLayout_StructInfo.addWidget(self.struct_volume_box, 2, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_volume_unit, 2, 3, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_minDose_label, 3, 0, 1, 2)
-        self.gridLayout_StructInfo.addWidget(self.struct_minDose_box, 3, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_minDose_unit, 3, 3, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_label, 4, 0, 1, 2)
-        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_box, 4, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_maxDose_unit, 4, 3, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_label, 5, 0, 1, 2)
-        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_box, 5, 2, 1, 1)
-        self.gridLayout_StructInfo.addWidget(self.struct_meanDose_unit, 5, 3, 1, 1)
+        # Create the UI of Structure Information (bottom left of the window)
+        self.struct_info = StructureInformation(self)
 
         self.vLayout_left.addWidget(self.tab1)
-        self.vLayout_left.addWidget(self.structInfo_widget)
+        self.vLayout_left.addWidget(self.struct_info.widget)
 
         ############################################
         ############################################
@@ -489,24 +389,8 @@ class Ui_MainWindow(object):
 
         self.main_vLayout.addWidget(self.mainView_widget)
 
-        self.structInfo_icon.raise_()
-        self.structInfo_label.raise_()
-        self.comboBoxStructInfo.raise_()
-        self.struct_volume_label.raise_()
-        self.struct_minDose_label.raise_()
-        self.struct_maxDose_label.raise_()
-        self.struct_meanDose_label.raise_()
-        self.struct_volume_box.raise_()
-        self.struct_minDose_box.raise_()
-        self.struct_maxDose_box.raise_()
-        self.struct_meanDose_box.raise_()
-        self.struct_volume_unit.raise_()
-        self.struct_minDose_unit.raise_()
-        self.struct_maxDose_unit.raise_()
-        self.struct_meanDose_unit.raise_()
         self.tab1.raise_()
         self.tab2.raise_()
-        self.structInfo_widget.raise_()
 
         # Bottom Layer
         self.bottom_widget = QtWidgets.QWidget(self.mainWidget)
@@ -817,23 +701,6 @@ class Ui_MainWindow(object):
         # Set bottom layer label
         self.label.setText(_translate("MainWindow", "@OnkoDICOM 2019"))
 
-        # Set structure information labels
-        self.struct_volume_label.setText(_translate("MainWindow", "Volume:"))
-        self.struct_minDose_label.setText(
-            _translate("MainWindow", "Min Dose:"))
-        self.struct_maxDose_label.setText(
-            _translate("MainWindow", "Max Dose:"))
-        self.struct_meanDose_label.setText(
-            _translate("MainWindow", "Mean Dose:"))
-        self.structInfo_label.setText(_translate(
-            "MainWindow", "Structure Information"))
-
-        # # Set structure information units
-        self.struct_volume_unit.setText(_translate("MainWindow", "cm³"))
-        self.struct_minDose_unit.setText(_translate("MainWindow", "cGy"))
-        self.struct_maxDose_unit.setText(_translate("MainWindow", "cGy"))
-        self.struct_meanDose_unit.setText(_translate("MainWindow", "cGy"))
-
         # Set patient bar labels
         self.patient_DOB.setText(_translate("MainWindow", "DOB"))
         self.patient_gender.setText(_translate("MainWindow", "Gender"))
@@ -1047,9 +914,9 @@ class Ui_MainWindow(object):
             # Select the corresponding item in Structure Info selector
             #select the real index from the np array since the keys differ
             index = np.where(self.np_listRoisID == key)
-            index = index[0][0]
-            self.comboBoxStructInfo.setCurrentIndex(index)
-            self.comboStructInfo(index)
+            index = index[0][0] + 1
+            self.struct_info.combobox.setCurrentIndex(index)
+            self.struct_info.item_selected(index)
 
         # Checkbox of the structure unchecked
         else:
@@ -1213,51 +1080,7 @@ class Ui_MainWindow(object):
         colorSquarePix.fill(QtGui.QColor(a, b, c))
         colorSquareLabel.setPixmap(colorSquarePix)
         return colorSquareLabel
-
-    ###########################
-    #  STRUCTURE INFORMATION  #
-    ###########################
-
-    # Initialize the selector for structure information
-
-    def initStructInfoSelector(self):
-        self.comboBoxStructInfo = QtWidgets.QComboBox(self.structInfo_widget)
-        self.comboBoxStructInfo.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
-                                              "combobox-popup: 0;"
-                                              "background-color: #efefef; }")
-        self.comboBoxStructInfo.addItem("Select...")
-        for key, value in self.rois.items():
-            self.comboBoxStructInfo.addItem(value['name'])
-        self.comboBoxStructInfo.activated.connect(self.comboStructInfo)
-        self.comboBoxStructInfo.setGeometry(QtCore.QRect(5, 35, 188, 31))
-        self.comboBoxStructInfo.setObjectName("comboBox")
-        self.comboBoxStructInfo.setFocusPolicy(QtCore.Qt.NoFocus)
-
-
-    # Function triggered when an item of the selector 'Structure Information' is selected
-
-    def comboStructInfo(self, index):
-        _translate = QtCore.QCoreApplication.translate
-
-        if index == 0:
-            self.struct_volume_box.setText(_translate("MainWindow", "-"))
-            self.struct_minDose_box.setText(_translate("MainWindow", "-"))
-            self.struct_maxDose_box.setText(_translate("MainWindow", "-"))
-            self.struct_meanDose_box.setText(_translate("MainWindow", "-"))
-
-        else:
-            structID = self.listRoisID[index-1]
-
-            # Set structure information boxes
-            self.struct_volume_box.setText(_translate(
-                "MainWindow", str(self.dict_roi_info[structID]['volume'])))
-            self.struct_minDose_box.setText(_translate(
-                "MainWindow", str(self.dict_roi_info[structID]['min'])))
-            self.struct_maxDose_box.setText(_translate(
-                "MainWindow", str(self.dict_roi_info[structID]['max'])))
-            self.struct_meanDose_box.setText(_translate(
-                "MainWindow", str(self.dict_roi_info[structID]['mean'])))
-
+    
 
     ####### CLINICAL DATA #######
 
@@ -1719,95 +1542,3 @@ class Ui_MainWindow(object):
     def AddOnOptionsHandler(self):
         options = self.callManager.show_add_on_options()
 
-
-
-
-
-
-
-
-
-class StructureInformation(object):
-    """
-    Information for all ROI structures (volume, min, max, mean doses).
-    """
-
-    def __init__(self, mainWindow):
-        """
-        Retrieve informations for all ROI structures.
-
-        :param mainWindow:
-         the window of the main page
-        """
-        self.window = mainWindow
-        self.listInfo = self.getStructInfo()
-
-
-    def getStructInfo(self):
-        """
-        Dictionary for all the ROI structures containing information about the volume, the min, max and mean doses.
-
-        :return:
-         Dictionary where:
-          - the key is the id of the ROI structure
-          - the value is a dictionary whose keys are volume, min, max and mean.
-        """
-
-        res = dict()
-        for roi_id, _ in self.window.rois.items():
-            structInfo = dict()
-            dvh = self.window.raw_dvh[roi_id]
-            # counts is an array of values indicating the volume at each dose (in cGy)
-            counts = self.window.dvh_x_y[roi_id]['counts']
-
-            structInfo['volume'] = float("{0:.3f}".format(dvh.volume))
-
-
-            # The volume of the ROI is equal to 0
-            if dvh.volume == 0:
-                structInfo['min'] = '-'
-                structInfo['max'] = '-'
-                structInfo['mean'] = '-'
-
-
-            # The volume of the ROI is greater than 0
-            else:
-                """
-                The min dose is the last dose (in cGy) where the percentage of volume
-                 receiving this dose is equal to 100%.
-                The mean dose is the last dose (in cGy) where the percentage of volume
-                 receiving this dose is greater than 50%.
-                The max dose is the last dose (in cGy) where the percentage of volume
-                 receiving this dose is greater than 0%.
-                """
-                volume_percent = 100 * counts / dvh.volume
-                # index is used as a cursor to get the min, mean and max doses.
-                index = 0
-
-                # Get the min dose of the ROI
-                while index < len(volume_percent) and int(volume_percent.item(index)) == 100:
-                    index += 1
-                if index == 0:
-                    structInfo['min'] = 0
-                else:
-                    structInfo['min'] = index-1
-
-                # Get the mean dose of the ROI
-                while index < len(volume_percent) and volume_percent.item(index) > 50:
-                    index += 1
-                if index == 0:
-                    structInfo['mean'] = 0
-                else:
-                    structInfo['mean'] = index-1
-
-                # Get the max dose of the ROI
-                while index < len(volume_percent) and volume_percent.item(index) != 0:
-                    index += 1
-                if index == 0:
-                    structInfo['max'] = 0
-                else:
-                    structInfo['max'] = index-1
-
-            res[roi_id] = structInfo
-
-        return res

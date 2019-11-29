@@ -78,7 +78,7 @@ class DicomTreeUI(object):
 
 	def selector_combobox(self):
 		"""
-		Create the combobox to select the tree of a dataset.
+		:return: Combobox to select the tree of a dataset.
 		"""
 		combobox = QtWidgets.QComboBox()
 		combobox.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -91,13 +91,13 @@ class DicomTreeUI(object):
 		combobox.addItem("RTSS")
 		for i in range(len(self.pixmaps) - 1):
 			combobox.addItem("CT Image Slice " + str(i + 1))
-		combobox.activated.connect(self.comboTreeSelector)
+		combobox.activated.connect(self.item_selected)
 		combobox.setFixedSize(QtCore.QSize(200, 31))
 
 		return combobox
 
 
-	def comboTreeSelector(self, index):
+	def item_selected(self, index):
 		"""
 		Function triggered when an item of the combobox is selected.
 		Update the DICOM Tree view.
