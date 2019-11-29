@@ -109,9 +109,12 @@ class DVH(object):
         :param mainWindow:
          the window of the main page
         """
+        mainWindow.tab2_DVH = QtWidgets.QWidget()
+        mainWindow.tab2_DVH.setFocusPolicy(QtCore.Qt.NoFocus)
         self.layout = QtWidgets.QGridLayout(mainWindow.tab2_DVH)
         self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
         self.layout.addWidget(self.button_export, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
+        mainWindow.tab2.addTab(mainWindow.tab2_DVH, "")
 
 
     def update_plot(self, mainWindow):

@@ -77,39 +77,6 @@ class DicomTree(object):
         dataset = pydicom.dcmread(filename, force=True)
         return dataset
 
-    def show_tree(self):
-        ds = self.read_dcm(self.filename)
-        dict = self.dataset_to_dict(ds)
-        model = self.dict_to_model(dict)
-        self.display(model)
-
-    def recurse_dict_to_item(self, dict, parent):
-        # For every key in the dictionary
-        for key in dict:
-            # The value of current key
-            value = dict[key]
-            # If the value is a dictionary
-            if isinstance(value, type(dict)):
-                # Recurse until leaf
-                item = QtGui.QStandardItem(key)
-                parent.appendRow(self.recurse_dict_to_item(value, item))
-            else:
-                # If the value is a simple item
-                # Append it.
-                item = QtGui.QStandardItem(key + ': ' + str(value[0]) + " "+ str(value[1]) + " " + str(value[2]) \
-                                           + " " + str(value[3]))
-                parent.appendRow(item)
-        return parent
-
-    def dict_to_model(self, dict):
-        # Create a QstandardItemModel for the tree data
-        model = QtGui.QStandardItemModel()
-        # Set the parent item with a ghost root
-        parentItem = model.invisibleRootItem()
-        # Recursively get the tree
-        self.recurse_dict_to_item(dict, parentItem)
-        return model
-
     # Convert the data_element to an ordered dicitonary
     def data_element_to_dict(self, data_element):
         # Create an oredered dictionary
@@ -126,7 +93,7 @@ class DicomTree(object):
             for dataset_item in data_element:
                 # Convert the item to dictionary
                 # And store it as key: 'item: index num', value: dictionary of the item
-                # in the dictonary
+                # in the dictionary
                 items['item ' + str(tmp)] = self.dataset_to_dict(dataset_item)
                 tmp += 1
         # If current data element is not pixel data element
@@ -150,42 +117,3 @@ class DicomTree(object):
             # The dictionary is converted from every data_element.
             dict.update(self.data_element_to_dict(data_element))
         return dict
-
-    # Display the TreeView
-    def display(self, model):
-        app = QApplication.instance()
-
-        if not app:
-            app = QApplication(sys.argv)
-
-        # Create an instance of QTreeView
-        tree = QTreeView()
-        # Set the model to the tree
-        tree.setModel(model)
-        # Show the tree
-        tree.show()
-
-        app.exec_()
-
-        return tree
-
-
-
-
-# def main():
-#     filename = 'dicom_sample/ct.0.dcm'
-#     dicomTree = DicomTree(filename)
-#     dicomTree.show_tree()
-#
-# if __name__ == '__main__':
-#     path = 'dicom_sample/ct.0.dcm'
-#     ds = pydicom.dcmread(path, force=True)
-#     # ls = get_tree(ds, 0)
-#     # for i in ls:
-#     #     print(i)
-#     #
-#     # print(ds)
-#
-#     main()
-#     dict = get_basic_info(ds)
-#     print(dict)

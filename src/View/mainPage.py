@@ -8,11 +8,11 @@ from random import randint, seed
 from src.Controller.Add_On_OController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.Model.CalculateImages import *
-from src.Model.GetPatientInfo import *
 from src.Model.ROI import *
 from src.Model.Isodose import *
 from src.View.InputDialogs import Rxdose_Check
 from src.View.DVH import *
+from src.View.TreeDICOM import *
 
 
 class Ui_MainWindow(object):
@@ -465,36 +465,12 @@ class Ui_MainWindow(object):
         #######################################
 
         # Main view: DVH
-        self.tab2_DVH = QtWidgets.QWidget()
-        self.tab2_DVH.setObjectName("tab2_DVH")
-        self.tab2_DVH.setFocusPolicy(QtCore.Qt.NoFocus)
-        # DVH Processing
         self.dvh = DVH(self)
         self.dvh.init_layout(self)
-        # DVH: Export DVH Button
-        # self.addExportDVH_button()
-        self.tab2.addTab(self.tab2_DVH, "")
-
-        #######################################
 
         # Main view: DICOM Tree
-        self.tab2_DICOM_tree = QtWidgets.QWidget()
-        self.tab2_DICOM_tree.setObjectName("tab2_DICOM_tree")
-        self.tab2_DICOM_tree.setFocusPolicy(QtCore.Qt.NoFocus)
-        # Tree View tab grid layout
-        self.vboxL_Tree = QtWidgets.QVBoxLayout(self.tab2_DICOM_tree)
-        self.vboxL_Tree.setObjectName("vboxL_Tree")
-        self.vboxL_Tree.setContentsMargins(0, 0, 0, 0)
-        # Tree view selector
-        self.initTreeViewSelector()
-        # Creation of the Tree View
-        self.treeView = QtWidgets.QTreeView(self.tab2_DICOM_tree)
-        self.treeView.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.initTree()
-        self.initTreeParameters()
-        self.tab2.addTab(self.tab2_DICOM_tree, "")
-
-        #######################################
+        self.dicom_tree = DicomTreeUI(self)
+        self.dicom_tree.init_layout(self)
 
         # Main view: Clinical Data
         self.tab2_clinical_data = QtWidgets.QWidget()
@@ -1674,120 +1650,6 @@ class Ui_MainWindow(object):
 
         return QtCore.QObject.event(source, event)
 
-    ###################################
-    #  DICOM TREE VIEW FUNCTIONALITY  #
-    ###################################
-
-    # Add combobox to select a DICOM Tree from a dataset
-
-    def initTreeViewSelector(self):
-        self.comboBoxTree = QtWidgets.QComboBox()
-        self.comboBoxTree.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.comboBoxTree.setStyleSheet("QComboBox {font: 75 \"Laksaman\";"
-                                        "combobox-popup: 0;"
-                                        "background-color: #efefef; }"
-                                        )
-        self.comboBoxTree.addItem("Select a DICOM dataset...")
-        self.comboBoxTree.addItem("RT Dose")
-        self.comboBoxTree.addItem("RTSS")
-        for i in range(len(self.pixmaps) - 1):
-            self.comboBoxTree.addItem("CT Image Slice " + str(i + 1))
-        self.comboBoxTree.activated.connect(self.comboTreeSelector)
-        self.comboBoxTree.setFixedSize(QtCore.QSize(200, 31))
-        self.vboxL_Tree.addWidget(self.comboBoxTree, QtCore.Qt.AlignLeft)
-
-    # Function triggered when another item of the combobox is selected
-    #   Update the DICOM Tree view
-
-    def comboTreeSelector(self, index):
-        # CT Scans
-        if index > 2:
-            self.updateTree(True, index - 3, "")
-        # RT Dose
-        elif index == 1:
-            self.updateTree(False, 0, "RT Dose")
-        # RTSS
-        elif index == 2:
-            self.updateTree(False, 0, "RTSS")
-
-    # Initialize the DICOM Tree and add to the DICOM Tree View tab
-
-    def initTree(self):
-        # Create the model for the tree
-        self.modelTree = QtGui.QStandardItemModel(0, 5)
-        self.modelTree.setHeaderData(0, QtCore.Qt.Horizontal, "Name")
-        self.modelTree.setHeaderData(1, QtCore.Qt.Horizontal, "Value")
-        self.modelTree.setHeaderData(2, QtCore.Qt.Horizontal, "Tag")
-        self.modelTree.setHeaderData(3, QtCore.Qt.Horizontal, "VM")
-        self.modelTree.setHeaderData(4, QtCore.Qt.Horizontal, "VR")
-        self.treeView.setModel(self.modelTree)
-
-    # Set the parameters of the widget DICOM Tree View
-    def initTreeParameters(self):
-        # Set parameters for the Tree View
-        self.treeView.header().resizeSection(0, 250)
-        self.treeView.header().resizeSection(1, 350)
-        self.treeView.header().resizeSection(2, 100)
-        self.treeView.header().resizeSection(3, 50)
-        self.treeView.header().resizeSection(4, 50)
-        self.treeView.header().setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
-        self.treeView.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.treeView.setAlternatingRowColors(True)
-        # self.treeView.setGeometry(QtCore.QRect(0, 0, 877, 517))
-        self.treeView.expandAll()
-        self.treeView.setObjectName("treeView")
-        self.vboxL_Tree.addWidget(self.treeView)
-
-    # Update DICOM Tree view
-    def updateTree(self, ct_file, id, name):
-        self.initTree()
-
-        # The selected DICOM Dataset is a CT file
-        if ct_file:
-            # id is the index of the selected CT file
-            filename = self.filepaths[id]
-            dicomTreeSlice = DicomTree(filename)
-            dict = dicomTreeSlice.dict
-
-        # The selected DICOM Dataset is a RT Dose file
-        elif name == "RT Dose":
-            dict = self.dictDicomTree_rtdose
-
-        # The selected DICOM Dataset is a RTSS file
-        elif name == "RTSS":
-            dict = self.dictDicomTree_rtss
-
-        else:
-            print("Error filename in updateTree function")
-
-        parentItem = self.modelTree.invisibleRootItem()
-        self.recurseBuildModel(dict, parentItem)
-        self.treeView.setModel(self.modelTree)
-        self.vboxL_Tree.addWidget(self.treeView)
-
-    # Update recursively the model used for the DICOM Tree View
-
-    def recurseBuildModel(self, dict, parent):
-        # For every key in the dictionary
-        for key in dict:
-            # The value of current key
-            value = dict[key]
-            # If the value is a dictionary
-            if isinstance(value, type(dict)):
-                # Recurse until leaf
-                itemChild = QtGui.QStandardItem(key)
-                parent.appendRow(self.recurseBuildModel(value, itemChild))
-            else:
-                # If the value is a simple item
-                # Append it.
-                item = [QtGui.QStandardItem(key),
-                        QtGui.QStandardItem(str(value[0])),
-                        QtGui.QStandardItem(str(value[1])),
-                        QtGui.QStandardItem(str(value[2])),
-                        QtGui.QStandardItem(str(value[3]))]
-                parent.appendRow(item)
-        return parent
 
     #############################
     #  TOOLBAR FUNCTI0NALITIES  #
@@ -1856,6 +1718,12 @@ class Ui_MainWindow(object):
 
     def AddOnOptionsHandler(self):
         options = self.callManager.show_add_on_options()
+
+
+
+
+
+
 
 
 
