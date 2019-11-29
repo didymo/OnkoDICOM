@@ -480,7 +480,10 @@ class Ui_MainWindow(object):
         self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
 
         # DVH Processing
-        self.initDVH_view()
+        # self.initDVH_view()
+        self.dvh = DVH_plot(self)
+        self.gridL_DVH.addWidget(self.dvh.plotWidget, 1, 0, 1, 1)
+
         # DVH: Export DVH Button
         self.addExportDVH_button()
         self.tab2.addTab(self.tab2_DVH, "")
@@ -1091,7 +1094,10 @@ class Ui_MainWindow(object):
             self.selected_rois.remove(key)
 
         # Update the DVH view
-        self.updateDVH_view()
+        self.gridL_DVH.removeWidget(self.dvh.plotWidget)
+        self.dvh = DVH_plot(self)
+        self.gridL_DVH.addWidget(self.dvh.plotWidget, 1, 0, 1, 1)
+
         self.updateDICOM_view()
 
     # Initialize the list of isodoses (left column of the main page)
@@ -1295,24 +1301,24 @@ class Ui_MainWindow(object):
     #  DVH FUNCTIONALITY  #
     #######################
 
-    # Initialize the DVH plot and add to the DVH tab
+    # # Initialize the DVH plot and add to the DVH tab
+    #
+    # def initDVH_view(self):
+    #     dvh = DVH_plot(self)
+    #     fig = dvh.plot
+    #     self.plotWidget = FigureCanvas(fig)
+    #     self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
 
-    def initDVH_view(self):
-        dvh = DVH_plot(self)
-        fig = dvh.plot
-        self.plotWidget = FigureCanvas(fig)
-        self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
-
-    # Update the DVH plot and add to the DVH tab
-
-    def updateDVH_view(self):
-        self.gridL_DVH.removeWidget(self.plotWidget)
-        self.plotWidget.deleteLater()
-        self.plotWidget = None
-        dvh = DVH_plot(self)
-        fig = dvh.plot
-        self.plotWidget = FigureCanvas(fig)
-        self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
+    # # Update the DVH plot and add to the DVH tab
+    #
+    # def updateDVH_view(self):
+    #     self.gridL_DVH.removeWidget(self.plotWidget)
+    #     self.plotWidget.deleteLater()
+    #     self.plotWidget = None
+    #     dvh = DVH_plot(self)
+    #     fig = dvh.plot
+    #     self.plotWidget = FigureCanvas(fig)
+    #     self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
 
     # Add "Export DVH" button to the DVH tab
 
@@ -1330,7 +1336,7 @@ class Ui_MainWindow(object):
         self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
         self.button_exportDVH.clicked.connect(self.exportDVHcsv)
 
-    def exportDVHcsv (self):
+    def exportDVHcsv(self):
         if not os.path.isdir(self.path + '/CSV'):
             os.mkdir(self.path + '/CSV')
         dvh2csv(self.raw_dvh,self.path + "/CSV/",'DVH_'+ self.basicInfo['id'],self.dataset[0].PatientID)
@@ -1921,7 +1927,9 @@ class DVH_plot(object):
 
     def __init__(self, mainWindow):
         """
-        Initialize the information useful for creating the DVH and plot the DVH accordingly.
+        Initialize the information useful for creating the DVH.
+        Plot the DVH accordingly.
+        Create the widget to place in the window (plotWidget).
 
         :param mainWindow:
          the window of the main page
@@ -1930,11 +1938,12 @@ class DVH_plot(object):
         self.selected_rois = mainWindow.selected_rois
         self.raw_dvh = mainWindow.raw_dvh
         self.dvh_x_y = mainWindow.dvh_x_y
-        self.roiColor = mainWindow.roiColor
-        self.plot = self.dvh_view()
+        self.roi_color = mainWindow.roiColor
+        self.plot = self.plot_dvh()
+        self.plotWidget = FigureCanvas(self.plot)
 
 
-    def dvh_view(self):
+    def plot_dvh(self):
         """
         :return:
          DVH plot using Matplotlib library.
@@ -1961,10 +1970,10 @@ class DVH_plot(object):
                 counts = self.dvh_x_y[roi]['counts']
 
                 # Color of the line is the same as the color shown in the left column of the window
-                colorRoi = self.roiColor[roi]
-                color_R = colorRoi['R'] / 255
-                color_G = colorRoi['G'] / 255
-                color_B = colorRoi['B'] / 255
+                color = self.roi_color[roi]
+                color_R = color['R'] / 255
+                color_G = color['G'] / 255
+                color_B = color['B'] / 255
 
                 plt.plot(100 * bincenters,
                          100 * counts / dvh.volume,
