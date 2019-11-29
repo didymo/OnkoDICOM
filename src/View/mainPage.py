@@ -474,18 +474,11 @@ class Ui_MainWindow(object):
         self.tab2_DVH = QtWidgets.QWidget()
         self.tab2_DVH.setObjectName("tab2_DVH")
         self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
-        # DVH layout
-        self.gridL_DVH = QtWidgets.QGridLayout(self.tab2_DVH)
-        self.gridL_DVH.setObjectName("gridL_DVH")
-        self.tab2_DVH.setFocusPolicy(Qt.NoFocus)
-
         # DVH Processing
-        # self.initDVH_view()
-        self.dvh = DVH_plot(self)
-        self.gridL_DVH.addWidget(self.dvh.plotWidget, 1, 0, 1, 1)
-
+        self.dvh = DVH(self)
+        self.dvh.init_layout(self)
         # DVH: Export DVH Button
-        self.addExportDVH_button()
+        # self.addExportDVH_button()
         self.tab2.addTab(self.tab2_DVH, "")
 
         #######################################
@@ -732,7 +725,7 @@ class Ui_MainWindow(object):
         # Export DVH Spreadsheet Action
         self.actionDVH_Spreadsheet = QtWidgets.QAction(MainWindow)
         self.actionDVH_Spreadsheet.setObjectName("actionDVH_Spreadsheet")
-        self.actionDVH_Spreadsheet.triggered.connect(self.exportDVHcsv)
+        self.actionDVH_Spreadsheet.triggered.connect(self.dvh.export_csv)
 
         # Export Clinical Data Action
         self.actionClinical_Data = QtWidgets.QAction(MainWindow)
@@ -849,7 +842,7 @@ class Ui_MainWindow(object):
         # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
 
         # Set "export DVH" button label
-        self.button_exportDVH.setText(_translate("MainWindow", "Export DVH"))
+        self.dvh.button_export.setText(_translate("MainWindow", "Export DVH"))
 
         # Set bottom layer label
         self.label.setText(_translate("MainWindow", "@OnkoDICOM 2019"))
@@ -1094,9 +1087,7 @@ class Ui_MainWindow(object):
             self.selected_rois.remove(key)
 
         # Update the DVH view
-        self.gridL_DVH.removeWidget(self.dvh.plotWidget)
-        self.dvh = DVH_plot(self)
-        self.gridL_DVH.addWidget(self.dvh.plotWidget, 1, 0, 1, 1)
+        self.dvh.update_plot(self)
 
         self.updateDICOM_view()
 
@@ -1297,54 +1288,8 @@ class Ui_MainWindow(object):
             self.struct_meanDose_box.setText(_translate(
                 "MainWindow", str(self.dict_roi_info[structID]['mean'])))
 
-    #######################
-    #  DVH FUNCTIONALITY  #
-    #######################
 
-    # # Initialize the DVH plot and add to the DVH tab
-    #
-    # def initDVH_view(self):
-    #     dvh = DVH_plot(self)
-    #     fig = dvh.plot
-    #     self.plotWidget = FigureCanvas(fig)
-    #     self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
-
-    # # Update the DVH plot and add to the DVH tab
-    #
-    # def updateDVH_view(self):
-    #     self.gridL_DVH.removeWidget(self.plotWidget)
-    #     self.plotWidget.deleteLater()
-    #     self.plotWidget = None
-    #     dvh = DVH_plot(self)
-    #     fig = dvh.plot
-    #     self.plotWidget = FigureCanvas(fig)
-    #     self.gridL_DVH.addWidget(self.plotWidget, 1, 0, 1, 1)
-
-    # Add "Export DVH" button to the DVH tab
-
-    def addExportDVH_button(self):
-        self.button_exportDVH = QtWidgets.QPushButton()
-        self.button_exportDVH.setFocusPolicy(Qt.NoFocus)
-        self.button_exportDVH.setFixedSize(QtCore.QSize(100, 39))
-        self.button_exportDVH.setCursor(
-            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.button_exportDVH.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                            "font: 57 11pt \"Ubuntu\";\n"
-                                            "color:rgb(75,0,130);\n"
-                                            "font-weight: bold;\n")
-        self.button_exportDVH.setObjectName("button_exportDVH")
-        self.gridL_DVH.addWidget(self.button_exportDVH, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
-        self.button_exportDVH.clicked.connect(self.exportDVHcsv)
-
-    def exportDVHcsv(self):
-        if not os.path.isdir(self.path + '/CSV'):
-            os.mkdir(self.path + '/CSV')
-        dvh2csv(self.raw_dvh,self.path + "/CSV/",'DVH_'+ self.basicInfo['id'],self.dataset[0].PatientID)
-        SaveReply = QMessageBox.information(self, "Message",
-                                            "The DVH Data was saved successfully in your directory!",
-                                            QMessageBox.Ok)
-        if SaveReply == QMessageBox.Ok:
-            pass
+    ####### CLINICAL DATA #######
 
     def clinicalDataCheck(self):
         reg = '/CSV/ClinicalData*[.csv]'
@@ -1920,16 +1865,17 @@ class Ui_MainWindow(object):
 
 
 
-class DVH_plot(object):
+class DVH(object):
     """
-    Create the plot graph for the DVH
+    Manage all functionalities related to the DVH tab.
+    - Create and update the DVH.
+    - Manage Export DVH functionality.
     """
 
     def __init__(self, mainWindow):
         """
         Initialize the information useful for creating the DVH.
-        Plot the DVH accordingly.
-        Create the widget to place in the window (plotWidget).
+        Create the plot widget to place in the window (plotWidget) and the export DVH button.
 
         :param mainWindow:
          the window of the main page
@@ -1941,6 +1887,7 @@ class DVH_plot(object):
         self.roi_color = mainWindow.roiColor
         self.plot = self.plot_dvh()
         self.plotWidget = FigureCanvas(self.plot)
+        self.button_export = self.export_button()
 
 
     def plot_dvh(self):
@@ -2012,6 +1959,70 @@ class DVH_plot(object):
         plt.subplots_adjust(bottom=0.3)
 
         return fig
+
+
+    def init_layout(self, mainWindow):
+        """
+        Initialize the layout for the DVH tab.
+        Add the plot widget and the Export button in the layout.
+
+        :param mainWindow:
+         the window of the main page
+        """
+        self.layout = QtWidgets.QGridLayout(mainWindow.tab2_DVH)
+        self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
+        self.layout.addWidget(self.button_export, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
+
+
+    def update_plot(self, mainWindow):
+        """
+        Update the DVH plot.
+
+        :param mainWindow:
+         the window of the main page
+        """
+        self.layout.removeWidget(self.plotWidget)
+        self.__init__(mainWindow)
+        self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
+
+
+    def export_button(self):
+        """
+        Create a button Export DVH.
+        """
+        button = QtWidgets.QPushButton()
+        button.setFocusPolicy(Qt.NoFocus)
+        button.setFixedSize(QtCore.QSize(100, 39))
+        button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
+                                            "font: 57 11pt \"Ubuntu\";\n"
+                                            "color:rgb(75,0,130);\n"
+                                            "font-weight: bold;\n")
+        button.setObjectName("button_exportDVH")
+        button.clicked.connect(self.export_csv)
+
+        return button
+
+
+
+    def export_csv(self):
+        """
+        Export DVH as a CSV file in the current directory.
+        """
+        main_window = self.window
+        if not os.path.isdir(main_window.path + '/CSV'):
+            os.mkdir(main_window.path + '/CSV')
+        dvh2csv(main_window.raw_dvh,
+                main_window.path + "/CSV/",
+                'DVH_'+ main_window.basicInfo['id'],
+                main_window.dataset[0].PatientID)
+        SaveReply = QMessageBox.information(main_window, "Message",
+                                            "The DVH Data was saved successfully in your directory!",
+                                            QMessageBox.Ok)
+        if SaveReply == QMessageBox.Ok:
+            pass
+
 
 
 class StructureInformation(object):
