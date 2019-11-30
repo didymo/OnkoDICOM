@@ -8,11 +8,8 @@ after reading the data.
 
 import glob
 import re
-import logging
-import pydicom
-import os
-from PyQt5 import QtCore, QtWidgets
 
+import pydicom
 
 
 def natural_sort(file_list):
