@@ -9,8 +9,6 @@ import uuid
 import csv
 import pandas as pd
 from PyQt5.QtWidgets import QMessageBox
-
-from src.Model.Pyradiomics import pyradiomics
 from src.Model.CalculateDVHs import dvh2csv
 
 #========================================ANONYMIZation code ===================================

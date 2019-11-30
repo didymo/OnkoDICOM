@@ -99,14 +99,13 @@ class Extended(QtCore.QThread):
         if self.count > 20 and percent < 99:
             percent += 0.2
         self.copied_percent_signal.emit(percent)
-        self.previous = percent #keep a record of the previous value
+        self.previous = percent  # keep a record of the previous value
 
     def natural_sort(self, file_list):
         """
         Sort filenames.
 
         :param file_list:   List of dcm file names.
-        
         :return:            Sorted list of all file names.
         """
         # Logger info
@@ -120,9 +119,7 @@ class Extended(QtCore.QThread):
         Read patient directory and return dictionary of read data and file names.
 
         :param path: str, path of patient directory
-        
         :return read_data_dict: dict, data read from files in patient directory
-        
         :return file_names_dict: dict, the paths of all files read
         """
         # Data contains data read from files

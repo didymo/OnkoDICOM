@@ -2,6 +2,7 @@ try:
     from matplotlib import _cntr as cntr
 except ImportError:
     import legacycontour._cntr as cntr
+import glob
 import src.View.resources_rc
 from copy import deepcopy
 from random import randint, seed

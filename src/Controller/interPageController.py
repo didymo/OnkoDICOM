@@ -13,7 +13,6 @@ import re
 from src.View.mainPage import *
 from src.View.openpage import WelcomePage
 from src.Model.CalculateImages import *
-from src.Model.LoadPatients import *
 from src.Model.form_UI import *
 from src.View.ProgressBar import *
 from src.View.PyradiProgressBar import *

@@ -13,7 +13,6 @@ from pathlib import Path
 from src.Model.GetPatientInfo import *
 from src.Model.Display_CD_UI import *
 from src.Model.form_UI import *
-from src.Model.Pyradiomics import pyradiomics
 from PyQt5.QtWidgets import QMessageBox
 import math
 from PyQt5.QtWidgets import QGraphicsPixmapItem

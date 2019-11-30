@@ -1,5 +1,8 @@
+""" Contains functions required for isodose display """
+
 import numpy as np
 from src.Model.ROI import calculate_matrix
+
 
 def get_dose_pixels(pixlut, doselut, img_ds):
     """Convert dosegrid into pixel values"""
@@ -50,7 +53,6 @@ def get_dose_pixluts(dict_ds):
             pixlut = calculate_matrix(img_ds)
             dose_pixlut = get_dose_pixels(pixlut, dose_data, img_ds)
             dict_dose_pixluts[img_ds.SOPInstanceUID] = dose_pixlut
-
     return dict_dose_pixluts
 
 
