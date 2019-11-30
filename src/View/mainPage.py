@@ -492,7 +492,7 @@ class Ui_MainWindow(object):
         self.actionZoom_In.setIcon(iconZoom_In)
         self.actionZoom_In.setIconVisibleInMenu(True)
         self.actionZoom_In.setObjectName("actionZoom_In")
-        self.actionZoom_In.triggered.connect(self.zoomIn)
+        self.actionZoom_In.triggered.connect(self.dicom_view.zoomIn)
 
         # Zoom Out Action
         self.actionZoom_Out = QtWidgets.QAction(MainWindow)
@@ -500,7 +500,7 @@ class Ui_MainWindow(object):
         self.actionZoom_Out.setIcon(iconZoom_Out)
         self.actionZoom_Out.setIconVisibleInMenu(True)
         self.actionZoom_Out.setObjectName("actionZoom_Out")
-        self.actionZoom_Out.triggered.connect(self.zoomOut)
+        self.actionZoom_Out.triggered.connect(self.dicom_view.zoomOut)
 
         # Windowing Action
         self.actionWindowing = QtWidgets.QAction(MainWindow)
@@ -714,21 +714,6 @@ class Ui_MainWindow(object):
         return sorted(res)
 
 
-    ########################
-    #  ZOOM FUNCTIONALITY  #
-    ########################
-
-    # DICOM Image Zoom In
-    def zoomIn(self):
-
-        self.zoom *= 1.05
-        self.dicom_view.update_view(zoomChange=True)
-
-    # DICOM Image Zoom Out
-    def zoomOut(self):
-
-        self.zoom /= 1.05
-        self.dicom_view.update_view(zoomChange=True)
 
     #################################################
     #  STRUCTURES AND ISODOSES TAB FUNCTIONALITIES  #
@@ -776,16 +761,6 @@ class Ui_MainWindow(object):
                     RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
                 roiColor[roi_id] = RGB_dict
         return roiColor
-
-        # allColor = HexaColor()
-        # index = 0
-        # for key, val in self.rois.items():
-        #     value = dict()
-        #     value['R'], value['G'], value['B'] = allColor.getHexaColor(index)
-        #     value['QColor'] = QtGui.QColor(value['R'], value['G'], value['B'])
-        #     roiColor[key] = value
-        #     index += 1
-        # return roiColor
 
     # Initialization of the list of structures (left column of the main page)
 

@@ -11,7 +11,23 @@ from copy import deepcopy
 
 
 class DicomView(object):
+	"""
+	Manage all functionalities related to the DICOM View tab.
+	- Create and update the DICOM Image View and its metadata.
+	- Manage display of ROI contour.
+	- Manage display of isodose contour.
+	- Zoom In and Zoom Out functionalities.
+	"""
+
 	def __init__(self, mainWindow):
+		"""
+		Create the components (slider, view, metadata) for the DICOM View tab and place the widgets in the window of the
+		main page.
+
+		:param mainWindow:
+		 the window of the main page
+		"""
+
 		self.main_window = mainWindow
 		mainWindow.tab2_view = QtWidgets.QWidget()
 		mainWindow.tab2_view.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -21,7 +37,13 @@ class DicomView(object):
 		self.update_view()
 		self.init_layout()
 
+
 	def init_layout(self):
+		"""
+		Initialize the layout for the DICOM View tab.
+		Add the view widget and the slider in the layout.
+		"""
+
 		self.gridLayout_view = QtWidgets.QGridLayout(self.main_window.tab2_view)
 		self.gridLayout_view.setContentsMargins(0, 0, 0, 0)
 		self.gridLayout_view.setHorizontalSpacing(0)
@@ -30,9 +52,10 @@ class DicomView(object):
 		self.gridLayout_view.addWidget(self.view, 0, 0, 1, 1)
 		self.main_window.tab2.addTab(self.main_window.tab2_view, "")
 
+
 	def init_slider(self):
 		"""
-		:return: Slider for the DICOM Image View.
+		Create a slider for the DICOM Image View.
 		"""
 		self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
 		self.slider.setMinimum(0)
@@ -49,6 +72,7 @@ class DicomView(object):
 		self.slider.setGeometry(QtCore.QRect(0, 0, 50, 500))
 		self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
 
+
 	def value_changed(self):
 		"""
 		Function triggered when the value of the slider has changed.
@@ -56,18 +80,25 @@ class DicomView(object):
 		"""
 		self.update_view()
 
-	# Initialize the widget on which the DICOM image will be set
 
 	def init_view(self):
+		"""
+		Create a view widget for DICOM image.
+		"""
 		self.view = QtWidgets.QGraphicsView(self.main_window.tab2_view)
 		# Add antialiasing and smoothing when zooming in
 		self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
 		background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
 		self.view.setBackgroundBrush(background_brush)
 		self.view.setGeometry(QtCore.QRect(0, 0, 877, 517))
-		self.view.viewport().installEventFilter(self.main_window)  # Set event filter on the dicom_view area
+		# Set event filter on the DICOM View area
+		self.view.viewport().installEventFilter(self.main_window)
+
 
 	def init_metadata(self):
+		"""
+		Create and place metadata on the view widget.
+		"""
 		self.layout_view = QtWidgets.QGridLayout(self.view)
 		self.layout_view.setHorizontalSpacing(0)
 
@@ -115,33 +146,48 @@ class DicomView(object):
 		self.layout_view.addWidget(self.text_patientPos, 4, 2, 1, 1)
 		self.layout_view.addItem(fixed_spacer, 0, 3, 6, 1)
 
+
 	def update_view(self, zoomChange=False, windowingChange=False):
-		# Display DICOM image
+		"""
+		Update the view of the DICOM Image.
+
+		:param zoomChange:
+		 Boolean indicating whether the user wants to change the zoom.
+		 False by default.
+		:param windowingChange:
+		 Boolean indicating whether the user wants to change the window.
+		 False by default.
+		"""
 		if windowingChange:
 			self.image_display(windowingChange=True)
 		else:
 			self.image_display()
 
-		# Change zoom if needed
 		if zoomChange:
 			self.view.setTransform(QtGui.QTransform().scale(self.main_window.zoom, self.main_window.zoom))
 
-		# Add ROI contours
-		self.ROI_display()
+		# If the list of ROIs selected is not empty
+		if self.main_window.selected_rois:
+			self.ROI_display()
 
-		# If a dose value selected
+		# If the list of isodoses selected is not empty
 		if self.main_window.selected_doses:
-			# Display dose value
 			self.isodose_display()
 
-		# Update metadata on DICOM View
 		self.update_metadata()
-
 		self.view.setScene(self.scene)
+
 
 	# Display the DICOM image on the DICOM View tab
 
 	def image_display(self, windowingChange=False):
+		"""
+		Update the image to be displayed on the DICOM View.
+
+		:param windowingChange:
+		 Boolean indicating whether the user wants to change the window.
+		 False by default.
+		"""
 		slider_id = self.slider.value()
 		if windowingChange:
 			image = self.main_window.pixmapWindowing
@@ -153,8 +199,11 @@ class DicomView(object):
 		self.scene = QtWidgets.QGraphicsScene()
 		self.scene.addWidget(label)
 
-	# Display the settings on the DICOM View tab
+
 	def update_metadata(self):
+		"""
+		Update metadata displayed on the DICOM Image view.
+		"""
 		_translate = QtCore.QCoreApplication.translate
 
 		# Retrieve dictionary from the dataset of the slice
@@ -193,17 +242,28 @@ class DicomView(object):
 		self.text_zoom.setText(_translate("MainWindow", "Zoom: " + str(zoom) + ":" + str(zoom)))
 		self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
 
-	# Different Types of line
+
 	def get_qpen(self, color, style=1, widthF=1):
+		"""
+		The color and style for ROI structure and isodose display.
+		:param color:
+		 Color of the region. QColor type.
+		:param style:
+		 Style of the contour line. NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3  DashDotLine: 4  DashDotDotLine: 5
+		:param widthF:
+		 Width of the contour line.
+		:return: QPen object.
+		"""
 		pen = QPen(color)
-		# Style List:
-		# NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3
-		# DashDotLine: 4  DashDotDotLine: 5
 		pen.setStyle(style)
 		pen.setWidthF(widthF)
 		return pen
 
+
 	def ROI_display(self):
+		"""
+		Display ROI structures on the DICOM Image.
+		"""
 		slider_id = self.slider.value()
 		curr_slice = self.main_window.dict_UID[slider_id]
 
@@ -218,13 +278,13 @@ class DicomView(object):
 				self.main_window.dict_polygons[roi_name] = {}
 				self.dict_rois_contours = get_contour_pixel(self.main_window.dict_raw_ContourData, selected_rois_name,
 															self.main_window.dict_pixluts, curr_slice)
-				polygons = self.calcPolygonF(roi_name, curr_slice)
+				polygons = self.calc_roi_polygon(roi_name, curr_slice)
 				self.main_window.dict_polygons[roi_name][curr_slice] = polygons
 
 			elif curr_slice not in self.main_window.dict_polygons[roi_name].keys():
 				self.dict_rois_contours = get_contour_pixel(self.main_window.dict_raw_ContourData, selected_rois_name,
 															self.main_window.dict_pixluts, curr_slice)
-				polygons = self.calcPolygonF(roi_name, curr_slice)
+				polygons = self.calc_roi_polygon(roi_name, curr_slice)
 				self.main_window.dict_polygons[roi_name][curr_slice] = polygons
 
 			else:
@@ -255,7 +315,16 @@ class DicomView(object):
 				self.scene.addPolygon(
 					polygons[i], pen, QBrush(brush_color))
 
-	def calcPolygonF(self, curr_roi, curr_slice):
+
+	def calc_roi_polygon(self, curr_roi, curr_slice):
+		"""
+		Calculate a list of polygons to display for a given ROI and a given slice.
+		:param curr_roi:
+		 the ROI structure
+		:param curr_slice:
+		 the current slice
+		:return: List of polygons of type QPolygonF.
+		"""
 		list_polygons = []
 		pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
 		for i in range(len(pixel_list)):
@@ -268,7 +337,11 @@ class DicomView(object):
 			list_polygons.append(curr_polygon)
 		return list_polygons
 
+
 	def isodose_display(self):
+		"""
+		Display isodoses on the DICOM Image.
+		"""
 		slider_id = self.slider.value()
 		curr_slice_uid = self.main_window.dict_UID[slider_id]
 		z = self.main_window.dataset[slider_id].ImagePositionPatient[2]
@@ -318,24 +391,36 @@ class DicomView(object):
 					self.scene.addPolygon(
 						polygons[i], pen, QBrush(brush_color))
 
-	# Calculate polygons for isodose display
+
 	def calc_dose_polygon(self, dose_pixluts, contours):
+		"""
+		Calculate a list of polygons to display for a given isodose.
+		:param dose_pixluts:
+		 TODO To complete
+		:param contours:
+		 TODO To complete
+		:return: List of polygons of type QPolygonF.
+		"""
 		list_polygons = []
 		for contour in contours:
 			list_qpoints = []
 			# Slicing controls how many points considered for visualization
 			# Essentially effects sharpness of edges, fewer points equals "smoother" edges
 			for point in contour[::2]:
-				curr_qpoint = QPoint(
-					dose_pixluts[0][int(point[0])], dose_pixluts[1][int(point[1])])
+				curr_qpoint = QPoint(dose_pixluts[0][int(point[0])], dose_pixluts[1][int(point[1])])
 				list_qpoints.append(curr_qpoint)
 			curr_polygon = QPolygonF(list_qpoints)
 			list_polygons.append(curr_polygon)
 		return list_polygons
 
-	# Handles mouse movement and button press events in the dicom_view area
-	# Used for altering window and level values
+
 	def eventFilter(self, source, event):
+		"""
+		Handle mouse movement and button press events in the dicom_view area. Used for altering window and level values.
+		:param source: The source.
+		:param event: Nature of the event on the view.
+		:return: QObject event.
+		"""
 		# If mouse moved while the right mouse button was pressed, change window and level values
 		# if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
 		if event.type() == QtCore.QEvent.MouseMove and event.buttons() == QtCore.Qt.RightButton:
@@ -380,3 +465,19 @@ class DicomView(object):
 			self.main_window.pixmaps = get_pixmaps(img_data, self.main_window.window, self.main_window.level)
 
 		return QtCore.QObject.event(source, event)
+
+
+	def zoomIn(self):
+		"""
+		Zoom In the image on the DICOM View.
+		"""
+		self.main_window.zoom *= 1.05
+		self.update_view(zoomChange=True)
+
+
+	def zoomOut(self):
+		"""
+		Zoom Out the image on the DICOM View.
+		"""
+		self.main_window.zoom /= 1.05
+		self.update_view(zoomChange=True)
