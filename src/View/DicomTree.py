@@ -24,7 +24,7 @@ class DicomTreeUI(object):
 
 	def init_layout(self, mainWindow):
 		"""
-		Initialize the layout fot the DICOM Tree tab.
+		Initialize the layout for the DICOM Tree tab.
 		Add the combobox and the DICOM tree in the layout.
 
 		:param mainWindow:

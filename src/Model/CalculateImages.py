@@ -1,6 +1,5 @@
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
-from src.Model.ROI import *
+from PyQt5 import QtGui, QtCore
 
 
 # Convert the pixel data in every image dataset

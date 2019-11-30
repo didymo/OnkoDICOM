@@ -945,9 +945,7 @@ class Transect(QtWidgets.QGraphicsScene):
     def on_close(self, event):
         plt1.close()
         #returns the main page back to a non-drawing environment
-        self.mainWindow.DICOM_image_display()
-        self.mainWindow.updateText_View()
-        self.tabWindow.setScene(self.mainWindow.DICOM_image_scene)
+        self.mainWindow.dicom_view.update_view()
         event.canvas.figure.axes[0].has_been_closed = True
 
     # This function plots the Transect graph into a pop up window

@@ -1,6 +1,5 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 import matplotlib.pylab as plt
-import numpy as np
 import os
 from src.Model.CalculateDVHs import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas

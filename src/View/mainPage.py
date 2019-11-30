@@ -1,19 +1,12 @@
-try:
-    from matplotlib import _cntr as cntr
-except ImportError:
-    import legacycontour._cntr as cntr
-import glob
 import src.View.resources_rc
-from copy import deepcopy
+import glob
 from random import randint, seed
 from src.Controller.Add_On_OController import AddOptions
 from src.Controller.mainPageController import MainPage
-from src.Model.CalculateImages import *
-from src.Model.ROI import *
-from src.Model.Isodose import *
 from src.View.InputDialogs import Rxdose_Check
+from src.View.DicomView import *
 from src.View.DVH import *
-from src.View.TreeDICOM import *
+from src.View.DicomTree import *
 from src.View.StructureInformation import *
 
 
@@ -346,24 +339,7 @@ class Ui_MainWindow(object):
         self.tab2.setObjectName("tab2")
 
         # Main view: DICOM View
-        self.tab2_view = QtWidgets.QWidget()
-        self.tab2_view.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.tab2_view.setObjectName("tab2_view")
-        self.gridLayout_view = QtWidgets.QGridLayout(self.tab2_view)
-        self.gridLayout_view.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_view.setHorizontalSpacing(0)
-
-        # Vertical Slider
-        self.initSlider()
-        self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
-        # DICOM image processing
-        self.initDICOM_view()
-        self.updateDICOM_view()
-        self.gridLayout_view.addWidget(self.DICOM_view, 0, 0, 1, 1)
-        self.tab2.addTab(self.tab2_view, "")
-
-        #######################################
+        self.dicom_view = DicomView(self)
 
         # Main view: DVH
         self.dvh = DVH(self)
@@ -433,36 +409,26 @@ class Ui_MainWindow(object):
 
         # All icons used for menu bar and toolbar
         iconOpen = QtGui.QIcon()
-        iconOpen.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
-                           QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconOpen.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconAnonymize_and_Save = QtGui.QIcon()
-        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/anonlock.png"),
-                                         QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/anonlock.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconZoom_In = QtGui.QIcon()
-        iconZoom_In.addPixmap(QtGui.QPixmap(":/images/Icon/plus.png"),
-                              QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconZoom_In.addPixmap(QtGui.QPixmap(":/images/Icon/plus.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconZoom_Out = QtGui.QIcon()
-        iconZoom_Out.addPixmap(QtGui.QPixmap(":/images/Icon/minus.png"),
-                               QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconZoom_Out.addPixmap(QtGui.QPixmap(":/images/Icon/minus.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconWindowing = QtGui.QIcon()
-        iconWindowing.addPixmap(QtGui.QPixmap(":/images/Icon/windowing.png"),
-                                QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconWindowing.addPixmap(QtGui.QPixmap(":/images/Icon/windowing.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconTransect = QtGui.QIcon()
-        iconTransect.addPixmap(QtGui.QPixmap(":/images/Icon/transect.png"),
-                               QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconTransect.addPixmap(QtGui.QPixmap(":/images/Icon/transect.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         #Icons for creating ROIS
         # iconBrush = QtGui.QIcon()
-        # iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"),
-        #                     QtGui.QIcon.Normal, QtGui.QIcon.On)
+        # iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         # iconIsodose = QtGui.QIcon()
-        # iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"),
-        #                       QtGui.QIcon.Normal, QtGui.QIcon.On)
+        # iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconadd_on_options = QtGui.QIcon()
-        iconadd_on_options.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"),
-                                     QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconadd_on_options.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         iconExport = QtGui.QIcon()
-        iconExport.addPixmap(QtGui.QPixmap(":/images/Icon/export.png"),
-                             QtGui.QIcon.Normal, QtGui.QIcon.On)
+        iconExport.addPixmap(QtGui.QPixmap(":/images/Icon/export.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 
         # Set Menu Bar (Tools tab)
         self.menuWindowing = QtWidgets.QMenu(self.menuTools)
@@ -526,7 +492,7 @@ class Ui_MainWindow(object):
         self.actionZoom_In.setIcon(iconZoom_In)
         self.actionZoom_In.setIconVisibleInMenu(True)
         self.actionZoom_In.setObjectName("actionZoom_In")
-        self.actionZoom_In.triggered.connect(self.zoomIn)
+        self.actionZoom_In.triggered.connect(self.dicom_view.zoomIn)
 
         # Zoom Out Action
         self.actionZoom_Out = QtWidgets.QAction(MainWindow)
@@ -534,7 +500,7 @@ class Ui_MainWindow(object):
         self.actionZoom_Out.setIcon(iconZoom_Out)
         self.actionZoom_Out.setIconVisibleInMenu(True)
         self.actionZoom_Out.setObjectName("actionZoom_Out")
-        self.actionZoom_Out.triggered.connect(self.zoomOut)
+        self.actionZoom_Out.triggered.connect(self.dicom_view.zoomOut)
 
         # Windowing Action
         self.actionWindowing = QtWidgets.QAction(MainWindow)
@@ -547,7 +513,6 @@ class Ui_MainWindow(object):
         self.actionTransect = QtWidgets.QAction(MainWindow)
         self.actionTransect.setIcon(iconTransect)
         self.actionTransect.setIconVisibleInMenu(True)
-        self.actionTransect.setObjectName("actionTransect")
         self.actionTransect.triggered.connect(self.transectHandler)
 
         # # ROI by brush Action
@@ -646,11 +611,6 @@ class Ui_MainWindow(object):
         self.toolbar_spacer.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.toolbar_spacer.setFocusPolicy(QtCore.Qt.NoFocus)
-        # To create a space in the toolbar
-        self.right_spacer = QtWidgets.QWidget()
-        self.right_spacer.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.right_spacer.setFocusPolicy(QtCore.Qt.NoFocus)
 
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addSeparator()
@@ -668,12 +628,12 @@ class Ui_MainWindow(object):
         self.toolBar.addWidget(self.toolbar_spacer)
         self.toolBar.addWidget(self.exportButton)
         self.toolBar.addAction(self.actionAnonymize_and_Save)
-        # self.toolBar.addWidget(self.right_spacer)
 
         self.retranslateUi(MainWindow)
         self.tab1.setCurrentIndex(0)
         self.tab2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -682,16 +642,11 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "OnkoDICOM"))
 
         # Set tab labels
-        self.tab1.setTabText(self.tab1.indexOf(
-            self.tab1_structures), _translate("MainWindow", "Structures"))
-        self.tab1.setTabText(self.tab1.indexOf(
-            self.tab1_isodoses), _translate("MainWindow", "Isodoses"))
-        self.tab2.setTabText(self.tab2.indexOf(
-            self.tab2_view), _translate("MainWindow", "DICOM View"))
-        self.tab2.setTabText(self.tab2.indexOf(
-            self.tab2_DVH), _translate("MainWindow", "DVH"))
-        self.tab2.setTabText(self.tab2.indexOf(
-            self.tab2_DICOM_tree), _translate("MainWindow", "DICOM Tree"))
+        self.tab1.setTabText(self.tab1.indexOf(self.tab1_structures), _translate("MainWindow", "Structures"))
+        self.tab1.setTabText(self.tab1.indexOf(self.tab1_isodoses), _translate("MainWindow", "Isodoses"))
+        self.tab2.setTabText(self.tab2.indexOf(self.tab2_view), _translate("MainWindow", "DICOM View"))
+        self.tab2.setTabText(self.tab2.indexOf(self.tab2_DVH), _translate("MainWindow", "DVH"))
+        self.tab2.setTabText(self.tab2.indexOf(self.tab2_DICOM_tree), _translate("MainWindow", "DICOM Tree"))
         self.tab2.setTabText(3, "Clinical Data")
 
         # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
@@ -721,11 +676,9 @@ class Ui_MainWindow(object):
         # Set menu labels
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
-        # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
         self.menuWindowing.setTitle(_translate("MainWindow", "Windowing"))
-        # self.menuROI_Creation.setTitle(
-        #     _translate("MainWindow", "ROI Creation"))
+        # self.menuROI_Creation.setTitle(_translate("MainWindow", "ROI Creation"))
         self.menuExport.setTitle(_translate("MainWindow", "Export"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
@@ -734,28 +687,22 @@ class Ui_MainWindow(object):
         self.actionOpen.setText(_translate("MainWindow", "Open Patient..."))
         # self.actionImport.setText(_translate("MainWindow", "Import..."))
         # self.actionSave.setText(_translate("MainWindow", "Save"))
-        self.actionSave_as_Anonymous.setText(
-            _translate("MainWindow", "Save as Anonymous..."))
+        self.actionSave_as_Anonymous.setText(_translate("MainWindow", "Save as Anonymous..."))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
         # self.actionUndo.setText(_translate("MainWindow", "Undo"))
         # self.actionRedo.setText(_translate("MainWindow", "Redo"))
-        # self.actionRename_ROI.setText(
-        #     _translate("MainWindow", "Rename ROI..."))
-        # self.actionDelete_ROI.setText(
-        #     _translate("MainWindow", "Delete ROI..."))
+        # self.actionRename_ROI.setText(_translate("MainWindow", "Rename ROI..."))
+        # self.actionDelete_ROI.setText(_translate("MainWindow", "Delete ROI..."))
         self.actionZoom_In.setText(_translate("MainWindow", "Zoom In"))
         self.actionZoom_Out.setText(_translate("MainWindow", "Zoom Out"))
         self.actionWindowing.setText(_translate("MainWindow", "Windowing"))
         self.actionTransect.setText(_translate("MainWindow", "Transect"))
         # self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
         # self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
-        self.actionadd_on_options.setText(
-            _translate("MainWindow", "Add-On Options..."))
-        self.actionAnonymize_and_Save.setText(
-            _translate("MainWindow", "Anonymize and Save"))
+        self.actionadd_on_options.setText(_translate("MainWindow", "Add-On Options..."))
+        self.actionAnonymize_and_Save.setText(_translate("MainWindow", "Anonymize and Save"))
         self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
-        self.actionClinical_Data.setText(
-            _translate("MainWindow", "Clinical Data"))
+        self.actionClinical_Data.setText(_translate("MainWindow", "Clinical Data"))
         self.actionPyradiomics.setText(_translate("MainWindow", "Pyradiomics"))
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         MainWindow.update()
@@ -767,21 +714,6 @@ class Ui_MainWindow(object):
         return sorted(res)
 
 
-    ########################
-    #  ZOOM FUNCTIONALITY  #
-    ########################
-
-    # DICOM Image Zoom In
-    def zoomIn(self):
-
-        self.zoom *= 1.05
-        self.updateDICOM_view(zoomChange=True)
-
-    # DICOM Image Zoom Out
-    def zoomOut(self):
-
-        self.zoom /= 1.05
-        self.updateDICOM_view(zoomChange=True)
 
     #################################################
     #  STRUCTURES AND ISODOSES TAB FUNCTIONALITIES  #
@@ -829,16 +761,6 @@ class Ui_MainWindow(object):
                     RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
                 roiColor[roi_id] = RGB_dict
         return roiColor
-
-        # allColor = HexaColor()
-        # index = 0
-        # for key, val in self.rois.items():
-        #     value = dict()
-        #     value['R'], value['G'], value['B'] = allColor.getHexaColor(index)
-        #     value['QColor'] = QtGui.QColor(value['R'], value['G'], value['B'])
-        #     roiColor[key] = value
-        #     index += 1
-        # return roiColor
 
     # Initialization of the list of structures (left column of the main page)
 
@@ -927,7 +849,7 @@ class Ui_MainWindow(object):
         # Update the DVH view
         self.dvh.update_plot(self)
 
-        self.updateDICOM_view()
+        self.dicom_view.update_view()
 
     # Initialize the list of isodoses (left column of the main page)
 
@@ -1072,7 +994,7 @@ class Ui_MainWindow(object):
             # Remove dose from list of previously selected doses
             self.selected_doses.remove(key)
         # Update the dicom view
-        self.updateDICOM_view()
+        self.dicom_view.update_view()
 
     # Draw color squares
     def colorSquareDraw(self, a, b, c):
@@ -1100,379 +1022,6 @@ class Ui_MainWindow(object):
             if SaveReply == QtWidgets.QMessageBox.Ok:
                 pass
 
-
-    ####################################
-    #  DICOM IMAGE VIEW FUNCTIONALITY  #
-    ####################################
-
-    # Add slider on the DICOM Image view
-
-    def initSlider(self):
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(len(self.pixmaps) - 1)
-        if self.patient_HFS:
-            self.slider.setInvertedControls(True)
-            self.slider.setInvertedAppearance(True)
-        self.slider.setValue(int(len(self.pixmaps) / 2))
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
-        self.slider.setTickInterval(1)
-        self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
-                                  "y2:1, stop:0 #fff, stop:1 #ddd);border: 1px solid #444;border-radius: 4px;}")
-
-        # self.slider.setAutoFillBackground(True)
-        # p = self.slider.palette()
-        # p.setColor(self.slider.backgroundRole(), QtCore.Qt.black)
-        # self.slider.setPalette(p)
-        self.slider.valueChanged.connect(self.valueChangeSlider)
-        self.slider.setGeometry(QtCore.QRect(0, 0, 50, 500))
-
-    # Initialize the widget on which the DICOM image will be set
-
-    def initDICOM_view(self):
-        self.DICOM_view = QtWidgets.QGraphicsView(self.tab2_view)
-        # Add antialiasing and smoothing when zooming in
-        self.DICOM_view.setRenderHints(
-            QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
-        background_brush = QtGui.QBrush(
-            QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
-        self.DICOM_view.setBackgroundBrush(background_brush)
-        self.DICOM_view.setGeometry(QtCore.QRect(0, 0, 877, 517))
-        self.DICOM_view.setObjectName("DICOM_view")
-        self.DICOM_view.viewport().installEventFilter(
-            self)  # Set event filter on the dicom_view area
-        self.gridL_DICOM_view = QtWidgets.QGridLayout(self.DICOM_view)
-        self.gridL_DICOM_view.setHorizontalSpacing(0)
-
-        # Initialize text on DICOM View
-        self.text_imageID = QtWidgets.QLabel(self.DICOM_view)
-        self.text_imagePos = QtWidgets.QLabel(self.DICOM_view)
-        self.text_WL = QtWidgets.QLabel(self.DICOM_view)
-        self.text_imageSize = QtWidgets.QLabel(self.DICOM_view)
-        self.text_zoom = QtWidgets.QLabel(self.DICOM_view)
-        self.text_patientPos = QtWidgets.QLabel(self.DICOM_view)
-        # # Position of the texts on DICOM View
-        self.text_imageID.setAlignment(QtCore.Qt.AlignTop)
-        self.text_imagePos.setAlignment(QtCore.Qt.AlignTop)
-        self.text_WL.setAlignment(QtCore.Qt.AlignRight)
-        self.text_imageSize.setAlignment(QtCore.Qt.AlignBottom)
-        self.text_zoom.setAlignment(QtCore.Qt.AlignBottom)
-        self.text_patientPos.setAlignment(QtCore.Qt.AlignRight)
-        # Set all the texts in white
-        self.text_imageID.setStyleSheet("QLabel { color : white; }")
-        self.text_imagePos.setStyleSheet("QLabel { color : white; }")
-        self.text_WL.setStyleSheet("QLabel { color : white; }")
-        self.text_imageSize.setStyleSheet("QLabel { color : white; }")
-        self.text_zoom.setStyleSheet("QLabel { color : white; }")
-        self.text_patientPos.setStyleSheet("QLabel { color : white; }")
-
-        self.DICOM_hspacer = QtWidgets.QSpacerItem(10, 100,
-                                                   hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                                   vPolicy=QtWidgets.QSizePolicy.Expanding)
-        self.DICOM_vspacer = QtWidgets.QSpacerItem(100, 10,
-                                                   hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                                   vPolicy=QtWidgets.QSizePolicy.Expanding)
-        self.DICOM_spacer_scrollbar = QtWidgets.QSpacerItem(13, 15,
-                                                   hPolicy=QtWidgets.QSizePolicy.Fixed,
-                                                   vPolicy=QtWidgets.QSizePolicy.Fixed)
-
-        # Add texts in layout
-        self.gridL_DICOM_view.addWidget(self.text_imageID, 0, 0, 1, 1)
-        self.gridL_DICOM_view.addWidget(self.text_imagePos, 1, 0, 1, 1)
-        self.gridL_DICOM_view.addItem(self.DICOM_vspacer, 2, 0, 1, 4)
-        self.gridL_DICOM_view.addWidget(self.text_imageSize, 3, 0, 1, 1)
-        self.gridL_DICOM_view.addWidget(self.text_zoom, 4, 0, 1, 1)
-        self.gridL_DICOM_view.addItem(self.DICOM_spacer_scrollbar, 5, 0, 1, 4)
-
-        self.gridL_DICOM_view.addItem(self.DICOM_hspacer, 0, 1, 6, 1)
-        self.gridL_DICOM_view.addWidget(self.text_WL, 0, 2, 1, 1)
-        self.gridL_DICOM_view.addWidget(self.text_patientPos, 4, 2, 1, 1)
-        self.gridL_DICOM_view.addItem(self.DICOM_spacer_scrollbar, 0, 3, 6, 1)
-
-    def updateDICOM_view(self, zoomChange=False, windowingChange=False):
-        # Display DICOM image
-        if windowingChange:
-            self.DICOM_image_display(windowingChange=True)
-        else:
-            self.DICOM_image_display()
-
-        # Change zoom if needed
-        if zoomChange:
-            self.DICOM_view.setTransform(
-                QtGui.QTransform().scale(self.zoom, self.zoom))
-
-        # Add ROI contours
-        self.ROI_display()
-
-        # If a dose value selected
-        if self.selected_doses:
-            # Display dose value
-            self.isodose_display()
-
-        # Update settings on DICOM View
-        self.updateText_View()
-
-        self.DICOM_view.setScene(self.DICOM_image_scene)
-
-    # Display the DICOM image on the DICOM View tab
-
-    def DICOM_image_display(self, windowingChange=False):
-        slider_id = self.slider.value()
-        if windowingChange:
-            DICOM_image = self.pixmapWindowing
-        else:
-            DICOM_image = self.pixmaps[slider_id]
-        DICOM_image = DICOM_image.scaled(
-            512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        DICOM_image_label = QtWidgets.QLabel()
-        DICOM_image_label.setPixmap(DICOM_image)
-        self.DICOM_image_scene = QtWidgets.QGraphicsScene()
-        self.DICOM_image_scene.addWidget(DICOM_image_label)
-
-    # Display the settings on the DICOM View tab
-
-    def updateText_View(self):
-        _translate = QtCore.QCoreApplication.translate
-
-        # Dictionary from the dataset associated to the slice
-        id = self.slider.value()
-        filename = self.filepaths[id]
-        dicomTreeSlice = DicomTree(filename)
-        self.dictSlice = dicomTreeSlice.dict
-
-        # Information to display
-        current_slice = self.dictSlice['Instance Number'][0]
-        total_slices = len(self.pixmaps)
-        try:
-            slice_pos = self.dictSlice['Slice Location'][0]
-        except:
-            imagePosPatient = self.dictSlice['Image Position (Patient)']
-            # logging.error('Image Position (Patient):' + str(imagePosPatient))
-            imagePosPatientCoordinates = imagePosPatient[0]
-            # logging.error('Image Position (Patient) coordinates :' + str(imagePosPatientCoordinates))
-            slice_pos = imagePosPatientCoordinates[2]
-        row_image = self.dictSlice['Rows'][0]
-        col_image = self.dictSlice['Columns'][0]
-        patient_pos = self.dictSlice['Patient Position'][0]
-
-        # For formatting
-        if self.zoom == 1:
-            zoom = 1
-        else:
-            zoom = float("{0:.2f}".format(self.zoom))
-
-        # Add text on DICOM View
-        # Text: "Image: {current_slice} / {total_slices}"
-        self.text_imageID.setText(_translate(
-            "MainWindow", "Image: " + str(current_slice) + " / " + str(total_slices)))
-        # Text: "Position: {position_slice} mm"
-        self.text_imagePos.setText(_translate(
-            "MainWindow", "Position: " + str(slice_pos) + " mm"))
-        # Text: "W/L: {window} / {level}" (for windowing functionality)
-        self.text_WL.setText(_translate(
-            "MainWindow", "W/L: " + str(self.window) + "/" + str(self.level)))
-        # Text: "Image size: {total_row}x{total_col} px"
-        self.text_imageSize.setText(_translate(
-            "MainWindow", "Image Size: " + str(row_image) + "x" + str(col_image) + "px"))
-        # Text: "Zoom: {zoom}:{zoom}"
-        self.text_zoom.setText(_translate(
-            "MainWindow", "Zoom: " + str(zoom) + ":" + str(zoom)))
-        # Text: "Patient Position: {patient_position}"
-        self.text_patientPos.setText(_translate(
-            "MainWindow", "Patient Position: " + patient_pos))
-
-    # Different Types of
-    def get_qpen(self, color, style=1, widthF=1):
-        pen = QPen(color)
-        # Style List:
-        # NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3
-        # DashDotLine: 4  DashDotDotLine: 5
-        pen.setStyle(style)
-        pen.setWidthF(widthF)
-        return pen
-
-    def ROI_display(self):
-        slider_id = self.slider.value()
-        curr_slice = self.dict_UID[slider_id]
-
-        selected_rois_name = []
-        for roi in self.selected_rois:
-            selected_rois_name.append(self.rois[roi]['name'])
-
-        for roi in self.selected_rois:
-            roi_name = self.rois[roi]['name']
-
-            if roi_name not in self.dict_polygons.keys():
-                self.dict_polygons[roi_name] = {}
-                self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name,
-                                                            self.dict_pixluts, curr_slice)
-                polygons = self.calcPolygonF(roi_name, curr_slice)
-                self.dict_polygons[roi_name][curr_slice] = polygons
-
-            elif curr_slice not in self.dict_polygons[roi_name].keys():
-                self.dict_rois_contours = get_contour_pixel(self.dict_raw_ContourData, selected_rois_name,
-                                                            self.dict_pixluts, curr_slice)
-                polygons = self.calcPolygonF(roi_name, curr_slice)
-                self.dict_polygons[roi_name][curr_slice] = polygons
-
-            else:
-                polygons = self.dict_polygons[roi_name][curr_slice]
-
-            brush_color = self.roiColor[roi]['QColor_ROIdisplay']
-            with open('src/data/line&fill_configuration', 'r') as stream:
-                elements = stream.readlines()
-                if len(elements) > 0:
-                    roi_line = int(elements[0].replace('\n', ''))
-                    roi_opacity = int(elements[1].replace('\n', ''))
-                    iso_line = int(elements[2].replace('\n', ''))
-                    iso_opacity = int(elements[3].replace('\n', ''))
-                    line_width = float(elements[4].replace('\n', ''))
-                else:
-                    roi_line = 1
-                    roi_opacity = 10
-                    iso_line = 2
-                    iso_opacity = 5
-                    line_width = 2.0
-                stream.close()
-            roi_opacity = int((roi_opacity/100)*255)
-            brush_color.setAlpha(roi_opacity)
-            pen_color = QtGui.QColor(
-                brush_color.red(), brush_color.green(), brush_color.blue())
-            pen = self.get_qpen(pen_color, roi_line, line_width)
-            for i in range(len(polygons)):
-                self.DICOM_image_scene.addPolygon(
-                    polygons[i], pen, QBrush(brush_color))
-
-    def calcPolygonF(self, curr_roi, curr_slice):
-        list_polygons = []
-        pixel_list = self.dict_rois_contours[curr_roi][curr_slice]
-        for i in range(len(pixel_list)):
-            list_qpoints = []
-            contour = pixel_list[i]
-            for point in contour:
-                curr_qpoint = QPoint(point[0], point[1])
-                list_qpoints.append(curr_qpoint)
-            curr_polygon = QPolygonF(list_qpoints)
-            list_polygons.append(curr_polygon)
-        return list_polygons
-
-    def isodose_display(self):
-        slider_id = self.slider.value()
-        curr_slice_uid = self.dict_UID[slider_id]
-        z = self.dataset[slider_id].ImagePositionPatient[2]
-        grid = get_dose_grid(self.dataset['rtdose'], float(z))
-
-        if not (grid == []):
-            x, y = np.meshgrid(
-                np.arange(grid.shape[1]), np.arange(grid.shape[0]))
-
-            # Instantiate the isodose generator for this slice
-            isodosegen = cntr.Cntr(x, y, grid)
-
-            # sort selected_doses in ascending order so that the high dose isodose washes
-            # paint over the lower dose isodose washes
-            for sd in sorted(self.selected_doses):
-                dose_level = sd[0] * self.rxdose / \
-                    (self.dataset['rtdose'].DoseGridScaling * 10000)
-                contours = isodosegen.trace(dose_level)
-                contours = contours[:len(contours)//2]
-
-                polygons = self.calc_dose_polygon(
-                    self.dose_pixluts[curr_slice_uid], contours)
-
-                brush_color = sd[1]
-                with open('src/data/line&fill_configuration', 'r') as stream:
-                    elements = stream.readlines()
-                    if len(elements) > 0:
-                        roi_line = int(elements[0].replace('\n', ''))
-                        roi_opacity = int(elements[1].replace('\n', ''))
-                        iso_line = int(elements[2].replace('\n', ''))
-                        iso_opacity = int(elements[3].replace('\n', ''))
-                        line_width = float(elements[4].replace('\n', ''))
-                    else:
-                        roi_line = 1
-                        roi_opacity = 10
-                        iso_line = 2
-                        iso_opacity = 5
-                        line_width = 2.0
-                    stream.close()
-                iso_opacity = int((iso_opacity/100)*255)
-                brush_color.setAlpha(iso_opacity)
-                pen_color = QtGui.QColor(
-                    brush_color.red(), brush_color.green(), brush_color.blue())
-                pen = self.get_qpen(pen_color, iso_line, line_width)
-                for i in range(len(polygons)):
-                    #color = self.roiColor['body']['QColor_ROIdisplay']
-                    self.DICOM_image_scene.addPolygon(
-                        polygons[i], pen, QBrush(brush_color))
-
-    # Calculate polygons for isodose display
-    def calc_dose_polygon(self, dose_pixluts, contours):
-        list_polygons = []
-        for contour in contours:
-            list_qpoints = []
-            # Slicing controls how many points considered for visualization
-            # Essentially effects sharpness of edges, fewer points equals "smoother" edges
-            for point in contour[::2]:
-                curr_qpoint = QPoint(
-                    dose_pixluts[0][int(point[0])], dose_pixluts[1][int(point[1])])
-                list_qpoints.append(curr_qpoint)
-            curr_polygon = QPolygonF(list_qpoints)
-            list_polygons.append(curr_polygon)
-        return list_polygons
-
-    # When the value of the slider in the DICOM View changes
-
-    def valueChangeSlider(self):
-        self.updateDICOM_view()
-
-    # Handles mouse movement and button press events in the dicom_view area
-    # Used for altering window and level values
-    def eventFilter(self, source, event):
-        # If mouse moved while the right mouse button was pressed, change window and level values
-        # if event.type() == QtCore.QEvent.MouseMove and event.type() == QtCore.QEvent.MouseButtonPress:
-        if event.type() == QtCore.QEvent.MouseMove and event.buttons() == QtCore.Qt.RightButton:
-            # Values of x increase from left to right
-            # Window value should increase when mouse pointer moved to right, decrease when moved to left
-            # If the x value of the new mouse position is greater than the x value of
-            # the previous position, then increment the window value by 5,
-            # otherwise decrement it by 5
-            if event.x() > self.x1:
-                self.window += 1
-            elif event.x() < self.x1:
-                self.window -= 1
-
-            # Values of y increase from top to bottom
-            # Level value should increase when mouse pointer moved upwards, decrease when moved downwards
-            # If the y value of the new mouse position is greater than the y value of
-            # the previous position then decrement the level value by 5,
-            # otherwise increment it by 5
-            if event.y() > self.y1:
-                self.level -= 1
-            elif event.y() < self.y1:
-                self.level += 1
-
-            # Update previous position values
-            self.x1 = event.x()
-            self.y1 = event.y()
-
-            # Get id of current slice
-            id = self.slider.value()
-
-            # Create a deep copy as the pixel values are a list of list
-            np_pixels = deepcopy(self.pixel_values[id])
-
-            # Update current image based on new window and level values
-            self.pixmapWindowing = scaled_pixmap(
-                np_pixels, self.window, self.level)
-            self.updateDICOM_view(windowingChange=True)
-
-        # When mouse button released, update all the slices based on the new values
-        elif event.type() == QtCore.QEvent.MouseButtonRelease:
-            img_data = deepcopy(self.pixel_values)
-            self.pixmaps = get_pixmaps(img_data, self.window, self.level)
-
-        return QtCore.QObject.event(source, event)
 
 
     #############################
@@ -1519,26 +1068,26 @@ class Ui_MainWindow(object):
         img_data = deepcopy(self.pixel_values)
 
         # Get id of current slice
-        id = self.slider.value()
+        id = self.dicom_view.slider.value()
         np_pixels = img_data[id]
 
         # Update current slice with the new window and level values
         self.pixmapWindowing = scaled_pixmap(
             np_pixels, self.window, self.level)
-        self.updateDICOM_view(windowingChange=True)
+        self.dicom_view.update_view(windowingChange=True)
 
         # Update all the pixmaps with the updated window and level values
         self.pixmaps = get_pixmaps(img_data, self.window, self.level)
 
     def transectHandler(self):
 
-        id = self.slider.value()
+        id = self.dicom_view.slider.value()
         dt = self.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
         self.callClass.runTransect(
-            self, self.DICOM_view, self.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
+            self, self.dicom_view.view, self.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 
     def AddOnOptionsHandler(self):
         options = self.callManager.show_add_on_options()

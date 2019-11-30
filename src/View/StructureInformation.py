@@ -220,7 +220,6 @@ class StructureInformation(object):
 		
 		return combobox
 
-	# Function triggered when an item of the selector 'Structure Information' is selected
 
 	def item_selected(self, index):
 		"""
@@ -240,8 +239,6 @@ class StructureInformation(object):
 
 		else:
 			struct_id = self.window.listRoisID[index - 1]
-
-			# Set structure information boxes
 			self.volume_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['volume'])))
 			self.min_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['min'])))
 			self.max_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['max'])))
