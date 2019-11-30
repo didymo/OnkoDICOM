@@ -3,6 +3,13 @@ import collections
 
 
 def get_tree(ds, label=0):
+    """
+    Get a structured tree of patient, DICOM Tree
+
+    :param ds: A dataset of the patient.
+    :param label:
+    :return: tree, a list with hierarchical information of the dataset
+    """
     tree = []
     dont_print = ['Pixel Data', 'File Meta Information Version']
     # For all the elements in the dataset
@@ -39,8 +46,13 @@ def get_tree(ds, label=0):
     return tree
 
 
-# Get patient name, ID, gender and DOB
 def get_basic_info(ds):
+    """
+    Get patient name, ID, gender and DOB
+
+    :param ds: a dataset
+    :return: dict_basic_info, a dictionary of PatientName, PatientID, PatientSex, PatientBirthDate.
+    """
     dict_basic_info = {}
     dict_basic_info['name'] = str(ds.PatientName)
     dict_basic_info['id'] = str(ds.PatientID)
@@ -49,8 +61,13 @@ def get_basic_info(ds):
     return dict_basic_info
 
 
-# Return a dictionary where key = index of the slice and value is the Instance UID
 def dict_instanceUID(dict_ds):
+    """
+    Get a dictionary where key = index of the slice and value is the Instance UID
+
+    :param dict_ds:
+    :return:
+    """
     res = {}
     non_img_type = ['rtdose', 'rtplan', 'rtss']
 
@@ -64,18 +81,36 @@ def dict_instanceUID(dict_ds):
 
 # =========   This is a class for DICOM TREE   ===============
 class DicomTree(object):
+    """
+    A class of DICOM tree
+    """
     def __init__(self, filename):
+        """
+        DICOM Tree class constructor.
+
+        :param filename: dicom file path
+        """
         self.filename = filename
         self.dataset = self.read_dcm(filename)
         self.dict = self.dataset_to_dict(self.dataset)
 
-    # Read dicom file to dataset
     def read_dcm(self, filename):
+        """
+        Read dicom file to dataset
+
+        :param filename: dicom file path
+        :return: dataset, dataset of the dicom file
+        """
         dataset = pydicom.dcmread(filename, force=True)
         return dataset
 
-    # Convert the data_element to an ordered dicitonary
     def data_element_to_dict(self, data_element):
+        """
+        Convert the data_element to an ordered dicitonary
+
+        :param data_element: element level variable
+        :return: dictionary
+        """
         # Create an oredered dictionary
         dict = collections.OrderedDict()
         # If current data element is a sequence
@@ -104,8 +139,13 @@ class DicomTree(object):
             dict[data_element.name] = temp_list
         return dict
 
-    # Convert the dataset to an ordered dictionary
     def dataset_to_dict(self, dataset):
+        """
+        Convert the dataset to an ordered dictionary.
+
+        :param dataset: dicom dataset
+        :return: dictionary
+        """
         # Create an ordered dictionary
         dict = collections.OrderedDict()
         # For each element in the dataset
