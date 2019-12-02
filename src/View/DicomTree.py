@@ -10,6 +10,7 @@ class DicomTreeUI(object):
 	def __init__(self, mainWindow):
 		"""
 		Initialize the information useful for creating the DICOM Tree.
+		Add the DICOM Tree tab to the window of the main page.
 
 		:param mainWindow:
 		 the window of the main page
@@ -20,6 +21,7 @@ class DicomTreeUI(object):
 		mainWindow.tab2_DICOM_tree = QtWidgets.QWidget()
 		mainWindow.tab2_DICOM_tree.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_tree(mainWindow)
+		self.init_layout(mainWindow)
 
 
 	def init_layout(self, mainWindow):

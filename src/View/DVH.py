@@ -14,7 +14,7 @@ class DVH(object):
     def __init__(self, mainWindow):
         """
         Initialize the information useful for creating the DVH.
-        Create the plot widget to place in the window (plotWidget) and the export DVH button.
+        Add the DVH tab to the window of the main page.
 
         :param mainWindow:
          the window of the main page
@@ -27,6 +27,7 @@ class DVH(object):
         self.plot = self.plot_dvh()
         self.plotWidget = FigureCanvas(self.plot)
         self.button_export = self.export_button()
+        self.init_layout(mainWindow)
 
 
     def plot_dvh(self):
@@ -124,7 +125,11 @@ class DVH(object):
          the window of the main page
         """
         self.layout.removeWidget(self.plotWidget)
-        self.__init__(mainWindow)
+
+        # Create new plot
+        self.selected_rois = mainWindow.selected_rois
+        self.plot = self.plot_dvh()
+        self.plotWidget = FigureCanvas(self.plot)
         self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
 
 

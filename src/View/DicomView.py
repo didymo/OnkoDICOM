@@ -21,8 +21,8 @@ class DicomView(object):
 
 	def __init__(self, mainWindow):
 		"""
-		Create the components (slider, view, metadata) for the DICOM View tab and place the widgets in the window of the
-		main page.
+		Create the components (slider, view, metadata) for the DICOM View tab.
+		Add the DICOM View tab to the window of the main page.
 
 		:param mainWindow:
 		 the window of the main page
@@ -396,9 +396,9 @@ class DicomView(object):
 		"""
 		Calculate a list of polygons to display for a given isodose.
 		:param dose_pixluts:
-		 TODO To complete
+		 lookup table (LUT) to get the image pixel values
 		:param contours:
-		 TODO To complete
+		  trace outline of the isodose to be displayed
 		:return: List of polygons of type QPolygonF.
 		"""
 		list_polygons = []

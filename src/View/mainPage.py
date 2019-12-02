@@ -4,6 +4,7 @@ from random import randint, seed
 from src.Controller.Add_On_OController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.View.InputDialogs import Rxdose_Check
+from src.View.PatientBar import *
 from src.View.DicomView import *
 from src.View.DVH import *
 from src.View.DicomTree import *
@@ -156,139 +157,9 @@ class Ui_MainWindow(object):
         self.mainWidget = QtWidgets.QWidget(MainWindow)
         self.mainWidget.setObjectName("mainWidget")
         self.mainWidget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.main_vLayout = QtWidgets.QVBoxLayout(self.mainWidget)
-
-        #######################################
-        #######################################
-
-        # Patient Bar
-        self.patient_widget = QtWidgets.QWidget(self.mainWidget)
-        self.hLayout_patient = QtWidgets.QHBoxLayout(self.patient_widget)
-        self.hLayout_patient.setContentsMargins(0, 0, 0, 0)
-        self.hLayout_patient.setSpacing(5)
-
-        # Patient Icon
-        self.patient_icon = QtWidgets.QLabel(self.patient_widget)
-        self.patient_icon.setMaximumWidth(30)
-        self.patient_icon.setGeometry(QtCore.QRect(10, 5, 30, 30))
-        self.patient_icon.setText("")
-        self.patient_icon.setPixmap(QtGui.QPixmap(":/images/Icon/patient.png"))
-        self.patient_icon.setObjectName("patient_icon")
-
-        # Name Patient (layout)
-        self.patient_name_widget = QtWidgets.QWidget(self.patient_widget)
-        self.patient_name_widget.setGeometry(QtCore.QRect(50, 5, 370, 31))
-        self.patient_name_widget.setObjectName("widget3")
-        self.hLayout_name = QtWidgets.QHBoxLayout(self.patient_name_widget)
-        self.hLayout_name.setContentsMargins(0, 0, 0, 0)
-        self.hLayout_name.setSpacing(5)
-        self.hLayout_name.setObjectName("hLayout_name")
-        self.patient_name_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        # Name Patient (label)
-        self.patient_name = QtWidgets.QLabel(self.patient_name_widget)
-        self.patient_name.setObjectName("patient_name")
-        self.patient_name.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.patient_name.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_name.addWidget(self.patient_name)
-        # Name Patient (box)
-        self.patient_name_box = QtWidgets.QLabel(self.patient_name_widget)
-        self.patient_name_box.setObjectName("patient_name_box")
-        self.patient_name_box.setAlignment(QtCore.Qt.AlignLeft)
-        self.patient_name_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.hLayout_name.addWidget(self.patient_name_box)
-
-        # Patient ID (layout)
-        self.patient_ID_widget = QtWidgets.QWidget(self.patient_widget)
-        self.patient_ID_widget.setGeometry(QtCore.QRect(500, 5, 280, 31))
-        self.patient_ID_widget.setObjectName("widget4")
-        self.hLayout_ID = QtWidgets.QHBoxLayout(self.patient_ID_widget)
-        self.hLayout_ID.setContentsMargins(0, 0, 0, 0)
-        self.hLayout_ID.setObjectName("hLayout_ID")
-        self.hLayout_ID.setSpacing(5)
-        self.patient_ID_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        # Patient ID (label)
-        self.patient_ID = QtWidgets.QLabel(self.patient_ID_widget)
-        self.patient_ID.setObjectName("patient_ID")
-        self.patient_ID.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.patient_ID.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_ID.addWidget(self.patient_ID)
-        # Patient ID (box)
-        self.patient_ID_box = QtWidgets.QLabel(self.patient_ID_widget)
-        self.patient_ID_box.setObjectName("patient_ID_box")
-        self.patient_ID_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.patient_ID_box.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_ID.addWidget(self.patient_ID_box)
-
-        # Gender (layout)
-        self.patient_gender_widget = QtWidgets.QWidget(self.patient_widget)
-        self.patient_gender_widget.setGeometry(QtCore.QRect(830, 5, 111, 31))
-        self.patient_gender_widget.setObjectName("widget2")
-        self.patient_gender_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.hLayout_gender = QtWidgets.QHBoxLayout(self.patient_gender_widget)
-        self.hLayout_gender.setContentsMargins(0, 0, 0, 0)
-        self.hLayout_gender.setSpacing(5)
-        self.hLayout_gender.setObjectName("hLayout_gender")
-        # Gender (label)
-        self.patient_gender = QtWidgets.QLabel(self.patient_gender_widget)
-        self.patient_gender.setObjectName("patient_gender")
-        self.patient_gender.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.patient_gender.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_gender.addWidget(self.patient_gender)
-        # Gender (box)
-        self.patient_gender_box = QtWidgets.QLabel(self.patient_gender_widget)
-        self.patient_gender_box.setObjectName("patient_gender_box")
-        self.patient_gender_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.patient_gender_box.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_gender.addWidget(self.patient_gender_box)
-
-        # Date of Birth (layout)
-        self.patient_DOB_widget = QtWidgets.QWidget(self.patient_widget)
-        self.patient_DOB_widget.setGeometry(QtCore.QRect(950, 5, 95, 31))
-        self.patient_DOB_widget.setObjectName("widget1")
-        self.patient_DOB_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.hLayout_DOB = QtWidgets.QHBoxLayout(self.patient_DOB_widget)
-        self.hLayout_DOB.setContentsMargins(0, 0, 0, 0)
-        self.hLayout_DOB.setSpacing(5)
-        self.hLayout_DOB.setObjectName("hLayout_DOB")
-        # Date of Birth (label)
-        self.patient_DOB = QtWidgets.QLabel(self.patient_DOB_widget)
-        self.patient_DOB.setObjectName("patient_DOB")
-        self.patient_DOB.setFont(QtGui.QFont(
-            "Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
-        self.patient_DOB.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_DOB.addWidget(self.patient_DOB)
-        # Date of Birth (box)
-        self.patient_DOB_box = QtWidgets.QLabel(self.patient_DOB_widget)
-        self.patient_DOB_box.setObjectName("patient_DOB_box")
-        self.patient_DOB_box.setFont(QtGui.QFont("Laksaman", pointSize=10))
-        self.patient_DOB_box.setAlignment(QtCore.Qt.AlignLeft)
-        self.hLayout_DOB.addWidget(self.patient_DOB_box)
-
-        self.hLayout_patient.addWidget(self.patient_icon)
-        self.hLayout_patient.addWidget(self.patient_name_widget)
-        self.hLayout_patient.addWidget(self.patient_ID_widget)
-        self.hLayout_patient.addWidget(self.patient_gender_widget)
-        self.hLayout_patient.addWidget(self.patient_DOB_widget)
-
-        self.main_vLayout.addWidget(self.patient_widget)
-
-        self.patient_icon.raise_()
-        self.patient_name.raise_()
-        self.patient_name_box.raise_()
-        self.patient_ID.raise_()
-        self.patient_ID_box.raise_()
-        self.patient_gender_box.raise_()
-        self.patient_DOB_box.raise_()
-        self.patient_gender.raise_()
-        self.patient_DOB.raise_()
-        self.patient_gender_box.raise_()
-        self.patient_gender.raise_()
-        self.patient_DOB_box.raise_()
-        self.patient_gender_box.raise_()
-
+        self.main_layout = QtWidgets.QVBoxLayout(self.mainWidget)
+        
+        self.patient_bar = PatientBar(self)
 
         #######################################
         #######################################
@@ -343,11 +214,9 @@ class Ui_MainWindow(object):
 
         # Main view: DVH
         self.dvh = DVH(self)
-        self.dvh.init_layout(self)
 
         # Main view: DICOM Tree
         self.dicom_tree = DicomTreeUI(self)
-        self.dicom_tree.init_layout(self)
 
         # Main view: Clinical Data
         self.tab2_clinical_data = QtWidgets.QWidget()
@@ -364,7 +233,7 @@ class Ui_MainWindow(object):
         self.hLayout_mainView.addWidget(self.left_widget)
         self.hLayout_mainView.addWidget(self.tab2)
 
-        self.main_vLayout.addWidget(self.mainView_widget)
+        self.main_layout.addWidget(self.mainView_widget)
 
         self.tab1.raise_()
         self.tab2.raise_()
@@ -382,7 +251,7 @@ class Ui_MainWindow(object):
         self.label.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hLayout_bottom.addWidget(self.label)
 
-        self.main_vLayout.addWidget(self.bottom_widget)
+        self.main_layout.addWidget(self.bottom_widget)
         self.bottom_widget.raise_()
 
         MainWindow.setCentralWidget(self.mainWidget)
@@ -657,22 +526,6 @@ class Ui_MainWindow(object):
         # Set bottom layer label
         self.label.setText(_translate("MainWindow", "@OnkoDICOM 2019"))
 
-        # Set patient bar labels
-        self.patient_DOB.setText(_translate("MainWindow", "DOB"))
-        self.patient_gender.setText(_translate("MainWindow", "Gender"))
-        self.patient_name.setText(_translate("MainWindow", "Name"))
-        self.patient_ID.setText(_translate("MainWindow", "ID"))
-
-        # Set patient bar boxes
-        self.patient_DOB_box.setText(_translate(
-            "MainWindow", self.basicInfo['dob']))
-        self.patient_gender_box.setText(_translate(
-            "MainWindow", self.basicInfo['gender']))
-        self.patient_ID_box.setText(_translate(
-            "MainWindow", self.basicInfo['id']))
-        self.patient_name_box.setText(_translate(
-            "MainWindow", self.basicInfo['name']))
-
         # Set menu labels
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
@@ -938,26 +791,26 @@ class Ui_MainWindow(object):
                 iso_opacity = 5
             stream.close()
         iso_opacity = int((iso_opacity / 100) * 255)
-        self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(
-            131, 0, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(
-            185, 0, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(
-            255, 46, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(
-            255, 161, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(
-            253, 255, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(
-            0, 255, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(
-            0, 143, 0, iso_opacity)]: self.checked_dose(state, text))
-        self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(
-            0, 255, 255, iso_opacity)]: self.checked_dose(state, text))
-        self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(
-            33, 0, 255, iso_opacity)]: self.checked_dose(state, text))
-        self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(
-            11, 0, 134, iso_opacity)]: self.checked_dose(state, text))
+        self.box1_isod.clicked.connect(lambda state, text=[107, QtGui.QColor(131, 0, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box2_isod.clicked.connect(lambda state, text=[105, QtGui.QColor(185, 0, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box3_isod.clicked.connect(lambda state, text=[100, QtGui.QColor(255, 46, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box4_isod.clicked.connect(lambda state, text=[95, QtGui.QColor(255, 161, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box5_isod.clicked.connect(lambda state, text=[90, QtGui.QColor(253, 255, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box6_isod.clicked.connect(lambda state, text=[80, QtGui.QColor(0, 255, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box7_isod.clicked.connect(lambda state, text=[70, QtGui.QColor(0, 143, 0, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box8_isod.clicked.connect(lambda state, text=[60, QtGui.QColor(0, 255, 255, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box9_isod.clicked.connect(lambda state, text=[30, QtGui.QColor(33, 0, 255, iso_opacity)]:
+                                       self.checked_dose(state, text))
+        self.box10_isod.clicked.connect(lambda state, text=[10, QtGui.QColor(11, 0, 134, iso_opacity)]:
+                                        self.checked_dose(state, text))
 
         self.box1_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box2_isod.setStyleSheet("font: 10pt \"Laksaman\";")
