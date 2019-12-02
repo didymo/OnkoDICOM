@@ -226,8 +226,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.setupUi(self, path, dataset, filepaths, rois, raw_dvh,
                      dvhxy, raw_contour, num_points, pixluts)
-        self.actionOpen.triggered.connect(self.patientHandler)
-        self.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
+        self.menu_bar.actionOpen.triggered.connect(self.patientHandler)
+        self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
         self.pyradi_trigger.connect(self.pyradiomicsHandler)
 
     def patientHandler(self):
@@ -313,7 +313,7 @@ class Controller:
                                          self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
         self.patient_window.open_patient_window.connect(self.show_bar)
         self.patient_window.run_pyradiomics.connect(self.show_pyradi_progress)
-        self.patient_window.actionExit.triggered.connect(
+        self.patient_window.menu_bar.actionExit.triggered.connect(
             self.patient_window.close)
         self.bar_window.close()
         if self.welcome_window.isVisible():

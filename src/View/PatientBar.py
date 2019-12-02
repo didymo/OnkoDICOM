@@ -13,7 +13,7 @@ class PatientBar(object):
 		 the window of the main page
 		"""
 		self.window = main_window
-		self.widget = QtWidgets.QWidget(main_window.mainWidget)
+		self.widget = QtWidgets.QWidget(main_window.main_widget)
 		self.layout = QtWidgets.QHBoxLayout(self.widget)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.setSpacing(5)

@@ -9,6 +9,7 @@ from src.View.DicomView import *
 from src.View.DVH import *
 from src.View.DicomTree import *
 from src.View.StructureInformation import *
+from src.View.MenuBar import *
 
 
 class Ui_MainWindow(object):
@@ -153,31 +154,28 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setMinimumSize(1080, 700)
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.jpg"))
-        # Central Layer
-        self.mainWidget = QtWidgets.QWidget(MainWindow)
-        self.mainWidget.setObjectName("mainWidget")
-        self.mainWidget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.main_layout = QtWidgets.QVBoxLayout(self.mainWidget)
-        
+
+
+        # Main Container and Layout
+        self.main_widget = QtWidgets.QWidget(MainWindow)
+        self.main_widget.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
+
+        # Patient Bar
         self.patient_bar = PatientBar(self)
 
-        #######################################
-        #######################################
-
-
-        self.mainView_widget = QtWidgets.QWidget(MainWindow)
-        self.mainView_widget.setObjectName("mainView_widget")
-        self.mainView_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.hLayout_mainView = QtWidgets.QHBoxLayout(self.mainView_widget)
-        self.hLayout_mainView.setContentsMargins(0, 0, 0, 0)
+        # Functionalities Container and Layout
+        # (Structure/Isodoses tab, Structure Information tab, DICOM View / DVH / DICOM Tree / Clinical Data tab)
+        self.function_widget = QtWidgets.QWidget(MainWindow)
+        self.function_widget.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.function_layout = QtWidgets.QHBoxLayout(self.function_widget)
+        self.function_layout.setContentsMargins(0, 0, 0, 0)
 
         # Left Column
-        self.left_widget = QtWidgets.QWidget(self.mainWidget)
-        self.vLayout_left = QtWidgets.QVBoxLayout(self.left_widget)
-        self.vLayout_left.setContentsMargins(0, 0, 0, 0)
+        self.left_widget = QtWidgets.QWidget(self.main_widget)
+        self.left_layout = QtWidgets.QVBoxLayout(self.left_widget)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
         self.left_widget.setMaximumWidth(230)
-
-        #######################################
         
         # Left Top Column: Structure and Isodoses Tabs
         self.tab1 = QtWidgets.QTabWidget(self.left_widget)
@@ -192,19 +190,17 @@ class Ui_MainWindow(object):
         self.initIsodColumn()
         self.tab1.addTab(self.tab1_isodoses, "")
 
-        #######################################
-
-        # Create the UI of Structure Information (bottom left of the window)
+        # Structure Information (bottom left of the window)
         self.struct_info = StructureInformation(self)
 
-        self.vLayout_left.addWidget(self.tab1)
-        self.vLayout_left.addWidget(self.struct_info.widget)
+        self.left_layout.addWidget(self.tab1)
+        self.left_layout.addWidget(self.struct_info.widget)
 
         ############################################
         ############################################
 
         # Main view
-        self.tab2 = QtWidgets.QTabWidget(self.mainWidget)
+        self.tab2 = QtWidgets.QTabWidget(self.main_widget)
         self.tab2.setGeometry(QtCore.QRect(200, 40, 880, 561))
         self.tab2.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.tab2.setObjectName("tab2")
@@ -230,16 +226,18 @@ class Ui_MainWindow(object):
         self.tab2.setFocusPolicy(QtCore.Qt.NoFocus)
 
 
-        self.hLayout_mainView.addWidget(self.left_widget)
-        self.hLayout_mainView.addWidget(self.tab2)
+        self.function_layout.addWidget(self.left_widget)
+        self.function_layout.addWidget(self.tab2)
 
-        self.main_layout.addWidget(self.mainView_widget)
+        self.main_layout.addWidget(self.function_widget)
 
         self.tab1.raise_()
         self.tab2.raise_()
+        
+        #######################################
 
         # Bottom Layer
-        self.bottom_widget = QtWidgets.QWidget(self.mainWidget)
+        self.bottom_widget = QtWidgets.QWidget(self.main_widget)
         self.hLayout_bottom = QtWidgets.QHBoxLayout(self.bottom_widget)
         self.hLayout_bottom.setContentsMargins(0, 0, 0, 0)
 
@@ -254,249 +252,10 @@ class Ui_MainWindow(object):
         self.main_layout.addWidget(self.bottom_widget)
         self.bottom_widget.raise_()
 
-        MainWindow.setCentralWidget(self.mainWidget)
+        MainWindow.setCentralWidget(self.main_widget)
 
-        #######################################
-        #######################################
-
-        # Menu Bar
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 901, 35))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.menubar.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        # Menu Bar: File, Edit, Tools, Help
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        # self.menuEdit = QtWidgets.QMenu(self.menubar)
-        # self.menuEdit.setObjectName("menuEdit")
-        self.menuTools = QtWidgets.QMenu(self.menubar)
-        self.menuTools.setObjectName("menuTools")
-        self.menuHelp = QtWidgets.QMenu(self.menubar)
-        self.menuHelp.setObjectName("menuHelp")
-
-        # All icons used for menu bar and toolbar
-        iconOpen = QtGui.QIcon()
-        iconOpen.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconAnonymize_and_Save = QtGui.QIcon()
-        iconAnonymize_and_Save.addPixmap(QtGui.QPixmap(":/images/Icon/anonlock.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconZoom_In = QtGui.QIcon()
-        iconZoom_In.addPixmap(QtGui.QPixmap(":/images/Icon/plus.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconZoom_Out = QtGui.QIcon()
-        iconZoom_Out.addPixmap(QtGui.QPixmap(":/images/Icon/minus.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconWindowing = QtGui.QIcon()
-        iconWindowing.addPixmap(QtGui.QPixmap(":/images/Icon/windowing.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconTransect = QtGui.QIcon()
-        iconTransect.addPixmap(QtGui.QPixmap(":/images/Icon/transect.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        #Icons for creating ROIS
-        # iconBrush = QtGui.QIcon()
-        # iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        # iconIsodose = QtGui.QIcon()
-        # iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconadd_on_options = QtGui.QIcon()
-        iconadd_on_options.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        iconExport = QtGui.QIcon()
-        iconExport.addPixmap(QtGui.QPixmap(":/images/Icon/export.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-
-        # Set Menu Bar (Tools tab)
-        self.menuWindowing = QtWidgets.QMenu(self.menuTools)
-        self.menuWindowing.setObjectName("menuWindowing")
-        self.menuWindowing.setIcon(iconWindowing)
-        # self.menuROI_Creation = QtWidgets.QMenu(self.menuTools)
-        # self.menuROI_Creation.setObjectName("menuROI_Creation")
-        self.menuExport = QtWidgets.QMenu(self.menuTools)
-        self.menuExport.setIcon(iconExport)
-        self.menuExport.setObjectName("menuExport")
-
-        # Set Tool Bar
-        self.toolBar = QtWidgets.QToolBar(MainWindow)
-        self.toolBar.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.toolBar.setMovable(False)
-        self.toolBar.setObjectName("toolBar")
-        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
-
-        # Open Patient Action
-        self.actionOpen = QtWidgets.QAction(MainWindow)
-        self.actionOpen.setIcon(iconOpen)
-        self.actionOpen.setIconVisibleInMenu(True)
-        self.actionOpen.setObjectName("actionOpen")
-
-        # # Import Action
-        # self.actionImport = QtWidgets.QAction(MainWindow)
-        # self.actionImport.setObjectName("actionImport")
-        #
-        # # Save Action
-        # self.actionSave = QtWidgets.QAction(MainWindow)
-        # self.actionSave.setObjectName("actionSave")
-
-        # Save as Anonymous Action
-        self.actionSave_as_Anonymous = QtWidgets.QAction(MainWindow)
-        self.actionSave_as_Anonymous.setObjectName("actionSave_as_Anonymous")
-        self.actionSave_as_Anonymous.triggered.connect(self.HandleAnonymization)
-
-        # Exit Action
-        self.actionExit = QtWidgets.QAction(MainWindow)
-        self.actionExit.setObjectName("actionExit")
-
-        #All the Edit actions
-        # # Undo Action
-        # self.actionUndo = QtWidgets.QAction(MainWindow)
-        # self.actionUndo.setObjectName("actionUndo")
-        #
-        # # Redo Action
-        # self.actionRedo = QtWidgets.QAction(MainWindow)
-        # self.actionRedo.setObjectName("actionRedo")
-        #
-        # # Rename ROI Action
-        # self.actionRename_ROI = QtWidgets.QAction(MainWindow)
-        # self.actionRename_ROI.setObjectName("actionRename_ROI")
-        #
-        # # Delete ROI Action
-        # self.actionDelete_ROI = QtWidgets.QAction(MainWindow)
-        # self.actionDelete_ROI.setObjectName("actionDelete_ROI")
-
-        # Zoom In Action
-        self.actionZoom_In = QtWidgets.QAction(MainWindow)
-        self.actionZoom_In.setIcon(iconZoom_In)
-        self.actionZoom_In.setIconVisibleInMenu(True)
-        self.actionZoom_In.setObjectName("actionZoom_In")
-        self.actionZoom_In.triggered.connect(self.dicom_view.zoomIn)
-
-        # Zoom Out Action
-        self.actionZoom_Out = QtWidgets.QAction(MainWindow)
-
-        self.actionZoom_Out.setIcon(iconZoom_Out)
-        self.actionZoom_Out.setIconVisibleInMenu(True)
-        self.actionZoom_Out.setObjectName("actionZoom_Out")
-        self.actionZoom_Out.triggered.connect(self.dicom_view.zoomOut)
-
-        # Windowing Action
-        self.actionWindowing = QtWidgets.QAction(MainWindow)
-        self.actionWindowing.setIcon(iconWindowing)
-        self.actionWindowing.setIconVisibleInMenu(True)
-        self.actionWindowing.setObjectName("actionWindowing")
-        self.initWindowingMenu(MainWindow)
-
-        # Transect Action
-        self.actionTransect = QtWidgets.QAction(MainWindow)
-        self.actionTransect.setIcon(iconTransect)
-        self.actionTransect.setIconVisibleInMenu(True)
-        self.actionTransect.triggered.connect(self.transectHandler)
-
-        # # ROI by brush Action
-        # self.actionBrush = QtWidgets.QAction(MainWindow)
-        # self.actionBrush.setIcon(iconBrush)
-        # self.actionBrush.setIconVisibleInMenu(True)
-        # self.actionBrush.setObjectName("actionBrush")
-        #
-        # # ROI by Isodose Action
-        # self.actionIsodose = QtWidgets.QAction(MainWindow)
-        # self.actionIsodose.setIcon(iconIsodose)
-        # self.actionIsodose.setIconVisibleInMenu(True)
-        # self.actionIsodose.setObjectName("actionIsodose")
-
-        # Add-On Options Action
-        self.actionadd_on_options = QtWidgets.QAction(MainWindow)
-        self.actionadd_on_options.setIcon(iconadd_on_options)
-        self.actionadd_on_options.setIconVisibleInMenu(True)
-        self.actionadd_on_options.setObjectName("actionadd_on_options")
-        self.actionadd_on_options.triggered.connect(self.AddOnOptionsHandler)
-
-        # Anonymize and Save Action
-        self.actionAnonymize_and_Save = QtWidgets.QAction(MainWindow)
-        self.actionAnonymize_and_Save.setIcon(iconAnonymize_and_Save)
-        self.actionAnonymize_and_Save.setIconVisibleInMenu(True)
-        self.actionAnonymize_and_Save.setObjectName("actionAnonymize_and_Save")
-        self.actionAnonymize_and_Save.triggered.connect(
-            self.HandleAnonymization)
-
-        # Export DVH Spreadsheet Action
-        self.actionDVH_Spreadsheet = QtWidgets.QAction(MainWindow)
-        self.actionDVH_Spreadsheet.setObjectName("actionDVH_Spreadsheet")
-        self.actionDVH_Spreadsheet.triggered.connect(self.dvh.export_csv)
-
-        # Export Clinical Data Action
-        self.actionClinical_Data = QtWidgets.QAction(MainWindow)
-        self.actionClinical_Data.setObjectName("actionClinical_Data")
-        self.actionClinical_Data.triggered.connect(self.clinicalDataCheck)
-
-        # Export Pyradiomics Action
-        self.actionPyradiomics = QtWidgets.QAction(MainWindow)
-        self.actionPyradiomics.setObjectName("actionPyradiomics")
-
-        # Build menu bar
-        self.menuFile.addAction(self.actionOpen)
-        # self.menuFile.addAction(self.actionImport)
-        self.menuFile.addSeparator()
-        # self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionSave_as_Anonymous)
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionExit)
-        # self.menuEdit.addAction(self.actionUndo)
-        # self.menuEdit.addAction(self.actionRedo)
-        # self.menuEdit.addSeparator()
-        # self.menuEdit.addAction(self.actionRename_ROI)
-        # self.menuEdit.addAction(self.actionDelete_ROI)
-        # self.menuROI_Creation.addAction(self.actionBrush)
-        # self.menuROI_Creation.addAction(self.actionIsodose)
-        self.menuExport.addAction(self.actionDVH_Spreadsheet)
-        self.menuExport.addAction(self.actionClinical_Data)
-        self.menuExport.addAction(self.actionPyradiomics)
-
-        self.menubar.addAction(self.menuFile.menuAction())
-        #self.menubar.addAction(self.menuEdit.menuAction())
-        self.menubar.addAction(self.menuTools.menuAction())
-        self.menubar.addAction(self.menuHelp.menuAction())
-
-        # Windowing drop-down list on toolbar
-        self.windowingButton = QtWidgets.QToolButton()
-        self.windowingButton.setMenu(self.menuWindowing)
-        self.windowingButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.windowingButton.setIcon(iconWindowing)
-        self.windowingButton.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        # Export Button drop-down list on toolbar
-        self.exportButton = QtWidgets.QToolButton()
-        self.exportButton.setMenu(self.menuExport)
-        self.exportButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.exportButton.setIcon(iconExport)
-        self.exportButton.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        # Build toolbar
-        self.menuTools.addAction(self.actionZoom_In)
-        self.menuTools.addAction(self.actionZoom_Out)
-        self.menuTools.addAction(self.menuWindowing.menuAction())
-        self.menuTools.addAction(self.actionTransect)
-        # self.menuTools.addAction(self.menuROI_Creation.menuAction())
-        self.menuTools.addAction(self.actionadd_on_options)
-        self.menuTools.addSeparator()
-        self.menuTools.addAction(self.menuExport.menuAction())
-        self.menuTools.addAction(self.actionAnonymize_and_Save)
-        self.menuTools.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        # To create a space in the toolbar
-        self.toolbar_spacer = QtWidgets.QWidget()
-        self.toolbar_spacer.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.toolbar_spacer.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        self.toolBar.addAction(self.actionOpen)
-        self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionZoom_In)
-        self.toolBar.addAction(self.actionZoom_Out)
-        self.toolBar.addSeparator()
-        self.toolBar.addWidget(self.windowingButton)
-        self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionTransect)
-        self.toolBar.addSeparator()
-        # self.toolBar.addAction(self.actionBrush)
-        # self.toolBar.addAction(self.actionIsodose)
-        # self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionadd_on_options)
-        self.toolBar.addWidget(self.toolbar_spacer)
-        self.toolBar.addWidget(self.exportButton)
-        self.toolBar.addAction(self.actionAnonymize_and_Save)
+        # Menu and Tool bars
+        self.menu_bar = MenuBar(self)
 
         self.retranslateUi(MainWindow)
         self.tab1.setCurrentIndex(0)
@@ -525,38 +284,6 @@ class Ui_MainWindow(object):
 
         # Set bottom layer label
         self.label.setText(_translate("MainWindow", "@OnkoDICOM 2019"))
-
-        # Set menu labels
-        self.menuFile.setTitle(_translate("MainWindow", "File"))
-        # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
-        self.menuTools.setTitle(_translate("MainWindow", "Tools"))
-        self.menuWindowing.setTitle(_translate("MainWindow", "Windowing"))
-        # self.menuROI_Creation.setTitle(_translate("MainWindow", "ROI Creation"))
-        self.menuExport.setTitle(_translate("MainWindow", "Export"))
-        self.menuHelp.setTitle(_translate("MainWindow", "Help"))
-        self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
-
-        # Set action labels (menu and tool bars)
-        self.actionOpen.setText(_translate("MainWindow", "Open Patient..."))
-        # self.actionImport.setText(_translate("MainWindow", "Import..."))
-        # self.actionSave.setText(_translate("MainWindow", "Save"))
-        self.actionSave_as_Anonymous.setText(_translate("MainWindow", "Save as Anonymous..."))
-        self.actionExit.setText(_translate("MainWindow", "Exit"))
-        # self.actionUndo.setText(_translate("MainWindow", "Undo"))
-        # self.actionRedo.setText(_translate("MainWindow", "Redo"))
-        # self.actionRename_ROI.setText(_translate("MainWindow", "Rename ROI..."))
-        # self.actionDelete_ROI.setText(_translate("MainWindow", "Delete ROI..."))
-        self.actionZoom_In.setText(_translate("MainWindow", "Zoom In"))
-        self.actionZoom_Out.setText(_translate("MainWindow", "Zoom Out"))
-        self.actionWindowing.setText(_translate("MainWindow", "Windowing"))
-        self.actionTransect.setText(_translate("MainWindow", "Transect"))
-        # self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
-        # self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
-        self.actionadd_on_options.setText(_translate("MainWindow", "Add-On Options..."))
-        self.actionAnonymize_and_Save.setText(_translate("MainWindow", "Anonymize and Save"))
-        self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
-        self.actionClinical_Data.setText(_translate("MainWindow", "Clinical Data"))
-        self.actionPyradiomics.setText(_translate("MainWindow", "Pyradiomics"))
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         MainWindow.update()
 
@@ -880,24 +607,6 @@ class Ui_MainWindow(object):
     #############################
     #  TOOLBAR FUNCTI0NALITIES  #
     #############################
-
-    def initWindowingMenu(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-
-        # Get the right order for windowing names
-        names_ordered = sorted(self.dict_windowing.keys())
-        if 'Normal' in self.dict_windowing.keys():
-            old_index = names_ordered.index('Normal')
-            names_ordered.insert(0, names_ordered.pop(old_index))
-
-        # Create actions for each windowing items
-        for name in names_ordered:
-            text = str(name)
-            actionWindowingItem = QtWidgets.QAction(MainWindow)
-            actionWindowingItem.triggered.connect(
-                lambda state, text=name: self.setWindowingLimits(state, text))
-            self.menuWindowing.addAction(actionWindowingItem)
-            actionWindowingItem.setText(_translate("MainWindow", text))
 
     def HandleAnonymization(self):
         SaveReply = QtWidgets.QMessageBox.information(self, "Confirmation",
