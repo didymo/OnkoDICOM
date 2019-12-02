@@ -1,5 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 
+from src.Model.CalculateImages import *
+from copy import deepcopy
+
 class MenuBar(object):
 	"""
 	Manage all actions related to the menu bar and the tool bar.
@@ -15,6 +18,7 @@ class MenuBar(object):
 		 the window of the main page
 		"""
 		self.window = main_window
+		self.handlers = MenuHandler(self, main_window)
 		self.init_icons()
 		self.create_actions()
 		self.create_menubar()
@@ -65,7 +69,7 @@ class MenuBar(object):
 
 		# Save as Anonymous Action
 		self.actionSave_as_Anonymous = QtWidgets.QAction(self.window)
-		self.actionSave_as_Anonymous.triggered.connect(self.window.HandleAnonymization)
+		self.actionSave_as_Anonymous.triggered.connect(self.handlers.anonymization_handler)
 
 		# Exit Action
 		self.actionExit = QtWidgets.QAction(self.window)
@@ -102,7 +106,7 @@ class MenuBar(object):
 		self.actionTransect = QtWidgets.QAction(self.window)
 		self.actionTransect.setIcon(self.iconTransect)
 		self.actionTransect.setIconVisibleInMenu(True)
-		self.actionTransect.triggered.connect(self.window.transectHandler)
+		self.actionTransect.triggered.connect(self.handlers.transect_handler)
 
 		# # ROI by brush Action
 		# self.actionBrush = QtWidgets.QAction(self.window)
@@ -118,13 +122,13 @@ class MenuBar(object):
 		self.actionAddOn = QtWidgets.QAction(self.window)
 		self.actionAddOn.setIcon(self.iconAddOn)
 		self.actionAddOn.setIconVisibleInMenu(True)
-		self.actionAddOn.triggered.connect(self.window.AddOnOptionsHandler)
+		self.actionAddOn.triggered.connect(self.handlers.add_on_options_handler)
 
 		# Anonymize and Save Action
 		self.actionAnonymize_and_Save = QtWidgets.QAction(self.window)
 		self.actionAnonymize_and_Save.setIcon(self.iconAnonymize_and_Save)
 		self.actionAnonymize_and_Save.setIconVisibleInMenu(True)
-		self.actionAnonymize_and_Save.triggered.connect(self.window.HandleAnonymization)
+		self.actionAnonymize_and_Save.triggered.connect(self.handlers.anonymization_handler)
 
 		# Export DVH Spreadsheet Action
 		self.actionDVH_Spreadsheet = QtWidgets.QAction(self.window)
@@ -136,6 +140,7 @@ class MenuBar(object):
 
 		# Export Pyradiomics Action
 		self.actionPyradiomics = QtWidgets.QAction(self.window)
+
 
 	def init_windowing_menu(self):
 		"""
@@ -154,9 +159,10 @@ class MenuBar(object):
 			text = str(name)
 			actionWindowingItem = QtWidgets.QAction(self.window)
 			actionWindowingItem.triggered.connect(
-				lambda state, text=name: self.window.setWindowingLimits(state, text))
+				lambda state, text=name: self.handlers.windowing_handler(state, text))
 			self.menuWindowing.addAction(actionWindowingItem)
 			actionWindowingItem.setText(_translate("MainWindow", text))
+
 
 	def create_menubar(self):
 		"""
@@ -225,8 +231,11 @@ class MenuBar(object):
 		self.menubar.addAction(self.menuTools.menuAction())
 		self.menubar.addAction(self.menuHelp.menuAction())
 
-	def create_toolbar(self):
 
+	def create_toolbar(self):
+		"""
+		Build the tool bar.
+		"""
 		# Drop-down list for Windowing button on toolbar
 		self.windowingButton = QtWidgets.QToolButton()
 		self.windowingButton.setMenu(self.menuWindowing)
@@ -269,6 +278,7 @@ class MenuBar(object):
 		self.toolBar.addWidget(self.exportButton)
 		self.toolBar.addAction(self.actionAnonymize_and_Save)
 
+
 	def retranslate(self):
 		"""
 		Give names for all items in the menu bar and tool bar.
@@ -306,3 +316,82 @@ class MenuBar(object):
 		self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
 		self.actionClinical_Data.setText(_translate("MainWindow", "Clinical Data"))
 		self.actionPyradiomics.setText(_translate("MainWindow", "Pyradiomics"))
+	
+	
+class MenuHandler(object):
+	"""
+	Gather functions to be triggered and used in the menu and tool bars.
+	Note: The triggered functions related to one of the four tabs (DICOM View, DVH, DICOM Tree and Clinical	Data)
+	are managed by their corresponding classes.
+	"""
+
+	def __init__(self, main_window):
+		"""
+		Initialization of the handler class.
+		:param main_window:
+		 the window of the main page
+		"""
+		self.main_window = main_window
+		
+	
+	def windowing_handler(self, state, text):
+		"""
+		Function triggered when a window is selected from the menu.
+		:param state: Variable not used. Present to be able to use a lambda function.
+		:param text: The name of the window selected.
+		"""
+		# Get the values for window and level from the dict
+		windowing_limits = self.main_window.dict_windowing[text]
+
+		# Set window and level to the new values
+		self.main_window.window = windowing_limits[0]
+		self.main_window.level = windowing_limits[1]
+
+		# Create a deep copy of the pixel values as they are a list of list
+		img_data = deepcopy(self.main_window.pixel_values)
+
+		# Get id of current slice
+		id = self.main_window.dicom_view.slider.value()
+		np_pixels = img_data[id]
+
+		# Update current slice with the new window and level values
+		self.main_window.pixmapWindowing = scaled_pixmap(np_pixels, self.main_window.window, self.main_window.level)
+		self.main_window.dicom_view.update_view(windowingChange=True)
+
+		# Update all the pixmaps with the updated window and level values
+		self.pixmaps = get_pixmaps(img_data, self.main_window.window, self.main_window.level)
+
+
+	def anonymization_handler(self):
+		"""
+		Function triggered when the Anonymization button is pressed from the menu.
+		"""
+		SaveReply = QtWidgets.QMessageBox.information(self.main_window, "Confirmation",
+													  "Are you sure you want to perform anonymization?",
+													  QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+		if SaveReply == QtWidgets.QMessageBox.Yes:
+			self.main_window.hashed_path = self.main_window.callClass.runAnonymization(self.main_window)
+			self.main_window.pyradi_trigger.emit(self.main_window.path, self.main_window.filepaths, self.main_window.hashed_path)
+		if SaveReply == QtWidgets.QMessageBox.No:
+			pass
+	
+	
+	def transect_handler(self):
+		"""
+		Function triggered when the Transect button is pressed from the menu.
+		"""
+		id = self.main_window.dicom_view.slider.value()
+		dt = self.main_window.dataset[id]
+		rowS = dt.PixelSpacing[0]
+		colS = dt.PixelSpacing[1]
+		dt.convert_pixel_data()
+		self.main_window.callClass.runTransect(
+			self.main_window, self.main_window.dicom_view.view, self.main_window.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
+	
+	
+	def add_on_options_handler(self):
+		"""
+		Function triggered when the Add-On Options button is pressed from the menu.
+		:return:
+		"""
+		self.main_window.callManager.show_add_on_options()
