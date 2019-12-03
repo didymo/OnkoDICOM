@@ -1,9 +1,24 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 class IsodosesTab(object):
+	"""
+	Manage all functionality related to Isodoses (second tab of left column).
+	- Create a dictionary of Isodoses-colors where the key is the percentage of isodose and the value a QColor
+	(color_dict).
+	- Create the color squares and the checkboxes.
+	- Place the widgets in the window of the main page.
+	"""
+	
 	def __init__(self, main_window):
+		"""
+		Create the color squares and the checkboxes for the Structures tab.
+		Add the widgets to the window of the main page.
+
+		:param main_window:
+		 the window of the main page
+		"""
 		self.main_window = main_window
-		self.color_dict = self.init_color_dict()
+		self.color_dict = self.init_color_isod()
 		self.tab1_isodoses = QtWidgets.QWidget()
 		self.tab1_isodoses.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_color_square()
@@ -11,6 +26,11 @@ class IsodosesTab(object):
 		self.init_layout()
 
 	def init_layout(self):
+		"""
+		Initialize the layout for the Isodoses tab.
+		Add the color squares and the checkboxes in the layout.
+		Add the whole container 'tab2_isodoses' as a tab in the main page.
+		"""
 		self.layout = QtWidgets.QGridLayout(self.tab1_isodoses)
 		self.layout.setContentsMargins(5, 5, 5, 5)
 
@@ -50,8 +70,10 @@ class IsodosesTab(object):
 		self.main_window.tab1.addTab(self.tab1_isodoses, "Isodoses")
 
 
-	# Initialize the list of isodoses (left column of the main page)
 	def init_checkbox(self):
+		"""
+		Initialize the checkbox objects.
+		"""
 		# Values of Isodoses
 		val1 = int(1.07 * self.main_window.rxdose)
 		val2 = int(1.05 * self.main_window.rxdose)
@@ -109,18 +131,28 @@ class IsodosesTab(object):
 
 	# Function triggered when a dose level selected
 	# Updates the list of selected isodoses and dicom view
-	def checked_dose(self, state, key):
+	def checked_dose(self, state, isod_value):
+		"""
+		Function triggered when the checkbox of a structure is checked / unchecked.
+		Update the list of selected structures.
+		Update the DICOM view.
+		
+		:param state: True if the checkbox is checked, False otherwise.
+		:param isod_value: Percentage of isodose.
+		"""
 		if state:
 			# Add the dose to the list of selected doses
-			self.main_window.selected_doses.append(key)
+			self.main_window.selected_doses.append(isod_value)
 		else:
 			# Remove dose from list of previously selected doses
-			self.main_window.selected_doses.remove(key)
+			self.main_window.selected_doses.remove(isod_value)
 		# Update the dicom view
 		self.main_window.dicom_view.update_view()
 
 	def init_color_square(self):
-		# Color squares
+		"""
+		Initialize the color squares.
+		"""
 		self.color1_isod = self.draw_color_square(131, 0, 0)
 		self.color2_isod = self.draw_color_square(185, 0, 0)
 		self.color3_isod = self.draw_color_square(255, 46, 0)
@@ -133,7 +165,12 @@ class IsodosesTab(object):
 		self.color10_isod = self.draw_color_square(11, 0, 134)
 
 
-	def init_color_dict(self):
+	def init_color_isod(self):
+		"""
+		Create a dictionary containing the colors for each isodose.
+
+		:return: Dictionary where the key is the percentage of isodose and the value a QColor object.
+		"""
 		roiColor = dict()
 		roiColor[107] = QtGui.QColor(131, 0, 0)
 		roiColor[105] = QtGui.QColor(185, 0, 0)
@@ -147,10 +184,18 @@ class IsodosesTab(object):
 		roiColor[10] = QtGui.QColor(11, 0, 134)
 		return roiColor
 
-	# Draw color squares
-	def draw_color_square(self, a, b, c):
+
+	def draw_color_square(self, red, green, blue):
+		"""
+		Create a color square.
+		:param red: Red component of the color.
+		:param green: Green component of the color.
+		:param blue: Blue component of the color.
+
+		:return: Color square widget.
+		"""
 		color_square_label = QtWidgets.QLabel()
 		color_square_pix = QtGui.QPixmap(15, 15)
-		color_square_pix.fill(QtGui.QColor(a, b, c))
+		color_square_pix.fill(QtGui.QColor(red, green, blue))
 		color_square_label.setPixmap(color_square_pix)
 		return color_square_label

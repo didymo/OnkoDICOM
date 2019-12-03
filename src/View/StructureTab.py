@@ -5,7 +5,7 @@ import numpy as np
 class StructureTab(object):
 	"""
 	Manage all functionalities related to the ROI Structures (first tab of left column).
-	- Create a dictionary where the key is the ROI structure and the value a QColor (color_dict).
+	- Create a dictionary of ROI-colors where the key is the ROI structure and the value a QColor (color_dict).
 	- Create the color squares and the checkboxes.
 	- Place the widgets in the window of the main page.
 	"""
@@ -26,6 +26,18 @@ class StructureTab(object):
 		self.update_content()
 		self.init_layout()
 
+
+	def init_layout(self):
+		"""
+		Initialize the layout for the Structure tab.
+		Add the scroll area widget in the layout.
+		Add the whole container 'tab1_structures' as a tab in the main page.
+		"""
+		self.layout = QtWidgets.QHBoxLayout(self.tab1_structures)
+		self.layout.setContentsMargins(0, 0, 0, 0)
+		self.layout.addWidget(self.scroll_area)
+		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
+		
 
 	def init_color_roi(self):
 		"""
@@ -61,18 +73,6 @@ class StructureTab(object):
 				roiColor[roi_id] = QtGui.QColor(red, green, blue)
 
 		return roiColor
-
-
-	def init_layout(self):
-		"""
-		Initialize the layout for the Structure tab.
-		Add the scroll area widget in the layout.
-		Add the whole container 'tab1_structures' as a tab in the main page.
-		"""
-		self.layout = QtWidgets.QHBoxLayout(self.tab1_structures)
-		self.layout.setContentsMargins(0, 0, 0, 0)
-		self.layout.addWidget(self.scroll_area)
-		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
 
 
 	def init_content(self):
