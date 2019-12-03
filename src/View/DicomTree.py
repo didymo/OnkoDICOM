@@ -36,7 +36,7 @@ class DicomTreeUI(object):
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.selector, QtCore.Qt.AlignLeft)
 		self.layout.addWidget(self.treeView)
-		mainWindow.tab2.addTab(mainWindow.tab2_DICOM_tree, "")
+		mainWindow.tab2.addTab(mainWindow.tab2_DICOM_tree, "DICOM Tree")
 
 
 	def init_tree(self, mainWindow):

@@ -59,11 +59,7 @@ class StructureTab(object):
 		self.layout = QtWidgets.QHBoxLayout(self.tab1_structures)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.scroll_area)
-		self.main_window.tab1.addTab(self.tab1_structures, "")
-
-		_translate = QtCore.QCoreApplication.translate
-		self.main_window.tab1.setTabText(self.main_window.tab1.indexOf(self.tab1_structures),
-										 _translate("MainWindow", "Structures"))
+		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
 
 	def init_content(self):
 		# Scroll Area

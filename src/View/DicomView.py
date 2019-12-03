@@ -30,6 +30,7 @@ class DicomView(object):
 
 		self.main_window = mainWindow
 		self.roi_color = mainWindow.structures_tab.color_dict
+		self.isod_color = mainWindow.isodoses_tab.color_dict
 		mainWindow.tab2_view = QtWidgets.QWidget()
 		mainWindow.tab2_view.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_slider()
@@ -51,7 +52,7 @@ class DicomView(object):
 
 		self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
 		self.gridLayout_view.addWidget(self.view, 0, 0, 1, 1)
-		self.main_window.tab2.addTab(self.main_window.tab2_view, "")
+		self.main_window.tab2.addTab(self.main_window.tab2_view, "DICOM View")
 
 
 	def init_slider(self):
@@ -358,7 +359,7 @@ class DicomView(object):
 			# sort selected_doses in ascending order so that the high dose isodose washes
 			# paint over the lower dose isodose washes
 			for sd in sorted(self.main_window.selected_doses):
-				dose_level = sd[0] * self.main_window.rxdose / \
+				dose_level = sd * self.main_window.rxdose / \
 							 (self.main_window.dataset['rtdose'].DoseGridScaling * 10000)
 				contours = isodosegen.trace(dose_level)
 				contours = contours[:len(contours) // 2]
@@ -366,7 +367,7 @@ class DicomView(object):
 				polygons = self.calc_dose_polygon(
 					self.main_window.dose_pixluts[curr_slice_uid], contours)
 
-				brush_color = sd[1]
+				brush_color = self.isod_color[sd]
 				with open('src/data/line&fill_configuration', 'r') as stream:
 					elements = stream.readlines()
 					if len(elements) > 0:

@@ -114,7 +114,7 @@ class DVH(object):
         self.layout = QtWidgets.QGridLayout(mainWindow.tab2_DVH)
         self.layout.addWidget(self.plotWidget, 1, 0, 1, 1)
         self.layout.addWidget(self.button_export, 1, 1, 1, 1, QtCore.Qt.AlignBottom)
-        mainWindow.tab2.addTab(mainWindow.tab2_DVH, "")
+        mainWindow.tab2.addTab(mainWindow.tab2_DVH, "DVH")
 
 
     def update_plot(self, mainWindow):
@@ -146,7 +146,6 @@ class DVH(object):
                                             "font: 57 11pt \"Ubuntu\";\n"
                                             "color:rgb(75,0,130);\n"
                                             "font-weight: bold;\n")
-        button.setObjectName("button_exportDVH")
         button.clicked.connect(self.export_csv)
 
         return button
