@@ -23,7 +23,7 @@ class DVH(object):
         self.selected_rois = mainWindow.selected_rois
         self.raw_dvh = mainWindow.raw_dvh
         self.dvh_x_y = mainWindow.dvh_x_y
-        self.roi_color = mainWindow.roiColor
+        self.roi_color = mainWindow.structures_tab.color_dict
         self.plot = self.plot_dvh()
         self.plotWidget = FigureCanvas(self.plot)
         self.button_export = self.export_button()

@@ -29,6 +29,7 @@ class DicomView(object):
 		"""
 
 		self.main_window = mainWindow
+		self.roi_color = mainWindow.structures_tab.color_dict
 		mainWindow.tab2_view = QtWidgets.QWidget()
 		mainWindow.tab2_view.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_slider()
@@ -290,7 +291,7 @@ class DicomView(object):
 			else:
 				polygons = self.main_window.dict_polygons[roi_name][curr_slice]
 
-			brush_color = self.main_window.roiColor[roi]['QColor_ROIdisplay']
+			brush_color = self.roi_color[roi]['QColor_ROIdisplay']
 			with open('src/data/line&fill_configuration', 'r') as stream:
 				elements = stream.readlines()
 				if len(elements) > 0:
@@ -387,7 +388,7 @@ class DicomView(object):
 					brush_color.red(), brush_color.green(), brush_color.blue())
 				pen = self.get_qpen(pen_color, iso_line, line_width)
 				for i in range(len(polygons)):
-					# color = self.roiColor['body']['QColor_ROIdisplay']
+					# color = self.roi_color['body']['QColor_ROIdisplay']
 					self.scene.addPolygon(
 						polygons[i], pen, QBrush(brush_color))
 

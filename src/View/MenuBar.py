@@ -18,7 +18,7 @@ class MenuBar(object):
 		 the window of the main page
 		"""
 		self.window = main_window
-		self.handlers = MenuHandler(self, main_window)
+		self.handlers = MenuHandler(main_window)
 		self.init_icons()
 		self.create_actions()
 		self.create_menubar()

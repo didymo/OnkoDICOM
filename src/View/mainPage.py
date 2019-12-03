@@ -1,14 +1,14 @@
 import src.View.resources_rc
 import glob
-from random import randint, seed
 from src.Controller.Add_On_OController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.View.InputDialogs import Rxdose_Check
 from src.View.PatientBar import *
+from src.View.StructureTab import *
+from src.View.StructureInformation import *
 from src.View.DicomView import *
 from src.View.DVH import *
 from src.View.DicomTree import *
-from src.View.StructureInformation import *
 from src.View.MenuBar import *
 
 
@@ -141,7 +141,6 @@ class Ui_MainWindow(object):
         dictSlice_CT0 = dicomTreeSlice_CT0.dict
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
-        self.roiColor = self.initRoiColor()  # Color squares initialization for each ROI
         self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions()
 
@@ -181,11 +180,8 @@ class Ui_MainWindow(object):
         self.tab1 = QtWidgets.QTabWidget(self.left_widget)
         self.tab1.setFocusPolicy(QtCore.Qt.NoFocus)
         self.tab1.setGeometry(QtCore.QRect(0, 40, 200, 361))
-        self.tab1.setObjectName("tab1")
         # Left Column: Structures tab
-        self.initStructCol()
-        self.updateStructCol()
-        self.tab1.addTab(self.tab1_structures, "")
+        self.structures_tab = StructureTab(self)
         # Left Column: Isodoses tab
         self.initIsodColumn()
         self.tab1.addTab(self.tab1_isodoses, "")
@@ -203,7 +199,6 @@ class Ui_MainWindow(object):
         self.tab2 = QtWidgets.QTabWidget(self.main_widget)
         self.tab2.setGeometry(QtCore.QRect(200, 40, 880, 561))
         self.tab2.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
-        self.tab2.setObjectName("tab2")
 
         # Main view: DICOM View
         self.dicom_view = DicomView(self)
@@ -234,8 +229,20 @@ class Ui_MainWindow(object):
         self.tab1.raise_()
         self.tab2.raise_()
         
-        #######################################
+        self.create_footer()
 
+        MainWindow.setCentralWidget(self.main_widget)
+
+        # Menu and Tool bars
+        self.menu_bar = MenuBar(self)
+
+        self.retranslateUi(MainWindow)
+        self.tab1.setCurrentIndex(0)
+        self.tab2.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+
+    def create_footer(self):
         # Bottom Layer
         self.bottom_widget = QtWidgets.QWidget(self.main_widget)
         self.hLayout_bottom = QtWidgets.QHBoxLayout(self.bottom_widget)
@@ -252,16 +259,6 @@ class Ui_MainWindow(object):
         self.main_layout.addWidget(self.bottom_widget)
         self.bottom_widget.raise_()
 
-        MainWindow.setCentralWidget(self.main_widget)
-
-        # Menu and Tool bars
-        self.menu_bar = MenuBar(self)
-
-        self.retranslateUi(MainWindow)
-        self.tab1.setCurrentIndex(0)
-        self.tab2.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -270,7 +267,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "OnkoDICOM"))
 
         # Set tab labels
-        self.tab1.setTabText(self.tab1.indexOf(self.tab1_structures), _translate("MainWindow", "Structures"))
         self.tab1.setTabText(self.tab1.indexOf(self.tab1_isodoses), _translate("MainWindow", "Isodoses"))
         self.tab2.setTabText(self.tab2.indexOf(self.tab2_view), _translate("MainWindow", "DICOM View"))
         self.tab2.setTabText(self.tab2.indexOf(self.tab2_DVH), _translate("MainWindow", "DVH"))
@@ -299,137 +295,6 @@ class Ui_MainWindow(object):
     #  STRUCTURES AND ISODOSES TAB FUNCTIONALITIES  #
     #################################################
 
-    # Initialization of colors for ROIs
-
-    def initRoiColor(self):
-        roiColor = dict()
-
-        # ROI Display color from RTSS file
-        roiContourInfo = self.dictDicomTree_rtss['ROI Contour Sequence']
-        if len(roiContourInfo)>0:
-            for item, roi_dict in roiContourInfo.items():
-                id = item.split()[1]
-                roi_id = self.listRoisID[int(id)]
-                RGB_dict = dict()
-                if 'ROI Display Color' in roiContourInfo[item]:
-                    RGB_list = roiContourInfo[item]['ROI Display Color'][0]
-                    RGB_dict['R'] = RGB_list[0]
-                    RGB_dict['G'] = RGB_list[1]
-                    RGB_dict['B'] = RGB_list[2]
-                else:
-                    seed(1)
-                    RGB_dict['R'] = randint(0,255)
-                    RGB_dict['G'] = randint(0,255)
-                    RGB_dict['B'] = randint(0,255)
-                with open('src/data/line&fill_configuration', 'r') as stream:
-                    elements = stream.readlines()
-                    if len(elements) > 0:
-                        roi_line = int(elements[0].replace('\n', ''))
-                        roi_opacity = int(elements[1].replace('\n', ''))
-                        iso_line = int(elements[2].replace('\n', ''))
-                        iso_opacity = int(elements[3].replace('\n', ''))
-                    else:
-                        roi_line = 1
-                        roi_opacity = 10
-                        iso_line = 2
-                        iso_opacity = 5
-                    stream.close()
-                roi_opacity = int((roi_opacity / 100) * 255)
-                RGB_dict['QColor'] = QtGui.QColor(
-                    RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
-                RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
-                    RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
-                roiColor[roi_id] = RGB_dict
-        return roiColor
-
-    # Initialization of the list of structures (left column of the main page)
-
-    def initStructCol(self):
-        # Scroll Area
-        self.tab1_structures = QtWidgets.QWidget()
-        self.tab1_structures.setObjectName("tab1_structures")
-        self.tab1_structures.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        self.scrollAreaStruct = QtWidgets.QScrollArea(self.tab1_structures)
-        self.hLayout_structures = QtWidgets.QHBoxLayout(self.tab1_structures)
-        self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
-
-        self.scrollAreaStruct.setWidgetResizable(True)
-        self.scrollAreaStruct.setFocusPolicy(QtCore.Qt.NoFocus)
-        # Scroll Area Content
-        self.scrollAreaStructContents = QtWidgets.QWidget(self.scrollAreaStruct)
-        self.scrollAreaStruct.ensureWidgetVisible(self.scrollAreaStructContents)
-        self.scrollAreaStructContents.setFocusPolicy(QtCore.Qt.NoFocus)
-        # Grid Layout containing the color squares and the checkboxes
-        self.gridL_StructColumn = QtWidgets.QGridLayout(self.scrollAreaStructContents)
-        self.gridL_StructColumn.setContentsMargins(5, 5, 5, 5)
-        self.gridL_StructColumn.setVerticalSpacing(0)
-        self.gridL_StructColumn.setHorizontalSpacing(10)
-        self.gridL_StructColumn.setObjectName("gridL_StructColumn")
-
-        self.hLayout_structures.addWidget(self.scrollAreaStruct)
-
-    # Add the contents in the list of structures (left column of the main page)
-    def updateStructCol(self):
-        index = 0
-        for key, value in self.rois.items():
-
-            # Color Square
-            colorSquareLabel = QtWidgets.QLabel()
-            colorSquarePix = QtGui.QPixmap(15, 15)
-            colorSquarePix.fill(self.roiColor[key]['QColor'])
-            colorSquareLabel.setPixmap(colorSquarePix)
-            self.gridL_StructColumn.addWidget(colorSquareLabel, index, 0, 1, 1)
-            # QCheckbox
-            text = value['name']
-            checkBoxStruct = QtWidgets.QCheckBox()
-            checkBoxStruct.setFocusPolicy(QtCore.Qt.NoFocus)
-            checkBoxStruct.clicked.connect(
-                lambda state, text=key: self.checkedStruct(state, text))
-            checkBoxStruct.setStyleSheet("font: 10pt \"Laksaman\";")
-            checkBoxStruct.setText(text)
-            checkBoxStruct.setObjectName(text)
-            self.gridL_StructColumn.addWidget(checkBoxStruct, index, 1, 1, 1)
-            index += 1
-        self.scrollAreaStruct.setStyleSheet(
-            "QScrollArea {background-color: #ffffff; border-style: none;}")
-        self.scrollAreaStructContents.setStyleSheet(
-            "QWidget {background-color: #ffffff; border-style: none;}")
-
-        vspacer = QtWidgets.QSpacerItem(
-            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.gridL_StructColumn.addItem(vspacer, index + 1, 0, 1, -1)
-
-        hspacer = QtWidgets.QSpacerItem(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridL_StructColumn.addItem(hspacer, 0, 2, -1, 1)
-
-        self.scrollAreaStruct.setWidget(self.scrollAreaStructContents)
-
-    # Function triggered when the state of checkbox of a structure has changed
-    #   Update the list of selected structures and DVH view
-
-    def checkedStruct(self, state, key):
-        # Checkbox of the structure checked
-        if state:
-            # Add the structure in the list of selected ROIS
-            self.selected_rois.append(key)
-            # Select the corresponding item in Structure Info selector
-            #select the real index from the np array since the keys differ
-            index = np.where(self.np_listRoisID == key)
-            index = index[0][0] + 1
-            self.struct_info.combobox.setCurrentIndex(index)
-            self.struct_info.item_selected(index)
-
-        # Checkbox of the structure unchecked
-        else:
-            # Remove the structure from the list of selected ROIS
-            self.selected_rois.remove(key)
-
-        # Update the DVH view
-        self.dvh.update_plot(self)
-
-        self.dicom_view.update_view()
 
     # Initialize the list of isodoses (left column of the main page)
 
@@ -438,10 +303,9 @@ class Ui_MainWindow(object):
         self.tab1_isodoses.setFocusPolicy(QtCore.Qt.NoFocus)
         self.tab1_isodoses.setGeometry(QtCore.QRect(0, 0, 198, 320))
         self.gridL_IsodCol = QtWidgets.QGridLayout(self.tab1_isodoses)
-        self.gridL_IsodCol.setContentsMargins(5, 1, 0, 0)
+        self.gridL_IsodCol.setContentsMargins(5, 5, 5, 5)
         self.gridL_IsodCol.setVerticalSpacing(1)
         self.gridL_IsodCol.setHorizontalSpacing(10)
-        self.gridL_IsodCol.setObjectName("gridL_IsodCol")
         # Color squares
         self.color1_isod = self.colorSquareDraw(131, 0, 0)
         self.color2_isod = self.colorSquareDraw(185, 0, 0)
@@ -474,26 +338,16 @@ class Ui_MainWindow(object):
         val_isod8 = int(0.60 * self.rxdose)
         val_isod9 = int(0.30 * self.rxdose)
         val_isod10 = int(0.10 * self.rxdose)
-        self.box1_isod = QtWidgets.QCheckBox(
-            "107 % / " + str(val_isod1) + " cGy [Max]")
-        self.box2_isod = QtWidgets.QCheckBox(
-            "105 % / " + str(val_isod2) + " cGy")
-        self.box3_isod = QtWidgets.QCheckBox(
-            "100 % / " + str(val_isod3) + " cGy")
-        self.box4_isod = QtWidgets.QCheckBox(
-            "95 % / " + str(val_isod4) + " cGy")
-        self.box5_isod = QtWidgets.QCheckBox(
-            "90 % / " + str(val_isod5) + " cGy")
-        self.box6_isod = QtWidgets.QCheckBox(
-            "80 % / " + str(val_isod6) + " cGy")
-        self.box7_isod = QtWidgets.QCheckBox(
-            "70 % / " + str(val_isod7) + " cGy")
-        self.box8_isod = QtWidgets.QCheckBox(
-            "60 % / " + str(val_isod8) + " cGy")
-        self.box9_isod = QtWidgets.QCheckBox(
-            "30 % / " + str(val_isod9) + " cGy")
-        self.box10_isod = QtWidgets.QCheckBox(
-            "10 % / " + str(val_isod10) + " cGy")
+        self.box1_isod = QtWidgets.QCheckBox("107 % / " + str(val_isod1) + " cGy [Max]")
+        self.box2_isod = QtWidgets.QCheckBox("105 % / " + str(val_isod2) + " cGy")
+        self.box3_isod = QtWidgets.QCheckBox("100 % / " + str(val_isod3) + " cGy")
+        self.box4_isod = QtWidgets.QCheckBox("95 % / " + str(val_isod4) + " cGy")
+        self.box5_isod = QtWidgets.QCheckBox("90 % / " + str(val_isod5) + " cGy")
+        self.box6_isod = QtWidgets.QCheckBox("80 % / " + str(val_isod6) + " cGy")
+        self.box7_isod = QtWidgets.QCheckBox("70 % / " + str(val_isod7) + " cGy")
+        self.box8_isod = QtWidgets.QCheckBox("60 % / " + str(val_isod8) + " cGy")
+        self.box9_isod = QtWidgets.QCheckBox("30 % / " + str(val_isod9) + " cGy")
+        self.box10_isod = QtWidgets.QCheckBox("10 % / " + str(val_isod10) + " cGy")
         self.box1_isod.setFocusPolicy(QtCore.Qt.NoFocus)
         self.box2_isod.setFocusPolicy(QtCore.Qt.NoFocus)
         self.box3_isod.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -549,20 +403,24 @@ class Ui_MainWindow(object):
         self.box8_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box9_isod.setStyleSheet("font: 10pt \"Laksaman\";")
         self.box10_isod.setStyleSheet("font: 10pt \"Laksaman\";")
-        self.gridL_IsodCol.addWidget(self.box1_isod, 0, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box2_isod, 1, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box3_isod, 2, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box4_isod, 3, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box5_isod, 4, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box6_isod, 5, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box7_isod, 6, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box8_isod, 7, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box9_isod, 8, 1, 1, 1)
-        self.gridL_IsodCol.addWidget(self.box10_isod, 9, 1, 1, 1)
+        self.gridL_IsodCol.addWidget(self.box1_isod, 0, 2)
+        self.gridL_IsodCol.addWidget(self.box2_isod, 1, 2)
+        self.gridL_IsodCol.addWidget(self.box3_isod, 2, 2)
+        self.gridL_IsodCol.addWidget(self.box4_isod, 3, 2)
+        self.gridL_IsodCol.addWidget(self.box5_isod, 4, 2)
+        self.gridL_IsodCol.addWidget(self.box6_isod, 5, 2)
+        self.gridL_IsodCol.addWidget(self.box7_isod, 6, 2)
+        self.gridL_IsodCol.addWidget(self.box8_isod, 7, 2)
+        self.gridL_IsodCol.addWidget(self.box9_isod, 8, 2)
+        self.gridL_IsodCol.addWidget(self.box10_isod, 9, 2)
 
-        vspacer = QtWidgets.QSpacerItem(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.gridL_IsodCol.addItem(vspacer, 10, 0, 2, -1)
+        vspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        fixed_spacer = QtWidgets.QSpacerItem(6, 6, hPolicy=QtWidgets.QSizePolicy.Fixed,
+                                                   vPolicy=QtWidgets.QSizePolicy.Expanding)
+        self.gridL_IsodCol.addItem(fixed_spacer, 0, 1, 1, 11)
+        self.gridL_IsodCol.addItem(vspacer, 10, 0, 3, -1)
+        self.gridL_IsodCol.addItem(hspacer, 0, 3, -1, 11)
 
     # Function triggered when a dose level selected
     # Updates the list of selected isodoses and dicom view
@@ -578,11 +436,11 @@ class Ui_MainWindow(object):
 
     # Draw color squares
     def colorSquareDraw(self, a, b, c):
-        colorSquareLabel = QtWidgets.QLabel()
-        colorSquarePix = QtGui.QPixmap(15, 15)
-        colorSquarePix.fill(QtGui.QColor(a, b, c))
-        colorSquareLabel.setPixmap(colorSquarePix)
-        return colorSquareLabel
+        color_square_label = QtWidgets.QLabel()
+        color_square_pix = QtGui.QPixmap(15, 15)
+        color_square_pix.fill(QtGui.QColor(a, b, c))
+        color_square_label.setPixmap(color_square_pix)
+        return color_square_label
     
 
     ####### CLINICAL DATA #######
@@ -597,7 +455,8 @@ class Ui_MainWindow(object):
                 self.tab2.setCurrentIndex(3)
         else:
             SaveReply = QtWidgets.QMessageBox.information(self, "Message",
-                                                "A Clinical Data file exists for this patient! If you wish \nto update it you can do so in the Clinical Data tab.",
-                                                QtWidgets.QMessageBox.Ok)
+                                                          "A Clinical Data file exists for this patient!"
+                                                          " If you wish \nto update it you can do so in the "
+                                                          "Clinical Data tab.", QtWidgets.QMessageBox.Ok)
             if SaveReply == QtWidgets.QMessageBox.Ok:
                 pass
