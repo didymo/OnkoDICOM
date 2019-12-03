@@ -3,7 +3,21 @@ from random import randint, seed
 import numpy as np
 
 class StructureTab(object):
+	"""
+	Manage all functionalities related to the ROI Structures (first tab of left column).
+	- Create a dictionary where the key is the ROI structure and the value a QColor (color_dict).
+	- Create the color squares and the checkboxes.
+	- Place the widgets in the window of the main page.
+	"""
+
 	def __init__(self, main_window):
+		"""
+		Create the color squares and the checkboxes for the Structures tab.
+		Add the widgets to the window of the main page.
+
+		:param main_window:
+		 the window of the main page
+		"""
 		self.main_window = main_window
 		self.color_dict = self.init_color_roi()
 		self.tab1_structures = QtWidgets.QWidget()
@@ -12,56 +26,59 @@ class StructureTab(object):
 		self.update_content()
 		self.init_layout()
 
-	# Initialization of colors for ROIs
+
 	def init_color_roi(self):
+		"""
+		Create a dictionary containing the colors for each structure.
+
+		:return: Dictionary where the key is the ROI number and the value a QColor object.
+		"""
 		roiColor = dict()
 
-		# ROI Display color from RTSS file
+		# The RTSS file may contain information about the color of the ROI
 		roiContourInfo = self.main_window.dictDicomTree_rtss['ROI Contour Sequence']
+
+		# There is at least one ROI listed in the RTSS file.
 		if len(roiContourInfo) > 0:
 			for item, roi_dict in roiContourInfo.items():
+				# Note: the keys of roiContourInfo are "item 0", "item 1", etc.
+				# As all the ROI structures are identified by the ROI numbers in the whole code,
+				# we get the ROI number 'roi_id' by using the member 'list_roi_numbers'
 				id = item.split()[1]
-				roi_id = self.main_window.listRoisID[int(id)]
-				RGB_dict = dict()
+				roi_id = self.main_window.list_roi_numbers[int(id)]
+
 				if 'ROI Display Color' in roiContourInfo[item]:
 					RGB_list = roiContourInfo[item]['ROI Display Color'][0]
-					RGB_dict['R'] = RGB_list[0]
-					RGB_dict['G'] = RGB_list[1]
-					RGB_dict['B'] = RGB_list[2]
+					red = RGB_list[0]
+					green = RGB_list[1]
+					blue = RGB_list[2]
 				else:
 					seed(1)
-					RGB_dict['R'] = randint(0, 255)
-					RGB_dict['G'] = randint(0, 255)
-					RGB_dict['B'] = randint(0, 255)
-				with open('src/data/line&fill_configuration', 'r') as stream:
-					elements = stream.readlines()
-					if len(elements) > 0:
-						roi_line = int(elements[0].replace('\n', ''))
-						roi_opacity = int(elements[1].replace('\n', ''))
-						iso_line = int(elements[2].replace('\n', ''))
-						iso_opacity = int(elements[3].replace('\n', ''))
-					else:
-						roi_line = 1
-						roi_opacity = 10
-						iso_line = 2
-						iso_opacity = 5
-					stream.close()
-				roi_opacity = int((roi_opacity / 100) * 255)
-				RGB_dict['QColor'] = QtGui.QColor(
-					RGB_dict['R'], RGB_dict['G'], RGB_dict['B'])
-				RGB_dict['QColor_ROIdisplay'] = QtGui.QColor(
-					RGB_dict['R'], RGB_dict['G'], RGB_dict['B'], roi_opacity)
-				roiColor[roi_id] = RGB_dict
+					red = randint(0, 255)
+					green = randint(0, 255)
+					blue = randint(0, 255)
+
+				roiColor[roi_id] = QtGui.QColor(red, green, blue)
+
 		return roiColor
 
-	# Initialization of the list of structures (left column of the main page)
+
 	def init_layout(self):
+		"""
+		Initialize the layout for the Structure tab.
+		Add the scroll area widget in the layout.
+		Add the whole container 'tab1_structures' as a tab in the main page.
+		"""
 		self.layout = QtWidgets.QHBoxLayout(self.tab1_structures)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.scroll_area)
 		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
 
+
 	def init_content(self):
+		"""
+		Create scrolling area widget which will contain the content.
+		"""
 		# Scroll Area
 		self.scroll_area = QtWidgets.QScrollArea(self.tab1_structures)
 		self.scroll_area.setWidgetResizable(True)
@@ -70,54 +87,68 @@ class StructureTab(object):
 		self.scroll_area_content = QtWidgets.QWidget(self.scroll_area)
 		self.scroll_area.ensureWidgetVisible(self.scroll_area_content)
 		self.scroll_area_content.setFocusPolicy(QtCore.Qt.NoFocus)
-		# Grid Layout containing the color squares and the checkboxes
+		# Layout which will contain the color squares and the checkboxes
 		self.layout_content = QtWidgets.QGridLayout(self.scroll_area_content)
 		self.layout_content.setContentsMargins(3, 3, 3, 3)
 		self.layout_content.setVerticalSpacing(0)
 		self.layout_content.setHorizontalSpacing(10)
 
+
 	# Add the contents in the list of structures (left column of the main page)
 	def update_content(self):
-		index = 0
-		for key, value in self.main_window.rois.items():
+		"""
+		Add the contents (color square and checkbox) in the scrolling area widget.
+		"""
+		row = 0
+		for roi_id, roi_dict in self.main_window.rois.items():
 			# Create color square
 			color_square_label = QtWidgets.QLabel()
 			color_square_pix = QtGui.QPixmap(15, 15)
-			color_square_pix.fill(self.color_dict[key]['QColor'])
+			color_square_pix.fill(self.color_dict[roi_id])
 			color_square_label.setPixmap(color_square_pix)
-			self.layout_content.addWidget(color_square_label, index, 0, 1, 1)
+			self.layout_content.addWidget(color_square_label, row, 0, 1, 1)
 
-			# QCheckbox
-			text = value['name']
+			# Create checkbox
+			text = roi_dict['name']
 			checkbox = QtWidgets.QCheckBox()
 			checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
-			checkbox.clicked.connect(lambda state, text=key: self.structure_checked(state, text))
+			checkbox.clicked.connect(lambda state, text=roi_id: self.structure_checked(state, text))
 			checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
 			checkbox.setText(text)
-			self.layout_content.addWidget(checkbox, index, 1, 1, 1)
+			self.layout_content.addWidget(checkbox, row, 1, 1, 1)
 
-			index += 1
+			row += 1
 
 		self.scroll_area.setStyleSheet("QScrollArea {background-color: #ffffff; border-style: none;}")
 		self.scroll_area_content.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
 
+		# Add spacer at the end of the list
 		vspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+		# Add spacer on the right side of the list
 		hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-		self.layout_content.addItem(vspacer, index + 1, 0, 1, -1)
+		self.layout_content.addItem(vspacer, row + 1, 0, 1, -1)
 		self.layout_content.addItem(hspacer, 0, 2, -1, 1)
 
 		self.scroll_area.setWidget(self.scroll_area_content)
 
-	# Function triggered when the state of checkbox of a structure has changed
-	#   Update the list of selected structures and DVH view
-	def structure_checked(self, state, key):
+
+	def structure_checked(self, state, roi_id):
+		"""
+		Function triggered when the checkbox of a structure is checked / unchecked.
+		Update the list of selected structures.
+		Update the plot of the DVH and the DICOM view.
+
+		:param state: True if the checkbox is checked, False otherwise.
+		:param roi_id: ROI number
+		"""
 		# Checkbox of the structure checked
 		if state:
 			# Add the structure in the list of selected ROIS
-			self.main_window.selected_rois.append(key)
+			self.main_window.selected_rois.append(roi_id)
 			# Select the corresponding item in Structure Info selector
-			# select the real index from the np array since the keys differ
-			index = np.where(self.main_window.np_listRoisID == key)
+			# Here, we select the real index from the ROI number
+			np_list_roi_numbers = np.array(self.main_window.list_roi_numbers)
+			index = np.where(np_list_roi_numbers == roi_id)
 			index = index[0][0] + 1
 			self.main_window.struct_info.combobox.setCurrentIndex(index)
 			self.main_window.struct_info.item_selected(index)
@@ -125,8 +156,8 @@ class StructureTab(object):
 		# Checkbox of the structure unchecked
 		else:
 			# Remove the structure from the list of selected ROIS
-			self.main_window.selected_rois.remove(key)
+			self.main_window.selected_rois.remove(roi_id)
 
-		# Update the DVH view
+		# Update the DVH and DICOM view
 		self.main_window.dvh.update_plot(self.main_window)
 		self.main_window.dicom_view.update_view()

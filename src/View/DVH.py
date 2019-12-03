@@ -58,9 +58,9 @@ class DVH(object):
 
                 # Color of the line is the same as the color shown in the left column of the window
                 color = self.roi_color[roi]
-                color_R = color['R'] / 255
-                color_G = color['G'] / 255
-                color_B = color['B'] / 255
+                color_R = color.red() / 255
+                color_G = color.green() / 255
+                color_B = color.blue() / 255
 
                 plt.plot(100 * bincenters,
                          100 * counts / dvh.volume,
@@ -105,6 +105,7 @@ class DVH(object):
         """
         Initialize the layout for the DVH tab.
         Add the plot widget and the Export button in the layout.
+        Add the whole container 'tab2_DVH' as a tab in the main page.
 
         :param mainWindow:
          the window of the main page

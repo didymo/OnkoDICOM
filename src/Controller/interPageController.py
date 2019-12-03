@@ -224,8 +224,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     # Initialising the main window and setting up the UI
     def __init__(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
         QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh,
-                     dvhxy, raw_contour, num_points, pixluts)
+        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts)
         self.menu_bar.actionOpen.triggered.connect(self.patientHandler)
         self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
         self.pyradi_trigger.connect(self.pyradiomicsHandler)

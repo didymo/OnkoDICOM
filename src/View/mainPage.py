@@ -26,10 +26,16 @@ class Ui_MainWindow(object):
         self.dataset = dataset
         self.raw_dvh = raw_dvh
         self.dvh_x_y = dvhxy
+        
+        # Dictionary whose key is the ROI number as specified in the RTSS file
+        # and whose value is a dictionary with keys 'uid', 'name' and 'algorithm'
         self.rois = rois
+        # Contain the ordered list of ROI numbers.
+        # Used to manage the case of missing integers in an ordered series of ROI numbers (for example 1 2 4 7)
+        self.list_roi_numbers = self.ordered_list_rois()
+        
         self.filepaths = filepaths
         self.path = path
-        # dataset = self.dataset
         self.dose_pixluts = get_dose_pixluts(self.dataset)
         self.hashed_path = ''     # Path to hashed patient directory
 
@@ -108,15 +114,10 @@ class Ui_MainWindow(object):
         self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
         self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
 
-        # self.rois = get_roi_info(self.dataset_rtss)
-        self.listRoisID = self.orderedListRoiID()
-        self.np_listRoisID = np.array(self.listRoisID)
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
         self.selected_doses = []
 
-        # self.raw_dvh = calc_dvhs(self.dataset_rtss, self.dataset_rtdose, self.rois)
-        # self.dvh_x_y = converge_to_O_dvh(self.raw_dvh)
         self.basicInfo = get_basic_info(self.dataset[0])
         self.pixmapWindowing = None
 
@@ -275,7 +276,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         MainWindow.update()
 
-    def orderedListRoiID(self):
+    def ordered_list_rois(self):
         res = []
         for id, value in self.rois.items():
             res.append(id)
@@ -294,8 +295,8 @@ class Ui_MainWindow(object):
                 self.tab2.setCurrentIndex(3)
         else:
             SaveReply = QtWidgets.QMessageBox.information(self, "Message",
-                                                          "A Clinical Data file exists for this patient!"
-                                                          " If you wish \nto update it you can do so in the "
-                                                          "Clinical Data tab.", QtWidgets.QMessageBox.Ok)
+                                                          "A Clinical Data file exists for this patient! If you wish \n"
+                                                          "to update it you can do so in the Clinical Data tab.",
+                                                          QtWidgets.QMessageBox.Ok)
             if SaveReply == QtWidgets.QMessageBox.Ok:
                 pass

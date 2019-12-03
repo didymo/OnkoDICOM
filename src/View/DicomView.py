@@ -44,6 +44,7 @@ class DicomView(object):
 		"""
 		Initialize the layout for the DICOM View tab.
 		Add the view widget and the slider in the layout.
+		Add the whole container 'tab2_view' as a tab in the main page.
 		"""
 
 		self.gridLayout_view = QtWidgets.QGridLayout(self.main_window.tab2_view)
@@ -292,30 +293,23 @@ class DicomView(object):
 			else:
 				polygons = self.main_window.dict_polygons[roi_name][curr_slice]
 
-			brush_color = self.roi_color[roi]['QColor_ROIdisplay']
+			color = self.roi_color[roi]
 			with open('src/data/line&fill_configuration', 'r') as stream:
 				elements = stream.readlines()
 				if len(elements) > 0:
 					roi_line = int(elements[0].replace('\n', ''))
 					roi_opacity = int(elements[1].replace('\n', ''))
-					iso_line = int(elements[2].replace('\n', ''))
-					iso_opacity = int(elements[3].replace('\n', ''))
 					line_width = float(elements[4].replace('\n', ''))
 				else:
 					roi_line = 1
 					roi_opacity = 10
-					iso_line = 2
-					iso_opacity = 5
 					line_width = 2.0
 				stream.close()
 			roi_opacity = int((roi_opacity / 100) * 255)
-			brush_color.setAlpha(roi_opacity)
-			pen_color = QtGui.QColor(
-				brush_color.red(), brush_color.green(), brush_color.blue())
-			pen = self.get_qpen(pen_color, roi_line, line_width)
+			color.setAlpha(roi_opacity)
+			pen = self.get_qpen(color, roi_line, line_width)
 			for i in range(len(polygons)):
-				self.scene.addPolygon(
-					polygons[i], pen, QBrush(brush_color))
+				self.scene.addPolygon(polygons[i], pen, QBrush(color))
 
 
 	def calc_roi_polygon(self, curr_roi, curr_slice):
@@ -371,27 +365,20 @@ class DicomView(object):
 				with open('src/data/line&fill_configuration', 'r') as stream:
 					elements = stream.readlines()
 					if len(elements) > 0:
-						roi_line = int(elements[0].replace('\n', ''))
-						roi_opacity = int(elements[1].replace('\n', ''))
 						iso_line = int(elements[2].replace('\n', ''))
 						iso_opacity = int(elements[3].replace('\n', ''))
 						line_width = float(elements[4].replace('\n', ''))
 					else:
-						roi_line = 1
-						roi_opacity = 10
 						iso_line = 2
 						iso_opacity = 5
 						line_width = 2.0
 					stream.close()
 				iso_opacity = int((iso_opacity / 100) * 255)
 				brush_color.setAlpha(iso_opacity)
-				pen_color = QtGui.QColor(
-					brush_color.red(), brush_color.green(), brush_color.blue())
+				pen_color = QtGui.QColor(brush_color.red(), brush_color.green(), brush_color.blue())
 				pen = self.get_qpen(pen_color, iso_line, line_width)
 				for i in range(len(polygons)):
-					# color = self.roi_color['body']['QColor_ROIdisplay']
-					self.scene.addPolygon(
-						polygons[i], pen, QBrush(brush_color))
+					self.scene.addPolygon(polygons[i], pen, QBrush(brush_color))
 
 
 	def calc_dose_polygon(self, dose_pixluts, contours):

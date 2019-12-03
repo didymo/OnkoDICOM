@@ -20,30 +20,31 @@ class DicomTreeUI(object):
 		self.selector = self.selector_combobox()
 		mainWindow.tab2_DICOM_tree = QtWidgets.QWidget()
 		mainWindow.tab2_DICOM_tree.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.init_tree(mainWindow)
-		self.init_layout(mainWindow)
+		self.init_tree()
+		self.init_layout()
 
 
-	def init_layout(self, mainWindow):
+	def init_layout(self):
 		"""
 		Initialize the layout for the DICOM Tree tab.
 		Add the combobox and the DICOM tree in the layout.
+		Add the whole container 'tab2_DICOM_tree' as a tab in the main page.
 
 		:param mainWindow:
 		 the window of the main page
 		"""
-		self.layout = QtWidgets.QVBoxLayout(mainWindow.tab2_DICOM_tree)
+		self.layout = QtWidgets.QVBoxLayout(self.window.tab2_DICOM_tree)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.selector, QtCore.Qt.AlignLeft)
 		self.layout.addWidget(self.treeView)
-		mainWindow.tab2.addTab(mainWindow.tab2_DICOM_tree, "DICOM Tree")
+		self.window.tab2.addTab(self.window.tab2_DICOM_tree, "DICOM Tree")
 
 
-	def init_tree(self, mainWindow):
+	def init_tree(self):
 		"""
 		:return: An initial tree.
 		"""
-		self.treeView = QtWidgets.QTreeView(mainWindow.tab2_DICOM_tree)
+		self.treeView = QtWidgets.QTreeView(self.window.tab2_DICOM_tree)
 		self.treeView.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_headers_tree()
 		self.init_parameters_tree()

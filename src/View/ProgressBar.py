@@ -42,19 +42,16 @@ class Extended(QtCore.QThread):
 
     # this function runs all the necessary processes for opening a patient file
     def run(self):
-        self.dataset, self.file_names_dict = self.get_datasets(
-            self.path, self.my_callback)
+        self.dataset, self.file_names_dict = self.get_datasets(self.path, self.my_callback)
 
         if not self.file_names_dict:
             self.incorrect_directory_signal.emit()
 
         elif 'rtss' not in self.file_names_dict:
             if 'rtdose' not in self.file_names_dict:
-                self.missing_files_signal.emit(
-                    'RTStruct and RTDose files not found in selected directory')
+                self.missing_files_signal.emit('RTStruct and RTDose files not found in selected directory.')
             else:
-                self.missing_files_signal.emit(
-                    'RTStruct file not found in selected directory')
+                self.missing_files_signal.emit('RTStruct file not found in selected directory.')
         else:
             self.file_rtss = self.file_names_dict['rtss']
             self.file_rtdose = self.file_names_dict['rtdose']

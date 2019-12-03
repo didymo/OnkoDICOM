@@ -238,7 +238,7 @@ class StructureInformation(object):
 			self.mean_dose_value.setText(_translate("MainWindow", "-"))
 
 		else:
-			struct_id = self.window.listRoisID[index - 1]
+			struct_id = self.window.list_roi_numbers[index - 1]
 			self.volume_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['volume'])))
 			self.min_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['min'])))
 			self.max_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['max'])))
