@@ -347,19 +347,10 @@ class MenuHandler(object):
 		self.main_window.window = windowing_limits[0]
 		self.main_window.level = windowing_limits[1]
 
-		# Create a deep copy of the pixel values as they are a list of list
-		img_data = deepcopy(self.main_window.pixel_values)
-
-		# Get id of current slice
-		id = self.main_window.dicom_view.slider.value()
-		np_pixels = img_data[id]
-
-		# Update current slice with the new window and level values
-		self.main_window.pixmapWindowing = scaled_pixmap(np_pixels, self.main_window.window, self.main_window.level)
-		self.main_window.dicom_view.update_view(windowingChange=True)
-
-		# Update all the pixmaps with the updated window and level values
-		self.pixmaps = get_pixmaps(img_data, self.main_window.window, self.main_window.level)
+		# Update the dictionary of pixmaps with the updated window and level values
+		self.main_window.pixmaps = get_pixmaps(self.main_window.pixel_values,
+											   self.main_window.window, self.main_window.level)
+		self.main_window.dicom_view.update_view()
 
 
 	def anonymization_handler(self):
@@ -371,7 +362,8 @@ class MenuHandler(object):
 													  QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 		if SaveReply == QtWidgets.QMessageBox.Yes:
 			self.main_window.hashed_path = self.main_window.callClass.runAnonymization(self.main_window)
-			self.main_window.pyradi_trigger.emit(self.main_window.path, self.main_window.filepaths, self.main_window.hashed_path)
+			self.main_window.pyradi_trigger.emit(self.main_window.path, self.main_window.filepaths,
+												 self.main_window.hashed_path)
 		if SaveReply == QtWidgets.QMessageBox.No:
 			pass
 	
@@ -385,13 +377,12 @@ class MenuHandler(object):
 		rowS = dt.PixelSpacing[0]
 		colS = dt.PixelSpacing[1]
 		dt.convert_pixel_data()
-		self.main_window.callClass.runTransect(
-			self.main_window, self.main_window.dicom_view.view, self.main_window.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
+		self.main_window.callClass.runTransect(self.main_window, self.main_window.dicom_view.view,
+											   self.main_window.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 	
 	
 	def add_on_options_handler(self):
 		"""
 		Function triggered when the Add-On Options button is pressed from the menu.
-		:return:
 		"""
 		self.main_window.callManager.show_add_on_options()
