@@ -119,8 +119,6 @@ class Ui_MainWindow(object):
         self.selected_doses = []
 
         self.basicInfo = get_basic_info(self.dataset[0])
-        self.pixmapWindowing = None
-
         self.dict_pixluts = pixluts
         self.dict_raw_ContourData = raw_contour
         self.dict_NumPoints = num_points

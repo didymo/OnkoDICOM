@@ -150,19 +150,22 @@ class DicomView(object):
 		self.layout_view.addItem(fixed_spacer, 0, 3, 6, 1)
 
 
-	def update_view(self, zoomChange=False, windowingChange=False):
+	def update_view(self, zoomChange=False, eventChangedWindow=False):
 		"""
 		Update the view of the DICOM Image.
 
 		:param zoomChange:
 		 Boolean indicating whether the user wants to change the zoom.
 		 False by default.
-		:param windowingChange:
-		 Boolean indicating whether the user wants to change the window.
+
+		:param eventChangedWindow:
+		 Boolean indicating if the user is altering the window and level values through mouse movement and button press
+		 events in the DICOM View area.
 		 False by default.
 		"""
-		if windowingChange:
-			self.image_display(windowingChange=True)
+
+		if eventChangedWindow:
+			self.image_display(eventChangedWindow=True)
 		else:
 			self.image_display()
 
@@ -183,17 +186,18 @@ class DicomView(object):
 
 	# Display the DICOM image on the DICOM View tab
 
-	def image_display(self, windowingChange=False):
+	def image_display(self, eventChangedWindow=False):
 		"""
 		Update the image to be displayed on the DICOM View.
 
-		:param windowingChange:
-		 Boolean indicating whether the user wants to change the window.
+		:param eventChangedWindow:
+		 Boolean indicating if the user is altering the window and level values through mouse movement and button press
+		 events in the DICOM View area.
 		 False by default.
 		"""
 		slider_id = self.slider.value()
-		if windowingChange:
-			image = self.main_window.pixmapWindowing
+		if eventChangedWindow:
+			image = self.main_window.pixmapChangedWindow
 		else:
 			image = self.main_window.pixmaps[slider_id]
 		image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
@@ -444,14 +448,13 @@ class DicomView(object):
 			np_pixels = deepcopy(self.main_window.pixel_values[id])
 
 			# Update current image based on new window and level values
-			self.main_window.pixmapWindowing = scaled_pixmap(
+			self.main_window.pixmapChangedWindow = scaled_pixmap(
 				np_pixels, self.main_window.window, self.main_window.level)
-			self.update_view(windowingChange=True)
+			self.update_view(eventChangedWindow=True)
 
 		# When mouse button released, update all the slices based on the new values
 		elif event.type() == QtCore.QEvent.MouseButtonRelease:
-			img_data = deepcopy(self.main_window.pixel_values)
-			self.main_window.pixmaps = get_pixmaps(img_data, self.main_window.window, self.main_window.level)
+			self.main_window.pixmaps = get_pixmaps(self.main_window.pixel_values, self.main_window.window, self.main_window.level)
 
 		return QtCore.QObject.event(source, event)
 
