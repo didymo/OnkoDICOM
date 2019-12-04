@@ -133,6 +133,8 @@ class Extended(QtCore.QThread):
 
         # For each file in path
         for file in dcm_files:
+            if (os.path.isdir(file)):
+                continue
             try:
                 read_file = pydicom.dcmread(file, force=True)
             except:
@@ -150,6 +152,10 @@ class Extended(QtCore.QThread):
                         self.read_data_dict['rtdose'] = read_file
                         self.file_names_dict['rtdose'] = file
                     elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.5':
+                        self.read_data_dict['rtplan'] = read_file
+                        self.file_names_dict['rtplan'] = file
+                    # RT Ion Plan
+                    elif read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.8':
                         self.read_data_dict['rtplan'] = read_file
                         self.file_names_dict['rtplan'] = file
                     self.copied += len(read_file)
