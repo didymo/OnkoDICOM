@@ -66,8 +66,6 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         #Functionalities of the Apply and Cancel button
         self.cancel_button.clicked.connect(self.close) #Close the window by discarding all changes
         self.apply_button.clicked.connect(self.accepting)
-        #Triggering the view change according to the row selected in the tree
-        self.treeList.clicked.connect(self.display)
         #Connecting the functionalities of the view dependant buttons
         self.add_new_window.clicked.connect(self.new_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
@@ -323,119 +321,6 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         #Close the Add-On Options Window after saving
         self.close()
 
-###################################################################################################################
-#                                                                                                                 #
-# this function changes the display of the right view of the window in regards to the option chosen from the tree #
-#                                                                                                                 #
-###################################################################################################################
-
-    def display(self, index):
-        item = self.treeList.selectedIndexes()[0]
-        self.optionTitle.setText(item.model().itemFromIndex(index).text()) #changes the title
-        self.changeDislpay(item.model().itemFromIndex(index).text()) #changes the display
-
-    #this function updates the right view display of the window
-    def changeDislpay(self, type):
-        # Check which option is chosen and update the views
-        #commented out lines are for the extra option
-        if type == "Image Windowing":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(True)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
-            self.add_new_window.setVisible(True)
-            # self.add_new_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-        elif type == "Standard Organ Names":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(True)
-            self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
-            self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(True)
-            self.import_organ_csv.setVisible(True)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-        elif type == "Standard Volume Names":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(True)
-            # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
-            self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(True)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-        # elif type == "Create ROI from Isodose":
-        #     self.table_modules.setVisible(False)
-        #     self.table_view.setVisible(False)
-        #     self.table_organ.setVisible(False)
-        #     self.table_volume.setVisible(False)
-        #     self.table_roi.setVisible(True)
-        #     self.table_Ids.setVisible(False)
-        #     self.add_new_window.setVisible(False)
-        #     self.add_new_roi.setVisible(True)
-        #     self.add_standard_volume_name.setVisible(False)
-        #     self.add_standard_organ_name.setVisible(False)
-        #     self.import_organ_csv.setVisible(False)
-        #     self.note.setVisible(False)
-        #     self.fill_options.setVisible(False)
-        elif type == "Patient ID - Hash ID":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(True)
-            self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(True)
-            self.fill_options.setVisible(False)
-        elif type == "User Options":
-            self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.table_modules.setVisible(True)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-        elif type == 'Line & Fill configuration':
-            self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(True)
 
 ###################################################################################################################
 #                                                                                                                 #

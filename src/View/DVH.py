@@ -141,12 +141,13 @@ class DVH(object):
         button = QtWidgets.QPushButton()
         button.setFocusPolicy(QtCore.Qt.NoFocus)
         button.setFixedSize(QtCore.QSize(100, 39))
-        button.setCursor(
-            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                             "font: 57 11pt \"Ubuntu\";\n"
                                             "color:rgb(75,0,130);\n"
                                             "font-weight: bold;\n")
+        _translate = QtCore.QCoreApplication.translate
+        button.setText(_translate("MainWindow", "Export DVH"))
         button.clicked.connect(self.export_csv)
 
         return button
