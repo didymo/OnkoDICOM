@@ -48,9 +48,47 @@ class Ui_Add_On_Options(object):
         self.create_cancel_button()
         self.create_apply_button()
         self.init_tree_list()
+        self.set_layout()
 
         Add_On_Options.setCentralWidget(self.widget)
         QtCore.QMetaObject.connectSlotsByName(Add_On_Options)
+
+
+    def set_layout(self):
+        # Layout for the whole window
+        self.layout = QtWidgets.QGridLayout(self.widget)
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.layout.addWidget(self.treeList, 0, 0)
+
+        # Container including the table view and the option buttons for each options
+        self.option_widget = QtWidgets.QWidget(self.widget)
+        self.option_layout = QtWidgets.QGridLayout(self.option_widget)
+        self.option_layout.setContentsMargins(5, 5, 5, 5)
+        self.option_layout.setHorizontalSpacing(10)
+        fixed_spacer = QtWidgets.QSpacerItem(70, 70, hPolicy=QtWidgets.QSizePolicy.Expanding,
+                                             vPolicy=QtWidgets.QSizePolicy.Fixed)
+        self.option_layout.addItem(fixed_spacer, 0, 0, 1, 3)
+        # Add Table Widgets
+        self.option_layout.addWidget(self.table_modules, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_view, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_organ, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_volume, 1, 0, 1, 3)
+        # self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_Ids, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
+        # Add Button Widgets
+        self.option_layout.addWidget(self.add_new_window, 2, 2)
+        # self.option_layout.addWidget(self.add_new_roi, 2, 2)
+        self.option_layout.addWidget(self.import_organ_csv, 2, 1)
+        self.option_layout.addWidget(self.add_standard_organ_name, 2, 2)
+        self.option_layout.addWidget(self.add_standard_volume_name, 2, 2)
+        self.option_layout.addWidget(self.note, 2, 0, 1, 3)
+
+        self.layout.addWidget(self.option_widget, 0, 1, 1, 3)
+        hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.layout.addItem(hspacer, 1, 1)
+        self.layout.addWidget(self.apply_button, 1, 2)
+        self.layout.addWidget(self.cancel_button, 1, 3)
 
     def create_cancel_button(self):
         """
@@ -59,7 +97,7 @@ class Ui_Add_On_Options(object):
         self.cancel_button = QtWidgets.QPushButton(self.widget)
         self.cancel_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.cancel_button.setGeometry(QtCore.QRect(638, 554, 101, 31))
+        self.cancel_button.setFixedSize(101, 31)
         self.cancel_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                          " font: 57 11pt \\\"Ubuntu\\\";\n"
                                          "\n"
@@ -77,7 +115,7 @@ class Ui_Add_On_Options(object):
         self.apply_button = QtWidgets.QPushButton(self.widget)
         self.apply_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.apply_button.setGeometry(QtCore.QRect(510, 554, 111, 31))
+        self.apply_button.setFixedSize(111, 31)
         self.apply_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                         "font: 57 11pt \\\"Ubuntu\\\";\n"
                                         "color:rgb(75,0,130);\n"
@@ -120,6 +158,7 @@ class Ui_Add_On_Options(object):
         self.treeList.setHeaderHidden(True)
         #Triggering the view change according to the row selected in the tree
         self.treeList.clicked.connect(self.display)
+        self.treeList.setMaximumWidth(250)
 
     def display(self, index):
         """
@@ -256,7 +295,7 @@ class WindowingOptions(object):
         Create a button to add a new window view.
         """
         self.window.add_new_window = QtWidgets.QPushButton(self.window.widget)
-        self.window.add_new_window.setGeometry(QtCore.QRect(598, 470, 141, 31))
+        self.window.add_new_window.setFixedSize(141, 31)
         self.window.add_new_window.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.window.add_new_window.setStyleSheet("background-color: rgb(238, 238, 236);\n"
@@ -273,7 +312,7 @@ class WindowingOptions(object):
         Create a table to hold all the windowing options.
         """
         self.window.table_view = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_view.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.window.table_view.setFixedHeight(370)
         self.window.table_view.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_view.setColumnCount(4)
         self.window.table_view.setHorizontalHeaderLabels([" Window Name ", " Scan ", " Window ", " Level "])
@@ -311,7 +350,7 @@ class StandardOrganOptions(object):
         Create a button to add a new standard organ name.
         """
         self.window.add_standard_organ_name = QtWidgets.QPushButton(self.window.widget)
-        self.window.add_standard_organ_name.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        self.window.add_standard_organ_name.setFixedSize(161, 31)
         self.window.add_standard_organ_name.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.window.add_standard_organ_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                                    "font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -328,7 +367,7 @@ class StandardOrganOptions(object):
         """
         self.window.import_organ_csv = QtWidgets.QPushButton(self.window.widget)
         self.window.import_organ_csv.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.import_organ_csv.setGeometry(QtCore.QRect(406, 470, 161, 31))
+        self.window.import_organ_csv.setFixedSize(161, 31)
         self.window.import_organ_csv.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                             "font: 57 11pt \\\"Ubuntu\\\";\n"
                                             "color:rgb(75,0,130);\n"
@@ -343,7 +382,7 @@ class StandardOrganOptions(object):
         Create a table to hold all the standard organ entries.
         """
         self.window.table_organ = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_organ.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.window.table_organ.setFixedHeight(370)
         self.window.table_organ.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_organ.setColumnCount(4)
         self.window.table_organ.setHorizontalHeaderLabels([" Standard Name ", " FMA ID ", " Organ ", " Url "])
@@ -381,7 +420,7 @@ class StandardVolumeOptions(object):
         """
         self.window.add_standard_volume_name = QtWidgets.QPushButton(self.window.widget)
         self.window.add_standard_volume_name.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_standard_volume_name.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        self.window.add_standard_volume_name.setFixedSize(161, 31)
         self.window.add_standard_volume_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                                     "font: 57 11pt \\\"Ubuntu\\\";\n"
                                                     "color:rgb(75,0,130);\n"
@@ -396,7 +435,7 @@ class StandardVolumeOptions(object):
         Create a table to hold the volume entries.
         """
         self.window.table_volume = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_volume.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.window.table_volume.setFixedHeight(370)
         self.window.table_volume.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_volume.setColumnCount(2)
         self.window.table_volume.setHorizontalHeaderLabels([" Standard Name ", " Volume Name"])
@@ -428,7 +467,7 @@ class RoiFromIsodoseOptions(object):
         self.window.add_new_roi = QtWidgets.QPushButton(self.window.widget)
         self.window.add_new_roi.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_new_roi.setGeometry(QtCore.QRect(578, 470, 161, 31))
+        self.window.add_new_roi.setFixedSize(161, 31)
         self.window.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                        "font: 57 11pt \\\"Ubuntu\\\";\n"
                                        "color:rgb(75,0,130);\n"
@@ -443,7 +482,7 @@ class RoiFromIsodoseOptions(object):
         Create a table to hold all the ROI creation by isodose entries.
         """
         self.window.table_roi = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_roi.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.window.table_roi.setFixedHeight(370)
         self.window.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_roi.setColumnCount(3)
         self.window.table_roi.verticalHeader().hide()
@@ -477,7 +516,7 @@ class PatientHashId(object):
         Create a table to hold all the patients and their hash that the software has anonymised.
         """
         self.window.table_Ids = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_Ids.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.window.table_Ids.setFixedHeight(370)
         self.window.table_Ids.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_Ids.setColumnCount(2)
         self.window.table_Ids.setHorizontalHeaderLabels([" Patient ID ", " Hash ID "])
@@ -496,7 +535,7 @@ class PatientHashId(object):
         Create a note for the user about data privacy.
         """
         self.window.note = QtWidgets.QLabel(self.window.widget)
-        self.window.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
+        # self.window.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
         self.window.note.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
                                 "color:rgb(0,0,0)")
         self.window.note.setVisible(False)
@@ -552,7 +591,7 @@ class LineFillOptions(object):
         self.window.line_width.setCurrentText(str(self.line_width))
 
         self.window.fill_options.setLayout(self.window.fill_layout)
-        self.window.fill_options.setGeometry(QtCore.QRect(290, 90, 451, 370))
+        # self.window.fill_options.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.window.fill_options.setVisible(False)
 
 
@@ -567,6 +606,7 @@ class LineFillOptions(object):
         self.window.line_style_ROI.addItem("Dot Line")
         self.window.line_style_ROI.addItem("Dash-Dot Line")
         self.window.line_style_ROI.addItem("Dash-Dot-Dot Line")
+        self.window.line_style_ROI.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
 
     def create_slider_opacity_ROI(self):
         """
@@ -593,6 +633,7 @@ class LineFillOptions(object):
         self.window.line_style_ISO.addItem("Dot Line")
         self.window.line_style_ISO.addItem("Dash-Dot Line")
         self.window.line_style_ISO.addItem("Dash-Dot-Dot Line")
+        self.window.line_style_ISO.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
 
     def create_slider_opacity_isodose(self):
         """
@@ -618,6 +659,7 @@ class LineFillOptions(object):
         self.window.line_width.addItem("1.5")
         self.window.line_width.addItem("2")
         self.window.line_width.addItem("2.5")
+        self.window.line_width.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
 
     def update_ROI_opacity(self):
         """
