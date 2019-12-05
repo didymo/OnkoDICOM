@@ -5,6 +5,21 @@ class Ui_Add_On_Options(object):
     """
     Create all UI components for the Add-On options window.
     """
+
+    def __init__(self):
+        self.table_view = None
+        self.table_organ = None
+        self.table_volume = None
+        # self.table_roi = None
+        self.table_Ids = None
+        self.add_new_window = None
+        self.add_standard_organ_name = None
+        self.import_organ_csv = None
+        self.add_standard_volume_name = None
+        # self.add_new_roi = None
+        self.note = None
+        self.fill_options = None
+
     def setupUi(self, Add_On_Options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         """
         Create the window and the components for each option view.
@@ -103,6 +118,125 @@ class Ui_Add_On_Options(object):
         self.treeList.setGeometry(QtCore.QRect(10, 40, 256, 461))
         self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
         self.treeList.setHeaderHidden(True)
+        #Triggering the view change according to the row selected in the tree
+        self.treeList.clicked.connect(self.display)
+
+    def display(self, index):
+        """
+        Function triggered when an item from the tree view on the left column is clicked.
+        Change the display of the right view of the window in regards to the option chosen from the tree.
+        """
+        item = self.treeList.selectedIndexes()[0]
+        self.optionTitle.setText(item.model().itemFromIndex(index).text()) #changes the title
+        self.changeDisplay(item.model().itemFromIndex(index).text()) #changes the display
+
+    def changeDisplay(self, type):
+        """
+        Update the right view display of the window.
+        """
+        # Check which option is chosen and update the views
+        # commented out lines are for the extra option (ROI by Isodose)
+        if type == "Image Windowing":
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(True)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.add_new_window.setVisible(True)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+        elif type == "Standard Organ Names":
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(True)
+            self.table_volume.setVisible(False)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.add_new_window.setVisible(False)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(True)
+            self.import_organ_csv.setVisible(True)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+        elif type == "Standard Volume Names":
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(True)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.add_new_window.setVisible(False)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(True)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+        # elif type == "Create ROI from Isodose":
+        #     self.table_modules.setVisible(False)
+        #     self.table_view.setVisible(False)
+        #     self.table_organ.setVisible(False)
+        #     self.table_volume.setVisible(False)
+        #     self.table_roi.setVisible(True)
+        #     self.table_Ids.setVisible(False)
+        #     self.add_new_window.setVisible(False)
+        #     self.add_new_roi.setVisible(True)
+        #     self.add_standard_volume_name.setVisible(False)
+        #     self.add_standard_organ_name.setVisible(False)
+        #     self.import_organ_csv.setVisible(False)
+        #     self.note.setVisible(False)
+        #     self.fill_options.setVisible(False)
+        elif type == "Patient ID - Hash ID":
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(True)
+            self.add_new_window.setVisible(False)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.note.setVisible(True)
+            self.fill_options.setVisible(False)
+        elif type == "User Options":
+            self.add_new_window.setVisible(False)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.table_modules.setVisible(True)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+        elif type == 'Line & Fill configuration':
+            self.add_new_window.setVisible(False)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(True)
+
+
+
 
 
 class WindowingOptions(object):
@@ -485,7 +619,6 @@ class LineFillOptions(object):
         self.window.line_width.addItem("2")
         self.window.line_width.addItem("2.5")
 
-    # updating the % on slider change for ROIs
     def update_ROI_opacity(self):
         """
         Update the percentage on slider change for ROIs.
