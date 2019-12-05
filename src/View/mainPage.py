@@ -150,9 +150,9 @@ class Ui_MainWindow(object):
         ##########################################
 
         # Main Window
-        MainWindow.setObjectName("MainWindow")
         MainWindow.setMinimumSize(1080, 700)
-        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.jpg"))
+        MainWindow.setWindowTitle("OnkoDICOM")
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
 
         # Main Container and Layout
@@ -230,11 +230,12 @@ class Ui_MainWindow(object):
         self.create_footer()
 
         MainWindow.setCentralWidget(self.main_widget)
+        self.tab2.setTabText(3, "Clinical Data")
+        # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
 
         # Menu and Tool bars
         self.menu_bar = MenuBar(self)
 
-        self.retranslateUi(MainWindow)
         self.tab1.setCurrentIndex(0)
         self.tab2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -251,28 +252,13 @@ class Ui_MainWindow(object):
         self.label.setAlignment(QtCore.Qt.AlignRight)
         self.label.setStyleSheet("font: 9pt \"Laksaman\";")
         self.label.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.label.setText("@OnkoDICOM 2019")
+
         self.hLayout_bottom.addWidget(self.label)
 
         self.main_layout.addWidget(self.bottom_widget)
         self.bottom_widget.raise_()
 
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-
-        # Window title
-        MainWindow.setWindowTitle(_translate("MainWindow", "OnkoDICOM"))
-
-        self.tab2.setTabText(3, "Clinical Data")
-        # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
-
-        # Set "export DVH" button label
-        self.dvh.button_export.setText(_translate("MainWindow", "Export DVH"))
-
-        # Set bottom layer label
-        self.label.setText(_translate("MainWindow", "@OnkoDICOM 2019"))
-        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
-        MainWindow.update()
 
     def ordered_list_rois(self):
         res = []
