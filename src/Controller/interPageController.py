@@ -3,17 +3,11 @@
 #   This file handles all the processes done when opening a new patient or opening the program for the first time   #
 #                                                                                                                   #
 #####################################################################################################################
-import sys
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget
 from shutil import which
-import glob
-import re
 from src.View.mainPage import *
 from src.View.openpage import WelcomePage
-from src.Model.CalculateImages import *
-from src.Model.form_UI import *
+from src.View.form_UI import *
 from src.View.ProgressBar import *
 from src.View.PyradiProgressBar import *
 

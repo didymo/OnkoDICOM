@@ -4,25 +4,21 @@
 #                                                                                                                   #
 #####################################################################################################################
 
-import matplotlib.cbook
-from src.Model.ROI import *
-from src.Model.CalculateImages import *
-from src.Model.Anon import *
-from dateutil.relativedelta import relativedelta
-from pathlib import Path
-from src.Model.GetPatientInfo import *
-from src.Model.Display_CD_UI import *
-from src.Model.form_UI import *
-from PyQt5.QtWidgets import QMessageBox
-import math
-from PyQt5.QtWidgets import QGraphicsPixmapItem
-from PyQt5.QtCore import Qt, QPoint, QPointF, QRectF
-import matplotlib.pyplot as plt1
 import glob
-import sys
-
+import math
 # removing warnings
 import warnings
+from pathlib import Path
+
+import matplotlib.cbook
+import matplotlib.pyplot as plt1
+from PyQt5.QtCore import QPoint, QPointF
+from PyQt5.QtWidgets import QGraphicsPixmapItem
+from dateutil.relativedelta import relativedelta
+
+from src.Model.Anon import *
+from src.View.Display_CD_UI import *
+from src.View.form_UI import *
 
 warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
