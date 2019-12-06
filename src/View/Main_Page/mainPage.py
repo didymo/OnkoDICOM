@@ -1,16 +1,16 @@
-import src.View.resources_rc
 import glob
 from src.Controller.Add_On_OController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.View.InputDialogs import Rxdose_Check
-from src.View.PatientBar import *
-from src.View.StructureTab import *
-from src.View.IsodoseTab import *
-from src.View.StructureInformation import *
-from src.View.DicomView import *
-from src.View.DVH import *
-from src.View.DicomTree import *
-from src.View.MenuBar import *
+from src.View.Main_Page.PatientBar import *
+from src.View.Main_Page.StructureTab import *
+from src.View.Main_Page.IsodoseTab import *
+from src.View.Main_Page.StructureInformation import *
+from src.View.Main_Page.DicomView import *
+from src.View.Main_Page.DVH import *
+from src.View.Main_Page.DicomTree import *
+from src.View.Main_Page.MenuBar import *
+from src.View.Main_Page.resources_rc import *
 
 
 class Ui_MainWindow(object):
