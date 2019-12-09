@@ -58,7 +58,6 @@ class Ui_CD_Display(object):
     Build the UI of Clinical Data in Display mode.
     """
 
-    # set up the ui
     def setupUi(self, tabWindow):
         """
         Set up the UI.
@@ -284,7 +283,7 @@ class Ui_CD_Display(object):
         """
         self.scrollArea_cd = QtWidgets.QScrollArea()
         self.scrollArea_cd.setWidgetResizable(True)
-        self.scrollArea_cd.setFocusPolicy(Qt.NoFocus)
+        self.scrollArea_cd.setFocusPolicy(QtCore.Qt.NoFocus)
         # self.scrollArea_cd.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         # self.scrollArea_cd.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
@@ -315,7 +314,7 @@ class Ui_CD_Display(object):
         self.layout_content.addWidget(self.label_Dx_year, 2, 6)
         self.layout_content.addWidget(self.line_Dx_Year, 2, 7, 1, 4)
         self.layout_content.addWidget(self.label_icd, 3, 0)
-        self.layout_content.addWidget(self.line_icd, 3, 1, 1, 8)
+        self.layout_content.addWidget(self.line_icd, 3, 1, 1, 9)
         self.layout_content.addWidget(self.label_histology, 4, 0)
         self.layout_content.addWidget(self.line_histology, 4, 1, 1, 8)
         self.layout_content.addWidget(self.label_T_stage, 5, 0)

@@ -4,19 +4,13 @@
 #                                                                                                                   #
 #####################################################################################################################
 
-from PyQt5 import QtCore, QtGui, QtWidgets, Qt
-from PyQt5.QtCore import QStringListModel, QDate
-from PyQt5.QtWidgets import QCompleter, QLineEdit
-from country_list import countries_for_language
-from array import *
-import numpy as np
 import csv
 
-#####################################################################################################################
-#                                                                                                                   #
-#   The following code are global functions and data/variables used by Clinical Data form completer components      #
-#                                                                                                                   #
-#####################################################################################################################
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import QCompleter
+from country_list import countries_for_language
+
 
 # Load the list of countries
 countries = dict(countries_for_language('en'))
@@ -62,424 +56,72 @@ for items in hist:
     strg = ''
 
 
-#####################################################################################################################
-#                                                                                                                   #
-#   The following code builds the UI od Clinical data in creation/editing mode                                      #
-#                                                                                                                   #
-#####################################################################################################################
-
 class Ui_Form(object):
+    """
+    Build the UI of Clinical Data in creation / editing mode.
+    """
+    def setupUi(self, tabWindow):
+        """
+        Set up the UI.
+        """
+        self.tabWindow = tabWindow
 
-    #this function builds the UI components of the clinical data form
-    def setupUi(self, MainWindow):
-        self.hLayout_structures = QtWidgets.QHBoxLayout(MainWindow)
-        self.hLayout_structures.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_cd = QtWidgets.QScrollArea()
-        self.scrollArea_cd.setWidgetResizable(True)
-        self.scrollArea_cd.setObjectName("scrollArea_cd")
-        self.scrollArea_cd.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scrollArea_cd.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setFixedSize(1000,900)
-        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
-        self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
-        # last name components
-        self.label_LN = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_LN.setGeometry(QtCore.QRect(20, 70, 81, 21))
-        self.label_LN.setObjectName("label_LN")
-        self.line_LN = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-        self.line_LN.setGeometry(QtCore.QRect(150, 70, 171, 25))
-        self.line_LN.setObjectName("line_LN")
-        # first name components
-        self.line_FN = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-        self.line_FN.setGeometry(QtCore.QRect(440, 70, 171, 25))
-        self.line_FN.setObjectName("line_FN")
-        self.line_LN.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.label_FN = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_FN.setGeometry(QtCore.QRect(350, 70, 81, 21))
-        self.label_FN.setObjectName("label_FN")
-        # gender components
-        self.gender = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.gender.setGeometry(QtCore.QRect(440, 170, 171, 25))
-        self.gender.setObjectName("gender")
-        self.gender.addItem("")
-        self.gender.addItem("")
-        self.gender.addItem("")
-        self.gender.addItem("")
-        self.label_3 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_3.setGeometry(QtCore.QRect(350, 170, 81, 21))
-        self.label_3.setObjectName("label_3")
-        # top note label that indicates the form state
-        self.label_4 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_4.setGeometry(QtCore.QRect(20, 8, 961, 65))
-        self.label_4.setStyleSheet("color: rgb(0,0,0) ")
-        self.label_4.setObjectName("label_4")
-        # Date of birth
-        self.label_DB = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_DB.setGeometry(QtCore.QRect(20, 120, 101, 21))
-        self.label_DB.setObjectName("label_DB")
-        self.date_of_birth = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
-        self.date_of_birth.setDisplayFormat("dd/MM/yyyy")
-        self.date_of_birth.setDate(QDate.currentDate())
-        self.date_of_birth.setGeometry(QtCore.QRect(150, 115, 171, 31))
-        self.date_of_birth.setObjectName("date_of_birth")
-        self.date_of_birth.setCalendarPopup(True)
-        # birth place components
-        self.line_BP = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-        self.line_BP.setGeometry(QtCore.QRect(450, 120, 171, 25))
-        self.line_BP.setObjectName("line_BP")
-        completer = QCompleter(data, self.line_BP)
-        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        self.line_BP.setCompleter(completer)
-        self.label_BP = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_BP.setGeometry(QtCore.QRect(350, 120, 101, 21))
-        self.label_BP.setObjectName("label_BP")
-        # date of diagnosis elements
-        self.dateEdit_2 = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
-        self.dateEdit_2.setDisplayFormat("dd/MM/yyyy")
-        self.dateEdit_2.setGeometry(QtCore.QRect(150, 165, 171, 31))
-        self.dateEdit_2.setObjectName("dateEdit_2")
-        self.dateEdit_2.setDate(QDate.currentDate())
-        self.dateEdit_2.setCalendarPopup(True)
-        self.label_7 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_7.setGeometry(QtCore.QRect(20, 170, 131, 21))
-        self.label_7.setObjectName("label_7")
-        # icd components
-        self.line_icd = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-        self.line_icd.setGeometry(QtCore.QRect(150, 220, 601, 25))
-        self.line_icd.setObjectName("line_icd")
-        completer_5 = QCompleter(new_icd, self.line_icd)
-        completer_5.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        completer_5.setFilterMode(QtCore.Qt.MatchContains)
-        self.line_icd.setCompleter(completer_5)
-        self.label_icd = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_icd.setGeometry(QtCore.QRect(20, 220, 81, 21))
-        self.label_icd.setObjectName("label_icd")
-        # histology components
-        self.line_histology = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-        self.line_histology.setGeometry(QtCore.QRect(150, 270, 601, 25))
-        self.line_histology.setObjectName("line_histology")
-        completer_4 = QCompleter(new_hist, self.line_histology)
-        completer_4.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        completer_4.setFilterMode(QtCore.Qt.MatchContains)
-        self.line_histology.setCompleter(completer_4)
-        self.label_histology = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_histology.setGeometry(QtCore.QRect(20, 270, 81, 21))
-        self.label_histology.setObjectName("label_histology")
-        # T stage components
-        self.label_T_stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_T_stage.setGeometry(QtCore.QRect(20, 320, 81, 21))
-        self.label_T_stage.setObjectName("label_T_stage")
-        self.T_stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.T_stage.setGeometry(QtCore.QRect(90, 320, 81, 25))
-        self.T_stage.setObjectName("T_stage")
-        self.T_stage.addItem("")
-        self.T_stage.addItem("")
-        self.T_stage.addItem("")
-        self.T_stage.addItem("")
-        self.T_stage.addItem("")
-        self.T_stage.addItem("")
-        self.T_stage.addItem("")
-        # N stage components
-        self.N_stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.N_stage.setGeometry(QtCore.QRect(270, 320, 81, 25))
-        self.N_stage.setObjectName("N_stage")
-        self.N_stage.addItem("")
-        self.N_stage.addItem("")
-        self.N_stage.addItem("")
-        self.N_stage.addItem("")
-        self.N_stage.addItem("")
-        self.label_N_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_N_Stage.setGeometry(QtCore.QRect(200, 320, 81, 21))
-        self.label_N_Stage.setObjectName("label_N_Stage")
-        # M state components
-        self.M_stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.M_stage.setGeometry(QtCore.QRect(450, 320, 81, 25))
-        self.M_stage.setObjectName("M_stage")
-        self.M_stage.addItem("")
-        self.M_stage.addItem("")
-        self.M_stage.addItem("")
-        self.label_M_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_M_Stage.setGeometry(QtCore.QRect(380, 320, 81, 21))
-        self.label_M_Stage.setObjectName("label_M_Stage")
-        # Overall stage components
-        self.label_Overall_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Overall_Stage.setGeometry(QtCore.QRect(560, 320, 101, 21))
-        self.label_Overall_Stage.setObjectName("label_Overall_Stage")
-        self.Overall_Stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Overall_Stage.setGeometry(QtCore.QRect(670, 320, 81, 25))
-        self.Overall_Stage.setObjectName("Overall_Stage")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        self.Overall_Stage.addItem("")
-        # Tx intent components
-        self.Tx_intent = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Tx_intent.setGeometry(QtCore.QRect(150, 370, 171, 25))
-        self.Tx_intent.setObjectName("Tx_intent")
-        self.Tx_intent.addItem("")
-        self.Tx_intent.addItem("")
-        self.Tx_intent.addItem("")
-        self.Tx_intent.addItem("")
-        self.Tx_intent.addItem("")
-        self.Tx_intent.addItem("")
-        self.label_Tx_intent = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Tx_intent.setGeometry(QtCore.QRect(20, 370, 81, 21))
-        self.label_Tx_intent.setObjectName("label_Tx_intent")
-        # Surgery components
-        self.label_Surgery = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Surgery.setGeometry(QtCore.QRect(20, 420, 81, 21))
-        self.label_Surgery.setObjectName("label_Surgery")
-        self.Surgery = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Surgery.setGeometry(QtCore.QRect(150, 420, 171, 25))
-        self.Surgery.setObjectName("Surgery")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        self.Surgery.addItem("")
-        # Rad components
-        self.label_Rad = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Rad.setGeometry(QtCore.QRect(350, 420, 81, 21))
-        self.label_Rad.setObjectName("label_Rad")
-        self.Rad = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Rad.setGeometry(QtCore.QRect(440, 420, 171, 25))
-        self.Rad.setObjectName("Rad")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        self.Rad.addItem("")
-        # Immuno components
-        self.label_Immuno = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Immuno.setGeometry(QtCore.QRect(350, 470, 81, 21))
-        self.label_Immuno.setObjectName("label_Immuno")
-        self.Immuno = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Immuno.setGeometry(QtCore.QRect(440, 470, 171, 25))
-        self.Immuno.setObjectName("Immuno")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        self.Immuno.addItem("")
-        # Chemo components
-        self.label_Chemo = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Chemo.setGeometry(QtCore.QRect(20, 470, 81, 21))
-        self.label_Chemo.setObjectName("label_Chemo")
-        self.Chemo = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Chemo.setGeometry(QtCore.QRect(150, 470, 171, 25))
-        self.Chemo.setObjectName("Chemo")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        self.Chemo.addItem("")
-        # Hormone components
-        self.label_Hormone = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Hormone.setGeometry(QtCore.QRect(350, 520, 81, 21))
-        self.label_Hormone.setObjectName("label_Hormone")
-        self.Hormone = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Hormone.setGeometry(QtCore.QRect(440, 520, 171, 25))
-        self.Hormone.setObjectName("Hormone")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        self.Hormone.addItem("")
-        # Brachy components
-        self.label_Brachy = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Brachy.setGeometry(QtCore.QRect(20, 520, 81, 21))
-        self.label_Brachy.setObjectName("label_Brachy")
-        self.Brachy = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Brachy.setGeometry(QtCore.QRect(150, 520, 171, 25))
-        self.Brachy.setObjectName("Brachy")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        self.Brachy.addItem("")
-        # date of last existence components
-        self.label_DT_Last_existence = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_DT_Last_existence.setGeometry(QtCore.QRect(20, 570, 171, 21))
-        self.label_DT_Last_existence.setObjectName("label_DT_Last_existence")
-        self.Dt_Last_Existence = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
-        self.Dt_Last_Existence.setDisplayFormat("dd/MM/yyyy")
-        self.Dt_Last_Existence.setGeometry(QtCore.QRect(200, 565, 171, 31))
-        self.Dt_Last_Existence.setObjectName("Dt_Last_Existence")
-        self.Dt_Last_Existence.setDate(QDate.currentDate())
-        self.Dt_Last_Existence.setCalendarPopup(True)
-        #survival duration indicator
-        self.Survival_dt = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.Survival_dt.setGeometry(QtCore.QRect(440, 565, 171, 31))
-        self.Survival_dt.setObjectName("Survival_dt")
-        self.Survival_dt.setVisible(False)
-        # Cancer Death components
-        self.label_Cancer_death = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Cancer_death.setGeometry(QtCore.QRect(350, 620, 111, 21))
-        self.label_Cancer_death.setObjectName("label_Cancer_death")
-        self.Cancer_death = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Cancer_death.setGeometry(QtCore.QRect(530, 620, 171, 25))
-        self.Cancer_death.setObjectName("Cancer_death")
-        self.Cancer_death.addItem("")
-        self.Cancer_death.addItem("")
-        self.Cancer_death.addItem("")
-        # Death components
-        self.label_Death = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Death.setGeometry(QtCore.QRect(20, 620, 81, 21))
-        self.label_Death.setObjectName("label_Death")
-        self.Death = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Death.setGeometry(QtCore.QRect(150, 620, 171, 25))
-        self.Death.setObjectName("Death")
-        self.Death.addItem("")
-        self.Death.addItem("")
-        self.Death.addItem("")
-        # Regional control components
-        self.label_Regional_control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Regional_control.setGeometry(QtCore.QRect(20, 720, 121, 21))
-        self.label_Regional_control.setObjectName("label_Regional_control")
-        self.Regional_Control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Regional_Control.setGeometry(QtCore.QRect(150, 720, 171, 25))
-        self.Regional_Control.setObjectName("Regional_Control")
-        self.Regional_Control.addItem("")
-        self.Regional_Control.addItem("")
-        self.Regional_Control.addItem("")
-        # Distant control components
-        self.label_Distant_Control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Distant_Control.setGeometry(QtCore.QRect(20, 770, 121, 21))
-        self.label_Distant_Control.setObjectName("label_Distant_Control")
-        self.Distant_Control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Distant_Control.setGeometry(QtCore.QRect(150, 770, 171, 25))
-        self.Distant_Control.setObjectName("Distant_Control")
-        self.Distant_Control.addItem("")
-        self.Distant_Control.addItem("")
-        self.Distant_Control.addItem("")
-        #Local control components
-        self.label_Local_control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Local_control.setGeometry(QtCore.QRect(20, 670, 101, 21))
-        self.label_Local_control.setObjectName("label_Local_control")
-        self.Local_control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
-        self.Local_control.setGeometry(QtCore.QRect(150, 670, 171, 25))
-        self.Local_control.setObjectName("Local_control")
-        self.Local_control.addItem("")
-        self.Local_control.addItem("")
-        self.Local_control.addItem("")
-        #Save button
-        self.Save_button = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
-        self.Save_button.setGeometry(QtCore.QRect(20, 820, 89, 25))
-        self.Save_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                       "color:rgb(75,0,130);\n"
-                                       "font-weight: bold;\n")
-        self.Save_button.setObjectName("Save_button")
-        self.Save_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # Date of local failure components
-        self.label_Dt_Local_failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Dt_Local_failure.setGeometry(QtCore.QRect(350, 675, 151, 21))
-        self.label_Dt_Local_failure.setObjectName("label_Dt_Local_failure")
-        self.Dt_local_failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
-        self.Dt_local_failure.setDisplayFormat("dd/MM/yyyy")
-        self.Dt_local_failure.setDate(QDate.currentDate())
-        self.Dt_local_failure.setGeometry(QtCore.QRect(530, 670, 171, 31))
-        self.Dt_local_failure.setObjectName("Dt_local_failure")
-        self.Dt_local_failure.setCalendarPopup(True)
-        self.Dt_local_failure.setDisabled(True)
-        # date of regional failure components
-        self.label_Dt_Regional_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Dt_Regional_Failure.setGeometry(QtCore.QRect(350, 725, 171, 21))
-        self.label_Dt_Regional_Failure.setObjectName("label_Dt_Regional_Failure")
-        self.Dt_REgional_failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
-        self.Dt_REgional_failure.setDisplayFormat("dd/MM/yyyy")
-        self.Dt_REgional_failure.setGeometry(QtCore.QRect(530, 720, 171, 31))
-        self.Dt_REgional_failure.setObjectName("Dt_REgional_failure")
-        self.Dt_REgional_failure.setDate(QDate.currentDate())
-        self.Dt_REgional_failure.setCalendarPopup(True)
-        self.Dt_REgional_failure.setDisabled(True)
-        # date of distant failure components
-        self.Dt_Distant_Failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
-        self.Dt_Distant_Failure.setDisplayFormat("dd/MM/yyyy")
-        self.Dt_Distant_Failure.setGeometry(QtCore.QRect(530, 765, 171, 31))
-        self.Dt_Distant_Failure.setObjectName("Dt_Distant_Failure")
-        self.Dt_Distant_Failure.setDate(QDate.currentDate())
-        self.Dt_Distant_Failure.setCalendarPopup(True)
-        self.Dt_Distant_Failure.setDisabled(True)
-        self.label_Dt_Distant_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_Dt_Distant_Failure.setGeometry(QtCore.QRect(350, 770, 171, 21))
-        self.label_Dt_Distant_Failure.setObjectName("label_Dt_Distant_Failure")
-        self.hLayout_structures.addWidget(self.scrollArea_cd)
-        self.scrollArea_cd.setWidget(self.scrollAreaWidgetContents)
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        # Create the scrolling area widget
+        self.init_content()
 
-    # this function adds the appropriate names for each element of the class
-    def retranslateUi(self, MainWindow):
+        # Create Components
+        self.create_note()
+        self.add_last_name()
+        self.add_first_name()
+        self.add_gender()
+        self.add_dob()
+        self.add_birth_place()
+        self.add_date_at_diagnosis()
+        self.add_icd()
+        self.add_histology()
+        self.add_T_stage()
+        self.add_N_stage()
+        self.add_M_stage()
+        self.add_overall_stage()
+        self.add_Tx_intent()
+        self.add_surgery()
+        self.add_Rad()
+        self.add_immuno()
+        self.add_chemo()
+        self.add_hormone()
+        self.add_brachy()
+        self.add_date_last_existence()
+        self.add_survival_duration()
+        self.add_cancer_death()
+        self.add_death()
+        self.add_regional_control()
+        self.add_distant_control()
+        self.add_local_control()
+        self.add_date_local_failure()
+        self.add_date_regional_failure()
+        self.add_date_distant_failure()
+        self.create_save_button()
+
+        # Add the component in a layout to be displayed.
+        self.set_layout()
+
+        self.retranslateUi()
+        QtCore.QMetaObject.connectSlotsByName(tabWindow)
+
+    def retranslateUi(self):
+        """
+        Add the appropriate names for each element of the class.
+        """
         _translate = QtCore.QCoreApplication.translate
         self.label_LN.setText(_translate("MainWindow", "Last Name:"))
         self.label_FN.setText(_translate("MainWindow", "First Name:"))
-        self.label_3.setText(_translate("MainWindow", "Gender:"))
-        self.label_4.setText(_translate("MainWindow",
-                                        "Note: There was no csv file containing \"ClinicalData\" in its name located in the directory."))
+        self.label_gender.setText(_translate("MainWindow", "Gender:"))
+        self.note.setText(_translate("MainWindow",
+                                        "Note: There was no csv file containing \"ClinicalData\""
+                                        " in its name located in the directory."))
         self.label_DB.setText(_translate("MainWindow", "Date of Birth:"))
         self.label_BP.setText(_translate("MainWindow", "Birth Country:"))
-        self.label_7.setText(_translate("MainWindow", "Date of Diagnosis:"))
+        self.label_date_diagnosis.setText(_translate("MainWindow", "Date of Diagnosis:"))
         self.label_icd.setText(_translate("MainWindow", "ICD10:"))
         self.label_histology.setText(_translate("MainWindow", "Histology:"))
         self.label_T_stage.setText(_translate("MainWindow", "T Stage:"))
@@ -638,3 +280,543 @@ class Ui_Form(object):
         self.label_Dt_Local_failure.setText(_translate("MainWindow", "Date of Local Failure:"))
         self.label_Dt_Regional_Failure.setText(_translate("MainWindow", "Date of Regional Failure:"))
         self.label_Dt_Distant_Failure.setText(_translate("MainWindow", "Date of Distant Failure:"))
+
+    def init_content(self):
+        """
+        Create scrolling area widget which will contain the content.
+        """
+        self.scrollArea_cd = QtWidgets.QScrollArea()
+        self.scrollArea_cd.setWidgetResizable(True)
+        self.scrollArea_cd.setFocusPolicy(QtCore.Qt.NoFocus)
+        # self.scrollArea_cd.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        # self.scrollArea_cd.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        # self.scrollAreaWidgetContents.setFixedSize(1000,900)
+        self.scrollArea_cd.ensureWidgetVisible(self.scrollAreaWidgetContents)
+
+    def set_layout(self):
+        """
+        Add the components in the content layout.
+        """
+        self.layout_content = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.layout_content.setContentsMargins(10, 10, 10, 10)
+        self.layout_content.setVerticalSpacing(7)
+
+        # Create horizontal spacer in the middle of the grid
+        hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        # The grid layout here is of size 17 * 11
+        self.layout_content.addItem(hspacer, 0, 5, 16, 1)
+        self.layout_content.addWidget(self.note, 0, 0, 1, 8)
+        self.layout_content.addWidget(self.label_LN, 1, 0)
+        self.layout_content.addWidget(self.line_LN, 1, 1, 1, 4)
+        self.layout_content.addWidget(self.label_FN, 1, 6)
+        self.layout_content.addWidget(self.line_FN, 1, 7, 1, 4)
+        self.layout_content.addWidget(self.label_DB, 2, 0)
+        self.layout_content.addWidget(self.date_of_birth, 2, 1, 1, 4)
+        self.layout_content.addWidget(self.label_BP, 2, 6)
+        self.layout_content.addWidget(self.line_BP, 2, 7, 1, 4)
+        self.layout_content.addWidget(self.label_date_diagnosis, 3, 0)
+        self.layout_content.addWidget(self.date_diagnosis, 3, 1, 1, 4)
+        self.layout_content.addWidget(self.label_gender, 3, 6)
+        self.layout_content.addWidget(self.gender, 3, 7, 1, 4)
+        self.layout_content.addWidget(self.label_icd, 4, 0)
+        self.layout_content.addWidget(self.line_icd, 4, 1, 1, 9)
+        self.layout_content.addWidget(self.label_histology, 5, 0)
+        self.layout_content.addWidget(self.line_histology, 5, 1, 1, 8)
+        self.layout_content.addWidget(self.label_T_stage, 6, 0)
+        self.layout_content.addWidget(self.T_stage, 6, 1)
+        self.layout_content.addWidget(self.label_N_Stage, 6, 3)
+        self.layout_content.addWidget(self.N_stage, 6, 4)
+        self.layout_content.addWidget(self.label_M_Stage, 6, 6)
+        self.label_M_Stage.setAlignment(QtCore.Qt.AlignCenter)
+        self.layout_content.addWidget(self.M_stage, 6, 7)
+        self.layout_content.addWidget(self.label_Overall_Stage, 6, 9)
+        self.layout_content.addWidget(self.Overall_Stage, 6, 10)
+        self.layout_content.addWidget(self.label_Tx_intent, 7, 0)
+        self.layout_content.addWidget(self.Tx_intent, 7, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Surgery, 8, 0)
+        self.layout_content.addWidget(self.Surgery, 8, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Rad, 8, 6)
+        self.layout_content.addWidget(self.Rad, 8, 7, 1, 4)
+        self.layout_content.addWidget(self.label_Chemo, 9, 0)
+        self.layout_content.addWidget(self.Chemo, 9, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Immuno, 9, 6)
+        self.layout_content.addWidget(self.Immuno, 9, 7, 1, 4)
+        self.layout_content.addWidget(self.label_Brachy, 10, 0)
+        self.layout_content.addWidget(self.Brachy, 10, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Hormone, 10, 6)
+        self.layout_content.addWidget(self.Hormone, 10, 7, 1, 4)
+        self.layout_content.addWidget(self.label_DT_Last_existence, 11, 0)
+        self.layout_content.addWidget(self.Dt_Last_Existence, 11, 1, 1, 4)
+        self.layout_content.addWidget(self.Survival_dt, 11, 6, 1, 5)
+        self.layout_content.addWidget(self.label_Death, 12, 0)
+        self.layout_content.addWidget(self.Death, 12, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Cancer_death, 12, 6)
+        self.layout_content.addWidget(self.Cancer_death, 12, 7, 1, 4)
+        self.layout_content.addWidget(self.label_Local_control, 13, 0)
+        self.layout_content.addWidget(self.Local_control, 13, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Dt_Local_failure, 13, 6)
+        self.layout_content.addWidget(self.Dt_local_failure, 13, 7, 1, 4)
+        self.layout_content.addWidget(self.label_Regional_control, 14, 0)
+        self.layout_content.addWidget(self.Regional_Control, 14, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Dt_Regional_Failure, 14, 6)
+        self.layout_content.addWidget(self.Dt_REgional_failure, 14, 7, 1, 4)
+        self.layout_content.addWidget(self.label_Distant_Control, 15, 0)
+        self.layout_content.addWidget(self.Distant_Control, 15, 1, 1, 4)
+        self.layout_content.addWidget(self.label_Dt_Distant_Failure, 15, 6)
+        self.layout_content.addWidget(self.Dt_Distant_Failure, 15, 7, 1, 4)
+        self.layout_content.addWidget(self.Save_button, 16, 0)
+        # self.scrollArea_cd.setStyleSheet("QScrollArea {background-color: #ffffff; border-style: none;}")
+        # self.scrollAreaWidgetContents.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
+
+        self.scrollArea_cd.setWidget(self.scrollAreaWidgetContents)
+
+        self.layout = QtWidgets.QHBoxLayout(self.tabWindow)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.scrollArea_cd)
+
+    def create_note(self):
+        """
+        Create a note that indicates the form state.
+        """
+        self.note = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.note.setGeometry(QtCore.QRect(20, 8, 961, 65))
+
+    def add_last_name(self):
+        """
+        Create last name components.
+        """
+        self.label_LN = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_LN.setGeometry(QtCore.QRect(20, 70, 81, 21))
+        self.line_LN = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        # self.line_LN.setGeometry(QtCore.QRect(150, 70, 171, 25))
+        self.line_LN.setFocusPolicy(QtCore.Qt.StrongFocus)
+
+    def add_first_name(self):
+        """
+        Create first name components.
+        """
+        self.line_FN = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        # self.line_FN.setGeometry(QtCore.QRect(440, 70, 171, 25))
+        self.label_FN = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_FN.setGeometry(QtCore.QRect(350, 70, 81, 21))
+
+    def add_gender(self):
+        """
+        Create gender components.
+        """
+        self.gender = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.gender.setGeometry(QtCore.QRect(440, 170, 171, 25))
+        self.gender.addItem("")
+        self.gender.addItem("")
+        self.gender.addItem("")
+        self.gender.addItem("")
+        self.label_gender = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_gender.setGeometry(QtCore.QRect(350, 170, 81, 21))
+
+    def add_dob(self):
+        """
+        Create date of birth components.
+        """
+        self.label_DB = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_DB.setGeometry(QtCore.QRect(20, 120, 101, 21))
+        self.label_DB.setObjectName("label_DB")
+        self.date_of_birth = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.date_of_birth.setDisplayFormat("dd/MM/yyyy")
+        self.date_of_birth.setDate(QDate.currentDate())
+        # self.date_of_birth.setGeometry(QtCore.QRect(150, 115, 171, 31))
+        self.date_of_birth.setCalendarPopup(True)
+
+    def add_birth_place(self):
+        """
+        Create birth place components.
+        """
+        self.line_BP = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        # self.line_BP.setGeometry(QtCore.QRect(450, 120, 171, 25))
+        completer = QCompleter(data, self.line_BP)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.line_BP.setCompleter(completer)
+        self.label_BP = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_BP.setGeometry(QtCore.QRect(350, 120, 101, 21))
+
+    def add_date_at_diagnosis(self):
+        """
+        Create date at diagnosis components.
+        """
+        self.date_diagnosis = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.date_diagnosis.setDisplayFormat("dd/MM/yyyy")
+        # self.date_diagnosis.setGeometry(QtCore.QRect(150, 165, 171, 31))
+        self.date_diagnosis.setDate(QDate.currentDate())
+        self.date_diagnosis.setCalendarPopup(True)
+        self.label_date_diagnosis = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_date_diagnosis.setGeometry(QtCore.QRect(20, 170, 131, 21))
+
+    def add_icd(self):
+        """
+        Create ICD10 components.
+        """
+        self.line_icd = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        # self.line_icd.setGeometry(QtCore.QRect(150, 220, 601, 25))
+        completer_5 = QCompleter(new_icd, self.line_icd)
+        completer_5.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        completer_5.setFilterMode(QtCore.Qt.MatchContains)
+        self.line_icd.setCompleter(completer_5)
+        self.label_icd = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_icd.setGeometry(QtCore.QRect(20, 220, 81, 21))
+
+    def add_histology(self):
+        """
+        Create histology components.
+        """
+        self.line_histology = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        # self.line_histology.setGeometry(QtCore.QRect(150, 270, 601, 25))
+        completer_4 = QCompleter(new_hist, self.line_histology)
+        completer_4.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        completer_4.setFilterMode(QtCore.Qt.MatchContains)
+        self.line_histology.setCompleter(completer_4)
+        self.label_histology = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_histology.setGeometry(QtCore.QRect(20, 270, 81, 21))
+
+    def add_T_stage(self):
+        """
+        Create T stage components.
+        """
+        self.label_T_stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_T_stage.setGeometry(QtCore.QRect(20, 320, 81, 21))
+        self.T_stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.T_stage.setGeometry(QtCore.QRect(90, 320, 81, 25))
+        self.T_stage.addItem("")
+        self.T_stage.addItem("")
+        self.T_stage.addItem("")
+        self.T_stage.addItem("")
+        self.T_stage.addItem("")
+        self.T_stage.addItem("")
+        self.T_stage.addItem("")
+
+    def add_N_stage(self):
+        """
+        Create N stage components.
+        """
+        self.N_stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.N_stage.setGeometry(QtCore.QRect(270, 320, 81, 25))
+        self.N_stage.addItem("")
+        self.N_stage.addItem("")
+        self.N_stage.addItem("")
+        self.N_stage.addItem("")
+        self.N_stage.addItem("")
+        self.label_N_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_N_Stage.setGeometry(QtCore.QRect(200, 320, 81, 21))
+
+    def add_M_stage(self):
+        """
+        Create M stage components.
+        """
+        self.M_stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.M_stage.setGeometry(QtCore.QRect(450, 320, 81, 25))
+        self.M_stage.addItem("")
+        self.M_stage.addItem("")
+        self.M_stage.addItem("")
+        self.label_M_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_M_Stage.setGeometry(QtCore.QRect(380, 320, 81, 21))
+
+    def add_overall_stage(self):
+        """
+        Create overall stage components.
+        """
+        self.label_Overall_Stage = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Overall_Stage.setGeometry(QtCore.QRect(560, 320, 101, 21))
+        self.Overall_Stage = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Overall_Stage.setGeometry(QtCore.QRect(670, 320, 81, 25))
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+        self.Overall_Stage.addItem("")
+
+    def add_Tx_intent(self):
+        """
+        Create Tx intent components.
+        """
+        self.Tx_intent = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Tx_intent.setGeometry(QtCore.QRect(150, 370, 171, 25))
+        self.Tx_intent.addItem("")
+        self.Tx_intent.addItem("")
+        self.Tx_intent.addItem("")
+        self.Tx_intent.addItem("")
+        self.Tx_intent.addItem("")
+        self.Tx_intent.addItem("")
+        self.label_Tx_intent = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Tx_intent.setGeometry(QtCore.QRect(20, 370, 81, 21))
+
+    def add_surgery(self):
+        """
+        Create surgery components.
+        """
+        self.label_Surgery = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Surgery.setGeometry(QtCore.QRect(20, 420, 81, 21))
+        self.Surgery = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Surgery.setGeometry(QtCore.QRect(150, 420, 171, 25))
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+        self.Surgery.addItem("")
+
+    def add_Rad(self):
+        """
+        Create Rad components.
+        """
+        self.label_Rad = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Rad.setGeometry(QtCore.QRect(350, 420, 81, 21))
+        self.Rad = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Rad.setGeometry(QtCore.QRect(440, 420, 171, 25))
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+        self.Rad.addItem("")
+
+    def add_immuno(self):
+        """
+        Create Immuno components.
+        """
+        self.label_Immuno = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Immuno.setGeometry(QtCore.QRect(350, 470, 81, 21))
+        self.Immuno = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Immuno.setGeometry(QtCore.QRect(440, 470, 171, 25))
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+        self.Immuno.addItem("")
+
+    def add_chemo(self):
+        """
+        Create chemo components.
+        """
+        self.label_Chemo = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Chemo.setGeometry(QtCore.QRect(20, 470, 81, 21))
+        self.Chemo = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Chemo.setGeometry(QtCore.QRect(150, 470, 171, 25))
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+        self.Chemo.addItem("")
+
+    def add_hormone(self):
+        """
+        Create hormone components.
+        """
+        self.label_Hormone = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Hormone.setGeometry(QtCore.QRect(350, 520, 81, 21))
+        self.Hormone = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Hormone.setGeometry(QtCore.QRect(440, 520, 171, 25))
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+        self.Hormone.addItem("")
+
+    def add_brachy(self):
+        """
+        Create brachy components.
+        """
+        self.label_Brachy = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Brachy.setGeometry(QtCore.QRect(20, 520, 81, 21))
+        self.Brachy = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Brachy.setGeometry(QtCore.QRect(150, 520, 171, 25))
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+        self.Brachy.addItem("")
+
+    def add_date_last_existence(self):
+        """
+        Create date of last existence components.
+        """
+        self.label_DT_Last_existence = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_DT_Last_existence.setGeometry(QtCore.QRect(20, 570, 171, 21))
+        self.Dt_Last_Existence = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.Dt_Last_Existence.setDisplayFormat("dd/MM/yyyy")
+        # self.Dt_Last_Existence.setGeometry(QtCore.QRect(200, 565, 171, 31))
+        self.Dt_Last_Existence.setDate(QDate.currentDate())
+        self.Dt_Last_Existence.setCalendarPopup(True)
+
+    def add_survival_duration(self):
+        """
+        Create survival duration indicator.
+        """
+        self.Survival_dt = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.Survival_dt.setGeometry(QtCore.QRect(440, 565, 171, 31))
+        self.Survival_dt.setVisible(False)
+
+    def add_cancer_death(self):
+        """
+        Create cancer death components.
+        """
+        self.label_Cancer_death = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Cancer_death.setGeometry(QtCore.QRect(350, 620, 111, 21))
+        self.Cancer_death = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Cancer_death.setGeometry(QtCore.QRect(530, 620, 171, 25))
+        self.Cancer_death.addItem("")
+        self.Cancer_death.addItem("")
+        self.Cancer_death.addItem("")
+
+    def add_death(self):
+        """
+        Create death components.
+        """
+        self.label_Death = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Death.setGeometry(QtCore.QRect(20, 620, 81, 21))
+        self.Death = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Death.setGeometry(QtCore.QRect(150, 620, 171, 25))
+        self.Death.addItem("")
+        self.Death.addItem("")
+        self.Death.addItem("")
+
+    def add_regional_control(self):
+        """
+        Create regional control components.
+        """
+        self.label_Regional_control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Regional_control.setGeometry(QtCore.QRect(20, 720, 121, 21))
+        self.Regional_Control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Regional_Control.setGeometry(QtCore.QRect(150, 720, 171, 25))
+        self.Regional_Control.addItem("")
+        self.Regional_Control.addItem("")
+        self.Regional_Control.addItem("")
+
+    def add_distant_control(self):
+        """
+        Create distant control components.
+        """
+        self.label_Distant_Control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Distant_Control.setGeometry(QtCore.QRect(20, 770, 121, 21))
+        self.Distant_Control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Distant_Control.setGeometry(QtCore.QRect(150, 770, 171, 25))
+        self.Distant_Control.addItem("")
+        self.Distant_Control.addItem("")
+        self.Distant_Control.addItem("")
+
+    def add_local_control(self):
+        """
+        Create local control components.
+        """
+        self.label_Local_control = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Local_control.setGeometry(QtCore.QRect(20, 670, 101, 21))
+        self.Local_control = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
+        # self.Local_control.setGeometry(QtCore.QRect(150, 670, 171, 25))
+        self.Local_control.addItem("")
+        self.Local_control.addItem("")
+        self.Local_control.addItem("")
+
+    def add_date_local_failure(self):
+        """
+        Create date local failure components.
+        """
+        self.label_Dt_Local_failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Dt_Local_failure.setGeometry(QtCore.QRect(350, 675, 151, 21))
+        self.Dt_local_failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.Dt_local_failure.setDisplayFormat("dd/MM/yyyy")
+        self.Dt_local_failure.setDate(QDate.currentDate())
+        # self.Dt_local_failure.setGeometry(QtCore.QRect(530, 670, 171, 31))
+        self.Dt_local_failure.setCalendarPopup(True)
+        self.Dt_local_failure.setDisabled(True)
+
+    def add_date_regional_failure(self):
+        """
+        Create date regional failure components.
+        """
+        self.label_Dt_Regional_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Dt_Regional_Failure.setGeometry(QtCore.QRect(350, 725, 171, 21))
+        self.Dt_REgional_failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.Dt_REgional_failure.setDisplayFormat("dd/MM/yyyy")
+        # self.Dt_REgional_failure.setGeometry(QtCore.QRect(530, 720, 171, 31))
+        self.Dt_REgional_failure.setDate(QDate.currentDate())
+        self.Dt_REgional_failure.setCalendarPopup(True)
+        self.Dt_REgional_failure.setDisabled(True)
+
+    def add_date_distant_failure(self):
+        """
+        Create date distant failure components.
+        """
+        self.Dt_Distant_Failure = QtWidgets.QDateEdit(self.scrollAreaWidgetContents)
+        self.Dt_Distant_Failure.setDisplayFormat("dd/MM/yyyy")
+        # self.Dt_Distant_Failure.setGeometry(QtCore.QRect(530, 765, 171, 31))
+        self.Dt_Distant_Failure.setDate(QDate.currentDate())
+        self.Dt_Distant_Failure.setCalendarPopup(True)
+        self.Dt_Distant_Failure.setDisabled(True)
+        self.label_Dt_Distant_Failure = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        # self.label_Dt_Distant_Failure.setGeometry(QtCore.QRect(350, 770, 171, 21))
+
+    def create_save_button(self):
+        """
+        Create Save Button.
+        """
+        self.Save_button = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.Save_button.setFixedSize(89, 25)
+        self.Save_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
+                                       "color:rgb(75,0,130);\n"
+                                       "font-weight: bold;\n")
+        self.Save_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))

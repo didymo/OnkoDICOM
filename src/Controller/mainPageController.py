@@ -107,8 +107,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.setTabOrder(self.ui.line_LN, self.ui.line_FN)
         self.setTabOrder(self.ui.line_FN, self.ui.date_of_birth)
         self.setTabOrder(self.ui.date_of_birth, self.ui.line_BP)
-        self.setTabOrder(self.ui.line_BP, self.ui.dateEdit_2)
-        self.setTabOrder(self.ui.dateEdit_2, self.ui.gender)
+        self.setTabOrder(self.ui.line_BP, self.ui.date_diagnosis)
+        self.setTabOrder(self.ui.date_diagnosis, self.ui.gender)
         self.setTabOrder(self.ui.gender, self.ui.line_icd)
         self.setTabOrder(self.ui.line_icd, self.ui.line_histology)
         self.setTabOrder(self.ui.line_histology, self.ui.T_stage)
@@ -204,7 +204,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
     # This function shows the survival of a patient without cancer since last diagnosed
     def show_survival(self):
         Survival_years = str(calculate_years(
-            self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+            self.ui.date_diagnosis.date(), self.ui.Dt_Last_Existence.date()))
         self.ui.Survival_dt.setText("Survival Length: " + Survival_years)
         self.ui.Survival_dt.setVisible(True)
 
@@ -298,7 +298,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Input patient's birth place. \n"
         if (self.ui.date_of_birth.date() > QDate.currentDate()):
             message = message + "Patient's date of birth cannot be in the future. \n"
-        if (self.ui.dateEdit_2.date() > QDate.currentDate()):
+        if (self.ui.date_diagnosis.date() > QDate.currentDate()):
             message = message + "Patient's date of diagnosis cannot be in the future. \n"
         if (len(self.ui.line_icd.text()) == 0):
             message = message + "Input patient's ICD 10. \n"
@@ -381,48 +381,48 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
             # get the age of the patient
             ageAtDiagnosis = round(float(calculate_years(
-                self.ui.date_of_birth.date(), self.ui.dateEdit_2.date())))
+                self.ui.date_of_birth.date(), self.ui.date_diagnosis.date())))
 
             # get the local failure duration
             local_failure = str(self.ui.Local_control.currentText())
             if (local_failure == "Control"):
                 Lc_duration = str(calculate_years(
-                    self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                    self.ui.date_diagnosis.date(), self.ui.Dt_Last_Existence.date()))
                 Lc_date = ''
             elif (local_failure == "Failure"):
                 Lc_duration = str(calculate_years(
-                    self.ui.dateEdit_2.date(), self.ui.Dt_local_failure.date()))
+                    self.ui.date_diagnosis.date(), self.ui.Dt_local_failure.date()))
                 Lc_date = self.ui.Dt_local_failure.date().toString("dd/MM/yyyy")
 
             # get the regional failure duration
             regional_failure = str(self.ui.Regional_Control.currentText())
             if (regional_failure == "Control"):
                 Rc_Duration = str(calculate_years(
-                    self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                    self.ui.date_diagnosis.date(), self.ui.Dt_Last_Existence.date()))
                 Rc_date = ''
             elif (regional_failure == "Failure"):
                 Rc_Duration = str(calculate_years(
-                    self.ui.dateEdit_2.date(), self.ui.Dt_REgional_failure.date()))
+                    self.ui.date_diagnosis.date(), self.ui.Dt_REgional_failure.date()))
                 Rc_date = self.ui.Dt_REgional_failure.date().toString("dd/MM/yyyy")
 
             # get the distant failure duration
             distant_failure = str(self.ui.Distant_Control.currentText())
             if (distant_failure == "Control"):
                 Dc_Duration = str(calculate_years(
-                    self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                    self.ui.date_diagnosis.date(), self.ui.Dt_Last_Existence.date()))
                 Dc_date = ''
             elif (distant_failure == "Failure"):
                 Dc_Duration = str(calculate_years(
-                    self.ui.dateEdit_2.date(), self.ui.Dt_Distant_Failure.date()))
+                    self.ui.date_diagnosis.date(), self.ui.Dt_Distant_Failure.date()))
                 Dc_date = self.ui.Dt_Distant_Failure.date().toString("dd/MM/yyyy")
 
             # get the survival duration
             Survival_years = str(calculate_years(
-                self.ui.dateEdit_2.date(), self.ui.Dt_Last_Existence.date()))
+                self.ui.date_diagnosis.date(), self.ui.Dt_Last_Existence.date()))
 
             # the data array to be entered in the file
             dataRow = [self.pID, self.ui.gender.currentText(), self.ui.line_BP.text(),
-                       ageAtDiagnosis, self.ui.dateEdit_2.date().year(),
+                       ageAtDiagnosis, self.ui.date_diagnosis.date().year(),
                        self.getDeseaseCode(self.ui.line_histology.text(
                        )), self.getDeseaseCode(self.ui.line_icd.text()),
                        self.ui.T_stage.currentText(),
@@ -455,7 +455,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             fileName = Path('src/data/records.pkl')
             df = pd.DataFrame(columns=['PID', 'DOB', 'DOD', 'DOLE'])
             dt = [self.pID, self.ui.date_of_birth.date().toString("dd/MM/yyyy"),
-                  self.ui.dateEdit_2.date().toString("dd/MM/yyyy"),
+                  self.ui.date_diagnosis.date().toString("dd/MM/yyyy"),
                   self.ui.Dt_Last_Existence.date().toString("dd/MM/yyyy")]
             df.loc[0] = dt
             #check if the file is already created
@@ -469,7 +469,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                         # get the new records
                         new_df.at[i, 'DOB'] = self.ui.date_of_birth.date().toString(
                             "dd/MM/yyyy")
-                        new_df.at[i, 'DOD'] = self.ui.dateEdit_2.date().toString(
+                        new_df.at[i, 'DOD'] = self.ui.date_diagnosis.date().toString(
                             "dd/MM/yyyy")
                         new_df.at[i, 'DOLE'] = self.ui.Dt_Last_Existence.date().toString(
                             "dd/MM/yyyy")
@@ -563,7 +563,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             if df.at[i, 'PID'] == self.pID:
                 self.ui.date_of_birth.setDate(
                     QtCore.QDate.fromString(df.at[i, 'DOB'], "dd/MM/yyyy"))
-                self.ui.dateEdit_2.setDate(
+                self.ui.date_diagnosis.setDate(
                     QtCore.QDate.fromString(df.at[i, 'DOD'], "dd/MM/yyyy"))
                 self.ui.Dt_Last_Existence.setDate(
                     QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
@@ -571,7 +571,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         reg = '/CSV/ClinicalData*[.csv]'
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
-        self.ui.label_4.setText(
+        self.ui.note.setText(
             "You are editing the last known Clinical Data for this patient.")
         self.ui.line_FN.setVisible(False)
         self.ui.line_LN.setVisible(False)
