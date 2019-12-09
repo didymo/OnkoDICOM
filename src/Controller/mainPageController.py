@@ -17,8 +17,8 @@ from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
 from src.Model.Anon import *
-from src.View.Main_Page.Display_CD_UI import *
-from src.View.Main_Page.form_UI import *
+from src.View.Main_Page.ClinicalDataDisplay import *
+from src.View.Main_Page.ClinicalDataForm import *
 
 warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
@@ -120,8 +120,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.setTabOrder(self.ui.Surgery, self.ui.Rad)
         self.setTabOrder(self.ui.Rad, self.ui.Chemo)
         self.setTabOrder(self.ui.Chemo, self.ui.Immuno)
-        self.setTabOrder(self.ui.Immuno, self.ui.Branchy)
-        self.setTabOrder(self.ui.Branchy, self.ui.Hormone)
+        self.setTabOrder(self.ui.Immuno, self.ui.Brachy)
+        self.setTabOrder(self.ui.Brachy, self.ui.Hormone)
         self.setTabOrder(self.ui.Hormone, self.ui.Dt_Last_Existence)
         self.setTabOrder(self.ui.Dt_Last_Existence, self.ui.Death)
         self.setTabOrder(self.ui.Death, self.ui.Cancer_death)
@@ -224,26 +224,26 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             self.ui.Rad.setCurrentIndex(1)
             self.ui.Chemo.setCurrentIndex(1)
             self.ui.Immuno.setCurrentIndex(1)
-            self.ui.Branchy.setCurrentIndex(1)
+            self.ui.Brachy.setCurrentIndex(1)
             self.ui.Hormone.setCurrentIndex(1)
             self.ui.Surgery.setDisabled(True)
             self.ui.Rad.setDisabled(True)
             self.ui.Chemo.setDisabled(True)
             self.ui.Immuno.setDisabled(True)
-            self.ui.Branchy.setDisabled(True)
+            self.ui.Brachy.setDisabled(True)
             self.ui.Hormone.setDisabled(True)
         elif choice != 'Refused':
             self.ui.Surgery.setDisabled(False)
             self.ui.Rad.setDisabled(False)
             self.ui.Chemo.setDisabled(False)
             self.ui.Immuno.setDisabled(False)
-            self.ui.Branchy.setDisabled(False)
+            self.ui.Brachy.setDisabled(False)
             self.ui.Hormone.setDisabled(False)
             self.ui.Surgery.setCurrentIndex(0)
             self.ui.Rad.setCurrentIndex(0)
             self.ui.Chemo.setCurrentIndex(0)
             self.ui.Immuno.setCurrentIndex(0)
-            self.ui.Branchy.setCurrentIndex(0)
+            self.ui.Brachy.setCurrentIndex(0)
             self.ui.Hormone.setCurrentIndex(0)
 
     # handles the change in the date of local failure according on the option selected at the local failure combo box
@@ -324,7 +324,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's Rad. \n"
         if (str(self.ui.Chemo.currentText()) == "Select..."):
             message = message + "Select patient's Chemo. \n"
-        if (str(self.ui.Branchy.currentText()) == "Select..."):
+        if (str(self.ui.Brachy.currentText()) == "Select..."):
             message = message + "Select patient's Brachy. \n"
         if (str(self.ui.Hormone.currentText()) == "Select..."):
             message = message + "Select patient's Hormone. \n"
@@ -432,7 +432,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                        self.getCode(self.ui.Rad.currentText()),
                        self.getCode(self.ui.Chemo.currentText()), self.getCode(
                     self.ui.Immuno.currentText()),
-                       self.getCode(self.ui.Branchy.currentText()),
+                       self.getCode(self.ui.Brachy.currentText()),
                        self.getCode(self.ui.Hormone.currentText()), self.codeAlive(
                     self.ui.Death.currentText()),
                        self.codeCancerDeath(CancerDeath), Survival_years,
@@ -599,7 +599,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 self.getCodeReverse(clinical_data[14]))
             self.ui.Immuno.setCurrentText(
                 self.getCodeReverse(clinical_data[15]))
-            self.ui.Branchy.setCurrentText(
+            self.ui.Brachy.setCurrentText(
                 self.getCodeReverse(clinical_data[16]))
             self.ui.Hormone.setCurrentText(
                 self.getCodeReverse(clinical_data[17]))
@@ -718,8 +718,8 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         self.ui.Chemo.setDisabled(True)
         self.ui.Immuno.setCurrentText(self.getCode(clinical_data[15]))
         self.ui.Immuno.setDisabled(True)
-        self.ui.Branchy.setCurrentText(self.getCode(clinical_data[16]))
-        self.ui.Branchy.setDisabled(True)
+        self.ui.Brachy.setCurrentText(self.getCode(clinical_data[16]))
+        self.ui.Brachy.setDisabled(True)
         self.ui.Hormone.setCurrentText(self.getCode(clinical_data[17]))
         self.ui.Hormone.setDisabled(True)
         self.ui.Death.setCurrentIndex(int(1 + int(clinical_data[18])))

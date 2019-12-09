@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget
 from shutil import which
 from src.View.Main_Page.mainPage import *
 from src.View.openpage import WelcomePage
-from src.View.Main_Page.form_UI import *
+from src.View.Main_Page.ClinicalDataForm import *
 from src.View.ProgressBar import *
 from src.View.PyradiProgressBar import *
 
