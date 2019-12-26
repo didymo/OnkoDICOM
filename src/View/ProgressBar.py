@@ -17,6 +17,80 @@ from PyQt5 import QtCore,QtGui
 from src.Model.ROI import *
 import multiprocessing
 
+def img_stack_displacement(ds_orient,ds_img_pos_patient):
+    """
+    Calculate the projection of the image position patient along the axis
+    perpendicular to the images themselves, i.e. along the stack axis.
+    Intended use is for the sorting key to sort a stack of image datatsets
+    so that they are in order, regardless of whether the images are
+    axial, coronal, or sagittal, and independent from the order in which
+    the images were read in.
+
+
+    Parameters
+    ----------
+    ds_orient : list of strings with six elements
+        the image orientation patient value from the dataset
+    ds_img_pos_patient : list of strings with three elements
+        the image position patient value from the dataset.
+
+    Returns
+    -------
+    displacement : float
+        The projection of the image position patient along the image
+        stack axis.
+
+    """
+    ds_orient_x=ds_orient[0:3]
+    # print ('orient x: ', ds_orient_x)
+    ds_orient_y=ds_orient[3:6]
+    # print ('orient_y: ', ds_orient_y)
+    orient_x = np.array(list(map(float, ds_orient_x)))
+    orient_y= np.array(list(map(float,ds_orient_y)))
+    orient_z = np.cross(  orient_x, orient_y)
+    img_pos_patient=np.array(list(map(float,ds_img_pos_patient)))
+    displacement= orient_z.dot(img_pos_patient)
+    # print('displacement: ', displacement)
+    return displacement
+
+def get_dict_sort_on_stackdisplacement(item):
+    """
+
+
+    Parameters
+    ----------
+    item : dictionary key,value item with value of a pydicom dataset
+        Sorting function input for a pydicom dataset.
+        Expecting an image SOP instance that has image orientation patient
+        and image position patient.
+
+    Returns
+    -------
+    sortkey : float
+        The projection of the image position patient on the axis through
+        the image stack
+
+    """
+    # print ('length of item')
+    # print(len(item))
+    # input_slice_num=item[0]
+    # print (input_slice_num)
+    img_ds=item[1]
+    #print ('img ds')
+    #print (img_ds)
+    orientation = img_ds.ImageOrientationPatient
+    # print ('orientation')
+    # print (orientation)
+    # The x, y, and z coordinates of the upper left hand corner
+    # (center of the first voxel transmitted) of the image, in mm.
+    # 3 values: [Sx, Sy, Sz]
+    position = img_ds.ImagePositionPatient
+    # print('position')
+    # print(position)
+    sortkey=img_stack_displacement(orientation,position)
+    # print('sortkey')
+    # print(sortkey)
+    return sortkey
 
 class Extended(QtCore.QThread):
     """
@@ -59,10 +133,15 @@ class Extended(QtCore.QThread):
             self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True, defer_size=100)
             self.rois = self.get_roi_info(self.dataset_rtss, self.my_callback)
             self.platform = platform.system()
-            if self.platform == 'Linux':
+            # one can add to the list of fork safe platforms
+            # but Darwin (MacOS) and Windows are not fork safe platforms
+            # Those platforms can be spawn based.  Unfortunately, this class ("Extended")
+            # does not pickle in it's current form and will therefore not multiprocess with spawn
+            fork_safe_platforms = ['Linux']
+            if self.platform in fork_safe_platforms:
                 self.raw_dvh = self.calc_dvhs(
                     self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
-            elif self.platform == 'Windows':
+            else:
                 self.raw_dvh = self.single_calc_dvhs(
                     self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
             # self.raw_dvh = self.calc_dvhs(
@@ -110,6 +189,39 @@ class Extended(QtCore.QThread):
         def alphanum_key(key): return [convert(c)
                                        for c in re.split('([0-9]+)', key)]
         return sorted(file_list, key=alphanum_key)
+
+    def image_stack_sort(self):
+        """
+        Sort the read_data_dict and file_names_dict by order of displacement
+        along the image stack axis.
+        For axial images this is by the Z coordinate
+
+        Returns
+        -------
+        None.
+
+        """
+        if self.read_data_dict is None or self.file_names_dict is None:
+            return
+
+        newImageDict = {key:value for (key,value) in self.read_data_dict.items() if str(key).isnumeric()}
+        newImageFileNameDict={key:value for (key,value) in self.file_names_dict.items() if str(key).isnumeric()}
+        newNonImageDict = {key:value for (key,value) in self.read_data_dict.items() if not str(key).isnumeric()}
+
+        myitems= newImageDict.items()
+        sortedDictOnDisplacement=sorted(myitems,key=get_dict_sort_on_stackdisplacement, reverse=True)
+        self.read_data_dict.clear()
+        i=0
+        for sortedDataset in sortedDictOnDisplacement:
+            # repopulate the dictionary of read data in the new order
+            self.read_data_dict[i]=sortedDataset[1]
+            original_index=sortedDataset[0]
+            # overwrite the dictionary of file names using the new order
+            self.file_names_dict[i]=newImageFileNameDict[original_index]
+            i += 1
+        # add the rtss, rtdose, rtplan back to the dict of datasets
+        self.read_data_dict.update(newNonImageDict)
+
 
     def get_datasets(self, path, callback):
         """
@@ -160,6 +272,8 @@ class Extended(QtCore.QThread):
                         self.file_names_dict['rtplan'] = file
                     self.copied += len(read_file)
                     callback(self.copied) #update the bar
+
+        self.image_stack_sort()
 
         return self.read_data_dict, self.file_names_dict
 
