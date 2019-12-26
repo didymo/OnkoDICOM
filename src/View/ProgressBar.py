@@ -71,25 +71,11 @@ def get_dict_sort_on_stackdisplacement(item):
         the image stack
 
     """
-    # print ('length of item')
-    # print(len(item))
     # input_slice_num=item[0]
-    # print (input_slice_num)
     img_ds=item[1]
-    #print ('img ds')
-    #print (img_ds)
     orientation = img_ds.ImageOrientationPatient
-    # print ('orientation')
-    # print (orientation)
-    # The x, y, and z coordinates of the upper left hand corner
-    # (center of the first voxel transmitted) of the image, in mm.
-    # 3 values: [Sx, Sy, Sz]
     position = img_ds.ImagePositionPatient
-    # print('position')
-    # print(position)
     sortkey=img_stack_displacement(orientation,position)
-    # print('sortkey')
-    # print(sortkey)
     return sortkey
 
 class Extended(QtCore.QThread):
