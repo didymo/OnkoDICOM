@@ -130,9 +130,6 @@ class Extended(QtCore.QThread):
             else:
                 self.raw_dvh = self.single_calc_dvhs(
                     self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
-            elif self.platform == 'Darwin':
-                self.raw_dvh = self.single_calc_dvhs(
-                    self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
             # self.raw_dvh = self.calc_dvhs(
             #     self.dataset_rtss, self.dataset_rtdose, self.rois, self.my_callback)
             self.dvh_x_y = self.converge_to_O_dvh(
