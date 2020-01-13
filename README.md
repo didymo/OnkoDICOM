@@ -1,5 +1,5 @@
 # Onko
-Onko is an extensible open source radiation therapy research platform based on the DICOM standard. It also functions as a cross-platform DICOM RT viewer.  Onko is written in Python and is built on a number of technologies including: pydicom, Pyqt5, PIL, and matplotlib and runs on Windows, Mac OS X and Linux.  Take a tour of Onko by checking out some screenshots or download your own copy today.
+Onko is an extensible open source radiation therapy research platform based on the DICOM standard. It also functions as a cross-platform DICOM RT viewer.  Onko is written in Python and is built on a number of technologies including: pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib and runs on Windows, Mac OS X and Linux.  Take a tour of Onko by checking out some screenshots or download your own copy today.
 
 # Installation
 *These instructions are based off this
