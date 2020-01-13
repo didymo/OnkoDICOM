@@ -1,5 +1,8 @@
 # Onko
-OnkoDICOM was created for Radiation Oncologists to do research using the DICOM standard. OnkoDICOM uses many technologies, including: pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. OnkoDICOM is cross platform, open source and welcomes contributions from the wider community. OnkoDICOM was inspired by dicompyler.
+OnkoDICOM was created for Radiation Oncologists to do research using the DICOM standard. OnkoDICOM uses many technologies, including: pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. OnkoDICOM is cross platform, open source and welcomes contributions from the wider community. 
+
+OnkoDICOM was inspired by the [dicompyler project] (https://github.com/bastula/dicompyler)er.
+
 
 # Installation
 *These instructions are based off this
