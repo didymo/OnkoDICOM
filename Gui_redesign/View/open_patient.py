@@ -77,6 +77,7 @@ class Ui_OpenPatientWindow(object):
 
     def chooseButtonClicked(self):
         self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
+        self.pathTextBrowser.setText(self.filepath) # added functionality
 
 
 if __name__ == "__main__":
