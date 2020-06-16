@@ -77,7 +77,11 @@ class UIWelcomeWindow(object):
         self.welcome_text = QtWidgets.QLabel(self.frame2)
         self.welcome_text.setGeometry(QtCore.QRect(200, 350, 508, 106))
         self.welcome_text.setTextFormat(QtCore.Qt.AutoText)
-        self.welcome_text.setText("<html><head/><body><p align=\"center\"><span style=\" font-size:26pt; font-weight:600;\">Welcome to OnkoDICOM!</span></p><p align=\"center\"><br/></p><p align=\"center\"><span style=\" font-size:9pt;\">OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans</span></p></body></html>")
+        self.welcome_text.setText("<html><head/><body><p align=\"center\"><span style=\" font-size:26pt; "
+                                  "font-weight:600;\">Welcome to OnkoDICOM!</span></p><p align=\"center\"><br/></p><p "
+                                  "align=\"center\"><span style=\" font-size:9pt;\">OnkoDICOM - the solution for "
+                                  "producing data for analysis from your oncology plans and "
+                                  "scans</span></p></body></html>")
         self.welcome_text.setScaledContents(False)
         self.welcome_text.setObjectName("welcome")
 
