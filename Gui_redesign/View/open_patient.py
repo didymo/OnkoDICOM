@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class UIOpenPatientWindow(object):
 
     def setup_ui(self, main_window):
