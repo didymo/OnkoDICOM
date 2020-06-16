@@ -61,7 +61,7 @@ class UIWelcomeWindow(object):
         self.open_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;") # Self added
         self.grid_layout.addWidget(self.open_button, 2, 0, 1, 1, QtCore.Qt.AlignHCenter) # Keeps button in middle
 
-        self.open_button.clicked.connect(self.buttonClicked) # signal opening of Patient
+        self.open_button.clicked.connect(self.button_clicked) # signal opening of Patient
 
         self.frame2 = QtWidgets.QFrame(self.frame)
         self.frame2.setFrameShape(QtWidgets.QFrame.StyledPanel)
