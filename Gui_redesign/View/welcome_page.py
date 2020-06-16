@@ -1,20 +1,21 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from Gui_redesign.View.open_patient import *
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowTitle("OnkoDICOM")
-        MainWindow.setWindowModality(QtCore.Qt.NonModal)
-        MainWindow.setEnabled(True)
-        MainWindow.setFixedSize(939, 594)
-        MainWindow.setFocusPolicy(QtCore.Qt.ClickFocus)
-        MainWindow.setAcceptDrops(False)
+class Ui_WelcomeWindow(object):
+    def setupUi(self, WelcomeWindow):
+        WelcomeWindow.setObjectName("MainWindow")
+        WelcomeWindow.setWindowTitle("OnkoDICOM")
+        WelcomeWindow.setWindowModality(QtCore.Qt.NonModal)
+        WelcomeWindow.setEnabled(True)
+        WelcomeWindow.setFixedSize(939, 594)
+        WelcomeWindow.setFocusPolicy(QtCore.Qt.ClickFocus)
+        WelcomeWindow.setAcceptDrops(False)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        MainWindow.setWindowIcon(icon)
-        MainWindow.setAutoFillBackground(False)
+        WelcomeWindow.setWindowIcon(icon)
+        WelcomeWindow.setAutoFillBackground(False)
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget = QtWidgets.QWidget(WelcomeWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
@@ -81,23 +82,24 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.frame_2, 0, 0, 1, 1)
         self.gridLayout_2.addWidget(self.frame, 5, 0, 1, 1)
-        MainWindow.setCentralWidget(self.centralwidget)
+        WelcomeWindow.setCentralWidget(self.centralwidget)
 
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar = QtWidgets.QStatusBar(WelcomeWindow)
         self.statusbar.setObjectName("statusbar")
         self.statusbar.setSizeGripEnabled(False) # Remove expanding window option
-        MainWindow.setStatusBar(self.statusbar)
+        WelcomeWindow.setStatusBar(self.statusbar)
 
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(WelcomeWindow)
 
     def buttonClicked(self):
         print("Button has been pressed")
+
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
+    ui = Ui_WelcomeWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
