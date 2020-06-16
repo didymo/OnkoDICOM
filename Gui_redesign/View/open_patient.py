@@ -1,94 +1,90 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_OpenPatientWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(942, 600)
-        MainWindow.setWindowTitle("OnkoDICOM")
+
+class UIOpenPatientWindow(object):
+
+    def setup_ui(self, main_window):
+        main_window.setObjectName("MainWindow")
+        main_window.resize(942, 600)
+        main_window.setWindowTitle("OnkoDICOM")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        MainWindow.setWindowIcon(icon)
+        main_window.setWindowIcon(icon)
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName("gridLayout")
+        self.central_widget = QtWidgets.QWidget(main_window)
+        self.central_widget.setObjectName("centralwidget")
+        self.grid_layout = QtWidgets.QGridLayout(self.central_widget)
+        self.grid_layout.setObjectName("gridLayout")
 
-        self.path_label = QtWidgets.QLabel(self.centralwidget)
+        self.path_label = QtWidgets.QLabel(self.central_widget)
         self.path_label.setObjectName("path_label")
         self.path_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Path:</span></p></body></html>")
-        self.gridLayout.addWidget(self.path_label, 1, 0, 1, 1)
+        self.grid_layout.addWidget(self.path_label, 1, 0, 1, 1)
 
-        self.cancelButton = QtWidgets.QPushButton(self.centralwidget)
-        self.cancelButton.setObjectName("cancelButton")
-        self.cancelButton.setText("Cancel")
-        self.cancelButton.clicked.connect(self.cancelButtonClicked) # Signal Closing Application
+        self.cancel_button = QtWidgets.QPushButton(self.central_widget)
+        self.cancel_button.setObjectName("cancelButton")
+        self.cancel_button.setText("Cancel")
+        self.cancel_button.clicked.connect(self.cancel_button_clicked) # Signal Closing Application
 
-        self.gridLayout.addWidget(self.cancelButton, 9, 3, 1, 1)
-        self.chooseButton = QtWidgets.QPushButton(self.centralwidget)
-        self.chooseButton.setObjectName("chooseButton")
-        self.chooseButton.setText("Choose")
-        self.chooseButton.clicked.connect(self.chooseButtonClicked)
+        self.grid_layout.addWidget(self.cancel_button, 9, 3, 1, 1)
+        self.choose_button = QtWidgets.QPushButton(self.central_widget)
+        self.choose_button.setObjectName("chooseButton")
+        self.choose_button.setText("Choose")
+        self.choose_button.clicked.connect(self.choose_button_clicked)
 
-        self.gridLayout.addWidget(self.chooseButton, 1, 2, 1, 1)
-        self.pathTextBrowser = QtWidgets.QTextBrowser(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pathTextBrowser.sizePolicy().hasHeightForWidth())
-        self.pathTextBrowser.setSizePolicy(sizePolicy)
-        self.pathTextBrowser.setObjectName("pathTextBrowser")
-        self.gridLayout.addWidget(self.pathTextBrowser, 1, 1, 1, 1)
-        self.choose_label = QtWidgets.QLabel(self.centralwidget)
+        self.grid_layout.addWidget(self.choose_button, 1, 2, 1, 1)
+        self.path_text_browser = QtWidgets.QTextBrowser(self.central_widget)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.path_text_browser.sizePolicy().hasHeightForWidth())
+        self.path_text_browser.setSizePolicy(size_policy)
+        self.path_text_browser.setObjectName("pathTextBrowser")
+        self.grid_layout.addWidget(self.path_text_browser, 1, 1, 1, 1)
+        self.choose_label = QtWidgets.QLabel(self.central_widget)
         self.choose_label.setObjectName("choose_label")
-        self.choose_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Choose the file path of a "
-                                  "folder containing DICOM files to create the Patient file "
-                                  "directory:</span></p></body></html>")
-        self.gridLayout.addWidget(self.choose_label, 0, 1, 1, 3)
+        self.choose_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Choose the file path of a folder containing DICOM files to create the Patient file directory:</span></p></body></html>")
+        self.grid_layout.addWidget(self.choose_label, 0, 1, 1, 3)
 
-        self.patient_file_label = QtWidgets.QLabel(self.centralwidget)
+        self.patient_file_label = QtWidgets.QLabel(self.central_widget)
         self.patient_file_label.setObjectName("patient_file_label")
-        self.patient_file_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Patient File "
-                                        "directory shown below once file path chosen. Please select the file(s) you "
-                                        "want to open:</span></p></body></html>")
-        self.gridLayout.addWidget(self.patient_file_label, 6, 1, 1, 3)
+        self.patient_file_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Patient File directory shown below once file path chosen. Please select the file(s) you want to open:</span></p></body></html>")
+        self.grid_layout.addWidget(self.patient_file_label, 6, 1, 1, 3)
 
-        self.confirmButton = QtWidgets.QPushButton(self.centralwidget)
-        self.confirmButton.setObjectName("confirmButton")
-        self.confirmButton.setText("Confirm")
-        self.gridLayout.addWidget(self.confirmButton, 9, 4, 1, 1)
+        self.confirm_Button = QtWidgets.QPushButton(self.central_widget)
+        self.confirm_Button.setObjectName("confirmButton")
+        self.confirm_Button.setText("Confirm")
+        self.grid_layout.addWidget(self.confirm_Button, 9, 4, 1, 1)
 
-        self.selected_directory_label = QtWidgets.QLabel(self.centralwidget)
+        self.selected_directory_label = QtWidgets.QLabel(self.central_widget)
         self.selected_directory_label.setObjectName("selected_directory_label")
-        self.selected_directory_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">The selected "
-                                              "directory(s) above will be opened in the OnkoDICOM "
-                                              "program.</span></p></body></html>")
-        self.gridLayout.addWidget(self.selected_directory_label, 9, 1, 1, 2)
+        self.selected_directory_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">The selected directory(s) above will be opened in the OnkoDICOM program.</span></p></body></html>")
+        self.grid_layout.addWidget(self.selected_directory_label, 9, 1, 1, 2)
 
-        self.treeWidget = QtWidgets.QTreeWidget(self.centralwidget)
-        self.treeWidget.setObjectName("treeWidget")
-        self.gridLayout.addWidget(self.treeWidget, 7, 1, 1, 1)
+        self.tree_widget = QtWidgets.QTreeWidget(self.central_widget)
+        self.tree_widget.setObjectName("treeWidget")
+        self.grid_layout.addWidget(self.tree_widget, 7, 1, 1, 1)
 
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        main_window.setCentralWidget(self.central_widget)
+        self.status_bar = QtWidgets.QStatusBar(main_window)
+        self.status_bar.setObjectName("statusbar")
+        main_window.setStatusBar(self.status_bar)
 
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(main_window)
 
-    def cancelButtonClicked(self):
+    def cancel_button_clicked(self):
         sys.exit(app.exec_())
 
-    def chooseButtonClicked(self):
+    def choose_button_clicked(self):
         self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
-        self.pathTextBrowser.setText(self.filepath) # added functionality
+        self.path_text_browser.setText(self.filepath) # added functionality
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_OpenPatientWindow()
-    ui.setupUi(MainWindow)
+    ui = UIOpenPatientWindow()
+    ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
