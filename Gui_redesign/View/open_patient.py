@@ -9,6 +9,8 @@ class Ui_OpenPatientWindow(object):
         icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
 
+        self.filepath = ""
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -28,6 +30,7 @@ class Ui_OpenPatientWindow(object):
         self.chooseButton = QtWidgets.QPushButton(self.centralwidget)
         self.chooseButton.setObjectName("chooseButton")
         self.chooseButton.setText("Choose")
+        self.chooseButton.clicked.connect(self.chooseButtonClicked)
 
         self.gridLayout.addWidget(self.chooseButton, 1, 2, 1, 1)
         self.pathTextBrowser = QtWidgets.QTextBrowser(self.centralwidget)
@@ -71,6 +74,10 @@ class Ui_OpenPatientWindow(object):
 
     def cancelButtonClicked(self):
         sys.exit(app.exec_())
+
+    def chooseButtonClicked(self):
+        self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
+
 
 if __name__ == "__main__":
     import sys
