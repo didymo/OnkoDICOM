@@ -6,22 +6,19 @@ class Ui_MainWindow(object):
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.setEnabled(True)
         MainWindow.setFixedSize(939, 594)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-        MainWindow.setSizePolicy(sizePolicy)
         MainWindow.setFocusPolicy(QtCore.Qt.ClickFocus)
         MainWindow.setAcceptDrops(False)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
-        MainWindow.setLayoutDirection(QtCore.Qt.LeftToRight)
         MainWindow.setAutoFillBackground(False)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
+
+        # Logo
         self.logo = QtWidgets.QLabel(self.centralwidget)
         self.logo.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
@@ -33,6 +30,7 @@ class Ui_MainWindow(object):
         self.logo.setPixmap(QtGui.QPixmap("OnkoDicom/logo.ico"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
+
         self.gridLayout_2.addWidget(self.logo, 4, 0, 1, 1)
         self.frame = QtWidgets.QFrame(self.centralwidget)
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -45,6 +43,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.continueButton.sizePolicy().hasHeightForWidth())
+
         self.continueButton.setSizePolicy(sizePolicy)
         self.continueButton.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.continueButton.setLayoutDirection(QtCore.Qt.LeftToRight)
@@ -53,37 +52,33 @@ class Ui_MainWindow(object):
         self.continueButton.setFlat(False)
         self.continueButton.setObjectName("continueButton")
         self.continueButton.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;") # Self added
-        self.gridLayout.addWidget(self.continueButton, 2, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.gridLayout.addWidget(self.continueButton, 2, 0, 1, 1, QtCore.Qt.AlignHCenter) # Keeps button in middle
+
         self.frame_2 = QtWidgets.QFrame(self.frame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.frame_2.sizePolicy().hasHeightForWidth())
-        self.frame_2.setSizePolicy(sizePolicy)
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
+
         self.label = QtWidgets.QLabel(self.frame_2)
         self.label.setGeometry(QtCore.QRect(210, -50, 501, 361))
         self.label.setText("")
         self.label.setPixmap(QtGui.QPixmap("src/images/image.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
+
         self.welcome = QtWidgets.QLabel(self.frame_2)
         self.welcome.setGeometry(QtCore.QRect(200, 350, 508, 106))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.welcome.sizePolicy().hasHeightForWidth())
-        self.welcome.setSizePolicy(sizePolicy)
         self.welcome.setTextFormat(QtCore.Qt.AutoText)
         self.welcome.setScaledContents(False)
         self.welcome.setObjectName("welcome")
+
         self.gridLayout.addWidget(self.frame_2, 0, 0, 1, 1)
         self.gridLayout_2.addWidget(self.frame, 5, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
+
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
+        self.statusbar.setSizeGripEnabled(False) # Remove expanding window option
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
