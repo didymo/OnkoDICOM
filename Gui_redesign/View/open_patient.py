@@ -41,12 +41,16 @@ class Ui_OpenPatientWindow(object):
         self.gridLayout.addWidget(self.pathTextBrowser, 1, 1, 1, 1)
         self.choose_label = QtWidgets.QLabel(self.centralwidget)
         self.choose_label.setObjectName("choose_label")
-        self.choose_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Choose the file path of a folder containing DICOM files to create the Patient file directory:</span></p></body></html>")
+        self.choose_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Choose the file path of a "
+                                  "folder containing DICOM files to create the Patient file "
+                                  "directory:</span></p></body></html>")
         self.gridLayout.addWidget(self.choose_label, 0, 1, 1, 3)
 
         self.patient_file_label = QtWidgets.QLabel(self.centralwidget)
         self.patient_file_label.setObjectName("patient_file_label")
-        self.patient_file_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Patient File directory shown below once file path chosen. Please select the file(s) you want to open:</span></p></body></html>")
+        self.patient_file_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Patient File "
+                                        "directory shown below once file path chosen. Please select the file(s) you "
+                                        "want to open:</span></p></body></html>")
         self.gridLayout.addWidget(self.patient_file_label, 6, 1, 1, 3)
 
         self.confirmButton = QtWidgets.QPushButton(self.centralwidget)
@@ -56,7 +60,9 @@ class Ui_OpenPatientWindow(object):
 
         self.selected_directory_label = QtWidgets.QLabel(self.centralwidget)
         self.selected_directory_label.setObjectName("selected_directory_label")
-        self.selected_directory_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">The selected directory(s) above will be opened in the OnkoDICOM program.</span></p></body></html>")
+        self.selected_directory_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">The selected "
+                                              "directory(s) above will be opened in the OnkoDICOM "
+                                              "program.</span></p></body></html>")
         self.gridLayout.addWidget(self.selected_directory_label, 9, 1, 1, 2)
 
         self.treeWidget = QtWidgets.QTreeWidget(self.centralwidget)
