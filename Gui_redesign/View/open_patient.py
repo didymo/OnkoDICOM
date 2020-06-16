@@ -9,6 +9,7 @@ class UIOpenPatientWindow(object):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         main_window.setWindowIcon(icon)
+        main_window.setAutoFillBackground(False)
 
         self.central_widget = QtWidgets.QWidget(main_window)
         self.central_widget.setObjectName("centralwidget")
