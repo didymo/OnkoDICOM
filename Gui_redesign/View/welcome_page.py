@@ -98,8 +98,6 @@ class UIWelcomeWindow(object):
 
     def button_clicked(self):
         print("Button has been pressed")
-        open_patient = UIOpenPatientWindow(self)
-        open_patient.show()
 
 
 def main():
