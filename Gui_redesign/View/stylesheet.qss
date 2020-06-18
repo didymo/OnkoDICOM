@@ -1,0 +1,33 @@
+/* RESET EVERYTHING */
+QAbstractScrollArea,QCheckBox,QColumnView,QComboBox,QDateEdit,QDateTimeEdit,QDialog,QDialogButtonBox,QDockWidget,QDoubleSpinBox,QFrame,QGroupBox,QHeaderView,QLabel,QLineEdit,QListView,QListWidget,QMainWindow,QMenu,QMenuBar,QMessageBox,QProgressBar,QPushButton,QRadioButton,QScrollBar,QSizeGrip,QSlider,QSpinBox,QSplitter,QStatusBar,QTabBar,QTabWidget,QTableView,QTableWidget,QTextEdit,QTimeEdit,QToolBar,QToolButton,QToolBox,QToolTip,QTreeView,QTreeWidget,QWidget {
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    border-style: none;
+    background-color: #e6e6e6; /* set with default background color */
+}
+
+QLabel#label {
+    margin-bottom: 0px;
+}
+
+QLabel#welcome {
+    margin-bottom: 0px;
+}
+
+QPushButton {
+    font-family: Roboto Black;
+}
+
+QPushButton#open_button {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#open_button:hover {
+    background-color: #64b5f6;
+}

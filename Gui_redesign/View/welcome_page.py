@@ -54,9 +54,8 @@ class UIWelcomeWindow(object):
         self.open_button.setAutoDefault(True)
         self.open_button.setDefault(False)
         self.open_button.setFlat(False)
-        self.open_button.setObjectName("continueButton")
+        self.open_button.setObjectName("open_button")
         self.open_button.setText("Open Patient")
-        self.open_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;") # Self added
         self.grid_layout.addWidget(self.open_button, 2, 0, 1, 1, QtCore.Qt.AlignHCenter) # Keeps button in middle
         self.open_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) # clickable animation
 
@@ -72,7 +71,7 @@ class UIWelcomeWindow(object):
         self.label.setGeometry(QtCore.QRect(210, -50, 501, 361))
         self.label.setPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/image.png"))
         self.label.setScaledContents(True)
-        self.label.setObjectName("label")
+        self.label.setObjectName("onkoImage")
 
         self.welcome_text = QtWidgets.QLabel(self.frame2)
         self.welcome_text.setGeometry(QtCore.QRect(200, 350, 508, 106))
@@ -105,6 +104,16 @@ class UIWelcomeWindow(object):
 def main():
     import sys
     app = QtWidgets.QApplication(sys.argv)
+    # Load Fonts, print() for getting the exact name of the font, can be deleted.
+    robotoReg = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Regular.ttf')
+    print(QtGui.QFontDatabase.applicationFontFamilies(robotoReg))
+    robotoBold = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Bold.ttf')
+    print(QtGui.QFontDatabase.applicationFontFamilies(robotoBold))
+    robotoBlack = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Black.ttf')
+    print(QtGui.QFontDatabase.applicationFontFamilies(robotoBlack))
+    # Load Style Sheet
+    stylesheet = open('stylesheet.qss').read()
+    app.setStyleSheet(stylesheet)
     MainWindow = QtWidgets.QMainWindow()
     ui = UIWelcomeWindow()
     ui.setup_ui(MainWindow)
