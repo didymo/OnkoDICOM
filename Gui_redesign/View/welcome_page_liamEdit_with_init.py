@@ -12,7 +12,7 @@ class UIWelcomeWindow(object):
 
         self.setObjectName("WelcomePage")
         self.setWindowTitle("OnkoDICOM")
-        self.setWindowIcon(QtGui.QIcon("../../Gui_redesign/src/images/icon.ico"))
+        self.setWindowIcon(QtGui.QIcon("../res/images/icon.ico"))
         self.setFixedSize(844, 528)
         self.setStyleSheet("background-color: rgb(244, 245, 245);")
 

@@ -12,7 +12,7 @@ class UIWelcomeWindow(object):
         welcome_window.setFocusPolicy(QtCore.Qt.ClickFocus)
         welcome_window.setAcceptDrops(False)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         welcome_window.setWindowIcon(icon)
         welcome_window.setAutoFillBackground(False)
 
@@ -69,7 +69,7 @@ class UIWelcomeWindow(object):
 
         self.label = QtWidgets.QLabel(self.frame2)
         self.label.setGeometry(QtCore.QRect(210, -50, 501, 361))
-        self.label.setPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/image.png"))
+        self.label.setPixmap(QtGui.QPixmap("../res/images/image.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("onkoImage")
 
@@ -105,11 +105,11 @@ def main():
     import sys
     app = QtWidgets.QApplication(sys.argv)
     # Load Fonts, print() for getting the exact name of the font, can be deleted.
-    robotoReg = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Regular.ttf')
+    robotoReg = QtGui.QFontDatabase.addApplicationFont('../res/assets/Roboto/Roboto-Regular.ttf')
     print(QtGui.QFontDatabase.applicationFontFamilies(robotoReg))
-    robotoBold = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Bold.ttf')
+    robotoBold = QtGui.QFontDatabase.addApplicationFont('../res/assets/Roboto/Roboto-Bold.ttf')
     print(QtGui.QFontDatabase.applicationFontFamilies(robotoBold))
-    robotoBlack = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Black.ttf')
+    robotoBlack = QtGui.QFontDatabase.addApplicationFont('../res/assets/Roboto/Roboto-Black.ttf')
     print(QtGui.QFontDatabase.applicationFontFamilies(robotoBlack))
     # Load Style Sheet
     stylesheet = open('stylesheet.qss').read()

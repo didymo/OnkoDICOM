@@ -34,7 +34,7 @@ class PyradiProgressBar(QtWidgets.QWidget):
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         self.w.move(qtRectangle.topLeft())
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
 
         self.setGeometry(300, 300, 460, 100)
         self.label = QtWidgets.QLabel(self)
@@ -97,7 +97,7 @@ class ProgressBar(QtWidgets.QWidget):
         # Creating the UI of the progress bar
         self.w = QtWidgets.QWidget()
         self.setWindowTitle("Opening patient")
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
         qtRectangle = self.w.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)

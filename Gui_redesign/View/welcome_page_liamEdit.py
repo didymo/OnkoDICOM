@@ -8,7 +8,7 @@ class UIWelcomeWindow(object):
     def setup_ui(self, welcome_page):
         welcome_page.setObjectName("WelcomePage")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
+        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_page.setWindowIcon(icon)
         welcome_page.setFixedSize(844, 528)
         welcome_page.setStyleSheet("background-color: rgb(244, 245, 245);")

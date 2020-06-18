@@ -23,7 +23,7 @@ class Dialog_Windowing(QDialog):
 
         #passing the current values if it is an existing option or empty if its a new one
         self.winName = winName
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
         self.scan = scan
         self.ULevel = ULevel
         self.LLevel = LLevel
@@ -89,7 +89,7 @@ class Dialog_Organ(QDialog):
 
         #passing the current values if it is an existing option or empty if its a new one
         self.name = Name
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
         self.id = id
         self.org = organ
         self.url = url
@@ -157,7 +157,7 @@ class Dialog_Volume(QDialog):
         self.vol = volume
 
         # creating the ui components
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.S_name = QLineEdit()
         self.S_name.setText(self.name)
@@ -202,7 +202,7 @@ class Dialog_Volume(QDialog):
 #
 #         self.dose = dose
 #         self.notes = notes
-#         self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+#         self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
 #         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
 #         self.iso_dose = QLineEdit()
 #         self.iso_dose.setText(self.dose)
@@ -253,7 +253,7 @@ class Rxdose_Check(QDialog):
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.rxdose_display = QLineEdit()
         self.rxdose_display.setText(str(self.rxdose))
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
         layout = QFormLayout(self)
         layout.addRow(QLabel("RxDose: "), self.rxdose_display)
         layout.addWidget(buttonBox)

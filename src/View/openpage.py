@@ -11,7 +11,7 @@ class WelcomePage(object):
     # the ui constructor function
     def setupUi(self, WelcomePage):
         WelcomePage.setObjectName("WelcomePage")
-        WelcomePage.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        WelcomePage.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
         WelcomePage.setFixedSize(844, 528)
         WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
@@ -37,7 +37,7 @@ class WelcomePage(object):
         self.logo = QtWidgets.QLabel(self.centralwidget)
         self.logo.setGeometry(QtCore.QRect(185, 60, 480, 261))
         self.logo.setText("")
-        self.logo.setPixmap(QtGui.QPixmap("src/Icon/LOGOT.png"))
+        self.logo.setPixmap(QtGui.QPixmap("res/Icon/LOGOT.png"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
         WelcomePage.setCentralWidget(self.centralwidget)

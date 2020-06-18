@@ -19,7 +19,7 @@ class UIOpenPatientWindow(QMainWindow):
 
     def setup_ui(self):
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
         self.setAutoFillBackground(False)
 

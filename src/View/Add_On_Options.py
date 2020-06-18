@@ -27,7 +27,7 @@ class Ui_Add_On_Options(object):
         Add_On_Options.setObjectName("Add_On_Options")
         Add_On_Options.setMinimumSize(766, 600)
         Add_On_Options.setStyleSheet("")
-        Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        Add_On_Options.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
 
         _translate = QtCore.QCoreApplication.translate
         Add_On_Options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))

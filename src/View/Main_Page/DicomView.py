@@ -298,7 +298,7 @@ class DicomView(object):
 				polygons = self.main_window.dict_polygons[roi_name][curr_slice]
 
 			color = self.roi_color[roi]
-			with open('src/data/line&fill_configuration', 'r') as stream:
+			with open('res/data/line&fill_configuration', 'r') as stream:
 				elements = stream.readlines()
 				if len(elements) > 0:
 					roi_line = int(elements[0].replace('\n', ''))
@@ -366,7 +366,7 @@ class DicomView(object):
 					self.main_window.dose_pixluts[curr_slice_uid], contours)
 
 				brush_color = self.isod_color[sd]
-				with open('src/data/line&fill_configuration', 'r') as stream:
+				with open('res/data/line&fill_configuration', 'r') as stream:
 					elements = stream.readlines()
 					if len(elements) > 0:
 						iso_line = int(elements[2].replace('\n', ''))
