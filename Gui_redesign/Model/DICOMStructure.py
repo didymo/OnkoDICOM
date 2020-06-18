@@ -1,3 +1,6 @@
+from PyQt5.QtWidgets import QTreeWidgetItem
+
+
 class DICOMStructure:
 
     def __init__(self):
@@ -42,6 +45,17 @@ class DICOMStructure:
             output += patient.output_as_text()
 
         return output
+
+    def get_tree_items_list(self):
+        # TODO complete.
+        # References to help:
+        # https://doc.qt.io/qtforpython/PySide2/QtWidgets/QTreeWidgetItem.html#PySide2.QtWidgets.QTreeWidgetItem
+        # https://doc.qt.io/qtforpython/PySide2/QtWidgets/QTreeWidget.html
+        # https://stackoverflow.com/questions/41204234/python-pyqt5-qtreewidget-sub-item
+        """
+        :return: A list of QTreeWidgetItems based on the DICOMStructure object.
+        """
+        return None
 
 
 class Patient:
