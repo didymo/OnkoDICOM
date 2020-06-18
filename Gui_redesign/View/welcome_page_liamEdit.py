@@ -56,9 +56,6 @@ class UIWelcomeWindow(object):
                                         "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
         self.push_button.setText(_translate("WelcomePage", "Continue"))
 
-    def button_clicked(self):
-        print("Button has been pressed")
-
 
 if __name__ == "__main__":
     import sys
