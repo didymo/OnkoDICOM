@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QCoreApplication
 
 
 class UIOpenPatientWindow(object):
@@ -81,9 +82,12 @@ class UIOpenPatientWindow(object):
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def cancel_button_clicked(self):
-        import sys
+        # Keeping the old method here commented, because not sure if there's a specific reason why it was used.
+        # This method prevents the program hanging on close.
+        """import sys
         app = QtWidgets.QApplication(sys.argv)
-        sys.exit(app.exec_())
+        sys.exit(app.exec_())"""
+        QCoreApplication.exit(0)
 
     def choose_button_clicked(self):
         self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
