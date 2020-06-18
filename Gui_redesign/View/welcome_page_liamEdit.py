@@ -4,7 +4,7 @@ from Gui_redesign.View.open_patient import *
 class UIWelcomeWindow(object):
 
     # the ui constructor function
-    def setupUi(self, WelcomePage):
+    def setup_ui(self, WelcomePage):
         WelcomePage.setObjectName("WelcomePage")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
@@ -13,19 +13,19 @@ class UIWelcomeWindow(object):
         WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
         self.centralwidget.setObjectName("centralwidget")
-        self.welcomeLabel = QtWidgets.QLabel(self.centralwidget)
-        self.welcomeLabel.setGeometry(QtCore.QRect(270, 340, 351, 41))
-        self.welcomeLabel.setStyleSheet("font: 57 18pt;\n"
+        self.welcome_label = QtWidgets.QLabel(self.centralwidget)
+        self.welcome_label.setGeometry(QtCore.QRect(270, 340, 351, 41))
+        self.welcome_label.setStyleSheet("font: 57 18pt;\n"
                                         "font: 57 18pt;")
-        self.welcomeLabel.setObjectName("welcomeLabel")
+        self.welcome_label.setObjectName("welcomeLabel")
         # the sentence below welcome
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(150, 390, 671, 21)) # previously had 80 in place of 150.
         self.label_2.setObjectName("label_2")
         # button to open a patient
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(350, 440, 121, 31))
-        self.pushButton.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;" "font-weight: bold;")
+        self.push_button = QtWidgets.QPushButton(self.centralwidget)
+        self.push_button.setGeometry(QtCore.QRect(350, 440, 121, 31))
+        self.push_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;" "font-weight: bold;")
         """
         If the original button is desired, the code is below.;
         
@@ -33,8 +33,8 @@ class UIWelcomeWindow(object):
                                       "color:rgb(75,0,130);\n"
                                       "font-weight: bold;\n")
         """
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.push_button.setObjectName("pushButton")
+        self.push_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         # logo holder
         self.logo = QtWidgets.QLabel(self.centralwidget)
         self.logo.setGeometry(QtCore.QRect(185, 60, 480, 261))
@@ -43,17 +43,17 @@ class UIWelcomeWindow(object):
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
         WelcomePage.setCentralWidget(self.centralwidget)
-        self.retranslateUi(WelcomePage)
+        self.retranslate_ui(WelcomePage)
         QtCore.QMetaObject.connectSlotsByName(WelcomePage)
 
     # this function inserts all the text in the welcome page
-    def retranslateUi(self, WelcomePage):
+    def retranslate_ui(self, WelcomePage):
         _translate = QtCore.QCoreApplication.translate
         WelcomePage.setWindowTitle(_translate("WelcomePage", "OnkoDICOM"))
-        self.welcomeLabel.setText(_translate("WelcomePage", "Welcome to OnkoDICOM!"))
+        self.welcome_label.setText(_translate("WelcomePage", "Welcome to OnkoDICOM!"))
         self.label_2.setText(_translate("WelcomePage",
                                         "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
-        self.pushButton.setText(_translate("WelcomePage", "Continue"))
+        self.push_button.setText(_translate("WelcomePage", "Continue"))
 
     def button_clicked(self):
         print("Button has been pressed")
@@ -64,6 +64,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = UIWelcomeWindow()
-    ui.setupUi(MainWindow)
+    ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())

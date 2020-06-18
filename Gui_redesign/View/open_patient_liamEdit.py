@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class UIOpenPatientWindow(object):
 
-    def setupUi(self, main_window):
+    def setup_ui(self, main_window):
         main_window.setObjectName("MainWindow")
         main_window.setFixedSize(844, 528)
         main_window.setWindowTitle("OnkoDICOM")

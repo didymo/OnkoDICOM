@@ -11,10 +11,10 @@ class NewWelcomeGui(QtWidgets.QMainWindow, UIWelcomeWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.patient_window = QtWidgets.QMainWindow()
 
-        self.setupUi(self)
-        self.pushButton.clicked.connect(self.patientHandler)
+        self.setup_ui(self)
+        self.push_button.clicked.connect(self.patient_handler)
 
-    def patientHandler(self):
+    def patient_handler(self):
         """
         Function to handle the Open patient button being clicked
         """
@@ -32,4 +32,4 @@ class NewPatientGui(QtWidgets.QMainWindow, UIOpenPatientWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
 
-        self.setupUi(self)
+        self.setup_ui(self)

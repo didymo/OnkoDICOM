@@ -4,6 +4,7 @@ import sys
 
 from Gui_redesign.Controller.new_gui_controller import *
 
+
 class Controller:
 
     # Initialisation function that creates an instance of each window
