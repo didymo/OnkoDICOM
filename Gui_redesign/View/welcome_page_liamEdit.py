@@ -6,7 +6,9 @@ class UIWelcomeWindow(object):
     # the ui constructor function
     def setupUi(self, WelcomePage):
         WelcomePage.setObjectName("WelcomePage")
-        WelcomePage.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
+        WelcomePage.setWindowIcon(icon)
         WelcomePage.setFixedSize(844, 528)
         WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
         self.centralwidget = QtWidgets.QWidget(WelcomePage)
@@ -18,14 +20,19 @@ class UIWelcomeWindow(object):
         self.welcomeLabel.setObjectName("welcomeLabel")
         # the sentence below welcome
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(80, 390, 671, 21))
+        self.label_2.setGeometry(QtCore.QRect(150, 390, 671, 21)) # previously had 80 in place of 150.
         self.label_2.setObjectName("label_2")
         # button to open a patient
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(350, 440, 121, 31))
+        self.pushButton.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;" "font-weight: bold;")
+        """
+        If the original button is desired, the code is below.;
+        
         self.pushButton.setStyleSheet("background-color: rgb(238, 238, 236);\n"
                                       "color:rgb(75,0,130);\n"
                                       "font-weight: bold;\n")
+        """
         self.pushButton.setObjectName("pushButton")
         self.pushButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         # logo holder

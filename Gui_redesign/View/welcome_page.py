@@ -12,7 +12,7 @@ class UIWelcomeWindow(object):
         welcome_window.setFocusPolicy(QtCore.Qt.ClickFocus)
         welcome_window.setAcceptDrops(False)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         welcome_window.setWindowIcon(icon)
         welcome_window.setAutoFillBackground(False)
 
@@ -70,7 +70,7 @@ class UIWelcomeWindow(object):
 
         self.label = QtWidgets.QLabel(self.frame2)
         self.label.setGeometry(QtCore.QRect(210, -50, 501, 361))
-        self.label.setPixmap(QtGui.QPixmap("../Gui_redesign/src/images/image.png"))
+        self.label.setPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/image.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
 
@@ -98,6 +98,8 @@ class UIWelcomeWindow(object):
 
     def button_clicked(self):
         print("Button has been pressed")
+        newWindow = UIOpenPatientWindow(self)
+        newWindow.setup_ui()
 
 
 def main():

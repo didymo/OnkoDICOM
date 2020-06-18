@@ -2,14 +2,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class UIOpenPatientWindow(object):
 
-    switch_window = QtCore.pyqtSignal()
-
     def setup_ui(self, main_window):
         main_window.setObjectName("main_window")
         main_window.resize(942, 600)
         main_window.setWindowTitle("OnkoDICOM")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         main_window.setWindowIcon(icon)
         main_window.setAutoFillBackground(False)
 

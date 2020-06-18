@@ -12,7 +12,7 @@ class UIWelcomeWindow(object):
 
         self.setObjectName("WelcomePage")
         self.setWindowTitle("OnkoDICOM")
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("../../Gui_redesign/src/images/icon.ico"))
         self.setFixedSize(844, 528)
         self.setStyleSheet("background-color: rgb(244, 245, 245);")
 
@@ -65,7 +65,6 @@ class UIWelcomeWindow(object):
 
     def button_clicked(self):
         print("Button has been pressed")
-
         UIOpenPatientWindow.run_open_patient()
 
 
