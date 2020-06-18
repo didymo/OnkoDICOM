@@ -8,7 +8,7 @@ class UIOpenPatientWindow(object):
         main_window.setFixedSize(844, 528)
         main_window.setWindowTitle("OnkoDICOM")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         main_window.setWindowIcon(icon)
         main_window.setAutoFillBackground(False)
 
@@ -75,6 +75,7 @@ class UIOpenPatientWindow(object):
         main_window.setCentralWidget(self.central_widget)
         self.status_bar = QtWidgets.QStatusBar(main_window)
         self.status_bar.setObjectName("statusbar")
+        self.status_bar.setSizeGripEnabled(False)  # Remove expanding window option
         main_window.setStatusBar(self.status_bar)
 
         QtCore.QMetaObject.connectSlotsByName(main_window)
