@@ -58,6 +58,8 @@ class UIWelcomeWindow(object):
         self.open_button.setText("Open Patient")
         self.open_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;") # Self added
         self.grid_layout.addWidget(self.open_button, 2, 0, 1, 1, QtCore.Qt.AlignHCenter) # Keeps button in middle
+        self.open_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) # clickable animation
+
 
         self.open_button.clicked.connect(self.button_clicked) # signal opening of Patient
 
@@ -98,7 +100,7 @@ class UIWelcomeWindow(object):
         print("Button has been pressed")
 
 
-if __name__ == "__main__":
+def main():
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
@@ -106,3 +108,7 @@ if __name__ == "__main__":
     ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
