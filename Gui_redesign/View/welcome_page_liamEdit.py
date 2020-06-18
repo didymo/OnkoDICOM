@@ -48,9 +48,9 @@ class UIWelcomeWindow(object):
         QtCore.QMetaObject.connectSlotsByName(welcome_page)
 
     # this function inserts all the text in the welcome page
-    def retranslate_ui(self, WelcomePage):
+    def retranslate_ui(self, welcome_page):
         _translate = QtCore.QCoreApplication.translate
-        WelcomePage.setWindowTitle(_translate("WelcomePage", "OnkoDICOM"))
+        welcome_page.setWindowTitle(_translate("WelcomePage", "OnkoDICOM"))
         self.welcome_label.setText(_translate("WelcomePage", "Welcome to OnkoDICOM!"))
         self.label_2.setText(_translate("WelcomePage",
                                         "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
