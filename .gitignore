@@ -1,0 +1,11 @@
+# Ignore venv
+venv/
+
+# Ignore .idea
+.idea/
+
+# Ignore .pyc
+*.pyc
+*.pkl
+src/data/csv/patientHash.csv
+Hash_map.csv
