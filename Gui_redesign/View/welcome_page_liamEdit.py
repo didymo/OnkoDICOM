@@ -1,17 +1,18 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Gui_redesign.View.open_patient import *
 
+
 class UIWelcomeWindow(object):
 
     # the ui constructor function
-    def setup_ui(self, WelcomePage):
-        WelcomePage.setObjectName("WelcomePage")
+    def setup_ui(self, welcome_page):
+        welcome_page.setObjectName("WelcomePage")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
-        WelcomePage.setWindowIcon(icon)
-        WelcomePage.setFixedSize(844, 528)
-        WelcomePage.setStyleSheet("background-color: rgb(244, 245, 245);")
-        self.centralwidget = QtWidgets.QWidget(WelcomePage)
+        welcome_page.setWindowIcon(icon)
+        welcome_page.setFixedSize(844, 528)
+        welcome_page.setStyleSheet("background-color: rgb(244, 245, 245);")
+        self.centralwidget = QtWidgets.QWidget(welcome_page)
         self.centralwidget.setObjectName("centralwidget")
         self.welcome_label = QtWidgets.QLabel(self.centralwidget)
         self.welcome_label.setGeometry(QtCore.QRect(270, 340, 351, 41))
@@ -42,9 +43,9 @@ class UIWelcomeWindow(object):
         self.logo.setPixmap(QtGui.QPixmap("View/image.png"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
-        WelcomePage.setCentralWidget(self.centralwidget)
-        self.retranslate_ui(WelcomePage)
-        QtCore.QMetaObject.connectSlotsByName(WelcomePage)
+        welcome_page.setCentralWidget(self.centralwidget)
+        self.retranslate_ui(welcome_page)
+        QtCore.QMetaObject.connectSlotsByName(welcome_page)
 
     # this function inserts all the text in the welcome page
     def retranslate_ui(self, WelcomePage):
