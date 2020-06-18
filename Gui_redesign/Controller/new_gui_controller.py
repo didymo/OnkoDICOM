@@ -22,6 +22,7 @@ class NewWelcomeGui(QtWidgets.QMainWindow, UIWelcomeWindow):
 
         self.patient_opener = NewPatientGui()
         self.patient_opener.show()
+        self.close()
 
 
 class NewPatientGui(QtWidgets.QMainWindow, UIOpenPatientWindow):
