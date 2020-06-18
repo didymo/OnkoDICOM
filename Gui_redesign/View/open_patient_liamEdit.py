@@ -34,7 +34,7 @@ class UIOpenPatientWindow(object):
         self.choose_button.clicked.connect(self.choose_button_clicked)
 
         self.grid_layout.addWidget(self.choose_button, 1, 2, 1, 1)
-        self.path_text_browser = QtWidgets.QTextBrowser(self.central_widget)
+        self.path_text_browser = QtWidgets.QTextEdit(self.central_widget) #changed to text edit instead of browser
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
