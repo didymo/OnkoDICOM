@@ -1,13 +1,14 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class UIOpenPatientWindow(object):
 
-    def setup_ui(self, main_window):
-        main_window.setObjectName("main_window")
-        main_window.resize(942, 600)
+    def setupUi(self, main_window):
+        main_window.setObjectName("MainWindow")
+        main_window.setFixedSize(844, 528)
         main_window.setWindowTitle("OnkoDICOM")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         main_window.setWindowIcon(icon)
         main_window.setAutoFillBackground(False)
 
@@ -33,7 +34,7 @@ class UIOpenPatientWindow(object):
         self.choose_button.clicked.connect(self.choose_button_clicked)
 
         self.grid_layout.addWidget(self.choose_button, 1, 2, 1, 1)
-        self.path_text_browser = QtWidgets.QTextBrowser(self.central_widget)
+        self.path_text_browser = QtWidgets.QLineEdit(self.central_widget) #changed to text edit instead of browser
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
@@ -74,11 +75,14 @@ class UIOpenPatientWindow(object):
         main_window.setCentralWidget(self.central_widget)
         self.status_bar = QtWidgets.QStatusBar(main_window)
         self.status_bar.setObjectName("statusbar")
+        self.status_bar.setSizeGripEnabled(False)  # Remove expanding window option
         main_window.setStatusBar(self.status_bar)
 
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def cancel_button_clicked(self):
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
         sys.exit(app.exec_())
 
     def choose_button_clicked(self):

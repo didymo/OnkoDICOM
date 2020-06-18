@@ -12,7 +12,7 @@ class UIWelcomeWindow(object):
         welcome_window.setFocusPolicy(QtCore.Qt.ClickFocus)
         welcome_window.setAcceptDrops(False)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         welcome_window.setWindowIcon(icon)
         welcome_window.setAutoFillBackground(False)
 
@@ -29,7 +29,6 @@ class UIWelcomeWindow(object):
         size_policy.setVerticalStretch(0)
         size_policy.setHeightForWidth(self.logo.sizePolicy().hasHeightForWidth())
         self.logo.setSizePolicy(size_policy)
-        self.logo.setText("")
         self.logo.setPixmap(QtGui.QPixmap("OnkoDicom/logo.ico"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
@@ -55,24 +54,24 @@ class UIWelcomeWindow(object):
         self.open_button.setAutoDefault(True)
         self.open_button.setDefault(False)
         self.open_button.setFlat(False)
-        self.open_button.setObjectName("continueButton")
+        self.open_button.setObjectName("open_button")
         self.open_button.setText("Open Patient")
-        self.open_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;") # Self added
         self.grid_layout.addWidget(self.open_button, 2, 0, 1, 1, QtCore.Qt.AlignHCenter) # Keeps button in middle
+        self.open_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) # clickable animation
+
 
         self.open_button.clicked.connect(self.button_clicked) # signal opening of Patient
 
         self.frame2 = QtWidgets.QFrame(self.frame)
         self.frame2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame2.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame2.setObjectName("frame_2")
+        self.frame2.setObjectName("frame2")
 
         self.label = QtWidgets.QLabel(self.frame2)
         self.label.setGeometry(QtCore.QRect(210, -50, 501, 361))
-        self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("../Gui_redesign/src/images/image.png"))
+        self.label.setPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/image.png"))
         self.label.setScaledContents(True)
-        self.label.setObjectName("label")
+        self.label.setObjectName("onkoImage")
 
         self.welcome_text = QtWidgets.QLabel(self.frame2)
         self.welcome_text.setGeometry(QtCore.QRect(200, 350, 508, 106))
@@ -98,13 +97,29 @@ class UIWelcomeWindow(object):
 
     def button_clicked(self):
         print("Button has been pressed")
+        newWindow = UIOpenPatientWindow(self)
+        newWindow.setup_ui()
 
 
-if __name__ == "__main__":
+def main():
     import sys
     app = QtWidgets.QApplication(sys.argv)
+    # Load Fonts, print() for getting the exact name of the font, can be deleted.
+    robotoReg = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Regular.ttf')
+    print(QtGui.QFontDatabase.applicationFontFamilies(robotoReg))
+    robotoBold = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Bold.ttf')
+    print(QtGui.QFontDatabase.applicationFontFamilies(robotoBold))
+    robotoBlack = QtGui.QFontDatabase.addApplicationFont('../src/assets/Roboto/Roboto-Black.ttf')
+    print(QtGui.QFontDatabase.applicationFontFamilies(robotoBlack))
+    # Load Style Sheet
+    stylesheet = open('stylesheet.qss').read()
+    app.setStyleSheet(stylesheet)
     MainWindow = QtWidgets.QMainWindow()
     ui = UIWelcomeWindow()
     ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

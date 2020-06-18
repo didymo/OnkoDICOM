@@ -1,17 +1,29 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QApplication
 
-class UIOpenPatientWindow(object):
+#from Gui_redesign.View.welcome_page import UIWelcomeWindow
 
-    def setup_ui(self, main_window):
-        main_window.setObjectName("main_window")
-        main_window.resize(942, 600)
-        main_window.setWindowTitle("OnkoDICOM")
+
+class UIOpenPatientWindow(QMainWindow):
+
+    def __init__(self):
+        super(UIOpenPatientWindow, self).__init__()
+
+        self.setWindowTitle("OnkoDICOM")
+        self.setObjectName("MainWindow")
+        self.resize(942, 600)
+        self.setWindowTitle("OnkoDICOM")
+
+        self.setup_ui()
+
+
+    def setup_ui(self):
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        main_window.setWindowIcon(icon)
-        main_window.setAutoFillBackground(False)
+        icon.addPixmap(QtGui.QPixmap("../Gui_redesign/src/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(icon)
+        self.setAutoFillBackground(False)
 
-        self.central_widget = QtWidgets.QWidget(main_window)
+        self.central_widget = QtWidgets.QWidget(self)
         self.central_widget.setObjectName("centralwidget")
         self.grid_layout = QtWidgets.QGridLayout(self.central_widget)
         self.grid_layout.setObjectName("gridLayout")
@@ -24,7 +36,7 @@ class UIOpenPatientWindow(object):
         self.cancel_button = QtWidgets.QPushButton(self.central_widget)
         self.cancel_button.setObjectName("cancelButton")
         self.cancel_button.setText("Cancel")
-        self.cancel_button.clicked.connect(self.cancel_button_clicked) # Signal Closing Application
+        self.cancel_button.clicked.connect(self.cancel_button_clicked)  # Signal Closing Application
 
         self.grid_layout.addWidget(self.cancel_button, 9, 3, 1, 1)
         self.choose_button = QtWidgets.QPushButton(self.central_widget)
@@ -71,12 +83,11 @@ class UIOpenPatientWindow(object):
         self.tree_widget.setObjectName("treeWidget")
         self.grid_layout.addWidget(self.tree_widget, 7, 1, 1, 1)
 
-        main_window.setCentralWidget(self.central_widget)
-        self.status_bar = QtWidgets.QStatusBar(main_window)
+        self.setCentralWidget(self.central_widget)
+        self.status_bar = QtWidgets.QStatusBar(self)
         self.status_bar.setObjectName("statusbar")
-        main_window.setStatusBar(self.status_bar)
+        self.setStatusBar(self.status_bar)
 
-        QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def cancel_button_clicked(self):
         sys.exit(app.exec_())
@@ -86,11 +97,13 @@ class UIOpenPatientWindow(object):
         self.path_text_browser.setText(self.filepath) # added functionality
 
 
+    def run_open_patient(self):
+        patient_browser_ui = UIOpenPatientWindow()
+        patient_browser_ui.show()
+
 if __name__ == "__main__":
     import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = UIOpenPatientWindow()
-    ui.setup_ui(MainWindow)
-    MainWindow.show()
+    app = QApplication(sys.argv)
+    patient_browser_ui = UIOpenPatientWindow()
+    patient_browser_ui.show()
     sys.exit(app.exec_())
