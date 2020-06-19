@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-#from Gui_redesign.View.open_patient import *
+from Gui_redesign.View.open_patient import *
 
 
 class UIWelcomeWindow(object):
