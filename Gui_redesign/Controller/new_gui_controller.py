@@ -3,7 +3,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from Gui_redesign.View.welcome_page import UIWelcomeWindow
 from Gui_redesign.View.open_patient import UIOpenPatientWindow
 
-
 class NewWelcomeGui(QtWidgets.QMainWindow, UIWelcomeWindow):
 
     # Initialisation function to display the UI

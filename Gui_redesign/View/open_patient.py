@@ -60,6 +60,7 @@ class UIOpenPatientWindow(object):
         self.confirm_Button = QtWidgets.QPushButton(self.central_widget)
         self.confirm_Button.setObjectName("confirmButton")
         self.confirm_Button.setText("Confirm")
+        self.confirm_Button.clicked.connect(self.confirm_button_clicked)
         self.grid_layout.addWidget(self.confirm_Button, 9, 4, 1, 1)
 
         self.selected_directory_label = QtWidgets.QLabel(self.central_widget)
@@ -92,6 +93,9 @@ class UIOpenPatientWindow(object):
     def choose_button_clicked(self):
         self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
         self.path_text_browser.setText(self.filepath) # added functionality
+
+    def confirm_button_clicked(self):
+        print("Confirm button")
 
 
 if __name__ == "__main__":
