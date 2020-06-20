@@ -108,6 +108,10 @@ class UIOpenPatientWindow(object):
             # Next, update the tree widget
             self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory..."]))
 
+            # The choose button is disabled until the thread finishes executing
+            self.choose_button.setEnabled(False)
+            self.choose_button.setText("Loading directory...")
+
             # Then, create a new thread that will load the selected folder
             worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
             worker.signals.result.connect(self.on_dicom_loaded)
@@ -118,6 +122,8 @@ class UIOpenPatientWindow(object):
     def on_dicom_loaded(self, dicom_structure):
         # TODO populate tree widget using result
         print(dicom_structure.output_as_text())
+        self.choose_button.setEnabled(True)
+        self.choose_button.setText("Choose")
         self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loaded"]))
 
     def confirm_button_clicked(self):
