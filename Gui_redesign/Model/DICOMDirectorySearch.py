@@ -69,20 +69,6 @@ def get_dicom_structure(path):
     return dicom_structure
 
 
-class DICOMSearchWorker(QRunnable):
-
-    def __init__(self, filepath):
-        super(DICOMSearchWorker, self).__init__()
-        self.filepath = filepath
-        self.result = pyqtSignal(DICOMStructure)
-
-    @pyqtSlot()
-    def run(self):
-        print("3")
-        result = get_dicom_structure(self.filepath)
-        self.result.emit(result)
-
-
 if __name__ == "__main__":
     ds = get_dicom_structure("XR.Identified")
     print(ds.get_files())
