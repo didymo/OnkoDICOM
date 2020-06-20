@@ -2,7 +2,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QCoreApplication, QThreadPool
 from PyQt5.QtWidgets import QTreeWidgetItem
 
-from Gui_redesign.Model.DICOMDirectorySearch import DICOMSearchWorker
+from Gui_redesign.Model import DICOMDirectorySearch
+from Gui_redesign.Model.Worker import Worker
 
 
 class UIOpenPatientWindow(object):
@@ -105,18 +106,19 @@ class UIOpenPatientWindow(object):
             self.tree_widget.clear()
 
             # Next, update the tree widget
-            self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory..."]))  # TODO this doesn't work
+            self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory..."]))
 
             # Then, create a new thread that will load the selected folder
-            worker = DICOMSearchWorker(self.filepath)
-            worker.result.connect(self.on_dicom_loaded)  # TODO fix crash here. Exit code (0xC0000409)
+            worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
+            worker.signals.result.connect(self.on_dicom_loaded)
 
             # Execute the thread
             self.threadpool.start(worker)
 
     def on_dicom_loaded(self, dicom_structure):
-        # TODO once above issues are correct, handle the result and populate tree widget
-        pass
+        # TODO populate tree widget using result
+        print(dicom_structure.output_as_text())
+        self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loaded"]))
 
     def confirm_button_clicked(self):
         print("Confirm button")
