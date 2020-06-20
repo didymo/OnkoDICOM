@@ -83,11 +83,6 @@ class UIOpenPatientWindow(object):
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def cancel_button_clicked(self):
-        # Keeping the old method here commented, because not sure if there's a specific reason why it was used.
-        # This method prevents the program hanging on close.
-        """import sys
-        app = QtWidgets.QApplication(sys.argv)
-        sys.exit(app.exec_())"""
         QCoreApplication.exit(0)
 
     def choose_button_clicked(self):
