@@ -1,4 +1,6 @@
 import os
+
+from PyQt5.QtCore import QRunnable, pyqtSignal, pyqtSlot
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
@@ -65,6 +67,20 @@ def get_dicom_structure(path):
                                 existing_series.add_image(new_image)
 
     return dicom_structure
+
+
+class DICOMSearchWorker(QRunnable):
+
+    def __init__(self, filepath):
+        super(DICOMSearchWorker, self).__init__()
+        self.filepath = filepath
+        self.result = pyqtSignal(DICOMStructure)
+
+    @pyqtSlot()
+    def run(self):
+        print("3")
+        result = get_dicom_structure(self.filepath)
+        self.result.emit(result)
 
 
 if __name__ == "__main__":
