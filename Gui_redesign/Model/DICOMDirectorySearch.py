@@ -27,7 +27,7 @@ def get_dicom_structure(path):
             try:
                 dicom_file = dcmread(file_path)
             except InvalidDicomError:
-                print("%s is not a valid DICOM file" % file_path)
+                pass
             else:
                 new_image = Image(dicom_file, file_path)
                 if not dicom_structure.has_patient(dicom_file.PatientID):
@@ -63,8 +63,6 @@ def get_dicom_structure(path):
                             existing_series = existing_study.get_series(dicom_file.SeriesInstanceUID)
                             if not existing_series.has_image(dicom_file.SOPInstanceUID):
                                 existing_series.add_image(new_image)
-                            else:
-                                print("%s already exists in DICOM structure" % file_path)
 
     return dicom_structure
 
