@@ -18,6 +18,11 @@ def get_dicom_structure(path):
 
     for root, dirs, files in os.walk(path):
         for file in files:
+
+            # Fix to program crashing when encountering DICOMDIR files
+            if file == "DICOMDIR":
+                continue
+
             file_path = root + os.sep + file
             try:
                 dicom_file = dcmread(file_path)
