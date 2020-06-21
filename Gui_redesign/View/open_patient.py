@@ -1,5 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import QCoreApplication, QThreadPool
+from PyQt5.QtWidgets import QTreeWidgetItem
+
+from Gui_redesign.Model import DICOMDirectorySearch
+from Gui_redesign.Model.Worker import Worker
 
 class UIOpenPatientWindow(object):
 
@@ -11,6 +15,10 @@ class UIOpenPatientWindow(object):
         icon.addPixmap(QtGui.QPixmap("res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         main_window.setWindowIcon(icon)
         main_window.setAutoFillBackground(False)
+
+        # Create threadpool for multithreading
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
         self.central_widget = QtWidgets.QWidget(main_window)
         self.central_widget.setObjectName("centralwidget")
@@ -70,7 +78,8 @@ class UIOpenPatientWindow(object):
         self.grid_layout.addWidget(self.selected_directory_label, 9, 1, 1, 2)
 
         self.tree_widget = QtWidgets.QTreeWidget(self.central_widget)
-        self.tree_widget.setObjectName("treeWidget")
+        self.tree_widget.setHeaderHidden(True)
+        self.tree_widget.setHeaderLabels([""])
         self.grid_layout.addWidget(self.tree_widget, 7, 1, 1, 1)
 
         main_window.setCentralWidget(self.central_widget)
@@ -82,16 +91,39 @@ class UIOpenPatientWindow(object):
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def cancel_button_clicked(self):
-        # Keeping the old method here commented, because not sure if there's a specific reason why it was used.
-        # This method prevents the program hanging on close.
-        """import sys
-        app = QtWidgets.QApplication(sys.argv)
-        sys.exit(app.exec_())"""
         QCoreApplication.exit(0)
 
     def choose_button_clicked(self):
+        # Get folder path from pop up dialog box
         self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
-        self.path_text_browser.setText(self.filepath) # added functionality
+        self.path_text_browser.setText(self.filepath)
+
+        # Proceed if a folder was selected
+        if self.filepath != "":
+            # Update the QTreeWidget to reflect data being loaded
+            # First, clear the widget of any existing data
+            self.tree_widget.clear()
+
+            # Next, update the tree widget
+            self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory..."]))
+
+            # The choose button is disabled until the thread finishes executing
+            self.choose_button.setEnabled(False)
+            self.choose_button.setText("Loading directory...")
+
+            # Then, create a new thread that will load the selected folder
+            worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
+            worker.signals.result.connect(self.on_dicom_loaded)
+
+            # Execute the thread
+            self.threadpool.start(worker)
+
+    def on_dicom_loaded(self, dicom_structure):
+        # TODO populate tree widget using result
+        print(dicom_structure.output_as_text())
+        self.choose_button.setEnabled(True)
+        self.choose_button.setText("Choose")
+        self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loaded"]))
 
     def confirm_button_clicked(self):
         print("Confirm button")
