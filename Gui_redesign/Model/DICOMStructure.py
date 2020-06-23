@@ -47,25 +47,25 @@ class DICOMStructure:
         return output
 
     def get_tree_items_list(self):
-        # TODO complete.
-        # References to help:
-        # https://doc.qt.io/qtforpython/PySide2/QtWidgets/QTreeWidgetItem.html#PySide2.QtWidgets.QTreeWidgetItem
-        # https://doc.qt.io/qtforpython/PySide2/QtWidgets/QTreeWidget.html
-        # https://stackoverflow.com/questions/41204234/python-pyqt5-qtreewidget-sub-item
         """
         :return: A list of QTreeWidgetItems based on the DICOMStructure object.
         """
-        return None
+        new_items_list = []
+        for patient in self.patients:
+            new_items_list.append(patient.get_widget_item())
+
+        return new_items_list
 
 
 class Patient:
 
-    def __init__(self, patient_id):
+    def __init__(self, patient_id, patient_name):
         """
         studies: A list of Study objects.
         :param patient_id: PatientID in DICOM standard.
         """
         self.patient_id = patient_id
+        self.patient_name = patient_name
         self.studies = []
 
     def add_study(self, study):
@@ -104,6 +104,13 @@ class Patient:
             output += study.output_as_text()
 
         return output
+
+    def get_widget_item(self):
+        widget_item = QTreeWidgetItem(["Patient: %s (%s)" % (self.patient_name, self.patient_id)])
+        for study in self.studies:
+            widget_item.addChild(study.get_widget_item())
+
+        return widget_item
 
 
 class Study:
@@ -153,6 +160,13 @@ class Study:
 
         return output
 
+    def get_widget_item(self):
+        widget_item = QTreeWidgetItem(["Study: %s" % self.study_id])
+        for series in self.series:
+            widget_item.addChild(series.get_widget_item())
+
+        return widget_item
+
 
 class Series:
 
@@ -200,6 +214,9 @@ class Series:
             output += image.output_as_text()
 
         return output
+
+    def get_widget_item(self):
+        return QTreeWidgetItem(["%s (%s images)" % (self.series_id, len(self.images))])
 
 
 class Image:
