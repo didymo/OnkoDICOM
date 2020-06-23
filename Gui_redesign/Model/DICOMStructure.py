@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
 
+from Gui_redesign.Model.DICOMWidgetItem import DICOMWidgetItem
+
 
 class DICOMStructure:
 
@@ -106,7 +108,7 @@ class Patient:
         return output
 
     def get_widget_item(self):
-        widget_item = QTreeWidgetItem(["Patient: %s (%s)" % (self.patient_name, self.patient_id)])
+        widget_item = DICOMWidgetItem("Patient: %s (%s)" % (self.patient_name, self.patient_id), self)
         for study in self.studies:
             widget_item.addChild(study.get_widget_item())
 
@@ -161,7 +163,7 @@ class Study:
         return output
 
     def get_widget_item(self):
-        widget_item = QTreeWidgetItem(["Study: %s" % self.study_id])
+        widget_item = DICOMWidgetItem("Study: %s" % self.study_id, self)
         for series in self.series:
             widget_item.addChild(series.get_widget_item())
 
@@ -216,7 +218,7 @@ class Series:
         return output
 
     def get_widget_item(self):
-        return QTreeWidgetItem(["%s (%s images)" % (self.series_id, len(self.images))])
+        return DICOMWidgetItem("Series: %s (%s images)" % (self.series_id, len(self.images)), self)
 
 
 class Image:

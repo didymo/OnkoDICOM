@@ -127,7 +127,8 @@ class UIOpenPatientWindow(object):
             self.tree_widget.addTopLevelItem(patient_item)
 
     def confirm_button_clicked(self):
-        print("Confirm button")
+        for item in self.tree_widget.selectedItems():
+            print(item.dicom_object.get_files())
 
 
 if __name__ == "__main__":
