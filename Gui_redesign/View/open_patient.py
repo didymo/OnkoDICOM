@@ -120,11 +120,11 @@ class UIOpenPatientWindow(object):
             self.threadpool.start(worker)
 
     def on_dicom_loaded(self, dicom_structure):
-        # TODO populate tree widget using result
-        print(dicom_structure.output_as_text())
         self.choose_button.setEnabled(True)
         self.choose_button.setText("Choose")
-        self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loaded"]))
+        self.tree_widget.clear()
+        for patient_item in dicom_structure.get_tree_items_list():
+            self.tree_widget.addTopLevelItem(patient_item)
 
     def confirm_button_clicked(self):
         print("Confirm button")

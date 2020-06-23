@@ -40,7 +40,7 @@ def get_dicom_structure(path):
                     new_study = Study(dicom_file.StudyInstanceUID)
                     new_study.add_series(new_series)
 
-                    new_patient = Patient(dicom_file.PatientID)
+                    new_patient = Patient(dicom_file.PatientID, dicom_file.PatientName)
                     new_patient.add_study(new_study)
 
                     dicom_structure.add_patient(new_patient)
