@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.Qt import Qt
 
 from Gui_redesign.Model.DICOMWidgetItem import DICOMWidgetItem
 
@@ -109,6 +109,7 @@ class Patient:
 
     def get_widget_item(self):
         widget_item = DICOMWidgetItem("Patient: %s (%s)" % (self.patient_name, self.patient_id), self)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for study in self.studies:
             widget_item.addChild(study.get_widget_item())
 
@@ -164,6 +165,7 @@ class Study:
 
     def get_widget_item(self):
         widget_item = DICOMWidgetItem("Study: %s" % self.study_id, self)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for series in self.series:
             widget_item.addChild(series.get_widget_item())
 
@@ -218,7 +220,10 @@ class Series:
         return output
 
     def get_widget_item(self):
-        return DICOMWidgetItem("Series: %s (%s images)" % (self.series_id, len(self.images)), self)
+        widget_item = DICOMWidgetItem("Series: %s (%s images)" % (self.series_id, len(self.images)), self)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
+        widget_item.setCheckState(0, Qt.Unchecked)
+        return widget_item
 
 
 class Image:
