@@ -111,7 +111,6 @@ class UIOpenPatientWindow(object):
 
             # The choose button is disabled until the thread finishes executing
             self.choose_button.setEnabled(False)
-            self.choose_button.setText("Loading directory...")
 
             # Then, create a new thread that will load the selected folder
             worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
@@ -122,7 +121,6 @@ class UIOpenPatientWindow(object):
 
     def on_dicom_loaded(self, dicom_structure):
         self.choose_button.setEnabled(True)
-        self.choose_button.setText("Choose")
         self.tree_widget.clear()
         for patient_item in dicom_structure.get_tree_items_list():
             self.tree_widget.addTopLevelItem(patient_item)
