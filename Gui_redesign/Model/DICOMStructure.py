@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.Qt import Qt
+
+from Gui_redesign.Model.DICOMWidgetItem import DICOMWidgetItem
 
 
 class DICOMStructure:
@@ -106,7 +108,8 @@ class Patient:
         return output
 
     def get_widget_item(self):
-        widget_item = QTreeWidgetItem(["Patient: %s (%s)" % (self.patient_name, self.patient_id)])
+        widget_item = DICOMWidgetItem("Patient: %s (%s)" % (self.patient_name, self.patient_id), self)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for study in self.studies:
             widget_item.addChild(study.get_widget_item())
 
@@ -160,8 +163,27 @@ class Study:
 
         return output
 
+    def is_dicom_rt(self):
+        """
+        :return: True if study can be considered DICOM-RT
+        """
+        rt_classes = ["1.2.840.10008.5.1.4.1.1.2",          # CT Image
+                      "1.2.840.10008.5.1.4.1.1.481.3",      # RT Structure Set
+                      "1.2.840.10008.5.1.4.1.1.481.2",      # RT Dose
+                      "1.2.840.10008.5.1.4.1.1.481.5"]      # RT Plan
+
+        contained_classes = []
+        for series in self.series:
+            for image in series.images:
+                image_class = image.dicom_file.SOPClassUID
+                if image_class not in contained_classes:
+                    contained_classes.append(image_class)
+
+        return sorted(rt_classes) == sorted(contained_classes)
+
     def get_widget_item(self):
-        widget_item = QTreeWidgetItem(["Study: %s" % self.study_id])
+        widget_item = DICOMWidgetItem("Study: %s (DICOM-RT: %s)" % (self.study_id, self.is_dicom_rt()), self)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for series in self.series:
             widget_item.addChild(series.get_widget_item())
 
@@ -216,7 +238,10 @@ class Series:
         return output
 
     def get_widget_item(self):
-        return QTreeWidgetItem(["%s (%s images)" % (self.series_id, len(self.images))])
+        widget_item = DICOMWidgetItem("Series: %s (%s images)" % (self.series_id, len(self.images)), self)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
+        widget_item.setCheckState(0, Qt.Unchecked)
+        return widget_item
 
 
 class Image:

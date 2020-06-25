@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QCoreApplication, QThreadPool
 from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.Qt import Qt
 
 from Gui_redesign.Model import DICOMDirectorySearch
 from Gui_redesign.Model.Worker import Worker
@@ -109,7 +110,6 @@ class UIOpenPatientWindow(object):
 
             # The choose button is disabled until the thread finishes executing
             self.choose_button.setEnabled(False)
-            self.choose_button.setText("Loading directory...")
 
             # Then, create a new thread that will load the selected folder
             worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
@@ -120,13 +120,34 @@ class UIOpenPatientWindow(object):
 
     def on_dicom_loaded(self, dicom_structure):
         self.choose_button.setEnabled(True)
-        self.choose_button.setText("Choose")
         self.tree_widget.clear()
         for patient_item in dicom_structure.get_tree_items_list():
             self.tree_widget.addTopLevelItem(patient_item)
 
     def confirm_button_clicked(self):
-        print("Confirm button")
+        selected_files = []
+        for item in self.get_checked_leaves():
+            selected_files += item.dicom_object.get_files()
+        print(selected_files)  # This needs to be replaced with a link to the existing OnkoDICOM main page
+
+    def get_checked_leaves(self):
+        """
+        :return: A list of all QTreeWidgetItems in the QTreeWidget that are both leaves and checked.
+        """
+        checked_items = []
+
+        def recurse(parent_item: QTreeWidgetItem):
+            for i in range(parent_item.childCount()):
+                child = parent_item.child(i)
+                grand_children = child.childCount()
+                if grand_children > 0:
+                    recurse(child)
+                else:
+                    if child.checkState(0) == Qt.Checked:
+                        checked_items.append(child)
+
+        recurse(self.tree_widget.invisibleRootItem())
+        return checked_items
 
 
 if __name__ == "__main__":
