@@ -166,7 +166,7 @@ def checkFileExist(fileName):
     print("file name:-- ", fileName)  # printing file name
 
     if (fileName == "patientHash.csv"):
-        data_folder_path = "/res/data/csv/"
+        data_folder_path = "/src/data/csv/"
         cwd = os.getcwd()  # getting the current working directory
         file_path = cwd + data_folder_path + fileName  # concatenating the current working directory with the csv filename
         print("Full path :  ===========", file_path)  # print the full csv file path

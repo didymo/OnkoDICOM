@@ -23,7 +23,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     def __init__(self): #initialization function
         super(Add_On_Options, self).__init__()
         # read configuration file for line and fill options
-        with open('res/data/line&fill_configuration', 'r') as stream:
+        with open('src/data/line&fill_configuration', 'r') as stream:
             elements = stream.readlines()
             #if file is not empty, each line represents the last saved configuration in the given order
             if len(elements) > 0:
@@ -254,7 +254,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     def accepting(self):
         # starting save
         #Saving the Windowing options
-        with open('res/data/csv/imageWindowing.csv', 'w') as stream:
+        with open('src/data/csv/imageWindowing.csv', 'w') as stream:
             writer = csv.writer(stream)
             writer.writerow(["Organ", "Scan", "Window", "Level"])
             for row in range(self.table_view.rowCount()):
@@ -267,7 +267,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                         rowdata.append('')
                 writer.writerow(rowdata)
         #saving the Standard Organ names
-        with open('res/data/csv/organName.csv', 'w') as stream:
+        with open('src/data/csv/organName.csv', 'w') as stream:
             writer = csv.writer(stream)
             writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
             for row in range(self.table_organ.rowCount()):
@@ -280,7 +280,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                         rowdata.append('')
                 writer.writerow(rowdata)
         #Saving the Standard Volume Names
-        with open('res/data/csv/volumeName.csv', 'w') as stream:
+        with open('src/data/csv/volumeName.csv', 'w') as stream:
             writer = csv.writer(stream)
             for row in range(self.table_volume.rowCount()):
                 rowdata = []
@@ -293,7 +293,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 writer.writerow(rowdata)
 
         # saves the new ROI from Isodoses, To Do in the future
-        # with open('res/data/csv/isodoseRoi.csv', 'w') as stream:
+        # with open('src/data/csv/isodoseRoi.csv', 'w') as stream:
         #     writer = csv.writer(stream)
         #     for row in range(self.table_roi.rowCount()):
         #         rowdata = []
@@ -306,7 +306,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         #         writer.writerow(rowdata)
 
         # save configuration file
-        with open('res/data/line&fill_configuration', 'w') as stream:
+        with open('src/data/line&fill_configuration', 'w') as stream:
             stream.write(str(self.line_style_ROI.currentIndex()))
             stream.write("\n")
             stream.write(str(self.opacity_ROI.value()))
@@ -330,7 +330,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
     def fillTables(self):
         #Fill the Windowing table
-        with open('res/data/csv/imageWindowing.csv', "r") as fileInput:
+        with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
             next(fileInput)
             i = 0
             for row in fileInput:
@@ -346,7 +346,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 i += 1
 
         # organ names table
-        with open('res/data/csv/organName.csv', "r") as fileInput:
+        with open('src/data/csv/organName.csv', "r") as fileInput:
             next(fileInput)
             i = 0
             for row in fileInput:
@@ -363,7 +363,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 i += 1
 
         # volume name table
-        with open('res/data/csv/volumeName.csv', "r") as fileInput:
+        with open('src/data/csv/volumeName.csv', "r") as fileInput:
             i = 0
             for row in fileInput:
                 items = [
@@ -377,7 +377,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
         # roi isodose table, TO DO in the future
 
-        # with open('res/data/csv/isodoseRoi.csv', "r") as fileInput:
+        # with open('src/data/csv/isodoseRoi.csv', "r") as fileInput:
         #     i = 0;
         #     for row in fileInput:
         #         items = [
@@ -392,7 +392,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         #         i += 1
 
         # patient hash ID table, which is just for displaying all the patients annonymized byt the software since intallation
-        with open('res/data/csv/patientHash.csv', "r") as fileInput:
+        with open('src/data/csv/patientHash.csv', "r") as fileInput:
             next(fileInput)
             i = 0
             for row in fileInput:

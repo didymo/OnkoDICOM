@@ -89,10 +89,10 @@ class Ui_MainWindow(object):
         self.x1, self.y1 = 256, 256
 
         # Check to see if the imageWindowing.csv file exists
-        if os.path.exists('res/data/csv/imageWindowing.csv'):
+        if os.path.exists('src/data/csv/imageWindowing.csv'):
             # If it exists, read data from file into the self.dict_windowing variable
             self.dict_windowing = {}
-            with open('res/data/csv/imageWindowing.csv', "r") as fileInput:
+            with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
                 next(fileInput)
                 self.dict_windowing["Normal"] = [self.window, self.level]
                 for row in fileInput:
@@ -152,7 +152,7 @@ class Ui_MainWindow(object):
         # Main Window
         MainWindow.setMinimumSize(1080, 700)
         MainWindow.setWindowTitle("OnkoDICOM")
-        MainWindow.setWindowIcon(QtGui.QIcon("res/Icon/DONE.png"))
+        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
 
         # Main Container and Layout
