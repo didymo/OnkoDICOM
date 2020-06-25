@@ -193,7 +193,6 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
         self.pushButton.clicked.connect(self.patientHandler)
 
     def patientHandler(self):
-
         """
         Function to handle the Open patient button being clicked
         """
