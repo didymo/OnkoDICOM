@@ -6,6 +6,7 @@ from PyQt5.Qt import Qt
 from Gui_redesign.Model import DICOMDirectorySearch
 from Gui_redesign.Model.Worker import Worker
 
+
 class UIOpenPatientWindow(object):
 
     def setup_ui(self, main_window):
