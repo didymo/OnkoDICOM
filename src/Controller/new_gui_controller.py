@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QMessageBox, QDesktopWidget
-from PyQt5 import QtCore, QtGui, QtWidgets
-from Gui_redesign.View.welcome_page import UIWelcomeWindow
-from Gui_redesign.View.open_patient import UIOpenPatientWindow
+from PyQt5 import QtCore, QtWidgets
+from src.View.welcome_page import UIWelcomeWindow
+from src.View.open_patient import UIOpenPatientWindow
 
 
 class NewWelcomeGui(QtWidgets.QMainWindow, UIWelcomeWindow):

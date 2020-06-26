@@ -1,8 +1,4 @@
-from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QApplication
-from PyQt5 import QtCore, QtGui, QtWidgets
-import sys
-
-from Gui_redesign.Controller.new_gui_controller import *
+from src.Controller.new_gui_controller import *
 
 
 class Controller:

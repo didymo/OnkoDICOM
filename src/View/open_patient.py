@@ -3,8 +3,8 @@ from PyQt5.QtCore import QCoreApplication, QThreadPool
 from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5.Qt import Qt
 
-from Gui_redesign.Model import DICOMDirectorySearch
-from Gui_redesign.Model.Worker import Worker
+from src.Model import DICOMDirectorySearch
+from src.Model.Worker import Worker
 
 
 class UIOpenPatientWindow(object):

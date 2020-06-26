@@ -1,6 +1,6 @@
 from PyQt5.Qt import Qt
 
-from Gui_redesign.Model.DICOMWidgetItem import DICOMWidgetItem
+from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
 
 class DICOMStructure:

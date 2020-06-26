@@ -1,10 +1,9 @@
 import os
 
-from PyQt5.QtCore import QRunnable, pyqtSignal, pyqtSlot
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
-from Gui_redesign.Model.DICOMStructure import DICOMStructure, Patient, Study, Series, Image
+from src.Model.DICOMStructure import DICOMStructure, Patient, Study, Series, Image
 
 
 def get_dicom_structure(path):

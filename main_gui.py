@@ -1,14 +1,12 @@
 import warnings
 
-import PyQt5
-import country_list
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from PyQt5.QtGui import QFont
 
 warnings.filterwarnings("ignore")
 import sys
 import platform
-from Gui_redesign.Controller.top_level_controller import Controller
+from src.Controller.top_level_controller import Controller
 
 if __name__ == "__main__":
 
