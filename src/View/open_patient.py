@@ -15,7 +15,7 @@ class UIOpenPatientWindow(object):
         main_window.setMinimumSize(844, 528) # Window size change
         main_window.setWindowTitle("OnkoDICOM")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         main_window.setWindowIcon(icon)
         main_window.setAutoFillBackground(False)
 

@@ -7,7 +7,7 @@ class UIWelcomeWindow(object):
     def setup_ui(self, welcome_page):
         welcome_page.setObjectName("WelcomePage")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
+        icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_page.setWindowIcon(icon)
         welcome_page.setFixedSize(844, 528)
         welcome_page.setStyleSheet("background-color: rgb(244, 245, 245);")
@@ -39,7 +39,7 @@ class UIWelcomeWindow(object):
         self.logo = QtWidgets.QLabel(self.centralwidget)
         self.logo.setGeometry(QtCore.QRect(185, 60, 480, 261))
         self.logo.setText("")
-        self.logo.setPixmap(QtGui.QPixmap("res/images/image.png"))
+        self.logo.setPixmap(QtGui.QPixmap("src/res/images/image.png"))
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
         welcome_page.setCentralWidget(self.centralwidget)
