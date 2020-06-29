@@ -237,8 +237,16 @@ class Series:
 
         return output
 
+    def get_series_type(self):
+        series_types = []
+        for image in self.images:
+            modality = image.dicom_file.Modality
+            if modality not in series_types:
+                series_types.append(modality)
+        return series_types if len(series_types) > 1 else series_types[0]
+
     def get_widget_item(self):
-        widget_item = DICOMWidgetItem("Series: %s (%s images)" % (self.series_id, len(self.images)), self)
+        widget_item = DICOMWidgetItem("Series: %s (%s images)" % (self.get_series_type(), len(self.images)), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
         widget_item.setCheckState(0, Qt.Unchecked)
         return widget_item
