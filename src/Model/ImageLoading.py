@@ -55,9 +55,16 @@ allowed_classes = {
 }
 
 
+class NotRTSetError(Exception):
+    pass
+
+
 def get_patient_attributes(selected_files):
     path = os.path.dirname(os.path.commonprefix(selected_files))  # Temporary patch, gets the common root folder.
     read_data_dict, file_names_dict = get_datasets(selected_files)
+    if not is_dataset_dicom_rt(read_data_dict):
+        raise NotRTSetError
+
     dataset_rtss = dcmread(file_names_dict['rtss'])
     dataset_rtdose = dcmread(file_names_dict['rtdose'])
 
@@ -95,10 +102,26 @@ def get_datasets(filepath_list):
                 else:
                     slice_name = allowed_class["name"]
 
-            read_data_dict[slice_name] = read_file
-            file_names_dict[slice_name] = file
+                read_data_dict[slice_name] = read_file
+                file_names_dict[slice_name] = file
 
     return read_data_dict, file_names_dict
+
+
+def is_dataset_dicom_rt(read_data_dict):
+    """
+    Tests if a read_data_dict produced by get_datasets(..) is a DICOM-RT set.
+    :param read_data_dict: Dictionary of DICOM dataset objects.
+    :return:  True if read_data_dict can be considered a complete DICOM-RT object.
+    """
+    class_names = []
+
+    for key, item in read_data_dict.items():
+        if allowed_classes[item.SOPClassUID]["name"] not in class_names:
+            class_names.append(allowed_classes[item.SOPClassUID]["name"])
+
+    class_names.sort()
+    return class_names == ["ct", "rtdose", "rtplan", "rtss"]
 
 
 def natural_sort(strings):

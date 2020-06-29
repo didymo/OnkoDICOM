@@ -1,13 +1,10 @@
-import os
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QCoreApplication, QThreadPool
-from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.QtWidgets import QTreeWidgetItem, QMessageBox
 from PyQt5.Qt import Qt
-from pydicom import dcmread
 
-from src.Controller import interPageController
 from src.Model import DICOMDirectorySearch, ImageLoading
+from src.Model.ImageLoading import NotRTSetError
 from src.Model.Worker import Worker
 
 
@@ -136,7 +133,15 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        self.open_patient_window.emit(ImageLoading.get_patient_attributes(selected_files))
+        try:
+            # TODO this should be run in a progress window on a separate thread
+            patient_attributes = ImageLoading.get_patient_attributes(selected_files)
+        except NotRTSetError:
+            # Temporary solution to only allow DICOM-RT sets to be opened
+            QMessageBox.about(self, "Unable to open selection",
+                              "Selected files cannot be opened as they are not a DICOM-RT set.")
+        else:
+            self.open_patient_window.emit(patient_attributes)
 
     def get_checked_leaves(self):
         """
