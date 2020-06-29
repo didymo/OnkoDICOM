@@ -22,11 +22,13 @@ dictionary and the get_datasets() function should not need to be added to. (Of c
 case, however this alternative function promotes scalability and durability of the process).
 """
 import collections
+import os
 import re
 
 import pydicom
 from dicompylercore import dvhcalc
 from pandas import np
+from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
 allowed_classes = {
@@ -53,6 +55,22 @@ allowed_classes = {
 }
 
 
+def get_patient_attributes(selected_files):
+    path = os.path.dirname(os.path.commonprefix(selected_files))  # Temporary patch, gets the common root folder.
+    read_data_dict, file_names_dict = get_datasets(selected_files)
+    dataset_rtss = dcmread(file_names_dict['rtss'])
+    dataset_rtdose = dcmread(file_names_dict['rtdose'])
+
+    rois = get_roi_info(dataset_rtss)
+    raw_dvh = calc_dvhs(dataset_rtss, dataset_rtdose, rois)
+    dvh_x_y = converge_to_0_dvh(raw_dvh)
+    dict_raw_contour_data, dict_numpoints = get_raw_contour_data(dataset_rtss)
+    dict_pixluts = get_pixluts(read_data_dict)
+
+    return path, read_data_dict, file_names_dict, rois, raw_dvh, dvh_x_y, dict_raw_contour_data,\
+        dict_numpoints, dict_pixluts
+
+
 def get_datasets(filepath_list):
     """
     TODO This function will need to be adapted to accept files outside the DICOM-RT set.
@@ -65,7 +83,7 @@ def get_datasets(filepath_list):
     slice_count = 0
     for file in natural_sort(filepath_list):
         try:
-            read_file = pydicom.dcmread(file)
+            read_file = dcmread(file)
         except InvalidDicomError:
             pass
         else:

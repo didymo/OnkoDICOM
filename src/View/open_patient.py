@@ -12,6 +12,7 @@ from src.Model.Worker import Worker
 
 
 class UIOpenPatientWindow(object):
+    open_patient_window = QtCore.pyqtSignal(tuple)
 
     def setup_ui(self, main_window):
         main_window.setObjectName("MainWindow")
@@ -135,25 +136,7 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        # TODO the following code should be run in a separate thread/process inside the Model directory.
-        path = os.path.dirname(os.path.commonprefix(selected_files))  # Temporary patch, gets the common root folder.
-        read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)
-        dataset_rtss = dcmread(file_names_dict['rtss'])
-        dataset_rtdose = dcmread(file_names_dict['rtdose'])
-
-        rois = ImageLoading.get_roi_info(dataset_rtss)
-        raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois)
-        dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
-        dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
-        dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
-
-        # TODO the following code should be executed from a Controller class, not a View class.
-        # Loads the main window  by providing the necessary data obtained by the progress bar
-        patient_window = interPageController.MainWindow(path, read_data_dict, file_names_dict, rois, raw_dvh,
-                                         dvh_x_y, dict_raw_contour_data, dict_numpoints, dict_pixluts)
-        patient_window.show()
-        self.close()
-
+        self.open_patient_window.emit(ImageLoading.get_patient_attributes(selected_files))
 
     def get_checked_leaves(self):
         """
