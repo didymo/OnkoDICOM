@@ -27,7 +27,7 @@ def get_dicom_structure(path):
             file_path = root + os.sep + file
             try:
                 dicom_file = dcmread(file_path)
-            except InvalidDicomError:
+            except (InvalidDicomError, FileNotFoundError):
                 pass
             else:
                 new_image = Image(dicom_file, file_path)
