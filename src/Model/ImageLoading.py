@@ -275,7 +275,7 @@ def calculate_matrix(img_ds):
         j_mat = matrix_M * np.matrix([[0], [j], [0], [1]])
         y.append(float(j_mat[1]))
 
-    return (np.array(x), np.array(y))
+    return np.array(x), np.array(y)
 
 
 def get_pixluts(read_data_dict):
