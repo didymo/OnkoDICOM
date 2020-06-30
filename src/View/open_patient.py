@@ -134,23 +134,26 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        # Temporary progress window. This will be removed replaced with a new fully-fledged window accessible
-        # from a Controller class.
-        progress_window = QDialog(self, QtCore.Qt.WindowTitleHint)
-        progress_window.setWindowTitle("Loading")
-        progress_window.resize(150, 60)
-        progress_window.show()
+        if len(selected_files) > 0:
+            # Temporary progress window. This will be removed replaced with a new fully-fledged window accessible
+            # from a Controller class.
+            progress_window = QDialog(self, QtCore.Qt.WindowTitleHint)
+            progress_window.setWindowTitle("Loading")
+            progress_window.resize(150, 60)
+            progress_window.show()
 
-        try:
-            # TODO this should be run in a progress window on a separate thread
-            patient_attributes = ImageLoading.get_patient_attributes(selected_files)
-        except ImageLoading.NotRTSetError:
-            # Temporary solution to only allow DICOM-RT sets to be opened
-            QMessageBox.about(self, "Unable to open selection",
-                              "Selected files cannot be opened as they are not a DICOM-RT set.")
-            progress_window.close()
+            try:
+                # TODO this should be run in a progress window on a separate thread
+                patient_attributes = ImageLoading.get_patient_attributes(selected_files)
+            except ImageLoading.NotRTSetError:
+                # Temporary solution to only allow DICOM-RT sets to be opened
+                QMessageBox.about(self, "Unable to open selection",
+                                  "Selected files cannot be opened as they are not a DICOM-RT set.")
+                progress_window.close()
+            else:
+                self.open_patient_window.emit((patient_attributes, progress_window))
         else:
-            self.open_patient_window.emit((patient_attributes, progress_window))
+            QMessageBox.about(self, "Unable to open selection", "No files selected.")
 
     def get_checked_leaves(self):
         """
