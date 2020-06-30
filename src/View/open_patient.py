@@ -134,6 +134,8 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
+        # Temporary progress window. This will be removed replaced with a new fully-fledged window accessible
+        # from a Controller class.
         progress_window = QDialog(self, QtCore.Qt.WindowTitleHint)
         progress_window.setWindowTitle("Loading")
         progress_window.resize(150, 60)
@@ -148,8 +150,7 @@ class UIOpenPatientWindow(object):
                               "Selected files cannot be opened as they are not a DICOM-RT set.")
             progress_window.close()
         else:
-            progress_window.close()
-            self.open_patient_window.emit(patient_attributes)
+            self.open_patient_window.emit((patient_attributes, progress_window))
 
     def get_checked_leaves(self):
         """
