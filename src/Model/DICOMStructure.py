@@ -182,7 +182,7 @@ class Study:
         return sorted(rt_classes) == sorted(contained_classes)
 
     def get_widget_item(self):
-        widget_item = DICOMWidgetItem("Study: %s (DICOM-RT: %s)" % (self.study_id, self.is_dicom_rt()), self)
+        widget_item = DICOMWidgetItem("Study: (DICOM-RT: %s)" % ("Y" if self.is_dicom_rt() else "N"), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for series in self.series:
             widget_item.addChild(series.get_widget_item())
