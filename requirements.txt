@@ -1,5 +1,6 @@
 dicompyler-core
 pydicom
+cython
 pyradiomics
 PyQt5
 pandas
