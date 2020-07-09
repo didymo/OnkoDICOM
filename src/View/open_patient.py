@@ -129,6 +129,9 @@ class UIOpenPatientWindow(object):
         for patient_item in dicom_structure.get_tree_items_list():
             self.tree_widget.addTopLevelItem(patient_item)
 
+        if len(dicom_structure.patients) == 0:
+            QMessageBox.about(self, "No files found", "Selected directory contains no DICOM files.")
+
     def confirm_button_clicked(self):
         selected_files = []
         for item in self.get_checked_leaves():
