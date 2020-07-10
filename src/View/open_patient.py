@@ -7,6 +7,7 @@ from PyQt5.Qt import Qt
 
 from src.Model import DICOMDirectorySearch, ImageLoading
 from src.Model.Worker import Worker
+from src.View.ProgressWindow import ProgressWindow
 
 
 class UIOpenPatientWindow(object):
@@ -138,25 +139,22 @@ class UIOpenPatientWindow(object):
             selected_files += item.dicom_object.get_files()
 
         if len(selected_files) > 0:
-            # Temporary progress window. This will be removed replaced with a new fully-fledged window accessible
-            # from a Controller class.
-            progress_window = QDialog(self, QtCore.Qt.WindowTitleHint)
-            progress_window.setWindowTitle("Loading")
-            progress_window.resize(150, 60)
-            progress_window.show()
+            progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint)
+            progress_window.signal_loaded.connect(self.on_loaded)
 
             try:
-                # TODO this should be run in a progress window on a separate thread
-                patient_attributes = ImageLoading.get_patient_attributes(selected_files)
+                progress_window.start_loading(selected_files)
+                progress_window.exec_()
             except ImageLoading.NotRTSetError:
                 # Temporary solution to only allow DICOM-RT sets to be opened
                 QMessageBox.about(self, "Unable to open selection",
                                   "Selected files cannot be opened as they are not a DICOM-RT set.")
                 progress_window.close()
-            else:
-                self.open_patient_window.emit((patient_attributes, progress_window))
         else:
             QMessageBox.about(self, "Unable to open selection", "No files selected.")
+
+    def on_loaded(self, results):
+        self.open_patient_window.emit(results)
 
     def get_checked_leaves(self):
         """
