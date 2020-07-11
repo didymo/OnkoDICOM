@@ -19,6 +19,8 @@ class ImageLoader(QObject):
         self.signal_progress.emit("Creating datasets...")
         path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
         read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
+        if not ImageLoading.is_dataset_dicom_rt(read_data_dict):
+            raise ImageLoading.NotRTSetError
 
         dataset_rtss = dcmread(file_names_dict['rtss'])
         dataset_rtdose = dcmread(file_names_dict['rtdose'])

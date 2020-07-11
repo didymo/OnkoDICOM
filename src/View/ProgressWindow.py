@@ -2,12 +2,14 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout
 
+from src.Model import ImageLoading
 from src.Model.Worker import Worker
 from src.View.ImageLoader import ImageLoader
 
 
 class ProgressWindow(QDialog):
     signal_loaded = QtCore.pyqtSignal(tuple)
+    signal_error = QtCore.pyqtSignal(int)
 
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)
@@ -28,7 +30,7 @@ class ProgressWindow(QDialog):
 
         worker = Worker(image_loader.load)
         worker.signals.result.connect(self.on_finish)
-        worker.signals.error.connect(self.print_error)
+        worker.signals.error.connect(self.on_error)
         image_loader.signal_progress.connect(self.update_text)
 
         self.threadpool.start(worker)
@@ -40,6 +42,6 @@ class ProgressWindow(QDialog):
     def update_text(self, new_text):
         self.text_field.setText(new_text)
 
-    def print_error(self, err):
-        # TODO error handling
-        print(err)
+    def on_error(self, err):
+        if type(err[1]) is ImageLoading.NotRTSetError:
+            self.signal_error.emit(0)
