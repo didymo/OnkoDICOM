@@ -25,7 +25,7 @@ import collections
 import os
 import re
 
-import pydicom
+from multiprocess import Queue, Process
 from dicompylercore import dvhcalc
 from pandas import np
 from pydicom import dcmread
@@ -169,6 +169,36 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
 
     for roi in roi_list:
         dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit)
+
+    return dict_dvh
+
+
+def calc_dvh_worker(rtss, dose, roi, queue, dose_limit=None):
+    dvh = {}
+    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+    queue.put(dvh)
+
+
+def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
+    queue = Queue()
+    processes = []
+    dict_dvh = {}
+
+    roi_list = []
+    for key in rois:
+        roi_list.append(key)
+
+    for i in range(len(roi_list)):
+        p = Process(target=calc_dvh_worker, args=(dataset_rtss, dataset_rtdose, roi_list[i], queue, dose_limit,))
+        processes.append(p)
+        p.start()
+
+    for process in processes:
+        dvh = queue.get()
+        dict_dvh.update(dvh)
+
+    for process in processes:
+        process.join()
 
     return dict_dvh
 

@@ -1,4 +1,5 @@
 import os
+import time
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject
@@ -28,8 +29,11 @@ class ImageLoader(QObject):
         self.signal_progress.emit("Getting ROI info...")
         rois = ImageLoading.get_roi_info(dataset_rtss)
 
+        start_time = time.time()
         self.signal_progress.emit("Calculating DVHs...")
-        raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois)
+        raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois)
+        elapsed_time = time.time() - start_time
+        print("Time elapsed:", elapsed_time)
         dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
 
         self.signal_progress.emit("Getting contour data...")
