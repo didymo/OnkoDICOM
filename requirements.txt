@@ -6,3 +6,4 @@ PyQt5
 pandas
 country-list
 git+https://github.com/matplotlib/legacycontour.git
+multiprocess
