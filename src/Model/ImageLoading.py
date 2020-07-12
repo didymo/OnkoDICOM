@@ -24,6 +24,7 @@ case, however this alternative function promotes scalability and durability of t
 import collections
 import os
 import re
+import time
 
 from multiprocess import Queue, Process
 from dicompylercore import dvhcalc
@@ -174,9 +175,13 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
 
 
 def calc_dvh_worker(rtss, dose, roi, queue, dose_limit=None):
+    print("Starting process,", roi)
+    start_time = time.time()
     dvh = {}
     dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
     queue.put(dvh)
+    elapsed_time = time.time() - start_time
+    print("Ending process", roi, "elapsed:", elapsed_time)
 
 
 def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
