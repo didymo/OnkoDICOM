@@ -15,7 +15,7 @@ class ProgressWindow(QDialog):
         super(ProgressWindow, self).__init__(*args, **kwargs)
 
         self.setWindowTitle("Loading")
-        self.resize(150, 60)
+        self.resize(225, 60)
 
         self.text_field = QLabel("Loading")
 
