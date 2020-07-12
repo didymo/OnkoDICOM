@@ -254,7 +254,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
     def accepting(self):
         # starting save
         #Saving the Windowing options
-        with open('src/data/csv/imageWindowing.csv', 'w') as stream:
+        with open('src/data/csv/imageWindowing.csv', 'w', newline='') as stream:
             writer = csv.writer(stream)
             writer.writerow(["Organ", "Scan", "Window", "Level"])
             for row in range(self.table_view.rowCount()):
@@ -267,7 +267,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                         rowdata.append('')
                 writer.writerow(rowdata)
         #saving the Standard Organ names
-        with open('src/data/csv/organName.csv', 'w') as stream:
+        with open('src/data/csv/organName.csv', 'w', newline='') as stream:
             writer = csv.writer(stream)
             writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
             for row in range(self.table_organ.rowCount()):
@@ -280,7 +280,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                         rowdata.append('')
                 writer.writerow(rowdata)
         #Saving the Standard Volume Names
-        with open('src/data/csv/volumeName.csv', 'w') as stream:
+        with open('src/data/csv/volumeName.csv', 'w', newline='') as stream:
             writer = csv.writer(stream)
             for row in range(self.table_volume.rowCount()):
                 rowdata = []
