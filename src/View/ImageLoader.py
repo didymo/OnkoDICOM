@@ -1,5 +1,5 @@
 import os
-import time
+import platform
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject
@@ -29,11 +29,15 @@ class ImageLoader(QObject):
         self.signal_progress.emit("Getting ROI info...")
         rois = ImageLoading.get_roi_info(dataset_rtss)
 
-        start_time = time.time()
+        # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which
+        # ends up making multiprocessing on these platforms more expensive than linear calculation. As such,
+        # multiprocessing is only available on Linux until a better solution is found.
         self.signal_progress.emit("Calculating DVHs...")
-        raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois)
-        elapsed_time = time.time() - start_time
-        print("Time elapsed:", elapsed_time)
+        fork_safe_platforms = ['Linux']
+        if platform.system() in fork_safe_platforms:
+            raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois)
+        else:
+            raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois)
         dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
 
         self.signal_progress.emit("Getting contour data...")
