@@ -269,8 +269,8 @@ class Rxdose_Check(QDialog):
     def accepting(self):
 
         # check that no mandatory input is empty and a non number
-        if (self.rxdose_display.text != '' and self.rxdose_display.text().isdigit()):
-            self.rxdose = int(self.rxdose_display.text())
+        #if (self.rxdose_display.text != '' and self.rxdose_display.text().isdigit()):
+        #    self.rxdose = int(self.rxdose_display.text())
             self.accept()
 
         # the input is empty or a non positive number
