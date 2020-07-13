@@ -43,7 +43,7 @@ class ImageLoader(QObject):
         self.signal_progress.emit("Getting contour data...")
         dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
 
-        self.signal_progress.emit("Getting pixluts...")
+        self.signal_progress.emit("Getting pixel LUTs...")
         dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
         return path, read_data_dict, file_names_dict, rois, raw_dvh, dvh_x_y, dict_raw_contour_data, dict_numpoints,\
