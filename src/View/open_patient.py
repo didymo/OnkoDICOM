@@ -1,12 +1,13 @@
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QCoreApplication, QThreadPool, QObject
-from PyQt5.QtWidgets import QTreeWidgetItem, QMessageBox, QDialog
+from PyQt5.QtCore import QCoreApplication, QThreadPool
+from PyQt5.QtWidgets import QTreeWidgetItem, QMessageBox
 from PyQt5.Qt import Qt
 
-from src.Model import DICOMDirectorySearch, ImageLoading
+from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
+from src.View.ProgressWindow import ProgressWindow
 
 
 class UIOpenPatientWindow(object):
@@ -138,25 +139,23 @@ class UIOpenPatientWindow(object):
             selected_files += item.dicom_object.get_files()
 
         if len(selected_files) > 0:
-            # Temporary progress window. This will be removed replaced with a new fully-fledged window accessible
-            # from a Controller class.
-            progress_window = QDialog(self, QtCore.Qt.WindowTitleHint)
-            progress_window.setWindowTitle("Loading")
-            progress_window.resize(150, 60)
-            progress_window.show()
+            self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint)
+            self.progress_window.signal_loaded.connect(self.on_loaded)
+            self.progress_window.signal_error.connect(self.on_loading_error)
 
-            try:
-                # TODO this should be run in a progress window on a separate thread
-                patient_attributes = ImageLoading.get_patient_attributes(selected_files)
-            except ImageLoading.NotRTSetError:
-                # Temporary solution to only allow DICOM-RT sets to be opened
-                QMessageBox.about(self, "Unable to open selection",
-                                  "Selected files cannot be opened as they are not a DICOM-RT set.")
-                progress_window.close()
-            else:
-                self.open_patient_window.emit((patient_attributes, progress_window))
+            self.progress_window.start_loading(selected_files)
+            self.progress_window.exec_()
         else:
             QMessageBox.about(self, "Unable to open selection", "No files selected.")
+
+    def on_loaded(self, results):
+        self.open_patient_window.emit(results)
+
+    def on_loading_error(self, error_code):
+        if error_code == 0:
+            QMessageBox.about(self.progress_window, "Unable to open selection",
+                              "Selected files cannot be opened as they are not a DICOM-RT set.")
+            self.progress_window.close()
 
     def get_checked_leaves(self):
         """

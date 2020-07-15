@@ -249,33 +249,33 @@ class Rxdose_Check(QDialog):
         # add the file dose
         self.rxdose = rxdose
 
-        #create the ui components
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        self.rxdose_display = QLineEdit()
-        self.rxdose_display.setText(str(self.rxdose))
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
-        layout = QFormLayout(self)
-        layout.addRow(QLabel("RxDose: "), self.rxdose_display)
-        layout.addWidget(buttonBox)
-        buttonBox.accepted.connect(self.accepting)
-        buttonBox.rejected.connect(self.reject)
-        self.setWindowTitle("Verify RxDose")
+        # create the ui components
+        #buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        #self.rxdose_display = QLineEdit()
+        #self.rxdose_display.setText(str(self.rxdose))
+        #self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        #layout = QFormLayout(self)
+        #layout.addRow(QLabel("RxDose: "), self.rxdose_display)
+        #layout.addWidget(buttonBox)
+        #buttonBox.accepted.connect(self.accepting)
+        #buttonBox.rejected.connect(self.reject)
+        #self.setWindowTitle("Verify RxDose")
 
     # this function returns the user input in case of a OK being pressed
-    def get_dose(self):
-        return self.rxdose
+    #def get_dose(self):
+    #    return self.rxdose
 
     # this function does the validation of the input and gives the corresponding errors if needed
     def accepting(self):
 
         # check that no mandatory input is empty and a non number
-        if (self.rxdose_display.text != '' and self.rxdose_display.text().isdigit()):
-            self.rxdose = int(self.rxdose_display.text())
+        #if (self.rxdose_display.text != '' and self.rxdose_display.text().isdigit()):
+        #    self.rxdose = int(self.rxdose_display.text())
             self.accept()
 
         # the input is empty or a non positive number
-        else:
-            buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "RxDose must be a positive number!", QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
-                pass
+        #else:
+        #    buttonReply = QMessageBox.warning(self, "Error Message",
+        #                                      "RxDose must be a positive number!", QMessageBox.Ok)
+        #    if buttonReply == QMessageBox.Ok:
+        #        pass
