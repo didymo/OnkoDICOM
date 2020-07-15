@@ -65,6 +65,8 @@ class Ui_MainWindow(object):
                         if "BeamDose" in beam:
                             self.rxdose += beam.BeamDose * number_of_fractions * 100
         self.rxdose = round(self.rxdose)
+
+        # Commented out as rx dose dialogue no longer needed.
         #dose_check_dialog = Rxdose_Check(self.rxdose)
         #dose_check_dialog.exec()
         #self.rxdose = dose_check_dialog.get_dose()
