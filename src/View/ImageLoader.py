@@ -16,7 +16,7 @@ class ImageLoader(QObject):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
 
-    def load(self):
+    def load(self, progress_callback):
         self.signal_progress.emit("Creating datasets...")
         path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
         read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
