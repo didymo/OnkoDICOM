@@ -127,7 +127,8 @@ class UIOpenPatientWindow(object):
 
     def search_progress(self, progress_update):
         self.tree_widget.clear()
-        self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory... (%s)" % progress_update]))
+        self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory... (%s files searched)"
+                                                          % progress_update]))
 
     def on_dicom_loaded(self, dicom_structure):
         self.choose_button.setEnabled(True)
