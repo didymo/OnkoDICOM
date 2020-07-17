@@ -6,8 +6,6 @@ from src.Model import ImageLoading
 from src.Model.Worker import Worker
 from src.View.ImageLoader import ImageLoader
 
-# Used to update progress bar
-percent_counter = 0
 
 class ProgressWindow(QDialog):
     signal_loaded = QtCore.pyqtSignal(tuple)
