@@ -43,6 +43,7 @@ class NewPatientGui(QtWidgets.QMainWindow, UIOpenPatientWindow):
         self.patient_window = interPageController.MainWindow(path, read_data_dict, file_names_dict, rois, raw_dvh,
                                                              dvh_x_y, dict_raw_contour_data, dict_numpoints,
                                                              dict_pixluts)
+        progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.patient_window.show()
         self.close()

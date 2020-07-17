@@ -38,36 +38,21 @@ class ProgressWindow(QDialog):
         worker = Worker(image_loader.load)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)
-        image_loader.signal_progress.connect(self.update_text)
+        worker.signals.progress.connect(self.update_progress)
 
         self.threadpool.start(worker)
 
     def on_finish(self, results):
-        self.update_text("Initalizing patient window...")
+        self.update_progress(("Initalizing patient window...", 90))
         self.signal_loaded.emit((results, self))
 
-    def update_text(self, new_text):
+    def update_progress(self, progress_update):
         """
-                Function responsible for updating the bar percentage and the label
+        Function responsible for updating the bar percentage and the label.
+        :param progress_update: A tuple containing update text and update percentage
         """
-        self.text_field.setText(new_text)
-
-        global percent_counter
-        # Increments every time the text is updated.
-        percent_counter = percent_counter + 1
-
-        if percent_counter == 1:
-            self.progress_bar.setValue(10)
-        elif percent_counter == 2:
-            self.progress_bar.setValue(30)
-        elif percent_counter == 3:
-            self.progress_bar.setValue(60)
-        elif percent_counter == 4:
-            self.progress_bar.setValue(75)
-        elif percent_counter == 5:
-            self.progress_bar.setValue(85)
-        else:
-            self.progress_bar.setValue(95)
+        self.text_field.setText(progress_update[0])
+        self.progress_bar.setValue(progress_update[1])
 
     def on_error(self, err):
         if type(err[1]) is ImageLoading.NotRTSetError:
