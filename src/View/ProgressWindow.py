@@ -15,7 +15,7 @@ class ProgressWindow(QDialog):
         super(ProgressWindow, self).__init__(*args, **kwargs)
 
         # Setting up progress bar
-        self.progress_bar = QtWidgets.QProgressBar(self)
+        self.progress_bar = QtWidgets.QProgressBar()
         self.progress_bar.setGeometry(10, 50, 230, 20)
         self.progress_bar.setMaximum(100)
 
@@ -26,6 +26,7 @@ class ProgressWindow(QDialog):
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.text_field)
+        self.layout.addWidget(self.progress_bar)
         self.setLayout(self.layout)
 
         self.threadpool = QThreadPool()
