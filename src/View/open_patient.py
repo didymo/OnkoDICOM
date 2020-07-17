@@ -119,7 +119,7 @@ class UIOpenPatientWindow(object):
 
             # Then, create a new thread that will load the selected folder
             worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
-            worker.signals.result.connect(self.on_dicom_loaded)
+            worker.signals.result.connect(self.on_search_complete)
             worker.signals.progress.connect(self.search_progress)
 
             # Execute the thread
@@ -130,7 +130,7 @@ class UIOpenPatientWindow(object):
         self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory... (%s files searched)"
                                                           % progress_update]))
 
-    def on_dicom_loaded(self, dicom_structure):
+    def on_search_complete(self, dicom_structure):
         self.choose_button.setEnabled(True)
         self.tree_widget.clear()
         for patient_item in dicom_structure.get_tree_items_list():
