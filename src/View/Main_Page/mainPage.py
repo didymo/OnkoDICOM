@@ -1,4 +1,7 @@
 import glob
+
+from PyQt5.QtCore import Qt
+
 from src.Controller.Add_On_OController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.View.InputDialogs import Rxdose_Check
@@ -172,11 +175,14 @@ class Ui_MainWindow(object):
         self.function_layout = QtWidgets.QHBoxLayout(self.function_widget)
         self.function_layout.setContentsMargins(0, 0, 0, 0)
 
+        splitter = QtWidgets.QSplitter(Qt.Horizontal)
+
         # Left Column
         self.left_widget = QtWidgets.QWidget(self.main_widget)
         self.left_layout = QtWidgets.QVBoxLayout(self.left_widget)
         self.left_layout.setContentsMargins(0, 0, 0, 0)
-        self.left_widget.setMaximumWidth(230)
+        self.left_widget.setMinimumWidth(230)
+        self.left_widget.setMaximumWidth(500)
         
         # Left Top Column: Structure and Isodoses Tabs
         self.tab1 = QtWidgets.QTabWidget(self.left_widget)
@@ -220,9 +226,9 @@ class Ui_MainWindow(object):
             self.callClass.display_cd_dat(self.tab2, self.path)
         self.tab2.setFocusPolicy(QtCore.Qt.NoFocus)
 
-
-        self.function_layout.addWidget(self.left_widget)
-        self.function_layout.addWidget(self.tab2)
+        splitter.addWidget(self.left_widget)
+        splitter.addWidget(self.tab2)
+        self.function_layout.addWidget(splitter)
 
         self.main_layout.addWidget(self.function_widget)
 
