@@ -155,7 +155,7 @@ class Ui_MainWindow(object):
         ##########################################
 
         # Main Window
-        MainWindow.setMinimumSize(1080, 700)
+        MainWindow.showMaximized()
         MainWindow.setWindowTitle("OnkoDICOM")
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
