@@ -12,6 +12,7 @@ idna
 kiwisolver
 git+https://github.com/matplotlib/legacycontour.git
 matplotlib
+multipledispatch
 numpy
 pandas
 pydicom
