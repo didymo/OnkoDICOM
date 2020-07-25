@@ -42,9 +42,11 @@ def get_dicom_structure(path, progress_callback):
                 if not dicom_structure.has_patient(dicom_file.PatientID):
                     # TODO there is definitely a more efficient way of doing this
                     new_series = Series(dicom_file.SeriesInstanceUID)
+                    new_series.series_description = dicom_file.get("SeriesDescription")
                     new_series.add_image(new_image)
 
                     new_study = Study(dicom_file.StudyInstanceUID)
+                    new_study.study_description = dicom_file.get("StudyDescription")
                     new_study.add_series(new_series)
 
                     new_patient = Patient(dicom_file.PatientID, dicom_file.PatientName)
@@ -55,9 +57,11 @@ def get_dicom_structure(path, progress_callback):
                     existing_patient = dicom_structure.get_patient(dicom_file.PatientID)
                     if not existing_patient.has_study(dicom_file.StudyInstanceUID):
                         new_series = Series(dicom_file.SeriesInstanceUID)
+                        new_series.series_description = dicom_file.get("SeriesDescription")
                         new_series.add_image(new_image)
 
                         new_study = Study(dicom_file.StudyInstanceUID)
+                        new_study.study_description = dicom_file.get("StudyDescription")
                         new_study.add_series(new_series)
 
                         existing_patient.add_study(new_study)
@@ -65,6 +69,7 @@ def get_dicom_structure(path, progress_callback):
                         existing_study = existing_patient.get_study(dicom_file.StudyInstanceUID)
                         if not existing_study.has_series(dicom_file.SeriesInstanceUID):
                             new_series = Series(dicom_file.SeriesInstanceUID)
+                            new_series.series_description = dicom_file.get("SeriesDescription")
                             new_series.add_image(new_image)
 
                             existing_study.add_series(new_series)

@@ -41,13 +41,6 @@ class DICOMStructure:
 
         return filepaths
 
-    def output_as_text(self):
-        output = "DICOM structure:"
-        for patient in self.patients:
-            output += patient.output_as_text()
-
-        return output
-
     def get_tree_items_list(self):
         """
         :return: A list of QTreeWidgetItems based on the DICOMStructure object.
@@ -101,14 +94,10 @@ class Patient:
         return filepaths
 
     def output_as_text(self):
-        output = "\nPatient: %s" % self.patient_id
-        for study in self.studies:
-            output += study.output_as_text()
-
-        return output
+        return "Patient: %s (%s)" % (self.patient_name, self.patient_id)
 
     def get_widget_item(self):
-        widget_item = DICOMWidgetItem("Patient: %s (%s)" % (self.patient_name, self.patient_id), self)
+        widget_item = DICOMWidgetItem(self.output_as_text(), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for study in self.studies:
             widget_item.addChild(study.get_widget_item())
@@ -124,6 +113,7 @@ class Study:
         :param study_id: StudyInstanceUID in DICOM standard.
         """
         self.study_id = study_id
+        self.study_description = None
         self.series = []
 
     def add_series(self, series):
@@ -157,11 +147,7 @@ class Study:
         return filepaths
 
     def output_as_text(self):
-        output = "\n\tStudy: %s" % self.study_id
-        for series in self.series:
-            output += series.output_as_text()
-
-        return output
+        return "Study: %s (DICOM-RT: %s)" % (self.study_description, "Y" if self.is_dicom_rt() else "N")
 
     def is_dicom_rt(self):
         """
@@ -182,7 +168,7 @@ class Study:
         return sorted(rt_classes) == sorted(contained_classes)
 
     def get_widget_item(self):
-        widget_item = DICOMWidgetItem("Study: (DICOM-RT: %s)" % ("Y" if self.is_dicom_rt() else "N"), self)
+        widget_item = DICOMWidgetItem(self.output_as_text(), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for series in self.series:
             widget_item.addChild(series.get_widget_item())
@@ -198,6 +184,7 @@ class Series:
         :param series_id: SeriesInstanceUID in DICOM standard.
         """
         self.series_id = series_id
+        self.series_description = None
         self.images = []
 
     def add_image(self, image):
@@ -231,11 +218,7 @@ class Series:
         return filepaths
 
     def output_as_text(self):
-        output = "\n\t\tSeries: %s" % self.series_id
-        for image in self.images:
-            output += image.output_as_text()
-
-        return output
+        return "Series: %s (%s, %s images)" % (self.series_description, self.get_series_type(), len(self.images))
 
     def get_series_type(self):
         series_types = []
@@ -246,7 +229,7 @@ class Series:
         return series_types if len(series_types) > 1 else series_types[0]
 
     def get_widget_item(self):
-        widget_item = DICOMWidgetItem("Series: %s (%s images)" % (self.get_series_type(), len(self.images)), self)
+        widget_item = DICOMWidgetItem(self.output_as_text(), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
         widget_item.setCheckState(0, Qt.Unchecked)
         return widget_item
@@ -265,4 +248,4 @@ class Image:
         self.image_id = dicom_file.SOPInstanceUID
 
     def output_as_text(self):
-        return "\n\t\t\tImage: %s | Path: %s" % (self.image_id, self.path)
+        return "Image: %s | Path: %s" % (self.image_id, self.path)
