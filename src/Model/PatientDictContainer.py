@@ -1,3 +1,14 @@
+"""
+Keyword arguments for DICOM-RT:
+    rois
+    raw_dvh
+    dvh_x_y
+    raw_contour
+    num_points
+    pixluts
+"""
+
+
 class PatientDictContainer:
 
     def __init__(self, path, dataset, filepaths, **kwargs):
