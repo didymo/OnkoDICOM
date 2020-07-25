@@ -37,12 +37,9 @@ class NewPatientGui(QtWidgets.QMainWindow, UIOpenPatientWindow):
         self.open_patient_window.connect(self.open_patient)
 
     def open_patient(self, patient_attributes):
-        path, read_data_dict, file_names_dict, rois, raw_dvh, dvh_x_y, dict_raw_contour_data, \
-            dict_numpoints, dict_pixluts = patient_attributes[0]
+        patient_dict_container = patient_attributes[0]
         progress_window = patient_attributes[1]
-        self.patient_window = interPageController.MainWindow(path, read_data_dict, file_names_dict, rois, raw_dvh,
-                                                             dvh_x_y, dict_raw_contour_data, dict_numpoints,
-                                                             dict_pixluts)
+        self.patient_window = interPageController.MainWindow(patient_dict_container)
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.patient_window.show()

@@ -21,24 +21,24 @@ class Ui_MainWindow(object):
     # To initiate progress bar for pyradiomics through anonymization
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
 
-    def setupUi(self, MainWindow, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
+    def setupUi(self, MainWindow, patient_dict_container):
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-        self.dataset = dataset
-        self.raw_dvh = raw_dvh
-        self.dvh_x_y = dvhxy
+        self.dataset = patient_dict_container.dataset
+        self.raw_dvh = patient_dict_container.get("raw_dvh")
+        self.dvh_x_y = patient_dict_container.get("dvh_x_y")
         
         # Dictionary whose key is the ROI number as specified in the RTSS file
         # and whose value is a dictionary with keys 'uid', 'name' and 'algorithm'
-        self.rois = rois
+        self.rois = patient_dict_container.get("rois")
         # Contain the ordered list of ROI numbers.
         # Used to manage the case of missing integers in an ordered series of ROI numbers (for example 1 2 4 7)
         self.list_roi_numbers = self.ordered_list_rois()
         
-        self.filepaths = filepaths
-        self.path = path
+        self.filepaths = patient_dict_container.filepaths
+        self.path = patient_dict_container.path
         self.dose_pixluts = get_dose_pixluts(self.dataset)
         self.hashed_path = ''     # Path to hashed patient directory
 
@@ -124,9 +124,9 @@ class Ui_MainWindow(object):
         self.selected_doses = []
 
         self.basicInfo = get_basic_info(self.dataset[0])
-        self.dict_pixluts = pixluts
-        self.dict_raw_ContourData = raw_contour
-        self.dict_NumPoints = num_points
+        self.dict_pixluts = patient_dict_container.get("pixluts")
+        self.dict_raw_ContourData = patient_dict_container.get("raw_contour")
+        self.dict_NumPoints = patient_dict_container.get("num_points")
 
         self.dict_polygons = {}
 

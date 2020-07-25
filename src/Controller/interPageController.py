@@ -216,9 +216,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     run_pyradiomics = QtCore.pyqtSignal(str, dict, str)
 
     # Initialising the main window and setting up the UI
-    def __init__(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts):
+    def __init__(self, patient_dict_container):
         QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self, path, dataset, filepaths, rois, raw_dvh, dvhxy, raw_contour, num_points, pixluts)
+        self.setupUi(self, patient_dict_container)
         self.menu_bar.actionOpen.triggered.connect(self.patientHandler)
         self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomicsHandler)
         self.pyradi_trigger.connect(self.pyradiomicsHandler)
