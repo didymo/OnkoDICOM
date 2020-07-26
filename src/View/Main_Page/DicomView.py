@@ -47,12 +47,11 @@ class DicomView(object):
 		Add the whole container 'tab2_view' as a tab in the main page.
 		"""
 
-		self.gridLayout_view = QtWidgets.QGridLayout(self.main_window.tab2_view)
+		self.gridLayout_view = QtWidgets.QHBoxLayout(self.main_window.tab2_view)
 		self.gridLayout_view.setContentsMargins(0, 0, 0, 0)
-		self.gridLayout_view.setHorizontalSpacing(0)
 
-		self.gridLayout_view.addWidget(self.slider, 0, 1, 1, 1)
-		self.gridLayout_view.addWidget(self.view, 0, 0, 1, 1)
+		self.gridLayout_view.addWidget(self.view)
+		self.gridLayout_view.addWidget(self.slider)
 		self.main_window.tab2.addTab(self.main_window.tab2_view, "DICOM View")
 
 
