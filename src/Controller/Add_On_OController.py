@@ -20,7 +20,7 @@ from src.View.InputDialogs import *
 
 class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
-    def __init__(self): #initialization function
+    def __init__(self, window): #initialization function
         super(Add_On_Options, self).__init__()
         # read configuration file for line and fill options
         with open('src/data/line&fill_configuration', 'r') as stream:
@@ -40,6 +40,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
                 line_width = 2.0
             stream.close()
         #initialise the UI
+        self.window = window
         self.setupUi(self, roi_line, roi_opacity,
                      iso_line, iso_opacity, line_width)
         #this data is used to create the tree view of functionalities on the left of the window
@@ -319,6 +320,11 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             stream.write("\n")
             stream.close()
         #Close the Add-On Options Window after saving
+
+        if self.window.patient_dict_container.has("rtss"):
+            self.window.structures_tab.init_standard_names()
+            self.window.structures_tab.update_content()
+
         self.close()
 
 
@@ -493,9 +499,9 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
 class AddOptions:
 
-    def __init__(self):
-        pass
+    def __init__(self, window):
+        self.window = window
 
     def show_add_on_options(self):
-        self.options_window = Add_On_Options()
+        self.options_window = Add_On_Options(self.window)
         self.options_window.show()

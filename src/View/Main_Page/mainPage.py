@@ -26,6 +26,7 @@ class Ui_MainWindow(object):
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
+        self.patient_dict_container = patient_dict_container
         self.dataset = patient_dict_container.dataset
         self.raw_dvh = patient_dict_container.get("raw_dvh")
         self.dvh_x_y = patient_dict_container.get("dvh_x_y")
@@ -147,7 +148,7 @@ class Ui_MainWindow(object):
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
         self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
-        self.callManager = AddOptions()
+        self.callManager = AddOptions(self)
 
 
         ##########################################
