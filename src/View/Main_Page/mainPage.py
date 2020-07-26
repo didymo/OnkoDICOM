@@ -252,6 +252,7 @@ class Ui_MainWindow(object):
     def create_footer(self):
         # Bottom Layer
         self.bottom_widget = QtWidgets.QWidget(self.main_widget)
+        self.bottom_widget.setMaximumHeight(35)
         self.hLayout_bottom = QtWidgets.QHBoxLayout(self.bottom_widget)
         self.hLayout_bottom.setContentsMargins(0, 0, 0, 0)
 

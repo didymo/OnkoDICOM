@@ -14,6 +14,7 @@ class PatientBar(object):
 		"""
 		self.window = main_window
 		self.widget = QtWidgets.QWidget(main_window.main_widget)
+		self.widget.setMaximumHeight(35)
 		self.layout = QtWidgets.QHBoxLayout(self.widget)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.setSpacing(5)
