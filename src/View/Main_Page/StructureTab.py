@@ -1,6 +1,9 @@
+import csv
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 from random import randint, seed
 import numpy as np
+
 
 class StructureTab(object):
 	"""
@@ -23,9 +26,9 @@ class StructureTab(object):
 		self.tab1_structures = QtWidgets.QWidget()
 		self.tab1_structures.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_content()
+		self.init_standard_names()
 		self.update_content()
 		self.init_layout()
-
 
 	def init_layout(self):
 		"""
@@ -37,7 +40,6 @@ class StructureTab(object):
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.scroll_area)
 		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
-		
 
 	def init_color_roi(self):
 		"""
@@ -74,7 +76,6 @@ class StructureTab(object):
 
 		return roiColor
 
-
 	def init_content(self):
 		"""
 		Create scrolling area widget which will contain the content.
@@ -93,8 +94,23 @@ class StructureTab(object):
 		self.layout_content.setVerticalSpacing(0)
 		self.layout_content.setHorizontalSpacing(10)
 
+	def init_standard_names(self):
+		with open('src/data/csv/organName.csv', 'r') as f:
+			self.standard_organ_names = []
 
-	# Add the contents in the list of structures (left column of the main page)
+			csv_input = csv.reader(f)
+			header = next(f)
+			for row in csv_input:
+				self.standard_organ_names.append(row[0])
+
+		with open('src/data/csv/volumeName.csv', 'r') as f:
+			self.standard_volume_names = []
+
+			csv_input = csv.reader(f)
+			header = next(f)
+			for row in csv_input:
+				self.standard_volume_names.append(row[1])
+
 	def update_content(self):
 		"""
 		Add the contents (color square and checkbox) in the scrolling area widget.
@@ -113,7 +129,10 @@ class StructureTab(object):
 			checkbox = QtWidgets.QCheckBox()
 			checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
 			checkbox.clicked.connect(lambda state, text=roi_id: self.structure_checked(state, text))
-			checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+			if text in self.standard_organ_names or text in self.standard_volume_names:
+				checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+			else:
+				checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
 			checkbox.setText(text)
 			self.layout_content.addWidget(checkbox, row, 1, 1, 1)
 
@@ -130,7 +149,6 @@ class StructureTab(object):
 		self.layout_content.addItem(hspacer, 0, 2, -1, 1)
 
 		self.scroll_area.setWidget(self.scroll_area_content)
-
 
 	def structure_checked(self, state, roi_id):
 		"""
