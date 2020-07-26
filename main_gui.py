@@ -1,6 +1,7 @@
+import os
 import warnings
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QFont
 
 warnings.filterwarnings("ignore")
@@ -19,7 +20,9 @@ if __name__ == "__main__":
 
     sys.excepthook = exception_hook
 
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QtWidgets.QApplication(sys.argv)
+    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
     # Set the font to Segoe UI, 9, when in windows OS
     if platform.system() == 'Windows':
