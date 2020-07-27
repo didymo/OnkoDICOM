@@ -321,7 +321,7 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
             stream.close()
         #Close the Add-On Options Window after saving
 
-        if self.window.patient_dict_container.has("rtss"):
+        if self.window.has_rtss:
             self.window.structures_tab.init_standard_names()
             self.window.structures_tab.update_content()
 
