@@ -33,24 +33,34 @@ from pydicom.errors import InvalidDicomError
 
 allowed_classes = {
     # CT Image
-    "1.2.840.10008.5.1.4.1.1.2" : {
-        "name" : "ct",
-        "sliceable" : True
+    "1.2.840.10008.5.1.4.1.1.2": {
+        "name": "ct",
+        "sliceable": True
     },
     # RT Structure Set
-    "1.2.840.10008.5.1.4.1.1.481.3" : {
-        "name" : "rtss",
-        "sliceable" : False
+    "1.2.840.10008.5.1.4.1.1.481.3": {
+        "name": "rtss",
+        "sliceable": False
     },
     # RT Dose
-    "1.2.840.10008.5.1.4.1.1.481.2" : {
-        "name" : "rtdose",
+    "1.2.840.10008.5.1.4.1.1.481.2": {
+        "name": "rtdose",
         "sliceable" : False
     },
     # RT Plan
-    "1.2.840.10008.5.1.4.1.1.481.5" : {
-        "name" : "rtplan",
+    "1.2.840.10008.5.1.4.1.1.481.5": {
+        "name": "rtplan",
         "sliceable" : False
+    },
+    # MR Image
+    "1.2.840.10008.5.1.4.1.1.4" : {
+        "name": "mr",
+        "sliceable" : True
+    },
+    # PET Image
+    "1.2.840.10008.5.1.4.1.1.128" : {
+        "name": "pet",
+        "sliceable": True
     }
 }
 
