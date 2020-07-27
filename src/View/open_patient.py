@@ -162,6 +162,10 @@ class UIOpenPatientWindow(object):
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they are not a DICOM-RT set.")
             self.progress_window.close()
+        elif error_code == 1:
+            QMessageBox.about(self.progress_window, "Unable to open selection",
+                              "Selected files cannot be opened as they contain unsupported DICOM classes.")
+            self.progress_window.close()
 
     def get_checked_leaves(self):
         """

@@ -68,6 +68,9 @@ allowed_classes = {
 class NotRTSetError(Exception):
     pass
 
+class NotAllowedClassError(Exception):
+    pass
+
 
 def get_patient_attributes(selected_files):
     path = os.path.dirname(os.path.commonprefix(selected_files))  # Temporary patch, gets the common root folder.
@@ -114,6 +117,8 @@ def get_datasets(filepath_list):
 
                 read_data_dict[slice_name] = read_file
                 file_names_dict[slice_name] = file
+            else:
+                raise NotAllowedClassError
 
     return read_data_dict, file_names_dict
 

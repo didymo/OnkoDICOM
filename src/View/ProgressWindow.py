@@ -56,3 +56,5 @@ class ProgressWindow(QDialog):
     def on_error(self, err):
         if type(err[1]) is ImageLoading.NotRTSetError:
             self.signal_error.emit(0)
+        elif type(err[1]) is ImageLoading.NotAllowedClassError:
+            self.signal_error.emit(1)
