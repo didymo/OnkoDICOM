@@ -11,7 +11,7 @@ class RenameROIWindow(QDialog):
         self.standard_names = standard_names
 
         self.setWindowTitle("Rename Region of Interest")
-        self.resize(248, 80)
+        self.resize(300, 80)
 
         self.explanation_text = QLabel("Enter a new name:")
 
