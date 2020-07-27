@@ -29,8 +29,10 @@ class DicomView(object):
 		"""
 
 		self.main_window = mainWindow
-		self.roi_color = mainWindow.structures_tab.color_dict
-		self.isod_color = mainWindow.isodoses_tab.color_dict
+		if self.main_window.has_rtss:
+			self.roi_color = mainWindow.structures_tab.color_dict
+		if self.main_window.has_rtdose:
+			self.isod_color = mainWindow.isodoses_tab.color_dict
 		mainWindow.tab2_view = QtWidgets.QWidget()
 		mainWindow.tab2_view.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.init_slider()

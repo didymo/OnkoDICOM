@@ -168,8 +168,9 @@ class StructureTab(object):
 			np_list_roi_numbers = np.array(self.main_window.list_roi_numbers)
 			index = np.where(np_list_roi_numbers == roi_id)
 			index = index[0][0] + 1
-			self.main_window.struct_info.combobox.setCurrentIndex(index)
-			self.main_window.struct_info.item_selected(index)
+			if hasattr(self.main_window, 'struct_info'):
+				self.main_window.struct_info.combobox.setCurrentIndex(index)
+				self.main_window.struct_info.item_selected(index)
 
 		# Checkbox of the structure unchecked
 		else:
@@ -177,5 +178,6 @@ class StructureTab(object):
 			self.main_window.selected_rois.remove(roi_id)
 
 		# Update the DVH and DICOM view
-		self.main_window.dvh.update_plot(self.main_window)
+		if hasattr(self.main_window, 'dvh'):
+			self.main_window.dvh.update_plot(self.main_window)
 		self.main_window.dicom_view.update_view()

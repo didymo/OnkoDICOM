@@ -26,25 +26,29 @@ class Ui_MainWindow(object):
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-        self.patient_dict_container = patient_dict_container
         self.dataset = patient_dict_container.dataset
         self.raw_dvh = patient_dict_container.get("raw_dvh")
         self.dvh_x_y = patient_dict_container.get("dvh_x_y")
+
+        self.has_rtss = True if patient_dict_container.has('rtss') else False
+        self.has_rtdose = True if patient_dict_container.has('rtdose') else False
         
         # Dictionary whose key is the ROI number as specified in the RTSS file
         # and whose value is a dictionary with keys 'uid', 'name' and 'algorithm'
         self.rois = patient_dict_container.get("rois")
         # Contain the ordered list of ROI numbers.
         # Used to manage the case of missing integers in an ordered series of ROI numbers (for example 1 2 4 7)
-        self.list_roi_numbers = self.ordered_list_rois()
+        if self.has_rtss:
+            self.list_roi_numbers = self.ordered_list_rois()
         
         self.filepaths = patient_dict_container.filepaths
         self.path = patient_dict_container.path
-        self.dose_pixluts = get_dose_pixluts(self.dataset)
+        if self.has_rtdose:
+            self.dose_pixluts = get_dose_pixluts(self.dataset)
         self.hashed_path = ''     # Path to hashed patient directory
 
         self.rxdose = 1
-        if self.dataset['rtplan']:
+        if patient_dict_container.has("rtplan"):
             # the TargetPrescriptionDose is type 3 (optional), so it may not be there
             # However, it is preferable to the sum of the beam doses
             # DoseReferenceStructureType is type 1 (value is mandatory), 
@@ -115,10 +119,13 @@ class Ui_MainWindow(object):
         self.pixel_values = convert_raw_data(self.dataset)
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 
-        self.file_rtss = self.filepaths['rtss']
-        self.file_rtdose = self.filepaths['rtdose']
-        self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
-        self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
+        if self.has_rtss:
+            self.file_rtss = self.filepaths['rtss']
+            self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
+
+        if self.has_rtdose:
+            self.file_rtdose = self.filepaths['rtdose']
+            self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
 
         self.dict_UID = dict_instanceUID(self.dataset)
         self.selected_rois = []
@@ -134,12 +141,14 @@ class Ui_MainWindow(object):
         self.zoom = 1
 
         # DICOM Tree for RTSS file
-        self.dicomTree_rtss = DicomTree(self.file_rtss)
-        self.dictDicomTree_rtss = self.dicomTree_rtss.dict
+        if self.has_rtss:
+            self.dicomTree_rtss = DicomTree(self.file_rtss)
+            self.dictDicomTree_rtss = self.dicomTree_rtss.dict
 
         # DICOM Tree for RT Dose file
-        self.dicomTree_rtdose = DicomTree(self.file_rtdose)
-        self.dictDicomTree_rtdose = self.dicomTree_rtdose.dict
+        if self.has_rtdose:
+            self.dicomTree_rtdose = DicomTree(self.file_rtdose)
+            self.dictDicomTree_rtdose = self.dicomTree_rtdose.dict
 
         # Patient Position
         filename_CT0 = self.filepaths[0]
@@ -184,6 +193,9 @@ class Ui_MainWindow(object):
         self.left_layout.setContentsMargins(0, 0, 0, 0)
         self.left_widget.setMinimumWidth(230)
         self.left_widget.setMaximumWidth(500)
+
+        if not self.has_rtss and not self.has_rtdose:
+            self.left_widget.hide()
         
         # Left Top Column: Structure and Isodoses Tabs
         self.tab1 = QtWidgets.QTabWidget(self.left_widget)
@@ -191,15 +203,21 @@ class Ui_MainWindow(object):
         self.tab1.setGeometry(QtCore.QRect(0, 40, 200, 361))
 
         # Left Column: Structures tab
-        self.structures_tab = StructureTab(self)
+        if self.has_rtss:
+            self.structures_tab = StructureTab(self)
         # Left Column: Isodoses tab
-        self.isodoses_tab = IsodosesTab(self)
+        if self.has_rtdose:
+            self.isodoses_tab = IsodosesTab(self)
 
         # Structure Information (bottom left of the window)
-        self.struct_info = StructureInformation(self)
+        if self.has_rtss and self.has_rtdose:
+            self.struct_info = StructureInformation(self)
 
-        self.left_layout.addWidget(self.tab1)
-        self.left_layout.addWidget(self.struct_info.widget)
+        if self.has_rtss or self.has_rtdose:
+            self.left_layout.addWidget(self.tab1)
+
+        if self.has_rtss and self.has_rtdose:
+            self.left_layout.addWidget(self.struct_info.widget)
 
 
         # Main view
@@ -211,7 +229,8 @@ class Ui_MainWindow(object):
         self.dicom_view = DicomView(self)
 
         # Main view: DVH
-        self.dvh = DVH(self)
+        if self.has_rtss and self.has_rtdose:
+            self.dvh = DVH(self)
 
         # Main view: DICOM Tree
         self.dicom_tree = DicomTreeUI(self)
@@ -239,7 +258,8 @@ class Ui_MainWindow(object):
         self.create_footer()
 
         MainWindow.setCentralWidget(self.main_widget)
-        self.tab2.setTabText(3, "Clinical Data")
+        clinical_tab_index = 3 if self.has_rtss and self.has_rtdose else 2
+        self.tab2.setTabText(clinical_tab_index, "Clinical Data")
         # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
 
         # Menu and Tool bars

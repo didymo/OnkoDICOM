@@ -131,8 +131,9 @@ class MenuBar(object):
 		self.actionAnonymize_and_Save.triggered.connect(self.handlers.anonymization_handler)
 
 		# Export DVH Spreadsheet Action
-		self.actionDVH_Spreadsheet = QtWidgets.QAction(self.window)
-		self.actionDVH_Spreadsheet.triggered.connect(self.window.dvh.export_csv)
+		if self.window.has_rtss and self.window.has_rtdose:
+			self.actionDVH_Spreadsheet = QtWidgets.QAction(self.window)
+			self.actionDVH_Spreadsheet.triggered.connect(self.window.dvh.export_csv)
 
 		# Export Clinical Data Action
 		self.actionClinical_Data = QtWidgets.QAction(self.window)
@@ -193,7 +194,8 @@ class MenuBar(object):
 		# Create sub-menu for Export item
 		self.menuExport = QtWidgets.QMenu(self.menuTools)
 		self.menuExport.setIcon(self.iconExport)
-		self.menuExport.addAction(self.actionDVH_Spreadsheet)
+		if self.window.has_rtss and self.window.has_rtdose:
+			self.menuExport.addAction(self.actionDVH_Spreadsheet)
 		self.menuExport.addAction(self.actionClinical_Data)
 		self.menuExport.addAction(self.actionPyradiomics)
 
@@ -313,7 +315,8 @@ class MenuBar(object):
 		# self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
 		self.actionAddOn.setText(_translate("MainWindow", "Add-On Options..."))
 		self.actionAnonymize_and_Save.setText(_translate("MainWindow", "Anonymize and Save"))
-		self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
+		if self.window.has_rtss and self.window.has_rtdose:
+			self.actionDVH_Spreadsheet.setText(_translate("MainWindow", "DVH"))
 		self.actionClinical_Data.setText(_translate("MainWindow", "Clinical Data"))
 		self.actionPyradiomics.setText(_translate("MainWindow", "Pyradiomics"))
 	
