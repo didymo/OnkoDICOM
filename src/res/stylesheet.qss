@@ -1,0 +1,111 @@
+
+QLabel#label {
+    font-family: Roboto Black;
+    margin-bottom: 0px;
+}
+
+QLabel#welcome {
+    font-family: Roboto Black;
+    margin-bottom: 0px;
+}
+
+QPushButton {
+    font-family: Roboto Black;
+}
+
+/* Welcome Page */
+QPushButton#open_button {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#open_button:hover {
+    background-color: #64b5f6;
+}
+
+/* Open Patient */
+QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    height: 36px;
+    font-size: 14px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}
+QTreeView {
+    border: 2px solid grey;
+    border-radius:2px;
+}
+QTreeView::item:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);
+    border: 1px solid #bfcde4;
+}
+
+
+QPushButton#chooseButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 136px;
+    height: 40px;
+    border-radius: 4px;
+    color: #fff;
+}
+QPushButton#chooseButton:hover {
+    background-color: #64b5f6;
+}
+
+/*
+QTreeView::branch:has-siblings:!adjoins-item {
+    border-image: url(images/qtree/stylesheet-vline.png) 0;
+}
+
+QTreeView::branch:has-siblings:adjoins-item {
+    border-image: url(images/qtree/stylesheet-branch-more.png) 0;
+}
+
+QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+    border-image: url(:/../images/qtree/stylesheet-branch-end.png) 0;
+}
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+        border-image: none;
+        image: url(images/qtree/stylesheet-branch-closed.png);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings  {
+        border-image: none;
+        image: url(images/qtree/stylesheet-branch-open.png);
+}
+*/
+
+QPushButton#cancelButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#cancelButton:hover {
+    background-color: #64b5f6;
+}
+
+QPushButton#confirmButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#confirmButton:hover {
+    background-color: #64b5f6;
+}

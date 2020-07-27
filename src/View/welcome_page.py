@@ -5,6 +5,7 @@ class UIWelcomeWindow(object):
 
     # the ui constructor function
     def setup_ui(self, welcome_page):
+        stylesheet = open("src/res/stylesheet.qss").read()
         welcome_page.setObjectName("WelcomePage")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
@@ -25,7 +26,7 @@ class UIWelcomeWindow(object):
         # button to open a patient
         self.push_button = QtWidgets.QPushButton(self.centralwidget)
         self.push_button.setGeometry(QtCore.QRect(350, 440, 121, 31))
-        self.push_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;" "font-weight: bold;")
+        #self.push_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;" "font-weight: bold;")
         """
         If the original button is desired, the code is below.;
         
@@ -33,7 +34,7 @@ class UIWelcomeWindow(object):
                                       "color:rgb(75,0,130);\n"
                                       "font-weight: bold;\n")
         """
-        self.push_button.setObjectName("pushButton")
+        self.push_button.setObjectName("open_button")
         self.push_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         # logo holder
         self.logo = QtWidgets.QLabel(self.centralwidget)
@@ -43,6 +44,7 @@ class UIWelcomeWindow(object):
         self.logo.setScaledContents(True)
         self.logo.setObjectName("logo")
         welcome_page.setCentralWidget(self.centralwidget)
+        welcome_page.setStyleSheet(stylesheet)
         self.retranslate_ui(welcome_page)
         QtCore.QMetaObject.connectSlotsByName(welcome_page)
 
@@ -60,7 +62,9 @@ if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
+    stylesheet = open('../res/stylesheet.qss').read()
     ui = UIWelcomeWindow()
     ui.setup_ui(MainWindow)
+    MainWindow.setStyleSheet(stylesheet)
     MainWindow.show()
     sys.exit(app.exec_())
