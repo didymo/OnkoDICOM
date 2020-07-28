@@ -392,4 +392,4 @@ class MenuHandler(object):
 		self.main_window.callManager.show_add_on_options()
 
 	def actionExit(self):
-		self.sys.exit()
+		sys.exit()
