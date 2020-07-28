@@ -19,7 +19,6 @@ class StructureWidget(QtWidgets.QWidget):
         color_square_pix = QtGui.QPixmap(15, 15)
         color_square_pix.fill(self.color)
         color_square_label.setPixmap(color_square_pix)
-        color_square_label.setFixedWidth(20)
         self.layout.addWidget(color_square_label)
 
         # Create checkbox

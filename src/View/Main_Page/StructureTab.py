@@ -3,6 +3,7 @@ import csv
 from PyQt5 import QtWidgets, QtGui, QtCore
 from random import randint, seed
 import numpy as np
+from PyQt5.QtCore import Qt
 
 from src.View.Main_Page.StructureWidget import StructureWidget
 
@@ -92,7 +93,9 @@ class StructureTab(object):
 		self.scroll_area_content.setFocusPolicy(QtCore.Qt.NoFocus)
 		# Layout which will contain the color squares and the checkboxes
 		self.layout_content = QtWidgets.QVBoxLayout(self.scroll_area_content)
-		self.layout_content.setContentsMargins(3, 3, 3, 3)
+		self.layout_content.setContentsMargins(0, 0, 0, 0)
+		self.layout_content.setSpacing(0)
+		self.layout_content.setAlignment(Qt.AlignTop)
 
 	def init_standard_names(self):
 		with open('src/data/csv/organName.csv', 'r') as f:
