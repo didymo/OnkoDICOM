@@ -37,3 +37,22 @@ class StructureWidget(QtWidgets.QWidget):
         self.layout.setAlignment(Qt.AlignLeft)
 
         self.setLayout(self.layout)
+
+    def contextMenuEvent(self, event):
+        menu = QtWidgets.QMenu(self)
+        menu.addAction(self.text)
+        rename_action = menu.addAction("Rename")
+        menu.addSeparator()
+        suggested_action1 = menu.addAction("Suggestion 1")
+        suggested_action2 = menu.addAction("Suggestion 2")
+        suggested_action3 = menu.addAction("Suggestion 3")
+
+        action = menu.exec_(self.mapToGlobal(event.pos()))
+        if action == rename_action:
+            print("Rename")
+        elif action == suggested_action1:
+            print("1")
+        elif action == suggested_action2:
+            print("2")
+        elif action == suggested_action3:
+            print("3")
