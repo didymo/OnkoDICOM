@@ -85,7 +85,7 @@ class Ui_MainWindow(object):
         # The values are converted from the type pydicom.valuerep.DSfloat to
         # int for processing later on in the program
         if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
-            self.window = int(self.dataset[0].WindowWidth)
+                self.window = int(self.dataset[0].WindowWidth)
         elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
             self.window = int(self.dataset[0].WindowWidth[1])
 

@@ -3,6 +3,9 @@ import csv
 from PyQt5 import QtWidgets, QtGui, QtCore
 from random import randint, seed
 import numpy as np
+from PyQt5.QtCore import Qt
+
+from src.View.Main_Page.StructureWidget import StructureWidget
 
 
 class StructureTab(object):
@@ -89,10 +92,10 @@ class StructureTab(object):
 		self.scroll_area.ensureWidgetVisible(self.scroll_area_content)
 		self.scroll_area_content.setFocusPolicy(QtCore.Qt.NoFocus)
 		# Layout which will contain the color squares and the checkboxes
-		self.layout_content = QtWidgets.QGridLayout(self.scroll_area_content)
-		self.layout_content.setContentsMargins(3, 3, 3, 3)
-		self.layout_content.setVerticalSpacing(0)
-		self.layout_content.setHorizontalSpacing(10)
+		self.layout_content = QtWidgets.QVBoxLayout(self.scroll_area_content)
+		self.layout_content.setContentsMargins(0, 0, 0, 0)
+		self.layout_content.setSpacing(0)
+		self.layout_content.setAlignment(Qt.AlignTop)
 
 	def init_standard_names(self):
 		with open('src/data/csv/organName.csv', 'r') as f:
@@ -117,36 +120,12 @@ class StructureTab(object):
 		"""
 		row = 0
 		for roi_id, roi_dict in self.main_window.rois.items():
-			# Create color square
-			color_square_label = QtWidgets.QLabel()
-			color_square_pix = QtGui.QPixmap(15, 15)
-			color_square_pix.fill(self.color_dict[roi_id])
-			color_square_label.setPixmap(color_square_pix)
-			self.layout_content.addWidget(color_square_label, row, 0, 1, 1)
-
-			# Create checkbox
-			text = roi_dict['name']
-			checkbox = QtWidgets.QCheckBox()
-			checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
-			checkbox.clicked.connect(lambda state, text=roi_id: self.structure_checked(state, text))
-			if text in self.standard_organ_names or text in self.standard_volume_names:
-				checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
-			else:
-				checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
-			checkbox.setText(text)
-			self.layout_content.addWidget(checkbox, row, 1, 1, 1)
-
+			structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
+			self.layout_content.addWidget(structure)
 			row += 1
 
 		self.scroll_area.setStyleSheet("QScrollArea {background-color: #ffffff; border-style: none;}")
 		self.scroll_area_content.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
-
-		# Add spacer at the end of the list
-		vspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-		# Add spacer on the right side of the list
-		hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-		self.layout_content.addItem(vspacer, row + 1, 0, 1, -1)
-		self.layout_content.addItem(hspacer, 0, 2, -1, 1)
 
 		self.scroll_area.setWidget(self.scroll_area_content)
 

@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
-
+import sys
 from src.Model.CalculateImages import *
 from copy import deepcopy
 
@@ -73,6 +73,7 @@ class MenuBar(object):
 
 		# Exit Action
 		self.actionExit = QtWidgets.QAction(self.window)
+		self.actionExit.triggered.connect(self.handlers.actionExit)
 
 		# # All the Edit actions
 		# # Undo Action
@@ -421,3 +422,6 @@ class MenuHandler(object):
 		Function triggered when the Add-On Options button is pressed from the menu.
 		"""
 		self.main_window.callManager.show_add_on_options()
+
+	def actionExit(self):
+		sys.exit()

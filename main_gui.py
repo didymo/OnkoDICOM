@@ -9,6 +9,8 @@ import sys
 import platform
 from src.Controller.top_level_controller import Controller
 
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
 if __name__ == "__main__":
 
     # On some configurations error traceback is not being displayed when the program crashes. This is a workaround.
@@ -22,7 +24,6 @@ if __name__ == "__main__":
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QtWidgets.QApplication(sys.argv)
-    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
     # Set the font to Segoe UI, 9, when in windows OS
     if platform.system() == 'Windows':
