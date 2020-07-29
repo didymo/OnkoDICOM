@@ -43,8 +43,8 @@ class MenuBar(object):
 		self.iconTransect = QtGui.QIcon()
 		self.iconTransect.addPixmap(QtGui.QPixmap(":/images/Icon/transect.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		# # Icons for creating ROIs
-		# self.iconBrush = QtGui.QIcon()
-		# self.iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+		self.iconBrush = QtGui.QIcon()
+		self.iconBrush.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Brush.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		# self.iconIsodose = QtGui.QIcon()
 		# self.iconIsodose.addPixmap(QtGui.QPixmap(":/images/Icon/ROI_Isodose.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		self.iconAddOn = QtGui.QIcon()
@@ -124,6 +124,25 @@ class MenuBar(object):
 		self.actionAddOn.setIconVisibleInMenu(True)
 		self.actionAddOn.triggered.connect(self.handlers.add_on_options_handler)
 
+		# Image Fusion
+
+		self.actionFusion = QtWidgets.QAction(self.window)
+		# self.actionFusion.setIcon(self.)
+		self.actionFusion.setIconVisibleInMenu(True)
+
+		# Draw ROI
+
+		self.actionROIDraw = QtWidgets.QAction(self.window)
+		self.actionROIDraw.setIcon(self.iconBrush)
+		self.actionROIDraw.setIconVisibleInMenu(True)
+
+		# Delete ROI
+
+		self.actionROIDelete = QtWidgets.QAction(self.window)
+		# self.actionROIDelete.setIcon(self.)
+		self.actionROIDelete.setIconVisibleInMenu(True)
+
+
 		# Anonymize and Save Action
 		self.actionAnonymize_and_Save = QtWidgets.QAction(self.window)
 		self.actionAnonymize_and_Save.setIcon(self.iconAnonymize_and_Save)
@@ -181,6 +200,7 @@ class MenuBar(object):
 		self.menuTools = QtWidgets.QMenu(self.menubar)
 		self.menuHelp = QtWidgets.QMenu(self.menubar)
 
+
 		# Create sub-menu for Windowing item
 		self.menuWindowing = QtWidgets.QMenu(self.menuTools)
 		self.menuWindowing.setIcon(self.iconWindowing)
@@ -222,10 +242,14 @@ class MenuBar(object):
 		self.menuTools.addAction(self.actionTransect)
 		# self.menuTools.addAction(self.menuROI_Creation.menuAction())
 		self.menuTools.addAction(self.actionAddOn)
+		self.menuTools.addAction(self.actionFusion)
+		self.menuTools.addAction(self.actionROIDraw)
+		self.menuTools.addAction(self.actionROIDelete)
 		self.menuTools.addSeparator()
 		self.menuTools.addAction(self.menuExport.menuAction())
 		self.menuTools.addAction(self.actionAnonymize_and_Save)
 		self.menuTools.setFocusPolicy(QtCore.Qt.NoFocus)
+
 
 		# Add the four menus to the menu bar
 		self.menubar.addAction(self.menuFile.menuAction())
@@ -276,6 +300,11 @@ class MenuBar(object):
 		# self.toolBar.addAction(self.actionIsodose)
 		# self.toolBar.addSeparator()
 		self.toolBar.addAction(self.actionAddOn)
+		self.toolBar.addSeparator()
+		self.toolBar.addAction(self.actionFusion)
+		self.toolBar.addSeparator()
+		self.toolBar.addAction(self.actionROIDraw)
+		self.toolBar.addAction(self.actionROIDelete)
 		self.toolBar.addWidget(spacer)
 		self.toolBar.addWidget(self.exportButton)
 		self.toolBar.addAction(self.actionAnonymize_and_Save)
@@ -311,6 +340,9 @@ class MenuBar(object):
 		self.actionZoom_Out.setText(_translate("MainWindow", "Zoom Out"))
 		self.actionWindowing.setText(_translate("MainWindow", "Windowing"))
 		self.actionTransect.setText(_translate("MainWindow", "Transect"))
+		self.actionROIDelete.setText(_translate("MainWindow", "Delete ROI"))
+		self.actionROIDraw.setText(_translate("MainWindow", "Draw ROI"))
+		self.actionFusion.setText(_translate("MainWindow", "Image Fusion"))
 		# self.actionBrush.setText(_translate("MainWindow", "ROI by Brush"))
 		# self.actionIsodose.setText(_translate("MainWindow", "ROI by Isodose"))
 		self.actionAddOn.setText(_translate("MainWindow", "Add-On Options..."))
