@@ -49,7 +49,7 @@ class StructureWidget(QtWidgets.QWidget):
 
         return organNames
 
-    def roiSuggestions(self):
+    def roi_suggestions(self):
         """
         Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
 
@@ -63,7 +63,6 @@ class StructureWidget(QtWidgets.QWidget):
 
         return suggestions
 
-
     def contextMenuEvent(self, event):
         """
         This function is called whenever the QWidget is right clicked.
@@ -73,20 +72,24 @@ class StructureWidget(QtWidgets.QWidget):
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
         menu.addAction(self.text)
         rename_action = menu.addAction("Rename")
-        menu.addSeparator()
 
-        suggestions = self.roiSuggestions()
-        suggested_action1 = menu.addAction(suggestions[0][0])
-        suggested_action2 = menu.addAction(suggestions[1][0])
-        suggested_action3 = menu.addAction(suggestions[2][0])
+        if not self.standard_name:
+            menu.addSeparator()
+
+            suggestions = self.roi_suggestions()
+            suggested_action1 = menu.addAction(suggestions[0][0])
+            suggested_action2 = menu.addAction(suggestions[1][0])
+            suggested_action3 = menu.addAction(suggestions[2][0])
 
         action = menu.exec_(self.mapToGlobal(event.pos()))
         if action == rename_action:
             print("Rename")
-        elif action == suggested_action1:
-            print("1")
-            print(type(suggestions))
-        elif action == suggested_action2:
-            print("2")
-        elif action == suggested_action3:
-            print("3")
+
+        if not self.standard_name:
+            if action == suggested_action1:
+                print("1")
+                print(type(suggestions))
+            elif action == suggested_action2:
+                print("2")
+            elif action == suggested_action3:
+                print("3")
