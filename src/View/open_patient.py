@@ -133,6 +133,10 @@ class UIOpenPatientWindow(object):
         QCoreApplication.exit(0)
 
     def choose_button_clicked(self):
+        """
+        Executes when the choose button is clicked.
+        Gets filepath from the user and loads all files and subdirectories.
+        """
         # Get folder path from pop up dialog box
         self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
         self.path_text_browser.setText(self.filepath)
@@ -158,11 +162,18 @@ class UIOpenPatientWindow(object):
             self.threadpool.start(worker)
 
     def search_progress(self, progress_update):
+        """
+        Current progress of the file search.
+        """
         self.tree_widget.clear()
         self.tree_widget.addTopLevelItem(QTreeWidgetItem(["Loading selected directory... (%s files searched)"
                                                           % progress_update]))
 
     def on_search_complete(self, dicom_structure):
+        """
+        Executes once the directory search is complete.
+        :param dicom_structure: DICOMStructure object constructed by the directory search.
+        """
         self.choose_button.setEnabled(True)
         self.tree_widget.clear()
         for patient_item in dicom_structure.get_tree_items_list():
@@ -172,6 +183,9 @@ class UIOpenPatientWindow(object):
             QMessageBox.about(self, "No files found", "Selected directory contains no DICOM files.")
 
     def confirm_button_clicked(self):
+        """
+        Begins loading of the selected files.
+        """
         selected_files = []
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
@@ -187,9 +201,15 @@ class UIOpenPatientWindow(object):
             QMessageBox.about(self, "Unable to open selection", "No files selected.")
 
     def on_loaded(self, results):
+        """
+        Executes when the progress bar finishes loaded the selected files.
+        """
         self.open_patient_window.emit(results)
 
     def on_loading_error(self, error_code):
+        """
+        Error handling for progress window.
+        """
         if error_code == 0:
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they are not a DICOM-RT set.")

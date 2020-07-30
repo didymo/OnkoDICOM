@@ -10,12 +10,20 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class ImageLoader(QObject):
+    """
+    This class is responsible for initializing and creating all the values required to create an instance of
+    the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
+    """
 
     def __init__(self, selected_files, *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
 
     def load(self, progress_callback):
+        """
+        :param progress_callback: A signal that receives the current progress of the loading.
+        :return: PatientDictContainer object containing all values related to the loaded DICOM files.
+        """
         progress_callback.emit(("Creating datasets...", 0))
         try:
             path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
