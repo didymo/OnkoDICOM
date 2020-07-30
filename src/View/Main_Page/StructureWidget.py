@@ -38,17 +38,6 @@ class StructureWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
-    def getOrganNames(self):
-        organNames = []
-        with open("src/data/csv/organName.csv", 'r') as file:
-            for line in file:
-                organName = line.split(',', 1)[0]  # add nsplits = 1 for efficiency
-                organNames.append(organName)
-
-        del organNames[0] # removing "Standard name"
-
-        return organNames
-
     def roiSuggestions(self):
         """
         Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
