@@ -76,17 +76,24 @@ class StructureWidget(QtWidgets.QWidget):
         menu.addSeparator()
 
         suggestions = self.roiSuggestions()
-        suggested_action1 = menu.addAction(suggestions[0][0])
-        suggested_action2 = menu.addAction(suggestions[1][0])
-        suggested_action3 = menu.addAction(suggestions[2][0])
+
+        if self.standard_name == False:
+            suggested_action1 = menu.addAction(suggestions[0][0])
+            suggested_action2 = menu.addAction(suggestions[1][0])
+            suggested_action3 = menu.addAction(suggestions[2][0])
+
+            action = menu.exec_(self.mapToGlobal(event.pos()))
+
+            if action == suggested_action1:
+                print("1")
+            elif action == suggested_action2:
+                print("2")
+            elif action == suggested_action3:
+                print("3")
 
         action = menu.exec_(self.mapToGlobal(event.pos()))
+
         if action == rename_action:
             print("Rename")
-        elif action == suggested_action1:
-            print("1")
-            print(type(suggestions))
-        elif action == suggested_action2:
-            print("2")
-        elif action == suggested_action3:
-            print("3")
+
+
