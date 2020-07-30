@@ -44,17 +44,22 @@ class StructureWidget(QtWidgets.QWidget):
 
         menu.addAction(self.text)
         rename_action = menu.addAction("Rename")
-        menu.addSeparator()
-        suggested_action1 = menu.addAction("Suggestion 1")
-        suggested_action2 = menu.addAction("Suggestion 2")
-        suggested_action3 = menu.addAction("Suggestion 3")
+
+        # If the structure name is not in the list of standard names, then add some name suggestions to the menu
+        if not self.standard_name:
+            menu.addSeparator()
+            suggested_action1 = menu.addAction("Suggestion 1")
+            suggested_action2 = menu.addAction("Suggestion 2")
+            suggested_action3 = menu.addAction("Suggestion 3")
 
         action = menu.exec_(self.mapToGlobal(event.pos()))
         if action == rename_action:
             print("Rename")
-        elif action == suggested_action1:
-            print("1")
-        elif action == suggested_action2:
-            print("2")
-        elif action == suggested_action3:
-            print("3")
+
+        if not self.standard_name:
+            if action == suggested_action1:
+                print("1")
+            elif action == suggested_action2:
+                print("2")
+            elif action == suggested_action3:
+                print("3")
