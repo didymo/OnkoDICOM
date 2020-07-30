@@ -98,11 +98,14 @@ class StructureTab(object):
 		self.layout_content.setAlignment(Qt.AlignTop)
 
 	def init_standard_names(self):
+		"""
+		Create two lists containing standard organ and standard volume names as set by the Add-On options.
+		"""
 		with open('src/data/csv/organName.csv', 'r') as f:
 			self.standard_organ_names = []
 
 			csv_input = csv.reader(f)
-			header = next(f)
+			header = next(f)  # Ignore the "header" of the column
 			for row in csv_input:
 				self.standard_organ_names.append(row[0])
 
@@ -110,7 +113,7 @@ class StructureTab(object):
 			self.standard_volume_names = []
 
 			csv_input = csv.reader(f)
-			header = next(f)
+			header = next(f)  # Ignore the "header" of the column
 			for row in csv_input:
 				self.standard_volume_names.append(row[1])
 
@@ -120,6 +123,7 @@ class StructureTab(object):
 		"""
 		row = 0
 		for roi_id, roi_dict in self.main_window.rois.items():
+			# Creates a widget representing each ROI
 			structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
 			self.layout_content.addWidget(structure)
 			row += 1

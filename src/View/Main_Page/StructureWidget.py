@@ -38,6 +38,17 @@ class StructureWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
+    def getOrganNames(self):
+        organNames = []
+        with open("src/data/csv/organName.csv", 'r') as file:
+            for line in file:
+                organName = line.split(',', 1)[0]  # add nsplits = 1 for efficiency
+                organNames.append(organName)
+
+        del organNames[0] # removing "Standard name"
+
+        return organNames
+
     def roiSuggestions(self):
         """
         Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
@@ -54,29 +65,28 @@ class StructureWidget(QtWidgets.QWidget):
 
 
     def contextMenuEvent(self, event):
+        """
+        This function is called whenever the QWidget is right clicked.
+        This creates a right click menu for the widget.
+        """
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
         menu.addAction(self.text)
-
         rename_action = menu.addAction("Rename")
         menu.addSeparator()
+
         suggestions = self.roiSuggestions()
-
-        if self.standard_name == False:
-            suggested_action1 = menu.addAction(suggestions[0][0])
-            suggested_action2 = menu.addAction(suggestions[1][0])
-            suggested_action3 = menu.addAction(suggestions[2][0])
-
-            action = menu.exec_(self.mapToGlobal(event.pos()))
-
-            if action == suggested_action1:
-                print("1")
-            elif action == suggested_action2:
-                print("2")
-            elif action == suggested_action3:
-                print("3")
+        suggested_action1 = menu.addAction(suggestions[0][0])
+        suggested_action2 = menu.addAction(suggestions[1][0])
+        suggested_action3 = menu.addAction(suggestions[2][0])
 
         action = menu.exec_(self.mapToGlobal(event.pos()))
-
         if action == rename_action:
             print("Rename")
+        elif action == suggested_action1:
+            print("1")
+            print(type(suggestions))
+        elif action == suggested_action2:
+            print("2")
+        elif action == suggested_action3:
+            print("3")
