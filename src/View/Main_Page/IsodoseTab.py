@@ -32,7 +32,7 @@ class IsodosesTab(object):
 		Add the whole container 'tab2_isodoses' as a tab in the main page.
 		"""
 		self.layout = QtWidgets.QGridLayout(self.tab1_isodoses)
-		self.layout.setContentsMargins(5, 5, 5, 5)
+		self.layout.setContentsMargins(0, 0, 0, 0)
 
 		# Add Color Squares
 		self.layout.addWidget(self.color1_isod, 0, 0, 1, 1)
@@ -97,16 +97,7 @@ class IsodosesTab(object):
 		self.checkbox8 = QtWidgets.QCheckBox("60 % / " + str(val8) + " cGy")
 		self.checkbox9 = QtWidgets.QCheckBox("30 % / " + str(val9) + " cGy")
 		self.checkbox10 = QtWidgets.QCheckBox("10 % / " + str(val10) + " cGy")
-		self.checkbox1.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox2.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox3.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox4.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox5.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox6.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox7.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox8.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox9.setFocusPolicy(QtCore.Qt.NoFocus)
-		self.checkbox10.setFocusPolicy(QtCore.Qt.NoFocus)
+
 		self.checkbox1.clicked.connect(lambda state, text=107: self.checked_dose(state, text))
 		self.checkbox2.clicked.connect(lambda state, text=105: self.checked_dose(state, text))
 		self.checkbox3.clicked.connect(lambda state, text=100: self.checked_dose(state, text))
