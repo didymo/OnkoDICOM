@@ -40,6 +40,8 @@ class StructureWidget(QtWidgets.QWidget):
 
     def contextMenuEvent(self, event):
         menu = QtWidgets.QMenu(self)
+        menu.setStyleSheet("QMenu::item::selected { background-color: #9370DB; }")
+
         menu.addAction(self.text)
         rename_action = menu.addAction("Rename")
         menu.addSeparator()
