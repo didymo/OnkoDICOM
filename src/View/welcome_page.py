@@ -16,13 +16,13 @@ class UIWelcomeWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.welcome_label = QtWidgets.QLabel(self.centralwidget)
         self.welcome_label.setGeometry(QtCore.QRect(270, 340, 351, 41))
-        self.welcome_label.setStyleSheet("font: 57 18pt;\n"
-                                        "font: 57 18pt;")
+        #self.welcome_label.setStyleSheet("font: 57 18pt;\n"
+        #                                "font: 57 18pt;")
         self.welcome_label.setObjectName("welcomeLabel")
         # the sentence below welcome
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(150, 390, 671, 21)) # previously had 80 in place of 150.
-        self.label_2.setObjectName("label_2")
+        self.label_2.setGeometry(QtCore.QRect(100, 390, 671, 21)) # previously had 80 in place of 100.
+        self.label_2.setObjectName("welcomeLabelDetail")
         # button to open a patient
         self.push_button = QtWidgets.QPushButton(self.centralwidget)
         self.push_button.setGeometry(QtCore.QRect(350, 440, 121, 31))

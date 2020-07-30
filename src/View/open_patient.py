@@ -18,7 +18,7 @@ class UIOpenPatientWindow(object):
 
         main_window.setObjectName("MainWindow")
         main_window.setStyleSheet(stylesheet)
-        main_window.setFixedSize(770, 550)
+        main_window.setFixedSize(700, 550)
         #main_window.setFixedSize(750, 570) # Window size change
         main_window.setWindowTitle("OnkoDICOM")
         icon = QtGui.QIcon()
@@ -38,14 +38,14 @@ class UIOpenPatientWindow(object):
 
         # Frame
         self.frame = QtWidgets.QFrame(self.central_widget)
-        self.frame.setGeometry(QtCore.QRect(36, 10, 611, 101))
+        self.frame.setGeometry(QtCore.QRect(40, 10, 611, 101))
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
 
         self.path_text_browser = QtWidgets.QLineEdit(self.frame)  # changed to text edit instead of browser
         self.path_text_browser.setPlaceholderText("Your Path:")
-        self.path_text_browser.setGeometry(QtCore.QRect(10, 40, 500, 20))
+        self.path_text_browser.setGeometry(QtCore.QRect(6, 40, 500, 20))
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
@@ -63,7 +63,7 @@ class UIOpenPatientWindow(object):
         # self.grid_layout.addWidget(self.choose_button, 1, 2, 1, 1)
 
         self.choose_label = QtWidgets.QLabel(self.frame)
-        self.choose_label.setGeometry(QtCore.QRect(10, 10, 571, 16))
+        self.choose_label.setGeometry(QtCore.QRect(6, 10, 571, 16))
         self.choose_label.setObjectName("choose_label")
         self.choose_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Choose the file path of a "
                                   "folder containing DICOM files to create the Patient file "
@@ -71,7 +71,7 @@ class UIOpenPatientWindow(object):
         # self.grid_layout.addWidget(self.choose_label, 0, 1, 1, 3)
 
         self.patient_file_label = QtWidgets.QLabel(self.frame)
-        self.patient_file_label.setGeometry(QtCore.QRect(10, 70, 571, 16))
+        self.patient_file_label.setGeometry(QtCore.QRect(6, 70, 571, 16))
         self.patient_file_label.setObjectName("patient_file_label")
         self.patient_file_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Patient File "
                                         "directory shown below once file path chosen. Please select the file(s) you "
@@ -93,7 +93,7 @@ class UIOpenPatientWindow(object):
 
         self.cancel_button = QtWidgets.QPushButton(self.frame_2)
         self.cancel_button.setObjectName("cancelButton")
-        self.cancel_button.setGeometry(QtCore.QRect(420, 370, 85, 23))
+        self.cancel_button.setGeometry(QtCore.QRect(420, 365, 85, 23))
         self.cancel_button.setText("Cancel")
         self.cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.cancel_button.clicked.connect(self.cancel_button_clicked) # Signal Closing Application
@@ -103,7 +103,7 @@ class UIOpenPatientWindow(object):
         self.confirm_Button.setObjectName("confirmButton")
         self.confirm_Button.setText("Confirm")
         self.confirm_Button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.confirm_Button.setGeometry(QtCore.QRect(525, 370, 85, 23))
+        self.confirm_Button.setGeometry(QtCore.QRect(525, 365, 85, 23))
         self.confirm_Button.clicked.connect(self.confirm_button_clicked)
         #self.grid_layout.addWidget(self.confirm_Button, 9, 4, 1, 1)
 

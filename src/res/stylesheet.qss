@@ -10,10 +10,22 @@ QLabel#welcome {
 }
 
 QPushButton {
+    font-weight: bold;
     font-family: Roboto Black;
 }
 
 /* Welcome Page */
+
+QLabel#welcomeLabel {
+    font-weight: bold;
+    font-size: 18pt;
+}
+
+QLabel#welcomeLabelDetail {
+    font-weight: semi-bold;
+    font-size: 16px;
+}
+
 QPushButton#open_button {
     font-size:14px;
     background-color: #9370DB;
@@ -30,7 +42,7 @@ QPushButton#open_button:hover {
 /* Open Patient */
 QLineEdit {
     border: 2px solid gray;
-    border-radius: 10px;
+    border-radius: 6px;
     height: 36px;
     font-size: 14px;
     padding: 0 8px;
@@ -41,6 +53,7 @@ QTreeView {
     border-radius:2px;
 }
 QTreeView::item:hover {
+    color: #000 !important;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);
     border: 1px solid #bfcde4;
 }
@@ -60,27 +73,27 @@ QPushButton#chooseButton:hover {
 
 /*
 QTreeView::branch:has-siblings:!adjoins-item {
-    border-image: url(images/qtree/stylesheet-vline.png) 0;
+    border-image: url(':/res/images/qtree/stylesheet-vline.png') 0;
 }
 
 QTreeView::branch:has-siblings:adjoins-item {
-    border-image: url(images/qtree/stylesheet-branch-more.png) 0;
+    border-image: url(':/res/images/qtree/stylesheet-branch-more.png') 0;
 }
 
 QTreeView::branch:!has-children:!has-siblings:adjoins-item {
-    border-image: url(:/../images/qtree/stylesheet-branch-end.png) 0;
+    border-image: url(':/res/images/qtree/stylesheet-branch-end.png') 0;
 }
 
 QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings {
         border-image: none;
-        image: url(images/qtree/stylesheet-branch-closed.png);
+        image: url(':/res/images/qtree/stylesheet-branch-closed.png');
 }
 
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
-        image: url(images/qtree/stylesheet-branch-open.png);
+        image: url(':/res/images/qtree/stylesheet-branch-open.png');
 }
 */
 
