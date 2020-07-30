@@ -65,6 +65,10 @@ class StructureWidget(QtWidgets.QWidget):
 
 
     def contextMenuEvent(self, event):
+        """
+        This function is called whenever the QWidget is right clicked.
+        This creates a right click menu for the widget.
+        """
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
         menu.addAction(self.text)
