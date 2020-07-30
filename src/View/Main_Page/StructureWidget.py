@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt
-
+from fuzzywuzzy import fuzz, process
 
 class StructureWidget(QtWidgets.QWidget):
 
@@ -38,20 +38,49 @@ class StructureWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
+    def getOrganNames(self):
+        organNames = []
+        with open("src/data/csv/organName.csv", 'r') as file:
+            for line in file:
+                organName = line.split(',', 1)[0]  # add nsplits = 1 for efficiency
+                organNames.append(organName)
+
+        del organNames[0] # removing "Standard name"
+
+        return organNames
+
+    def roiSuggestions(self):
+        """
+        Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
+
+        :return: two dimensional list with ROI name and string match percent
+        i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
+        """
+
+        # TODO extra conditions need to be added for a more accurate suggestion
+        roi_list = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+        suggestions = process.extract(self.text, roi_list, limit=3) # will get the top 3 matches
+
+        return suggestions
+
+
     def contextMenuEvent(self, event):
         menu = QtWidgets.QMenu(self)
         menu.addAction(self.text)
         rename_action = menu.addAction("Rename")
         menu.addSeparator()
-        suggested_action1 = menu.addAction("Suggestion 1")
-        suggested_action2 = menu.addAction("Suggestion 2")
-        suggested_action3 = menu.addAction("Suggestion 3")
+
+        suggestions = self.roiSuggestions()
+        suggested_action1 = menu.addAction(suggestions[0][0])
+        suggested_action2 = menu.addAction(suggestions[1][0])
+        suggested_action3 = menu.addAction(suggestions[2][0])
 
         action = menu.exec_(self.mapToGlobal(event.pos()))
         if action == rename_action:
             print("Rename")
         elif action == suggested_action1:
             print("1")
+            print(type(suggestions))
         elif action == suggested_action2:
             print("2")
         elif action == suggested_action3:

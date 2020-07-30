@@ -31,3 +31,4 @@ six
 soupsieve
 urllib3
 wheel
+fuzzywuzzy
