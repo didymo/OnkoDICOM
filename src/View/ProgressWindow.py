@@ -20,7 +20,7 @@ class ProgressWindow(QDialog):
         self.progress_bar.setMaximum(100)
 
         self.setWindowTitle("Loading")
-        self.resize(248, 80)
+        self.setFixedSize(248, 80)
 
         self.text_field = QLabel("Loading")
 

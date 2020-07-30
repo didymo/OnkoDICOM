@@ -304,7 +304,7 @@ class Extended(QtCore.QThread):
 
         for i in range(len(roi_list)):
             p = multiprocessing.Process(target=self.multi_get_dvhs, args=(
-                rtss, rtdose, roi_list[i], queue, callback))
+                rtss, rtdose, roi_list[i], queue, callback, dose_limit))
             processes.append(p)
             self.copied += len(processes)
             callback(self.copied) #update the bar
