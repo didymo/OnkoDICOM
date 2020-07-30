@@ -4,6 +4,11 @@ from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
 
 class DICOMStructure:
+    """
+    A class representing the structure of the given DICOM files.
+    Used by the open patient window to generate the tree structure of the DICOM set.
+    Creates a hierarchy of Patient -> can have many Studies -> which can have many Series -> which can have many Images.
+    """
 
     def __init__(self):
         """
@@ -29,12 +34,19 @@ class DICOMStructure:
         return False
 
     def get_patient(self, patient_id):
+        """
+        :param patient_id: PatientID to check.
+        :return: Patient object if patient found.
+        """
         for patient in self.patients:
             if patient_id == patient.patient_id:
                 return patient
         return None
 
     def get_files(self):
+        """
+        :return: List of all filepaths in all images below this item in the hierarchy.
+        """
         filepaths = []
         for patient in self.patients:
             filepaths += (patient.get_files())
@@ -81,12 +93,19 @@ class Patient:
         return False
 
     def get_study(self, study_id):
+        """
+        :param study_id: StudyID to check.
+        :return: Study object if study found.
+        """
         for study in self.studies:
             if study_id == study.study_id:
                 return study
         return None
 
     def get_files(self):
+        """
+        :return: List of all filepaths in all images below this item in the hierarchy.
+        """
         filepaths = []
         for study in self.studies:
             filepaths += (study.get_files())
@@ -94,11 +113,19 @@ class Patient:
         return filepaths
 
     def output_as_text(self):
+        """
+        :return: Information about the object as a string
+        """
         return "Patient: %s (%s)" % (self.patient_name, self.patient_id)
 
     def get_widget_item(self):
+        """
+        :return: DICOMWidgetItem to be used in a QTreeWidget.
+        """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
+
+        # Add all children of this object as children of the widget item.
         for study in self.studies:
             widget_item.addChild(study.get_widget_item())
 
@@ -134,12 +161,19 @@ class Study:
         return False
 
     def get_series(self, series_id):
+        """
+        :param series_id: SeriesID to check.
+        :return: Series object if series found.
+        """
         for series in self.series:
             if series_id == series.series_id:
                 return series
         return None
 
     def get_files(self):
+        """
+        :return: List of all filepaths in all images below this item in the hierarchy.
+        """
         filepaths = []
         for series in self.series:
             filepaths += (series.get_files())
@@ -147,6 +181,9 @@ class Study:
         return filepaths
 
     def output_as_text(self):
+        """
+        :return: Information about the object as a string
+        """
         return "Study: %s (DICOM-RT: %s)" % (self.study_description, "Y" if self.is_dicom_rt() else "N")
 
     def is_dicom_rt(self):
@@ -168,8 +205,13 @@ class Study:
         return sorted(rt_classes) == sorted(contained_classes)
 
     def get_widget_item(self):
+        """
+        :return: DICOMWidgetItem to be used in a QTreeWidget.
+        """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
+
+        # Add all children of this object as children of the widget item.
         for series in self.series:
             widget_item.addChild(series.get_widget_item())
 
@@ -205,12 +247,19 @@ class Series:
         return False
 
     def get_image(self, image_id):
+        """
+        :param image_id: ImageID to check
+        :return: Image object if Image found.
+        """
         for image in self.images:
             if image_id == image.series_id:
                 return image
         return None
 
     def get_files(self):
+        """
+        :return: List of all filepaths in all images below this item in the hierarchy.
+        """
         filepaths = []
         for image in self.images:
             filepaths += [image.path]
@@ -218,9 +267,15 @@ class Series:
         return filepaths
 
     def output_as_text(self):
+        """
+        :return: Information about the object as a string
+        """
         return "Series: %s (%s, %s images)" % (self.series_description, self.get_series_type(), len(self.images))
 
     def get_series_type(self):
+        """
+        :return: List of string or single string containing modalities of all images in the series.
+        """
         series_types = []
         for image in self.images:
             modality = image.dicom_file.Modality
@@ -229,6 +284,9 @@ class Series:
         return series_types if len(series_types) > 1 else series_types[0]
 
     def get_widget_item(self):
+        """
+        :return: DICOMWidgetItem to be used in a QTreeWidget.
+        """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
         widget_item.setCheckState(0, Qt.Unchecked)
@@ -248,4 +306,7 @@ class Image:
         self.image_id = dicom_file.SOPInstanceUID
 
     def output_as_text(self):
+        """
+        :return: Information about the object as a string
+        """
         return "Image: %s | Path: %s" % (self.image_id, self.path)

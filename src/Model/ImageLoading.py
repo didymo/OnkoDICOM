@@ -68,32 +68,13 @@ allowed_classes = {
 class NotRTSetError(Exception):
     pass
 
+
 class NotAllowedClassError(Exception):
     pass
 
 
-def get_patient_attributes(selected_files):
-    path = os.path.dirname(os.path.commonprefix(selected_files))  # Temporary patch, gets the common root folder.
-    read_data_dict, file_names_dict = get_datasets(selected_files)
-    if not is_dataset_dicom_rt(read_data_dict):
-        raise NotRTSetError
-
-    dataset_rtss = dcmread(file_names_dict['rtss'])
-    dataset_rtdose = dcmread(file_names_dict['rtdose'])
-
-    rois = get_roi_info(dataset_rtss)
-    raw_dvh = calc_dvhs(dataset_rtss, dataset_rtdose, rois)
-    dvh_x_y = converge_to_0_dvh(raw_dvh)
-    dict_raw_contour_data, dict_numpoints = get_raw_contour_data(dataset_rtss)
-    dict_pixluts = get_pixluts(read_data_dict)
-
-    return path, read_data_dict, file_names_dict, rois, raw_dvh, dvh_x_y, dict_raw_contour_data,\
-        dict_numpoints, dict_pixluts
-
-
 def get_datasets(filepath_list):
     """
-    TODO This function will need to be adapted to accept files outside the DICOM-RT set.
     :param filepath_list: List of all files to be searched.
     :return: Tuple (read_data_dict, file_names_dict)
     """
@@ -170,7 +151,6 @@ def get_roi_info(dataset_rtss):
 
 def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
     """
-    TODO currently single_calc_dvh, multiprocessing needs to be considered for all platforms.
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
     :param rois: Dictionary of ROI information.
@@ -195,6 +175,9 @@ def calc_dvh_worker(rtss, dose, roi, queue, dose_limit=None):
 
 
 def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
+    """
+    Multiprocessing variant of calc_dvh for fork-based platforms.
+    """
     queue = Queue()
     processes = []
     dict_dvh = {}
