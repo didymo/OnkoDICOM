@@ -45,7 +45,7 @@ class UIOpenPatientWindow(object):
 
         self.path_text_browser = QtWidgets.QLineEdit(self.frame)  # changed to text edit instead of browser
         self.path_text_browser.setPlaceholderText("Your Path:")
-        self.path_text_browser.setGeometry(QtCore.QRect(6, 40, 500, 20))
+        self.path_text_browser.setGeometry(QtCore.QRect(6, 40, 500, 26))
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
@@ -56,7 +56,7 @@ class UIOpenPatientWindow(object):
 
         self.choose_button = QtWidgets.QPushButton(self.frame)
         self.choose_button.setObjectName("chooseButton")
-        self.choose_button.setGeometry(QtCore.QRect(526, 40, 85, 23))
+        self.choose_button.setGeometry(QtCore.QRect(521, 40, 90, 26))
         self.choose_button.setText("Choose")
         self.choose_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.choose_button.clicked.connect(self.choose_button_clicked)
@@ -71,7 +71,7 @@ class UIOpenPatientWindow(object):
         # self.grid_layout.addWidget(self.choose_label, 0, 1, 1, 3)
 
         self.patient_file_label = QtWidgets.QLabel(self.frame)
-        self.patient_file_label.setGeometry(QtCore.QRect(6, 70, 571, 16))
+        self.patient_file_label.setGeometry(QtCore.QRect(6, 76, 571, 16))
         self.patient_file_label.setObjectName("patient_file_label")
         self.patient_file_label.setText("<html><head/><body><p><span style=\" font-size:10pt;\">Patient File "
                                         "directory shown below once file path chosen. Please select the file(s) you "
@@ -93,7 +93,7 @@ class UIOpenPatientWindow(object):
 
         self.cancel_button = QtWidgets.QPushButton(self.frame_2)
         self.cancel_button.setObjectName("cancelButton")
-        self.cancel_button.setGeometry(QtCore.QRect(420, 365, 85, 23))
+        self.cancel_button.setGeometry(QtCore.QRect(414, 365, 90, 26))
         self.cancel_button.setText("Cancel")
         self.cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.cancel_button.clicked.connect(self.cancel_button_clicked) # Signal Closing Application
@@ -103,7 +103,7 @@ class UIOpenPatientWindow(object):
         self.confirm_Button.setObjectName("confirmButton")
         self.confirm_Button.setText("Confirm")
         self.confirm_Button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.confirm_Button.setGeometry(QtCore.QRect(525, 365, 85, 23))
+        self.confirm_Button.setGeometry(QtCore.QRect(520, 365, 90, 26))
         self.confirm_Button.clicked.connect(self.confirm_button_clicked)
         #self.grid_layout.addWidget(self.confirm_Button, 9, 4, 1, 1)
 
