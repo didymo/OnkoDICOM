@@ -305,6 +305,7 @@ class MenuBar(object):
 		self.toolBar.addAction(self.actionFusion)
 		self.toolBar.addSeparator()
 		self.toolBar.addAction(self.actionROIDraw)
+		self.toolBar.addSeparator()
 		self.toolBar.addAction(self.actionROIDelete)
 		self.toolBar.addWidget(spacer)
 		self.toolBar.addWidget(self.exportButton)
