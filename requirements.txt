@@ -11,7 +11,7 @@ docopt
 idna
 kiwisolver
 git+https://github.com/matplotlib/legacycontour.git
-matplotlib
+matplotlib==3.2
 numpy
 pandas
 pydicom
