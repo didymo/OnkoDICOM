@@ -20,8 +20,9 @@ def get_dicom_structure(path, progress_callback):
     files_searched = 0
     total_files = sum([len(files) for root, dirs, files in os.walk(path)])
 
+    no_patient_id = 1
+
     for root, dirs, files in os.walk(path):
-        no_patient_id = 1
         for file in files:
 
             # The progress is updated first because the total files represents ALL files inside the selected directory,
