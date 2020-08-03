@@ -12,7 +12,7 @@ from src.View.ProgressWindow import ProgressWindow
 
 
 class UIOpenPatientWindow(object):
-    open_patient_window = QtCore.pyqtSignal(tuple)
+    patient_info_initialized = QtCore.pyqtSignal(tuple)
 
     def setup_ui(self, main_window):
         stylesheet = open("src/res/stylesheet.qss").read()
@@ -230,7 +230,7 @@ class UIOpenPatientWindow(object):
         """
         Executes when the progress bar finishes loaded the selected files.
         """
-        self.open_patient_window.emit(results)
+        self.patient_info_initialized.emit(results)
 
     def on_loading_error(self, error_code):
         """
