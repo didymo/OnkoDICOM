@@ -31,6 +31,10 @@ class StructureWidget(QtWidgets.QWidget):
         else:
             self.standard_name = False
             checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
+        for item in structure_tab.standard_volume_names: # any suffix number will still be considered standard.
+            if text.startswith(item):
+                self.standard_name = True
+                checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
         checkbox.setText(text)
         self.layout.addWidget(checkbox)
 
