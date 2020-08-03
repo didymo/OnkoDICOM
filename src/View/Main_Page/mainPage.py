@@ -16,7 +16,7 @@ from src.View.Main_Page.MenuBar import *
 from src.View.Main_Page.resources_rc import *
 
 
-class Ui_MainWindow(object):
+class UIMainWindow(object):
 
     # To initiate progress bar for pyradiomics through anonymization
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)

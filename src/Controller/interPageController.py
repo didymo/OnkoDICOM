@@ -209,7 +209,7 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
 #                                                                                                                   #
 #####################################################################################################################
 
-class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal(str)
     # When the pyradiomics button is pressed

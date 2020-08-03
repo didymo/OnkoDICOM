@@ -3,7 +3,7 @@ from shutil import which
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from src.View.Main_Page.mainPage import Ui_MainWindow
+from src.View.Main_Page.mainPage import UIMainWindow
 from src.View.welcome_page import UIWelcomeWindow
 from src.View.open_patient import UIOpenPatientWindow
 
@@ -39,7 +39,7 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
         self.go_next_window.emit(patient_attributes)
 
 
-class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal()
