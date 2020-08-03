@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Add_On_Options(object):
+class UIAddOnOptions(object):
     """
     Create all UI components for the Add-On options window.
     """
@@ -20,19 +20,19 @@ class Ui_Add_On_Options(object):
         self.note = None
         self.fill_options = None
 
-    def setupUi(self, Add_On_Options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
+    def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         """
         Create the window and the components for each option view.
         """
-        Add_On_Options.setObjectName("Add_On_Options")
-        Add_On_Options.setMinimumSize(766, 600)
-        Add_On_Options.setStyleSheet("")
-        Add_On_Options.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        add_on_options.setObjectName("Add_On_Options")
+        add_on_options.setMinimumSize(766, 600)
+        add_on_options.setStyleSheet("")
+        add_on_options.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
         _translate = QtCore.QCoreApplication.translate
-        Add_On_Options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))
+        add_on_options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))
         
-        self.widget = QtWidgets.QWidget(Add_On_Options)
+        self.widget = QtWidgets.QWidget(add_on_options)
 
         self.init_user_options_header()
 
@@ -50,9 +50,8 @@ class Ui_Add_On_Options(object):
         self.init_tree_list()
         self.set_layout()
 
-        Add_On_Options.setCentralWidget(self.widget)
-        QtCore.QMetaObject.connectSlotsByName(Add_On_Options)
-
+        add_on_options.setCentralWidget(self.widget)
+        QtCore.QMetaObject.connectSlotsByName(add_on_options)
 
     def set_layout(self):
         # Layout for the whole window
@@ -107,7 +106,6 @@ class Ui_Add_On_Options(object):
         _translate = QtCore.QCoreApplication.translate
         self.cancel_button.setText(_translate("Add_On_Options", "Cancel"))
 
-
     def create_apply_button(self):
         """
         Create APPLY button to save all changes made.
@@ -123,7 +121,6 @@ class Ui_Add_On_Options(object):
 
         _translate = QtCore.QCoreApplication.translate
         self.apply_button.setText(_translate("Add_On_Options", "Apply"))
-
 
     def init_user_options_header(self):
         """
@@ -147,7 +144,6 @@ class Ui_Add_On_Options(object):
             "Add-On Options you will be able to Add/Modify/Delete the \n"
             " settings for the displayed options on the left. ")
 
-
     def init_tree_list(self):
         """
         Create a tree view that holds the different options.
@@ -167,9 +163,9 @@ class Ui_Add_On_Options(object):
         """
         item = self.treeList.selectedIndexes()[0]
         self.optionTitle.setText(item.model().itemFromIndex(index).text()) #changes the title
-        self.changeDisplay(item.model().itemFromIndex(index).text()) #changes the display
+        self.change_display(item.model().itemFromIndex(index).text()) #changes the display
 
-    def changeDisplay(self, type):
+    def change_display(self, type):
         """
         Update the right view display of the window.
         """
@@ -275,9 +271,6 @@ class Ui_Add_On_Options(object):
             self.fill_options.setVisible(True)
 
 
-
-
-
 class WindowingOptions(object):
     """
     Manage the UI of Windowing option.
@@ -343,7 +336,6 @@ class StandardOrganOptions(object):
         self.create_add_button()
         self.create_import_csv_button()
         self.create_table_view()
-
 
     def create_add_button(self):
         """
@@ -563,8 +555,8 @@ class LineFillOptions(object):
 
         window_options.fill_layout = QtWidgets.QFormLayout(window_options.widget)
         window_options.fill_options = QtWidgets.QWidget(window_options.widget)
-        self.create_combobox_line_style_ROI()
-        self.create_slider_opacity_ROI()
+        self.create_combobox_line_style_roi()
+        self.create_slider_opacity_roi()
         self.create_combobox_line_style_isodoses()
         self.create_slider_opacity_isodose()
         self.create_combobox_line_width()
@@ -594,8 +586,7 @@ class LineFillOptions(object):
         # self.window.fill_options.setGeometry(QtCore.QRect(290, 90, 451, 370))
         self.window.fill_options.setVisible(False)
 
-
-    def create_combobox_line_style_ROI(self):
+    def create_combobox_line_style_roi(self):
         """
         Create combobox with the available lines for ROIs.
         """
@@ -608,7 +599,7 @@ class LineFillOptions(object):
         self.window.line_style_ROI.addItem("Dash-Dot-Dot Line")
         self.window.line_style_ROI.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
 
-    def create_slider_opacity_ROI(self):
+    def create_slider_opacity_roi(self):
         """
         Create slider to determine the opacity of the fill for ROIs
         """
@@ -618,7 +609,7 @@ class LineFillOptions(object):
         self.window.opacity_ROI.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.window.opacity_ROI.setTickInterval(10)
         self.window.opacity_ROI.setValue(self.roi_opacity)
-        self.window.opacity_ROI.valueChanged.connect(self.update_ROI_opacity)
+        self.window.opacity_ROI.valueChanged.connect(self.update_roi_opacity)
         self.window.opacityLabel_ROI = QtWidgets.QLabel(
             "ROI Fill Opacity: \t {}%".format(int(self.window.opacity_ROI.value())))
 
@@ -645,7 +636,7 @@ class LineFillOptions(object):
         self.window.opacity_ISO.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.window.opacity_ISO.setTickInterval(10)
         self.window.opacity_ISO.setValue(self.iso_opacity)
-        self.window.opacity_ISO.valueChanged.connect(self.update_ISO_opacity)
+        self.window.opacity_ISO.valueChanged.connect(self.update_iso_opacity)
         self.window.opacityLabel_ISO = QtWidgets.QLabel(
             "ISO Fill Opacity: \t {}%".format(int(self.window.opacity_ISO.value())))
 
@@ -661,13 +652,13 @@ class LineFillOptions(object):
         self.window.line_width.addItem("2.5")
         self.window.line_width.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
 
-    def update_ROI_opacity(self):
+    def update_roi_opacity(self):
         """
         Update the percentage on slider change for ROIs.
         """
         self.window.opacityLabel_ROI.setText("ROI Fill Opacity: \t {}%".format(int(self.window.opacity_ROI.value())))
 
-    def update_ISO_opacity(self):
+    def update_iso_opacity(self):
         """
         Update the percentage on slider change for isodoses.
         """

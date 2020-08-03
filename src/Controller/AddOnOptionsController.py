@@ -8,7 +8,7 @@ import sys
 import webbrowser
 from collections import deque
 from PyQt5.QtWidgets import QFileDialog
-from src.View.Add_On_Options import *
+from src.View.AddOnOptions import *
 from src.data.csv import *
 from src.View.InputDialogs import *
 
@@ -18,60 +18,61 @@ from src.View.InputDialogs import *
 #                                                                                                    #
 ######################################################################################################
 
-class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
 
-    def __init__(self, window): #initialization function
-        super(Add_On_Options, self).__init__()
+class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
+
+    def __init__(self, window):  # initialization function
+        super(AddOnOptions, self).__init__()
         # read configuration file for line and fill options
         with open('src/data/line&fill_configuration', 'r') as stream:
             elements = stream.readlines()
-            #if file is not empty, each line represents the last saved configuration in the given order
+            # if file is not empty, each line represents the last saved configuration in the given order
             if len(elements) > 0:
                 roi_line = int(elements[0].replace('\n', ''))
                 roi_opacity = int(elements[1].replace('\n', ''))
                 iso_line = int(elements[2].replace('\n', ''))
                 iso_opacity = int(elements[3].replace('\n', ''))
                 line_width = float(elements[4].replace('\n', ''))
-            else: #if file is empty for some reason, use the default measures below
+            else:  # if file is empty for some reason, use the default measures below
                 roi_line = 1
                 roi_opacity = 10
                 iso_line = 2
                 iso_opacity = 5
                 line_width = 2.0
             stream.close()
-        #initialise the UI
+        # initialise the UI
         self.window = window
-        self.setupUi(self, roi_line, roi_opacity,
-                     iso_line, iso_opacity, line_width)
-        #this data is used to create the tree view of functionalities on the left of the window
-        #each entrie will be used as a button to change the view on the right accordingly
+        self.setup_ui(self, roi_line, roi_opacity,
+                      iso_line, iso_opacity, line_width)
+        # this data is used to create the tree view of functionalities on the left of the window
+        # each entrie will be used as a button to change the view on the right accordingly
         data = [
             {'level': 0, 'dbID': 442, 'parent_ID': 6, 'short_name': 'User Options'},
 
             {'level': 1, 'dbID': 522, 'parent_ID': 442, 'short_name': 'Image Windowing'},
             {'level': 1, 'dbID': 556, 'parent_ID': 442, 'short_name': 'Standard Organ Names'},
             {'level': 1, 'dbID': 527, 'parent_ID': 442, 'short_name': 'Standard Volume Names'},
-            # {'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name': 'Create ROI from Isodose'}, #extra option not fully supported
+            # {'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name': 'Create ROI from Isodose'}, # extra option not fully supported
             {'level': 1, 'dbID': 520, 'parent_ID': 442, 'short_name': 'Patient ID - Hash ID'},
             {'level': 1, 'dbID': 523, 'parent_ID': 442, 'short_name': 'Line & Fill configuration'}
 
         ]
-        #create a model for the tree view of options and attach the data
+        # create a model for the tree view of options and attach the data
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
         self.importData(data)
         self.treeList.expandAll()
-        #fill the corresponding tables with the corresponding data from the csv files
+        # fill the corresponding tables with the corresponding data from the csv files
         self.fillTables()
-        self.treeList.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers) #make the tree entries not editable
-        #Functionalities of the Apply and Cancel button
-        self.cancel_button.clicked.connect(self.close) #Close the window by discarding all changes
+        self.treeList.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers) # make the tree entries not editable
+        # Functionalities of the Apply and Cancel button
+        self.cancel_button.clicked.connect(self.close) # Close the window by discarding all changes
         self.apply_button.clicked.connect(self.accepting)
-        #Connecting the functionalities of the view dependant buttons
+        # Connecting the functionalities of the view dependant buttons
         self.add_new_window.clicked.connect(self.new_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
-        # self.add_new_roi.clicked.connect(self.new_isodose) #extra functionality
+        # self.add_new_roi.clicked.connect(self.new_isodose) # extra functionality
         self.import_organ_csv.clicked.connect(self.import_organs)
 
         # adding the right click menus for each table
@@ -85,13 +86,13 @@ class Add_On_Options(QtWidgets.QMainWindow, Ui_Add_On_Options):
         self.table_volume.customContextMenuRequested.connect(self.on_customContextMenuRequested_Volume)
         # self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
-        #making the URL column a double clicked link
-        self.table_organ.itemDoubleClicked.connect(self.OpenLink)
+        # making the URL column a double clicked link
+        self.table_organ.itemDoubleClicked.connect(self.open_link)
 
-    #function to open the corresponding URL in a new browser
-    def OpenLink(self, item):
+    # function to open the corresponding URL in a new browser
+    def open_link(self, item):
         if item.column() == 3 and item.text() != '':
-            #checking if the url has http entered or not
+            # checking if the url has http entered or not
             if 'http://' in item.text():
                 webbrowser.open_new(item.text())
             else:
@@ -503,5 +504,5 @@ class AddOptions:
         self.window = window
 
     def show_add_on_options(self):
-        self.options_window = Add_On_Options(self.window)
+        self.options_window = AddOnOptions(self.window)
         self.options_window.show()

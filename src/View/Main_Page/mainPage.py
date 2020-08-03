@@ -2,7 +2,7 @@ import glob
 
 from PyQt5.QtCore import Qt
 
-from src.Controller.Add_On_OController import AddOptions
+from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.View.InputDialogs import Rxdose_Check
 from src.View.Main_Page.PatientBar import *
