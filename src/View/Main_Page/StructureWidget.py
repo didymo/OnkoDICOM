@@ -62,6 +62,8 @@ class StructureWidget(QtWidgets.QWidget):
         This function is called whenever the QWidget is right clicked.
         This creates a right click menu for the widget.
         """
+
+        # Part 1: Construct context menu
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
         menu.addAction(self.text)
@@ -75,6 +77,7 @@ class StructureWidget(QtWidgets.QWidget):
             suggested_action2 = menu.addAction(suggestions[1][0])
             suggested_action3 = menu.addAction(suggestions[2][0])
 
+        # Part 2: Determine action taken
         action = menu.exec_(self.mapToGlobal(event.pos()))
         if action == rename_action:
             print("Rename")
