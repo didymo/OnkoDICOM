@@ -1,4 +1,5 @@
 from PyQt5 import QtWidgets
+from PyQt5.QtGui import QKeySequence
 
 try:
 	from matplotlib import _cntr as cntr
@@ -55,6 +56,12 @@ class DicomView(object):
 		self.gridLayout_view.addWidget(self.view)
 		self.gridLayout_view.addWidget(self.slider)
 		self.main_window.tab2.addTab(self.main_window.tab2_view, "DICOM View")
+
+		self.zoom_in_shortcut = QtWidgets.QShortcut(QKeySequence("Ctrl+="), self.main_window.tab2_view)
+		self.zoom_in_shortcut.activated.connect(self.zoomIn)
+
+		self.zoom_out_shortcut = QtWidgets.QShortcut(QKeySequence("Ctrl+-"), self.main_window.tab2_view)
+		self.zoom_out_shortcut.activated.connect(self.zoomOut)
 
 
 	def init_slider(self):
