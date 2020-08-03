@@ -94,7 +94,7 @@ class UIOpenPatientWindow(object):
         self.cancel_button = QtWidgets.QPushButton(self.frame_2)
         self.cancel_button.setObjectName("cancelButton")
         self.cancel_button.setGeometry(QtCore.QRect(414, 365, 90, 26))
-        self.cancel_button.setText("Cancel")
+        self.cancel_button.setText("Exit")
         self.cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.cancel_button.clicked.connect(self.cancel_button_clicked) # Signal Closing Application
         #self.grid_layout.addWidget(self.cancel_button, 9, 3, 1, 1)
