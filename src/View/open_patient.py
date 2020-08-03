@@ -1,3 +1,4 @@
+import threading
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -29,6 +30,9 @@ class UIOpenPatientWindow(object):
         # Create threadpool for multithreading
         self.threadpool = QThreadPool()
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
+        # Create interrupt event for stopping the directory search
+        self.interrupt_flag = threading.Event()
 
         self.central_widget = QtWidgets.QWidget(main_window)
         self.central_widget.setObjectName("centralwidget")
@@ -107,6 +111,14 @@ class UIOpenPatientWindow(object):
         self.confirm_Button.clicked.connect(self.confirm_button_clicked)
         #self.grid_layout.addWidget(self.confirm_Button, 9, 4, 1, 1)
 
+        self.stop_button = QtWidgets.QPushButton(self.frame_2)
+        self.stop_button.setObjectName("stopButton")
+        self.stop_button.setText("Stop Search")
+        self.stop_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.stop_button.setGeometry(QtCore.QRect(6, 365, 120, 26))
+        self.stop_button.clicked.connect(self.stop_button_clicked)
+        self.stop_button.setVisible(False)  # Button doesn't show until a search commences
+
         self.selected_directory_label = QtWidgets.QLabel(self.frame_2)
         self.selected_directory_label.setObjectName("selected_directory_label")
         self.selected_directory_label.setGeometry(QtCore.QRect(6, 330, 541, 16))
@@ -153,13 +165,22 @@ class UIOpenPatientWindow(object):
             # The choose button is disabled until the thread finishes executing
             self.choose_button.setEnabled(False)
 
+            # Reveals the Stop Search button for the duration of the search
+            self.stop_button.setVisible(True)
+
+            # The interrupt flag is then un-set if a previous search has been stopped.
+            self.interrupt_flag.clear()
+
             # Then, create a new thread that will load the selected folder
-            worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath)
+            worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath, self.interrupt_flag)
             worker.signals.result.connect(self.on_search_complete)
             worker.signals.progress.connect(self.search_progress)
 
             # Execute the thread
             self.threadpool.start(worker)
+
+    def stop_button_clicked(self):
+        self.interrupt_flag.set()
 
     def search_progress(self, progress_update):
         """
@@ -175,7 +196,12 @@ class UIOpenPatientWindow(object):
         :param dicom_structure: DICOMStructure object constructed by the directory search.
         """
         self.choose_button.setEnabled(True)
+        self.stop_button.setVisible(False)
         self.tree_widget.clear()
+
+        if dicom_structure is None:  # dicom_structure will be None if function was interrupted.
+            return
+
         for patient_item in dicom_structure.get_tree_items_list():
             self.tree_widget.addTopLevelItem(patient_item)
 

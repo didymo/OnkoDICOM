@@ -122,3 +122,16 @@ QPushButton#confirmButton {
 QPushButton#confirmButton:hover {
     background-color: #64b5f6;
 }
+
+QPushButton#stopButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #64b5f6;
+}

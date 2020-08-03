@@ -6,7 +6,7 @@ from pydicom.errors import InvalidDicomError
 from src.Model.DICOMStructure import DICOMStructure, Patient, Study, Series, Image
 
 
-def get_dicom_structure(path, progress_callback):
+def get_dicom_structure(path, interrupt_flag, progress_callback):
     """
     Searches the given directory and creates a Patient>Study>Series>Image structure based on the DICOM files in the
     directory and subdirectories.
@@ -24,6 +24,9 @@ def get_dicom_structure(path, progress_callback):
 
     for root, dirs, files in os.walk(path):
         for file in files:
+
+            if interrupt_flag.is_set():
+                return
 
             # The progress is updated first because the total files represents ALL files inside the selected directory,
             # not just the DICOM files. Otherwise, most files would be skipped and the progress would be inaccurate.
