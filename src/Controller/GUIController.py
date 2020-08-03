@@ -84,4 +84,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
         else:
             exe_not_found = QMessageBox.information(self, "Error",
-                                                 "Plastimatch not installed. Please install Plastimatch (https://sourceforge.net/projects/plastimatch/) to carry out pyradiomics analysis.")
+                                                 "Plastimatch not installed. Please install Plastimatch "
+                                                 "(https://sourceforge.net/projects/plastimatch/) to carry out "
+                                                 "pyradiomics analysis.")
