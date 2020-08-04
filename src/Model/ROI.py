@@ -11,6 +11,20 @@ import multiprocessing
 from src.Model.CalculateImages import *
 
 
+def rename_roi(rtss, roi_id, new_name):
+    """
+    Renames the given Region of Interest. Creates a csv file storing all the renamed ROIs for the given RTSTRUCT file.
+    :param rtss: The RTSTRUCT file.
+    :param roi_id: ID the structure produced by ImageLoading.get_rois(..)
+    :param new_name: The structure's new name
+    """
+    for sequence in rtss.StructureSetROISequence:
+        if sequence.ROINumber == roi_id:
+            sequence.ROIName = new_name
+
+    return rtss
+
+
 def delete_roi(rtss, roi_name):
     """
     Delete ROI by name
@@ -40,7 +54,7 @@ def delete_roi(rtss, roi_name):
     return rtss
 
 
-def get_raw_ContourData(rtss):
+def get_raw_contour_data(rtss):
     """
     Get raw contour data of ROI in RT Structure Set
 
