@@ -68,7 +68,6 @@ class StructureWidget(QtWidgets.QWidget):
         # Part 1: Construct context menu
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
-        menu.addAction(self.text)
         rename_action = menu.addAction("Rename")
 
         if not self.standard_name:
@@ -84,7 +83,7 @@ class StructureWidget(QtWidgets.QWidget):
         if action == rename_action:
             all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
             rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
-                                            self.roi_id, self.structure_renamed, suggested_text="")
+                                            self.roi_id, self.structure_renamed)
             rename_window.exec_()
 
         if not self.standard_name:

@@ -9,7 +9,7 @@ from src.Model import ROI
 
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_names, file_rtss, roi_id, rename_signal, suggested_text, *args, **kwargs):
+    def __init__(self, standard_names, file_rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
         self.standard_names = standard_names
@@ -30,7 +30,6 @@ class RenameROIWindow(QDialog):
         self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
-
         self.explanation_text = QLabel("Enter a new name:")
 
         self.input_field = QLineEdit()
@@ -38,7 +37,6 @@ class RenameROIWindow(QDialog):
         self.input_field.textChanged.connect(self.on_text_edited)
 
         self.feedback_text = QLabel()
-
 
         self.button_area = QWidget()
         self.cancel_button = QPushButton("Cancel")
@@ -83,5 +81,5 @@ class RenameROIWindow(QDialog):
         # up towards the main page and then 'replaces' the current rtss. at some point the user should be given the
         # option of saving this new rtss file. when the rtss file is replaced it should also recalculate the rois and
         # reload the structure widget's structures.
-        self.rename_signal.emit()
+        self.rename_signal.emit(new_dataset)
         self.close()
