@@ -55,7 +55,6 @@ class StructureWidget(QtWidgets.QWidget):
         i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
         """
 
-        # TODO extra conditions need to be added for a more accurate suggestion
         roi_list = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
         suggestions = process.extract(self.text, roi_list, limit=3)  # will get the top 3 matches
 

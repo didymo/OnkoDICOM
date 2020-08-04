@@ -24,17 +24,19 @@ class RenameROIWindow(QDialog):
 
         self.setWindowTitle("Rename Region of Interest")
         self.resize(300, 80)
+
         self.icon = QtGui.QIcon()
         self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
+
 
         self.explanation_text = QLabel("Enter a new name:")
 
         self.input_field = QLineEdit()
         self.input_field.textChanged.connect(self.on_text_edited)
 
-        self.error_text = QLabel()
-        self.error_text.setStyleSheet("color: red")
+        self.feedback_text = QLabel()
+
 
         self.button_area = QWidget()
         self.cancel_button = QPushButton("Cancel")
@@ -51,16 +53,23 @@ class RenameROIWindow(QDialog):
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.explanation_text)
         self.layout.addWidget(self.input_field)
-        self.layout.addWidget(self.error_text)
+        self.layout.addWidget(self.feedback_text)
         self.layout.addWidget(self.button_area)
         self.setLayout(self.layout)
 
     def on_text_edited(self, text):
         if text in self.standard_names:
-            self.error_text.setText("")
+            self.feedback_text.setStyleSheet("color: green")
+            self.feedback_text.setText("Entered text is in standard names")
             #self.rename_button.setDisabled(False)
+        elif text.upper() in self.standard_names:
+            self.feedback_text.setStyleSheet("color: orange")
+            self.feedback_text.setText("Entered text exists but should be in capitals")
+        elif text == "":
+            self.feedback_text.setText("")
         else:
-            self.error_text.setText("Entered name is not in standard names")
+            self.feedback_text.setStyleSheet("color: red")
+            self.feedback_text.setText("Entered text is not in standard names")
             #self.rename_button.setDisabled(True)
 
     def on_rename_clicked(self):
