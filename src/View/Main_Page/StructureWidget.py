@@ -81,18 +81,25 @@ class StructureWidget(QtWidgets.QWidget):
 
         # Part 2: Determine action taken
         action = menu.exec_(self.mapToGlobal(event.pos()))
-        suggestion = ""
+        if action == rename_action:
+            all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+            rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
+                                            self.roi_id, self.structure_renamed, suggested_text="")
+            rename_window.exec_()
 
         if not self.standard_name:
             if action == suggested_action1:
-                suggestion = suggestions[0][0]
+                all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+                rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
+                                                self.roi_id, self.structure_renamed, suggestions[0][0])
+                rename_window.exec_()
             elif action == suggested_action2:
-                suggestion = suggestions[1][0]
+                all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+                rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
+                                                self.roi_id, self.structure_renamed, suggestions[1][0])
+                rename_window.exec_()
             elif action == suggested_action3:
-                suggestion = suggestions[2][0]
-
-        all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
-
-        rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
-                                        self.roi_id, self.structure_renamed, suggestion)
-        rename_window.exec_()
+                all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+                rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
+                                                self.roi_id, self.structure_renamed, suggestions[2][0])
+                rename_window.exec_()
