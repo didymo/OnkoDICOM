@@ -9,13 +9,14 @@ from src.Model import ROI
 
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_names, file_rtss, roi_id, rename_signal, *args, **kwargs):
+    def __init__(self, standard_names, file_rtss, roi_id, rename_signal, suggested_text, *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
         self.standard_names = standard_names
         self.file_rtss = file_rtss
         self.roi_id = roi_id
         self.rename_signal = rename_signal
+        self.suggested_text = suggested_text
 
         self.path = os.path.dirname(self.file_rtss)
         self.filename = os.path.splitext(os.path.basename(self.file_rtss))[0]
@@ -33,6 +34,7 @@ class RenameROIWindow(QDialog):
         self.explanation_text = QLabel("Enter a new name:")
 
         self.input_field = QLineEdit()
+        self.input_field.setText(self.suggested_text)
         self.input_field.textChanged.connect(self.on_text_edited)
 
         self.feedback_text = QLabel()

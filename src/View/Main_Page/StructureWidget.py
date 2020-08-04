@@ -6,7 +6,6 @@ from src.View.Main_Page.RenameROIWindow import RenameROIWindow
 
 
 class StructureWidget(QtWidgets.QWidget):
-
     structure_renamed = QtCore.pyqtSignal()
 
     def __init__(self, roi_id, color, text, structure_tab):
@@ -82,16 +81,18 @@ class StructureWidget(QtWidgets.QWidget):
 
         # Part 2: Determine action taken
         action = menu.exec_(self.mapToGlobal(event.pos()))
-        if action == rename_action:
-            all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
-            rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
-                                            self.roi_id, self.structure_renamed)
-            rename_window.exec_()
+        suggestion = ""
 
         if not self.standard_name:
             if action == suggested_action1:
-                print("1")
+                suggestion = suggestions[0][0]
             elif action == suggested_action2:
-                print("2")
+                suggestion = suggestions[1][0]
             elif action == suggested_action3:
-                print("3")
+                suggestion = suggestions[2][0]
+
+        all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+
+        rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
+                                        self.roi_id, self.structure_renamed, suggestion)
+        rename_window.exec_()
