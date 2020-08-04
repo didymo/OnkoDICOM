@@ -63,7 +63,6 @@ class DicomView(object):
 		self.zoom_out_shortcut = QtWidgets.QShortcut(QKeySequence("Ctrl+-"), self.main_window.tab2_view)
 		self.zoom_out_shortcut.activated.connect(self.zoomOut)
 
-
 	def init_slider(self):
 		"""
 		Create a slider for the DICOM Image View.

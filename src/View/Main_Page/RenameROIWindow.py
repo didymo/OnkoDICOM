@@ -1,5 +1,6 @@
 import os
 
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton
 from pydicom import dcmread
 
@@ -23,6 +24,9 @@ class RenameROIWindow(QDialog):
 
         self.setWindowTitle("Rename Region of Interest")
         self.resize(300, 80)
+        self.icon = QtGui.QIcon()
+        self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
+        self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Enter a new name:")
 
