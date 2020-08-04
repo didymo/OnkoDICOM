@@ -2,8 +2,12 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt
 from fuzzywuzzy import process
 
+from src.View.Main_Page.RenameROIWindow import RenameROIWindow
+
 
 class StructureWidget(QtWidgets.QWidget):
+
+    structure_renamed = QtCore.pyqtSignal()
 
     def __init__(self, roi_id, color, text, structure_tab):
         super(StructureWidget, self).__init__()
@@ -53,7 +57,7 @@ class StructureWidget(QtWidgets.QWidget):
 
         # TODO extra conditions need to be added for a more accurate suggestion
         roi_list = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
-        suggestions = process.extract(self.text, roi_list, limit=3) # will get the top 3 matches
+        suggestions = process.extract(self.text, roi_list, limit=3)  # will get the top 3 matches
 
         return suggestions
 
@@ -80,7 +84,10 @@ class StructureWidget(QtWidgets.QWidget):
         # Part 2: Determine action taken
         action = menu.exec_(self.mapToGlobal(event.pos()))
         if action == rename_action:
-            print("Rename")
+            all_standard_names = self.structure_tab.standard_organ_names + self.structure_tab.standard_volume_names
+            rename_window = RenameROIWindow(all_standard_names, self.structure_tab.main_window.file_rtss,
+                                            self.roi_id, self.structure_renamed)
+            rename_window.exec_()
 
         if not self.standard_name:
             if action == suggested_action1:

@@ -39,7 +39,7 @@ class StructureTab(object):
 		Add the scroll area widget in the layout.
 		Add the whole container 'tab1_structures' as a tab in the main page.
 		"""
-		self.layout = QtWidgets.QHBoxLayout(self.tab1_structures)
+		self.layout = QtWidgets.QVBoxLayout(self.tab1_structures)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.scroll_area)
 		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
@@ -125,6 +125,7 @@ class StructureTab(object):
 		for roi_id, roi_dict in self.main_window.rois.items():
 			# Creates a widget representing each ROI
 			structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
+			structure.structure_renamed.connect(self.structure_modified)
 			self.layout_content.addWidget(structure)
 			row += 1
 
@@ -132,6 +133,15 @@ class StructureTab(object):
 		self.scroll_area_content.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
 
 		self.scroll_area.setWidget(self.scroll_area_content)
+
+	def structure_modified(self):
+		"""
+		Executes when a structure is renamed/deleted. Displays indicator that structure has changed.
+		"""
+		modified_indicator = QtWidgets.QLabel("Structures have been modified")
+		modified_indicator.setStyleSheet("color: red")
+		modified_indicator.setContentsMargins(8, 5, 8, 5)
+		self.layout.addWidget(modified_indicator)
 
 	def structure_checked(self, state, roi_id):
 		"""
