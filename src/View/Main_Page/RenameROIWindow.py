@@ -9,19 +9,14 @@ from src.Model import ROI
 
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_names, file_rtss, roi_id, rename_signal, suggested_text, *args, **kwargs):
+    def __init__(self, standard_names, rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
         self.standard_names = standard_names
-        self.file_rtss = file_rtss
+        self.rtss = rtss
         self.roi_id = roi_id
         self.rename_signal = rename_signal
         self.suggested_text = suggested_text
-
-        self.path = os.path.dirname(self.file_rtss)
-        self.filename = os.path.splitext(os.path.basename(self.file_rtss))[0]
-
-        self.rtss = dcmread(self.file_rtss, force=True)
 
         self.setWindowTitle("Rename Region of Interest")
         self.resize(300, 80)
@@ -30,7 +25,6 @@ class RenameROIWindow(QDialog):
         self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
-
         self.explanation_text = QLabel("Enter a new name:")
 
         self.input_field = QLineEdit()
@@ -38,7 +32,6 @@ class RenameROIWindow(QDialog):
         self.input_field.textChanged.connect(self.on_text_edited)
 
         self.feedback_text = QLabel()
-
 
         self.button_area = QWidget()
         self.cancel_button = QPushButton("Cancel")
@@ -77,11 +70,9 @@ class RenameROIWindow(QDialog):
     def on_rename_clicked(self):
         new_name = self.input_field.text()
         new_dataset = ROI.rename_roi(self.rtss, self.roi_id, new_name)
-        new_filepath = self.path + os.sep + self.filename + '_modified.dcm'
-        new_dataset.save_as(new_filepath)
-        # TODO rather than save this so a file straight away, the dataset should be sent as part of the signal further
-        # up towards the main page and then 'replaces' the current rtss. at some point the user should be given the
-        # option of saving this new rtss file. when the rtss file is replaced it should also recalculate the rois and
+        # TODO rather than save this so a file straight away, the dataset is sent as part of the signal further
+        # up towards the main page and then 'replaces' the current rtss. at some point the user is given the
+        # option of saving this new rtss file. when the rtss file is replaced it also recalculates the rois and
         # reload the structure widget's structures.
-        self.rename_signal.emit()
+        self.rename_signal.emit(new_dataset)
         self.close()

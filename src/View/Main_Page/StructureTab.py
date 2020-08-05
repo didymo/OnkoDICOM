@@ -5,6 +5,7 @@ from random import randint, seed
 import numpy as np
 from PyQt5.QtCore import Qt
 
+from src.Model import ImageLoading
 from src.View.Main_Page.StructureWidget import StructureWidget
 
 
@@ -121,6 +122,10 @@ class StructureTab(object):
 		"""
 		Add the contents (color square and checkbox) in the scrolling area widget.
 		"""
+		# Clear the children
+		for i in reversed(range(self.layout_content.count())):
+			self.layout_content.itemAt(i).widget().setParent(None)
+
 		row = 0
 		for roi_id, roi_dict in self.main_window.rois.items():
 			# Creates a widget representing each ROI
@@ -134,14 +139,30 @@ class StructureTab(object):
 
 		self.scroll_area.setWidget(self.scroll_area_content)
 
-	def structure_modified(self):
+	def structure_modified(self, new_dataset):
 		"""
 		Executes when a structure is renamed/deleted. Displays indicator that structure has changed.
 		"""
-		modified_indicator = QtWidgets.QLabel("Structures have been modified")
-		modified_indicator.setStyleSheet("color: red")
-		modified_indicator.setContentsMargins(8, 5, 8, 5)
-		self.layout.addWidget(modified_indicator)
+		# TODO there needs to be a way to give the user the option to save the new RTSS file.
+		# Currently all changes are discarded when the user exits the program.
+
+		if not self.main_window.rtss_modified:
+			modified_indicator = QtWidgets.QLabel("Structures have been modified")
+			modified_indicator.setStyleSheet("color: red")
+			modified_indicator.setContentsMargins(8, 5, 8, 5)
+			self.layout.addWidget(modified_indicator)
+
+		# If this is the first change made to the RTSS file, update the dataset with the new one so that OnkoDICOM
+		# starts working off this dataset rather than the original RTSS file.
+		self.main_window.rtss_modified = True
+		self.main_window.dataset_rtss = new_dataset
+
+		# Refresh ROIs in main page
+		self.main_window.rois = ImageLoading.get_roi_info(new_dataset)
+		self.main_window.list_roi_numbers = self.main_window.ordered_list_rois()
+
+		# Refresh structure tab
+		self.update_content()
 
 	def structure_checked(self, state, roi_id):
 		"""
