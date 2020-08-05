@@ -159,6 +159,7 @@ class StructureTab(object):
 
 		# Refresh ROIs in main page
 		self.main_window.rois = ImageLoading.get_roi_info(new_dataset)
+		self.main_window.dict_raw_ContourData, self.main_window.dict_NumPoints = ImageLoading.get_raw_contour_data(new_dataset)
 		self.main_window.list_roi_numbers = self.main_window.ordered_list_rois()
 
 		# Refresh structure tab
