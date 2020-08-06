@@ -9,6 +9,7 @@ from PyQt5.Qt import Qt
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
 from src.View.ProgressWindow import ProgressWindow
+from src.View.resources_open_patient_rc import *
 
 
 class UIOpenPatientWindow(object):

@@ -1,9 +1,9 @@
 <RCC>
   <qresource prefix="res">
-    <file>../images/qtree/stylesheet-vline.png</file>
-    <file>../images/qtree/stylesheet-branch-more.pngg</file>
-    <file>../images/qtree/stylesheet-branch-end.png</file>
-    <file>../images/qtree/stylesheet-branch-closed.png</file>
-    <file>../images/qtree/stylesheet-branch-open.png</file>
+    <file>images/qtree/stylesheet-vline.png</file>
+    <file>images/qtree/stylesheet-branch-more.png</file>
+    <file>images/qtree/stylesheet-branch-end.png</file>
+    <file>images/qtree/stylesheet-branch-closed.png</file>
+    <file>images/qtree/stylesheet-branch-open.png</file>
   </qresource>
 </RCC>
