@@ -147,10 +147,22 @@ class StructureTab(object):
 		# Currently all changes are discarded when the user exits the program.
 
 		if not self.main_window.rtss_modified:
-			modified_indicator = QtWidgets.QLabel("Structures have been modified")
-			modified_indicator.setStyleSheet("color: red")
-			modified_indicator.setContentsMargins(8, 5, 8, 5)
-			self.layout.addWidget(modified_indicator)
+
+			modified_indicator_widget = QtWidgets.QWidget()
+			modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
+			modified_indicator_layout = QtWidgets.QHBoxLayout()
+			modified_indicator_layout.setAlignment(Qt.AlignLeft)
+
+			modified_indicator_icon = QtWidgets.QLabel()
+			modified_indicator_icon.setPixmap(QtGui.QPixmap("src/Icon/alert.png"))
+			modified_indicator_layout.addWidget(modified_indicator_icon)
+
+			modified_indicator_text = QtWidgets.QLabel("Structures have been modified")
+			modified_indicator_text.setStyleSheet("color: red")
+			modified_indicator_layout.addWidget(modified_indicator_text)
+
+			modified_indicator_widget.setLayout(modified_indicator_layout)
+			self.layout.addWidget(modified_indicator_widget)
 
 		# If this is the first change made to the RTSS file, update the dataset with the new one so that OnkoDICOM
 		# starts working off this dataset rather than the original RTSS file.
