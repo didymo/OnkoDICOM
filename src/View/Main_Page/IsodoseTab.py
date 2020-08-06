@@ -32,7 +32,7 @@ class IsodosesTab(object):
 		Add the whole container 'tab2_isodoses' as a tab in the main page.
 		"""
 		self.layout = QtWidgets.QGridLayout(self.tab1_isodoses)
-		self.layout.setContentsMargins(0, 0, 0, 0)
+		self.layout.setContentsMargins(5, 5, 5, 5)
 
 		# Add Color Squares
 		self.layout.addWidget(self.color1_isod, 0, 0, 1, 1)
@@ -61,9 +61,6 @@ class IsodosesTab(object):
 		# Add Spacers
 		vspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
 		hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-		fixed_spacer = QtWidgets.QSpacerItem(6, 6, hPolicy=QtWidgets.QSizePolicy.Fixed,
-											 vPolicy=QtWidgets.QSizePolicy.Expanding)
-		self.layout.addItem(fixed_spacer, 0, 1, 1, 11)
 		self.layout.addItem(vspacer, 10, 0, 3, -1)
 		self.layout.addItem(hspacer, 0, 3, -1, 11)
 
