@@ -71,7 +71,7 @@ QPushButton#chooseButton:hover {
     background-color: #64b5f6;
 }
 
-/*
+
 QTreeView::branch:has-siblings:!adjoins-item {
     border-image: url(':/res/images/qtree/stylesheet-vline.png') 0;
 }
@@ -95,7 +95,7 @@ QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
         image: url(':/res/images/qtree/stylesheet-branch-open.png');
 }
-*/
+
 
 QPushButton#cancelButton {
     font-size:14px;
