@@ -214,5 +214,6 @@ class StructureTab(object):
 
 	def save_new_rtss(self, event=None):
 		save_filepath = QtWidgets.QFileDialog.getSaveFileName(self.main_window, "Save file")[0]
-		self.main_window.dataset_rtss.save_as(save_filepath)
-		QtWidgets.QMessageBox.about(self.main_window, "File saved", "The RTSTRUCT file has been saved.")
+		if save_filepath != "":
+			self.main_window.dataset_rtss.save_as(save_filepath)
+			QtWidgets.QMessageBox.about(self.main_window, "File saved", "The RTSTRUCT file has been saved.")
