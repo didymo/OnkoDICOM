@@ -1,6 +1,6 @@
 from shutil import which
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
 from src.View.Main_Page.mainPage import UIMainWindow
@@ -87,3 +87,18 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                                                  "Plastimatch not installed. Please install Plastimatch "
                                                  "(https://sourceforge.net/projects/plastimatch/) to carry out "
                                                  "pyradiomics analysis.")
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        if self.rtss_modified and hasattr(self, "structures_tab"):
+            confirmation_dialog = QMessageBox.information(self, 'Close without saving?',
+                                                          'The RTSTRUCT file has been modified. Would you like to save '
+                                                          'before exiting the program?',
+                                                          QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+
+            if confirmation_dialog == QMessageBox.Save:
+                self.structures_tab.save_new_rtss()
+                event.accept()
+            elif confirmation_dialog == QMessageBox.Discard:
+                event.accept()
+            else:
+                event.ignore()
