@@ -146,11 +146,26 @@ class StructureTab(object):
 		# TODO there needs to be a way to give the user the option to save the new RTSS file.
 		# Currently all changes are discarded when the user exits the program.
 
+		# If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
+		# to save their new file.
 		if not self.main_window.rtss_modified:
-			modified_indicator = QtWidgets.QLabel("Structures have been modified")
-			modified_indicator.setStyleSheet("color: red")
-			modified_indicator.setContentsMargins(8, 5, 8, 5)
-			self.layout.addWidget(modified_indicator)
+
+			modified_indicator_widget = QtWidgets.QWidget()
+			modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
+			modified_indicator_layout = QtWidgets.QHBoxLayout()
+			modified_indicator_layout.setAlignment(Qt.AlignLeft)
+
+			modified_indicator_icon = QtWidgets.QLabel()
+			modified_indicator_icon.setPixmap(QtGui.QPixmap("src/Icon/alert.png"))
+			modified_indicator_layout.addWidget(modified_indicator_icon)
+
+			modified_indicator_text = QtWidgets.QLabel("Structures have been modified")
+			modified_indicator_text.setStyleSheet("color: red")
+			modified_indicator_layout.addWidget(modified_indicator_text)
+
+			modified_indicator_widget.setLayout(modified_indicator_layout)
+			modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
+			self.layout.addWidget(modified_indicator_widget)
 
 		# If this is the first change made to the RTSS file, update the dataset with the new one so that OnkoDICOM
 		# starts working off this dataset rather than the original RTSS file.
@@ -196,3 +211,8 @@ class StructureTab(object):
 		if hasattr(self.main_window, 'dvh'):
 			self.main_window.dvh.update_plot(self.main_window)
 		self.main_window.dicom_view.update_view()
+
+	def save_new_rtss(self, event=None):
+		save_filepath = QtWidgets.QFileDialog.getSaveFileName(self.main_window, "Save file")[0]
+		self.main_window.dataset_rtss.save_as(save_filepath)
+		QtWidgets.QMessageBox.about(self.main_window, "File saved", "The RTSTRUCT file has been saved.")

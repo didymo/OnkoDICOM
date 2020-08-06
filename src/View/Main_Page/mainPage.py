@@ -122,7 +122,8 @@ class UIMainWindow(object):
         if self.has_rtss:
             self.file_rtss = self.filepaths['rtss']
             self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
-            self.rtss_modified = False  # Flag that changes the first time the rtss file is modified.
+
+        self.rtss_modified = False  # Flag that changes the first time the rtss file is modified.
 
         if self.has_rtdose:
             self.file_rtdose = self.filepaths['rtdose']
