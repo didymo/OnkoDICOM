@@ -72,6 +72,11 @@ class RenameROIWindow(QDialog):
             if text.startswith(item):
                 self.feedback_text.setStyleSheet("color: green")
                 self.feedback_text.setText("Entered text is in standard names")
+            else:
+                upper_text = text.upper()
+                if upper_text.startswith(item):
+                    self.feedback_text.setStyleSheet("color: orange")
+                    self.feedback_text.setText("Entered text exists but should be in capitals")
 
     def on_rename_clicked(self):
         new_name = self.input_field.text()
