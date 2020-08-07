@@ -9,10 +9,11 @@ from src.Model import ROI
 
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_names, rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):
+    def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
-        self.standard_names = standard_names
+        self.standard_volume_names = standard_volume_names
+        self.standard_organ_names = standard_organ_names
         self.rtss = rtss
         self.roi_id = roi_id
         self.rename_signal = rename_signal
@@ -53,11 +54,11 @@ class RenameROIWindow(QDialog):
         self.setLayout(self.layout)
 
     def on_text_edited(self, text):
-        if text in self.standard_names:
+        if text in self.standard_volume_names or text in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: green")
             self.feedback_text.setText("Entered text is in standard names")
             #self.rename_button.setDisabled(False)
-        elif text.upper() in self.standard_names:
+        elif text.upper() in self.standard_volume_names or text.upper() in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: orange")
             self.feedback_text.setText("Entered text exists but should be in capitals")
         elif text == "":
@@ -66,6 +67,11 @@ class RenameROIWindow(QDialog):
             self.feedback_text.setStyleSheet("color: red")
             self.feedback_text.setText("Entered text is not in standard names")
             #self.rename_button.setDisabled(True)
+
+        for item in self.standard_volume_names:
+            if text.startswith(item):
+                self.feedback_text.setStyleSheet("color: green")
+                self.feedback_text.setText("Entered text is in standard names")
 
     def on_rename_clicked(self):
         new_name = self.input_field.text()
