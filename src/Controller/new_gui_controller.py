@@ -10,10 +10,8 @@ class NewWelcomeGui(QtWidgets.QMainWindow, UIWelcomeWindow):
     # Initialisation function to display the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        self.patient_window = QtWidgets.QMainWindow()
-
         self.setup_ui(self)
-        self.push_button.clicked.connect(self.patient_handler)
+        self.open_patient_button.clicked.connect(self.patient_handler)
 
     def patient_handler(self):
         """
@@ -31,8 +29,6 @@ class NewPatientGui(QtWidgets.QMainWindow, UIOpenPatientWindow):
     # Initialisation function to display the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        self.patient_window = QtWidgets.QMainWindow()
-
         self.setup_ui(self)
         self.open_patient_window.connect(self.open_patient)
 

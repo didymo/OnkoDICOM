@@ -10,33 +10,29 @@ QLabel#welcome {
 }
 
 QPushButton {
-    font-weight: bold;
-    font-family: Roboto Black;
+    margin: 6px 8px;
+    padding: 0 16px;
+    min-height: 36px;
+    border-radius: 2px;
+    color: #f5f5f5;
+    background-color: #9370DB;
+    font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    font-size: 14px;
+    text-align: center;
+}
+
+QPushButton:hover {
+    background-color: #b299e6;
+}
+
+QPushButton:pressed {
+    background-color: #5c2eb8;
 }
 
 /* Welcome Page */
 
-QLabel#welcomeLabel {
-    font-weight: bold;
-    font-size: 18pt;
-}
-
-QLabel#welcomeLabelDetail {
-    font-weight: semi-bold;
-    font-size: 16px;
-}
-
-QPushButton#open_button {
-    font-size:14px;
-    background-color: #9370DB;
-    width: 126px;
-    height: 32px;
-    border-radius: 4px;
-    color: #fff;
-}
-
-QPushButton#open_button:hover {
-    background-color: #64b5f6;
+QMainWindow#WelcomeWindowInstance {
+    background-color: rgb(244, 245, 245);
 }
 
 /* Open Patient */
@@ -56,19 +52,6 @@ QTreeView::item:hover {
     color: #000 !important;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);
     border: 1px solid #bfcde4;
-}
-
-
-QPushButton#chooseButton {
-    font-size:14px;
-    background-color: #9370DB;
-    width: 136px;
-    height: 40px;
-    border-radius: 4px;
-    color: #fff;
-}
-QPushButton#chooseButton:hover {
-    background-color: #64b5f6;
 }
 
 /*
@@ -96,29 +79,3 @@ QTreeView::branch:open:has-children:has-siblings  {
         image: url(':/res/images/qtree/stylesheet-branch-open.png');
 }
 */
-
-QPushButton#cancelButton {
-    font-size:14px;
-    background-color: #9370DB;
-    width: 126px;
-    height: 32px;
-    border-radius: 4px;
-    color: #fff;
-}
-
-QPushButton#cancelButton:hover {
-    background-color: #64b5f6;
-}
-
-QPushButton#confirmButton {
-    font-size:14px;
-    background-color: #9370DB;
-    width: 126px;
-    height: 32px;
-    border-radius: 4px;
-    color: #fff;
-}
-
-QPushButton#confirmButton:hover {
-    background-color: #64b5f6;
-}
