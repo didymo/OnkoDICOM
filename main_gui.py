@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     app_font = QFont()
     app_font.setFamily(FontService.get_instance().font_family())
-    app_font.setPixelSize(FontService.get_instance().get_scaled_font_pixel_size(app, 12))
+    app_font.setPixelSize(FontService.get_instance().get_scaled_font_pixel_size(app, 10))
     app.setFont(app_font)
 
     controller = Controller()
