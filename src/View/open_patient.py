@@ -108,7 +108,7 @@ class UIOpenPatientWindow(object):
         self.confirm_Button.setObjectName("confirmButton")
         self.confirm_Button.setText("Confirm")
         self.confirm_Button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.confirm_Button.setGeometry(QtCore.QRect(520, 365, 90, 26))
+        self.confirm_Button.setGeometry(QtCore.QRect(520, 365, 90, 36))
         self.confirm_Button.clicked.connect(self.confirm_button_clicked)
         #self.grid_layout.addWidget(self.confirm_Button, 9, 4, 1, 1)
 

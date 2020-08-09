@@ -16,7 +16,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
-        self.push_button.clicked.connect(self.go_open_patient_window)
+        self.open_patient_button.clicked.connect(self.go_open_patient_window)
 
     def go_open_patient_window(self):
         """

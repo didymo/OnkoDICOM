@@ -1,70 +1,80 @@
 from src.View.open_patient import *
-
+from src.View.fonts_service import FontService
 
 class UIWelcomeWindow(object):
 
     # the ui constructor function
-    def setup_ui(self, welcome_page):
+    def setup_ui(self, welcome_window_instance):
         stylesheet = open("src/res/stylesheet.qss").read()
-        welcome_page.setObjectName("WelcomePage")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
-        welcome_page.setWindowIcon(icon)
-        welcome_page.setFixedSize(844, 528)
-        welcome_page.setStyleSheet("background-color: rgb(244, 245, 245);")
-        self.centralwidget = QtWidgets.QWidget(welcome_page)
-        self.centralwidget.setObjectName("centralwidget")
-        self.welcome_label = QtWidgets.QLabel(self.centralwidget)
-        self.welcome_label.setGeometry(QtCore.QRect(270, 340, 351, 41))
-        #self.welcome_label.setStyleSheet("font: 57 18pt;\n"
-        #                                "font: 57 18pt;")
-        self.welcome_label.setObjectName("welcomeLabel")
-        # the sentence below welcome
-        self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(100, 390, 671, 21)) # previously had 80 in place of 100.
-        self.label_2.setObjectName("welcomeLabelDetail")
-        # button to open a patient
-        self.push_button = QtWidgets.QPushButton(self.centralwidget)
-        self.push_button.setGeometry(QtCore.QRect(350, 440, 121, 31))
-        #self.push_button.setStyleSheet("background-color: #9370DB;" "border-width: 8px;" "border-radius: 20px;" "padding: 6px;" "color:white;" "font-weight: bold;")
-        """
-        If the original button is desired, the code is below.;
+        window_icon = QtGui.QIcon()
+        window_icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
+        welcome_window_instance.setObjectName("WelcomeWindowInstance")
+        welcome_window_instance.setWindowIcon(window_icon)
+        welcome_window_instance.setFixedSize(844, 528)
+
+        # Set a vertical layout to manage layout in a vertical manner
+        self.window_vertical_layout_box = QtWidgets.QVBoxLayout()
+        self.window_vertical_layout_box.setObjectName("WindowVerticalLayoutBox")
+
+
+        # Set up the Logo Holder for the Welcome Window
+        self.logo_holder = QtWidgets.QHBoxLayout()
+        self.welcome_window_logo = QtWidgets.QLabel()
+        self.welcome_window_logo.setPixmap(QtGui.QPixmap("src/res/images/image.png"))
+        self.welcome_window_logo.setScaledContents(True)
+        self.welcome_window_logo.setObjectName("WelcomeWindowLogo")
+        self.welcome_window_logo.setFixedSize(480, 260)
+        self.logo_holder.addWidget(self.welcome_window_logo)
+        self.window_vertical_layout_box.addStretch(1)
+        self.window_vertical_layout_box.addLayout(self.logo_holder)
         
-        self.pushButton.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                      "color:rgb(75,0,130);\n"
-                                      "font-weight: bold;\n")
-        """
-        self.push_button.setObjectName("open_button")
-        self.push_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # logo holder
-        self.logo = QtWidgets.QLabel(self.centralwidget)
-        self.logo.setGeometry(QtCore.QRect(185, 60, 480, 261))
-        self.logo.setText("")
-        self.logo.setPixmap(QtGui.QPixmap("src/res/images/image.png"))
-        self.logo.setScaledContents(True)
-        self.logo.setObjectName("logo")
-        welcome_page.setCentralWidget(self.centralwidget)
-        welcome_page.setStyleSheet(stylesheet)
-        self.retranslate_ui(welcome_page)
-        QtCore.QMetaObject.connectSlotsByName(welcome_page)
+
+        # Set up the Label for the Welcome Window
+        self.welcome_window_label = QtWidgets.QLabel()
+        self.welcome_window_label.setObjectName("WelcomeWindowLabel")
+        welcome_window_label_font = QtGui.QFont(FontService.get_instance().font_family(), 18)
+        welcome_window_label_font.setBold(True)
+        self.welcome_window_label.setFont(welcome_window_label_font)
+        self.welcome_window_label.setAlignment(Qt.AlignCenter)
+        self.window_vertical_layout_box.addWidget(self.welcome_window_label)
+
+
+        # Set up the Slogan for the Welcome Window
+        self.welcome_window_slogan = QtWidgets.QLabel()
+        self.welcome_window_slogan.setObjectName("WelcomeWindowSlogan")
+        welcome_window_slogan_font = QtGui.QFont(FontService.get_instance().font_family(), 12)
+        self.welcome_window_slogan.setFont(welcome_window_slogan_font)
+        self.welcome_window_slogan.setAlignment(Qt.AlignCenter)
+        self.window_vertical_layout_box.addWidget(self.welcome_window_slogan)
+
+
+        # button to open a patient
+        self.buttons_holder = QtWidgets.QHBoxLayout()
+        self.open_patient_button = QtWidgets.QPushButton()
+        self.open_patient_button.setObjectName("OpenPatientButton")
+        self.open_patient_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.open_patient_button.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.open_patient_button.resize(self.open_patient_button.sizeHint().width(), self.open_patient_button.sizeHint().height())
+        self.buttons_holder.addStretch(1)
+        self.buttons_holder.addWidget(self.open_patient_button)
+        self.buttons_holder.addStretch(1)
+        self.window_vertical_layout_box.addStretch(1)
+        self.window_vertical_layout_box.addLayout(self.buttons_holder)
+        self.window_vertical_layout_box.addStretch(1)
+
+
+        self.welcome_window_instance_central_widget = QtWidgets.QWidget()
+        self.welcome_window_instance_central_widget.setLayout(self.window_vertical_layout_box)
+        welcome_window_instance.setCentralWidget(self.welcome_window_instance_central_widget)
+        welcome_window_instance.setStyleSheet(stylesheet)
+        self.retranslate_ui(welcome_window_instance)
+        QtCore.QMetaObject.connectSlotsByName(welcome_window_instance)
 
     # this function inserts all the text in the welcome page
-    def retranslate_ui(self, welcome_page):
+    def retranslate_ui(self, welcome_window_instance):
         _translate = QtCore.QCoreApplication.translate
-        welcome_page.setWindowTitle(_translate("WelcomePage", "OnkoDICOM"))
-        self.welcome_label.setText(_translate("WelcomePage", "Welcome to OnkoDICOM!"))
-        self.label_2.setText(_translate("WelcomePage",
+        welcome_window_instance.setWindowTitle(_translate("WelcomeWindowInstance", "OnkoDICOM"))
+        self.welcome_window_label.setText(_translate("WelcomeWindowInstance", "Welcome to OnkoDICOM!"))
+        self.welcome_window_slogan.setText(_translate("WelcomeWindowInstance",
                                         "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
-        self.push_button.setText(_translate("WelcomePage", "Continue"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    stylesheet = open('../res/stylesheet.qss').read()
-    ui = UIWelcomeWindow()
-    ui.setup_ui(MainWindow)
-    MainWindow.setStyleSheet(stylesheet)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        self.open_patient_button.setText(_translate("WelcomeWindowInstance", "Continue"))
