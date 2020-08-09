@@ -51,7 +51,10 @@ class MenuBar(object):
 		self.iconAddOn.addPixmap(QtGui.QPixmap(":/images/Icon/management.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		self.iconExport = QtGui.QIcon()
 		self.iconExport.addPixmap(QtGui.QPixmap(":/images/Icon/export.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-
+		self.iconROIDelete = QtGui.QIcon()
+		self.iconROIDelete.addPixmap(QtGui.QPixmap(":/images/Icon/ROIdelete.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+		self.iconImageFusion = QtGui.QIcon()
+		self.iconImageFusion.addPixmap(QtGui.QPixmap(":/images/Icon/ImageFusion.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 	def create_actions(self):
 		"""
 		Create actions used for menu and tool bars.
@@ -128,7 +131,7 @@ class MenuBar(object):
 		# Image Fusion
 
 		self.actionFusion = QtWidgets.QAction(self.window)
-		# self.actionFusion.setIcon(self.)
+		self.actionFusion.setIcon(self.iconImageFusion)
 		self.actionFusion.setIconVisibleInMenu(True)
 
 		# Draw ROI
@@ -140,7 +143,7 @@ class MenuBar(object):
 		# Delete ROI
 
 		self.actionROIDelete = QtWidgets.QAction(self.window)
-		# self.actionROIDelete.setIcon(self.)
+		self.actionROIDelete.setIcon(self.iconROIDelete)
 		self.actionROIDelete.setIconVisibleInMenu(True)
 
 

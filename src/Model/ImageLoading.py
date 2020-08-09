@@ -213,19 +213,23 @@ def converge_to_0_dvh(raw_dvh):
         dvh = raw_dvh[roi]
 
         # The last value of DVH is not equal to 0
-        if dvh.counts[-1] != 0:
-            tmp_bincenters = []
-            for i in range(3):
-                tmp_bincenters.append(dvh.bincenters[-1] + i)
+        if len(dvh.counts) > 0:
+            if dvh.counts[-1] != 0:
+                tmp_bincenters = []
+                for i in range(3):
+                    tmp_bincenters.append(dvh.bincenters[-1] + i)
 
-            tmp_bincenters = np.array(tmp_bincenters)
-            tmp_bincenters = np.concatenate(
-                (dvh.bincenters.flatten(), tmp_bincenters))
-            bincenters = np.array(tmp_bincenters)
-            counts = np.concatenate(
-                (dvh.counts.flatten(), np.array(zeros)))
+                tmp_bincenters = np.array(tmp_bincenters)
+                tmp_bincenters = np.concatenate(
+                    (dvh.bincenters.flatten(), tmp_bincenters))
+                bincenters = np.array(tmp_bincenters)
+                counts = np.concatenate(
+                    (dvh.counts.flatten(), np.array(zeros)))
 
-        # The last value of DVH is equal to 0
+            # The last value of DVH is equal to 0
+            else:
+                bincenters = dvh.bincenters
+                counts = dvh.counts
         else:
             bincenters = dvh.bincenters
             counts = dvh.counts

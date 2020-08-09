@@ -2,7 +2,7 @@ import glob
 
 from PyQt5.QtCore import Qt
 
-from src.Controller.Add_On_OController import AddOptions
+from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.mainPageController import MainPage
 from src.View.InputDialogs import Rxdose_Check
 from src.View.Main_Page.PatientBar import *
@@ -16,7 +16,7 @@ from src.View.Main_Page.MenuBar import *
 from src.View.Main_Page.resources_rc import *
 
 
-class Ui_MainWindow(object):
+class UIMainWindow(object):
 
     # To initiate progress bar for pyradiomics through anonymization
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
@@ -122,6 +122,8 @@ class Ui_MainWindow(object):
         if self.has_rtss:
             self.file_rtss = self.filepaths['rtss']
             self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
+
+        self.rtss_modified = False  # Flag that changes the first time the rtss file is modified.
 
         if self.has_rtdose:
             self.file_rtdose = self.filepaths['rtdose']

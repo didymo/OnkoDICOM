@@ -5,6 +5,7 @@ from random import randint, seed
 import numpy as np
 from PyQt5.QtCore import Qt
 
+from src.Model import ImageLoading
 from src.View.Main_Page.StructureWidget import StructureWidget
 
 
@@ -39,7 +40,7 @@ class StructureTab(object):
 		Add the scroll area widget in the layout.
 		Add the whole container 'tab1_structures' as a tab in the main page.
 		"""
-		self.layout = QtWidgets.QHBoxLayout(self.tab1_structures)
+		self.layout = QtWidgets.QVBoxLayout(self.tab1_structures)
 		self.layout.setContentsMargins(0, 0, 0, 0)
 		self.layout.addWidget(self.scroll_area)
 		self.main_window.tab1.addTab(self.tab1_structures, "Structures")
@@ -121,10 +122,15 @@ class StructureTab(object):
 		"""
 		Add the contents (color square and checkbox) in the scrolling area widget.
 		"""
+		# Clear the children
+		for i in reversed(range(self.layout_content.count())):
+			self.layout_content.itemAt(i).widget().setParent(None)
+
 		row = 0
 		for roi_id, roi_dict in self.main_window.rois.items():
 			# Creates a widget representing each ROI
 			structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
+			structure.structure_renamed.connect(self.structure_modified)
 			self.layout_content.addWidget(structure)
 			row += 1
 
@@ -132,6 +138,47 @@ class StructureTab(object):
 		self.scroll_area_content.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
 
 		self.scroll_area.setWidget(self.scroll_area_content)
+
+	def structure_modified(self, new_dataset):
+		"""
+		Executes when a structure is renamed/deleted. Displays indicator that structure has changed.
+		"""
+		# TODO there needs to be a way to give the user the option to save the new RTSS file.
+		# Currently all changes are discarded when the user exits the program.
+
+		# If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
+		# to save their new file.
+		if not self.main_window.rtss_modified:
+
+			modified_indicator_widget = QtWidgets.QWidget()
+			modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
+			modified_indicator_layout = QtWidgets.QHBoxLayout()
+			modified_indicator_layout.setAlignment(Qt.AlignLeft)
+
+			modified_indicator_icon = QtWidgets.QLabel()
+			modified_indicator_icon.setPixmap(QtGui.QPixmap("src/Icon/alert.png"))
+			modified_indicator_layout.addWidget(modified_indicator_icon)
+
+			modified_indicator_text = QtWidgets.QLabel("Structures have been modified")
+			modified_indicator_text.setStyleSheet("color: red")
+			modified_indicator_layout.addWidget(modified_indicator_text)
+
+			modified_indicator_widget.setLayout(modified_indicator_layout)
+			modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
+			self.layout.addWidget(modified_indicator_widget)
+
+		# If this is the first change made to the RTSS file, update the dataset with the new one so that OnkoDICOM
+		# starts working off this dataset rather than the original RTSS file.
+		self.main_window.rtss_modified = True
+		self.main_window.dataset_rtss = new_dataset
+
+		# Refresh ROIs in main page
+		self.main_window.rois = ImageLoading.get_roi_info(new_dataset)
+		self.main_window.dict_raw_ContourData, self.main_window.dict_NumPoints = ImageLoading.get_raw_contour_data(new_dataset)
+		self.main_window.list_roi_numbers = self.main_window.ordered_list_rois()
+
+		# Refresh structure tab
+		self.update_content()
 
 	def structure_checked(self, state, roi_id):
 		"""
@@ -164,3 +211,9 @@ class StructureTab(object):
 		if hasattr(self.main_window, 'dvh'):
 			self.main_window.dvh.update_plot(self.main_window)
 		self.main_window.dicom_view.update_view()
+
+	def save_new_rtss(self, event=None):
+		save_filepath = QtWidgets.QFileDialog.getSaveFileName(self.main_window, "Save file")[0]
+		if save_filepath != "":
+			self.main_window.dataset_rtss.save_as(save_filepath)
+			QtWidgets.QMessageBox.about(self.main_window, "File saved", "The RTSTRUCT file has been saved.")

@@ -7,7 +7,7 @@ from PyQt5.QtGui import QFont
 warnings.filterwarnings("ignore")
 import sys
 import platform
-from src.Controller.top_level_controller import Controller
+from src.Controller.TopLevelController import Controller
 from src.View.fonts_service import FontService
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)

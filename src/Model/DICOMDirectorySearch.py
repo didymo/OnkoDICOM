@@ -6,7 +6,7 @@ from pydicom.errors import InvalidDicomError
 from src.Model.DICOMStructure import DICOMStructure, Patient, Study, Series, Image
 
 
-def get_dicom_structure(path, progress_callback):
+def get_dicom_structure(path, interrupt_flag, progress_callback):
     """
     Searches the given directory and creates a Patient>Study>Series>Image structure based on the DICOM files in the
     directory and subdirectories.
@@ -20,8 +20,13 @@ def get_dicom_structure(path, progress_callback):
     files_searched = 0
     total_files = sum([len(files) for root, dirs, files in os.walk(path)])
 
+    no_patient_id = 1
+
     for root, dirs, files in os.walk(path):
         for file in files:
+
+            if interrupt_flag.is_set():
+                return
 
             # The progress is updated first because the total files represents ALL files inside the selected directory,
             # not just the DICOM files. Otherwise, most files would be skipped and the progress would be inaccurate.
@@ -38,8 +43,14 @@ def get_dicom_structure(path, progress_callback):
             except (InvalidDicomError, FileNotFoundError):
                 pass
             else:
+                if 'PatientID' in dicom_file:
+                    patient_id = dicom_file.PatientID
+                else:
+                    patient_id = "no_id_" + str(no_patient_id)
+                    no_patient_id += 1
+
                 new_image = Image(dicom_file, file_path)
-                if not dicom_structure.has_patient(dicom_file.PatientID):
+                if not dicom_structure.has_patient(patient_id):
                     # TODO there is definitely a more efficient way of doing this
                     new_series = Series(dicom_file.SeriesInstanceUID)
                     new_series.series_description = dicom_file.get("SeriesDescription")
@@ -49,7 +60,7 @@ def get_dicom_structure(path, progress_callback):
                     new_study.study_description = dicom_file.get("StudyDescription")
                     new_study.add_series(new_series)
 
-                    new_patient = Patient(dicom_file.PatientID, dicom_file.PatientName)
+                    new_patient = Patient(patient_id, dicom_file.PatientName)
                     new_patient.add_study(new_study)
 
                     dicom_structure.add_patient(new_patient)
