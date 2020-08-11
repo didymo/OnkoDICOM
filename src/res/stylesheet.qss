@@ -54,7 +54,7 @@ QTreeView::item:hover {
     border: 1px solid #bfcde4;
 }
 
-/*
+
 QTreeView::branch:has-siblings:!adjoins-item {
     border-image: url(':/res/images/qtree/stylesheet-vline.png') 0;
 }
@@ -78,7 +78,6 @@ QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
         image: url(':/res/images/qtree/stylesheet-branch-open.png');
 }
-*/
 
 QPushButton#stopButton {
     font-size:14px;
