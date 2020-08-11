@@ -63,7 +63,7 @@ class PatientBar(object):
 		"""
 		self.icon = QtWidgets.QLabel(self.widget)
 		self.icon.setMaximumWidth(30)
-		self.icon.setGeometry(QtCore.QRect(10, 5, 30, 30))
+		self.icon.setGeometry(QtCore.QRect(10, 0, 0, 0))
 		self.icon.setText("")
 		self.icon.setPixmap(QtGui.QPixmap(":/images/Icon/patient.png"))
 
@@ -75,7 +75,7 @@ class PatientBar(object):
 		self.name_widget = QtWidgets.QWidget(self.widget)
 		self.name_widget.setGeometry(QtCore.QRect(50, 5, 370, 31))
 		self.name_layout = QtWidgets.QHBoxLayout(self.name_widget)
-		self.name_layout.setContentsMargins(0, 0, 0, 0)
+		self.name_layout.setContentsMargins(0, 8, 0, 0)
 		self.name_layout.setSpacing(5)
 		self.name_widget.setFocusPolicy(QtCore.Qt.NoFocus)
 
@@ -99,7 +99,7 @@ class PatientBar(object):
 		self.id_widget = QtWidgets.QWidget(self.widget)
 		self.id_widget.setGeometry(QtCore.QRect(500, 5, 280, 31))
 		self.id_layout = QtWidgets.QHBoxLayout(self.id_widget)
-		self.id_layout.setContentsMargins(0, 0, 0, 0)
+		self.id_layout.setContentsMargins(0, 8, 0, 0)
 		self.id_layout.setSpacing(5)
 		self.id_widget.setFocusPolicy(QtCore.Qt.NoFocus)
 
@@ -125,7 +125,7 @@ class PatientBar(object):
 		self.gender_widget.setGeometry(QtCore.QRect(830, 5, 111, 31))
 		self.gender_widget.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.gender_layout = QtWidgets.QHBoxLayout(self.gender_widget)
-		self.gender_layout.setContentsMargins(0, 0, 0, 0)
+		self.gender_layout.setContentsMargins(0, 8, 0, 0)
 		self.gender_layout.setSpacing(5)
 
 		# Label
@@ -149,7 +149,7 @@ class PatientBar(object):
 		self.dob_widget.setGeometry(QtCore.QRect(950, 5, 95, 31))
 		self.dob_widget.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.dob_layout = QtWidgets.QHBoxLayout(self.dob_widget)
-		self.dob_layout.setContentsMargins(0, 0, 0, 0)
+		self.dob_layout.setContentsMargins(0, 8, 0, 0)
 		self.dob_layout.setSpacing(5)
 
 		# Label
