@@ -69,7 +69,7 @@ def dict_instanceUID(dict_ds):
     :return:
     """
     res = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss']
+    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
 
     for ds in dict_ds:
         if ds not in non_img_type:

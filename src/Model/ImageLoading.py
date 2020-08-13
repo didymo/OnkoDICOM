@@ -52,6 +52,11 @@ allowed_classes = {
         "name": "rtplan",
         "sliceable" : False
     },
+    # RT Image
+    "1.2.840.10008.5.1.4.1.1.481.1": {
+        "name": "rtimage",
+        "sliceable" : False
+    },
     # MR Image
     "1.2.840.10008.5.1.4.1.1.4" : {
         "name": "mr",
@@ -319,7 +324,7 @@ def get_pixluts(read_data_dict):
     :return: Dictionary of pixluts for the transformation from 3D to 2D.
     """
     dict_pixluts = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss']
+    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
     for ds in read_data_dict:
         if ds not in non_img_type:
             img_ds = read_data_dict[ds]

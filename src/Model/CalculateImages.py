@@ -9,7 +9,7 @@ def convert_raw_data(ds):
     :param ds: A dictionary of datasets of all the DICOM files of the patient
     :return: np_pixels, a list of pixel arrays of all slices of the patient
     """
-    non_img_list = ['rtss', 'rtdose', 'rtplan']
+    non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
     np_pixels = []
 
     # Do the conversion to every slice (except RTSS, RTDOSE, RTPLAN)
