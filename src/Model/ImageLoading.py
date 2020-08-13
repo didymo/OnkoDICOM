@@ -149,11 +149,12 @@ def get_roi_info(dataset_rtss):
     return dict_roi
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
+def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=None):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
     :param rois: Dictionary of ROI information.
+    :param interrupt_flag: A threading.Event() object that tells the function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
     :return: Dictionary of all the DVHs of all the ROIs of the patient.
     """
@@ -164,6 +165,8 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
 
     for roi in roi_list:
         dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit)
+        if interrupt_flag.is_set():  # Stop calculating at the next DVH.
+            return
 
     return dict_dvh
 

@@ -218,7 +218,7 @@ class UIOpenPatientWindow(object):
             selected_files += item.dicom_object.get_files()
 
         if len(selected_files) > 0:
-            self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint)
+            self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
             self.progress_window.signal_loaded.connect(self.on_loaded)
             self.progress_window.signal_error.connect(self.on_loading_error)
 
@@ -231,7 +231,8 @@ class UIOpenPatientWindow(object):
         """
         Executes when the progress bar finishes loaded the selected files.
         """
-        self.patient_info_initialized.emit(results)
+        if results[0] is not None:  # Will be NoneType if loading was interrupted.
+            self.patient_info_initialized.emit(results)
 
     def on_loading_error(self, error_code):
         """
