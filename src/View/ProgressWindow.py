@@ -1,4 +1,6 @@
-from PyQt5 import QtCore, QtWidgets
+import threading
+
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout
 
@@ -30,11 +32,12 @@ class ProgressWindow(QDialog):
         self.setLayout(self.layout)
 
         self.threadpool = QThreadPool()
+        self.interrupt_flag = threading.Event()
 
     def start_loading(self, selected_files):
         image_loader = ImageLoader(selected_files)
 
-        worker = Worker(image_loader.load)
+        worker = Worker(image_loader.load, self.interrupt_flag)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)
         worker.signals.progress.connect(self.update_progress)
@@ -58,3 +61,6 @@ class ProgressWindow(QDialog):
             self.signal_error.emit(0)
         elif type(err[1]) is ImageLoading.NotAllowedClassError:
             self.signal_error.emit(1)
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        self.interrupt_flag.set()
