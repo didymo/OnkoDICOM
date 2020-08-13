@@ -8,7 +8,7 @@ QLabel#welcome {
     font-family: Roboto Black;
     margin-bottom: 0px;
 }
-
+/*
 QPushButton {
     margin: 6px 8px;
     padding: 0 16px;
@@ -28,11 +28,39 @@ QPushButton:hover {
 QPushButton:pressed {
     background-color: #5c2eb8;
 }
+*/
+
+QPushButton {
+    font-weight: bold;
+}
 
 /* Welcome Page */
 
 QMainWindow#WelcomeWindowInstance {
     background-color: rgb(244, 245, 245);
+}
+
+QLabel#WelcomeWindowLabel {
+    font-weight: bold;
+    font-size: 18pt;
+}
+
+QLabel#WelcomeWindowSlogan {
+    font-weight: semi-bold;
+    font-size: 16px;
+}
+
+QPushButton#OpenPatientButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#OpenPatientButton:hover {
+    background-color: #64b5f6;
 }
 
 /* Open Patient */
@@ -54,6 +82,17 @@ QTreeView::item:hover {
     border: 1px solid #bfcde4;
 }
 
+QPushButton#chooseButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 136px;
+    height: 40px;
+    border-radius: 4px;
+    color: #fff;
+}
+QPushButton#chooseButton:hover {
+    background-color: #64b5f6;
+}
 
 QTreeView::branch:has-siblings:!adjoins-item {
     border-image: url(':/res/images/qtree/stylesheet-vline.png') 0;
@@ -77,6 +116,32 @@ QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
         image: url(':/res/images/qtree/stylesheet-branch-open.png');
+}
+
+QPushButton#cancelButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#cancelButton:hover {
+    background-color: #64b5f6;
+}
+
+QPushButton#confirmButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#confirmButton:hover {
+    background-color: #64b5f6;
 }
 
 QPushButton#stopButton {

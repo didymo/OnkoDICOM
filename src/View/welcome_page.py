@@ -32,9 +32,9 @@ class UIWelcomeWindow(object):
         # Set up the Label for the Welcome Window
         self.welcome_window_label = QtWidgets.QLabel()
         self.welcome_window_label.setObjectName("WelcomeWindowLabel")
-        welcome_window_label_font = QtGui.QFont(FontService.get_instance().font_family(), 18)
-        welcome_window_label_font.setBold(True)
-        self.welcome_window_label.setFont(welcome_window_label_font)
+        # welcome_window_label_font = QtGui.QFont(FontService.get_instance().font_family(), 18)
+        # welcome_window_label_font.setBold(True)
+        # self.welcome_window_label.setFont(welcome_window_label_font)
         self.welcome_window_label.setAlignment(Qt.AlignCenter)
         self.window_vertical_layout_box.addWidget(self.welcome_window_label)
 
@@ -42,8 +42,8 @@ class UIWelcomeWindow(object):
         # Set up the Slogan for the Welcome Window
         self.welcome_window_slogan = QtWidgets.QLabel()
         self.welcome_window_slogan.setObjectName("WelcomeWindowSlogan")
-        welcome_window_slogan_font = QtGui.QFont(FontService.get_instance().font_family(), 12)
-        self.welcome_window_slogan.setFont(welcome_window_slogan_font)
+        # welcome_window_slogan_font = QtGui.QFont(FontService.get_instance().font_family(), 12)
+        # self.welcome_window_slogan.setFont(welcome_window_slogan_font)
         self.welcome_window_slogan.setAlignment(Qt.AlignCenter)
         self.window_vertical_layout_box.addWidget(self.welcome_window_slogan)
 
@@ -54,7 +54,7 @@ class UIWelcomeWindow(object):
         self.open_patient_button.setObjectName("OpenPatientButton")
         self.open_patient_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.open_patient_button.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.open_patient_button.resize(self.open_patient_button.sizeHint().width(), self.open_patient_button.sizeHint().height())
+        self.open_patient_button.resize(480, 261)
         self.buttons_holder.addStretch(1)
         self.buttons_holder.addWidget(self.open_patient_button)
         self.buttons_holder.addStretch(1)

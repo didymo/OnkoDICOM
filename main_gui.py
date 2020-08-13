@@ -26,10 +26,17 @@ if __name__ == "__main__":
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QtWidgets.QApplication(sys.argv)
 
-    app_font = QFont()
-    app_font.setFamily(FontService.get_instance().font_family())
-    app_font.setPixelSize(FontService.get_instance().get_scaled_font_pixel_size(app, 10))
-    app.setFont(app_font)
+    print("PDPI: " + str(app.primaryScreen().physicalDotsPerInch()))
+    # app_font = QFont()
+    # app_font.setFamily(FontService.get_instance().font_family())
+    # app_font.setPixelSize(FontService.get_instance().get_scaled_font_pixel_size(app, 10))
+    # app.setFont(app_font)
+
+
+    # Set the font to Segoe UI, 9, when in windows OS
+    if platform.system() == 'Windows':
+        f = QFont("Segoe UI", 9)
+        app.setFont(f)
 
     controller = Controller()
     controller.show_welcome()
