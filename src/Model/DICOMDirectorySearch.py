@@ -12,6 +12,8 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
     directory and subdirectories.
 
     :param path: The root directory to search from.
+    :param interrupt_flag: A threading.Event() flag to indicate whether or not the process has been interrupted.
+    :param progress_callback: A function that receives the progress of the current search.
     :return: Complete DICOMStructure object with associated DICOM files
     """
 
