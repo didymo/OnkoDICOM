@@ -1,4 +1,5 @@
 import csv
+from pathlib import Path
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from random import randint, seed
@@ -213,7 +214,8 @@ class StructureTab(object):
 		self.main_window.dicom_view.update_view()
 
 	def save_new_rtss(self, event=None):
-		save_filepath = QtWidgets.QFileDialog.getSaveFileName(self.main_window, "Save file")[0]
+		rtss_directory = str(Path(self.main_window.file_rtss).parent)
+		save_filepath = QtWidgets.QFileDialog.getSaveFileName(self.main_window, "Save file", rtss_directory)[0]
 		if save_filepath != "":
 			self.main_window.dataset_rtss.save_as(save_filepath)
 			QtWidgets.QMessageBox.about(self.main_window, "File saved", "The RTSTRUCT file has been saved.")
