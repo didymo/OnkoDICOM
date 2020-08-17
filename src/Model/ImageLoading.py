@@ -106,7 +106,71 @@ def get_datasets(filepath_list):
             else:
                 raise NotAllowedClassError
 
-    return read_data_dict, file_names_dict
+    sorted_read_data_dict, sorted_file_names_dict = image_stack_sort(read_data_dict, file_names_dict)
+
+    return sorted_read_data_dict, sorted_file_names_dict
+
+
+def img_stack_displacement(orientation, position):
+    """
+    Calcualte the projection of the image position patient along the axis perpendicular to the images themselves,
+    i.e. along the stack axis. Intended use is for the sorting key to sort a stack of image datasets so that they are in
+    order, regardless of whether the images are axial, coronal, or sagittal, and independent from the order in which the
+    images were read in.
+    :param orientation: List of strings with six elements, the image orientation patient value from the dataset.
+    :param position: List of strings with three elements, the image position value from the dataset.
+    :return: Float of the image position patient along the image stack axis.
+    """
+    ds_orient_x = orientation[0:3]
+    ds_orient_y = orientation[3:6]
+    orient_x = np.array(list(map(float, ds_orient_x)))
+    orient_y = np.array(list(map(float, ds_orient_y)))
+    orient_z = np.cross(orient_x, orient_y)
+    img_pos_patient = np.array(list(map(float, position)))
+    displacement = orient_z.dot(img_pos_patient)
+
+    return displacement
+
+
+def get_dict_sort_on_displacement(item):
+    """
+    :param item: dictionary key, value item with value of a PyDicom dataset
+    :return: Float of the projection of the image position patient on the axis through the image stack
+    """
+    img_dataset = item[1]
+    orientation = img_dataset.ImageOrientationPatient
+    position = img_dataset.ImagePositionPatient
+    sort_key = img_stack_displacement(orientation, position)
+
+    return sort_key
+
+
+def image_stack_sort(read_data_dict, file_names_dict):
+    """
+    Sort the read_data_dict and file_names_dict by order of displacement along the image stack axis.
+    For axial images this is by the Z coordinate.
+    :return: Tuple of sorted dictionaries
+    """
+    new_image_dict = {key: value for (key, value) in read_data_dict.items() if str(key).isnumeric()}
+    new_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if str(key).isnumeric()}
+    new_non_image_dict = {key: value for (key, value) in read_data_dict.items() if not str(key).isnumeric()}
+
+    new_items = new_image_dict.items()
+    sorted_dict_on_displacement = sorted(new_items, key=get_dict_sort_on_displacement, reverse=True)
+
+    new_read_data_dict = {}
+    new_file_names_dict = {}
+
+    i = 0
+    for sorted_dataset in sorted_dict_on_displacement:
+        new_read_data_dict[i] = sorted_dataset[1]
+        original_index = sorted_dataset[0]
+        new_file_names_dict[i] = new_image_file_names_dict[original_index]
+        i += 1
+
+    new_read_data_dict.update(new_non_image_dict)
+
+    return new_read_data_dict, new_file_names_dict
 
 
 def is_dataset_dicom_rt(read_data_dict):
