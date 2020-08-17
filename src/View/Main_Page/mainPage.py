@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QLineEdit, QMessageBox
 
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.mainPageController import MainPage
-from src.View.InputDialogs import Rxdose_Check
 from src.View.Main_Page.PatientBar import *
 from src.View.Main_Page.StructureTab import *
 from src.View.Main_Page.IsodoseTab import *
