@@ -1,6 +1,7 @@
 import glob
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLineEdit, QMessageBox
 
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.mainPageController import MainPage
@@ -171,7 +172,6 @@ class UIMainWindow(object):
         MainWindow.setWindowTitle("OnkoDICOM")
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
-
         # Main Container and Layout
         self.main_widget = QtWidgets.QWidget(MainWindow)
         self.main_widget.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -271,7 +271,6 @@ class UIMainWindow(object):
         self.tab2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-
     def create_footer(self):
         # Bottom Layer
         self.bottom_widget = QtWidgets.QWidget(self.main_widget)
@@ -316,3 +315,4 @@ class UIMainWindow(object):
                                                           QtWidgets.QMessageBox.Ok)
             if SaveReply == QtWidgets.QMessageBox.Ok:
                 pass
+
