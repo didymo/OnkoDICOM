@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from PyQt5 import QtGui
+from src.Model import ROI
 
 class Ui_DeleteROIWindow(object):
     def setupUi(self, DeleteROIWindow):
@@ -23,12 +24,12 @@ class Ui_DeleteROIWindow(object):
         self.listViewKeep = QtWidgets.QListView(self.frame)
         self.listViewKeep.setGeometry(QtCore.QRect(70, 120, 221, 331))
         self.listViewKeep.setObjectName("listViewKeep")
-        #self.listViewKeep.setStyleSheet("background-color:green") Need to just have border of box green
+        self.listViewKeep.setStyleSheet("border: 2px solid green;")
 
         self.listViewDelete = QtWidgets.QListView(self.frame)
         self.listViewDelete.setGeometry(QtCore.QRect(480, 120, 221, 331))
         self.listViewDelete.setObjectName("listViewDelete")
-        #self.listViewDelete.setStyleSheet("background-color:red") Need to just have border of box green
+        self.listViewDelete.setStyleSheet("border: 2px solid red;")
 
 
         self.cancelButton = QtWidgets.QPushButton(self.frame)
