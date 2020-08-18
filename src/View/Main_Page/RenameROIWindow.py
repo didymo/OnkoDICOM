@@ -6,7 +6,6 @@ from pydicom import dcmread
 
 from src.Model import ROI
 
-
 class RenameROIWindow(QDialog):
 
     def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):

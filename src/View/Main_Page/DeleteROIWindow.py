@@ -1,8 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtGui
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton
+import os
 from src.Model import ROI
+from src.View.Main_Page import StructureTab
 
-class Ui_DeleteROIWindow(object):
+class Ui_DeleteROIWindow(QDialog):
     def setupUi(self, DeleteROIWindow):
 
         DeleteROIWindow.setObjectName("DeleteROIWindow")
@@ -21,12 +24,12 @@ class Ui_DeleteROIWindow(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
 
-        self.listViewKeep = QtWidgets.QListView(self.frame)
+        self.listViewKeep = QtWidgets.QTreeView(self.frame)
         self.listViewKeep.setGeometry(QtCore.QRect(70, 120, 221, 331))
         self.listViewKeep.setObjectName("listViewKeep")
         self.listViewKeep.setStyleSheet("border: 2px solid green;")
 
-        self.listViewDelete = QtWidgets.QListView(self.frame)
+        self.listViewDelete = QtWidgets.QTreeView(self.frame)
         self.listViewDelete.setGeometry(QtCore.QRect(480, 120, 221, 331))
         self.listViewDelete.setObjectName("listViewDelete")
         self.listViewDelete.setStyleSheet("border: 2px solid red;")
@@ -43,12 +46,12 @@ class Ui_DeleteROIWindow(object):
         self.confirmButton.setText("Confirm")
 
         self.moveRightButton = QtWidgets.QPushButton(self.frame)
-        self.moveRightButton.setGeometry(QtCore.QRect(340, 170, 81, 31))
+        self.moveRightButton.setGeometry(QtCore.QRect(340, 170, 90, 31))
         self.moveRightButton.setObjectName("moveRightButton")
         self.moveRightButton.setText("Move Right -->")
 
         self.moveLeftButton = QtWidgets.QPushButton(self.frame)
-        self.moveLeftButton.setGeometry(QtCore.QRect(340, 230, 81, 31))
+        self.moveLeftButton.setGeometry(QtCore.QRect(340, 230, 90, 31))
         self.moveLeftButton.setObjectName("moveLeftButton")
         self.moveLeftButton.setText("Move Left <--")
 
