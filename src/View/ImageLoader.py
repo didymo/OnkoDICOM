@@ -27,12 +27,11 @@ class ImageLoader(QObject):
         :return: PatientDictContainer object containing all values related to the loaded DICOM files.
         """
         progress_callback.emit(("Creating datasets...", 0))
-        path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
         try:
-            read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
+            path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
         except ImageLoading.NotAllowedClassError:
             raise ImageLoading.NotAllowedClassError
-
+        read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
         # if not ImageLoading.is_dataset_dicom_rt(read_data_dict):
         #    raise ImageLoading.NotRTSetError
 

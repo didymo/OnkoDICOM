@@ -154,6 +154,7 @@ def image_stack_sort(read_data_dict, file_names_dict):
     new_image_dict = {key: value for (key, value) in read_data_dict.items() if str(key).isnumeric()}
     new_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if str(key).isnumeric()}
     new_non_image_dict = {key: value for (key, value) in read_data_dict.items() if not str(key).isnumeric()}
+    new_non_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if not str(key).isnumeric()}
 
     new_items = new_image_dict.items()
     sorted_dict_on_displacement = sorted(new_items, key=get_dict_sort_on_displacement, reverse=True)
@@ -169,6 +170,7 @@ def image_stack_sort(read_data_dict, file_names_dict):
         i += 1
 
     new_read_data_dict.update(new_non_image_dict)
+    new_file_names_dict.update(new_non_image_file_names_dict)
 
     return new_read_data_dict, new_file_names_dict
 
