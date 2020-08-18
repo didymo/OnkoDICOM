@@ -145,6 +145,7 @@ class MenuBar(object):
 		self.actionROIDelete = QtWidgets.QAction(self.window)
 		self.actionROIDelete.setIcon(self.iconROIDelete)
 		self.actionROIDelete.setIconVisibleInMenu(True)
+		self.actionROIDelete.triggered.connect(self.handlers.roi_delete_options_handler)
 
 
 		# Anonymize and Save Action
@@ -426,6 +427,13 @@ class MenuHandler(object):
 		Function triggered when the Add-On Options button is pressed from the menu.
 		"""
 		self.main_window.callManager.show_add_on_options()
+
+
+	def roi_delete_options_handler(self):
+		"""
+			Function triggered when the ROI Delete button is pressed from the menu.
+		"""
+		self.main_window.callROI.show_roi_delete_options()
 
 	def actionExit(self):
 		sys.exit()

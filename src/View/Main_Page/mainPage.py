@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLineEdit, QMessageBox
 
 from src.Controller.AddOnOptionsController import AddOptions
+from src.Controller.ROIOptionsController import ROIDelOption
 from src.Controller.mainPageController import MainPage
 from src.View.Main_Page.PatientBar import *
 from src.View.Main_Page.StructureTab import *
@@ -161,6 +162,7 @@ class UIMainWindow(object):
         self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions(self)
 
+        self.callROI = ROIDelOption(self)
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
