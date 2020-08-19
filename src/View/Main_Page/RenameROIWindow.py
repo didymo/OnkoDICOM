@@ -49,9 +49,11 @@ class RenameROIWindow(QDialog):
 
         # Populating the table of ROIs
         self.list_of_ROIs = QListWidget()
+        self.list_of_ROIs.addItem("------------Standard Organ Names------------")
         for organ in self.standard_organ_names:
             self.list_of_ROIs.addItem(organ)
 
+        self.list_of_ROIs.addItem("------------Standard Volume Names------------")
         for volume in self.standard_volume_names:
             self.list_of_ROIs.addItem(volume)
 
@@ -100,5 +102,7 @@ class RenameROIWindow(QDialog):
         self.close()
 
     def on_ROI_clicked(self):
-        item = self.list_of_ROIs.currentItem()
-        self.input_field.setText(str(item.text()))
+        clicked_ROI = self.list_of_ROIs.currentItem()
+        # Excluding headers from being clicked.
+        if not str(clicked_ROI.text()).startswith("------------Standard"):
+            self.input_field.setText(str(clicked_ROI.text()))
