@@ -3,11 +3,14 @@
 #   This file handles all the processes done when opening a new patient or opening the program for the first time   #
 #                                                                                                                   #
 #####################################################################################################################
-from PyQt5.QtWidgets import QMessageBox, QDesktopWidget
 from shutil import which
+
+from PyQt5.QtWidgets import QDesktopWidget, QMessageBox
+
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.Main_Page.ClinicalDataForm import *
 from src.View.Main_Page.mainPage import *
 from src.View.openpage import WelcomePage
-from src.View.Main_Page.ClinicalDataForm import *
 from src.View.ProgressBar import *
 from src.View.PyradiProgressBar import *
 
@@ -16,6 +19,7 @@ from src.View.PyradiProgressBar import *
 #   This class creates an instance of the progress bar that is used while running pyradiomics                       #
 #                                                                                                                   #
 #####################################################################################################################
+
 
 class PyradiProgressBar(QtWidgets.QWidget):
     progress_complete = QtCore.pyqtSignal()
@@ -26,10 +30,11 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.w = QtWidgets.QWidget()
         self.setWindowTitle("Running Pyradiomics")
         self.setWindowFlags(
-            QtCore.Qt.Window |
-            QtCore.Qt.CustomizeWindowHint |
-            QtCore.Qt.WindowTitleHint |
-            QtCore.Qt.WindowMinimizeButtonHint)
+            QtCore.Qt.Window
+            | QtCore.Qt.CustomizeWindowHint
+            | QtCore.Qt.WindowTitleHint
+            | QtCore.Qt.WindowMinimizeButtonHint
+        )
         qtRectangle = self.w.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
@@ -46,7 +51,7 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.ext.copied_percent_signal.connect(self.on_update)
         self.ext.start()
 
-    def on_update(self, value, text=''):
+    def on_update(self, value, text=""):
         """
         Update percentage and text of progress bar. 
 
@@ -70,15 +75,18 @@ class PyradiProgressBar(QtWidgets.QWidget):
 
         # When the percentage reaches 100, send a signal to close progress bar
         if value == 100:
-            completion = QMessageBox.information(self, "Complete",
-                                                 "Task has been completed successfully")
+            completion = QMessageBox.information(
+                self, "Complete", "Task has been completed successfully"
+            )
             self.progress_complete.emit()
+
 
 #####################################################################################################################
 #                                                                                                                   #
 #   This class creates an instance of the progress bar that will load the patient into the system                   #
 #                                                                                                                   #
 #####################################################################################################################
+
 
 class ProgressBar(QtWidgets.QWidget):
     # the signals send to the other windows
@@ -116,8 +124,7 @@ class ProgressBar(QtWidgets.QWidget):
         # in case there are missing files
         self.ext.missing_files_signal.connect(self.on_missing_files)
         # in case the directory is not correct
-        self.ext.incorrect_directory_signal.connect(
-            self.on_incorrect_directory)
+        self.ext.incorrect_directory_signal.connect(self.on_incorrect_directory)
         # start the loading of the patient
         self.ext.start()
 
@@ -148,7 +155,7 @@ class ProgressBar(QtWidgets.QWidget):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
-        msg.setInformativeText('Invalid directory, no DICOM files found')
+        msg.setInformativeText("Invalid directory, no DICOM files found")
         msg.setWindowTitle("Error")
         msg.exec_()
 
@@ -175,6 +182,7 @@ class ProgressBar(QtWidgets.QWidget):
             self.ext.terminate()
             self.open_welcome_window.emit()
 
+
 #####################################################################################################################
 #                                                                                                                   #
 #   This class creates an instance of the Welcome Page when firstly running the software                            #
@@ -198,8 +206,9 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
         """
         # Browse directories
         path = QtWidgets.QFileDialog.getExistingDirectory(
-            None, 'Select patient folder...', '')
-        if (path != ''):
+            None, "Select patient folder...", ""
+        )
+        if path != "":
             self.open_patient_window.emit(path)
 
 
@@ -208,6 +217,7 @@ class Welcome(QtWidgets.QMainWindow, WelcomePage):
 #   This class creates an instance of the Main Window Page of OnkoDICOM                                             #
 #                                                                                                                   #
 #####################################################################################################################
+
 
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
@@ -228,29 +238,38 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         Function to handle the Open patient button being clicked
         """
         path = QtWidgets.QFileDialog.getExistingDirectory(
-            None, 'Select patient folder...', '/home')
-        if (path != ''):
+            None, "Select patient folder...", "/home"
+        )
+        if path != "":
             self.open_patient_window.emit(path)
 
     def pyradiomicsHandler(self):
         """
         Sends signal to initiate pyradiomics analysis
         """
-        if which('plastimatch') is not None:
-            if self.hashed_path == '':
-                confirm_pyradi = QMessageBox.information(self, "Confirmation",
-                                                    "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
-                                                    QMessageBox.Yes, QMessageBox.No)
+        if which("plastimatch") is not None:
+            if self.hashed_path == "":
+                confirm_pyradi = QMessageBox.information(
+                    self,
+                    "Confirmation",
+                    "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
+                    QMessageBox.Yes,
+                    QMessageBox.No,
+                )
                 if confirm_pyradi == QMessageBox.Yes:
-                    self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+                    self.run_pyradiomics.emit(
+                        self.path, self.filepaths, self.hashed_path
+                    )
                 if confirm_pyradi == QMessageBox.No:
                     pass
             else:
                 self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
         else:
-            exe_not_found = QMessageBox.information(self, "Error",
-                                                 "Plastimatch not installed. Please install Plastimatch (https://sourceforge.net/projects/plastimatch/) to carry out pyradiomics analysis.")
-        
+            exe_not_found = QMessageBox.information(
+                self,
+                "Error",
+                "Plastimatch not installed. Please install Plastimatch (https://sourceforge.net/projects/plastimatch/) to carry out pyradiomics analysis.",
+            )
 
 
 #####################################################################################################################
@@ -258,6 +277,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 #   This class controlls which window to be shown at each time according to users requests                          #
 #                                                                                                                   #
 #####################################################################################################################
+
 
 class Controller:
 
@@ -299,15 +319,35 @@ class Controller:
         """
         Display patient data
         """
+        patient_dict_container = PatientDictContainer(
+            path,
+            self.bar_window.ext.read_data_dict,
+            self.bar_window.ext.file_names_dict,
+            rois=self.bar_window.ext.rois,
+            raw_dvh=self.bar_window.ext.raw_dvh,
+            dvh_x_y=self.bar_window.ext.dvh_x_y,
+            raw_contour=self.bar_window.ext.dict_raw_ContourData,
+            num_points=self.bar_window.ext.dict_NumPoints,
+            pixluts=self.bar_window.ext.dict_pixluts,
+        )
         # Loads the main window  by providing the necessary data obtained by the progress bar
-        self.patient_window = MainWindow(path, self.bar_window.ext.read_data_dict, self.bar_window.ext.file_names_dict,
-                                         self.bar_window.ext.rois, self.bar_window.ext.raw_dvh,
-                                         self.bar_window.ext.dvh_x_y, self.bar_window.ext.dict_raw_ContourData,
-                                         self.bar_window.ext.dict_NumPoints, self.bar_window.ext.dict_pixluts)
+        self.patient_window = MainWindow(
+            # path,
+            patient_dict_container,
+            #    self.bar_window.ext.read_data_dict,
+            #    self.bar_window.ext.file_names_dict,
+            #    self.bar_window.ext.rois,
+            #    self.bar_window.ext.raw_dvh,
+            #    self.bar_window.ext.dvh_x_y,
+            #    self.bar_window.ext.dict_raw_ContourData,
+            #    self.bar_window.ext.dict_NumPoints,
+            #    self.bar_window.ext.dict_pixluts,
+        )
         self.patient_window.open_patient_window.connect(self.show_bar)
         self.patient_window.run_pyradiomics.connect(self.show_pyradi_progress)
         self.patient_window.menu_bar.actionExit.triggered.connect(
-            self.patient_window.close)
+            self.patient_window.close
+        )
         self.bar_window.close()
         if self.welcome_window.isVisible():
             self.welcome_window.close()
@@ -321,10 +361,8 @@ class Controller:
         #                                          "Are you sure you want to perform pyradiomics? Once started the process cannot be terminated until it finishes.",
         #                                          QMessageBox.Yes, QMessageBox.No)
         # if confirm_pyradi == QMessageBox.Yes:
-        self.pyradi_progressbar = PyradiProgressBar(
-            path, filepaths, target_path)
-        self.pyradi_progressbar.progress_complete.connect(
-            self.close_pyradi_progress)
+        self.pyradi_progressbar = PyradiProgressBar(path, filepaths, target_path)
+        self.pyradi_progressbar.progress_complete.connect(self.close_pyradi_progress)
         self.pyradi_progressbar.show()
         # if confirm_pyradi == QMessageBox.No:
         #     pass
