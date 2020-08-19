@@ -17,11 +17,11 @@ from src.View.Main_Page.DeleteROIWindow import *
 
 class RoiDeleteOptions(QtWidgets.QMainWindow, Ui_DeleteROIWindow):
 
-        def __init__(self, window):
+        def __init__(self, window, rois):
             super(RoiDeleteOptions, self).__init__()
 
             self.window = window
-            self.setupUi(self)
+            self.setupUi(self, rois)
 
 ###################################################################################################################
 #                                                                                                                 #
@@ -31,9 +31,10 @@ class RoiDeleteOptions(QtWidgets.QMainWindow, Ui_DeleteROIWindow):
 
 class ROIDelOption:
 
-    def __init__(self, window):
+    def __init__(self, window, rois):
         self.window = window
+        self.rois = rois
 
     def show_roi_delete_options(self):
-        self.options_window = RoiDeleteOptions(self.window)
+        self.options_window = RoiDeleteOptions(self.window, self.rois)
         self.options_window.show()

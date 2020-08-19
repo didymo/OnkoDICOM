@@ -1,12 +1,13 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidgetItem
 import os
 from src.Model import ROI
 from src.View.Main_Page import StructureTab
 
 class Ui_DeleteROIWindow(QDialog):
-    def setupUi(self, DeleteROIWindow):
+    def setupUi(self, DeleteROIWindow, rois):
 
         DeleteROIWindow.setObjectName("DeleteROIWindow")
         DeleteROIWindow.setFixedSize(800, 606)
@@ -24,13 +25,15 @@ class Ui_DeleteROIWindow(QDialog):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
 
-        self.listViewKeep = QtWidgets.QTreeView(self.frame)
+        self.listViewKeep = QtWidgets.QTreeWidget(self.frame)
         self.listViewKeep.setGeometry(QtCore.QRect(70, 120, 221, 331))
+        self.listViewKeep.setHeaderHidden(True)
         self.listViewKeep.setObjectName("listViewKeep")
         self.listViewKeep.setStyleSheet("border: 2px solid green;")
 
-        self.listViewDelete = QtWidgets.QTreeView(self.frame)
+        self.listViewDelete = QtWidgets.QTreeWidget(self.frame)
         self.listViewDelete.setGeometry(QtCore.QRect(480, 120, 221, 331))
+        self.listViewDelete.setHeaderHidden(True)
         self.listViewDelete.setObjectName("listViewDelete")
         self.listViewDelete.setStyleSheet("border: 2px solid red;")
 
@@ -49,6 +52,7 @@ class Ui_DeleteROIWindow(QDialog):
         self.moveRightButton.setGeometry(QtCore.QRect(340, 170, 90, 31))
         self.moveRightButton.setObjectName("moveRightButton")
         self.moveRightButton.setText("Move Right -->")
+        self.moveRightButton.clicked.connect(self.move_right_button_onClicked)
 
         self.moveLeftButton = QtWidgets.QPushButton(self.frame)
         self.moveLeftButton.setGeometry(QtCore.QRect(340, 230, 90, 31))
@@ -74,6 +78,45 @@ class Ui_DeleteROIWindow(QDialog):
 
         DeleteROIWindow.setCentralWidget(self.centralwidget)
 
+        self.rois = rois
+        self.display_rois_in_listViewKeep(self.rois)
+
         QtCore.QMetaObject.connectSlotsByName(DeleteROIWindow)
+
+    def display_rois_in_listViewKeep(self, rois):
+        self.listViewKeep.clear()
+        self.listViewKeep.setIndentation(0)
+        self.item = QTreeWidgetItem(["haha"]);
+        for roi_id, roi_dict in rois.items():
+            item = QTreeWidgetItem([roi_dict['name']])
+            item.setCheckState(0, Qt.Unchecked)
+            self.listViewKeep.addTopLevelItem(item)
+
+    def move_right_button_onClicked(self):
+
+        selected_rois = []
+        root = self.listViewKeep.invisibleRootItem()
+        child_count = root.childCount()
+        print(child_count)
+        for i in range(child_count):
+            item = root.child(i)
+            text = item.type()
+            ## I want to get the text out of the root.child(i)
+            print(text)
+            if item.checkState(0) == Qt.Checked:
+                selected_rois.append()
+
+        print(selected_rois)
+        self.listViewDelete.clear()
+        self.listViewDelete.setIndentation(0)
+        for i in selected_rois:
+            item = QTreeWidgetItem([i])
+            item.setCheckState(0, Qt.Unchecked)
+            self.listViewDelete.addTopLevelItem(item)
+
+
+
+
+
 
 
