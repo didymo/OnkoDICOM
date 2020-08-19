@@ -37,7 +37,6 @@ class RenameROIWindow(QDialog):
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.close)
         self.rename_button = QPushButton("Rename")
-        #self.rename_button.setDisabled(True)
         self.rename_button.clicked.connect(self.on_rename_clicked)
 
         self.button_layout = QHBoxLayout()
@@ -56,6 +55,8 @@ class RenameROIWindow(QDialog):
         for volume in self.standard_volume_names:
             self.list_of_ROIs.addItem(volume)
 
+        self.list_of_ROIs.clicked.connect(self.on_ROI_clicked)
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.explanation_text)
         self.layout.addWidget(self.input_field)
@@ -69,7 +70,6 @@ class RenameROIWindow(QDialog):
         if text in self.standard_volume_names or text in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: green")
             self.feedback_text.setText("Entered text is in standard names")
-            #self.rename_button.setDisabled(False)
         elif text.upper() in self.standard_volume_names or text.upper() in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: orange")
             self.feedback_text.setText("Entered text exists but should be in capitals")
@@ -78,7 +78,6 @@ class RenameROIWindow(QDialog):
         else:
             self.feedback_text.setStyleSheet("color: red")
             self.feedback_text.setText("Entered text is not in standard names")
-            #self.rename_button.setDisabled(True)
 
         for item in self.standard_volume_names:
             if text.startswith(item):
@@ -100,4 +99,6 @@ class RenameROIWindow(QDialog):
         self.rename_signal.emit(new_dataset)
         self.close()
 
-
+    def on_ROI_clicked(self):
+        item = self.list_of_ROIs.currentItem()
+        self.input_field.setText(str(item.text()))
