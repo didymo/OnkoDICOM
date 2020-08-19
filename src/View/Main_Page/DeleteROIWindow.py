@@ -77,11 +77,3 @@ class Ui_DeleteROIWindow(QDialog):
         QtCore.QMetaObject.connectSlotsByName(DeleteROIWindow)
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    DeleteROIWindow = QtWidgets.QMainWindow()
-    ui = Ui_DeleteROIWindow()
-    ui.setupUi(DeleteROIWindow)
-    DeleteROIWindow.show()
-    sys.exit(app.exec_())
