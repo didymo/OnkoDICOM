@@ -1,5 +1,4 @@
 from shutil import which
-
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
@@ -59,9 +58,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         Function to handle the Open patient button being clicked
         """
         confirmation_dialog = QMessageBox.information(self, 'Open new patient?',
-                                                    'Opening a new patient will close the currently opened patient. '
-                                                    'Would you like to continue?',
-                                                    QMessageBox.Yes | QMessageBox.No)
+                                                      'Opening a new patient will close the currently opened patient. '
+                                                      'Would you like to continue?',
+                                                      QMessageBox.Yes | QMessageBox.No)
 
         if confirmation_dialog == QMessageBox.Yes:
             self.open_patient_window.emit()

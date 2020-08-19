@@ -1,7 +1,7 @@
 import os
 
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
 from pydicom import dcmread
 
 from src.Model import ROI
@@ -19,7 +19,7 @@ class RenameROIWindow(QDialog):
         self.suggested_text = suggested_text
 
         self.setWindowTitle("Rename Region of Interest")
-        self.resize(300, 80)
+        self.setMinimumSize(300, 90)
 
         self.icon = QtGui.QIcon()
         self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
@@ -45,11 +45,24 @@ class RenameROIWindow(QDialog):
         self.button_layout.addWidget(self.rename_button)
         self.button_area.setLayout(self.button_layout)
 
+        self.list_label = QLabel()
+        self.list_label.setText("List of Standard Region of Interests")
+
+        # Populating the table of ROIs
+        self.list_of_ROIs = QListWidget()
+        for organ in self.standard_organ_names:
+            self.list_of_ROIs.addItem(organ)
+
+        for volume in self.standard_volume_names:
+            self.list_of_ROIs.addItem(volume)
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.explanation_text)
         self.layout.addWidget(self.input_field)
         self.layout.addWidget(self.feedback_text)
         self.layout.addWidget(self.button_area)
+        self.layout.addWidget(self.list_label)
+        self.layout.addWidget(self.list_of_ROIs)
         self.setLayout(self.layout)
 
     def on_text_edited(self, text):
@@ -86,3 +99,5 @@ class RenameROIWindow(QDialog):
         # reload the structure widget's structures.
         self.rename_signal.emit(new_dataset)
         self.close()
+
+
