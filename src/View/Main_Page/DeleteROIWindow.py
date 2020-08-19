@@ -42,6 +42,7 @@ class Ui_DeleteROIWindow(QDialog):
         self.cancelButton.setGeometry(QtCore.QRect(220, 490, 91, 31))
         self.cancelButton.setObjectName("cancelButton")
         self.cancelButton.setText("Cancel")
+        self.cancelButton.clicked.connect(self.on_cancel_button_clicked)
 
         self.confirmButton = QtWidgets.QPushButton(self.frame)
         self.confirmButton.setGeometry(QtCore.QRect(460, 490, 91, 31))
@@ -58,6 +59,7 @@ class Ui_DeleteROIWindow(QDialog):
         self.moveLeftButton.setGeometry(QtCore.QRect(340, 230, 90, 31))
         self.moveLeftButton.setObjectName("moveLeftButton")
         self.moveLeftButton.setText("Move Left <--")
+        self.moveLeftButton.clicked.connect(self.move_left_button_onClicked)
 
         self.keepLabel = QtWidgets.QLabel(self.frame)
         self.keepLabel.setGeometry(QtCore.QRect(120, 70, 91, 41))
@@ -83,37 +85,61 @@ class Ui_DeleteROIWindow(QDialog):
 
         QtCore.QMetaObject.connectSlotsByName(DeleteROIWindow)
 
+    def on_cancel_button_clicked(self):
+        self.close()
+
     def display_rois_in_listViewKeep(self, rois):
         self.listViewKeep.clear()
         self.listViewKeep.setIndentation(0)
-        self.item = QTreeWidgetItem(["haha"]);
+        self.item = QTreeWidgetItem(["item"])
         for roi_id, roi_dict in rois.items():
             item = QTreeWidgetItem([roi_dict['name']])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewKeep.addTopLevelItem(item)
 
+    # Currently allows movement back and forth. But not functional as of yet.
     def move_right_button_onClicked(self):
 
         selected_rois = []
-        root = self.listViewKeep.invisibleRootItem()
-        child_count = root.childCount()
-        print(child_count)
-        for i in range(child_count):
-            item = root.child(i)
-            text = item.type()
-            ## I want to get the text out of the root.child(i)
-            print(text)
-            if item.checkState(0) == Qt.Checked:
-                selected_rois.append()
+        root_item = self.listViewKeep.invisibleRootItem()
 
-        print(selected_rois)
+        for index in range(root_item.childCount()):
+            item = root_item.child(index)
+            if item.checkState(0) == Qt.Checked:
+                selected_rois.append(item.text(0)) # This will get ROI name
+                print(selected_rois)
+
+            item.setCheckState(0, Qt.Unchecked)
+
         self.listViewDelete.clear()
         self.listViewDelete.setIndentation(0)
-        for i in selected_rois:
-            item = QTreeWidgetItem([i])
+        for roi in selected_rois:
+            item = QTreeWidgetItem([roi])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewDelete.addTopLevelItem(item)
 
+        selected_rois.clear()
+
+    def move_left_button_onClicked(self):
+
+        selected_rois = []
+        root_item = self.listViewDelete.invisibleRootItem()
+
+        for index in range(root_item.childCount()):
+            item = root_item.child(index)
+            if item.checkState(0) == Qt.Checked:
+                selected_rois.append(item.text(0))
+                print(selected_rois)
+
+            item.setCheckState(0, Qt.Unchecked)
+
+        self.listViewKeep.setIndentation(0)
+        for roi in selected_rois:
+            item = QTreeWidgetItem([roi])
+            item.setCheckState(0, Qt.Unchecked)
+            self.listViewKeep.addTopLevelItem(item)
+
+        selected_rois.clear()
 
 
 
