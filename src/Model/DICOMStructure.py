@@ -198,9 +198,8 @@ class Study:
         contained_classes = []
         for series in self.series:
             for image in series.images:
-                image_class = image.dicom_file.SOPClassUID
-                if image_class not in contained_classes:
-                    contained_classes.append(image_class)
+                if image.class_id not in contained_classes:
+                    contained_classes.append(image.class_id)
 
         return sorted(rt_classes) == sorted(contained_classes)
 
@@ -278,9 +277,8 @@ class Series:
         """
         series_types = []
         for image in self.images:
-            modality = image.dicom_file.Modality
-            if modality not in series_types:
-                series_types.append(modality)
+            if image.modality not in series_types:
+                series_types.append(image.modality)
         return series_types if len(series_types) > 1 else series_types[0]
 
     def get_widget_item(self):
@@ -295,15 +293,16 @@ class Series:
 
 class Image:
 
-    def __init__(self, dicom_file, path):
+    def __init__(self, path, image_id, class_id, modality):
         """
         image_id: SOPInstanceUID in DICOM standard.
         :param dicom_file: A PyDicom dataset.
         :param path: Path of the DICOM file.
         """
-        self.dicom_file = dicom_file
         self.path = path
-        self.image_id = dicom_file.SOPInstanceUID
+        self.image_id = image_id
+        self.class_id = class_id
+        self.modality = modality
 
     def output_as_text(self):
         """

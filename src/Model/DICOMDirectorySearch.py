@@ -51,7 +51,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                     patient_id = "no_id_" + str(no_patient_id)
                     no_patient_id += 1
 
-                new_image = Image(dicom_file, file_path)
+                new_image = Image(file_path, dicom_file.SOPInstanceUID, dicom_file.SOPClassUID, dicom_file.Modality)
                 if not dicom_structure.has_patient(patient_id):
                     # TODO there is definitely a more efficient way of doing this
                     new_series = Series(dicom_file.SeriesInstanceUID)
