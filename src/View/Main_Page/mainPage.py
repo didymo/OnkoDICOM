@@ -162,7 +162,7 @@ class UIMainWindow(object):
         self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions(self)
 
-        self.callROI = ROIDelOption(self, self.rois)
+        self.callROI = ROIDelOption(self, self.rois, self.dataset_rtss)
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -207,7 +207,7 @@ class UIMainWindow(object):
 
         # Left Column: Structures tab
         if self.has_rtss:
-            self.structures_tab = StructureTab(self)
+            self.structures_tab = StructureTab(self, self.rois, self.dataset_rtss)
         # Left Column: Isodoses tab
         if self.has_rtdose:
             self.isodoses_tab = IsodosesTab(self)

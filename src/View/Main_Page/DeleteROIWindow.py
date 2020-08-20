@@ -1,13 +1,20 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidgetItem
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidgetItem, \
+    QMessageBox
 import os
 from src.Model import ROI
 from src.View.Main_Page import StructureTab
 
 class Ui_DeleteROIWindow(QDialog):
-    def setupUi(self, DeleteROIWindow, rois):
+    def setupUi(self, DeleteROIWindow, rois, dataset_rtss, newStructure):
+
+        self.listToKeep = []
+        self.listToDelete = []
+        self.rois = rois
+        self.dataset_rtss = dataset_rtss
+        self.newStructure = newStructure
 
         DeleteROIWindow.setObjectName("DeleteROIWindow")
         DeleteROIWindow.setFixedSize(800, 606)
@@ -48,6 +55,7 @@ class Ui_DeleteROIWindow(QDialog):
         self.confirmButton.setGeometry(QtCore.QRect(460, 490, 91, 31))
         self.confirmButton.setObjectName("confirmButton")
         self.confirmButton.setText("Confirm")
+        self.confirmButton.clicked.connect(self.confirm_button_onClicked)
 
         self.moveRightButton = QtWidgets.QPushButton(self.frame)
         self.moveRightButton.setGeometry(QtCore.QRect(340, 170, 90, 31))
@@ -80,67 +88,92 @@ class Ui_DeleteROIWindow(QDialog):
 
         DeleteROIWindow.setCentralWidget(self.centralwidget)
 
-        self.rois = rois
-        self.display_rois_in_listViewKeep(self.rois)
+        self.display_rois_in_listViewKeep()
 
         QtCore.QMetaObject.connectSlotsByName(DeleteROIWindow)
 
     def on_cancel_button_clicked(self):
         self.close()
 
-    def display_rois_in_listViewKeep(self, rois):
+    def display_rois_in_listViewKeep(self):
+        self.listToKeep.clear()
+        for roi_id, roi_dict in self.rois.items():
+            self.listToKeep.append(roi_dict['name'])
+
         self.listViewKeep.clear()
         self.listViewKeep.setIndentation(0)
         self.item = QTreeWidgetItem(["item"])
-        for roi_id, roi_dict in rois.items():
-            item = QTreeWidgetItem([roi_dict['name']])
+        for index in self.listToKeep:
+            item = QTreeWidgetItem([index])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewKeep.addTopLevelItem(item)
 
-    # Currently allows movement back and forth. But not functional as of yet.
+
     def move_right_button_onClicked(self):
-
-        selected_rois = []
         root_item = self.listViewKeep.invisibleRootItem()
-
         for index in range(root_item.childCount()):
             item = root_item.child(index)
             if item.checkState(0) == Qt.Checked:
-                selected_rois.append(item.text(0)) # This will get ROI name
-                print(selected_rois)
-
+                self.listToDelete.append(item.text(0)) # This will get ROI name
             item.setCheckState(0, Qt.Unchecked)
 
+        ## Move to the right column list
         self.listViewDelete.clear()
         self.listViewDelete.setIndentation(0)
-        for roi in selected_rois:
+        for roi in self.listToDelete:
             item = QTreeWidgetItem([roi])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewDelete.addTopLevelItem(item)
 
-        selected_rois.clear()
+        ## Delete moved items from the left column list
+        self.listToKeep = [x for x in self.listToKeep if x not in self.listToDelete]
+
+        self.listViewKeep.clear()
+        for index in self.listToKeep:
+            item = QTreeWidgetItem([index])
+            item.setCheckState(0, Qt.Unchecked)
+            self.listViewKeep.addTopLevelItem(item)
+
 
     def move_left_button_onClicked(self):
-
-        selected_rois = []
         root_item = self.listViewDelete.invisibleRootItem()
 
         for index in range(root_item.childCount()):
             item = root_item.child(index)
             if item.checkState(0) == Qt.Checked:
-                selected_rois.append(item.text(0))
-                print(selected_rois)
+                self.listToKeep.append(item.text(0)) # This will get ROI name
 
-            item.setCheckState(0, Qt.Unchecked)
-
+        item.setCheckState(0, Qt.Unchecked)
+        ## Move to the left column list
+        self.listViewKeep.clear()
         self.listViewKeep.setIndentation(0)
-        for roi in selected_rois:
+        for roi in self.listToKeep:
             item = QTreeWidgetItem([roi])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewKeep.addTopLevelItem(item)
 
-        selected_rois.clear()
+        ## Delete moved items from the right column list
+        self.listToDelete = [x for x in self.listToDelete if x not in self.listToKeep]
 
+        self.listViewDelete.clear()
+        for index in self.listToDelete:
+            item = QTreeWidgetItem([index])
+            item.setCheckState(0, Qt.Unchecked)
+            self.listViewDelete.addTopLevelItem(item)
+
+    def confirm_button_onClicked(self):
+
+        confirmation_dialog = QMessageBox.information(self, 'Delete ROIs?',
+                                                      'ROIs in the to-delete table will be deleted. '
+                                                      'Would you like to continue?',
+                                                      QMessageBox.Yes | QMessageBox.No)
+
+        if confirmation_dialog == QMessageBox.Yes:
+            for item in self.listToDelete:
+                new_dataset = ROI.delete_roi(self.dataset_rtss, item)
+
+            self.newStructure.emit(new_dataset)
+            self.close()
 
 
 
