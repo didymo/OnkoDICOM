@@ -144,8 +144,9 @@ class Ui_DeleteROIWindow(QDialog):
             item = root_item.child(index)
             if item.checkState(0) == Qt.Checked:
                 self.listToKeep.append(item.text(0)) # This will get ROI name
+            item.setCheckState(0, Qt.Unchecked)
 
-        item.setCheckState(0, Qt.Unchecked)
+
         ## Move to the left column list
         self.listViewKeep.clear()
         self.listViewKeep.setIndentation(0)
