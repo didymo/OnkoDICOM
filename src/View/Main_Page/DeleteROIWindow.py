@@ -117,8 +117,6 @@ class Ui_DeleteROIWindow(QDialog):
                 self.listToDelete.append(item.text(0)) # This will get ROI name
             item.setCheckState(0, Qt.Unchecked)
 
-        self.confirmButton.setEnabled(True)
-
         ## Move to the right column list
         self.listViewDelete.clear()
         self.listViewDelete.setIndentation(0)
@@ -126,9 +124,11 @@ class Ui_DeleteROIWindow(QDialog):
             item = QTreeWidgetItem([roi])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewDelete.addTopLevelItem(item)
+            self.confirmButton.setEnabled(True)
 
         ## Delete moved items from the left column list
         self.listToKeep = [x for x in self.listToKeep if x not in self.listToDelete]
+
 
         self.listViewKeep.clear()
         for index in self.listToKeep:
