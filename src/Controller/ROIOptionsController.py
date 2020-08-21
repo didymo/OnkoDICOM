@@ -17,14 +17,15 @@ from pydicom import Dataset
 #                                                                                                    #
 ######################################################################################################
 
+
 class RoiDeleteOptions(QtWidgets.QMainWindow, Ui_DeleteROIWindow):
-        newStructure = QtCore.pyqtSignal(Dataset)  # new PyDicom dataset
+    newStructure = QtCore.pyqtSignal(Dataset)  # new PyDicom dataset
 
-        def __init__(self, window, rois, dataset_rtss):
-            super(RoiDeleteOptions, self).__init__()
+    def __init__(self, window, rois, dataset_rtss):
+        super(RoiDeleteOptions, self).__init__()
 
-            self.window = window
-            self.setupUi(self, rois, dataset_rtss, self.newStructure)
+        self.window = window
+        self.setupUi(self, rois, dataset_rtss, self.newStructure)
 
 ###################################################################################################################
 #                                                                                                                 #
@@ -32,14 +33,14 @@ class RoiDeleteOptions(QtWidgets.QMainWindow, Ui_DeleteROIWindow):
 #                                                                                                                 #
 ###################################################################################################################
 
+
 class ROIDelOption:
 
-    def __init__(self, window, rois, dataset_rtss):
+    def __init__(self, window):
         super(ROIDelOption, self).__init__()
         self.window = window
-        self.rois = rois
-        self.dataset_rtss = dataset_rtss
 
     def show_roi_delete_options(self):
-        self.options_window = RoiDeleteOptions(self.window, self.rois, self.dataset_rtss)
+        self.options_window = RoiDeleteOptions(self.window, self.window.rois, self.window.dataset_rtss)
+        self.options_window.newStructure.connect(self.window.structures_tab.structure_modified)
         self.options_window.show()

@@ -133,8 +133,6 @@ class StructureTab(object):
 			# Creates a widget representing each ROI
 			structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
 			structure.structure_renamed.connect(self.structure_modified)
-			roi = RoiDeleteOptions(self, self.main_window.rois, self.main_window.dataset_rtss)
-			roi.newStructure.connect(self.structure_modified)
 			self.layout_content.addWidget(structure)
 			row += 1
 

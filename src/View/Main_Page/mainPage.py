@@ -162,9 +162,6 @@ class UIMainWindow(object):
         self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions(self)
 
-        if self.has_rtss:
-            self.callROI = ROIDelOption(self, self.rois, self.dataset_rtss)
-
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
@@ -272,6 +269,9 @@ class UIMainWindow(object):
         self.tab1.setCurrentIndex(0)
         self.tab2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        if self.has_rtss:
+            self.callROI = ROIDelOption(self)
 
     def create_footer(self):
         # Bottom Layer

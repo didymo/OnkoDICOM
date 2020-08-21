@@ -373,8 +373,7 @@ class MenuHandler(object):
 		 the window of the main page
 		"""
 		self.main_window = main_window
-		
-	
+
 	def windowing_handler(self, state, text):
 		"""
 		Function triggered when a window is selected from the menu.
@@ -393,7 +392,6 @@ class MenuHandler(object):
 											   self.main_window.window, self.main_window.level)
 		self.main_window.dicom_view.update_view()
 
-
 	def anonymization_handler(self):
 		"""
 		Function triggered when the Anonymization button is pressed from the menu.
@@ -407,8 +405,7 @@ class MenuHandler(object):
 												 self.main_window.hashed_path)
 		if SaveReply == QtWidgets.QMessageBox.No:
 			pass
-	
-	
+
 	def transect_handler(self):
 		"""
 		Function triggered when the Transect button is pressed from the menu.
@@ -421,13 +418,11 @@ class MenuHandler(object):
 		self.main_window.callClass.runTransect(self.main_window, self.main_window.dicom_view.view,
 											   self.main_window.pixmaps[id], dt._pixel_array.transpose(), rowS, colS)
 	
-	
 	def add_on_options_handler(self):
 		"""
 		Function triggered when the Add-On Options button is pressed from the menu.
 		"""
 		self.main_window.callManager.show_add_on_options()
-
 
 	def roi_delete_options_handler(self):
 		"""
