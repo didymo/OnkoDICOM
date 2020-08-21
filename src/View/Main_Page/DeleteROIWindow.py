@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QH
     QMessageBox
 import os
 from src.Model import ROI
-from src.View.Main_Page import StructureTab
 
 class Ui_DeleteROIWindow(QDialog):
     def setupUi(self, DeleteROIWindow, rois, dataset_rtss, newStructure):

@@ -19,7 +19,7 @@ class StructureTab(object):
 	- Place the widgets in the window of the main page.
 	"""
 
-	def __init__(self, main_window, rois, dataset_rtss):
+	def __init__(self, main_window):
 		"""
 		Create the color squares and the checkboxes for the Structures tab.
 		Add the widgets to the window of the main page.
@@ -28,8 +28,6 @@ class StructureTab(object):
 		 the window of the main page
 		"""
 		self.main_window = main_window
-		self.rois = rois
-		self.dataset_rtss = dataset_rtss
 		self.color_dict = self.init_color_roi()
 		self.tab1_structures = QtWidgets.QWidget()
 		self.tab1_structures.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -135,8 +133,8 @@ class StructureTab(object):
 			# Creates a widget representing each ROI
 			structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
 			structure.structure_renamed.connect(self.structure_modified)
-			##roi = RoiDeleteOptions(self, self.rois, self.dataset_rtss)
-			##roi.newStructure.connect(self.structure_modified)
+			roi = RoiDeleteOptions(self, self.main_window.rois, self.main_window.dataset_rtss)
+			roi.newStructure.connect(self.structure_modified)
 			self.layout_content.addWidget(structure)
 			row += 1
 

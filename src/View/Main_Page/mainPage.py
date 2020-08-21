@@ -207,7 +207,7 @@ class UIMainWindow(object):
 
         # Left Column: Structures tab
         if self.has_rtss:
-            self.structures_tab = StructureTab(self, self.rois, self.dataset_rtss)
+            self.structures_tab = StructureTab(self)
         # Left Column: Isodoses tab
         if self.has_rtdose:
             self.isodoses_tab = IsodosesTab(self)
