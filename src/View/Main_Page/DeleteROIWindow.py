@@ -53,7 +53,8 @@ class Ui_DeleteROIWindow(QDialog):
         self.confirmButton = QtWidgets.QPushButton(self.frame)
         self.confirmButton.setGeometry(QtCore.QRect(460, 490, 91, 31))
         self.confirmButton.setObjectName("confirmButton")
-        self.confirmButton.setText("Confirm")
+        self.confirmButton.setText("Delete")
+        self.confirmButton.setEnabled(False)
         self.confirmButton.clicked.connect(self.confirm_button_onClicked)
 
         self.moveRightButton = QtWidgets.QPushButton(self.frame)
@@ -116,6 +117,8 @@ class Ui_DeleteROIWindow(QDialog):
                 self.listToDelete.append(item.text(0)) # This will get ROI name
             item.setCheckState(0, Qt.Unchecked)
 
+        self.confirmButton.setEnabled(True)
+
         ## Move to the right column list
         self.listViewDelete.clear()
         self.listViewDelete.setIndentation(0)
@@ -159,6 +162,9 @@ class Ui_DeleteROIWindow(QDialog):
             item = QTreeWidgetItem([index])
             item.setCheckState(0, Qt.Unchecked)
             self.listViewDelete.addTopLevelItem(item)
+
+        if len(self.listToDelete) == 0:
+            self.confirmButton.setEnabled(False)
 
     def confirm_button_onClicked(self):
 
