@@ -220,3 +220,4 @@ class StructureTab(object):
 		if save_filepath != "":
 			self.main_window.dataset_rtss.save_as(save_filepath)
 			QtWidgets.QMessageBox.about(self.main_window, "File saved", "The RTSTRUCT file has been saved.")
+			self.main_window.rtss_modified = False
