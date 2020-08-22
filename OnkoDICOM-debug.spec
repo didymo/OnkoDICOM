@@ -7,7 +7,7 @@ added_files = [
     ('venv/Lib/site-packages/country_list/country_data', 'country_list/country_data')
 ]
 
-a = Analysis(['main_gui.py'],
+a = Analysis(['main.py'],
              pathex=['venv/Lib/site-packages'],
              binaries=[],
              datas=added_files,

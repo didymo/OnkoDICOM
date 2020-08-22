@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
 from src.View.Main_Page.mainPage import UIMainWindow
+from src.View.PyradiProgressBar import PyradiExtended
 from src.View.welcome_page import UIWelcomeWindow
 from src.View.open_patient import UIOpenPatientWindow
 
@@ -101,3 +102,61 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 event.accept()
             else:
                 event.ignore()
+
+
+class PyradiProgressBar(QtWidgets.QWidget):
+    progress_complete = QtCore.pyqtSignal()
+
+    def __init__(self, path, filepaths, target_path):
+        super().__init__()
+
+        self.w = QtWidgets.QWidget()
+        self.setWindowTitle("Running Pyradiomics")
+        self.setWindowFlags(
+            QtCore.Qt.Window
+            | QtCore.Qt.CustomizeWindowHint
+            | QtCore.Qt.WindowTitleHint
+            | QtCore.Qt.WindowMinimizeButtonHint
+        )
+        qtRectangle = self.w.frameGeometry()
+        centerPoint = QtWidgets.QDesktopWidget().availableGeometry().center()
+        qtRectangle.moveCenter(centerPoint)
+        self.w.move(qtRectangle.topLeft())
+        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+
+        self.setGeometry(300, 300, 460, 100)
+        self.label = QtWidgets.QLabel(self)
+        self.label.setGeometry(30, 15, 400, 20)
+        self.progress_bar = QtWidgets.QProgressBar(self)
+        self.progress_bar.setGeometry(30, 40, 400, 25)
+        self.progress_bar.setMaximum(100)
+        self.ext = PyradiExtended(path, filepaths, target_path)
+        self.ext.copied_percent_signal.connect(self.on_update)
+        self.ext.start()
+
+    def on_update(self, value, text=""):
+        """
+        Update percentage and text of progress bar.
+        :param value:   Percentage value to be displayed
+        :param text:    To display what ROI currently being processed
+        """
+
+        # When generating the nrrd file, the percentage starts at 0
+        # and reaches 25
+        if value == 0:
+            self.label.setText("Generating nrrd file")
+        # The segmentation masks are generated between the range 25 and 50
+        elif value == 25:
+            self.label.setText("Generating segmentation masks")
+        # Above 50, pyradiomics analysis is carried out over each segmentation mask
+        elif value in range(50, 100):
+            self.label.setText("Calculating features for " + text)
+        # Set the percentage value
+        self.progress_bar.setValue(value)
+
+        # When the percentage reaches 100, send a signal to close progress bar
+        if value == 100:
+            completion = QMessageBox.information(
+                self, "Complete", "Task has been completed successfully"
+            )
+            self.progress_complete.emit()

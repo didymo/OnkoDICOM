@@ -1,5 +1,6 @@
-from src.Controller.GUIController import *
-from src.Controller.interPageController import PyradiProgressBar
+from PyQt5 import QtWidgets
+
+from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, MainWindow, PyradiProgressBar
 
 
 class Controller:
