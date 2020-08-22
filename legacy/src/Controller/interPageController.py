@@ -8,7 +8,7 @@ from shutil import which
 from PyQt5.QtWidgets import QDesktopWidget
 
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.Main_Page.mainPage import *
+from src.View.mainpage.MainPage import *
 from legacy.src.View.openpage import WelcomePage
 from legacy.src.View.ProgressBar import *
 from src.View.PyradiProgressBar import *

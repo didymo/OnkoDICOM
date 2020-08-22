@@ -2,10 +2,10 @@ from shutil import which
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
-from src.View.Main_Page.mainPage import UIMainWindow
+from src.View.mainpage.MainPage import UIMainWindow
 from src.View.PyradiProgressBar import PyradiExtended
-from src.View.welcome_page import UIWelcomeWindow
-from src.View.open_patient import UIOpenPatientWindow
+from src.View.WelcomeWindow import UIWelcomeWindow
+from src.View.OpenPatientWindow import UIOpenPatientWindow
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):

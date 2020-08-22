@@ -1,5 +1,5 @@
-from src.View.open_patient import *
-from src.View.fonts_service import FontService
+from src.View.OpenPatientWindow import *
+from src.View.FontsService import FontService
 
 class UIWelcomeWindow(object):
 

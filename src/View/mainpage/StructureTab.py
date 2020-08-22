@@ -7,7 +7,7 @@ import numpy as np
 from PyQt5.QtCore import Qt
 
 from src.Model import ImageLoading
-from src.View.Main_Page.StructureWidget import StructureWidget
+from src.View.mainpage.StructureWidget import StructureWidget
 from src.Controller.ROIOptionsController import *
 
 

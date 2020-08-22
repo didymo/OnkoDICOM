@@ -6,15 +6,15 @@ from PyQt5.QtWidgets import QLineEdit, QMessageBox
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.ROIOptionsController import ROIDelOption
 from src.Controller.mainPageController import MainPage
-from src.View.Main_Page.PatientBar import *
-from src.View.Main_Page.StructureTab import *
-from src.View.Main_Page.IsodoseTab import *
-from src.View.Main_Page.StructureInformation import *
-from src.View.Main_Page.DicomView import *
-from src.View.Main_Page.DVH import *
-from src.View.Main_Page.DicomTree import *
-from src.View.Main_Page.MenuBar import *
-from src.View.Main_Page.resources_rc import *
+from src.View.mainpage.PatientBar import *
+from src.View.mainpage.StructureTab import *
+from src.View.mainpage.IsodoseTab import *
+from src.View.mainpage.StructureInformation import *
+from src.View.mainpage.DicomView import *
+from src.View.mainpage.DVH import *
+from src.View.mainpage.DicomTree import *
+from src.View.mainpage.MenuBar import *
+from src.View.mainpage.resources_rc import *
 
 
 class UIMainWindow(object):

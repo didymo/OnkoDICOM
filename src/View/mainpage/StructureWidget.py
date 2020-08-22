@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from fuzzywuzzy import process
 from pydicom import Dataset
 
-from src.View.Main_Page.RenameROIWindow import RenameROIWindow
+from src.View.mainpage.RenameROIWindow import RenameROIWindow
 
 
 class StructureWidget(QtWidgets.QWidget):

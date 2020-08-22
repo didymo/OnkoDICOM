@@ -7,7 +7,7 @@ import csv
 import sys
 import webbrowser
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from src.View.Main_Page.DeleteROIWindow import *
+from src.View.mainpage.DeleteROIWindow import *
 from src.Controller.AddOnOptionsController import *
 from pydicom import Dataset
 

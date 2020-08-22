@@ -17,8 +17,8 @@ from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
 from src.Model.Anon import *
-from src.View.Main_Page.ClinicalDataDisplay import *
-from src.View.Main_Page.ClinicalDataForm import *
+from src.View.mainpage.ClinicalDataDisplay import *
+from src.View.mainpage.ClinicalDataForm import *
 
 warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
