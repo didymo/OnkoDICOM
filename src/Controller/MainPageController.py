@@ -969,7 +969,7 @@ class Transect(QtWidgets.QGraphicsScene):
 #                                                                                                                   #
 #####################################################################################################################
 
-class MainPage:
+class MainPageCallClass:
 
     # Initialisation function of the controller
     def __init__(self, path, datasets, filepaths, raw_dvh):

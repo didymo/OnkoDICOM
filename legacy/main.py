@@ -5,7 +5,7 @@ from PyQt5.QtGui import QFont
 warnings.filterwarnings("ignore")
 import sys
 import platform
-from src.Controller.mainPageController import *
+from src.Controller.MainPageController import *
 from legacy.src.Controller.interPageController import Controller
 
 

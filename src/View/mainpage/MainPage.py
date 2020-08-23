@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QLineEdit, QMessageBox
 
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.ROIOptionsController import ROIDelOption
-from src.Controller.mainPageController import MainPage
+from src.Controller.MainPageController import MainPageCallClass
 from src.View.mainpage.PatientBar import *
 from src.View.mainpage.StructureTab import *
 from src.View.mainpage.IsodoseTab import *
@@ -159,7 +159,7 @@ class UIMainWindow(object):
         dictSlice_CT0 = dicomTreeSlice_CT0.dict
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
-        self.callClass = MainPage(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        self.callClass = MainPageCallClass(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions(self)
 
         ##########################################
