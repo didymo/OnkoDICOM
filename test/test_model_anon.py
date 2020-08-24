@@ -70,26 +70,33 @@ def test_create_hash_csv():
         with tempfile.TemporaryDirectory() as tmpdir:
             test_path = pathlib.Path()
             test_path = test_path.joinpath(tmpdir)
+            # expect a filename that is not patientHash.csv to fail
             csv_filename = "test_identifier_map.csv"
             os.chdir(test_path)
             with pytest.raises(Exception) as e_info:
                 create_hash_csv(patient_identifier, anonymised_identifier, csv_filename)
-            print(str(e_info))
+            # print(str(e_info))
+
             csv_filename = "patientHash.csv"
             expected_path = test_path.joinpath("src", "data", "csv", csv_filename)
-            # with pytest.raises(Exception) as e_info:
+            # the create_hash_csv() will fail unless the path is already in place
+            # it will not create the directories on its own.
+            # so... create the directory in advance for the csv file
             os.makedirs(os.path.dirname(expected_path))
             assert os.path.exists(os.path.dirname(expected_path))
+            # test that the file will be created if it is not there
             create_hash_csv(patient_identifier, anonymised_identifier, csv_filename)
             assert os.path.exists(expected_path)
             f = open(expected_path, mode="a")
             f.close()
+            # test that the file will be appended if it is already there
             assert os.path.exists(expected_path)
             create_hash_csv(patient_identifier, anonymised_identifier, csv_filename)
             f = open(expected_path, mode="r")
             lines = f.readlines()
-            for line in lines:
-                print(line)
+            # header plus first row plus second row makes for three row
+            assert 3 == len(lines)
+            # print(f"Found {len(lines)} rows including header in {expected_path}")
             f.close()
     finally:
         os.chdir(orig_cwd_path)
