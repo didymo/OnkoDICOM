@@ -14,11 +14,6 @@ from src.Model.CalculateDVHs import dvh2csv
 # ========================================Anonymization code ===================================
 
 
-# CHECK if the identifiers exist in dicom file
-def hasattribute(keyword, ds):
-    return keyword in ds
-
-
 ## ===================================HASH Function================================================
 
 
@@ -68,7 +63,7 @@ def Hash_identifiers(file_no, ds_rtss):
     # -----------------------------------------sha1 hash for patient ID------------------------------
 
     # if 'PatientID' in ds_rtss:
-    if hasattribute("PatientID", ds_rtss):
+    if "PatientID" in ds_rtss:
         patient_ID = str(ds_rtss.PatientID)
         # print("Patient ID - ", patient_ID)
         # MD 5 hashing
@@ -183,7 +178,7 @@ def Hash_identifiers(file_no, ds_rtss):
     # used to return flag = 1 to indicate the first file is used for saving the hash in
     # hash_CSV file so CSV function will not be performed for rest of the files.
     if file_no == 1:
-        if hasattribute("PatientID", ds_rtss):
+        if "PatientID" in ds_rtss:
             P_name_ID = patient_name + " + " + patient_ID
             print("Pname and ID=   ", P_name_ID)
         else:
