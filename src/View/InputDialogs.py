@@ -1,8 +1,4 @@
-#####################################################################################################################
-#                                                                                                                   #
-#   This file holds all the user input pop up dialogs used from the software                                        #
-#                                                                                                                   #
-#####################################################################################################################
+"""This file holds all the user input pop up dialogs used from the software"""
 import re
 import sys
 from PyQt5 import QtGui
@@ -10,183 +6,176 @@ from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QDialogButtonBox, QVBoxLay
     QDialog, \
     QComboBox, QGroupBox, QMessageBox, QPlainTextEdit
 
-#####################################################################################################################
-#                                                                                                                   #
-#   This class creates the user input dialog for when Modifying or Adding a Windowing option                        #
-#                                                                                                                   #
-#####################################################################################################################
+""" This class creates the user input dialog for when Modifying or Adding a Windowing option """
 
 class Dialog_Windowing(QDialog):
 
-    def __init__(self, winName, scan, ULevel, LLevel):
+    def __init__(self, win_name, scan, upper_level, lower_level):
         super(Dialog_Windowing, self).__init__()
 
-        #passing the current values if it is an existing option or empty if its a new one
-        self.winName = winName
+        # Passing the current values if it is an existing option or empty if its a new one
+        self.win_name = win_name
         self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
         self.scan = scan
-        self.ULevel = ULevel
-        self.LLevel = LLevel
+        self.upper_level = upper_level
+        self.lower_level = lower_level
 
-        #create the ui components for the inputs
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        # Create the ui components for the inputs
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.name = QLineEdit()
-        self.name.setText(self.winName)
-        self.sc = QLineEdit()
-        self.sc.setText(self.scan)
-        self.ul = QLineEdit()
-        self.ul.setText(self.ULevel)
-        self.ll = QLineEdit()
-        self.ll.setText(self.LLevel)
+        self.name.setText(self.win_name)
+        self.scan_text = QLineEdit()
+        self.scan_text.setText(self.scan)
+        self.upper_level_text = QLineEdit()
+        self.upper_level_text.setText(self.upper_level)
+        self.lower_level_text = QLineEdit()
+        self.lower_level_text.setText(self.lower_level)
         layout = QFormLayout(self)
         layout.addRow(QLabel("Window Name:"), self.name)
-        layout.addRow(QLabel("Scan:"), self.sc)
-        layout.addRow(QLabel("Upper Value:"), self.ul)
-        layout.addRow(QLabel("Lower Value:"), self.ll)
-        layout.addWidget(buttonBox)
-        buttonBox.accepted.connect(self.accepting)
-        buttonBox.rejected.connect(self.reject)
+        layout.addRow(QLabel("Scan:"), self.scan_text)
+        layout.addRow(QLabel("Upper Value:"), self.upper_level_text)
+        layout.addRow(QLabel("Lower Value:"), self.lower_level_text)
+        layout.addWidget(button_box)
+        button_box.accepted.connect(self.accepting)
+        button_box.rejected.connect(self.reject)
         self.setWindowTitle("Image Windowing")
 
-    # this function returns the user inputs in case of a OK being pressed
+    # This function returns the user inputs in case of a OK being pressed
     def getInputs(self):
-        return (self.name.text(), self.sc.text(), self.ul.text(), self.ll.text())
+        return (self.name.text(), self.scan_text.text(), self.upper_level_text.text(), self.lower_level_text.text())
 
-    # this function does the validation of the inputs and gives the corresponding errors if needed
+    # This function does the validation of the inputs and gives the corresponding errors if needed
     def accepting(self):
 
-        #check that no mandatory input is empty
-        if (self.name.text() != '' and self.sc.text() != '' and self.ul.text() != '' and self.ll.text() != ''):
+        # Check that no mandatory input is empty
+        if self.name.text() != '' and self.scan_text.text() != '' and self.upper_level_text.text() != '' and self.lower_level_text.text() != '':
 
-            # check validation
-            if re.match(r'^([\s\d]+)$', self.ul.text()) and re.match(r'^([\s\d]+)$', self.ll.text()):
+            # Check validation
+            if re.match(r'^([\s\d]+)$', self.upper_level_text.text()) and re.match(r'^([\s\d]+)$',
+                                                                                   self.lower_level_text.text()):
                 self.accept()
 
-            # the level fields do not contain just numbers
+            # The level fields do not contain just numbers
             else:
-                buttonReply = QMessageBox.warning(self, "Error Message",
-                                                  "The level fields need to be numbers!", QMessageBox.Ok)
-                if buttonReply == QMessageBox.Ok:
+                button_reply = QMessageBox.warning(self, "Error Message",
+                                                   "The level fields need to be numbers!", QMessageBox.Ok)
+                if button_reply == QMessageBox.Ok:
                     pass
 
-        # atleast one input field was left empty
+        # Atleast one input field was left empty
         else:
-            buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "None of the fields should be empty!", QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+            button_reply = QMessageBox.warning(self, "Error Message",
+                                               "None of the fields should be empty!", QMessageBox.Ok)
+            if button_reply == QMessageBox.Ok:
                 pass
 
-#####################################################################################################################
-#                                                                                                                   #
-#   This class creates the user input dialog for when Modifying or Adding a Standard Organ name option              #
-#                                                                                                                   #
-#####################################################################################################################
+
+""" This class creates the user input dialog for when Modifying or Adding a Standard Organ name option """
 
 class Dialog_Organ(QDialog):
 
-    def __init__(self, Name, id, organ, url):
+    def __init__(self, standard_name, fma_id, organ, url):
         super(Dialog_Organ, self).__init__()
 
-        #passing the current values if it is an existing option or empty if its a new one
-        self.name = Name
+        # Passing the current values if it is an existing option or empty if its a new one
+        self.standard_name = standard_name
         self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
-        self.id = id
-        self.org = organ
+        self.fma_id = fma_id
+        self.organ = organ
         self.url = url
 
-        #creating the UI components
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        self.S_name = QLineEdit()
-        self.S_name.setText(self.name)
-        self.oID = QLineEdit()
-        self.oID.setText(self.id)
-        self.organ = QLineEdit()
-        self.organ.setText(self.org)
-        self._url = QLineEdit()
-        self._url.setText(self.url)
+        # Creating the UI components
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.standard_name_header = QLineEdit()
+        self.standard_name_header.setText(self.standard_name)
+        self.fma_id_header = QLineEdit()
+        self.fma_id_header.setText(self.fma_id)
+        self.organ_header = QLineEdit()
+        self.organ_header.setText(self.organ)
+        self.url_header = QLineEdit()
+        self.url_header.setText(self.url)
         layout = QFormLayout(self)
-        layout.addRow(QLabel("Standard Name:"), self.S_name)
-        layout.addRow(QLabel("FMA ID:"), self.oID)
-        layout.addRow(QLabel("Organ:"), self.organ)
-        layout.addRow(QLabel("Url:"), self._url)
-        layout.addWidget(buttonBox)
-        buttonBox.accepted.connect(self.accepting)
-        buttonBox.rejected.connect(self.reject)
+        layout.addRow(QLabel("Standard Name:"), self.standard_name_header)
+        layout.addRow(QLabel("FMA ID:"), self.fma_id_header)
+        layout.addRow(QLabel("Organ:"), self.organ_header)
+        layout.addRow(QLabel("Url:"), self.url_header)
+        layout.addWidget(button_box)
+        button_box.accepted.connect(self.accepting)
+        button_box.rejected.connect(self.reject)
         self.setWindowTitle("Standard Organ Names")
 
-    # this function returns the user inputs in case of a OK being pressed
+    # This function returns the user inputs in case of a OK being pressed
     def getInputs(self):
-        return (self.S_name.text(), self.oID.text(), self.organ.text(), self._url.text())
+        return (
+            self.standard_name_header.text(), self.fma_id_header.text(), self.organ_header.text(),
+            self.url_header.text())
 
-    # this function does the validation of the inputs and gives the corresponding errors if needed
+    # This function does the validation of the inputs and gives the corresponding errors if needed
     def accepting(self):
 
-        # check that no mandatory input is empty
-        if (self.S_name.text() != '' and self.oID.text() != '' and self.organ.text() != ''):
-            # check validation
-            if re.match(r'^([\s\d]+)$', self.oID.text()):
+        # Check that no mandatory input is empty
+        if self.standard_name_header.text() != '' and self.fma_id_header.text() != '' and self.organ_header.text() != '':
+            # Check validation
+            if re.match(r'^([\s\d]+)$', self.fma_id_header.text()):
                 self.accept()
 
-            # the FMA ID field do not contain just numbers
+            # The FMA ID field do not contain just numbers
             else:
-                buttonReply = QMessageBox.warning(self, "Error Message",
-                                                  "The FMA ID field should to be a number!", QMessageBox.Ok)
-                if buttonReply == QMessageBox.Ok:
+                button_reply = QMessageBox.warning(self, "Error Message",
+                                                   "The FMA ID field should to be a number!", QMessageBox.Ok)
+                if button_reply == QMessageBox.Ok:
                     pass
 
-        # atleast one input field was left empty
+        # Atleast one input field was left empty
         else:
-            buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "None of the fields should be empty!", QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+            button_reply = QMessageBox.warning(self, "Error Message",
+                                               "None of the fields should be empty!", QMessageBox.Ok)
+            if button_reply == QMessageBox.Ok:
                 pass
 
-#####################################################################################################################
-#                                                                                                                   #
-#   This class creates the user input dialog for when Modifying or Adding a Standard Organ name option              #
-#                                                                                                                   #
-#####################################################################################################################
+
+""" This class creates the user input dialog for when Modifying or Adding a Standard Organ name option  """
 
 class Dialog_Volume(QDialog):
 
-    def __init__(self, Name, volume):
+    def __init__(self, standard_name, volume_name):
         super(Dialog_Volume, self).__init__()
 
-        # passing the current values if it is an existing option or empty if its a new one
-        self.name = Name
-        self.vol = volume
+        # Passing the current values if it is an existing option or empty if its a new one
+        self.standard_name = standard_name
+        self.volume_name = volume_name
 
-        # creating the ui components
+        # Creating the UI components
         self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        self.S_name = QLineEdit()
-        self.S_name.setText(self.name)
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.standard_name_text = QLineEdit()
+        self.standard_name_text.setText(self.standard_name)
         self.volume = QLineEdit()
-        self.volume.setText(self.vol)
+        self.volume.setText(self.volume_name)
         layout = QFormLayout(self)
-        layout.addRow(QLabel("Standard Name:"), self.S_name)
+        layout.addRow(QLabel("Standard Name:"), self.standard_name_text)
         layout.addRow(QLabel("Volume Name:"), self.volume)
-        layout.addWidget(buttonBox)
-        buttonBox.accepted.connect(self.accepting)
-        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+        button_box.accepted.connect(self.accepting)
+        button_box.rejected.connect(self.reject)
         self.setWindowTitle("Standard Volume Names")
 
-    # this function returns the user inputs in case of a OK being pressed
+    # This function returns the user inputs in case of a OK being pressed
     def getInputs(self):
-        return (self.S_name.text(), self.volume.text())
+        return (self.standard_name_text.text(), self.volume.text())
 
-    # this function does the validation of the inputs and gives the corresponding errors if needed
+    # This function does the validation of the inputs and gives the corresponding errors if needed
     def accepting(self):
 
-        # check that no mandatory input is empty
-        if (self.S_name.text() != '' and self.volume.text() != ''):
+        # Check that no mandatory input is empty
+        if self.standard_name_text.text() != '' and self.volume.text() != '':
             self.accept()
 
-        # atleast one input field was left empty
+        # Atleast one input field was left empty
         else:
-            buttonReply = QMessageBox.warning(self, "Error Message",
+            button_reply = QMessageBox.warning(self, "Error Message",
                                               "None of the fields should be empty!", QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+            if button_reply == QMessageBox.Ok:
                 pass
 
 #####################################################################################################################
@@ -234,4 +223,3 @@ class Dialog_Volume(QDialog):
 #                                               "The Isodose field should not be empty!", QMessageBox.Ok)
 #             if buttonReply == QMessageBox.Ok:
 #                 pass
-

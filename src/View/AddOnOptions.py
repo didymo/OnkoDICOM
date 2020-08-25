@@ -10,15 +10,17 @@ class UIAddOnOptions(object):
         self.table_view = None
         self.table_organ = None
         self.table_volume = None
-        # self.table_roi = None
         self.table_Ids = None
         self.add_new_window = None
         self.add_standard_organ_name = None
         self.import_organ_csv = None
         self.add_standard_volume_name = None
-        # self.add_new_roi = None
         self.note = None
         self.fill_options = None
+
+        # The following can be used for future implementation of creating ROIs from ISO dose.
+        # self.table_roi = None
+        # self.add_new_roi = None
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         """
@@ -39,9 +41,6 @@ class UIAddOnOptions(object):
         self.windowing_options = WindowingOptions(self)
         self.standard_organ_options = StandardOrganOptions(self)
         self.standard_volume_options = StandardVolumeOptions(self)
-        # The following line is commented out as it contains the possibility to create ROI from isodoses which is not
-        # yet supported
-        # self.roi_from_isodose_options = RoiFromIsodoseOptions(self)
         self.patient_hash_options = PatientHashId(self)
         self.line_fill_options = LineFillOptions(self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
 
@@ -67,6 +66,7 @@ class UIAddOnOptions(object):
         fixed_spacer = QtWidgets.QSpacerItem(70, 70, hPolicy=QtWidgets.QSizePolicy.Expanding,
                                              vPolicy=QtWidgets.QSizePolicy.Fixed)
         self.option_layout.addItem(fixed_spacer, 0, 0, 1, 3)
+
         # Add Table Widgets
         self.option_layout.addWidget(self.table_modules, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_view, 1, 0, 1, 3)
@@ -75,6 +75,7 @@ class UIAddOnOptions(object):
         # self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_Ids, 1, 0, 1, 3)
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
+
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
         # self.option_layout.addWidget(self.add_new_roi, 2, 2)
@@ -134,7 +135,7 @@ class UIAddOnOptions(object):
         _translate = QtCore.QCoreApplication.translate
         self.optionTitle.setText(_translate("Add_On_Options", "User Options"))
 
-        #description holder widget
+        # Description holder widget
         self.table_modules = QtWidgets.QLabel(self.widget)
         self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 70))
         self.table_modules.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
@@ -152,6 +153,7 @@ class UIAddOnOptions(object):
         self.treeList.setGeometry(QtCore.QRect(10, 40, 256, 461))
         self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
         self.treeList.setHeaderHidden(True)
+
         #Triggering the view change according to the row selected in the tree
         self.treeList.clicked.connect(self.display)
         self.treeList.setMaximumWidth(250)
@@ -162,15 +164,18 @@ class UIAddOnOptions(object):
         Change the display of the right view of the window in regards to the option chosen from the tree.
         """
         item = self.treeList.selectedIndexes()[0]
-        self.optionTitle.setText(item.model().itemFromIndex(index).text()) #changes the title
-        self.change_display(item.model().itemFromIndex(index).text()) #changes the display
+        # Changes the title
+        self.optionTitle.setText(item.model().itemFromIndex(index).text())
+        # Changes the display
+        self.change_display(item.model().itemFromIndex(index).text())
 
     def change_display(self, type):
         """
         Update the right view display of the window.
         """
-        # Check which option is chosen and update the views
-        # commented out lines are for the extra option (ROI by Isodose)
+        # Check which option is chosen and update the views.
+        # Commented out lines are for the extra option (ROI by Isodose)
+
         if type == "Image Windowing":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(True)
@@ -213,6 +218,7 @@ class UIAddOnOptions(object):
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
+
         # elif type == "Create ROI from Isodose":
         #     self.table_modules.setVisible(False)
         #     self.table_view.setVisible(False)
@@ -227,6 +233,7 @@ class UIAddOnOptions(object):
         #     self.import_organ_csv.setVisible(False)
         #     self.note.setVisible(False)
         #     self.fill_options.setVisible(False)
+
         elif type == "Patient ID - Hash ID":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -305,7 +312,6 @@ class WindowingOptions(object):
         Create a table to hold all the windowing options.
         """
         self.window.table_view = QtWidgets.QTableWidget(self.window.widget)
-        # self.window.table_view.setFixedHeight(370)
         self.window.table_view.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_view.setColumnCount(4)
         self.window.table_view.setHorizontalHeaderLabels([" Window Name ", " Scan ", " Window ", " Level "])
@@ -314,12 +320,13 @@ class WindowingOptions(object):
         self.window.table_view.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_view.horizontalHeaderItem(3).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_view.verticalHeader().hide()
-        header1 = self.window.table_view.horizontalHeader()
-        header1.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header1.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header1.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        header1.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        image_windowing_header = self.window.table_view.horizontalHeader()
+        image_windowing_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        image_windowing_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        image_windowing_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        image_windowing_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.window.table_view.setVisible(False)
+
         #removing the ability to edit tables with immediate click
         self.window.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
@@ -374,7 +381,6 @@ class StandardOrganOptions(object):
         Create a table to hold all the standard organ entries.
         """
         self.window.table_organ = QtWidgets.QTableWidget(self.window.widget)
-        # self.window.table_organ.setFixedHeight(370)
         self.window.table_organ.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_organ.setColumnCount(4)
         self.window.table_organ.setHorizontalHeaderLabels([" Standard Name ", " FMA ID ", " Organ ", " Url "])
@@ -383,14 +389,15 @@ class StandardOrganOptions(object):
         self.window.table_organ.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_organ.horizontalHeaderItem(3).setTextAlignment(QtCore.Qt.AlignLeft)
 
-        header2 = self.window.table_organ.horizontalHeader()
-        header2.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header2.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header2.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        header2.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        standard_organ_names_header = self.window.table_organ.horizontalHeader()
+        standard_organ_names_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        standard_organ_names_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        standard_organ_names_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        standard_organ_names_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.window.table_organ.setVisible(False)
         self.window.table_organ.verticalHeader().hide()
-        #removing the ability to edit tables with immediate click
+
+        # Removing the ability to edit tables with immediate click
         self.window.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
 
@@ -427,18 +434,18 @@ class StandardVolumeOptions(object):
         Create a table to hold the volume entries.
         """
         self.window.table_volume = QtWidgets.QTableWidget(self.window.widget)
-        # self.window.table_volume.setFixedHeight(370)
         self.window.table_volume.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_volume.setColumnCount(2)
         self.window.table_volume.setHorizontalHeaderLabels([" Standard Name ", " Volume Name"])
         self.window.table_volume.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_volume.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        header3 = self.window.table_volume.horizontalHeader()
+        standard_volume_names_header = self.window.table_volume.horizontalHeader()
         self.window.table_volume.verticalHeader().hide()
-        header3.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header3.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        standard_volume_names_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        standard_volume_names_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.window.table_volume.setVisible(False)
-        #removing the ability to edit tables with immediate click
+
+        # Removing the ability to edit tables with immediate click
         self.window.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
 
@@ -474,7 +481,6 @@ class RoiFromIsodoseOptions(object):
         Create a table to hold all the ROI creation by isodose entries.
         """
         self.window.table_roi = QtWidgets.QTableWidget(self.window.widget)
-        # self.window.table_roi.setFixedHeight(370)
         self.window.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_roi.setColumnCount(3)
         self.window.table_roi.verticalHeader().hide()
@@ -482,12 +488,13 @@ class RoiFromIsodoseOptions(object):
         self.window.table_roi.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_roi.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_roi.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
-        header4 = self.window.table_roi.horizontalHeader()
-        header4.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header4.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header4.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header = self.window.table_roi.horizontalHeader()
+        roi_from_isodose_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         self.window.table_roi.setVisible(False)
-        # removing the ability to edit tables with immediate click
+
+        # Removing the ability to edit tables with immediate click
         self.window.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
 
@@ -514,10 +521,10 @@ class PatientHashId(object):
         self.window.table_Ids.setHorizontalHeaderLabels([" Patient ID ", " Hash ID "])
         self.window.table_Ids.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_Ids.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        header5 = self.window.table_Ids.horizontalHeader()
+        patient_hash_id_header = self.window.table_Ids.horizontalHeader()
         self.window.table_Ids.verticalHeader().hide()
-        header5.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header5.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        patient_hash_id_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        patient_hash_id_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.window.table_Ids.setVisible(False)
         #removing the ability to edit tables with immediate click
         self.window.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
@@ -566,7 +573,7 @@ class LineFillOptions(object):
         """
         Add the components into a layout and initialize the values according to the last configuration settings.
         """
-        #adding the components into a layout
+        # Adding the components into a layout
         self.window.fill_layout.addRow(QtWidgets.QLabel("ROI Line Style: "), self.window.line_style_ROI)
         self.window.fill_layout.addRow(QtWidgets.QLabel(""))
         self.window.fill_layout.addRow(self.window.opacityLabel_ROI, self.window.opacity_ROI)
@@ -577,7 +584,7 @@ class LineFillOptions(object):
         self.window.fill_layout.addRow(QtWidgets.QLabel(""))
         self.window.fill_layout.addRow(QtWidgets.QLabel("Line Width: "), self.window.line_width)
 
-        #inserting the last configuration settings on initialisation
+        # Inserting the last configuration settings on initialisation
         self.window.line_style_ROI.setCurrentIndex(self.roi_line)
         self.window.line_style_ISO.setCurrentIndex(self.iso_line)
         self.window.line_width.setCurrentText(str(self.line_width))
