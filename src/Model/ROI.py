@@ -1,12 +1,29 @@
 import collections
+import multiprocessing
 import sys
 import time
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtWidgets import QWidget, QApplication, QGraphicsScene, QGraphicsView, QLabel, QVBoxLayout, QMainWindow
-from PyQt5.QtGui import QPainter, QPainterPath, QPolygon, QPolygonF, QColor, QPixmap, QPen, QBrush
 import numpy as np
-import multiprocessing
+from PyQt5.QtCore import QPoint
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPixmap,
+    QPolygon,
+    QPolygonF,
+)
+from PyQt5.QtWidgets import (
+    QApplication,
+    QGraphicsScene,
+    QGraphicsView,
+    QLabel,
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+)
 
 from src.Model.CalculateImages import *
 
@@ -110,20 +127,37 @@ def calculate_matrix(img_ds):
 
     # Equation C.7.6.2.1-1.
     # https://dicom.innolitics.com/ciods/rt-structure-set/roi-contour/30060039/30060040/30060050
-    matrix_M = np.matrix(
-        [[orientation[0] * dist_row, orientation[3] * dist_col, 0, position[0]],
-         [orientation[1] * dist_row, orientation[4] * dist_col, 0, position[1]],
-         [orientation[2] * dist_row, orientation[5] * dist_col, 0, position[2]],
-         [0, 0, 0, 1]]
+    matrix_M = np.ndarray(
+        shape=(4, 4),
+        buffer=np.array(
+            [
+                [orientation[0] * dist_row, orientation[3] * dist_col, 0, position[0]],
+                [orientation[1] * dist_row, orientation[4] * dist_col, 0, position[1]],
+                [orientation[2] * dist_row, orientation[5] * dist_col, 0, position[2]],
+                [0, 0, 0, 1],
+            ],
+            dtype=np.float,
+        ),
     )
+
     x = []
     y = []
     for i in range(0, img_ds.Columns):
-        i_mat = matrix_M * np.matrix([[i], [0], [0], [1]])
+        i_mat = np.matmul(
+            matrix_M,
+            np.ndarray(
+                shape=(4, 1), buffer=np.array([[i], [0], [0], [1]], dtype=np.float)
+            ),
+        )
         x.append(float(i_mat[0]))
 
     for j in range(0, img_ds.Rows):
-        j_mat = matrix_M * np.matrix([[0], [j], [0], [1]])
+        j_mat = np.matmul(
+            matrix_M,
+            np.ndarray(
+                shape=(4, 1), buffer=np.array([[0], [j], [0], [1]], dtype=np.float)
+            ),
+        )
         y.append(float(j_mat[1]))
 
     return (np.array(x), np.array(y))
@@ -137,7 +171,7 @@ def get_pixluts(dict_ds):
     :return: a dictionary of transformation matrices
     """
     dict_pixluts = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss']
+    non_img_type = ["rtdose", "rtplan", "rtss"]
     for ds in dict_ds:
         if ds not in non_img_type:
             img_ds = dict_ds[ds]
@@ -184,17 +218,17 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     ### Opitimazation 1 & 2
     np_x = np.array(pixlut[0])
     np_y = np.array(pixlut[1])
-    if (not feetfirst and not prone):
+    if not feetfirst and not prone:
         for i in range(0, len(contour), 3):
             con_x = contour[i]
-            con_y = contour[i+1]
+            con_y = contour[i + 1]
             x = np.argmax(np_x > con_x)
             y = np.argmax(np_y > con_y)
             pixels.append([x, y])
-    if (feetfirst and not prone):
+    if feetfirst and not prone:
         for i in range(0, len(contour), 3):
             con_x = contour[i]
-            con_y = contour[i+1]
+            con_y = contour[i + 1]
             x = np.argmin(np_x < con_x)
             y = np.argmax(np_y > con_y)
             pixels.append([x, y])
@@ -224,7 +258,14 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     return pixels
 
 
-def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice, prone=False, feetfirst=False):
+def get_contour_pixel(
+    dict_raw_ContourData,
+    roi_selected,
+    dict_pixluts,
+    curr_slice,
+    prone=False,
+    feetfirst=False,
+):
     """
     Get pixels of contours of all rois selected within current slice.
     {slice: list of pixels of all contours in this slice}
@@ -245,7 +286,9 @@ def get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_sli
         raw_contours = dict_raw_ContourData[roi]
         number_of_contours = len(raw_contours[curr_slice])
         for i in range(number_of_contours):
-            contour_pixels = calculate_pixels(pixlut, raw_contours[curr_slice][i], prone, feetfirst)
+            contour_pixels = calculate_pixels(
+                pixlut, raw_contours[curr_slice][i], prone, feetfirst
+            )
             dict_pixels_of_roi[curr_slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
 
