@@ -7,7 +7,6 @@ import uuid
 
 import pandas as pd
 import pydicom
-from PyQt5.QtWidgets import QMessageBox
 
 from src.Model.CalculateDVHs import dvh2csv
 
@@ -17,7 +16,7 @@ from src.Model.CalculateDVHs import dvh2csv
 ## ===================================HASH Function================================================
 
 
-def Hash_identifiers(file_no, ds_rtss):
+def _hash_identifiers(file_no, ds_rtss):
     """in place anonymisation of a set of identifiers in a dataset
     Parameters
     ----------
@@ -192,7 +191,7 @@ def Hash_identifiers(file_no, ds_rtss):
 ## ===================================CHECK FILE EXIST================================================
 
 
-def checkFileExist(fileName):
+def _check_identity_mapping_file_exists(fileName):
     """
     Determine if the unqualified name specified has a corresponding file
     in a partially qualified path relative to the current working directory.
@@ -235,10 +234,7 @@ def checkFileExist(fileName):
             return False, file_path
 
 
-## ===================================CREATE CSV FILE================================================
-
-
-def create_hash_csv(pname, sha1_pname, csv_filename):
+def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
     """ Creates or appends a csv file whose rows contain
     the original patient identifer and the anonymised identifier
 
@@ -262,10 +258,9 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
     -------
       
     """
-
     # print("Csv file name is : ",csv_filename)
     # chcek if the patientHash.csv exist
-    Csv_Exist, csv_filePath = checkFileExist(csv_filename)
+    Csv_Exist, csv_filePath = _check_identity_mapping_file_exists(csv_filename)
 
     # if the csv doent exist create a new CSV and export the Hash to that.
     if Csv_Exist == False:
@@ -309,7 +304,7 @@ def create_hash_csv(pname, sha1_pname, csv_filename):
 
 
 # ====================== getting Modality and Instance_number for new dicom file name=========
-def get_modality_ins_num(ds):
+def _get_modality_ins_num(ds):
 
     modality = ds.Modality
     if modality == "RTSTRUCT" or (modality == "RTPLAN"):
@@ -320,11 +315,11 @@ def get_modality_ins_num(ds):
 
 
 # ===================================Writing the hashed identifiers to DICOM FILE================================================
-def write_hash_dcm(
+def _write_hash_dcm(
     ds_rtss, Dicom_folder_path, Dicom_filename, sha1_P_name, new_patient_folder_name
 ):
 
-    modality, Inum = get_modality_ins_num(ds_rtss)
+    modality, Inum = _get_modality_ins_num(ds_rtss)
 
     SecondLastDir = os.path.dirname(
         Dicom_folder_path
@@ -383,20 +378,10 @@ def write_hash_dcm(
         print(":::::::Write complete :::")
 
 
-# ===============================getting all file names================
-
-
-def get_All_files(Dicom_folder_path):
-
-    All_dcm_fileNames = os.listdir(Dicom_folder_path)
-    print("ALL files: in fuction")
-    return All_dcm_fileNames
-
-
 # ## ===================================PRINTING THE HASH VALUES================================================
 
 
-def Print_identifiers(ds_rtss):
+def _print_patient_identifiers(ds_rtss):
     print("INSIDE PRINT================")
     print("Patient name in dataset not hash: ", ds_rtss.PatientName)
     print("Patient ID in dataset not hash: ", ds_rtss.PatientID)
@@ -405,50 +390,55 @@ def Print_identifiers(ds_rtss):
     print("\n\n")
 
 
-# loading the dicom file
-def LOAD_DCM(Dicom_folder_path, Dicom_filename, new_dict_dataset, key):
-    # Dicom_folder_path = self.path  # Getting and storing the Folder path of rtss.dcm file
-    print(
-        "\n\nIn Load_DCM function: PATH of the dicom file is:-----", Dicom_folder_path
-    )
-
-    # concatinating the folder path and the filename
-    Full_dicom_filepath = Dicom_folder_path + "/" + Dicom_filename
-    print("In Load_DCM function: FULL PATH of dicom file is:----", Full_dicom_filepath)
-    # ds_rtss = pydicom.dcmread(Full_dicom_filepath)
-    ds_rtss = new_dict_dataset[key]
-    print("In Load DCM function:", Dicom_filename, "loaded in ds_rtss")
-    return ds_rtss
-
-
-# ====================== Function to check if the file is sub-directory ==========
-
-
-def Check_if_folder(file_path):
-    # store the boolean value after checking the type of file
-    file_type = os.path.isdir(file_path)
-    if file_type == True:  # if the file is subdiirectory return true
-        return True
-    else:
-        return False  # if not a subdirectory return False
+def _is_directory(file_path):
+    return os.path.isdir(file_path)
 
 
 # ==============Check in patient identifiers are already hashed===========
 
 
-def check_file_hashed(file_name, new_dict_dataset, key, text):
-    if text in file_name:
+def _check_file_hashed(file_name, new_dict_dataset, key, matching_text):
+    """Returns whether the file_name contains the matching text
+    and the PatientName in the dataset pointed to by the key in the dict of datasets
+
+    Parameters
+    ----------
+    file_name: ``str``
+        the name of the DICOM file
+
+    new_dict_dataset: ``dict`` with key of type ``str``|``int``, value of type pydicom.dataset.Dataset
+        dict of the Patient's DICOM data objects
+
+    key: ``str``|``int``
+        key in to new_dict_dataset identifying which dataset to use for finding the 
+        PatientsName which is presumed to be Hashed
+    
+    matching_text: ``str``
+        the text that indicates whether the file contains hashed data or not based on
+    the assumption that the filename will contain the text if it contains hashed data.
+
+    Returns
+    -------
+    is_hashed, hashed_patient_name: ``bool``, ``str``|``int``
+        True when matching_text in file_name, PatientName presumed to be hashed | 0
+    """
+    if matching_text in file_name:
         hash_value = new_dict_dataset[key].PatientName
         return True, hash_value
     else:
         return False, 0
 
 
-# #######################   Create the NEw folder   #########################
+def _create_anonymised_patient_folder(new_patient_folder_name, Dicom_folder_path):
+    """Create the folder in which the anonymised patient's data will be placed
 
-
-def Create_New_Folder(new_patient_folder_name, Dicom_folder_path):
-
+    Parameters
+    ----------
+    new_patient_folder_name : ``str``
+        the unqualified path of the anonymised patient
+    Dicom_folder_path : ``str``
+        the fully or partially (relative to cwd) qualified path to the current patient's data
+    """
     # getting the current working directory
     # Dicom_file_dir = os.getcwd()
     # Dicom_folder_path = self.path
@@ -472,16 +462,47 @@ def Create_New_Folder(new_patient_folder_name, Dicom_folder_path):
 # ========================CHECK if hashed FOLDER exist=======================================
 
 
-def check_folder_exist(
+def _anonymisation_folder_exists(
     new_dict_dataset, all_filepaths, Dicom_folder_path, File_hash_status
 ):
+
+    """check if the directory of the hashed patient's name exists in the specified folder
+    current implementation uses a hash of the PatientName for the name of the folder
+    in which to place all of the patient's anonymised data, parallel to the directory
+    containing the original not anonymised patient data.
+
+    Parameters
+    ----------
+    new_dict_dataset: ``dict`` where values are ``pydicom.dataset.Dataset``
+        dictionary of the DICOM data objects for the patient
+
+    all_filepaths: ``list`` of str
+        list of the paths to the files containing the DICOM objects in new_dict_dataset
+    
+    Dicom_folder_path:  ``str``
+        the directory containing the current patient's DICOM data
+    
+    File_hash_status: ``int`` 
+        representing a boolean indicating whether the datasets in new_dict_dataset
+        have already been anonymised. 0 is False.
+
+    Return
+    ------
+        directory_exists: ``int`` as boolean 
+
+        anonymisation_folder_name:  ``str``
+            unqualified path, hashed patient name
+
+        fully_qualified_anonymisation_folder_name: ``str``
+
+    """
 
     first_file = os.path.basename(all_filepaths[0])
     # print("THE PATH IN THE CHECK FOLDER::::::::::", all_filepaths[0] )
     if File_hash_status == 0:
 
-        ds_rtss = LOAD_DCM(Dicom_folder_path, first_file, new_dict_dataset, 0)
-
+        # ds_rtss = LOAD_DCM(Dicom_folder_path, first_file, new_dict_dataset, 0)
+        ds_rtss = new_dict_dataset[0]
         if "PatientName" in ds_rtss:
             patient_name_first = str(ds_rtss.PatientName)
             # MD 5 hashing
@@ -532,8 +553,8 @@ def check_folder_exist(
             Dicom_folder_path
         )  # getting path till the second last Folder
 
-        ds_rtss = LOAD_DCM(Dicom_folder_path, first_file, new_dict_dataset, 0)
-
+        # ds_rtss = LOAD_DCM(Dicom_folder_path, first_file, new_dict_dataset, 0)
+        ds_rtss = new_dict_dataset[0]
         new_patient_folder_name = str(ds_rtss.PatientName)
 
         Full_Patient_Path_New_folder = SecondLastDir + "/" + new_patient_folder_name
@@ -546,7 +567,7 @@ def check_folder_exist(
 
 
 # ##==========================================Anon Function==========================================
-def anon_call(path, new_dict_dataset, all_filepaths):
+def _anon_call(path, new_dict_dataset, all_filepaths):
     """create anonymised copies of DICOM data that are specified in a list of paths
     Parameters
     ----------
@@ -573,9 +594,6 @@ def anon_call(path, new_dict_dataset, all_filepaths):
     #     if key == 0:
     #         print("The values are : ", new_dict_dataset[key])
 
-    # All_dcm = get_All_files(Dicom_folder_path)
-    # print("ALL files: in main \n\n")
-
     # count = 0
     # for eachFile in All_dcm:
     #     count += 1
@@ -583,7 +601,7 @@ def anon_call(path, new_dict_dataset, all_filepaths):
     First_Dicom_file = os.path.basename(all_filepaths[0])
 
     text = "Hashed"
-    Is_hashed, hash_value = check_file_hashed(
+    Is_hashed, hash_value = _check_file_hashed(
         First_Dicom_file, new_dict_dataset, 0, text
     )
 
@@ -594,20 +612,22 @@ def anon_call(path, new_dict_dataset, all_filepaths):
             Exist_folder,
             new_patient_folder_name,
             Full_Patient_Path_New_folder,
-        ) = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 0)
+        ) = _anonymisation_folder_exists(
+            new_dict_dataset, all_filepaths, Dicom_folder_path, 0
+        )
 
         if Exist_folder == 0:
 
             print("Status of folder==========", Exist_folder)
             print("The hashed folder does not exist")
             print("======Creating the new Hashed patient Folder=======")
-            Create_New_Folder(
+            _create_anonymised_patient_folder(
                 new_patient_folder_name, Dicom_folder_path
             )  # calling create_folder function
             # print("Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value))
 
             count = 0
-            for key in new_dict_dataset:
+            for key, dicom_obj in new_dict_dataset.items():
                 count += 1
 
                 # store the name of each dcm file in a variable
@@ -622,25 +642,28 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 # concatinating the folder path and the filename
                 Full_dicom_filepath = Dicom_folder_path + "/" + Dicom_filename
 
-                file_type = Check_if_folder(Full_dicom_filepath)
+                path_is_directory = _is_directory(Full_dicom_filepath)
 
-                if file_type != True:
+                if not path_is_directory:
 
                     print(
-                        "The file {} is Directory {}".format(Dicom_filename, file_type)
+                        "{} is an individual file, and not a directory".format(
+                            Dicom_filename
+                        )
                     )
 
                     # loading the dicom file content into the dataframe.
-                    ds_rtss = LOAD_DCM(
-                        Dicom_folder_path, Dicom_filename, new_dict_dataset, key
-                    )
+                    # ds_rtss = LOAD_DCM(
+                    #    Dicom_folder_path, Dicom_filename, new_dict_dataset, key
+                    # )
+                    ds_rtss = dicom_obj
                     print("\n\nloaded in ds_rtss:============ ", Dicom_filename)
 
                     # calling the HASH function and it returns the (Pname + PID), (hashvalue) and
                     # (flag = 1  will be used to restrict only one hash value per patient in the CSV file)
-                    pname_ID, sha1_pname, flag = Hash_identifiers(count, ds_rtss)
+                    pname_ID, sha1_pname, flag = _hash_identifiers(count, ds_rtss)
                     print(
-                        " In main Pname and ID=  {} and SHA1_name: {}".format(
+                        "Patient name + ID=  {} and SHA1_name: {}".format(
                             pname_ID, sha1_pname
                         )
                     )
@@ -650,20 +673,22 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                     ):  # (flag = 1 that will be used to restrict only one hash per patient in the CSV file)
                         print("\n\nFLAG --1111111111111111111111111")
                         print(
-                            " In main Pname and ID=  {} and SHA1_name: {}".format(
+                            "Patient name + ID=  {} and SHA1_name: {}".format(
                                 pname_ID, sha1_pname
                             )
                         )
 
-                        Print_identifiers(
+                        _print_patient_identifiers(
                             ds_rtss
                         )  # calling the print to show the identifiers
-                        csv_filename = str("patientHash") + ".csv"
+                        csv_filename = "patientHash.csv"
                         # calling create CSV to store the the hashed value
-                        create_hash_csv(pname_ID, sha1_pname, csv_filename)
-                        print("Calling WRITE FUNCTION when Csv called")
-                        # write_hash_dcm(sha1_pname, Dicom_filename)
-                        write_hash_dcm(
+                        _create_reidentification_spreadsheet(
+                            pname_ID, sha1_pname, csv_filename
+                        )
+                        print("Updating patient re-identification spreadsheet")
+
+                        _write_hash_dcm(
                             ds_rtss,
                             Dicom_folder_path,
                             Dicom_filename,
@@ -672,10 +697,10 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                         )
                     else:
                         print("\n\nFLAG --0000000000000000000000000")
-                        print("CSV function not called")
-                        print("Calling WRITE FUNCTION when Csv not called")
+                        print("already updated patient re-identification spreadsheet")
+                        print("Saving anonymised DICOM data")
                         # write_hash_dcm(sha1_pname, Dicom_filename)
-                        write_hash_dcm(
+                        _write_hash_dcm(
                             ds_rtss,
                             Dicom_folder_path,
                             Dicom_filename,
@@ -696,14 +721,15 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 )
             )
             count = 1
-            for key in new_dict_dataset:
+            for key, dicom_object in new_dict_dataset.items():
 
                 Dicom_filename = os.path.basename(all_filepaths[key])
-                ds_rtss = LOAD_DCM(
-                    Dicom_folder_path, Dicom_filename, new_dict_dataset, key
-                )
-                pname_ID, sha1_pname, flag = Hash_identifiers(count, ds_rtss)
-                write_hash_dcm(
+                # ds_rtss = LOAD_DCM(
+                #     Dicom_folder_path, Dicom_filename, new_dict_dataset, key
+                # )
+                ds_rtss = dicom_object
+                pname_ID, sha1_pname, flag = _hash_identifiers(count, ds_rtss)
+                _write_hash_dcm(
                     ds_rtss,
                     Dicom_folder_path,
                     Dicom_filename,
@@ -724,9 +750,11 @@ def anon_call(path, new_dict_dataset, all_filepaths):
             Exist_folder,
             new_patient_folder_name,
             Full_Patient_Path_New_folder,
-        ) = check_folder_exist(new_dict_dataset, all_filepaths, Dicom_folder_path, 1)
+        ) = _anonymisation_folder_exists(
+            new_dict_dataset, all_filepaths, Dicom_folder_path, 1
+        )
 
-        for key in new_dict_dataset:
+        for key, dicom_obj in new_dict_dataset.items():
 
             print(
                 "Is hashed: {} and the hash_value is: {}".format(Is_hashed, hash_value)
@@ -740,15 +768,16 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 print("Status of folder==========", Exist_folder)
                 print("The hashed folder does not exist")
                 print("======Creating the new Hashed patient Folder=======")
-                Create_New_Folder(
+                _create_anonymised_patient_folder(
                     new_patient_folder_name, Dicom_folder_path
                 )  # calling create_folder function
                 Dicom_filename = os.path.basename(all_filepaths[key])
                 # loading the dicom file content into the dataframe.
-                ds_rtss = LOAD_DCM(
-                    Dicom_folder_path, Dicom_filename, new_dict_dataset, key
-                )
-                write_hash_dcm(
+                # ds_rtss = LOAD_DCM(
+                #    Dicom_folder_path, Dicom_filename, new_dict_dataset, key
+                # )
+                ds_rtss = dicom_obj
+                _write_hash_dcm(
                     ds_rtss,
                     Dicom_folder_path,
                     Dicom_filename,
@@ -761,10 +790,11 @@ def anon_call(path, new_dict_dataset, all_filepaths):
                 print("Status of folder==========", Exist_folder)
                 print("The hashed folder exist")
                 Dicom_filename = os.path.basename(all_filepaths[key])
-                ds_rtss = LOAD_DCM(
-                    Dicom_folder_path, Dicom_filename, new_dict_dataset, key
-                )
-                write_hash_dcm(
+                # ds_rtss = LOAD_DCM(
+                #    Dicom_folder_path, Dicom_filename, new_dict_dataset, key
+                # )
+                ds_rtss = dicom_obj
+                _write_hash_dcm(
                     ds_rtss,
                     Dicom_folder_path,
                     Dicom_filename,
@@ -776,18 +806,11 @@ def anon_call(path, new_dict_dataset, all_filepaths):
         return Full_Patient_Path_New_folder
 
 
-# ===================== Check if the CSV folder exist in hashed patient directory ===========
-
-
-def check_CSV_folder_exist(Full_Patient_Path_New_folder):
-
+def _has_child_CSV_directory(Full_Patient_Path_New_folder):
     if "CSV" in os.listdir(Full_Patient_Path_New_folder):
         return 1
     else:
         return 0
-
-
-# ====================== Initiate the Automation sequence ==========================
 
 
 def anonymize(path, Datasets, FilePaths, rawdvh):
@@ -833,7 +856,7 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
 
     Original_P_ID = new_dict_dataset[1].PatientID
 
-    Full_Patient_Path_New_folder = anon_call(path, new_dict_dataset, all_filepaths)
+    Full_Patient_Path_New_folder = _anon_call(path, new_dict_dataset, all_filepaths)
     print("\n\nThe New patient folder path is : ", Full_Patient_Path_New_folder)
 
     patient_hash_dvh = os.path.basename(Full_Patient_Path_New_folder)
@@ -841,7 +864,7 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
 
     Full_Csv_Folder_Path = Full_Patient_Path_New_folder + "/" + "CSV"
     # check if CSV folder exist
-    CSV_Folder_exist = check_CSV_folder_exist(Full_Patient_Path_New_folder)
+    CSV_Folder_exist = _has_child_CSV_directory(Full_Patient_Path_New_folder)
     # if CSV folder does not exist create one
     if CSV_Folder_exist == 0:
         print("The CSV folder path is : ", Full_Csv_Folder_Path)
@@ -857,7 +880,8 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
     print("The path for dvh is::::::::::::::::  ", Full_dvhCsv_Folder_Path_)
 
     Dicom_filename = os.path.basename(all_filepaths[1])
-    ds_rtss = LOAD_DCM(path, Dicom_filename, new_dict_dataset, 1)
+    # ds_rtss = LOAD_DCM(path, Dicom_filename, new_dict_dataset, 1)
+    ds_rtss = new_dict_dataset[1]
     # P_ID = ds_rtss.PatientID
 
     P_HashID = patient_hash_dvh
