@@ -1,9 +1,8 @@
+Standard Volume Name, Standard Code
 Gross Tumour Volume,GTV
-Gross Tumour Volume (primary),GTVp
-Gross Tumour Volume (node),GTVn
-Gross Tumour Volume (metastasis),GTVm
-Gross Tumour Volume (primary) on MRI,GTVp_MRI
-Clinical Target Volume (primary),CTVp
-Internal Target Volume (primary) ,ITVp
-Planning Target Volume (60Gy),PTV6000
-Overlap Target Volume (max 45Gy),OTV4500
+Clinical Target Volume,CTV
+Internal Target Volume,ITV
+Planning Treatment Volume,PTV
+Overlap Treatment Volume,OTV
+Standardised Uptake Value,SUV
+Isodose,ISO

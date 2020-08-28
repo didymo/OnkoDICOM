@@ -45,7 +45,7 @@ def get_dose_pixluts(dict_ds):
 
     dict_dose_pixluts = {}
     dict_dose_pixluts = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss']
+    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
     dose_data = calculate_matrix(dict_ds['rtdose'])
     for ds in dict_ds:
         if ds not in non_img_type:

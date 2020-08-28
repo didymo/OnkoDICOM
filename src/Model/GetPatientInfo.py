@@ -54,10 +54,10 @@ def get_basic_info(ds):
     :return: dict_basic_info, a dictionary of PatientName, PatientID, PatientSex, PatientBirthDate.
     """
     dict_basic_info = {}
-    dict_basic_info['name'] = str(ds.PatientName)
-    dict_basic_info['id'] = str(ds.PatientID)
-    dict_basic_info['gender'] = str(ds.PatientSex)
-    dict_basic_info['dob'] = str(ds.PatientBirthDate)
+    dict_basic_info['name'] = str(ds.get("PatientName"))
+    dict_basic_info['id'] = str(ds.get("PatientID"))
+    dict_basic_info['gender'] = str(ds.get("PatientSex"))
+    dict_basic_info['dob'] = str(ds.get("PatientBirthDate"))
     return dict_basic_info
 
 
@@ -69,7 +69,7 @@ def dict_instanceUID(dict_ds):
     :return:
     """
     res = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss']
+    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
 
     for ds in dict_ds:
         if ds not in non_img_type:

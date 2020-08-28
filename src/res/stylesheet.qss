@@ -1,0 +1,158 @@
+
+QLabel#label {
+    font-family: Roboto Black;
+    margin-bottom: 0px;
+}
+
+QLabel#welcome {
+    font-family: Roboto Black;
+    margin-bottom: 0px;
+}
+/*
+QPushButton {
+    margin: 6px 8px;
+    padding: 0 16px;
+    min-height: 36px;
+    border-radius: 2px;
+    color: #f5f5f5;
+    background-color: #9370DB;
+    font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    font-size: 14px;
+    text-align: center;
+}
+
+QPushButton:hover {
+    background-color: #b299e6;
+}
+
+QPushButton:pressed {
+    background-color: #5c2eb8;
+}
+*/
+
+QPushButton {
+    font-weight: bold;
+}
+
+/* Welcome Page */
+
+QMainWindow#WelcomeWindowInstance {
+    background-color: rgb(244, 245, 245);
+}
+
+QLabel#WelcomeWindowLabel {
+    font-weight: bold;
+    font-size: 18pt;
+}
+
+QLabel#WelcomeWindowSlogan {
+    font-weight: semi-bold;
+    font-size: 16px;
+}
+
+QPushButton#OpenPatientButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#OpenPatientButton:hover {
+    background-color: #64b5f6;
+}
+
+/* Open Patient */
+QLineEdit {
+    border: 2px solid gray;
+    border-radius: 6px;
+    height: 36px;
+    font-size: 14px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}
+QTreeView {
+    border: 2px solid grey;
+    border-radius:2px;
+}
+QTreeView::item:hover {
+    color: #000 !important;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);
+    border: 1px solid #bfcde4;
+}
+
+QPushButton#chooseButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 136px;
+    height: 40px;
+    border-radius: 4px;
+    color: #fff;
+}
+QPushButton#chooseButton:hover {
+    background-color: #64b5f6;
+}
+
+QTreeView::branch:has-siblings:!adjoins-item {
+    border-image: url(':/res/images/qtree/stylesheet-vline.png') 0;
+}
+
+QTreeView::branch:has-siblings:adjoins-item {
+    border-image: url(':/res/images/qtree/stylesheet-branch-more.png') 0;
+}
+
+QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+    border-image: url(':/res/images/qtree/stylesheet-branch-end.png') 0;
+}
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+        border-image: none;
+        image: url(':/res/images/qtree/stylesheet-branch-closed.png');
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings  {
+        border-image: none;
+        image: url(':/res/images/qtree/stylesheet-branch-open.png');
+}
+
+QPushButton#cancelButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#cancelButton:hover {
+    background-color: #64b5f6;
+}
+
+QPushButton#confirmButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#confirmButton:hover {
+    background-color: #64b5f6;
+}
+
+QPushButton#stopButton {
+    font-size:14px;
+    background-color: #9370DB;
+    width: 126px;
+    height: 32px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #64b5f6;
+}
