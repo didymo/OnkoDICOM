@@ -106,6 +106,9 @@ QTreeView::indicator {
 QTreeView::indicator:unchecked {
     image: url('./src/res/images/widget-icons/checkbox_unchecked.png');
 }
+QTreeView::indicator:indeterminate {
+    image: url('./src/res/images/widget-icons/checkbox_indeterminate_checked.png');
+}
 QTreeView::indicator:checked {
     image: url('./src/res/images/widget-icons/checkbox_checked.png');
 }
