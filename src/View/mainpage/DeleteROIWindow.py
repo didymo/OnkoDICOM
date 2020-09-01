@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidgetItem, \
-    QMessageBox
+    QMessageBox, QAbstractItemView
 import os
 from src.Model import ROI
 
@@ -76,6 +76,9 @@ class Ui_DeleteROIWindow(QDialog):
 
         self.display_rois_in_listViewKeep()
 
+        self.to_keep_tree.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.to_delete_tree.setSelectionMode(QAbstractItemView.MultiSelection)
+
         QtCore.QMetaObject.connectSlotsByName(DeleteROIWindow)
 
     def on_cancel_button_clicked(self):
@@ -88,10 +91,10 @@ class Ui_DeleteROIWindow(QDialog):
 
         self.to_keep_tree.clear()
         self.to_keep_tree.setIndentation(0)
+
         self.item = QTreeWidgetItem(["item"])
         for index in self.list_to_keep:
             item = QTreeWidgetItem([index])
-            item.setCheckState(0, Qt.Unchecked)
             self.to_keep_tree.addTopLevelItem(item)
 
 
@@ -99,46 +102,40 @@ class Ui_DeleteROIWindow(QDialog):
         root_item = self.to_keep_tree.invisibleRootItem()
         for index in range(root_item.childCount()):
             item = root_item.child(index)
-            if item.checkState(0) == Qt.Checked:
-                self.list_to_delete.append(item.text(0)) # This will get ROI name
-            item.setCheckState(0, Qt.Unchecked)
+            if item in self.to_keep_tree.selectedItems():
+                # This will get ROI name
+                self.list_to_delete.append(item.text(0))
 
         # Move to the right column list
         self.to_delete_tree.clear()
         self.to_delete_tree.setIndentation(0)
         for roi in self.list_to_delete:
             item = QTreeWidgetItem([roi])
-            item.setCheckState(0, Qt.Unchecked)
             self.to_delete_tree.addTopLevelItem(item)
             self.confirm_button.setEnabled(True)
 
         # Delete moved items from the left column list
         self.list_to_keep = [x for x in self.list_to_keep if x not in self.list_to_delete]
 
-
         self.to_keep_tree.clear()
         for index in self.list_to_keep:
             item = QTreeWidgetItem([index])
-            item.setCheckState(0, Qt.Unchecked)
             self.to_keep_tree.addTopLevelItem(item)
-
 
     def move_left_button_onClicked(self):
         root_item = self.to_delete_tree.invisibleRootItem()
 
         for index in range(root_item.childCount()):
             item = root_item.child(index)
-            if item.checkState(0) == Qt.Checked:
-                self.list_to_keep.append(item.text(0)) # This will get ROI name
-            item.setCheckState(0, Qt.Unchecked)
-
+            if item in self.to_delete_tree.selectedItems():
+                # This will get ROI name
+                self.list_to_keep.append(item.text(0))
 
         # Move to the left column list
         self.to_keep_tree.clear()
         self.to_keep_tree.setIndentation(0)
         for roi in self.list_to_keep:
             item = QTreeWidgetItem([roi])
-            item.setCheckState(0, Qt.Unchecked)
             self.to_keep_tree.addTopLevelItem(item)
 
         # Delete moved items from the right column list
@@ -147,7 +144,6 @@ class Ui_DeleteROIWindow(QDialog):
         self.to_delete_tree.clear()
         for index in self.list_to_delete:
             item = QTreeWidgetItem([index])
-            item.setCheckState(0, Qt.Unchecked)
             self.to_delete_tree.addTopLevelItem(item)
 
         if len(self.list_to_delete) == 0:
