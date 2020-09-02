@@ -335,8 +335,6 @@ class DragDropZone(QFrame):
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.accept()
-            #Check if it is OnkoDICOM Compatible.
-
         else:
             event.ignore()
 
@@ -347,3 +345,4 @@ class DragDropZone(QFrame):
 
             path = event.mimeData().text()
             print(path)
+            # Send the path to the intial DICOM Directory search to determine it is a compatible Dicom File.
