@@ -211,13 +211,13 @@ class UIMainWindow(object):
             self.isodoses_tab = IsodosesTab(self)
 
         # Structure Information (bottom left of the window)
-        if self.has_rtss and self.has_rtdose:
+        if self.raw_dvh is not None:
             self.struct_info = StructureInformation(self)
 
         if self.has_rtss or self.has_rtdose:
             self.left_layout.addWidget(self.tab1)
 
-        if self.has_rtss and self.has_rtdose:
+        if self.raw_dvh is not None:
             self.left_layout.addWidget(self.struct_info.widget)
 
 
@@ -230,7 +230,7 @@ class UIMainWindow(object):
         self.dicom_view = DicomView(self)
 
         # Main view: DVH
-        if self.has_rtss and self.has_rtdose:
+        if self.raw_dvh is not None:
             self.dvh = DVH(self)
 
         # Main view: DICOM Tree
@@ -259,7 +259,7 @@ class UIMainWindow(object):
         self.create_footer()
 
         MainWindow.setCentralWidget(self.main_widget)
-        clinical_tab_index = 3 if self.has_rtss and self.has_rtdose else 2
+        clinical_tab_index = 3 if self.raw_dvh is not None else 2
         self.tab2.setTabText(clinical_tab_index, "Clinical Data")
         # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
 

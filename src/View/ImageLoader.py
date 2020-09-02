@@ -15,10 +15,14 @@ class ImageLoader(QObject):
     the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
     """
 
+    signal_request_calc_dvh = QtCore.pyqtSignal()
+
     def __init__(self, selected_files, parent_window, *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
         self.parent_window = parent_window
+        self.calc_dvh = False
+        self.advised_calc_dvh = False
 
     def load(self, interrupt_flag, progress_callback):
         """
@@ -44,6 +48,13 @@ class ImageLoader(QObject):
             print("stopped")
             return
 
+        if 'rtss' in file_names_dict and 'rtdose' in file_names_dict:
+            self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
+            self.signal_request_calc_dvh.emit()
+
+            while not self.advised_calc_dvh:
+                pass
+
         if 'rtss' in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])
 
@@ -68,7 +79,7 @@ class ImageLoader(QObject):
                 print("stopped")
                 return
 
-            if 'rtdose' in file_names_dict:
+            if 'rtdose' in file_names_dict and self.calc_dvh:
                 dataset_rtdose = dcmread(file_names_dict['rtdose'])
 
                 # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which
@@ -103,3 +114,7 @@ class ImageLoader(QObject):
                                             pixluts=dict_pixluts)
 
         return PatientDictContainer(path, read_data_dict, file_names_dict)
+
+    def update_calc_dvh(self, advice):
+        self.advised_calc_dvh = True
+        self.calc_dvh = advice
