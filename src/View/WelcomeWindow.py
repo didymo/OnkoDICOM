@@ -10,7 +10,7 @@ class UIWelcomeWindow(object):
         window_icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_window_instance.setObjectName("WelcomeWindowInstance")
         welcome_window_instance.setWindowIcon(window_icon)
-        welcome_window_instance.setFixedSize(844, 528)
+        welcome_window_instance.setFixedSize(840, 530)
 
         # Set a vertical layout to manage layout in a vertical manner
         self.window_vertical_layout_box = QtWidgets.QVBoxLayout()

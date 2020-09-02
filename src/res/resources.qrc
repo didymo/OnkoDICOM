@@ -4,8 +4,10 @@
     <file>images/qtree/stylesheet-vline.png</file>
     <file>images/qtree/stylesheet-branch-more.pngg</file>
     <file>images/qtree/stylesheet-branch-end.png</file>
-    <file>images/qtree/stylesheet-branch-closed.png</file>
-    <file>images/qtree/stylesheet-branch-open.png</file>
+    <file>images/qtree/collapse-tree.png</file>
+    <file>images/qtree/expand-tree.png</file>
+    <file>images/widget-icons/checkbox_checked.png</file>
+    <file>images/widget-icons/checkbox_unchecked.png</file>
     <file alias="Mac_HelveticaNeue.ttf">fonts/Darwin/HelveticaNeue.ttf</file>
     <file alias="Mac_HelveticaNeueHv.ttf">fonts/Darwin/HelveticaNeueHv.ttf</file>
     <file alias="Mac_HelveticaNeueMed.ttf">fonts/Darwin/HelveticaNeueMed.ttf</file>
