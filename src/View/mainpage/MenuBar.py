@@ -1,5 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 import sys
+
+from PyQt5.QtWidgets import QMessageBox
+
 from src.Model.CalculateImages import *
 from copy import deepcopy
 
@@ -428,7 +431,15 @@ class MenuHandler(object):
 		"""
 			Function triggered when the ROI Delete button is pressed from the menu.
 		"""
-		self.main_window.callROI.show_roi_delete_options()
+		if(self.main_window.has_rtss):
+			self.main_window.callROI.show_roi_delete_options()
+		else:
+			confirmation_dialog = QMessageBox.information(self.main_window, 'Unable to open ROI Delete Window',
+														  'This patient does not contain RTSS',
+														  QMessageBox.Ok)
+
+		if confirmation_dialog == QtWidgets.QMessageBox.Ok:
+			pass
 
 	def actionExit(self):
 		sys.exit()
