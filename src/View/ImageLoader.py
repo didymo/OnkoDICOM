@@ -15,10 +15,10 @@ class ImageLoader(QObject):
     the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
     """
 
-    def __init__(self, selected_files, skip_calc_dvh=False, *args, **kwargs):
+    def __init__(self, selected_files, parent_window, *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
-        self.skip_calc_dvh = skip_calc_dvh
+        self.parent_window = parent_window
 
     def load(self, interrupt_flag, progress_callback):
         """
@@ -68,7 +68,7 @@ class ImageLoader(QObject):
                 print("stopped")
                 return
 
-            if 'rtdose' in file_names_dict and not self.skip_calc_dvh:
+            if 'rtdose' in file_names_dict:
                 dataset_rtdose = dcmread(file_names_dict['rtdose'])
 
                 # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which

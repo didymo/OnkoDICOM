@@ -35,7 +35,7 @@ class ProgressWindow(QDialog):
         self.interrupt_flag = threading.Event()
 
     def start_loading(self, selected_files):
-        image_loader = ImageLoader(selected_files)
+        image_loader = ImageLoader(selected_files, self)
 
         worker = Worker(image_loader.load, self.interrupt_flag)
         worker.signals.result.connect(self.on_finish)
