@@ -437,9 +437,8 @@ class MenuHandler(object):
 			confirmation_dialog = QMessageBox.information(self.main_window, 'Unable to open ROI Delete Window',
 														  'This patient does not contain RTSS',
 														  QMessageBox.Ok)
-
-		if confirmation_dialog == QtWidgets.QMessageBox.Ok:
-			pass
+			if confirmation_dialog == QtWidgets.QMessageBox.Ok:
+				pass
 
 	def actionExit(self):
 		sys.exit()
