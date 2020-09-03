@@ -19,7 +19,7 @@ from pydicom import Dataset
 
 
 class RoiDeleteOptions(QtWidgets.QMainWindow, Ui_DeleteROIWindow):
-    structure_delete = QtCore.pyqtSignal(Dataset)  # new PyDicom dataset
+    structure_delete = QtCore.pyqtSignal(tuple)  # new PyDicom dataset
 
     def __init__(self, window, rois, dataset_rtss):
         super(RoiDeleteOptions, self).__init__()
