@@ -147,9 +147,10 @@ class StructureTab(object):
 		changes is a tuple of (new_dataset, description_of_changes)
 		description_of_changes follows the format {"type_of_change": value_of_change}.
 		Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
-		{"delete": "TEETH"} represents that the TEETH structure has been deleted.
+		{"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
 		"""
 
+		print(changes)
 		new_dataset = changes[0]
 
 		# If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
