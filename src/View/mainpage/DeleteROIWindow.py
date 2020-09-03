@@ -160,7 +160,7 @@ class Ui_DeleteROIWindow(QDialog):
             for item in self.list_to_delete:
                 new_dataset = ROI.delete_roi(self.dataset_rtss, item)
 
-            self.structure_delete.emit(new_dataset)
+            self.structure_delete.emit((new_dataset, {"delete": self.list_to_delete}))
             self.close()
 
 

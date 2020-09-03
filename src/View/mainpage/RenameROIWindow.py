@@ -6,15 +6,18 @@ from pydicom import dcmread
 
 from src.Model import ROI
 
+
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):
+    def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, roi_name, rename_signal,
+                 suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
         self.standard_volume_names = standard_volume_names
         self.standard_organ_names = standard_organ_names
         self.rtss = rtss
         self.roi_id = roi_id
+        self.roi_name = roi_name
         self.rename_signal = rename_signal
         self.suggested_text = suggested_text
 
@@ -98,7 +101,8 @@ class RenameROIWindow(QDialog):
         # up towards the main page and then 'replaces' the current rtss. at some point the user is given the
         # option of saving this new rtss file. when the rtss file is replaced it also recalculates the rois and
         # reload the structure widget's structures.
-        self.rename_signal.emit(new_dataset)
+        print()
+        self.rename_signal.emit((new_dataset, {"rename": [self.roi_name, new_name]}))
         self.close()
 
     def on_ROI_clicked(self):
