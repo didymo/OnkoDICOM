@@ -141,12 +141,16 @@ class StructureTab(object):
 
 		self.scroll_area.setWidget(self.scroll_area_content)
 
-	def structure_modified(self, new_dataset):
+	def structure_modified(self, changes):
 		"""
 		Executes when a structure is renamed/deleted. Displays indicator that structure has changed.
+		changes is a tuple of (new_dataset, description_of_changes)
+		description_of_changes follows the format {"type_of_change": value_of_change}.
+		Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
+		{"delete": "TEETH"} represents that the TEETH structure has been deleted.
 		"""
-		# TODO there needs to be a way to give the user the option to save the new RTSS file.
-		# Currently all changes are discarded when the user exits the program.
+
+		new_dataset = changes[0]
 
 		# If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
 		# to save their new file.
@@ -178,6 +182,19 @@ class StructureTab(object):
 		self.main_window.rois = ImageLoading.get_roi_info(new_dataset)
 		self.main_window.dict_raw_ContourData, self.main_window.dict_NumPoints = ImageLoading.get_raw_contour_data(new_dataset)
 		self.main_window.list_roi_numbers = self.main_window.ordered_list_rois()
+		self.main_window.selected_rois = []
+
+		# Rename structures in DVH dictionary
+		if "rename" in changes[1]:
+			for dvh in self.main_window.raw_dvh:
+				if self.main_window.raw_dvh[dvh].name == changes[1]["rename"][0]:
+					self.main_window.raw_dvh[dvh].name = changes[1]["rename"][1]
+					break
+
+		# Refresh ROIs in DVH tab and DICOM View
+		if hasattr(self.main_window, 'dvh'):
+			self.main_window.dvh.update_plot(self.main_window)
+		self.main_window.dicom_view.update_view()
 
 		# Refresh structure tab
 		self.update_content()
