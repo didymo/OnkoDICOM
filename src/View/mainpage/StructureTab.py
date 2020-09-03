@@ -141,12 +141,18 @@ class StructureTab(object):
 
 		self.scroll_area.setWidget(self.scroll_area_content)
 
-	def structure_modified(self, new_dataset):
+	def structure_modified(self, changes):
 		"""
 		Executes when a structure is renamed/deleted. Displays indicator that structure has changed.
+		changes is a tuple of (new_dataset, description_of_changes)
+		description_of_changes follows the format {"type_of_change": value_of_change}.
+		Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
+		{"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
 		"""
-		# TODO there needs to be a way to give the user the option to save the new RTSS file.
-		# Currently all changes are discarded when the user exits the program.
+
+		print(changes)
+		new_dataset = changes[0]
+		change_description = changes[1]
 
 		# If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
 		# to save their new file.
@@ -178,6 +184,28 @@ class StructureTab(object):
 		self.main_window.rois = ImageLoading.get_roi_info(new_dataset)
 		self.main_window.dict_raw_ContourData, self.main_window.dict_NumPoints = ImageLoading.get_raw_contour_data(new_dataset)
 		self.main_window.list_roi_numbers = self.main_window.ordered_list_rois()
+		self.main_window.selected_rois = []
+
+		# Rename structures in DVH list
+		if "rename" in changes[1]:
+			for key, dvh in self.main_window.raw_dvh.items():
+				if dvh.name == change_description["rename"][0]:
+					dvh.name = change_description["rename"][1]
+					break
+
+		# Remove structures from DVH list - the only visible effect of this section is the exported DVH csv
+		if "delete" in changes[1]:
+			list_of_deleted = []
+			for key, dvh in self.main_window.raw_dvh.items():
+				if dvh.name in change_description["delete"]:
+					list_of_deleted.append(key)
+			for key in list_of_deleted:
+				self.main_window.raw_dvh.pop(key)
+
+		# Refresh ROIs in DVH tab and DICOM View
+		if hasattr(self.main_window, 'dvh'):
+			self.main_window.dvh.update_plot(self.main_window)
+		self.main_window.dicom_view.update_view()
 
 		# Refresh structure tab
 		self.update_content()
