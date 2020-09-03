@@ -1,14 +1,24 @@
-
-QLabel#label {
-    font-family: Roboto Black;
-    margin-bottom: 0px;
+QMainWindow {
+    background-color: rgb(244, 245, 245);
 }
 
-QLabel#welcome {
-    font-family: Roboto Black;
-    margin-bottom: 0px;
+QLabel {
+    color: black;
 }
-
+QLabel[QLabelClass="window-title"] {
+    margin: 8px;
+    padding: 4px;
+    border-bottom: 4px solid #9370DB;
+    border-radius: 0;
+    font-size: 32px;
+}
+QLabel[QLabelClass~="tree-view-label"] {
+    padding: 8px;
+    font-size: 20px;
+}
+QLabel[QLabelClass~="tree-view-label-keep-delete"] {
+    color: #f5f5f5;
+}
 QPushButton {
     margin: 4px;
     padding: 0 16px;
@@ -30,36 +40,34 @@ QPushButton:disabled {
     background-color: #b3b3b3;
 }
 
-
-*[QPushButtonClass="success-button"] {
+QPushButton[QPushButtonClass="success-button"] {
     background-color: #388e3c;
 }
-*[QPushButtonClass="success-button"]:hover {
+QPushButton[QPushButtonClass="success-button"]:hover {
     background-color: #49b64e;
 }
-*[QPushButtonClass="success-button"]:pressed {
+QPushButton[QPushButtonClass="success-button"]:pressed {
     background-color: #1d491f;
 }
 
-*[QPushButtonClass="fail-button"] {
+QPushButton[QPushButtonClass="fail-button"] {
     background-color: #f44336;
 }
-*[QPushButtonClass="fail-button"]:hover {
+QPushButton[QPushButtonClass="fail-button"]:hover {
     background-color: #f7776e;
 }
-*[QPushButtonClass="fail-button"]:pressed {
+QPushButton[QPushButtonClass="fail-button"]:pressed {
     background-color: #c2160a;
 }
 
 /* Welcome Page */
-QMainWindow#WelcomeWindowInstance, QMainWindow#OpenPatientWindowInstance {
-    background-color: rgb(244, 245, 245);
-}
 QLabel#WelcomeWindowLabel {
     font-weight: bold;
     font-size: 18pt;
 }
-QLabel#WelcomeWindowSlogan, QLabel#OpenPatientDirectoryPrompt, QLabel#OpenPatientDirectoryAppearPrompt, QLabel#OpenPatientDirectoryResultLabel {
+QLabel#WelcomeWindowSlogan, QLabel#OpenPatientDirectoryPrompt,
+QLabel#OpenPatientDirectoryAppearPrompt, QLabel#OpenPatientDirectoryResultLabel,
+QLabel#DeleteRoiWindowInstruction {
     font-weight: semi-bold;
     font-size: 16px;
 }
@@ -99,6 +107,9 @@ QTreeView::item:focus {
     border: 2px solid #9370DB;
     border-radius: 2px;
 }
+QTreeView::item:selected {
+    background-color: #b299e6;
+}
 QTreeView::indicator {
     width: 30px;
     height: 30px;
@@ -131,4 +142,15 @@ QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
         image: url('./src/res/images/qtree/collapse-tree.png');
+}
+
+QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
+    padding: 0px;
+    border-radius: 2px;
+}
+QWidget#DeleteRoiWindowKeepWidget {
+    background-color: #388e3c;
+}
+QWidget#DeleteRoiWindowDeleteWidget {
+    background-color: #d32f2f ;
 }
