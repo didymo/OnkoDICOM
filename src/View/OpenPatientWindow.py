@@ -39,12 +39,14 @@ class UIOpenPatientWindow(object):
         self.open_patient_directory_input_horizontal_box = QHBoxLayout()
         self.open_patient_directory_input_horizontal_box.setObjectName("OpenPatientDirectoryInputHorizontalBox")
         # Create a textbox to contain the path to the directory that contains the DICOM files
-        self.open_patient_directory_input_box = QLineEdit()
+        self.open_patient_directory_input_box = UIOpenPatientWindowDragAndDropEvent(self)
+
         self.open_patient_directory_input_box.setObjectName("OpenPatientDirectoryInputBox")
         self.open_patient_directory_input_box.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.open_patient_directory_input_box.returnPressed.connect(self.scan_directory_for_patient)
         self.open_patient_directory_input_horizontal_box.addWidget(self.open_patient_directory_input_box)
+
         # Create a choose button to open the file dialog
         self.open_patient_directory_choose_button = QPushButton()
         self.open_patient_directory_choose_button.setObjectName("OpenPatientDirectoryChooseButton")
@@ -68,8 +70,8 @@ class UIOpenPatientWindow(object):
         self.open_patient_directory_appear_prompt = QLabel()
         self.open_patient_directory_appear_prompt.setObjectName("OpenPatientDirectoryAppearPrompt")
         self.open_patient_directory_appear_prompt.setAlignment(Qt.AlignLeft)
-        self.open_patient_appear_prompt_and_stop_horizontal_box.addWidget(self.open_patient_directory_appear_prompt);
-        self.open_patient_appear_prompt_and_stop_horizontal_box.addStretch(1);
+        self.open_patient_appear_prompt_and_stop_horizontal_box.addWidget(self.open_patient_directory_appear_prompt)
+        self.open_patient_appear_prompt_and_stop_horizontal_box.addStretch(1)
         # Create a button to stop searching
         self.open_patient_window_stop_button = QPushButton()
         self.open_patient_window_stop_button.setObjectName("OpenPatientWindowStopButton")
@@ -302,3 +304,29 @@ class UIOpenPatientWindow(object):
 
         recurse(self.open_patient_window_patients_tree.invisibleRootItem())
         return checked_items
+
+# This is to allow for dropping a directory into the input text.
+class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
+
+    parent_window = None
+
+    def __init__(self, UIOpenPatientWindowInstance):
+        super(UIOpenPatientWindowDragAndDropEvent, self).__init__(UIOpenPatientWindowInstance)
+        self.parent_window = UIOpenPatientWindowInstance
+        self.setDragEnabled(True)
+
+    def dragEnterEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if (urls and urls[0].scheme() == 'file'):
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if (urls and urls[0].scheme() == 'file'):
+            # Removes the doubled intro slash
+            dicom_file_path = str(urls[0].path())[1:]
+            # Pastes the directory into the text field
+            self.setText(dicom_file_path)
+            UIOpenPatientWindow.scan_directory_for_patient(self.parent_window)
