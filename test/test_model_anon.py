@@ -15,19 +15,22 @@ from pydicom import dataset
 from src.Model.Anon import (
     _check_identity_mapping_file_exists,
     _create_reidentification_spreadsheet,
-    _has_child_CSV_directory,
+    _trim_bracketing_single_quotes,
     anonymize,
 )
 
 
-def test_check_csv_folder_exist():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        test_path = pathlib.Path()
-        test_path = test_path.joinpath(tmpdir)
-        assert not _has_child_CSV_directory(test_path)
-        csv_path = pathlib.Path.joinpath(test_path, "CSV")
-        pathlib.os.mkdir(csv_path)
-        assert _has_child_CSV_directory(tmpdir)
+def test_trim_single_quotes():
+    no_quotes = "LAST^FIRST"
+    left_quote = "'LAST^FIRST"
+    both_quotes = "'LAST^FIRST'"
+    middle_only_quotes = "LAST'S^FIRST"
+    middle_with_both_quotes = "'LAST'S^FIRST"
+    assert no_quotes == _trim_bracketing_single_quotes(no_quotes)
+    assert no_quotes == _trim_bracketing_single_quotes(left_quote)
+    assert no_quotes == _trim_bracketing_single_quotes(both_quotes)
+    assert no_quotes != _trim_bracketing_single_quotes(middle_only_quotes)
+    assert middle_only_quotes == _trim_bracketing_single_quotes(middle_with_both_quotes)
 
 
 def test_check_specific_csv_file_exists():
