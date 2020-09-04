@@ -1,7 +1,8 @@
 import glob
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLineEdit, QMessageBox
+from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QDrag
+from PyQt5.QtWidgets import QLineEdit, QMessageBox, QFrame
 
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.ROIOptionsController import ROIDelOption
@@ -171,10 +172,15 @@ class UIMainWindow(object):
         MainWindow.setWindowTitle("OnkoDICOM")
         MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
+        # Drag and Drop Patient area
+        self.drop_zone = DragDropZone()
+        self.drop_zone.setParent(self)
+
         # Main Container and Layout
         self.main_widget = QtWidgets.QWidget(MainWindow)
         self.main_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
+        self.main_layout.addWidget(self.drop_zone)
 
         # Patient Bar
         self.patient_bar = PatientBar(self)
@@ -211,13 +217,13 @@ class UIMainWindow(object):
             self.isodoses_tab = IsodosesTab(self)
 
         # Structure Information (bottom left of the window)
-        if self.has_rtss and self.has_rtdose:
+        if self.raw_dvh is not None:
             self.struct_info = StructureInformation(self)
 
         if self.has_rtss or self.has_rtdose:
             self.left_layout.addWidget(self.tab1)
 
-        if self.has_rtss and self.has_rtdose:
+        if self.raw_dvh is not None:
             self.left_layout.addWidget(self.struct_info.widget)
 
 
@@ -230,7 +236,7 @@ class UIMainWindow(object):
         self.dicom_view = DicomView(self)
 
         # Main view: DVH
-        if self.has_rtss and self.has_rtdose:
+        if self.raw_dvh is not None:
             self.dvh = DVH(self)
 
         # Main view: DICOM Tree
@@ -259,7 +265,7 @@ class UIMainWindow(object):
         self.create_footer()
 
         MainWindow.setCentralWidget(self.main_widget)
-        clinical_tab_index = 3 if self.has_rtss and self.has_rtdose else 2
+        clinical_tab_index = 3 if self.raw_dvh is not None else 2
         self.tab2.setTabText(clinical_tab_index, "Clinical Data")
         # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
 
@@ -272,6 +278,8 @@ class UIMainWindow(object):
 
         if self.has_rtss:
             self.callROI = ROIDelOption(self)
+
+        self.drawROI = ROIDrawOption(self)
 
     def create_footer(self):
         # Bottom Layer
@@ -318,3 +326,25 @@ class UIMainWindow(object):
             if SaveReply == QtWidgets.QMessageBox.Ok:
                 pass
 
+# Class that allows for drag and drop of patient directories
+class DragDropZone(QFrame):
+    def __init__(self, parent=None):
+        QFrame.__init__(self)
+        self.setAcceptDrops(True)
+        self.setObjectName('drag_drop_zone')
+        self.setMaximumHeight(15)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+
+            path = event.mimeData().text()
+            print(path)
+            # Send the path to the intial DICOM Directory search to determine it is a compatible Dicom File.

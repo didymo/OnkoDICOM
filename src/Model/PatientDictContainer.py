@@ -23,6 +23,12 @@ class PatientDictContainer:
         self.filepaths = filepaths
         self.additional_data = kwargs
 
+    def add(self, key, value):
+        """
+        Adds a new attribute to the keyword arguments.
+        """
+        self.additional_data[key] = value
+
     def get(self, keyword):
         """
         TODO This method may not be necessary

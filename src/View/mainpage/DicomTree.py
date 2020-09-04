@@ -90,8 +90,10 @@ class DicomTreeUI(object):
 							   "background-color: #efefef; }"
 							   )
 		combobox.addItem("Select a DICOM dataset...")
-		combobox.addItem("RT Dose")
-		combobox.addItem("RTSS")
+		if self.window.has_rtss:
+			combobox.addItem("RT Dose")
+			combobox.addItem("RTSS")
+
 		for i in range(len(self.pixmaps) - 1):
 			combobox.addItem("CT Image Slice " + str(i + 1))
 		combobox.activated.connect(self.item_selected)
