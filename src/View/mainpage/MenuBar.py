@@ -142,6 +142,7 @@ class MenuBar(object):
 		self.actionROIDraw = QtWidgets.QAction(self.window)
 		self.actionROIDraw.setIcon(self.iconBrush)
 		self.actionROIDraw.setIconVisibleInMenu(True)
+		self.actionROIDraw.triggered.connect(self.handlers.roi_draw_options_handler)
 
 		# Delete ROI
 
@@ -426,6 +427,12 @@ class MenuHandler(object):
 		Function triggered when the Add-On Options button is pressed from the menu.
 		"""
 		self.main_window.callManager.show_add_on_options()
+
+	def roi_draw_options_handler(self):
+		"""
+			Function triggered when the ROI Draw button is pressed from the menu.
+		"""
+		self.main_window.drawROI.show_roi_draw_options()
 
 	def roi_delete_options_handler(self):
 		"""
