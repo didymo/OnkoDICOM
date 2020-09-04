@@ -279,6 +279,8 @@ class UIMainWindow(object):
         if self.has_rtss:
             self.callROI = ROIDelOption(self)
 
+        self.drawROI = ROIDrawOption(self)
+
     def create_footer(self):
         # Bottom Layer
         self.bottom_widget = QtWidgets.QWidget(self.main_widget)

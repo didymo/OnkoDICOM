@@ -311,7 +311,7 @@ class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
     parent_window = None
 
     def __init__(self, UIOpenPatientWindowInstance):
-        super(UIOpenPatientWindowDragAndDropEvent, self).__init__(UIOpenPatientWindowInstance)
+        super(UIOpenPatientWindowDragAndDropEvent, self).__init__()
         self.parent_window = UIOpenPatientWindowInstance
         self.setDragEnabled(True)
 
