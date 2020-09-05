@@ -37,6 +37,10 @@ Activate the virtual environment
 Install the requirements
 
 `pip install -r requirements.txt`
+`pip install --no-deps -r requirements-without-deps.txt`
+
+Please report any installation failures.
+If starting with a conda environment, it may be necessary to use conda to install numpy.
 
 You can execute Onko by running
 
