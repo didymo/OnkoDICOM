@@ -186,21 +186,22 @@ class StructureTab(object):
 		self.main_window.list_roi_numbers = self.main_window.ordered_list_rois()
 		self.main_window.selected_rois = []
 
+		if self.main_window.raw_dvh is not None:
 		# Rename structures in DVH list
-		if "rename" in changes[1]:
-			for key, dvh in self.main_window.raw_dvh.items():
-				if dvh.name == change_description["rename"][0]:
-					dvh.name = change_description["rename"][1]
-					break
+			if "rename" in changes[1]:
+				for key, dvh in self.main_window.raw_dvh.items():
+					if dvh.name == change_description["rename"][0]:
+						dvh.name = change_description["rename"][1]
+						break
 
-		# Remove structures from DVH list - the only visible effect of this section is the exported DVH csv
-		if "delete" in changes[1]:
-			list_of_deleted = []
-			for key, dvh in self.main_window.raw_dvh.items():
-				if dvh.name in change_description["delete"]:
-					list_of_deleted.append(key)
-			for key in list_of_deleted:
-				self.main_window.raw_dvh.pop(key)
+			# Remove structures from DVH list - the only visible effect of this section is the exported DVH csv
+			if "delete" in changes[1]:
+				list_of_deleted = []
+				for key, dvh in self.main_window.raw_dvh.items():
+					if dvh.name in change_description["delete"]:
+						list_of_deleted.append(key)
+				for key in list_of_deleted:
+					self.main_window.raw_dvh.pop(key)
 
 		# Refresh ROIs in DVH tab and DICOM View
 		if hasattr(self.main_window, 'dvh'):
