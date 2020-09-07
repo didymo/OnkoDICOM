@@ -9,11 +9,20 @@ import uuid
 
 import pandas as pd
 import pydicom
-import pymedphys.experimental.pseudonymisation as pseudonymise
-from pymedphys._dicom.anonymise import create_filename_from_dataset
-from pymedphys.dicom import anonymise as pmp_anonymise
 
 from src.Model.CalculateDVHs import dvh2csv
+
+try:
+    import pymedphys.experimental.pseudonymisation as pseudonymise
+    from pymedphys._dicom.anonymise import create_filename_from_dataset
+    from pymedphys.dicom import anonymise as pmp_anonymise
+
+    FEATURE_TOGGLE_PSEUDONYMISE = True
+except ImportError as ePymedphysImportFailed:
+    FEATURE_TOGGLE_PSEUDONYMISE = False
+    logging.error(ePymedphysImportFailed)
+    pass
+
 
 # ========================================Anonymization code ===================================
 
@@ -200,14 +209,13 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
     # chcek if the patientHash.csv exist
     Csv_Exist, csv_filePath = _check_identity_mapping_file_exists(csv_filename)
 
+    csv_header = []
+    csv_header.append("Pname and ID")
+    csv_header.append("Hashed_Pname")
+    print("the headers are:--", csv_header)
     # if the csv doent exist create a new CSV and export the Hash to that.
     if Csv_Exist == False:
         print("-----Creating CSV------")
-
-        csv_header = []
-        csv_header.append("Pname and ID")
-        csv_header.append("Hashed_Pname")
-        print("the headers are:--", csv_header)
 
         # hash_dictionary =  {patient_ID : hash_patient_ID}
         # print("dictionary values",hash_dictionary)
@@ -234,10 +242,22 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
     else:
         print("updating csv")
         row = [pname, sha1_pname]
-        with open(csv_filePath, "a") as csvFile:  # updating the CVS with hash values
-            writer = csv.writer(csvFile)
-            writer.writerow(row)
-            csvFile.close()
+        rows = {0: row}
+        sheet = pd.DataFrame.from_dict(rows, orient="index", columns=csv_header,)
+
+        # print("intending to update with:")
+        # print(sheet)
+        df_identifier = pd.read_csv(csv_filePath, header=0,)
+        # print("Before updating:")
+        # print(df_identifier)
+        updated_df = df_identifier.append(sheet, ignore_index=True)
+        # print("after updating:")
+        # print(updated_df)
+
+        updated_df.drop_duplicates(inplace=True)
+        # print("after dropping duplicates")
+        # print(updated_df)
+        updated_df.to_csv(csv_filePath, index=False)
         print("------CSV updated -----")
 
 
@@ -623,7 +643,6 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
     Full_Patient_Path_New_folder: ``str``
         The fully qualified directory name where the anonymised data has been placed
     """
-    feature_toggle_pseudonymise = True
 
     all_filepaths = FilePaths
     new_dict_dataset = Datasets
@@ -649,7 +668,13 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         first_dicom_object["PatientName"].repval
     )
 
-    if not feature_toggle_pseudonymise:
+    # get the pname_ID ("Patient Name  + PatientID") before any anonymisation
+    # but there's no point in using it if the current data is already anonymised
+    # the sha1_pname (md5 and sha1 hash) is no longer used directly,
+    # instead use hashed_patient_id
+    pname_ID, sha1_pname = _create_reidentification_item(first_dicom_object,)
+
+    if not FEATURE_TOGGLE_PSEUDONYMISE:
         if not file_previously_anonymised:
             hashed_patient_id = _gen_md5_and_sha1_hash(Original_P_ID)
             hashed_patient_name = _gen_md5_and_sha1_hash(patient_name_in_dataset)
@@ -737,12 +762,12 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         export_nrrd_files=False,  # TODO: ask AAM if he wants the nrrd files themselves copied
     )
 
-    pname_ID, sha1_pname = _create_reidentification_item(first_dicom_object,)
-    csv_filename = "patientHash.csv"
-    # store the the original vs. hashed values
-    # appends if the re-identification spreadsheet is already present
-    _create_reidentification_spreadsheet(pname_ID, hashed_patient_id, csv_filename)
-    print("Updating patient re-identification spreadsheet")
+    if not file_previously_anonymised:
+        csv_filename = "patientHash.csv"
+        # store the the original vs. hashed values
+        # appends if the re-identification spreadsheet is already present
+        _create_reidentification_spreadsheet(pname_ID, hashed_patient_id, csv_filename)
+        print("Updating patient re-identification spreadsheet")
 
     return str(anonymised_patient_full_path)
 

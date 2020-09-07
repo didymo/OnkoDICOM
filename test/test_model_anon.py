@@ -68,6 +68,8 @@ def test_check_specific_csv_file_exists():
 def test_create_hash_csv():
     patient_identifier = "ABC123"
     anonymised_identifier = "FakeAnonABC123"
+    patient_two_identifier = "DEF456"
+    patient_two_anonymised_id = "FakeAnonDEF456"
     orig_cwd = os.getcwd()
     orig_cwd_path = pathlib.Path().joinpath(orig_cwd)
     try:
@@ -100,13 +102,21 @@ def test_create_hash_csv():
             # test that the file will be appended if it is already there
             assert os.path.exists(expected_path)
             _create_reidentification_spreadsheet(
-                patient_identifier, anonymised_identifier, csv_filename
+                patient_two_identifier, patient_two_anonymised_id, csv_filename
             )
             f = open(expected_path, mode="r")
             lines = f.readlines()
-            # header plus first row plus second row makes for three row
+            # header plus first row plus second row makes for three rows
             assert 3 == len(lines)
             # print(f"Found {len(lines)} rows including header in {expected_path}")
             f.close()
+            # make sure duplicate entries are not created
+            _create_reidentification_spreadsheet(
+                patient_two_identifier, patient_two_anonymised_id, csv_filename
+            )
+            f = open(expected_path, mode="r")
+            lines = f.readlines()
+            # attempt to add a duplicate row does not result in an additional row
+            assert 3 == len(lines)
     finally:
         os.chdir(orig_cwd_path)
