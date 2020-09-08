@@ -12,6 +12,18 @@ import pydicom
 
 from src.Model.CalculateDVHs import dvh2csv
 
+try:
+    import pymedphys.experimental.pseudonymisation as pseudonymise
+    from pymedphys._dicom.anonymise import create_filename_from_dataset
+    from pymedphys.dicom import anonymise as pmp_anonymise
+
+    FEATURE_TOGGLE_PSEUDONYMISE = True
+except ImportError as ePymedphysImportFailed:
+    FEATURE_TOGGLE_PSEUDONYMISE = False
+    logging.error(ePymedphysImportFailed)
+    pass
+
+
 # ========================================Anonymization code ===================================
 
 
@@ -197,14 +209,13 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
     # chcek if the patientHash.csv exist
     Csv_Exist, csv_filePath = _check_identity_mapping_file_exists(csv_filename)
 
+    csv_header = []
+    csv_header.append("Pname and ID")
+    csv_header.append("Hashed_Pname")
+    print("the headers are:--", csv_header)
     # if the csv doent exist create a new CSV and export the Hash to that.
     if Csv_Exist == False:
         print("-----Creating CSV------")
-
-        csv_header = []
-        csv_header.append("Pname and ID")
-        csv_header.append("Hashed_Pname")
-        print("the headers are:--", csv_header)
 
         # hash_dictionary =  {patient_ID : hash_patient_ID}
         # print("dictionary values",hash_dictionary)
@@ -231,10 +242,22 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
     else:
         print("updating csv")
         row = [pname, sha1_pname]
-        with open(csv_filePath, "a") as csvFile:  # updating the CVS with hash values
-            writer = csv.writer(csvFile)
-            writer.writerow(row)
-            csvFile.close()
+        rows = {0: row}
+        sheet = pd.DataFrame.from_dict(rows, orient="index", columns=csv_header,)
+
+        # print("intending to update with:")
+        # print(sheet)
+        df_identifier = pd.read_csv(csv_filePath, header=0,)
+        # print("Before updating:")
+        # print(df_identifier)
+        updated_df = df_identifier.append(sheet, ignore_index=True)
+        # print("after updating:")
+        # print(updated_df)
+
+        updated_df.drop_duplicates(inplace=True)
+        # print("after dropping duplicates")
+        # print(updated_df)
+        updated_df.to_csv(csv_filePath, index=False)
         print("------CSV updated -----")
 
 
@@ -431,87 +454,6 @@ def _build_anonymisation_folder_name(
     )
 
     return anonymisation_folder
-
-
-def _anonymisation_folder_exists(
-    new_dict_dataset, all_filepaths, Dicom_folder_path, File_hash_status
-):
-
-    """check if the directory of the hashed patient's name exists in the specified folder
-    current implementation uses a hash of the PatientName for the name of the folder
-    in which to place all of the patient's anonymised data, parallel to the directory
-    containing the original not anonymised patient data.
-
-    Parameters
-    ----------
-    new_dict_dataset: ``dict`` where values are ``pydicom.dataset.Dataset``
-        dictionary of the DICOM data objects for the patient
-
-    all_filepaths: ``list`` of str
-        list of the paths to the files containing the DICOM objects in new_dict_dataset
-    
-    Dicom_folder_path:  ``str``
-        the directory containing the current patient's DICOM data
-    
-    File_hash_status: ``int`` 
-        representing a boolean indicating whether the datasets in new_dict_dataset
-        have already been anonymised. 0 is False.
-
-    Return
-    ------
-        directory_exists: ``int`` as boolean 
-
-        anonymisation_folder_name:  ``str``
-            unqualified path, hashed patient name
-
-        fully_qualified_anonymisation_folder_name: ``str``
-
-    """
-
-    first_file = os.path.basename(all_filepaths[0])
-    # print("THE PATH IN THE CHECK FOLDER::::::::::", all_filepaths[0] )
-    if File_hash_status == 0:
-
-        # ds_rtss = LOAD_DCM(Dicom_folder_path, first_file, new_dict_dataset, 0)
-        ds_rtss = new_dict_dataset[0]
-        # if the PatientName isn't found, all kinds of problems will ensue
-        # just let Python raise the error
-        hash_patient_name_sha1_first = _gen_md5_and_sha1_hash(
-            _trim_bracketing_single_quotes(ds_rtss["PatientName"].repval)
-        )
-
-        _print_patient_identifiers(ds_rtss)
-
-        new_patient_folder_name = hash_patient_name_sha1_first
-        print("New patient folder==", new_patient_folder_name)
-
-        SecondLastDir = os.path.dirname(
-            Dicom_folder_path
-        )  # getting path till the second last Folder
-
-        Full_Patient_Path_New_folder = SecondLastDir + "/" + new_patient_folder_name
-
-        # check if the hashed Folder name exist in the Specified folder
-        if new_patient_folder_name in os.listdir(SecondLastDir):
-            return 1, new_patient_folder_name, Full_Patient_Path_New_folder
-        else:
-            return 0, new_patient_folder_name, Full_Patient_Path_New_folder
-    else:
-        SecondLastDir = os.path.dirname(
-            Dicom_folder_path
-        )  # getting path till the second last Folder
-
-        # ds_rtss = LOAD_DCM(Dicom_folder_path, first_file, new_dict_dataset, 0)
-        ds_rtss = new_dict_dataset[0]
-        new_patient_folder_name = str(ds_rtss.PatientName)
-
-        Full_Patient_Path_New_folder = SecondLastDir + "/" + new_patient_folder_name
-
-        # check if the hashed Folder name exist in the Specified folder
-        if new_patient_folder_name in os.listdir(SecondLastDir):
-            return 1, new_patient_folder_name, Full_Patient_Path_New_folder
-        else:
-            return 0, new_patient_folder_name, Full_Patient_Path_New_folder
 
 
 def _anonymise_dicom_data(path, new_dict_dataset, all_filepaths):
@@ -726,24 +668,76 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         first_dicom_object["PatientName"].repval
     )
 
-    if not file_previously_anonymised:
-        hashed_patient_id = _gen_md5_and_sha1_hash(Original_P_ID)
-        hashed_patient_name = _gen_md5_and_sha1_hash(patient_name_in_dataset)
-    else:
-        hashed_patient_id = Original_P_ID
-        hashed_patient_name = patient_name_in_dataset
+    # get the pname_ID ("Patient Name  + PatientID") before any anonymisation
+    # but there's no point in using it if the current data is already anonymised
+    # the sha1_pname (md5 and sha1 hash) is no longer used directly,
+    # instead use hashed_patient_id
+    pname_ID, sha1_pname = _create_reidentification_item(first_dicom_object,)
 
-    # this build up of the anonymisation folder is not needed yet
-    # because _anon_call returns it, but I'd like to separate
-    # the "anonymise the DICOM data" from "where does everything go"
-    anonymised_patient_full_path = _build_anonymisation_folder_name(
-        first_dicom_object, path, file_previously_anonymised
-    )
-    # _anon_call currently modifies the datasets in hand as part of anonymisation
-    # if the data does not appear to have already been anonymised
-    anonymised_patient_full_path = _anonymise_dicom_data(
-        path, new_dict_dataset, all_filepaths
-    )
+    if not FEATURE_TOGGLE_PSEUDONYMISE:
+        if not file_previously_anonymised:
+            hashed_patient_id = _gen_md5_and_sha1_hash(Original_P_ID)
+            hashed_patient_name = _gen_md5_and_sha1_hash(patient_name_in_dataset)
+        else:
+            hashed_patient_id = Original_P_ID
+            hashed_patient_name = patient_name_in_dataset
+
+        # this build up of the anonymisation folder is not needed yet
+        # because _anon_call returns it, but I'd like to separate
+        # the "anonymise the DICOM data" from "where does everything go"
+        anonymised_patient_full_path = _build_anonymisation_folder_name(
+            first_dicom_object, path, file_previously_anonymised
+        )
+        # _anon_call currently modifies the datasets in hand as part of anonymisation
+        # if the data does not appear to have already been anonymised
+        anonymised_patient_full_path = _anonymise_dicom_data(
+            path, new_dict_dataset, all_filepaths
+        )
+    else:
+        # not bothering to check if the data itself was already pseudonymised.
+        # if it was, just  apply (another round of) pseudonymisation.
+        hashed_patient_id = pseudonymise.pseudonymisation_dispatch["LO"](
+            Original_P_ID
+        ).replace("/", "")
+        # hashed_patient_name = pseudonymise.pseudonymisation_dispatch["PN"](patient_name_in_dataset)
+        # changing the approach a bit with pseudonymisation
+        # instead of using a hash of the patient name for the directory, use the pseudonymised
+        # patient id, which is pretty much just a sha3 based hash.
+        # This will then be consistent with the naming of the CSV files, which are based
+        # on the hashed/pseudonymised patient id...
+        anonymised_patient_full_path = pathlib.Path(path).parent.joinpath(
+            hashed_patient_id
+        )
+
+        os.makedirs(anonymised_patient_full_path, exist_ok=True)
+        # workaround for pseudonymisation failing when faced with SQ that are identifiers.
+        # it was designed to pseudonymise what is *in* a SQ.
+        identifying_keywords_less_sequences = [
+            x
+            for x in pseudonymise.get_default_pseudonymisation_keywords()
+            if not x.endswith("Sequence")
+        ]
+        for key, dicom_object_as_dataset in new_dict_dataset.items():
+            ds_pseudo = pmp_anonymise(
+                dicom_object_as_dataset,
+                keywords_to_leave_unchanged=["PatientSex"],
+                replacement_strategy=pseudonymise.pseudonymisation_dispatch,
+                identifying_keywords=identifying_keywords_less_sequences,
+            )
+            # PatientSex has specific values that are valid.
+            # pseudonymisation doesn't handle that any better
+            # than other anonymisation techniques.
+            # above, it's left alone.  But it could be set to empty
+            # or it could be set to O.
+            # But clinically... the gender of the patient can be quite relevant
+            # and if the organ involved or imaged is sex linked or sex influenced (breast, prostate,
+            # ovary), "hiding" the gender in the metadata may not really prevent re-identification
+            # of the gender/PatientSex
+            ds_pseudo_full_path = create_filename_from_dataset(
+                ds_pseudo, anonymised_patient_full_path
+            )
+            ds_pseudo.save_as(ds_pseudo_full_path)
+
     print("\n\nThe New patient folder path is : ", anonymised_patient_full_path)
 
     anonymisation_csv_full_path = pathlib.Path().joinpath(
@@ -768,7 +762,14 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         export_nrrd_files=False,  # TODO: ask AAM if he wants the nrrd files themselves copied
     )
 
-    return anonymised_patient_full_path
+    if not file_previously_anonymised:
+        csv_filename = "patientHash.csv"
+        # store the the original vs. hashed values
+        # appends if the re-identification spreadsheet is already present
+        _create_reidentification_spreadsheet(pname_ID, hashed_patient_id, csv_filename)
+        print("Updating patient re-identification spreadsheet")
+
+    return str(anonymised_patient_full_path)
 
 
 def _export_anonymised_clinical_data(
