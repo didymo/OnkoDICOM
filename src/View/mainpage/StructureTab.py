@@ -150,7 +150,6 @@ class StructureTab(object):
 		{"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
 		"""
 
-		print(changes)
 		new_dataset = changes[0]
 		change_description = changes[1]
 
