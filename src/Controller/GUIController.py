@@ -6,6 +6,7 @@ from src.View.mainpage.MainPage import UIMainWindow
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
+from src.View.mainwindowrestructure.NewMainPage import UINewMainWindow
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
@@ -44,7 +45,7 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
         self.go_next_window.emit(patient_attributes)
 
 
-class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
+class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
 
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal()
@@ -54,10 +55,11 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # Initialising the main window and setting up the UI
     def __init__(self, patient_dict_container):
         QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self, patient_dict_container)
-        self.menu_bar.actionOpen.triggered.connect(self.open_new_patient)
-        self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomics_handler)
-        self.pyradi_trigger.connect(self.pyradiomics_handler)
+        self.setup_ui(self, patient_dict_container)
+        self.button_open_patient.clicked.connect(self.open_new_patient)
+        #self.menu_bar.actionOpen.triggered.connect(self.open_new_patient)
+        #self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomics_handler)
+        #self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def open_new_patient(self):
         """
