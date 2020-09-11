@@ -90,6 +90,9 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
                                                  "(https://sourceforge.net/projects/plastimatch/) to carry out "
                                                  "pyradiomics analysis.")
 
+    def cleanup(self):
+        del self.dataset
+
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         if self.rtss_modified and hasattr(self, "structures_tab"):
             confirmation_dialog = QMessageBox.information(self, 'Close without saving?',
@@ -100,10 +103,14 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
             if confirmation_dialog == QMessageBox.Save:
                 self.structures_tab.save_new_rtss()
                 event.accept()
+                self.cleanup()
             elif confirmation_dialog == QMessageBox.Discard:
                 event.accept()
+                self.cleanup()
             else:
                 event.ignore()
+        else:
+            self.cleanup()
 
 
 class PyradiProgressBar(QtWidgets.QWidget):
