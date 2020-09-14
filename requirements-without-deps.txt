@@ -1,2 +1,2 @@
-pymedphys>=0.32
+pymedphys>=0.33
 git+https://github.com/Radiomics/pyradiomics.git
