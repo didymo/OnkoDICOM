@@ -226,7 +226,6 @@ class UIMainWindow(object):
         if self.raw_dvh is not None:
             self.left_layout.addWidget(self.struct_info.widget)
 
-
         # Main view
         self.tab2 = QtWidgets.QTabWidget(self.main_widget)
         self.tab2.setGeometry(QtCore.QRect(200, 40, 880, 561))

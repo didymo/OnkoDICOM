@@ -1,3 +1,4 @@
+import csv
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThreadPool
@@ -9,7 +10,16 @@ from src.Model import ROI
 from src.View.mainpage.DicomView import *
 
 class UIDrawROIWindow():
-    def setup_ui(self, draw_roi_window_instance):
+
+    def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss):
+
+        self.rois = rois
+        self.dataset_rtss = dataset_rtss
+
+        self.standard_organ_names = []
+        self.standard_volume_names = []
+        self.standard_names = []
+
         # Initialise a DrawROIWindow
         stylesheet = open("src/res/stylesheet.qss").read()
         window_icon = QIcon()
@@ -25,6 +35,7 @@ class UIDrawROIWindow():
         # Creating a horizontal box to hold the image slice number, move up and down the image slice  and save button
         self.draw_roi_window_instance_image_slice_action_box = QHBoxLayout()
         self.draw_roi_window_instance_image_slice_action_box.setObjectName("DrawRoiWindowInstanceImageSliceActionBox")
+
         # Create a label for denoting the Image Slice Number
         self.image_slice_number_label = QLabel()
         self.image_slice_number_label.setObjectName("ImageSliceNumberLabel")
@@ -41,6 +52,7 @@ class UIDrawROIWindow():
         self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(), self.image_slice_number_line_edit.sizeHint().height())
         self.image_slice_number_line_edit.setEnabled(False)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_line_edit)
+
         # Create a button to move backward to the previous image
         self.image_slice_number_move_backward_button = QPushButton()
         self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
@@ -50,6 +62,7 @@ class UIDrawROIWindow():
             self.image_slice_number_move_backward_button.sizeHint().width(),
             self.image_slice_number_move_backward_button.sizeHint().height())
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_backward_button)
+
         # Create a button to move forward to the next image
         self.image_slice_number_move_forward_button = QPushButton()
         self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
@@ -59,6 +72,7 @@ class UIDrawROIWindow():
             self.image_slice_number_move_forward_button.sizeHint().width(),
             self.image_slice_number_move_forward_button.sizeHint().height())
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_forward_button)
+
         # Create a save button to save all the changes
         self.draw_roi_window_instance_save_button = QPushButton()
         self.draw_roi_window_instance_save_button.setObjectName("DrawRoiWindowInstanceSaveButton")
@@ -70,13 +84,13 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_save_button.setProperty("QPushButtonClass", "success-button")
         self.draw_roi_window_instance_image_slice_action_box.addStretch(1)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.draw_roi_window_instance_save_button)
+
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_image_slice_action_widget = QWidget()
         self.draw_roi_window_instance_image_slice_action_widget.setObjectName("DrawRoiWindowInstanceImageSliceActionWidget")
         self.draw_roi_window_instance_image_slice_action_widget.setLayout(self.draw_roi_window_instance_image_slice_action_box)
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_image_slice_action_widget)
         self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
-
 
         # Create a new Label to hold the pixmap
         self.image_slice_number_image_view = QLabel()
@@ -90,6 +104,7 @@ class UIDrawROIWindow():
         # Creating a horizontal box to hold the ROI draw action buttons: undo, redo, clear, tool
         self.draw_roi_window_instance_action_box = QHBoxLayout()
         self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
+
         # Create a button to undo the draw
         self.draw_roi_window_instance_action_undo_button = QPushButton()
         self.draw_roi_window_instance_action_undo_button.setObjectName("DrawRoiWindowInstanceActionUndoButton")
@@ -100,6 +115,7 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_action_undo_button.sizeHint().height())
         self.draw_roi_window_instance_action_box.addStretch(1)
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_undo_button)
+
         # Create a button to redo the draw
         self.draw_roi_window_instance_action_redo_button = QPushButton()
         self.draw_roi_window_instance_action_redo_button.setObjectName("DrawRoiWindowInstanceActionRedoButton")
@@ -109,6 +125,7 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_action_redo_button.sizeHint().width(),
             self.draw_roi_window_instance_action_redo_button.sizeHint().height())
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_redo_button)
+
         # Create a button to clear the draw
         self.draw_roi_window_instance_action_clear_button = QPushButton()
         self.draw_roi_window_instance_action_clear_button.setObjectName("DrawRoiWindowInstanceActionClearButton")
@@ -118,6 +135,7 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_action_clear_button.sizeHint().width(),
             self.draw_roi_window_instance_action_clear_button.sizeHint().height())
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_clear_button)
+
         # Create a button to tool the draw
         self.draw_roi_window_instance_action_tool_button = QPushButton()
         self.draw_roi_window_instance_action_tool_button.setObjectName("DrawRoiWindowInstanceActionToolButton")
@@ -127,6 +145,7 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_action_tool_button.sizeHint().width(),
             self.draw_roi_window_instance_action_tool_button.sizeHint().height())
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_tool_button)
+
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_action_widget = QWidget()
         self.draw_roi_window_instance_action_widget.setObjectName(
@@ -135,7 +154,6 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_action_box)
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_action_widget)
         self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
-
 
         # Create a new central widget to hold the vertical box layout
         self.draw_roi_window_instance_central_widget = QWidget()
@@ -147,6 +165,8 @@ class UIDrawROIWindow():
         draw_roi_window_instance.setCentralWidget(self.draw_roi_window_instance_central_widget)
         draw_roi_window_instance.setFixedSize(self.image_slice_number_image_view.size())
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
+
+        self.show_ROI_names()
 
 
 
@@ -162,3 +182,29 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_redo_button.setText(_translate("DrawRoiWindowInstanceActionRedoButton", "Redo"))
         self.draw_roi_window_instance_action_clear_button.setText(_translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
         self.draw_roi_window_instance_action_tool_button.setText(_translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
+
+    def init_standard_names(self):
+        """
+        Create two lists containing standard organ and standard volume names as set by the Add-On options.
+        """
+        with open('src/data/csv/organName.csv', 'r') as f:
+            self.standard_organ_names = []
+
+            csv_input = csv.reader(f)
+            header = next(f)  # Ignore the "header" of the column
+            for row in csv_input:
+                self.standard_organ_names.append(row[0])
+
+        with open('src/data/csv/volumeName.csv', 'r') as f:
+            self.standard_volume_names = []
+
+            csv_input = csv.reader(f)
+            header = next(f)  # Ignore the "header" of the column
+            for row in csv_input:
+                self.standard_volume_names.append(row[1])
+
+        self.standard_names = self.standard_organ_names + self.standard_volume_names
+
+    def show_ROI_names(self):
+        self.init_standard_names()
+        print(self.standard_names)

@@ -8,6 +8,7 @@ warnings.filterwarnings("ignore")
 import sys
 import platform
 from src.Controller.TopLevelController import Controller
+import importlib
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 
