@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThreadPool
 from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
-    QLabel, QLineEdit, QSizePolicy, QPushButton
+    QLabel, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget
 from PyQt5.Qt import Qt
 import os
 from src.Model import ROI
@@ -169,7 +169,6 @@ class UIDrawROIWindow():
         self.show_ROI_names()
 
 
-
     def retranslate_ui(self, draw_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
         draw_roi_window_instance.setWindowTitle(_translate("DrawRoiWindowInstance", "OnkoDICOM - Draw ROI(s)"))
@@ -207,4 +206,72 @@ class UIDrawROIWindow():
 
     def show_ROI_names(self):
         self.init_standard_names()
-        print(self.standard_names)
+
+        self.select_ROI = SelectROIPopUp(self.standard_names)
+        self.select_ROI.exec_()
+
+
+class SelectROIPopUp(QDialog):
+    def __init__(self, standard_names, parent=None):
+        QDialog.__init__(self)
+
+        self.standard_names = standard_names
+
+        self.setWindowTitle("Select A Region of Interest To Draw")
+        self.setMinimumSize(350, 180)
+
+        self.icon = QtGui.QIcon()
+        self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(self.icon)
+
+        self.explanation_text = QLabel("Search for ROI:")
+
+        self.input_field = QLineEdit()
+        self.input_field.textChanged.connect(self.on_text_edited)
+
+        self.button_area = QWidget()
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.close)
+        self.begin_draw_button = QPushButton("Begin Draw Process")
+        self.begin_draw_button.setEnabled(False)
+        self.begin_draw_button.clicked.connect(self.on_begin_clicked)
+
+        self.button_layout = QHBoxLayout()
+        self.button_layout.addWidget(self.cancel_button)
+        self.button_layout.addWidget(self.begin_draw_button)
+        self.button_area.setLayout(self.button_layout)
+
+        self.list_label = QLabel()
+        self.list_label.setText("List of Standard Region of Interests")
+
+        self.list_of_ROIs = QListWidget()
+        for standard_name in self.standard_names:
+            self.list_of_ROIs.addItem(standard_name)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.explanation_text)
+        self.layout.addWidget(self.input_field)
+        self.layout.addWidget(self.list_label)
+        self.layout.addWidget(self.list_of_ROIs)
+        self.layout.addWidget(self.button_area)
+        self.setLayout(self.layout)
+
+        self.list_of_ROIs.clicked.connect(self.roi_clicked)
+
+    def on_text_edited(self, text):
+        self.list_of_ROIs.clear()
+        text_upper_case = text.upper()
+        for item in self.standard_names:
+            if item.startswith(text) or item.startswith(text_upper_case):
+                self.list_of_ROIs.addItem(item)
+
+    def roi_clicked(self):
+        roi = self.list_of_ROIs.currentItem()
+        self.input_field.setText(str(roi.text()))
+        self.begin_draw_button.setEnabled(True)
+        self.begin_draw_button.setFocus()
+
+    def on_begin_clicked(self):
+        roi = self.list_of_ROIs.currentItem()
+        #print(str(roi.text()))
+

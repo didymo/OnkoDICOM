@@ -17,7 +17,6 @@ from src.View.mainpage.DicomTree import *
 from src.View.mainpage.MenuBar import *
 from src.View.mainpage.resources_rc import *
 
-
 class UIMainWindow(object):
 
     # To initiate progress bar for pyradiomics through anonymization
