@@ -19,6 +19,7 @@ class UIDrawROIWindow():
         self.standard_organ_names = []
         self.standard_volume_names = []
         self.standard_names = []
+        self.draw_roi_window_instance = draw_roi_window_instance
 
         # Initialise a DrawROIWindow
         stylesheet = open("src/res/stylesheet.qss").read()
@@ -35,6 +36,24 @@ class UIDrawROIWindow():
         # Creating a horizontal box to hold the image slice number, move up and down the image slice  and save button
         self.draw_roi_window_instance_image_slice_action_box = QHBoxLayout()
         self.draw_roi_window_instance_image_slice_action_box.setObjectName("DrawRoiWindowInstanceImageSliceActionBox")
+
+        # Create a label for denoting the ROI name
+        self.roi_name_label = QLabel()
+        self.roi_name_label.setObjectName("ROINameLabel")
+        self.roi_name_label.setAlignment(Qt.AlignLeft)
+        self.roi_name_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.roi_name_label.resize(
+            self.roi_name_label.sizeHint().width(), self.roi_name_label.sizeHint().height())
+        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.roi_name_label)
+
+        self.roi_name_line_edit = QLineEdit()
+        self.roi_name_line_edit.setObjectName("ROINameLineEdit")
+        self.roi_name_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.roi_name_line_edit.resize(self.roi_name_line_edit.sizeHint().width(),
+                                                 self.roi_name_line_edit.sizeHint().height())
+        self.roi_name_line_edit.setEnabled(False)
+        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.roi_name_line_edit)
+
 
         # Create a label for denoting the Image Slice Number
         self.image_slice_number_label = QLabel()
@@ -172,6 +191,8 @@ class UIDrawROIWindow():
     def retranslate_ui(self, draw_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
         draw_roi_window_instance.setWindowTitle(_translate("DrawRoiWindowInstance", "OnkoDICOM - Draw ROI(s)"))
+        self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
+        self.roi_name_line_edit.setText(_translate("ROINameLineEdit", "AORTA"))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
         self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", "1"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
@@ -206,14 +227,19 @@ class UIDrawROIWindow():
 
     def show_ROI_names(self):
         self.init_standard_names()
-        self.select_ROI = SelectROIPopUp(self.standard_names)
+        self.select_ROI = SelectROIPopUp(self.standard_names, self.draw_roi_window_instance)
         self.select_ROI.exec_()
 
+    def set_selected_roi_name(self, roi_name):
+        self.roi_name_line_edit.setText(roi_name)
 
 class SelectROIPopUp(QDialog):
 
-    def __init__(self, standard_names, parent=None):
+    parent_window = None
 
+    def __init__(self, standard_names, parent_window):
+        super(SelectROIPopUp, self).__init__()
+        self.parent_window = parent_window
         QDialog.__init__(self)
 
         self.standard_names = standard_names
@@ -266,7 +292,6 @@ class SelectROIPopUp(QDialog):
                 self.list_of_ROIs.addItem(item)
 
     def on_roi_clicked(self):
-        roi = self.list_of_ROIs.currentItem()
         self.begin_draw_button.setEnabled(True)
         self.begin_draw_button.setFocus()
 
@@ -274,10 +299,8 @@ class SelectROIPopUp(QDialog):
         # If there is a ROI Selected
         if self.list_of_ROIs.currentItem() != None:
             roi = self.list_of_ROIs.currentItem()
-            print(str(roi.text()))
+            self.roi_name = str(roi.text())
+
+            # Call function on UIDrawWindow so it has selected ROI
+            UIDrawROIWindow.set_selected_roi_name(self.parent_window, self.roi_name)
             self.close()
-
-
-
-
-
