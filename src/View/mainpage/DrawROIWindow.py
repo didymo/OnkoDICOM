@@ -206,13 +206,14 @@ class UIDrawROIWindow():
 
     def show_ROI_names(self):
         self.init_standard_names()
-
         self.select_ROI = SelectROIPopUp(self.standard_names)
         self.select_ROI.exec_()
 
 
 class SelectROIPopUp(QDialog):
+
     def __init__(self, standard_names, parent=None):
+
         QDialog.__init__(self)
 
         self.standard_names = standard_names
@@ -233,7 +234,6 @@ class SelectROIPopUp(QDialog):
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.close)
         self.begin_draw_button = QPushButton("Begin Draw Process")
-        self.begin_draw_button.setEnabled(False)
         self.begin_draw_button.clicked.connect(self.on_begin_clicked)
 
         self.button_layout = QHBoxLayout()
@@ -242,7 +242,7 @@ class SelectROIPopUp(QDialog):
         self.button_area.setLayout(self.button_layout)
 
         self.list_label = QLabel()
-        self.list_label.setText("List of Standard Region of Interests")
+        self.list_label.setText("Select a Standard Region of Interest")
 
         self.list_of_ROIs = QListWidget()
         for standard_name in self.standard_names:
@@ -256,7 +256,7 @@ class SelectROIPopUp(QDialog):
         self.layout.addWidget(self.button_area)
         self.setLayout(self.layout)
 
-        self.list_of_ROIs.clicked.connect(self.roi_clicked)
+        self.list_of_ROIs.clicked.connect(self.on_roi_clicked)
 
     def on_text_edited(self, text):
         self.list_of_ROIs.clear()
@@ -265,13 +265,19 @@ class SelectROIPopUp(QDialog):
             if item.startswith(text) or item.startswith(text_upper_case):
                 self.list_of_ROIs.addItem(item)
 
-    def roi_clicked(self):
+    def on_roi_clicked(self):
         roi = self.list_of_ROIs.currentItem()
-        self.input_field.setText(str(roi.text()))
         self.begin_draw_button.setEnabled(True)
         self.begin_draw_button.setFocus()
 
     def on_begin_clicked(self):
-        roi = self.list_of_ROIs.currentItem()
-        #print(str(roi.text()))
+        # If there is a ROI Selected
+        if self.list_of_ROIs.currentItem() != None:
+            roi = self.list_of_ROIs.currentItem()
+            print(str(roi.text()))
+            self.close()
+
+
+
+
 
