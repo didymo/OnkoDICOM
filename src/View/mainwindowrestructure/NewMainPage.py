@@ -9,7 +9,7 @@ class UINewMainWindow:
         self.patient_name = self.dataset[0]['PatientName']
         self.rtss_modified = False
 
-        main_window_instance.setFixedSize(800, 600)
+        main_window_instance.setMinimumSize(1080, 700)
         main_window_instance.setWindowTitle("OnkoDICOM")
         main_window_instance.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
