@@ -60,7 +60,7 @@ class ProgressWindow(QDialog):
 
     def prompt_calc_dvh(self):
         choice = QMessageBox.question(self, "Calculate DVHs?", "RTSTRUCT and RTDOSE datasets identified. Would you "
-                                                               "like you calculate DVHs? (This may take up to several "
+                                                               "like to calculate DVHs? (This may take up to several "
                                                                "minutes on some systems.)",
                                       QMessageBox.Yes | QMessageBox.No)
 
