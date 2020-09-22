@@ -14,6 +14,7 @@ class NewPatientBar(QtWidgets.QWidget):
         self.patient_bar_layout = QtWidgets.QHBoxLayout()
         self.patient_bar_layout.setContentsMargins(0, 0, 0, 0)
         self.patient_bar_layout.setSpacing(5)
+        self.setMaximumHeight(35)
 
         # Create patient icon
         self.icon = QtWidgets.QLabel()
@@ -51,6 +52,7 @@ class NewPatientBar(QtWidgets.QWidget):
         name_layout = QtWidgets.QHBoxLayout(self.name_widget)
         name_layout.setContentsMargins(0, 8, 0, 0)
         name_layout.setSpacing(5)
+        name_layout.setAlignment(QtCore.Qt.AlignLeft)
         self.name_widget.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Label
@@ -72,6 +74,7 @@ class NewPatientBar(QtWidgets.QWidget):
         id_layout = QtWidgets.QHBoxLayout(self.id_widget)
         id_layout.setContentsMargins(0, 8, 0, 0)
         id_layout.setSpacing(5)
+        id_layout.setAlignment(QtCore.Qt.AlignLeft)
         self.id_widget.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Label
@@ -95,6 +98,7 @@ class NewPatientBar(QtWidgets.QWidget):
         gender_layout = QtWidgets.QHBoxLayout(self.gender_widget)
         gender_layout.setContentsMargins(0, 8, 0, 0)
         gender_layout.setSpacing(5)
+        gender_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         # Label
         gender_label = QtWidgets.QLabel(self.gender_widget)
@@ -116,6 +120,7 @@ class NewPatientBar(QtWidgets.QWidget):
         dob_layout = QtWidgets.QHBoxLayout(self.dob_widget)
         dob_layout.setContentsMargins(0, 8, 0, 0)
         dob_layout.setSpacing(5)
+        dob_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         # Label
         dob_label = QtWidgets.QLabel(self.dob_widget)
