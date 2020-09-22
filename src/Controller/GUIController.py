@@ -97,7 +97,6 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
                                                  "pyradiomics analysis.")
 
     def cleanup(self):
-        del self.dataset
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
 
