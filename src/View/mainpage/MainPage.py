@@ -180,7 +180,7 @@ class UIMainWindow(object):
         self.main_widget = QtWidgets.QWidget(MainWindow)
         self.main_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
-        self.main_layout.addWidget(self.drop_zone)
+        #self.main_layout.addWidget(self.drop_zone)
 
         # Patient Bar
         self.patient_bar = PatientBar(self)
