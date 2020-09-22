@@ -48,6 +48,21 @@ class PatientDictContainer(metaclass=Singleton):
         self.filepaths = None
         self.additional_data = None
 
+    def is_empty(self):
+        """
+        :return: True if class is empty
+        """
+        if self.path is not None:
+            return False
+        if self.dataset is not None:
+            return False
+        if self.filepaths is not None:
+            return False
+        if self.additional_data is not None:
+            return False
+
+        return True
+
     def add(self, key, value):
         """
         Adds a new attribute to the keyword arguments.
