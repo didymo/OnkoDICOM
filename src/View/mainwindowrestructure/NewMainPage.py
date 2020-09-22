@@ -1,10 +1,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from src.Model.PatientDictContainer import PatientDictContainer
+
 
 class UINewMainWindow:
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
 
-    def setup_ui(self, main_window_instance, patient_dict_container):
+    def setup_ui(self, main_window_instance):
+        patient_dict_container = PatientDictContainer()
         self.dataset = patient_dict_container.dataset
         self.patient_name = self.dataset[0]['PatientName']
         self.rtss_modified = False

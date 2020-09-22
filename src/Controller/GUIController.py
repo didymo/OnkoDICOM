@@ -2,6 +2,7 @@ from shutil import which
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.MainPage import UIMainWindow
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
@@ -28,7 +29,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 
-    go_next_window = QtCore.pyqtSignal(tuple)
+    go_next_window = QtCore.pyqtSignal(object)
 
     # Initialisation function to display the UI
     def __init__(self, default_directory):
@@ -41,8 +42,8 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
             self.open_patient_directory_input_box.setText(default_directory)
             self.scan_directory_for_patient()
 
-    def open_patient(self, patient_attributes):
-        self.go_next_window.emit(patient_attributes)
+    def open_patient(self, progress_window):
+        self.go_next_window.emit(progress_window)
 
 
 class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
@@ -53,9 +54,9 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
     run_pyradiomics = QtCore.pyqtSignal(str, dict, str)
 
     # Initialising the main window and setting up the UI
-    def __init__(self, patient_dict_container):
+    def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        self.setup_ui(self, patient_dict_container)
+        self.setup_ui(self)
         self.button_open_patient.clicked.connect(self.open_new_patient)
         #self.menu_bar.actionOpen.triggered.connect(self.open_new_patient)
         #self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomics_handler)
@@ -97,6 +98,8 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
 
     def cleanup(self):
         del self.dataset
+        patient_dict_container = PatientDictContainer()
+        patient_dict_container.clear()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         if self.rtss_modified and hasattr(self, "structures_tab"):
