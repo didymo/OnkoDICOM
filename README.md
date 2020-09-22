@@ -37,6 +37,7 @@ Activate the virtual environment
 Install the requirements
 
 `pip install -r requirements.txt`
+
 `pip install --no-deps -r requirements-without-deps.txt`
 
 
