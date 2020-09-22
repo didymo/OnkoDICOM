@@ -63,9 +63,9 @@ class PatientDictContainer(metaclass=Singleton):
 
         return True
 
-    def add(self, key, value):
+    def set(self, key, value):
         """
-        Adds a new attribute to the keyword arguments.
+        Sets new attribute to the keyword arguments.
         """
         self.additional_data[key] = value
 

@@ -30,15 +30,15 @@ class UINewMainWindow:
         elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
             level = int(dataset[0].WindowCenter[1])
 
-        patient_dict_container.add("window", window)
-        patient_dict_container.add("level", level)
+        patient_dict_container.set("window", window)
+        patient_dict_container.set("level", level)
 
         pixel_values = convert_raw_data(dataset)
         pixmaps = get_pixmaps(pixel_values, window, level)
-        patient_dict_container.add("pixmaps", pixmaps)
+        patient_dict_container.set("pixmaps", pixmaps)
 
         basic_info = get_basic_info(dataset[0])
-        patient_dict_container.add("basic_info", basic_info)
+        patient_dict_container.set("basic_info", basic_info)
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #

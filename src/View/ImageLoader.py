@@ -85,10 +85,10 @@ class ImageLoader(QObject):
                 return False
 
             # Add RTSS values to PatientDictContainer
-            patient_dict_container.add("rois", rois)
-            patient_dict_container.add("raw_contour", dict_raw_contour_data)
-            patient_dict_container.add("num_points", dict_numpoints)
-            patient_dict_container.add("pixluts", dict_pixluts)
+            patient_dict_container.set("rois", rois)
+            patient_dict_container.set("raw_contour", dict_raw_contour_data)
+            patient_dict_container.set("num_points", dict_numpoints)
+            patient_dict_container.set("pixluts", dict_pixluts)
 
             if 'rtdose' in file_names_dict and self.calc_dvh:
                 dataset_rtdose = dcmread(file_names_dict['rtdose'])
@@ -116,8 +116,8 @@ class ImageLoader(QObject):
                     return False
 
                 # Add DVH values to PatientDictContainer
-                patient_dict_container.add("raw_dvh", raw_dvh)
-                patient_dict_container.add("dvh_x_y", dvh_x_y)
+                patient_dict_container.set("raw_dvh", raw_dvh)
+                patient_dict_container.set("dvh_x_y", dvh_x_y)
 
                 return True
             else:
