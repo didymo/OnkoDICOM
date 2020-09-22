@@ -203,6 +203,65 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_clear_button.setText(_translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
         self.draw_roi_window_instance_action_tool_button.setText(_translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
 
+    def init_slider(self):
+        """
+        Create a slider for the DICOM Image View.
+        """
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(len(self.main_window.pixmaps) - 1)
+        if self.patient_HFS:
+            self.slider.setInvertedControls(True)
+            self.slider.setInvertedAppearance(True)
+        self.slider.setValue(int(len(self.main_window.pixmaps) / 2))
+        self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
+        self.slider.setTickInterval(1)
+        self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
+                                  "y2:1, stop:0 #fff, stop:1 #ddd);border: 1px solid #444;border-radius: 4px;}")
+        self.slider.valueChanged.connect(self.value_changed)
+        self.slider.setGeometry(QtCore.QRect(0, 0, 50, 500))
+        self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
+
+    def value_changed(self):
+        """
+        Function triggered when the value of the slider has changed.
+        Update the view.
+        """
+        self.update_view()
+
+    def update_view(self, zoomChange=False, eventChangedWindow=False):
+        """
+        Update the view of the DICOM Image.
+
+        :param zoomChange:
+         Boolean indicating whether the user wants to change the zoom.
+         False by default.
+
+        :param eventChangedWindow:
+         Boolean indicating if the user is altering the window and level values through mouse movement and button press
+         events in the DICOM View area.
+         False by default.
+        """
+
+        if eventChangedWindow:
+            self.image_display(eventChangedWindow=True)
+        else:
+            self.image_display()
+
+        if zoomChange:
+            self.view.setTransform(QtGui.QTransform().scale(self.main_window.zoom, self.main_window.zoom))
+
+        # If the list of ROIs selected is not empty
+        if self.main_window.selected_rois:
+            self.ROI_display()
+
+        # If the list of isodoses selected is not empty
+        if self.main_window.selected_doses:
+            self.isodose_display()
+
+        self.update_metadata()
+        self.view.setScene(self.scene)
+
     def init_standard_names(self):
         """
         Create two lists containing standard organ and standard volume names as set by the Add-On options.
