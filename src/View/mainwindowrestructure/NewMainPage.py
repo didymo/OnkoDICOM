@@ -2,10 +2,12 @@ import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
-from src.Model.GetPatientInfo import get_basic_info
+from src.Model.GetPatientInfo import get_basic_info, DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.ROI import ordered_list_rois
 from src.View.mainwindowrestructure.NewDicomView import NewDicomView
 from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
+from src.View.mainwindowrestructure.NewStructureTab import NewStructureTab
 
 
 class UINewMainWindow:
@@ -18,7 +20,8 @@ class UINewMainWindow:
         ##############################
         patient_dict_container = PatientDictContainer()
         dataset = patient_dict_container.dataset
-        self.rtss_modified = False
+        filepaths = patient_dict_container.filepaths
+        patient_dict_container.set("rtss_modified", False)
 
         if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
             window = int(dataset[0].WindowWidth)
@@ -39,6 +42,18 @@ class UINewMainWindow:
 
         basic_info = get_basic_info(dataset[0])
         patient_dict_container.set("basic_info", basic_info)
+
+        # Set RTSS attributes
+        if patient_dict_container.has("rtss"):
+            patient_dict_container.set("file_rtss", filepaths['rtss'])
+            patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+            dicom_tree_rtss = DicomTree(filepaths['rtss'])
+            patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+
+            patient_dict_container.set("list_roi_numbers", ordered_list_rois(patient_dict_container.get("rois")))
+            patient_dict_container.set("selected_rois", [])
+
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -61,6 +76,16 @@ class UINewMainWindow:
         self.left_panel.setMaximumWidth(500)
         self.left_panel_layout = QtWidgets.QHBoxLayout(self.left_panel)
 
+        self.left_panel_tab = QtWidgets.QTabWidget()
+
+        # Add structures tab to left panel
+        if patient_dict_container.has("rtss"):
+            self.structures_tab = NewStructureTab()
+            self.structures_tab.request_update_structures.connect(self.update_views)
+            self.left_panel_tab.addTab(self.structures_tab, "Structures")
+
+        self.left_panel_layout.addWidget(self.left_panel_tab)
+
         # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
 
@@ -77,3 +102,7 @@ class UINewMainWindow:
 
         self.central_widget.setLayout(self.central_widget_layout)
         main_window_instance.setCentralWidget(self.central_widget)
+
+    def update_views(self):
+        self.dicom_view.update_view()
+        # TODO this will also need to update the DVH tab's plot

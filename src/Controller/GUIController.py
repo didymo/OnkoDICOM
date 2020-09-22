@@ -101,7 +101,8 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
         patient_dict_container.clear()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        if self.rtss_modified and hasattr(self, "structures_tab"):
+        patient_dict_container = PatientDictContainer()
+        if patient_dict_container.get("rtss_modified") and hasattr(self, "structures_tab"):
             confirmation_dialog = QMessageBox.information(self, 'Close without saving?',
                                                           'The RTSTRUCT file has been modified. Would you like to save '
                                                           'before exiting the program?',
