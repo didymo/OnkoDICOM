@@ -187,7 +187,6 @@ class UIDrawROIWindow():
 
         self.show_ROI_names()
 
-
     def retranslate_ui(self, draw_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
         draw_roi_window_instance.setWindowTitle(_translate("DrawRoiWindowInstance", "OnkoDICOM - Draw ROI(s)"))
@@ -258,7 +257,7 @@ class SelectROIPopUp(QDialog):
 
         self.button_area = QWidget()
         self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.clicked.connect(self.close)
+        self.cancel_button.clicked.connect(self.on_cancel_clicked)
         self.begin_draw_button = QPushButton("Begin Draw Process")
         self.begin_draw_button.clicked.connect(self.on_begin_clicked)
 
@@ -304,3 +303,7 @@ class SelectROIPopUp(QDialog):
             # Call function on UIDrawWindow so it has selected ROI
             UIDrawROIWindow.set_selected_roi_name(self.parent_window, self.roi_name)
             self.close()
+
+    def on_cancel_clicked(self):
+        self.close()
+
