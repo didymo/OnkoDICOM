@@ -2,7 +2,7 @@ import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
-from src.Model.GetPatientInfo import get_basic_info, DicomTree
+from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainwindowrestructure.NewDicomView import NewDicomView
@@ -54,6 +54,9 @@ class UINewMainWindow:
             patient_dict_container.set("list_roi_numbers", ordered_list_rois(patient_dict_container.get("rois")))
             patient_dict_container.set("selected_rois", [])
 
+            patient_dict_container.set("dict_uid", dict_instanceUID(dataset))
+            patient_dict_container.set("dict_polygons", {})
+
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -90,7 +93,8 @@ class UINewMainWindow:
         self.right_panel = QtWidgets.QTabWidget()
 
         # Add DICOM view to right panel as a tab
-        self.dicom_view = NewDicomView()
+        roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
+        self.dicom_view = NewDicomView(roi_color=roi_color_dict)
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         splitter.addWidget(self.left_panel)
