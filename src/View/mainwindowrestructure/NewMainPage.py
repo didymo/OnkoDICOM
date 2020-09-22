@@ -50,13 +50,30 @@ class UINewMainWindow:
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
 
-        self.patient_bar = NewPatientBar()
         self.button_open_patient = QtWidgets.QPushButton("Open new patient")
-        self.dicom_view = NewDicomView()
+        self.patient_bar = NewPatientBar()
 
-        self.central_widget_layout.addWidget(self.patient_bar)
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+
+        # Left panel contains stuctures tab, isodoses tab, and structure information
+        self.left_panel = QtWidgets.QWidget()
+        self.left_panel.setMinimumWidth(230)
+        self.left_panel.setMaximumWidth(500)
+        self.left_panel_layout = QtWidgets.QHBoxLayout(self.left_panel)
+
+        # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
+        self.right_panel = QtWidgets.QTabWidget()
+
+        # Add DICOM view to right panel as a tab
+        self.dicom_view = NewDicomView()
+        self.right_panel.addTab(self.dicom_view, "DICOM View")
+
+        splitter.addWidget(self.left_panel)
+        splitter.addWidget(self.right_panel)
+
         self.central_widget_layout.addWidget(self.button_open_patient)
-        self.central_widget_layout.addWidget(self.dicom_view)
+        self.central_widget_layout.addWidget(self.patient_bar)
+        self.central_widget_layout.addWidget(splitter)
 
         self.central_widget.setLayout(self.central_widget_layout)
         main_window_instance.setCentralWidget(self.central_widget)
