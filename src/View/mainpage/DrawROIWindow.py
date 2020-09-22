@@ -241,6 +241,8 @@ class SelectROIPopUp(QDialog):
         self.parent_window = parent_window
         QDialog.__init__(self)
 
+        stylesheet = open("src/res/stylesheet.qss").read()
+        self.setStyleSheet(stylesheet)
         self.standard_names = standard_names
 
         self.setWindowTitle("Select A Region of Interest To Draw")
@@ -259,6 +261,7 @@ class SelectROIPopUp(QDialog):
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.on_cancel_clicked)
         self.begin_draw_button = QPushButton("Begin Draw Process")
+
         self.begin_draw_button.clicked.connect(self.on_begin_clicked)
 
         self.button_layout = QHBoxLayout()
