@@ -79,7 +79,7 @@ class UIDrawROIWindow():
         window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
         self.draw_roi_window_instance.setObjectName("DrawRoiWindowInstance")
         self.draw_roi_window_instance.setWindowIcon(window_icon)
-
+        self.setFixedSize(1000, 700)
 
         # Creating a vertical box to hold the details
         self.draw_roi_window_instance_vertical_box = QVBoxLayout()
