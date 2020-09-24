@@ -57,6 +57,14 @@ class UIDrawROIWindow():
         # Set event filter on the DICOM View area
         self.view.viewport().installEventFilter(self.window)
 
+        # Create a line edit for containing the image slice number
+        self.image_slice_number_line_edit = QLineEdit()
+        self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
+        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(),
+                                                 self.image_slice_number_line_edit.sizeHint().height())
+        self.image_slice_number_line_edit.setEnabled(False)
+
     def init_layout(self):
         """
         Initialize the layout for the DICOM View tab.
@@ -109,12 +117,7 @@ class UIDrawROIWindow():
             self.image_slice_number_label.sizeHint().width(), self.image_slice_number_label.sizeHint().height())
         self.draw_roi_window_instance_image_slice_action_box.addStretch(1)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_label)
-        # Create a line edit for containing the image slice number
-        self.image_slice_number_line_edit = QLineEdit()
-        self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
-        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(), self.image_slice_number_line_edit.sizeHint().height())
-        self.image_slice_number_line_edit.setEnabled(False)
+
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_line_edit)
 
         # Create a button to move backward to the previous image
@@ -418,6 +421,7 @@ class UIDrawROIWindow():
             zoom = float("{0:.2f}".format(self.window.zoom))
 
         self.text_imageID.setText(_translate("MainWindow", "Image: " + str(current_slice) + " / " + str(total_slices)))
+        self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
         self.text_imagePos.setText(_translate("MainWindow", "Position: " + str(slice_pos) + " mm"))
         self.text_WL.setText(_translate("MainWindow", "W/L: " + str(window) + "/" + str(level)))
         self.text_imageSize.setText(_translate("MainWindow", "Image Size: " + str(row_img) + "x" + str(col_img) + "px"))
