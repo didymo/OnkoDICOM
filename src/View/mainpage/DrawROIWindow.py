@@ -57,6 +57,14 @@ class UIDrawROIWindow():
         # Set event filter on the DICOM View area
         self.view.viewport().installEventFilter(self.window)
 
+        # Create a line edit for containing the image slice number
+        self.image_slice_number_line_edit = QLineEdit()
+        self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
+        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(),
+                                                 self.image_slice_number_line_edit.sizeHint().height())
+        self.image_slice_number_line_edit.setEnabled(False)
+
     def init_layout(self):
         """
         Initialize the layout for the DICOM View tab.
@@ -109,12 +117,7 @@ class UIDrawROIWindow():
             self.image_slice_number_label.sizeHint().width(), self.image_slice_number_label.sizeHint().height())
         self.draw_roi_window_instance_image_slice_action_box.addStretch(1)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_label)
-        # Create a line edit for containing the image slice number
-        self.image_slice_number_line_edit = QLineEdit()
-        self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
-        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(), self.image_slice_number_line_edit.sizeHint().height())
-        self.image_slice_number_line_edit.setEnabled(False)
+
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_line_edit)
 
         # Create a button to move backward to the previous image
@@ -423,6 +426,8 @@ class UIDrawROIWindow():
         self.text_imageSize.setText(_translate("MainWindow", "Image Size: " + str(row_img) + "x" + str(col_img) + "px"))
         self.text_zoom.setText(_translate("MainWindow", "Zoom: " + str(zoom) + ":" + str(zoom)))
         self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
+        self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
+
 
     def init_standard_names(self):
         """
@@ -464,6 +469,7 @@ class SelectROIPopUp(QDialog):
         QDialog.__init__(self)
 
         stylesheet = open("src/res/stylesheet.qss").read()
+        self.setStyleSheet(stylesheet)
         self.standard_names = standard_names
 
         self.setWindowTitle("Select A Region of Interest To Draw")
