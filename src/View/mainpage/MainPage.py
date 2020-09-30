@@ -159,7 +159,7 @@ class UIMainWindow(object):
         dictSlice_CT0 = dicomTreeSlice_CT0.dict
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
-        self.callClass = MainPageCallClass(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        self.mainPageCallClass = MainPageCallClass(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions(self)
 
         ##########################################
@@ -246,9 +246,9 @@ class UIMainWindow(object):
         # check for csv data
         reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(self.path + reg):
-            self.callClass.display_cd_form(self.tab2, self.path)
+            self.mainPageCallClass.display_cd_form(self.tab2, self.path)
         else:
-            self.callClass.display_cd_dat(self.tab2, self.path)
+            self.mainPageCallClass.display_cd_dat(self.tab2, self.path)
         self.tab2.setFocusPolicy(QtCore.Qt.NoFocus)
 
         splitter.addWidget(self.left_widget)

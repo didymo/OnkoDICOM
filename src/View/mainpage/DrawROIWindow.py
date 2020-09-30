@@ -488,12 +488,13 @@ class UIDrawROIWindow():
         """
     	Function triggered when the Transect button is pressed from the menu.
     	"""
+
         id = self.slider.value()
         dt = self.window.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        self.window.callClass.runTransect(
+        self.window.mainPageCallClass.runTransect(
             self.window,
             self.view,
             self.window.pixmaps[id],

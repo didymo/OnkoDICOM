@@ -872,6 +872,8 @@ class Transect(QtWidgets.QGraphicsScene):
 
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
+        # Clear the current transect first
+        plt1.close()
         # If is the first time we can draw as we want a line per button press
         if self.drawing == True:
             self.pos1 = event.scenePos()
@@ -942,6 +944,9 @@ class Transect(QtWidgets.QGraphicsScene):
         plt1.close()
         #returns the main page back to a non-drawing environment
         self.mainWindow.dicom_view.update_view()
+        if(self.mainWindow.drawROI.draw_window):
+            self.mainWindow.drawROI.draw_window.update_view()
+
         event.canvas.figure.axes[0].has_been_closed = True
 
     # This function plots the Transect graph into a pop up window
