@@ -16,6 +16,10 @@ class UIDrawROIWindow():
         self.rois = rois
         self.dataset_rtss = dataset_rtss
 
+        self.current_slice = 0
+        self.forward_pressed = None
+        self.backward_press = None
+        self.slider_changed = None
         self.standard_organ_names = []
         self.standard_volume_names = []
         self.standard_names = []
@@ -35,7 +39,8 @@ class UIDrawROIWindow():
         self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", "AORTA"))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
-        self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", "1"))
+        #self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", "1"))
+        self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(_translate("ImageSliceNumberMoveBackwardButton", "Backward"))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
@@ -65,6 +70,7 @@ class UIDrawROIWindow():
                                                  self.image_slice_number_line_edit.sizeHint().height())
         self.image_slice_number_line_edit.setEnabled(False)
 
+
     def init_layout(self):
         """
         Initialize the layout for the DICOM View tab.
@@ -79,7 +85,7 @@ class UIDrawROIWindow():
         window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
         self.draw_roi_window_instance.setObjectName("DrawRoiWindowInstance")
         self.draw_roi_window_instance.setWindowIcon(window_icon)
-        self.setFixedSize(1000, 700)
+
 
         # Creating a vertical box to hold the details
         self.draw_roi_window_instance_vertical_box = QVBoxLayout()
@@ -128,6 +134,8 @@ class UIDrawROIWindow():
         self.image_slice_number_move_backward_button.resize(
             self.image_slice_number_move_backward_button.sizeHint().width(),
             self.image_slice_number_move_backward_button.sizeHint().height())
+
+        self.image_slice_number_move_backward_button.clicked.connect(self.backward_previous_image)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_backward_button)
 
         # Create a button to move forward to the next image
@@ -138,7 +146,19 @@ class UIDrawROIWindow():
         self.image_slice_number_move_forward_button.resize(
             self.image_slice_number_move_forward_button.sizeHint().width(),
             self.image_slice_number_move_forward_button.sizeHint().height())
+        self.image_slice_number_move_forward_button.clicked.connect(self.forward_next_image)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_forward_button)
+
+        # Create a transect button
+        self.image_slice_number_transect_button = QPushButton()
+        self.image_slice_number_transect_button.setObjectName("ImageSliceNumberTransectButton")
+        self.image_slice_number_transect_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+        self.image_slice_number_transect_button.resize(
+            self.image_slice_number_transect_button.sizeHint().width(),
+            self.image_slice_number_transect_button.sizeHint().height())
+        self.image_slice_number_transect_button.clicked.connect(self.transect_handler)
+        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_transect_button)
 
         # Create a save button to save all the changes
         self.draw_roi_window_instance_save_button = QPushButton()
@@ -250,7 +270,6 @@ class UIDrawROIWindow():
         self.retranslate_ui(self.draw_roi_window_instance)
         self.draw_roi_window_instance.setStyleSheet(stylesheet)
         self.draw_roi_window_instance.setCentralWidget(self.draw_roi_window_instance_central_widget)
-        #self.draw_roi_window_instance.setFixedSize(self.image_slice_number_image_view.size())
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
 
@@ -330,6 +349,9 @@ class UIDrawROIWindow():
         Function triggered when the value of the slider has changed.
         Update the view.
         """
+        self.forward_pressed = False
+        self.backward_press = False
+        self.slider_changed = True
         self.update_view()
 
     def update_view(self, zoomChange=False, eventChangedWindow=False):
@@ -374,7 +396,15 @@ class UIDrawROIWindow():
          events in the DICOM View area.
          False by default.
         """
+
         slider_id = self.slider.value()
+        if (self.forward_pressed):
+            slider_id = self.current_slice
+        elif (self.backward_press):
+            slider_id = self.current_slice
+        elif (self.slider_changed):
+            slider_id = self.slider.value()
+
         if eventChangedWindow:
             image = self.window.pixmapChangedWindow
         else:
@@ -392,7 +422,15 @@ class UIDrawROIWindow():
         _translate = QtCore.QCoreApplication.translate
 
         # Retrieve dictionary from the dataset of the slice
+
         id = self.slider.value()
+        if(self.forward_pressed):
+            id = self.current_slice
+        elif(self.backward_press):
+            id = self.current_slice
+        elif(self.slider_changed):
+            id = self.slider.value()
+
         filename = self.window.filepaths[id]
         dicomtree_slice = DicomTree(filename)
         dict_slice = dicomtree_slice.dict
@@ -428,6 +466,41 @@ class UIDrawROIWindow():
         self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
         self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
 
+    def backward_previous_image(self):
+        self.backward_press = True
+        self.forward_pressed = False
+        self.slider_changed = False
+        image_slice_number = self.image_slice_number_line_edit.text()
+        self.current_slice = int(image_slice_number) - 1
+
+        self.update_view()
+
+    def forward_next_image(self):
+        self.forward_pressed = True
+        self.backward_press = False
+        self.slider_changed = False
+        image_slice_number = self.image_slice_number_line_edit.text()
+        self.current_slice = int(image_slice_number) + 1
+
+        self.update_view()
+
+    def transect_handler(self):
+        """
+    	Function triggered when the Transect button is pressed from the menu.
+    	"""
+        id = self.slider.value()
+        dt = self.window.dataset[id]
+        rowS = dt.PixelSpacing[0]
+        colS = dt.PixelSpacing[1]
+        dt.convert_pixel_data()
+        self.window.callClass.runTransect(
+            self.window,
+            self.view,
+            self.window.pixmaps[id],
+            dt._pixel_array.transpose(),
+            rowS,
+            colS,
+        )
 
     def init_standard_names(self):
         """
