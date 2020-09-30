@@ -9,6 +9,7 @@ import os
 from src.Model import ROI
 from src.View.mainpage.DicomView import *
 
+
 class UIDrawROIWindow():
 
     def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss):
@@ -18,7 +19,7 @@ class UIDrawROIWindow():
 
         self.current_slice = 0
         self.forward_pressed = None
-        self.backward_press = None
+        self.backward_pressed = None
         self.slider_changed = None
         self.standard_organ_names = []
         self.standard_volume_names = []
@@ -32,22 +33,26 @@ class UIDrawROIWindow():
         self.init_layout()
         self.show_ROI_names()
 
-
     def retranslate_ui(self, draw_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
         draw_roi_window_instance.setWindowTitle(_translate("DrawRoiWindowInstance", "OnkoDICOM - Draw ROI(s)"))
         self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", "AORTA"))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
-        #self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", "1"))
+        # self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", "1"))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
-        self.image_slice_number_move_backward_button.setText(_translate("ImageSliceNumberMoveBackwardButton", "Backward"))
+        self.image_slice_number_move_backward_button.setText(
+            _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
-        self.draw_roi_window_instance_action_undo_button.setText(_translate("DrawRoiWindowInstanceActionUndoButton", "Undo"))
-        self.draw_roi_window_instance_action_redo_button.setText(_translate("DrawRoiWindowInstanceActionRedoButton", "Redo"))
-        self.draw_roi_window_instance_action_clear_button.setText(_translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
-        self.draw_roi_window_instance_action_tool_button.setText(_translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
+        self.draw_roi_window_instance_action_undo_button.setText(
+            _translate("DrawRoiWindowInstanceActionUndoButton", "Undo"))
+        self.draw_roi_window_instance_action_redo_button.setText(
+            _translate("DrawRoiWindowInstanceActionRedoButton", "Redo"))
+        self.draw_roi_window_instance_action_clear_button.setText(
+            _translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
+        self.draw_roi_window_instance_action_tool_button.setText(
+            _translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
 
     def init_view(self):
         """
@@ -70,7 +75,6 @@ class UIDrawROIWindow():
                                                  self.image_slice_number_line_edit.sizeHint().height())
         self.image_slice_number_line_edit.setEnabled(False)
 
-
     def init_layout(self):
         """
         Initialize the layout for the DICOM View tab.
@@ -78,14 +82,12 @@ class UIDrawROIWindow():
         Add the whole container 'tab2_view' as a tab in the main page.
         """
 
-
         # Initialise a DrawROIWindow
         stylesheet = open("src/res/stylesheet.qss").read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
         self.draw_roi_window_instance.setObjectName("DrawRoiWindowInstance")
         self.draw_roi_window_instance.setWindowIcon(window_icon)
-
 
         # Creating a vertical box to hold the details
         self.draw_roi_window_instance_vertical_box = QVBoxLayout()
@@ -109,16 +111,15 @@ class UIDrawROIWindow():
         self.roi_name_line_edit.setObjectName("ROINameLineEdit")
         self.roi_name_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.roi_name_line_edit.resize(self.roi_name_line_edit.sizeHint().width(),
-                                                 self.roi_name_line_edit.sizeHint().height())
+                                       self.roi_name_line_edit.sizeHint().height())
         self.roi_name_line_edit.setEnabled(False)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.roi_name_line_edit)
-
 
         # Create a label for denoting the Image Slice Number
         self.image_slice_number_label = QLabel()
         self.image_slice_number_label.setObjectName("ImageSliceNumberLabel")
         self.image_slice_number_label.setAlignment(Qt.AlignRight)
-        self.image_slice_number_label.setSizePolicy(QSizePolicy.Minimum,QSizePolicy.Minimum)
+        self.image_slice_number_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.image_slice_number_label.resize(
             self.image_slice_number_label.sizeHint().width(), self.image_slice_number_label.sizeHint().height())
         self.draw_roi_window_instance_image_slice_action_box.addStretch(1)
@@ -135,7 +136,7 @@ class UIDrawROIWindow():
             self.image_slice_number_move_backward_button.sizeHint().width(),
             self.image_slice_number_move_backward_button.sizeHint().height())
 
-        self.image_slice_number_move_backward_button.clicked.connect(self.backward_previous_image)
+        self.image_slice_number_move_backward_button.clicked.connect(self.on_backward_clicked)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_backward_button)
 
         # Create a button to move forward to the next image
@@ -146,7 +147,7 @@ class UIDrawROIWindow():
         self.image_slice_number_move_forward_button.resize(
             self.image_slice_number_move_forward_button.sizeHint().width(),
             self.image_slice_number_move_forward_button.sizeHint().height())
-        self.image_slice_number_move_forward_button.clicked.connect(self.forward_next_image)
+        self.image_slice_number_move_forward_button.clicked.connect(self.on_forward_clicked)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_forward_button)
 
         # Create a transect button
@@ -174,19 +175,21 @@ class UIDrawROIWindow():
 
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_image_slice_action_widget = QWidget()
-        self.draw_roi_window_instance_image_slice_action_widget.setObjectName("DrawRoiWindowInstanceImageSliceActionWidget")
-        self.draw_roi_window_instance_image_slice_action_widget.setLayout(self.draw_roi_window_instance_image_slice_action_box)
+        self.draw_roi_window_instance_image_slice_action_widget.setObjectName(
+            "DrawRoiWindowInstanceImageSliceActionWidget")
+        self.draw_roi_window_instance_image_slice_action_widget.setLayout(
+            self.draw_roi_window_instance_image_slice_action_box)
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_image_slice_action_widget)
         self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
 
         # Create a new Label to hold the pixmap
-        #self.image_slice_number_image_view = QLabel()
-        #self.image_slice_number_image_view.setPixmap(QPixmap("src/res/images/Capture.png"))
-        #self.image_slice_number_image_view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        #self.image_slice_number_image_view.resize(
+        # self.image_slice_number_image_view = QLabel()
+        # self.image_slice_number_image_view.setPixmap(QPixmap("src/res/images/Capture.png"))
+        # self.image_slice_number_image_view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        # self.image_slice_number_image_view.resize(
         #   self.image_slice_number_image_view.sizeHint().width(), self.image_slice_number_image_view.sizeHint().height())
-        #self.draw_roi_window_instance_vertical_box.addWidget(self.image_slice_number_image_view)
-        #self.draw_roi_window_instance_vertical_box.setStretch(1, 4)
+        # self.draw_roi_window_instance_vertical_box.addWidget(self.image_slice_number_image_view)
+        # self.draw_roi_window_instance_vertical_box.setStretch(1, 4)
 
         # Creating a horizontal box to hold the ROI view and slider
         self.draw_roi_window_instance_view_box = QHBoxLayout()
@@ -199,7 +202,6 @@ class UIDrawROIWindow():
         # Creating a horizontal box to hold the ROI draw action buttons: undo, redo, clear, tool
         self.draw_roi_window_instance_action_box = QHBoxLayout()
         self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
-
 
         # Create a button to undo the draw
         self.draw_roi_window_instance_action_undo_button = QPushButton()
@@ -260,8 +262,6 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_action_widget)
         self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
 
-
-
         # Create a new central widget to hold the vertical box layout
         self.draw_roi_window_instance_central_widget = QWidget()
         self.draw_roi_window_instance_central_widget.setObjectName("DrawRoiWindowInstanceCentralWidget")
@@ -271,8 +271,6 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance.setStyleSheet(stylesheet)
         self.draw_roi_window_instance.setCentralWidget(self.draw_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
-
-
 
     def init_slider(self):
         """
@@ -350,7 +348,7 @@ class UIDrawROIWindow():
         Update the view.
         """
         self.forward_pressed = False
-        self.backward_press = False
+        self.backward_pressed = False
         self.slider_changed = True
         self.update_view()
 
@@ -376,14 +374,6 @@ class UIDrawROIWindow():
         if zoomChange:
             self.view.setTransform(QtGui.QTransform().scale(self.main_window.zoom, self.main_window.zoom))
 
-        # If the list of ROIs selected is not empty
-        if self.window.selected_rois:
-            self.ROI_display()
-
-        # If the list of isodoses selected is not empty
-        if self.window.selected_doses:
-            self.isodose_display()
-
         self.update_metadata()
         self.view.setScene(self.scene)
 
@@ -400,9 +390,9 @@ class UIDrawROIWindow():
         slider_id = self.slider.value()
         if (self.forward_pressed):
             slider_id = self.current_slice
-        elif (self.backward_press):
+        if (self.backward_pressed):
             slider_id = self.current_slice
-        elif (self.slider_changed):
+        if (self.slider_changed):
             slider_id = self.slider.value()
 
         if eventChangedWindow:
@@ -421,14 +411,13 @@ class UIDrawROIWindow():
         """
         _translate = QtCore.QCoreApplication.translate
 
-        # Retrieve dictionary from the dataset of the slice
-
+        # Getting most updated selected slice
         id = self.slider.value()
-        if(self.forward_pressed):
+        if (self.forward_pressed):
             id = self.current_slice
-        elif(self.backward_press):
+        elif (self.backward_pressed):
             id = self.current_slice
-        elif(self.slider_changed):
+        elif (self.slider_changed):
             id = self.slider.value()
 
         filename = self.window.filepaths[id]
@@ -466,23 +455,46 @@ class UIDrawROIWindow():
         self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
         self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
 
-    def backward_previous_image(self):
-        self.backward_press = True
+    def on_backward_clicked(self):
+        total_slices = len(self.window.pixmaps)
+
+        self.backward_pressed = True
         self.forward_pressed = False
         self.slider_changed = False
+
         image_slice_number = self.image_slice_number_line_edit.text()
-        self.current_slice = int(image_slice_number) - 1
 
-        self.update_view()
+        # Backward will only execute if current image slice is above 1.
+        if int(image_slice_number) > 1:
+            self.current_slice = int(image_slice_number)
 
-    def forward_next_image(self):
+            # decrements slice by 1
+            self.current_slice = self.current_slice - 2
+
+            # Update slider to move to correct position
+            self.slider.setValue(self.current_slice)
+
+            self.update_view()
+
+    def on_forward_clicked(self):
+        total_slices = len(self.window.pixmaps)
+
+        self.backward_pressed = False
         self.forward_pressed = True
-        self.backward_press = False
         self.slider_changed = False
-        image_slice_number = self.image_slice_number_line_edit.text()
-        self.current_slice = int(image_slice_number) + 1
 
-        self.update_view()
+        image_slice_number = self.image_slice_number_line_edit.text()
+
+        # Forward will only execute if current image slice is below the total number of slices.
+        if int(image_slice_number) < total_slices:
+
+            # increments slice by 1
+            self.current_slice = int(image_slice_number)
+
+            # Update slider to move to correct position
+            self.slider.setValue(self.current_slice)
+
+            self.update_view()
 
     def transect_handler(self):
         """
@@ -490,6 +502,15 @@ class UIDrawROIWindow():
     	"""
 
         id = self.slider.value()
+
+        # Getting most updated selected slice
+        if (self.forward_pressed):
+            id = self.current_slice
+        elif (self.backward_pressed):
+            id = self.current_slice
+        elif (self.slider_changed):
+            id = self.slider.value()
+
         dt = self.window.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -533,8 +554,8 @@ class UIDrawROIWindow():
     def set_selected_roi_name(self, roi_name):
         self.roi_name_line_edit.setText(roi_name)
 
-class SelectROIPopUp(QDialog):
 
+class SelectROIPopUp(QDialog):
     parent_window = None
 
     def __init__(self, standard_names, parent_window):
