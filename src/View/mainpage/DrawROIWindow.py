@@ -9,7 +9,6 @@ import os
 from src.Model import ROI
 from src.View.mainpage.DicomView import *
 
-
 class UIDrawROIWindow():
 
     def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss):
@@ -232,6 +231,7 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_clear_button.resize(
             self.draw_roi_window_instance_action_clear_button.sizeHint().width(),
             self.draw_roi_window_instance_action_clear_button.sizeHint().height())
+        self.draw_roi_window_instance_action_clear_button.clicked.connect(self.on_clear_clicked)
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_clear_button)
 
         # Create a button to tool the draw
@@ -456,8 +456,6 @@ class UIDrawROIWindow():
         self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
 
     def on_backward_clicked(self):
-        total_slices = len(self.window.pixmaps)
-
         self.backward_pressed = True
         self.forward_pressed = False
         self.slider_changed = False
@@ -495,6 +493,9 @@ class UIDrawROIWindow():
             self.slider.setValue(self.current_slice)
 
             self.update_view()
+
+    def on_clear_clicked(self):
+        self.update_view()
 
     def transect_handler(self):
         """
