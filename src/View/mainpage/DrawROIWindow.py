@@ -44,10 +44,6 @@ class UIDrawROIWindow():
         self.image_slice_number_move_backward_button.setText(
             _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
-        self.draw_roi_window_instance_action_undo_button.setText(
-            _translate("DrawRoiWindowInstanceActionUndoButton", "Undo"))
-        self.draw_roi_window_instance_action_redo_button.setText(
-            _translate("DrawRoiWindowInstanceActionRedoButton", "Redo"))
         self.draw_roi_window_instance_action_clear_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
         self.draw_roi_window_instance_action_tool_button.setText(
@@ -202,26 +198,8 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_box = QHBoxLayout()
         self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
 
-        # Create a button to undo the draw
-        self.draw_roi_window_instance_action_undo_button = QPushButton()
-        self.draw_roi_window_instance_action_undo_button.setObjectName("DrawRoiWindowInstanceActionUndoButton")
-        self.draw_roi_window_instance_action_undo_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        self.draw_roi_window_instance_action_undo_button.resize(
-            self.draw_roi_window_instance_action_undo_button.sizeHint().width(),
-            self.draw_roi_window_instance_action_undo_button.sizeHint().height())
+        # Place buttons to the right of the screen
         self.draw_roi_window_instance_action_box.addStretch(1)
-        self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_undo_button)
-
-        # Create a button to redo the draw
-        self.draw_roi_window_instance_action_redo_button = QPushButton()
-        self.draw_roi_window_instance_action_redo_button.setObjectName("DrawRoiWindowInstanceActionRedoButton")
-        self.draw_roi_window_instance_action_redo_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        self.draw_roi_window_instance_action_redo_button.resize(
-            self.draw_roi_window_instance_action_redo_button.sizeHint().width(),
-            self.draw_roi_window_instance_action_redo_button.sizeHint().height())
-        self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_redo_button)
 
         # Create a button to clear the draw
         self.draw_roi_window_instance_action_clear_button = QPushButton()
