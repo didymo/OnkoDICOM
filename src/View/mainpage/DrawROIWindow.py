@@ -32,18 +32,23 @@ class UIDrawROIWindow():
         self.init_layout()
         self.show_ROI_names()
 
+        QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
+
     def retranslate_ui(self, draw_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
         draw_roi_window_instance.setWindowTitle(_translate("DrawRoiWindowInstance", "OnkoDICOM - Draw ROI(s)"))
         self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
-        self.roi_name_line_edit.setText(_translate("ROINameLineEdit", "AORTA"))
+        self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
-        # self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", "1"))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(
             _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
+        self.internal_hole_max_label.setText(_translate("InternalHoleLabel", "Maximum internal hole size (pixels): "))
+        self.internal_hole_max_line_edit.setText(_translate("InternalHoleInput", ""))
+        self.isthmus_width_max_label.setText(_translate("IsthmusWidthLabel", "Maximum isthmus width size (pixels): "))
+        self.isthmus_width_max_line_edit.setText(_translate("IsthmusWidthInput", ""))
         self.draw_roi_window_instance_action_clear_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
         self.draw_roi_window_instance_action_tool_button.setText(
@@ -194,9 +199,46 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_view_box.addWidget(self.view)
         self.draw_roi_window_instance_view_box.addWidget(self.slider)
 
-        # Creating a horizontal box to hold the ROI draw action buttons: undo, redo, clear, tool
+        # Creating a horizontal box to hold the ROI draw action buttons: clear, tool
         self.draw_roi_window_instance_action_box = QHBoxLayout()
         self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
+
+        # Create a label for denoting the internal hole size
+        self.internal_hole_max_label = QLabel()
+        self.internal_hole_max_label.setObjectName("InternalHoleLabel")
+        self.internal_hole_max_label.setAlignment(Qt.AlignLeft)
+        self.internal_hole_max_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.internal_hole_max_label.resize(
+            self.internal_hole_max_label.sizeHint().width(), self.internal_hole_max_label.sizeHint().height())
+        self.draw_roi_window_instance_action_box.addWidget(self.internal_hole_max_label)
+
+        # Create input for max internal hole size
+        self.internal_hole_max_line_edit = QLineEdit()
+        self.internal_hole_max_line_edit.setObjectName("InternalHoleInput")
+        self.internal_hole_max_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.internal_hole_max_line_edit.resize(self.internal_hole_max_line_edit.sizeHint().width(),
+                                       self.internal_hole_max_line_edit.sizeHint().height())
+        self.internal_hole_max_line_edit.setEnabled(True)
+        self.draw_roi_window_instance_action_box.addWidget(self.internal_hole_max_line_edit)
+
+        # Create a label for denoting the isthmus width size
+        self.isthmus_width_max_label = QLabel()
+        self.isthmus_width_max_label.setObjectName("IsthmusWidthLabel")
+        self.isthmus_width_max_label.setAlignment(Qt.AlignLeft)
+        self.isthmus_width_max_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.isthmus_width_max_label.resize(
+            self.isthmus_width_max_label.sizeHint().width(), self.isthmus_width_max_label.sizeHint().height())
+        self.draw_roi_window_instance_action_box.addWidget(self.isthmus_width_max_label)
+
+        # Create input for max isthmus width size
+        self.isthmus_width_max_line_edit = QLineEdit()
+        self.isthmus_width_max_line_edit.setObjectName("IsthmusWidthInput")
+        self.isthmus_width_max_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.isthmus_width_max_line_edit.resize(self.isthmus_width_max_line_edit.sizeHint().width(),
+                                                self.isthmus_width_max_line_edit.sizeHint().height())
+        self.isthmus_width_max_line_edit.setEnabled(True)
+        self.draw_roi_window_instance_action_box.addWidget(self.isthmus_width_max_line_edit)
+
 
         # Place buttons to the right of the screen
         self.draw_roi_window_instance_action_box.addStretch(1)
@@ -474,6 +516,8 @@ class UIDrawROIWindow():
 
     def on_clear_clicked(self):
         self.update_view()
+        self.isthmus_width_max_line_edit.setText("")
+        self.internal_hole_max_line_edit.setText("")
 
     def transect_handler(self):
         """
