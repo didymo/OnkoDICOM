@@ -964,12 +964,10 @@ class Transect(QtWidgets.QGraphicsScene):
     def plotResult(self):
         plt1.close('all')
 
-        thresholds = [0,30]
+        thresholds = [10, 40]
         #regions = digitize(self.img, thresholds)
 
         newList = [(x * self.pixSpacing) for x in self.distances]
-        print(self.pixSpacing)
-        print(self.distances)
         # adding a dummy manager
         fig1 = plt1.figure(num='Transect Graph')
         new_manager = fig1.canvas.manager
@@ -978,16 +976,25 @@ class Transect(QtWidgets.QGraphicsScene):
         ax1 = fig1.add_subplot(111)
         ax1.has_been_closed = False
         # new list is axis x, self.values is axis y
-        print(newList)
         ax1.step(newList, self.values, where='mid')
 
         for thresh in thresholds:
             ax1.axvline(thresh, color='r')
 
-        rangedList = [(x * self.pixSpacing) for x in self.distances[thresholds[0]:thresholds[1]]]
-        print(rangedList)
+        # Recalculate the distance and CT# to show ROI in histogram
+        self.ROIvalues = []
+        self.ROIdistance = []
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                temp = self.calculateDistance(
+                    i, j, round(self.pos2.x()), round(self.pos2.y()))
+                if(temp >= thresholds[0] and temp <= thresholds[1]):
+                        self.ROIdistance.append(self.calculateDistance(
+                            i, j, round(self.pos2.x()), round(self.pos2.y())))
+                        self.ROIvalues.append(self.data[i][j])
+        self.ROIdistance.reverse()
 
-        for i in ax1.bar(newList, self.values):
+        for i in ax1.bar(self.ROIdistance, self.ROIvalues):
             i.set_color('r')
 
 
