@@ -942,10 +942,12 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function handles the closing event of the transect graph
     def on_close(self, event):
         plt1.close()
+
         #returns the main page back to a non-drawing environment
-        self.mainWindow.dicom_view.update_view()
-        if(self.mainWindow.drawROI.draw_window):
+        if self.mainWindow.drawROI.draw_window:
             self.mainWindow.drawROI.draw_window.update_view()
+        else:
+            self.mainWindow.dicom_view.update_view()
 
         event.canvas.figure.axes[0].has_been_closed = True
 

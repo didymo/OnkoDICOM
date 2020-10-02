@@ -46,13 +46,16 @@ class UIDrawROIWindow():
             _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
         self.internal_hole_max_label.setText(_translate("InternalHoleLabel", "Maximum internal hole size (pixels): "))
-        self.internal_hole_max_line_edit.setText(_translate("InternalHoleInput", ""))
+        self.internal_hole_max_line_edit.setText(_translate("InternalHoleInput", "9"))
         self.isthmus_width_max_label.setText(_translate("IsthmusWidthLabel", "Maximum isthmus width size (pixels): "))
-        self.isthmus_width_max_line_edit.setText(_translate("IsthmusWidthInput", ""))
+        self.isthmus_width_max_line_edit.setText(_translate("IsthmusWidthInput", "5"))
         self.draw_roi_window_instance_action_clear_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
         self.draw_roi_window_instance_action_tool_button.setText(
             _translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
+        self.draw_roi_window_instance_action_go_button.setText(
+            _translate("DrawRoiWindowInstanceActionGoButton", "Go"))
+
 
     def init_view(self):
         """
@@ -263,6 +266,16 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_action_tool_button.sizeHint().width(),
             self.draw_roi_window_instance_action_tool_button.sizeHint().height())
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_tool_button)
+
+        # Create a button for running seed algorithm
+        self.draw_roi_window_instance_action_go_button = QPushButton()
+        self.draw_roi_window_instance_action_go_button.setObjectName("DrawRoiWindowInstanceActionGoButton")
+        self.draw_roi_window_instance_action_go_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+        self.draw_roi_window_instance_action_go_button.resize(
+            self.draw_roi_window_instance_action_go_button.sizeHint().width(),
+            self.draw_roi_window_instance_action_go_button.sizeHint().height())
+        self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_go_button)
 
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_view_widget = QWidget()
