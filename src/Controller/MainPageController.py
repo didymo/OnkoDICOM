@@ -16,6 +16,11 @@ from PyQt5.QtCore import QPoint, QPointF
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
+
+from skimage import data
+from numpy import *
+from skimage.filters import threshold_multiotsu
+
 from src.Model.Anon import *
 from src.View.mainpage.ClinicalDataDisplay import *
 from src.View.mainpage.ClinicalDataForm import *
@@ -886,6 +891,8 @@ class Transect(QtWidgets.QGraphicsScene):
             r = QtCore.QLineF(self._start, self._start)
             self._current_rect_item.setLine(r)
 
+        # Second time generate mouse position
+
     # This function tracks the mouse and draws the line from the original press point
     def mouseMoveEvent(self, event):
         if self._current_rect_item is not None and self.drawing == True:
@@ -901,6 +908,8 @@ class Transect(QtWidgets.QGraphicsScene):
             self.drawing = False
             self.plotResult()
             self._current_rect_item = None
+
+        # compare mouse positions with pos 1 and pos 2
 
     # This function performs the DDA algorithm that locates all the points in the drawn line
     def drawDDA(self, x1, y1, x2, y2):
@@ -954,7 +963,13 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
+
+        thresholds = [0,30]
+        #regions = digitize(self.img, thresholds)
+
         newList = [(x * self.pixSpacing) for x in self.distances]
+        print(self.pixSpacing)
+        print(self.distances)
         # adding a dummy manager
         fig1 = plt1.figure(num='Transect Graph')
         new_manager = fig1.canvas.manager
@@ -962,7 +977,18 @@ class Transect(QtWidgets.QGraphicsScene):
         fig1.set_canvas(new_manager.canvas)
         ax1 = fig1.add_subplot(111)
         ax1.has_been_closed = False
+        # new list is axis x, self.values is axis y
+        print(newList)
         ax1.step(newList, self.values, where='mid')
+        for thresh in thresholds:
+            ax1.axvline(thresh, color='r')
+
+        rangedList = [(x * self.pixSpacing) for x in self.distances[thresholds[0]:thresholds[1]]]
+        print(rangedList)
+
+        for i in ax1.bar(newList, self.values):
+            i.set_color('r')
+
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
         plt1.grid(True)
