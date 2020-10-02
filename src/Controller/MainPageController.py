@@ -980,6 +980,7 @@ class Transect(QtWidgets.QGraphicsScene):
         # new list is axis x, self.values is axis y
         print(newList)
         ax1.step(newList, self.values, where='mid')
+
         for thresh in thresholds:
             ax1.axvline(thresh, color='r')
 
@@ -988,6 +989,7 @@ class Transect(QtWidgets.QGraphicsScene):
 
         for i in ax1.bar(newList, self.values):
             i.set_color('r')
+
 
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
