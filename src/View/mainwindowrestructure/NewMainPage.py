@@ -94,6 +94,10 @@ class UINewMainWindow:
 
         self.left_panel_layout.addWidget(self.left_panel_tab)
 
+        # Hide left panel if no rtss or rtdose
+        if not patient_dict_container.has("rtss") and not patient_dict_container.has("rtdose"):
+            self.left_panel.hide()
+
         # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
 
