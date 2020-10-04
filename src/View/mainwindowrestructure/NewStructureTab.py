@@ -44,8 +44,15 @@ class NewStructureTab(QtWidgets.QWidget):
         # Create StructureWidget objects
         self.update_content()
 
+        # Create ROI manipulation buttons
+        self.button_roi_draw = QtWidgets.QPushButton()
+        self.button_roi_delete = QtWidgets.QPushButton()
+        self.roi_buttons = QtWidgets.QWidget()
+        self.init_roi_buttons()
+
         # Set layout
         self.structure_tab_layout.addWidget(self.scroll_area)
+        self.structure_tab_layout.addWidget(self.roi_buttons)
         self.setLayout(self.structure_tab_layout)
 
     def init_color_roi(self):
@@ -99,6 +106,36 @@ class NewStructureTab(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.standard_volume_names.append(row[1])
+
+    def init_roi_buttons(self):
+        icon_roi_delete = QtGui.QIcon()
+        icon_roi_delete.addPixmap(
+            QtGui.QPixmap(':/images/Icon/ROIdelete.png'),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+
+        icon_roi_draw = QtGui.QIcon()
+        icon_roi_draw.addPixmap(
+            QtGui.QPixmap(':/images/Icon/ROI_Brush.png'),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+
+        #self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.button_roi_delete.setMinimumHeight(50)
+        self.button_roi_delete.setIcon(icon_roi_delete)
+        self.button_roi_delete.setText("Delete ROI")
+
+        #self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.button_roi_draw.setMinimumHeight(50)
+        self.button_roi_draw.setIcon(icon_roi_draw)
+        self.button_roi_draw.setText("Draw ROI")
+
+        layout_roi_buttons = QtWidgets.QHBoxLayout(self.roi_buttons)
+        layout_roi_buttons.setContentsMargins(0, 0, 0, 0)
+        layout_roi_buttons.addWidget(self.button_roi_draw)
+        layout_roi_buttons.addWidget(self.button_roi_delete)
 
     def update_content(self):
         """
