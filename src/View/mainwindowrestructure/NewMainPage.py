@@ -105,12 +105,28 @@ class UINewMainWindow:
         splitter.addWidget(self.left_panel)
         splitter.addWidget(self.right_panel)
 
+        # Create footer
+        self.footer = QtWidgets.QWidget()
+        self.create_footer()
+
+        # Set layout
         self.central_widget_layout.addWidget(self.button_open_patient)
         self.central_widget_layout.addWidget(self.patient_bar)
         self.central_widget_layout.addWidget(splitter)
+        self.central_widget_layout.addWidget(self.footer)
 
         self.central_widget.setLayout(self.central_widget_layout)
         main_window_instance.setCentralWidget(self.central_widget)
+
+    def create_footer(self):
+        self.footer.setFixedHeight(15)
+        layout_footer = QtWidgets.QHBoxLayout(self.footer)
+        layout_footer.setContentsMargins(0, 0, 0, 0)
+
+        label_footer = QtWidgets.QLabel("@OnkoDICOM 2019-20")
+        label_footer.setAlignment(QtCore.Qt.AlignRight)
+
+        layout_footer.addWidget(label_footer)
 
     def update_views(self):
         self.dicom_view.update_view()
