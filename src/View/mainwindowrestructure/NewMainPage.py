@@ -65,6 +65,11 @@ class UINewMainWindow:
         main_window_instance.setWindowTitle("OnkoDICOM")
         main_window_instance.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
+        # Import stylesheet
+        sheet_file = "src/res/stylesheet.qss"
+        with open(sheet_file) as fh:
+            main_window_instance.setStyleSheet(fh.read())
+
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
 
