@@ -3,9 +3,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
+from src.Model.Isodose import get_dose_pixluts
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainwindowrestructure.NewDicomView import NewDicomView
+from src.View.mainwindowrestructure.NewIsodoseTab import NewIsodoseTab
 from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
 from src.View.mainwindowrestructure.NewStructureTab import NewStructureTab
 
@@ -57,6 +59,41 @@ class UINewMainWindow:
             patient_dict_container.set("dict_uid", dict_instanceUID(dataset))
             patient_dict_container.set("dict_polygons", {})
 
+        # Set RTDOSE attributes
+        if patient_dict_container.has("rtdose"):
+            patient_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
+
+            patient_dict_container.set("selected_doses", [])
+            patient_dict_container.set("rxdose", 1) # This will be overwritten if an RTPLAN is present. TODO calculate value w/o RTPLAN
+
+        # Set RTPLAN attributes
+        if patient_dict_container.has("rtplan"):
+            # the TargetPrescriptionDose is type 3 (optional), so it may not be there
+            # However, it is preferable to the sum of the beam doses
+            # DoseReferenceStructureType is type 1 (value is mandatory),
+            # but it can have a value of ORGAN_AT_RISK rather than TARGET
+            # in which case there will *not* be a TargetPrescriptionDose
+            # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose
+            # will be encoded and have a value
+            rxdose = 1
+            if ('DoseReferenceSequence' in dataset['rtplan'] and
+                    dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType and
+                    dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose):
+                rxdose = dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
+            # beam doses are to a point, not necessarily to the same point
+            # and don't necessarily add up to the prescribed dose to the target
+            # which is frequently to a SITE rather than to a POINT
+            elif dataset['rtplan'].FractionGroupSequence:
+                fraction_group = dataset['rtplan'].FractionGroupSequence[0]
+                if ("NumberOfFractionsPlanned" in fraction_group) and \
+                        ("ReferencedBeamSequence" in fraction_group):
+                    beams = fraction_group.ReferencedBeamSequence
+                    number_of_fractions = fraction_group.NumberOfFractionsPlanned
+                    for beam in beams:
+                        if "BeamDose" in beam:
+                            rxdose += beam.BeamDose * number_of_fractions * 100
+            patient_dict_container.set("rxdose", rxdose)
+
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -92,6 +129,11 @@ class UINewMainWindow:
             self.structures_tab.request_update_structures.connect(self.update_views)
             self.left_panel_tab.addTab(self.structures_tab, "Structures")
 
+        if patient_dict_container.has("rtdose"):
+            self.isodoses_tab = NewIsodoseTab()
+            self.isodoses_tab.request_update_isodoses.connect(self.update_views)
+            self.left_panel_tab.addTab(self.isodoses_tab, "Isodoses")
+
         self.left_panel_layout.addWidget(self.left_panel_tab)
 
         # Hide left panel if no rtss or rtdose
@@ -103,7 +145,8 @@ class UINewMainWindow:
 
         # Add DICOM view to right panel as a tab
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
-        self.dicom_view = NewDicomView(roi_color=roi_color_dict)
+        iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
+        self.dicom_view = NewDicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         splitter.addWidget(self.left_panel)
