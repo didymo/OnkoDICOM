@@ -6,6 +6,7 @@ from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
 from src.Model.Isodose import get_dose_pixluts
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
+from src.View.mainwindowrestructure.NewDVHTab import NewDVHTab
 from src.View.mainwindowrestructure.NewDicomView import NewDicomView
 from src.View.mainwindowrestructure.NewIsodoseTab import NewIsodoseTab
 from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
@@ -148,6 +149,11 @@ class UINewMainWindow:
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_view = NewDicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.right_panel.addTab(self.dicom_view, "DICOM View")
+
+        # Add DVH tab to right panel as a tab
+        if patient_dict_container.has("rtss") and patient_dict_container.has("rtdose"):
+            self.dvh_tab = NewDVHTab()
+            self.right_panel.addTab(self.dvh_tab, "DVH")
 
         splitter.addWidget(self.left_panel)
         splitter.addWidget(self.right_panel)
