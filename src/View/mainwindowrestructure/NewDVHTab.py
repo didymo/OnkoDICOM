@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore
-from matplotlib.backends.backend_template import FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pylab as plt
 from pandas import np
 
@@ -11,8 +11,7 @@ class NewDVHTab(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-        self.dvh_calculated = self.patient_dict_container.get("raw_dvh")
-        print(self.dvh_calculated)
+        self.dvh_calculated = self.patient_dict_container.has_attribute("raw_dvh")
 
         self.raw_dvh = None
         self.dvh_x_y = None

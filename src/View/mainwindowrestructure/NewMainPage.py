@@ -23,10 +23,6 @@ class UINewMainWindow:
         ##############################
         patient_dict_container = PatientDictContainer()
 
-        # Dump patient_dict_container additional data
-        for key, value in patient_dict_container.additional_data.items():
-            print(key)
-
         dataset = patient_dict_container.dataset
         filepaths = patient_dict_container.filepaths
         patient_dict_container.set("rtss_modified", False)
@@ -188,4 +184,4 @@ class UINewMainWindow:
 
     def update_views(self):
         self.dicom_view.update_view()
-        # TODO this will also need to update the DVH tab's plot
+        self.dvh_tab.update_plot()
