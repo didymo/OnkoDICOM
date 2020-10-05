@@ -1,9 +1,14 @@
+import platform
+import threading
+
 from PyQt5 import QtWidgets, QtCore
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pylab as plt
 from pandas import np
 
+from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Worker import Worker
 
 
 class NewDVHTab(QtWidgets.QWidget):
@@ -120,9 +125,20 @@ class NewDVHTab(QtWidgets.QWidget):
         return fig
 
     def prompt_calc_dvh(self):
-        # TODO this will confirm if DVH is to be calculated, then bring up a progress while the DVH calculates
-        # once the DVH is calculated, clear the layout and call init_layout_dvh
-        pass
+        choice = QtWidgets.QMessageBox.question(self, "Calculate DVHs?", "Would you like to calculate DVHs? This may"
+                                                                         " take up to several minutes on some systems.",
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+
+        if choice == QtWidgets.QMessageBox.Yes:
+            progress_window = CalculateDVHProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+            progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
+            progress_window.exec_()
+
+    def dvh_calculation_finished(self):
+        # Clear the screen
+        self.clear_layout()
+        self.dvh_calculated = True
+        self.init_layout_dvh()
 
     def update_plot(self):
         # Get new list of selected rois
@@ -133,3 +149,41 @@ class NewDVHTab(QtWidgets.QWidget):
 
         # Re-draw the plot and add to layout
         self.init_layout_dvh()
+
+
+class CalculateDVHProgressWindow(QtWidgets.QDialog):
+
+    signal_dvh_calculated = QtCore.pyqtSignal()
+
+    def __init__(self, *args, **kwargs):
+        super(CalculateDVHProgressWindow, self).__init__(*args, **kwargs)
+        layout = QtWidgets.QVBoxLayout()
+        text = QtWidgets.QLabel("Calculating DVHs... (This may take several minutes)")
+        layout.addWidget(text)
+        self.setWindowTitle("Please wait...")
+        self.setLayout(layout)
+
+        self.threadpool = QtCore.QThreadPool()
+        self.patient_dict_container = PatientDictContainer()
+
+        dataset_rtss = self.patient_dict_container.dataset["rtss"]
+        dataset_rtdose = self.patient_dict_container.dataset["rtdose"]
+        rois = self.patient_dict_container.get("rois")
+
+        interrupt_flag = threading.Event()
+        fork_safe_platforms = ['Linux']
+        if platform.system() in fork_safe_platforms:
+            worker = Worker(ImageLoading.multi_calc_dvh, dataset_rtss, dataset_rtdose, rois)
+        else:
+            worker = Worker(ImageLoading.calc_dvhs, dataset_rtss, dataset_rtdose, rois, interrupt_flag)
+
+        worker.signals.result.connect(self.dvh_calculated)
+
+        self.threadpool.start(worker)
+
+    def dvh_calculated(self, result):
+        dvh_x_y = ImageLoading.converge_to_0_dvh(result)
+        self.patient_dict_container.set("raw_dvh", result)
+        self.patient_dict_container.set("dvh_x_y", dvh_x_y)
+        self.signal_dvh_calculated.emit()
+        self.close()
