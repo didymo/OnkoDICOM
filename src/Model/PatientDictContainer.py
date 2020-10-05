@@ -81,7 +81,7 @@ class PatientDictContainer(metaclass=Singleton):
         """
         return self.additional_data.get(keyword)
 
-    def has(self, dicom_type):
+    def has_modality(self, dicom_type):
         """
         Example usage: dicom_data.has("rtss")
         :param dicom_type: A string containing a DICOM class name as defined in ImageLoading.allowed_classes

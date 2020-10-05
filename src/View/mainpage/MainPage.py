@@ -32,8 +32,8 @@ class UIMainWindow(object):
         self.raw_dvh = patient_dict_container.get("raw_dvh")
         self.dvh_x_y = patient_dict_container.get("dvh_x_y")
 
-        self.has_rtss = True if patient_dict_container.has('rtss') else False
-        self.has_rtdose = True if patient_dict_container.has('rtdose') else False
+        self.has_rtss = True if patient_dict_container.has_modality('rtss') else False
+        self.has_rtdose = True if patient_dict_container.has_modality('rtdose') else False
         
         # Dictionary whose key is the ROI number as specified in the RTSS file
         # and whose value is a dictionary with keys 'uid', 'name' and 'algorithm'
@@ -50,7 +50,7 @@ class UIMainWindow(object):
         self.hashed_path = ''     # Path to hashed patient directory
 
         self.rxdose = 1
-        if patient_dict_container.has("rtplan"):
+        if patient_dict_container.has_modality("rtplan"):
             # the TargetPrescriptionDose is type 3 (optional), so it may not be there
             # However, it is preferable to the sum of the beam doses
             # DoseReferenceStructureType is type 1 (value is mandatory), 

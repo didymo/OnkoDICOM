@@ -22,6 +22,11 @@ class UINewMainWindow:
         #  LOAD PATIENT INFORMATION  #
         ##############################
         patient_dict_container = PatientDictContainer()
+
+        # Dump patient_dict_container additional data
+        for key, value in patient_dict_container.additional_data.items():
+            print(key)
+
         dataset = patient_dict_container.dataset
         filepaths = patient_dict_container.filepaths
         patient_dict_container.set("rtss_modified", False)
@@ -47,7 +52,7 @@ class UINewMainWindow:
         patient_dict_container.set("basic_info", basic_info)
 
         # Set RTSS attributes
-        if patient_dict_container.has("rtss"):
+        if patient_dict_container.has_modality("rtss"):
             patient_dict_container.set("file_rtss", filepaths['rtss'])
             patient_dict_container.set("dataset_rtss", dataset['rtss'])
 
@@ -61,14 +66,14 @@ class UINewMainWindow:
             patient_dict_container.set("dict_polygons", {})
 
         # Set RTDOSE attributes
-        if patient_dict_container.has("rtdose"):
+        if patient_dict_container.has_modality("rtdose"):
             patient_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
 
             patient_dict_container.set("selected_doses", [])
             patient_dict_container.set("rxdose", 1) # This will be overwritten if an RTPLAN is present. TODO calculate value w/o RTPLAN
 
         # Set RTPLAN attributes
-        if patient_dict_container.has("rtplan"):
+        if patient_dict_container.has_modality("rtplan"):
             # the TargetPrescriptionDose is type 3 (optional), so it may not be there
             # However, it is preferable to the sum of the beam doses
             # DoseReferenceStructureType is type 1 (value is mandatory),
@@ -125,12 +130,12 @@ class UINewMainWindow:
         self.left_panel_tab = QtWidgets.QTabWidget()
 
         # Add structures tab to left panel
-        if patient_dict_container.has("rtss"):
+        if patient_dict_container.has_modality("rtss"):
             self.structures_tab = NewStructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
             self.left_panel_tab.addTab(self.structures_tab, "Structures")
 
-        if patient_dict_container.has("rtdose"):
+        if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = NewIsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel_tab.addTab(self.isodoses_tab, "Isodoses")
@@ -138,7 +143,7 @@ class UINewMainWindow:
         self.left_panel_layout.addWidget(self.left_panel_tab)
 
         # Hide left panel if no rtss or rtdose
-        if not patient_dict_container.has("rtss") and not patient_dict_container.has("rtdose"):
+        if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
             self.left_panel.hide()
 
         # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
@@ -151,7 +156,7 @@ class UINewMainWindow:
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         # Add DVH tab to right panel as a tab
-        if patient_dict_container.has("rtss") and patient_dict_container.has("rtdose"):
+        if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = NewDVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
 

@@ -190,7 +190,7 @@ class NewStructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(self.patient_dict_container.get("rois")))
         self.patient_dict_container.set("selected_rois", [])
 
-        if self.patient_dict_container.has("raw_dvh"):
+        if self.patient_dict_container.has_modality("raw_dvh"):
             # Rename structures in DVH list
             if "rename" in changes[1]:
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
