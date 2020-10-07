@@ -1051,7 +1051,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         plt1.connect('button_release_event', self.button_pressed)
         if INTERACTIVE:
             plt1.connect('motion_notify_event', self.mouse_moved)
-        plt1.connect('key_press_event', self.key_pressed)
 
         plt1.imshow(self.img)
         plt1.show()
@@ -1085,6 +1084,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.current_path is not None:
             self.current_path.pop(0).remove()
         self.current_path = plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
+
+
 
 
 
