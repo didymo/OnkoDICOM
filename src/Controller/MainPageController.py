@@ -21,6 +21,10 @@ from skimage import data
 from numpy import *
 from skimage.filters import threshold_multiotsu
 
+# import live wire method
+from itertools import cycle
+from src.Model.LiveWireAlgorithm.livewiresegmentation import LiveWireSegmentation
+
 from src.Model.Anon import *
 from src.View.mainpage.ClinicalDataDisplay import *
 from src.View.mainpage.ClinicalDataForm import *
@@ -878,7 +882,6 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
         # Clear the current transect first
-        plt1.close()
         # If is the first time we can draw as we want a line per button press
         if self.drawing == True:
             self.pos1 = event.scenePos()
@@ -1004,6 +1007,87 @@ class Transect(QtWidgets.QGraphicsScene):
         fig1.canvas.mpl_connect('close_event', self.on_close)
         plt1.show()
 
+#####################################################################################################################
+#                                                                                                                   #
+#  This Class handles the Drawing functionality                                                                    #
+#                                                                                                                   #
+#####################################################################################################################
+import numpy as np
+from itertools import cycle
+class Drawing(QtWidgets.QGraphicsScene):
+
+    # Initialisation function  of the class
+    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
+        super(Drawing, self).__init__()
+
+        #create the canvas to draw the line on and all its necessary components
+        self.img = imagetoPaint
+        self.algorithm = LiveWireSegmentation(self.img, smooth_image=False, threshold_gradient_image=False)
+
+
+        self.values = []
+        self.distances = []
+        self.data = dataset
+        self.pixSpacing = rowS / colS
+        self._start = QPointF()
+        self.drawing = True
+        self._current_rect_item = None
+        self.pos1 = QPoint()
+        self.pos2 = QPoint()
+        self.points = []
+        self.tabWindow = tabWindow
+        self.mainWindow = mainWindow
+
+        plt1.gray()
+        INTERACTIVE = True  # to compute interactive shortest path suggestions
+
+        self.COLORS = cycle('rgbyc')  # use separate colors for consecutive segmentations
+
+        self.start_point = None
+        self.current_color = next(self.COLORS)
+        self.current_path = None
+        self.length_penalty = 10.0
+
+        plt1.connect('button_release_event', self.button_pressed)
+        if INTERACTIVE:
+            plt1.connect('motion_notify_event', self.mouse_moved)
+        plt1.connect('key_press_event', self.key_pressed)
+
+        plt1.imshow(self.img)
+        plt1.show()
+
+    def button_pressed(self, event):
+        self.start_point
+        if self.start_point is None:
+            self.start_point = (int(event.ydata), int(event.xdata))
+
+        else:
+            self.end_point = (int(event.ydata), int(event.xdata))
+
+            # the line below is calling the segmentation algorithm
+            path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
+            plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
+            self.start_point = self.end_point
+
+        if self.current_path is not None:
+            plt1.draw()
+
+    def mouse_moved(self, event):
+        if self.start_point is None:
+            return
+
+        self.end_point = (int(event.ydata), int(event.xdata))
+
+        # the line below is calling the segmentation algorithm
+        path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
+
+        self.current_path
+        if self.current_path is not None:
+            self.current_path.pop(0).remove()
+        self.current_path = plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
+
+
+
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -1039,5 +1123,11 @@ class MainPageCallClass:
     # This function runs Transect on button click
     def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
+                               dataset, rowS, colS, tabWindow)
+        tabWindow.setScene(self.tab_ct)
+
+    # This function runs Transect on button click
+    def runDraw(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
+        self.tab_ct = Drawing(mainWindow, imagetoPaint,
                                dataset, rowS, colS, tabWindow)
         tabWindow.setScene(self.tab_ct)

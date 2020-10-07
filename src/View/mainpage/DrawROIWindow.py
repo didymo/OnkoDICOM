@@ -41,6 +41,7 @@ class UIDrawROIWindow():
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
+        self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(
             _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
@@ -163,6 +164,17 @@ class UIDrawROIWindow():
             self.image_slice_number_transect_button.sizeHint().height())
         self.image_slice_number_transect_button.clicked.connect(self.transect_handler)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_transect_button)
+
+        # Create a transect button
+        self.image_slice_number_draw_button = QPushButton()
+        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_draw_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+        self.image_slice_number_transect_button.resize(
+            self.image_slice_number_draw_button.sizeHint().width(),
+            self.image_slice_number_draw_button.sizeHint().height())
+        self.image_slice_number_draw_button.clicked.connect(self.draw_handler)
+        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_draw_button)
 
         # Create a save button to save all the changes
         self.draw_roi_window_instance_save_button = QPushButton()
@@ -560,6 +572,34 @@ class UIDrawROIWindow():
             colS,
         )
 
+    def draw_handler(self):
+        """
+        Function triggered when the Transect button is pressed from the menu.
+        """
+        id = self.slider.value()
+
+        # Getting most updated selected slice
+        if (self.forward_pressed):
+            id = self.current_slice
+        elif (self.backward_pressed):
+            id = self.current_slice
+        elif (self.slider_changed):
+            id = self.slider.value()
+
+        dt = self.window.dataset[id]
+        rowS = dt.PixelSpacing[0]
+        colS = dt.PixelSpacing[1]
+        dt.convert_pixel_data()
+        self.window.mainPageCallClass.runDraw(
+            self.window,
+            self.view,
+            self.window.pixel_values[id],
+            dt._pixel_array.transpose(),
+            rowS,
+            colS,
+        )
+
+
     def init_standard_names(self):
         """
         Create two lists containing standard organ and standard volume names as set by the Add-On options.
@@ -667,3 +707,166 @@ class SelectROIPopUp(QDialog):
 
     def on_cancel_clicked(self):
         self.close()
+
+
+#####################################################################################################################
+#                                                                                                                   #
+#  This Class handles the Transect functionality                                                                    #
+#                                                                                                                   #
+#####################################################################################################################
+import matplotlib.cbook
+import matplotlib.pyplot as plt1
+from PyQt5.QtCore import QPoint, QPointF
+from PyQt5.QtWidgets import QGraphicsPixmapItem
+
+from src.Model.LiveWireAlgorithm.livewiresegmentation import LiveWireSegmentation
+
+class Transect(QtWidgets.QGraphicsScene):
+
+    # Initialisation function  of the class
+    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
+        super(Transect, self).__init__()
+
+        #create the canvas to draw the line on and all its necessary components
+        self.addItem(QGraphicsPixmapItem(imagetoPaint))
+        self.img = imagetoPaint
+        self.values = []
+        self.distances = []
+        self.data = dataset
+        self.pixSpacing = rowS / colS
+        self._start = QPointF()
+        self.drawing = True
+        self._current_rect_item = None
+        self.pos1 = QPoint()
+        self.pos2 = QPoint()
+        self.points = []
+        self.tabWindow = tabWindow
+        self.mainWindow = mainWindow
+
+    # This function starts the line draw when the mouse is pressed into the 2D view of the scan
+    def mousePressEvent(self, event):
+        # Clear the current transect first
+        # If is the first time we can draw as we want a line per button press
+        if self.drawing == True:
+            self.pos1 = event.scenePos()
+            self._current_rect_item = QtWidgets.QGraphicsLineItem()
+            self._current_rect_item.setPen(QtCore.Qt.red)
+            self._current_rect_item.setFlag(
+                QtWidgets.QGraphicsItem.ItemIsMovable, False)
+            self.addItem(self._current_rect_item)
+            self._start = event.scenePos()
+            r = QtCore.QLineF(self._start, self._start)
+            self._current_rect_item.setLine(r)
+
+        # Second time generate mouse position
+
+    # This function tracks the mouse and draws the line from the original press point
+    def mouseMoveEvent(self, event):
+        if self._current_rect_item is not None and self.drawing == True:
+            r = QtCore.QLineF(self._start, event.scenePos())
+            self._current_rect_item.setLine(r)
+
+    # This function terminates the line drawing and initiates the plot
+    def mouseReleaseEvent(self, event):
+        if self.drawing == True:
+            self.pos2 = event.scenePos()
+            self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
+                         round(self.pos2.x()), round(self.pos2.y()))
+            self.drawing = False
+            self.plotResult()
+            self._current_rect_item = None
+
+        # compare mouse positions with pos 1 and pos 2
+
+    # This function performs the DDA algorithm that locates all the points in the drawn line
+    def drawDDA(self, x1, y1, x2, y2):
+        x, y = x1, y1
+        length = abs(x2 - x1) if abs(x2 - x1) > abs(y2 - y1) else abs(y2 - y1)
+        dx = (x2 - x1) / float(length)
+        dy = (y2 - y1) / float(length)
+        self.points.append((round(x), round(y)))
+
+        for i in range(length):
+            x += dx
+            y += dy
+            self.points.append((round(x), round(y)))
+
+        # get the values of these points from the dataset
+        self.getValues()
+        # get their distances for the plot
+        self.getDistances()
+
+    # This function calculates the distance between two points
+    def calculateDistance(self, x1, y1, x2, y2):
+        dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        return dist
+
+    # This function gets the corresponding values of all the points in the drawn line from the dataset
+    def getValues(self):
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                self.values.append(self.data[i][j])
+
+    # Get the distance of each point from the end of the line
+    def getDistances(self):
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                self.distances.append(self.calculateDistance(
+                    i, j, round(self.pos2.x()), round(self.pos2.y())))
+        self.distances.reverse()
+
+    # This function handles the closing event of the transect graph
+    def on_close(self, event):
+        plt1.close()
+
+        #returns the main page back to a non-drawing environment
+        if self.mainWindow.drawROI.draw_window:
+            self.mainWindow.drawROI.draw_window.update_view()
+        else:
+            self.mainWindow.dicom_view.update_view()
+
+        event.canvas.figure.axes[0].has_been_closed = True
+
+    # This function plots the Transect graph into a pop up window
+    def plotResult(self):
+        plt1.close('all')
+
+        thresholds = [10, 40]
+        #regions = digitize(self.img, thresholds)
+
+        newList = [(x * self.pixSpacing) for x in self.distances]
+        # adding a dummy manager
+        fig1 = plt1.figure(num='Transect Graph')
+        new_manager = fig1.canvas.manager
+        new_manager.canvas.figure = fig1
+        fig1.set_canvas(new_manager.canvas)
+        ax1 = fig1.add_subplot(111)
+        ax1.has_been_closed = False
+        # new list is axis x, self.values is axis y
+        ax1.step(newList, self.values, where='mid')
+
+        for thresh in thresholds:
+            ax1.axvline(thresh, color='r')
+
+        # Recalculate the distance and CT# to show ROI in histogram
+        self.ROIvalues = []
+        self.ROIdistance = []
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                temp = self.calculateDistance(
+                    i, j, round(self.pos2.x()), round(self.pos2.y()))
+                if(temp >= thresholds[0] and temp <= thresholds[1]):
+                        self.ROIdistance.append(self.calculateDistance(
+                            i, j, round(self.pos2.x()), round(self.pos2.y())))
+                        self.ROIvalues.append(self.data[i][j])
+        self.ROIdistance.reverse()
+
+        for i in ax1.bar(self.ROIdistance, self.ROIvalues):
+            i.set_color('r')
+
+
+        plt1.xlabel('Distance mm')
+        plt1.ylabel('CT #')
+        plt1.grid(True)
+        fig1.canvas.mpl_connect('close_event', self.on_close)
+        plt1.show()
