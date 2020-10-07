@@ -960,7 +960,7 @@ class Transect(QtWidgets.QGraphicsScene):
         plt1.close()
 
         #returns the main page back to a non-drawing environment
-        if self.mainWindow.drawROI.draw_window:
+        if self.isROIDraw:
             self.mainWindow.drawROI.draw_window.update_view()
         else:
             self.mainWindow.dicom_view.update_view()
@@ -1052,11 +1052,17 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.current_path = None
         self.length_penalty = 10.0
 
-        plt1.connect('button_release_event', self.button_pressed)
-        if INTERACTIVE:
-            plt1.connect('motion_notify_event', self.mouse_moved)
 
+        fig1 = plt1.figure(num='ROI Draw')
+        new_manager = fig1.canvas.manager
+        new_manager.canvas.figure = fig1
+        fig1.set_canvas(new_manager.canvas)
         plt1.imshow(self.img)
+        fig1.canvas.mpl_connect('close_event', self.on_close)
+
+        fig1.canvas.mpl_connect('button_release_event', self.button_pressed)
+        if INTERACTIVE:
+            fig1.canvas.mpl_connect('motion_notify_event', self.mouse_moved)
         plt1.show()
 
     def button_pressed(self, event):
@@ -1091,9 +1097,13 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.current_path.pop(0).remove()
         self.current_path = plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
 
+    def on_close(self, event):
+        plt1.close()
 
+        #returns the ROI Draw page back to a non-drawing environment
+        self.mainWindow.drawROI.draw_window.update_view()
 
-
+        event.canvas.figure.axes[0].has_been_closed = True
 
 
 #####################################################################################################################
