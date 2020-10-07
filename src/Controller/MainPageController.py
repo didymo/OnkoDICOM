@@ -1052,7 +1052,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.current_path = None
         self.length_penalty = 10.0
 
-
         fig1 = plt1.figure(num='ROI Draw')
         new_manager = fig1.canvas.manager
         new_manager.canvas.figure = fig1
