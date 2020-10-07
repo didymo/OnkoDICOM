@@ -1027,8 +1027,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         #create the canvas to draw the line on and all its necessary components
         self.img = imagetoPaint
         self.algorithm = LiveWireSegmentation(self.img, smooth_image=False, threshold_gradient_image=False)
-
-
         self.values = []
         self.distances = []
         self.data = dataset
@@ -1042,9 +1040,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
 
-        plt1.gray()
         INTERACTIVE = True  # to compute interactive shortest path suggestions
 
+        plt1.close('all')
         self.COLORS = cycle('rgbyc')  # use separate colors for consecutive segmentations
 
         self.start_point = None
@@ -1052,7 +1050,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.current_path = None
         self.length_penalty = 10.0
 
+
         fig1 = plt1.figure(num='ROI Draw')
+        plt1.gray()
         new_manager = fig1.canvas.manager
         new_manager.canvas.figure = fig1
         fig1.set_canvas(new_manager.canvas)
