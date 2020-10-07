@@ -50,8 +50,8 @@ class UIDrawROIWindow():
         self.internal_hole_max_line_edit.setText(_translate("InternalHoleInput", "9"))
         self.isthmus_width_max_label.setText(_translate("IsthmusWidthLabel", "Maximum isthmus width size (pixels): "))
         self.isthmus_width_max_line_edit.setText(_translate("IsthmusWidthInput", "5"))
-        self.draw_roi_window_instance_action_clear_button.setText(
-            _translate("DrawRoiWindowInstanceActionClearButton", "Clear"))
+        self.draw_roi_window_instance_action_reset_button.setText(
+            _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
         self.draw_roi_window_instance_action_tool_button.setText(
             _translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
         self.draw_roi_window_instance_action_go_button.setText(
@@ -259,15 +259,15 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_box.addStretch(1)
 
         # Create a button to clear the draw
-        self.draw_roi_window_instance_action_clear_button = QPushButton()
-        self.draw_roi_window_instance_action_clear_button.setObjectName("DrawRoiWindowInstanceActionClearButton")
-        self.draw_roi_window_instance_action_clear_button.setSizePolicy(
+        self.draw_roi_window_instance_action_reset_button = QPushButton()
+        self.draw_roi_window_instance_action_reset_button.setObjectName("DrawRoiWindowInstanceActionClearButton")
+        self.draw_roi_window_instance_action_reset_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        self.draw_roi_window_instance_action_clear_button.resize(
-            self.draw_roi_window_instance_action_clear_button.sizeHint().width(),
-            self.draw_roi_window_instance_action_clear_button.sizeHint().height())
-        self.draw_roi_window_instance_action_clear_button.clicked.connect(self.on_clear_clicked)
-        self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_clear_button)
+        self.draw_roi_window_instance_action_reset_button.resize(
+            self.draw_roi_window_instance_action_reset_button.sizeHint().width(),
+            self.draw_roi_window_instance_action_reset_button.sizeHint().height())
+        self.draw_roi_window_instance_action_reset_button.clicked.connect(self.on_reset_clicked)
+        self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_reset_button)
 
         # Create a button to tool the draw
         self.draw_roi_window_instance_action_tool_button = QPushButton()
@@ -539,10 +539,10 @@ class UIDrawROIWindow():
 
             self.update_view()
 
-    def on_clear_clicked(self):
+    def on_reset_clicked(self):
         self.update_view()
-        self.isthmus_width_max_line_edit.setText("")
-        self.internal_hole_max_line_edit.setText("")
+        self.isthmus_width_max_line_edit.setText("5")
+        self.internal_hole_max_line_edit.setText("9")
 
     def transect_handler(self):
         """
