@@ -882,6 +882,7 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
         # Clear the current transect first
+        plt1.close()
         # If is the first time we can draw as we want a line per button press
         if self.drawing == True:
             self.pos1 = event.scenePos()
@@ -1058,26 +1059,28 @@ class Drawing(QtWidgets.QGraphicsScene):
         plt1.show()
 
     def button_pressed(self, event):
-        self.start_point
-        if self.start_point is None:
-            self.start_point = (int(event.ydata), int(event.xdata))
+        if(event.ydata):
+            self.start_point
+            if self.start_point is None:
+                self.start_point = (int(event.ydata), int(event.xdata))
 
-        else:
-            self.end_point = (int(event.ydata), int(event.xdata))
+            else:
+                self.end_point = (int(event.ydata), int(event.xdata))
 
-            # the line below is calling the segmentation algorithm
-            path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
-            plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
-            self.start_point = self.end_point
+                # the line below is calling the segmentation algorithm
+                path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
+                plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
+                self.start_point = self.end_point
 
-        if self.current_path is not None:
-            plt1.draw()
+            if self.current_path is not None:
+                plt1.draw()
 
     def mouse_moved(self, event):
         if self.start_point is None:
             return
 
-        self.end_point = (int(event.ydata), int(event.xdata))
+        if (event.ydata):
+            self.end_point = (int(event.ydata), int(event.xdata))
 
         # the line below is calling the segmentation algorithm
         path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
