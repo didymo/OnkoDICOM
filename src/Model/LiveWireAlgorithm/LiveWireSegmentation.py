@@ -1,5 +1,5 @@
 import math
-from src.Model.LiveWireAlgorithm.dijkstra import shortestPath
+from src.Model.LiveWireAlgorithm.Dijkstra import shortestPath
 
 class LiveWireSegmentation(object):
     def __init__(self, image=None, smooth_image=False, threshold_gradient_image=False):

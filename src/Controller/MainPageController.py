@@ -23,7 +23,7 @@ from skimage.filters import threshold_multiotsu
 
 # import live wire method
 from itertools import cycle
-from src.Model.LiveWireAlgorithm.livewiresegmentation import LiveWireSegmentation
+from src.Model.LiveWireAlgorithm.LiveWireSegmentation import LiveWireSegmentation
 
 from src.Model.Anon import *
 from src.View.mainpage.ClinicalDataDisplay import *
@@ -906,13 +906,15 @@ class Transect(QtWidgets.QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self.drawing == True:
             self.pos2 = event.scenePos()
-            self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
-                         round(self.pos2.x()), round(self.pos2.y()))
-            self.drawing = False
-            self.plotResult()
-            self._current_rect_item = None
-
-        # compare mouse positions with pos 1 and pos 2
+            # If a user just clicked one position
+            if self.pos1.x() == self.pos2.x() and self.pos1.y() == self.pos2.y():
+                self.drawing = False
+            else:
+                self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
+                             round(self.pos2.x()), round(self.pos2.y()))
+                self.drawing = False
+                self.plotResult()
+                self._current_rect_item = None
 
     # This function performs the DDA algorithm that locates all the points in the drawn line
     def drawDDA(self, x1, y1, x2, y2):
