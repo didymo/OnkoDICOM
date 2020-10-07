@@ -860,7 +860,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 class Transect(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
+    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow, isROIDraw=False):
         super(Transect, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
@@ -876,6 +876,7 @@ class Transect(QtWidgets.QGraphicsScene):
         self.pos1 = QPoint()
         self.pos2 = QPoint()
         self.points = []
+        self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
 
@@ -984,24 +985,24 @@ class Transect(QtWidgets.QGraphicsScene):
         # new list is axis x, self.values is axis y
         ax1.step(newList, self.values, where='mid')
 
-        for thresh in thresholds:
-            ax1.axvline(thresh, color='r')
+        if(self.isROIDraw):
+            for thresh in thresholds:
+                ax1.axvline(thresh, color='r')
+            # Recalculate the distance and CT# to show ROI in histogram
+            self.ROIvalues = []
+            self.ROIdistance = []
+            for i, j in self.points:
+                if i in range(512) and j in range(512):
+                    temp = self.calculateDistance(
+                        i, j, round(self.pos2.x()), round(self.pos2.y()))
+                    if(temp >= thresholds[0] and temp <= thresholds[1]):
+                            self.ROIdistance.append(self.calculateDistance(
+                                i, j, round(self.pos2.x()), round(self.pos2.y())))
+                            self.ROIvalues.append(self.data[i][j])
+            self.ROIdistance.reverse()
 
-        # Recalculate the distance and CT# to show ROI in histogram
-        self.ROIvalues = []
-        self.ROIdistance = []
-        for i, j in self.points:
-            if i in range(512) and j in range(512):
-                temp = self.calculateDistance(
-                    i, j, round(self.pos2.x()), round(self.pos2.y()))
-                if(temp >= thresholds[0] and temp <= thresholds[1]):
-                        self.ROIdistance.append(self.calculateDistance(
-                            i, j, round(self.pos2.x()), round(self.pos2.y())))
-                        self.ROIvalues.append(self.data[i][j])
-        self.ROIdistance.reverse()
-
-        for i in ax1.bar(self.ROIdistance, self.ROIvalues):
-            i.set_color('r')
+            for i in ax1.bar(self.ROIdistance, self.ROIvalues):
+                i.set_color('r')
 
 
         plt1.xlabel('Distance mm')
@@ -1127,9 +1128,9 @@ class MainPageCallClass:
         tabWindow.addTab(self.tab_cd, "")
 
     # This function runs Transect on button click
-    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
+    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
-                               dataset, rowS, colS, tabWindow)
+                               dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
 
     # This function runs Transect on button click

@@ -493,6 +493,7 @@ class MenuHandler(object):
             dt._pixel_array.transpose(),
             rowS,
             colS,
+            isROIDraw=False,
         )
 
     def add_on_options_handler(self):

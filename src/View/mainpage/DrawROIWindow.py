@@ -570,6 +570,7 @@ class UIDrawROIWindow():
             dt._pixel_array.transpose(),
             rowS,
             colS,
+            isROIDraw=True,
         )
 
     def draw_handler(self):
