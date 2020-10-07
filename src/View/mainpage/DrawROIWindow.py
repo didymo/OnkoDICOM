@@ -165,7 +165,7 @@ class UIDrawROIWindow():
         self.image_slice_number_transect_button.clicked.connect(self.transect_handler)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_transect_button)
 
-        # Create a transect button
+        # Create a draw button
         self.image_slice_number_draw_button = QPushButton()
         self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
         self.image_slice_number_draw_button.setSizePolicy(
@@ -173,7 +173,7 @@ class UIDrawROIWindow():
         self.image_slice_number_transect_button.resize(
             self.image_slice_number_draw_button.sizeHint().width(),
             self.image_slice_number_draw_button.sizeHint().height())
-        self.image_slice_number_draw_button.clicked.connect(self.draw_handler)
+        self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_draw_button)
 
         # Create a save button to save all the changes
@@ -573,7 +573,7 @@ class UIDrawROIWindow():
             isROIDraw=True,
         )
 
-    def draw_handler(self):
+    def on_draw_clicked(self):
         """
         Function triggered when the Transect button is pressed from the menu.
         """
