@@ -857,6 +857,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #                                                                                                                   #
 #####################################################################################################################
 
+from matplotlib.backend_bases import MouseEvent
 class Transect(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
@@ -879,6 +880,11 @@ class Transect(QtWidgets.QGraphicsScene):
         self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
+        self._figure, self._axes, self._line = None, None, None
+        self.leftLine, self.rightLine = None, None
+        self._dragging_point = None
+        self._points = {}
+        self.thresholds = [10, 40]
 
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
@@ -970,24 +976,22 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
-
-        thresholds = [10, 40]
-        #regions = digitize(self.img, thresholds)
-
+        self._points[self.thresholds[0]] = 0
+        self._points[self.thresholds[1]] = 0
         newList = [(x * self.pixSpacing) for x in self.distances]
         # adding a dummy manager
-        fig1 = plt1.figure(num='Transect Graph')
-        new_manager = fig1.canvas.manager
-        new_manager.canvas.figure = fig1
-        fig1.set_canvas(new_manager.canvas)
-        ax1 = fig1.add_subplot(111)
-        ax1.has_been_closed = False
+        self._figure = plt1.figure(num='Transect Graph')
+        new_manager = self._figure.canvas.manager
+        new_manager.canvas.figure = self._figure
+        self._figure.set_canvas(new_manager.canvas)
+        self._axes = self._figure.add_subplot(111)
+        self._axes.has_been_closed = False
         # new list is axis x, self.values is axis y
-        ax1.step(newList, self.values, where='mid')
+        self._axes.step(newList, self.values, where='mid')
 
         if(self.isROIDraw):
-            for thresh in thresholds:
-                ax1.axvline(thresh, color='r')
+            self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
+            self.rightLine = self._axes.axvline(self.thresholds[1], color='r')
             # Recalculate the distance and CT# to show ROI in histogram
             self.ROIvalues = []
             self.ROIdistance = []
@@ -995,21 +999,111 @@ class Transect(QtWidgets.QGraphicsScene):
                 if i in range(512) and j in range(512):
                     temp = self.calculateDistance(
                         i, j, round(self.pos2.x()), round(self.pos2.y()))
-                    if(temp >= thresholds[0] and temp <= thresholds[1]):
+                    if(temp >= self.thresholds[0] and temp <= self.thresholds[1]):
                             self.ROIdistance.append(self.calculateDistance(
                                 i, j, round(self.pos2.x()), round(self.pos2.y())))
                             self.ROIvalues.append(self.data[i][j])
             self.ROIdistance.reverse()
 
-            for i in ax1.bar(self.ROIdistance, self.ROIvalues):
+            for i in self._axes.bar(self.ROIdistance, self.ROIvalues):
                 i.set_color('r')
 
 
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
         plt1.grid(True)
-        fig1.canvas.mpl_connect('close_event', self.on_close)
+        self._figure.canvas.mpl_connect('close_event', self.on_close)
+        self._figure.canvas.mpl_connect('button_press_event', self._on_click)
+        self._figure.canvas.mpl_connect('button_release_event', self._on_release)
+        self._figure.canvas.mpl_connect('motion_notify_event', self._on_motion)
+        self._update_plot()
         plt1.show()
+
+    def _update_plot(self):
+        if (self.isROIDraw):
+            if not self._points:
+                self._line.set_data([], [])
+            else:
+                x, y = zip(*sorted(self._points.items()))
+                # Add new plot
+                if not self._line:
+                    self._line, = self._axes.plot(x, y, "b", marker="o", markersize=10)
+                # Update current plot
+                else:
+                    self._line.set_data(x, y)
+                self.leftLine.set_xdata(x[0])
+                self.rightLine.set_xdata(x[1])
+                self.thresholds[0] = x[0]
+                self.thresholds[1] = x[1]
+            self._figure.canvas.draw()
+
+    def _add_point(self, x, y=None):
+        if (self.isROIDraw):
+            if isinstance(x, MouseEvent):
+                x = int(x.xdata)
+            self._points[x] = 0
+            return x, 0
+
+    def _remove_point(self, x, _):
+        if (self.isROIDraw):
+            if x in self._points:
+                self._points.pop(x)
+
+    def _find_neighbor_point(self, event):
+        u""" Find point around mouse position
+
+        :rtype: ((int, int)|None)
+        :return: (x, y) if there are any point around mouse else None
+        """
+        if (self.isROIDraw):
+            distance_threshold = 3.0
+            nearest_point = None
+            min_distance = math.sqrt(2 * (100 ** 2))
+            for x, y in self._points.items():
+                distance = math.hypot(event.xdata - x, event.ydata - y)
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_point = (x, y)
+            if min_distance < distance_threshold:
+                return nearest_point
+            return None
+
+    def _on_click(self, event):
+        u""" callback method for mouse click event
+
+        :type event: MouseEvent
+        """
+        if (self.isROIDraw):
+            # left click
+            if event.button == 1 and event.inaxes in [self._axes]:
+                point = self._find_neighbor_point(event)
+                if point:
+                    self._dragging_point = point
+                self._update_plot()
+
+    def _on_release(self, event):
+        u""" callback method for mouse release event
+
+        :type event: MouseEvent
+        """
+        if (self.isROIDraw):
+            if event.button == 1 and event.inaxes in [self._axes] and self._dragging_point:
+                self._dragging_point = None
+                self._update_plot()
+
+    def _on_motion(self, event):
+        u""" callback method for mouse motion event
+
+        :type event: MouseEvent
+        """
+        if (self.isROIDraw):
+            if not self._dragging_point:
+                return
+            if event.xdata is None or event.ydata is None:
+                return
+            self._remove_point(*self._dragging_point)
+            self._dragging_point = self._add_point(event)
+            self._update_plot()
 
 #####################################################################################################################
 #                                                                                                                   #
