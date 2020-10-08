@@ -1,3 +1,4 @@
+import os
 import platform
 import threading
 
@@ -7,6 +8,7 @@ import matplotlib.pylab as plt
 from pandas import np
 
 from src.Model import ImageLoading
+from src.Model.CalculateDVHs import dvh2csv
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 
@@ -42,7 +44,12 @@ class NewDVHTab(QtWidgets.QWidget):
         self.plot = self.plot_dvh()
         widget_plot = FigureCanvas(self.plot)
 
+        button_export = QtWidgets.QPushButton("Export DVH")
+        button_export.clicked.connect(self.export_csv)
+
+        self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
+        self.dvh_tab_layout.addWidget(button_export, alignment=QtCore.Qt.AlignLeft)
 
     def init_layout_no_dvh(self):
         button_calc_dvh = QtWidgets.QPushButton("Calculate DVH")
@@ -149,6 +156,19 @@ class NewDVHTab(QtWidgets.QWidget):
 
         # Re-draw the plot and add to layout
         self.init_layout_dvh()
+
+    def export_csv(self):
+        path = self.patient_dict_container.path
+        basic_info = self.patient_dict_container.get("basic_info")
+        if not os.path.isdir(path + '/CSV'):
+            os.mkdir(path + '/CSV')
+        dvh2csv(self.raw_dvh,
+                path + "/CSV/",
+                'DVH_' + basic_info['id'],
+                basic_info['id'])
+        save_reply = QtWidgets.QMessageBox.information(self, "Message",
+                                                      "The DVH Data was saved successfully in your directory!",
+                                                      QtWidgets.QMessageBox.Ok)
 
 
 class CalculateDVHProgressWindow(QtWidgets.QDialog):
