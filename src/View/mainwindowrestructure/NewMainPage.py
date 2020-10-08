@@ -182,4 +182,5 @@ class UINewMainWindow:
 
     def update_views(self):
         self.dicom_view.update_view()
-        self.dvh_tab.update_plot()
+        if hasattr(self, 'dvh_tab'):
+            self.dvh_tab.update_plot()

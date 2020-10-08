@@ -148,14 +148,15 @@ class NewDVHTab(QtWidgets.QWidget):
         self.init_layout_dvh()
 
     def update_plot(self):
-        # Get new list of selected rois
-        self.selected_rois = self.patient_dict_container.get("selected_rois")
+        if self.dvh_calculated:
+            # Get new list of selected rois
+            self.selected_rois = self.patient_dict_container.get("selected_rois")
 
-        # Clear the current layout
-        self.clear_layout()
+            # Clear the current layout
+            self.clear_layout()
 
-        # Re-draw the plot and add to layout
-        self.init_layout_dvh()
+            # Re-draw the plot and add to layout
+            self.init_layout_dvh()
 
     def export_csv(self):
         path = self.patient_dict_container.path
