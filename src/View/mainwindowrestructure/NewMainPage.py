@@ -118,25 +118,23 @@ class UINewMainWindow:
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         # Left panel contains stuctures tab, isodoses tab, and structure information
-        self.left_panel = QtWidgets.QWidget()
+        self.left_panel = QtWidgets.QTabWidget()
         self.left_panel.setMinimumWidth(230)
         self.left_panel.setMaximumWidth(500)
         self.left_panel_layout = QtWidgets.QHBoxLayout(self.left_panel)
-
-        self.left_panel_tab = QtWidgets.QTabWidget()
 
         # Add structures tab to left panel
         if patient_dict_container.has_modality("rtss"):
             self.structures_tab = NewStructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
-            self.left_panel_tab.addTab(self.structures_tab, "Structures")
+            self.left_panel.addTab(self.structures_tab, "Structures")
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = NewIsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
-            self.left_panel_tab.addTab(self.isodoses_tab, "Isodoses")
+            self.left_panel.addTab(self.isodoses_tab, "Isodoses")
 
-        self.left_panel_layout.addWidget(self.left_panel_tab)
+        self.left_panel_layout.addWidget(self.left_panel)
 
         # Hide left panel if no rtss or rtdose
         if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
