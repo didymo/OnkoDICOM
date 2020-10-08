@@ -13,6 +13,9 @@ class RenameROIWindow(QDialog):
                  suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
+        stylesheet = open("src/res/stylesheet.qss").read()
+        self.setStyleSheet(stylesheet)
+
         self.standard_volume_names = standard_volume_names
         self.standard_organ_names = standard_organ_names
         self.rtss = rtss
@@ -21,7 +24,6 @@ class RenameROIWindow(QDialog):
         self.rename_signal = rename_signal
         self.suggested_text = suggested_text
 
-        stylesheet = open("src/res/stylesheet.qss").read()
         self.setWindowTitle("Rename Region of Interest")
         self.setMinimumSize(300, 90)
 
@@ -71,7 +73,7 @@ class RenameROIWindow(QDialog):
         self.layout.addWidget(self.list_label)
         self.layout.addWidget(self.list_of_ROIs)
         self.setLayout(self.layout)
-        self.setStyleSheet(stylesheet)
+
 
     def on_text_edited(self, text):
         if text in self.standard_volume_names or text in self.standard_organ_names:
