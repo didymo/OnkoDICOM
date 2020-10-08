@@ -49,7 +49,7 @@ class NewDVHTab(QtWidgets.QWidget):
 
         self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
-        self.dvh_tab_layout.addWidget(button_export, alignment=QtCore.Qt.AlignLeft)
+        self.dvh_tab_layout.addWidget(button_export, alignment=QtCore.Qt.AlignRight)
 
     def init_layout_no_dvh(self):
         button_calc_dvh = QtWidgets.QPushButton("Calculate DVH")
