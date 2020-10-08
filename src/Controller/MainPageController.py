@@ -1002,11 +1002,11 @@ class Transect(QtWidgets.QGraphicsScene):
                     if(temp >= self.thresholds[0] and temp <= self.thresholds[1]):
                             self.ROIdistance.append(self.calculateDistance(
                                 i, j, round(self.pos2.x()), round(self.pos2.y())))
-                            self.ROIvalues.append(self.data[i][j])
-            self.ROIdistance.reverse()
+                            #self.ROIvalues.append(self.data[i][j])
+            #self.ROIdistance.reverse()
 
-            for i in self._axes.bar(self.ROIdistance, self.ROIvalues):
-                i.set_color('r')
+            #for i in self._axes.bar(self.ROIdistance, self.ROIvalues):
+               # i.set_color('r')
 
 
         plt1.xlabel('Distance mm')
