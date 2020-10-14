@@ -50,12 +50,18 @@ class UIDrawROIWindow():
         self.internal_hole_max_line_edit.setText(_translate("InternalHoleInput", "9"))
         self.isthmus_width_max_label.setText(_translate("IsthmusWidthLabel", "Maximum isthmus width size (pixels): "))
         self.isthmus_width_max_line_edit.setText(_translate("IsthmusWidthInput", "5"))
+        self.min_pixel_density_label.setText(_translate("MinPixelDensityLabel", "Minimum density (pixels): "))
+        self.min_pixel_density_line_edit.setText(_translate("MinPixelDensityInput", ""))
+        self.max_pixel_density_label.setText(_translate("MaxPixelDensityLabel", "Maximum density (pixels): "))
+        self.max_pixel_density_line_edit.setText(_translate("MaxPixelDensityInput", ""))
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
         self.draw_roi_window_instance_action_tool_button.setText(
             _translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
         self.draw_roi_window_instance_action_go_button.setText(
             _translate("DrawRoiWindowInstanceActionGoButton", "Go"))
+
+
 
 
     def init_view(self):
@@ -218,6 +224,10 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_box = QHBoxLayout()
         self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
 
+        # Creating a horizontal box to hold the ROI draw action buttons: clear, tool
+        self.draw_roi_window_instance_action_box_2 = QHBoxLayout()
+        self.draw_roi_window_instance_action_box_2.setObjectName("DrawRoiWindowInstanceActionBox")
+
         # Create a label for denoting the internal hole size
         self.internal_hole_max_label = QLabel()
         self.internal_hole_max_label.setObjectName("InternalHoleLabel")
@@ -254,6 +264,42 @@ class UIDrawROIWindow():
         self.isthmus_width_max_line_edit.setEnabled(True)
         self.draw_roi_window_instance_action_box.addWidget(self.isthmus_width_max_line_edit)
 
+        # Create a label for denoting the minimum pixel density
+        self.min_pixel_density_label = QLabel()
+        self.min_pixel_density_label.setObjectName("MinPixelDensityLabel")
+        self.min_pixel_density_label.setAlignment(Qt.AlignLeft)
+        self.min_pixel_density_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.min_pixel_density_label.resize(
+            self.min_pixel_density_label.sizeHint().width(), self.min_pixel_density_label.sizeHint().height())
+        self.draw_roi_window_instance_action_box.addWidget(self.min_pixel_density_label)
+
+
+        # Create input for min pixel size
+        self.min_pixel_density_line_edit = QLineEdit()
+        self.min_pixel_density_line_edit.setObjectName("MinPixelDensityInput")
+        self.min_pixel_density_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.min_pixel_density_line_edit.resize(self.min_pixel_density_line_edit.sizeHint().width(),
+                                                self.min_pixel_density_line_edit.sizeHint().height())
+        self.min_pixel_density_line_edit.setEnabled(True)
+        self.draw_roi_window_instance_action_box.addWidget(self.min_pixel_density_line_edit)
+
+        # Create a label for denoting the minimum pixel density
+        self.max_pixel_density_label = QLabel()
+        self.max_pixel_density_label.setObjectName("MaxPixelDensityLabel")
+        self.max_pixel_density_label.setAlignment(Qt.AlignLeft)
+        self.max_pixel_density_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.max_pixel_density_label.resize(
+            self.max_pixel_density_label.sizeHint().width(), self.max_pixel_density_label.sizeHint().height())
+        self.draw_roi_window_instance_action_box.addWidget(self.max_pixel_density_label)
+
+        # Create input for min pixel size
+        self.max_pixel_density_line_edit = QLineEdit()
+        self.max_pixel_density_line_edit.setObjectName("MaxPixelDensityInput")
+        self.max_pixel_density_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.max_pixel_density_line_edit.resize(self.max_pixel_density_line_edit.sizeHint().width(),
+                                                self.max_pixel_density_line_edit.sizeHint().height())
+        self.max_pixel_density_line_edit.setEnabled(True)
+        self.draw_roi_window_instance_action_box.addWidget(self.max_pixel_density_line_edit)
 
         # Place buttons to the right of the screen
         self.draw_roi_window_instance_action_box.addStretch(1)
