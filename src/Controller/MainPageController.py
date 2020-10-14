@@ -1056,7 +1056,7 @@ class Transect(QtWidgets.QGraphicsScene):
         :return: (x, y) if there are any point around mouse else None
         """
         if (self.isROIDraw):
-            distance_threshold = 3.0
+            distance_threshold = 50.0
             nearest_point = None
             min_distance = math.sqrt(2 * (100 ** 2))
             for x, y in self._points.items():
