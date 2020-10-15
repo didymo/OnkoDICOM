@@ -13,7 +13,7 @@ from pathlib import Path
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtGui import QPainter, QFont
+from PyQt5.QtGui import QPainter, QFont, QPainterPath
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
@@ -1130,20 +1130,20 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
 
-
-        self.rect = QtCore.QRect(QtCore.QPoint(*random.sample(range(50), 2)), QtCore.QSize(100, 100))
+        self.rect = QtCore.QRect(100,100,20,20)
         self.update()
         self.drag_position = QtCore.QPoint()
-        self.update()
 
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        if not self.rect.isNull():
-            painter = QtGui.QPainter(self)
-            painter.setRenderHint(QtGui.QPainter.Antialiasing)
-            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
-            painter.drawEllipse(self.rect)
+    def drawForeground(self, painter, rect):
+        super().drawForeground(painter, rect)
+
+        painter = QtGui.QPainter(self.img)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
+        painter.drawEllipse(self.rect)
+
         print("Paint")
+
 
     def mousePressEvent(self, event):
         if (
@@ -1152,18 +1152,20 @@ class Drawing(QtWidgets.QGraphicsScene):
         ):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
+        self.update()
         print("Press")
 
     def mouseMoveEvent(self, event):
         if not self.drag_position.isNull():
             self.rect.moveTopLeft(event.pos() - self.drag_position)
-            self.update()
         super().mouseMoveEvent(event)
+        self.update()
         print("Move")
 
     def mouseReleaseEvent(self, event):
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
+        self.update()
         print("Release")
 
 
