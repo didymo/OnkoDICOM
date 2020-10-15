@@ -41,7 +41,7 @@ class UIDrawROIWindow():
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
-        self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
+        self.image_slice_number_refine_button.setText(_translate("ImageSliceNumberDrawButton", "Refine"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(
             _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
@@ -172,15 +172,15 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_transect_button)
 
         # Create a draw button
-        self.image_slice_number_draw_button = QPushButton()
-        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
-        self.image_slice_number_draw_button.setSizePolicy(
+        self.image_slice_number_refine_button = QPushButton()
+        self.image_slice_number_refine_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_refine_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
         self.image_slice_number_transect_button.resize(
-            self.image_slice_number_draw_button.sizeHint().width(),
-            self.image_slice_number_draw_button.sizeHint().height())
-        self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
-        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_draw_button)
+            self.image_slice_number_refine_button.sizeHint().width(),
+            self.image_slice_number_refine_button.sizeHint().height())
+        self.image_slice_number_refine_button.clicked.connect(self.on_draw_clicked)
+        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_refine_button)
 
         # Create a save button to save all the changes
         self.draw_roi_window_instance_save_button = QPushButton()
@@ -224,7 +224,7 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_box = QHBoxLayout()
         self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
 
-        # Creating a horizontal box to hold the ROI draw action buttons: clear, tool
+        # Creating a horizontal box to hold the ROI draw min and max pixel density
         self.draw_roi_window_instance_action_box_2 = QHBoxLayout()
         self.draw_roi_window_instance_action_box_2.setObjectName("DrawRoiWindowInstanceActionBox")
 
@@ -640,10 +640,11 @@ class UIDrawROIWindow():
         self.window.mainPageCallClass.runDraw(
             self.window,
             self.view,
-            self.window.pixel_values[id],
+            self.window.pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,
+            isROIDraw=True
         )
 
 

@@ -13,6 +13,7 @@ from pathlib import Path
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
+from PyQt5.QtGui import QPainter, QFont
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
@@ -973,6 +974,8 @@ class Transect(QtWidgets.QGraphicsScene):
 
         event.canvas.figure.axes[0].has_been_closed = True
 
+
+
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
@@ -1110,17 +1113,15 @@ class Transect(QtWidgets.QGraphicsScene):
 #  This Class handles the Drawing functionality                                                                    #
 #                                                                                                                   #
 #####################################################################################################################
-import numpy as np
-from itertools import cycle
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
+    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow, isROIDraw=False):
         super(Drawing, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
+        self.addItem(QGraphicsPixmapItem(imagetoPaint))
         self.img = imagetoPaint
-        self.algorithm = LiveWireSegmentation(self.img, smooth_image=False, threshold_gradient_image=False)
         self.values = []
         self.distances = []
         self.data = dataset
@@ -1131,72 +1132,94 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.pos1 = QPoint()
         self.pos2 = QPoint()
         self.points = []
+        self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
+        self._figure, self._axes, self._line = None, None, None
+        self.leftLine, self.rightLine = None, None
+        self._dragging_point = None
+        self._points = {}
+        self.thresholds = [10, 40]
 
-        INTERACTIVE = True  # to compute interactive shortest path suggestions
-
-        plt1.close('all')
-        self.COLORS = cycle('rgbyc')  # use separate colors for consecutive segmentations
-
-        self.start_point = None
-        self.current_color = next(self.COLORS)
-        self.current_path = None
-        self.length_penalty = 10.0
-
-
-        fig1 = plt1.figure(num='ROI Draw')
-        plt1.gray()
-        new_manager = fig1.canvas.manager
-        new_manager.canvas.figure = fig1
-        fig1.set_canvas(new_manager.canvas)
-        plt1.imshow(self.img)
-        fig1.canvas.mpl_connect('close_event', self.on_close)
-
-        fig1.canvas.mpl_connect('button_release_event', self.button_pressed)
-        if INTERACTIVE:
-            fig1.canvas.mpl_connect('motion_notify_event', self.mouse_moved)
-        plt1.show()
-
-    def button_pressed(self, event):
-        if(event.ydata):
-            self.start_point
-            if self.start_point is None:
-                self.start_point = (int(event.ydata), int(event.xdata))
-
-            else:
-                self.end_point = (int(event.ydata), int(event.xdata))
-
-                # the line below is calling the segmentation algorithm
-                path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
-                plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
-                self.start_point = self.end_point
-
-            if self.current_path is not None:
-                plt1.draw()
-
-    def mouse_moved(self, event):
-        if self.start_point is None:
-            return
-
-        if (event.ydata):
-            self.end_point = (int(event.ydata), int(event.xdata))
-
-        # the line below is calling the segmentation algorithm
-        path = self.algorithm.compute_shortest_path(self.start_point, self.end_point, length_penalty=self.length_penalty)
-
-        self.current_path
-        if self.current_path is not None:
-            self.current_path.pop(0).remove()
-        self.current_path = plt1.plot(np.array(path)[:, 1], np.array(path)[:, 0], c=self.current_color)
-
-    def on_close(self, event):
+    # This function starts the line draw when the mouse is pressed into the 2D view of the scan
+    def mousePressEvent(self, event):
+        # Clear the current transect first
         plt1.close()
+        # If is the first time we can draw as we want a line per button press
+        if self.drawing == True:
+            self.pos1 = event.scenePos()
+            self._current_rect_item = QtWidgets.QGraphicsRectItem()
+            self._current_rect_item.setPen(QtCore.Qt.red)
+            self._current_rect_item.setFlag(
+                QtWidgets.QGraphicsItem.ItemIsMovable, False)
+            self.addItem(self._current_rect_item)
+            self._start = event.scenePos()
+            r = QtCore.QRectF(self._start, self._start)
+            self._current_rect_item.setRect(r)
 
-        #returns the ROI Draw page back to a non-drawing environment
-        self.mainWindow.drawROI.draw_window.update_view()
+          #self.painter = QPainter(self)
+           #self.painter.setPen(Qt.blue)
+            #self.painter.setFont(QFont("Ariel", 30))
+            #self.painter.drawEllipse(300, 300, 70)
 
-        event.canvas.figure.axes[0].has_been_closed = True
+        # Second time generate mouse position
+
+    # This function tracks the mouse and draws the line from the original press point
+    def mouseMoveEvent(self, event):
+        if self._current_rect_item is not None and self.drawing == True:
+            r = QtCore.QRectF(self._start, event.scenePos())
+            self._current_rect_item.setRect(r)
+
+    # This function terminates the line drawing and initiates the plot
+    def mouseReleaseEvent(self, event):
+        if self.drawing == True:
+            self.pos2 = event.scenePos()
+            # If a user just clicked one position
+            if self.pos1.x() == self.pos2.x() and self.pos1.y() == self.pos2.y():
+                self.drawing = False
+            else:
+                self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
+                             round(self.pos2.x()), round(self.pos2.y()))
+                self.drawing = False
+                self._current_rect_item = None
+
+    # This function performs the DDA algorithm that locates all the points in the drawn line
+    def drawDDA(self, x1, y1, x2, y2):
+        x, y = x1, y1
+        length = abs(x2 - x1) if abs(x2 - x1) > abs(y2 - y1) else abs(y2 - y1)
+        dx = (x2 - x1) / float(length)
+        dy = (y2 - y1) / float(length)
+        self.points.append((round(x), round(y)))
+
+        for i in range(length):
+            x += dx
+            y += dy
+            self.points.append((round(x), round(y)))
+
+        # get the values of these points from the dataset
+        self.getValues()
+        # get their distances for the plot
+        self.getDistances()
+
+    # This function calculates the distance between two points
+    def calculateDistance(self, x1, y1, x2, y2):
+        dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        return dist
+
+    # This function gets the corresponding values of all the points in the drawn line from the dataset
+    def getValues(self):
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                self.values.append(self.data[i][j])
+
+    # Get the distance of each point from the end of the line
+    def getDistances(self):
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                self.distances.append(self.calculateDistance(
+                    i, j, round(self.pos2.x()), round(self.pos2.y())))
+        self.distances.reverse()
+
 
 
 #####################################################################################################################
@@ -1236,8 +1259,8 @@ class MainPageCallClass:
                                dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
 
-    # This function runs Transect on button click
-    def runDraw(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
+    # This function runs Draw on button click
+    def runDraw(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
         self.tab_ct = Drawing(mainWindow, imagetoPaint,
-                               dataset, rowS, colS, tabWindow)
+                               dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
