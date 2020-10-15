@@ -1108,6 +1108,7 @@ class Transect(QtWidgets.QGraphicsScene):
             self._dragging_point = self._add_point(event)
             self._update_plot()
 
+import random
 #####################################################################################################################
 #                                                                                                                   #
 #  This Class handles the Drawing functionality                                                                    #
@@ -1125,100 +1126,45 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.values = []
         self.distances = []
         self.data = dataset
-        self.pixSpacing = rowS / colS
-        self._start = QPointF()
-        self.drawing = True
-        self._current_rect_item = None
-        self.pos1 = QPoint()
-        self.pos2 = QPoint()
-        self.points = []
         self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
-        self._figure, self._axes, self._line = None, None, None
-        self.leftLine, self.rightLine = None, None
-        self._dragging_point = None
-        self._points = {}
-        self.thresholds = [10, 40]
 
-    # This function starts the line draw when the mouse is pressed into the 2D view of the scan
+
+        self.rect = QtCore.QRect(QtCore.QPoint(*random.sample(range(50), 2)), QtCore.QSize(100, 100))
+        self.update()
+        self.drag_position = QtCore.QPoint()
+        self.update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if not self.rect.isNull():
+            painter = QtGui.QPainter(self)
+            painter.setRenderHint(QtGui.QPainter.Antialiasing)
+            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
+            painter.drawEllipse(self.rect)
+        print("Paint")
+
     def mousePressEvent(self, event):
-        # Clear the current transect first
-        plt1.close()
-        # If is the first time we can draw as we want a line per button press
-        if self.drawing == True:
-            self.pos1 = event.scenePos()
-            self._current_rect_item = QtWidgets.QGraphicsRectItem()
-            self._current_rect_item.setPen(QtCore.Qt.red)
-            self._current_rect_item.setFlag(
-                QtWidgets.QGraphicsItem.ItemIsMovable, False)
-            self.addItem(self._current_rect_item)
-            self._start = event.scenePos()
-            r = QtCore.QRectF(self._start, self._start)
-            self._current_rect_item.setRect(r)
+        if (
+                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
+                < self.rect.width()
+        ):
+            self.drag_position = event.pos() - self.rect.topLeft()
+        super().mousePressEvent(event)
+        print("Press")
 
-          #self.painter = QPainter(self)
-           #self.painter.setPen(Qt.blue)
-            #self.painter.setFont(QFont("Ariel", 30))
-            #self.painter.drawEllipse(300, 300, 70)
-
-        # Second time generate mouse position
-
-    # This function tracks the mouse and draws the line from the original press point
     def mouseMoveEvent(self, event):
-        if self._current_rect_item is not None and self.drawing == True:
-            r = QtCore.QRectF(self._start, event.scenePos())
-            self._current_rect_item.setRect(r)
+        if not self.drag_position.isNull():
+            self.rect.moveTopLeft(event.pos() - self.drag_position)
+            self.update()
+        super().mouseMoveEvent(event)
+        print("Move")
 
-    # This function terminates the line drawing and initiates the plot
     def mouseReleaseEvent(self, event):
-        if self.drawing == True:
-            self.pos2 = event.scenePos()
-            # If a user just clicked one position
-            if self.pos1.x() == self.pos2.x() and self.pos1.y() == self.pos2.y():
-                self.drawing = False
-            else:
-                self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
-                             round(self.pos2.x()), round(self.pos2.y()))
-                self.drawing = False
-                self._current_rect_item = None
-
-    # This function performs the DDA algorithm that locates all the points in the drawn line
-    def drawDDA(self, x1, y1, x2, y2):
-        x, y = x1, y1
-        length = abs(x2 - x1) if abs(x2 - x1) > abs(y2 - y1) else abs(y2 - y1)
-        dx = (x2 - x1) / float(length)
-        dy = (y2 - y1) / float(length)
-        self.points.append((round(x), round(y)))
-
-        for i in range(length):
-            x += dx
-            y += dy
-            self.points.append((round(x), round(y)))
-
-        # get the values of these points from the dataset
-        self.getValues()
-        # get their distances for the plot
-        self.getDistances()
-
-    # This function calculates the distance between two points
-    def calculateDistance(self, x1, y1, x2, y2):
-        dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-        return dist
-
-    # This function gets the corresponding values of all the points in the drawn line from the dataset
-    def getValues(self):
-        for i, j in self.points:
-            if i in range(512) and j in range(512):
-                self.values.append(self.data[i][j])
-
-    # Get the distance of each point from the end of the line
-    def getDistances(self):
-        for i, j in self.points:
-            if i in range(512) and j in range(512):
-                self.distances.append(self.calculateDistance(
-                    i, j, round(self.pos2.x()), round(self.pos2.y())))
-        self.distances.reverse()
+        self.drag_position = QtCore.QPoint()
+        super().mouseReleaseEvent(event)
+        print("Release")
 
 
 
