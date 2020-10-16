@@ -127,11 +127,13 @@ class NewStructureTab(QtWidgets.QWidget):
         self.button_roi_delete.setMinimumHeight(50)
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
+        self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
 
         #self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_draw.setMinimumHeight(50)
         self.button_roi_draw.setIcon(icon_roi_draw)
         self.button_roi_draw.setText("Draw ROI")
+        self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
 
         layout_roi_buttons = QtWidgets.QHBoxLayout(self.roi_buttons)
         layout_roi_buttons.setContentsMargins(0, 0, 0, 0)
@@ -158,6 +160,12 @@ class NewStructureTab(QtWidgets.QWidget):
         self.scroll_area_content.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
 
         self.scroll_area.setWidget(self.scroll_area_content)
+
+    def roi_delete_clicked(self):
+        pass
+
+    def roi_draw_clicked(self):
+        pass
 
     def structure_modified(self, changes):
         """
