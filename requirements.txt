@@ -1,6 +1,7 @@
 dicompyler-core
 pydicom
 cython
+numpy~=1.19
 pyradiomics
 PyQt5
 pandas
@@ -9,3 +10,4 @@ git+https://github.com/matplotlib/legacycontour.git
 fuzzywuzzy
 matplotlib==3.2.0
 PyWavelets==0.5.2
+dataclasses==0.7;python_version=="3.6.*"

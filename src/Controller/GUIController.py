@@ -30,10 +30,15 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
     go_next_window = QtCore.pyqtSignal(tuple)
 
     # Initialisation function to display the UI
-    def __init__(self):
+    def __init__(self, default_directory):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.patient_info_initialized.connect(self.open_patient)
+
+        if default_directory is not None:
+            self.filepath = default_directory
+            self.open_patient_directory_input_box.setText(default_directory)
+            self.scan_directory_for_patient()
 
     def open_patient(self, patient_attributes):
         self.go_next_window.emit(patient_attributes)

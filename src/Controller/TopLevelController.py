@@ -6,11 +6,13 @@ from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, MainW
 class Controller:
 
     # Initialisation function that creates an instance of each window
-    def __init__(self):
+    def __init__(self, default_directory=None):
         self.welcome_window = QtWidgets.QMainWindow()
         self.open_patient_window = QtWidgets.QMainWindow()
         self.main_window = QtWidgets.QMainWindow()
         self.pyradi_progressbar = QtWidgets.QWidget()
+        self.default_directory = default_directory  # This will contain a filepath of a folder that is dragged onto
+        # the executable icon
 
     def show_welcome(self):
         """
@@ -30,7 +32,7 @@ class Controller:
         if self.main_window.isVisible():
             self.main_window.close()
 
-        self.open_patient_window = OpenPatientWindow()
+        self.open_patient_window = OpenPatientWindow(self.default_directory)
         self.open_patient_window.patient_info_initialized.connect(self.show_main_window)
         self.open_patient_window.show()
 
