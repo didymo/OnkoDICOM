@@ -586,6 +586,7 @@ class UIDrawROIWindow():
             self.update_view()
 
     def on_reset_clicked(self):
+        self.image_display()
         self.update_view()
         self.isthmus_width_max_line_edit.setText("5")
         self.internal_hole_max_line_edit.setText("9")

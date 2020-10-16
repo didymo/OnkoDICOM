@@ -13,8 +13,8 @@ from pathlib import Path
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtGui import QPainter, QFont, QPainterPath
-from PyQt5.QtWidgets import QGraphicsPixmapItem
+from PyQt5.QtGui import QPainter, QFont, QPainterPath, QPen, QColor
+from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
 from dateutil.relativedelta import relativedelta
 
 
@@ -857,7 +857,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #  This Class handles the Transect functionality                                                                    #
 #                                                                                                                   #
 #####################################################################################################################
-
+import numpy as np
 from matplotlib.backend_bases import MouseEvent
 class Transect(QtWidgets.QGraphicsScene):
 
@@ -991,6 +991,14 @@ class Transect(QtWidgets.QGraphicsScene):
         self._axes.has_been_closed = False
         # new list is axis x, self.values is axis y
         self._axes.step(newList, self.values, where='mid')
+
+        self._axes.plot(newList, self.values, color='lightblue', linewidth=3)
+
+        # x3 = np.linespace(10, 40, 1000)
+        # y1_new = np.linespace(240, 50, 1000)
+        # y2_new = np.linespace(67, 88, 1000)
+        # idx = np.argwhere(np.isclose(y1_new, y2_new, atol=0.1)).reshape(-1)
+        # self._axes.plot(x3[idx], y2_new[idx], 'ro')
 
         if(self.isROIDraw):
             self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
@@ -1130,20 +1138,22 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
 
-        self.rect = QtCore.QRect(100,100,20,20)
+        self.rect = QtCore.QRect(250,300,20,20)
         self.update()
         self.drag_position = QtCore.QPoint()
 
     def drawForeground(self, painter, rect):
-        super().drawForeground(painter, rect)
 
-        painter = QtGui.QPainter(self.img)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
-        painter.drawEllipse(self.rect)
+        if self.rect.isNull():
+            super().drawForeground(painter, rect)
+            self.update()
+        else:
+            painter = QtGui.QPainter(self.img)
+            painter.setRenderHint(QtGui.QPainter.Antialiasing)
+            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
+            painter.drawEllipse(self.rect)
 
         print("Paint")
-
 
     def mousePressEvent(self, event):
         if (
@@ -1152,6 +1162,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         ):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
+        self.pos = event.scenePos()
+        self.item = QGraphicsEllipseItem(self.pos.x(), self.pos.y(), 60, 40)
+        self.item.setPen(QPen(QColor("blue")))
+        self.addItem(self.item)
         self.update()
         print("Press")
 
