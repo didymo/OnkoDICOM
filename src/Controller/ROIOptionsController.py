@@ -6,10 +6,9 @@ from pydicom import Dataset
 # Create the ROI Delete Options class based on the UI from the file in View/ROI Delete Option
 class RoiDeleteOptions(QtWidgets.QMainWindow, UIDeleteROIWindow):
     deleting_rois_structure_tuple = QtCore.pyqtSignal(tuple)  # new PyDicom dataset
-    def __init__(self, window, rois, dataset_rtss):
+    def __init__(self, rois, dataset_rtss):
         super(RoiDeleteOptions, self).__init__()
 
-        self.window = window
         self.setup_ui(self, rois, dataset_rtss, self.deleting_rois_structure_tuple)
 # The class that will be called by the main page to access the ROI Options controller
 class ROIDelOption:
@@ -19,7 +18,7 @@ class ROIDelOption:
         self.window = window
 
     def show_roi_delete_options(self):
-        self.options_window = RoiDeleteOptions(self.window, self.window.rois, self.window.dataset_rtss)
+        self.options_window = RoiDeleteOptions(self.window.rois, self.window.dataset_rtss)
         self.options_window.deleting_rois_structure_tuple.connect(self.window.structures_tab.structure_modified)
         self.options_window.show()
 
