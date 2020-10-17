@@ -1141,6 +1141,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.rect = QtCore.QRect(250,300,20,20)
         self.update()
         self.drag_position = QtCore.QPoint()
+        self._itemList = []
+        self.item = None
 
     def drawForeground(self, painter, rect):
 
@@ -1155,7 +1157,17 @@ class Drawing(QtWidgets.QGraphicsScene):
 
         print("Paint")
 
+    def update_image(self):
+        for x in self._itemList:
+            self.removeItem(x)
+        for x in self._itemList:
+            self.addItem(x)
+
+        self.update()
+
     def mousePressEvent(self, event):
+        if self.item:
+            self.removeItem(self.item)
         if (
                 2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
                 < self.rect.width()
@@ -1163,9 +1175,13 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
         self.pos = event.scenePos()
-        self.item = QGraphicsEllipseItem(self.pos.x(), self.pos.y(), 60, 40)
+        self.item = QGraphicsEllipseItem(self.pos.x(), self.pos.y(), 40, 40)
         self.item.setPen(QPen(QColor("blue")))
-        self.addItem(self.item)
+        if self._itemList:
+            self._itemList.pop()
+
+        self._itemList.append(self.item)
+        self.update_image()
         self.update()
         print("Press")
 
@@ -1173,6 +1189,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         if not self.drag_position.isNull():
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
+        self.update_image()
         self.update()
         print("Move")
 
