@@ -1,9 +1,11 @@
 import csv
+import math
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThreadPool
 from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
-    QLabel, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget
+    QLabel, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, QGraphicsPixmapItem, QGraphicsEllipseItem
 from PyQt5.Qt import Qt
 import os
 from src.Model import ROI
@@ -635,18 +637,14 @@ class UIDrawROIWindow():
             id = self.slider.value()
 
         dt = self.window.dataset[id]
-        rowS = dt.PixelSpacing[0]
-        colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        self.window.mainPageCallClass.runDraw(
+        self.drawingROI = Drawing(
             self.window,
-            self.view,
             self.window.pixmaps[id],
             dt._pixel_array.transpose(),
-            rowS,
-            colS,
-            isROIDraw=True
+            self.view
         )
+        self.view.setScene(self.drawingROI)
 
 
     def init_standard_names(self):
@@ -679,7 +677,11 @@ class UIDrawROIWindow():
     def set_selected_roi_name(self, roi_name):
         self.roi_name_line_edit.setText(roi_name)
 
-
+#####################################################################################################################
+#                                                                                                                   #
+#  This Class handles the ROI Pop Up functionalities                                                                    #
+#                                                                                                                   #
+#####################################################################################################################
 class SelectROIPopUp(QDialog):
     parent_window = None
 
@@ -757,3 +759,73 @@ class SelectROIPopUp(QDialog):
     def on_cancel_clicked(self):
         self.close()
 
+#####################################################################################################################
+#                                                                                                                   #
+#  This Class handles the Drawing functionality                                                                    #
+#                                                                                                                   #
+#####################################################################################################################
+class Drawing(QtWidgets.QGraphicsScene):
+
+    # Initialisation function  of the class
+    def __init__(self, mainWindow, imagetoPaint, dataset, tabWindow):
+        super(Drawing, self).__init__()
+
+        #create the canvas to draw the line on and all its necessary components
+        self.addItem(QGraphicsPixmapItem(imagetoPaint))
+        self.img = imagetoPaint
+        self.data = dataset
+        self.tabWindow = tabWindow
+        self.mainWindow = mainWindow
+        self.rect = QtCore.QRect(250,300,20,20)
+        self.update()
+        self._points = {}
+        self.drag_position = QtCore.QPoint()
+        self.item = None
+        self.isPressed = False
+
+    # This function is for if we want to choose and drag the circle
+    def _find_neighbor_point(self, event):
+        u""" Find point around mouse position
+        :rtype: ((int, int)|None)
+        :return: (x, y) if there are any point around mouse else None
+        """
+        distance_threshold = 3.0
+        nearest_point = None
+        min_distance = math.sqrt(2 * (100 ** 2))
+        for x, y in self._points.items():
+            distance = math.hypot(event.xdata - x, event.ydata - y)
+            if distance < min_distance:
+                min_distance = distance
+                nearest_point = (x, y)
+        if min_distance < distance_threshold:
+            return nearest_point
+        return None
+
+    def mousePressEvent(self, event):
+        if self.item:
+            self.removeItem(self.item)
+        self.isPressed = True
+        if (
+                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
+                < self.rect.width()
+        ):
+            self.drag_position = event.pos() - self.rect.topLeft()
+        super().mousePressEvent(event)
+        self.item = QGraphicsEllipseItem(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
+        self.item.setPen(QPen(QColor("blue")))
+        self.addItem(self.item)
+        self.update()
+
+    def mouseMoveEvent(self, event):
+        if not self.drag_position.isNull():
+            self.rect.moveTopLeft(event.pos() - self.drag_position)
+        super().mouseMoveEvent(event)
+        if self.item and self.isPressed:
+            self.item.setRect(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
+        self.update()
+
+    def mouseReleaseEvent(self, event):
+        self.isPressed = False
+        self.drag_position = QtCore.QPoint()
+        super().mouseReleaseEvent(event)
+        self.update()

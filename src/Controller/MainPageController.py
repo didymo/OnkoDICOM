@@ -13,18 +13,11 @@ from pathlib import Path
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtGui import QPainter, QFont, QPainterPath, QPen, QColor
 from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
 from dateutil.relativedelta import relativedelta
 
 
-from skimage import data
 from numpy import *
-from skimage.filters import threshold_multiotsu
-
-# import live wire method
-from itertools import cycle
-from src.Model.LiveWireAlgorithm.LiveWireSegmentation import LiveWireSegmentation
 
 from src.Model.Anon import *
 from src.View.mainpage.ClinicalDataDisplay import *
@@ -1116,91 +1109,6 @@ class Transect(QtWidgets.QGraphicsScene):
             self._dragging_point = self._add_point(event)
             self._update_plot()
 
-import random
-#####################################################################################################################
-#                                                                                                                   #
-#  This Class handles the Drawing functionality                                                                    #
-#                                                                                                                   #
-#####################################################################################################################
-class Drawing(QtWidgets.QGraphicsScene):
-
-    # Initialisation function  of the class
-    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow, isROIDraw=False):
-        super(Drawing, self).__init__()
-
-        #create the canvas to draw the line on and all its necessary components
-        self.addItem(QGraphicsPixmapItem(imagetoPaint))
-        self.img = imagetoPaint
-        self.values = []
-        self.distances = []
-        self.data = dataset
-        self.isROIDraw = isROIDraw
-        self.tabWindow = tabWindow
-        self.mainWindow = mainWindow
-        self.rect = QtCore.QRect(250,300,20,20)
-        self.update()
-        self._points = {}
-        self.drag_position = QtCore.QPoint()
-        self.item = None
-        self.isPressed = False
-
-    def drawForeground(self, painter, rect):
-        if self.rect.isNull():
-            super().drawForeground(painter, rect)
-            self.update()
-        else:
-            painter = QtGui.QPainter(self.img)
-            painter.setRenderHint(QtGui.QPainter.Antialiasing)
-            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
-            painter.drawEllipse(self.rect)
-
-    # This function is for if we want to choose and drag the circle
-    def _find_neighbor_point(self, event):
-        u""" Find point around mouse position
-        :rtype: ((int, int)|None)
-        :return: (x, y) if there are any point around mouse else None
-        """
-        distance_threshold = 3.0
-        nearest_point = None
-        min_distance = math.sqrt(2 * (100 ** 2))
-        for x, y in self._points.items():
-            distance = math.hypot(event.xdata - x, event.ydata - y)
-            if distance < min_distance:
-                min_distance = distance
-                nearest_point = (x, y)
-        if min_distance < distance_threshold:
-            return nearest_point
-        return None
-
-    def mousePressEvent(self, event):
-        if self.item:
-            self.removeItem(self.item)
-        self.isPressed = True
-        if (
-                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
-                < self.rect.width()
-        ):
-            self.drag_position = event.pos() - self.rect.topLeft()
-        super().mousePressEvent(event)
-        self.item = QGraphicsEllipseItem(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
-        self.item.setPen(QPen(QColor("blue")))
-        self.addItem(self.item)
-        self.update()
-
-    def mouseMoveEvent(self, event):
-        if not self.drag_position.isNull():
-            self.rect.moveTopLeft(event.pos() - self.drag_position)
-        super().mouseMoveEvent(event)
-        if self.item and self.isPressed:
-            self.item.setRect(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
-        self.update()
-
-    def mouseReleaseEvent(self, event):
-        self.isPressed = False
-        self.drag_position = QtCore.QPoint()
-        super().mouseReleaseEvent(event)
-        self.update()
-
 
 
 #####################################################################################################################
@@ -1237,11 +1145,5 @@ class MainPageCallClass:
     # This function runs Transect on button click
     def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
-                               dataset, rowS, colS, tabWindow, isROIDraw)
-        tabWindow.setScene(self.tab_ct)
-
-    # This function runs Draw on button click
-    def runDraw(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
-        self.tab_ct = Drawing(mainWindow, imagetoPaint,
                                dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
