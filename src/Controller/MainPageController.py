@@ -1144,20 +1144,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.drag_position = QtCore.QPoint()
         self._itemList = []
         self.item = None
-        self.isPressed = False
-
-    def drawForeground(self, painter, rect):
-
-        if self.rect.isNull():
-            super().drawForeground(painter, rect)
-            self.update()
-        else:
-            painter = QtGui.QPainter(self.img)
-            painter.setRenderHint(QtGui.QPainter.Antialiasing)
-            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
-            painter.drawEllipse(self.rect)
-
-        print("Paint")
+        self.is_pressed = False
 
     def update_image(self):
         for x in self._itemList:
@@ -1188,14 +1175,10 @@ class Drawing(QtWidgets.QGraphicsScene):
     def mousePressEvent(self, event):
         if self.item:
             self.removeItem(self.item)
-        self.isPressed = True
-        if (
-                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
-                < self.rect.width()
-        ):
-            self.drag_position = event.pos() - self.rect.topLeft()
+        self.is_pressed = True
+
         super().mousePressEvent(event)
-        self.item = QGraphicsEllipseItem(event.scenePos().x()-20, event.scenePos().y()-5, 40, 40)
+        self.item = QGraphicsEllipseItem(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
         self.item.setPen(QPen(QColor("blue")))
         self.addItem(self.item)
         self.update()
@@ -1209,7 +1192,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.update()
 
     def mouseReleaseEvent(self, event):
-        self.isPressed = False
+        self.is_pressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
         self.update()
