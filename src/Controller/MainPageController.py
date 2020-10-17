@@ -1137,22 +1137,22 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
-
         self.rect = QtCore.QRect(250,300,20,20)
         self.update()
         self._points = {}
         self.drag_position = QtCore.QPoint()
-        self._itemList = []
         self.item = None
-        self.is_pressed = False
+        self.isPressed = False
 
-    def update_image(self):
-        for x in self._itemList:
-            self.removeItem(x)
-        for x in self._itemList:
-            self.addItem(x)
-
-        self.update()
+    def drawForeground(self, painter, rect):
+        if self.rect.isNull():
+            super().drawForeground(painter, rect)
+            self.update()
+        else:
+            painter = QtGui.QPainter(self.img)
+            painter.setRenderHint(QtGui.QPainter.Antialiasing)
+            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
+            painter.drawEllipse(self.rect)
 
     # This function is for if we want to choose and drag the circle
     def _find_neighbor_point(self, event):
@@ -1175,8 +1175,12 @@ class Drawing(QtWidgets.QGraphicsScene):
     def mousePressEvent(self, event):
         if self.item:
             self.removeItem(self.item)
-        self.is_pressed = True
-
+        self.isPressed = True
+        if (
+                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
+                < self.rect.width()
+        ):
+            self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
         self.item = QGraphicsEllipseItem(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
         self.item.setPen(QPen(QColor("blue")))
@@ -1187,12 +1191,12 @@ class Drawing(QtWidgets.QGraphicsScene):
         if not self.drag_position.isNull():
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
-        if self.item:
+        if self.item and self.isPressed:
             self.item.setRect(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
         self.update()
 
     def mouseReleaseEvent(self, event):
-        self.is_pressed = False
+        self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
         self.update()
