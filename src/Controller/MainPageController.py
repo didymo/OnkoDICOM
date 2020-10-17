@@ -1144,15 +1144,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.item = None
         self.isPressed = False
 
-    def drawForeground(self, painter, rect):
-        if self.rect.isNull():
-            super().drawForeground(painter, rect)
-            self.update()
-        else:
-            painter = QtGui.QPainter(self.img)
-            painter.setRenderHint(QtGui.QPainter.Antialiasing)
-            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 5, QtCore.Qt.SolidLine))
-            painter.drawEllipse(self.rect)
 
     # This function is for if we want to choose and drag the circle
     def _find_neighbor_point(self, event):
@@ -1176,11 +1167,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.item:
             self.removeItem(self.item)
         self.isPressed = True
-        if (
-                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
-                < self.rect.width()
-        ):
-            self.drag_position = event.pos() - self.rect.topLeft()
+
         super().mousePressEvent(event)
         self.item = QGraphicsEllipseItem(event.scenePos().x()-20, event.scenePos().y()-20, 40, 40)
         self.item.setPen(QPen(QColor("blue")))
@@ -1200,7 +1187,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
         self.update()
-
 
 
 #####################################################################################################################
