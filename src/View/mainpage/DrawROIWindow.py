@@ -330,6 +330,7 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_tool_button.resize(
             self.draw_roi_window_instance_action_tool_button.sizeHint().width(),
             self.draw_roi_window_instance_action_tool_button.sizeHint().height())
+        self.draw_roi_window_instance_action_tool_button.clicked.connect(self.on_tool_clicked)
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_tool_button)
 
         # Create a button for running seed algorithm
@@ -680,14 +681,9 @@ class UIDrawROIWindow():
             max_pixel = int(max_pixel)
 
             if min_pixel <= max_pixel:
-                dt = self.window.dataset[id]
-                rowS = dt.PixelSpacing[0]
-                colS = dt.PixelSpacing[1]
+                data_set = self.window.dataset[id]
 
-                pixel_array = dt._pixel_array
-                pixel_spacing = rowS / colS
-
-                print(pixel_array)
+                pixel_array = data_set._pixel_array
 
                 new_pix_array = []
 
@@ -705,6 +701,10 @@ class UIDrawROIWindow():
             QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_save_clicked(self):
+
+        QMessageBox.about(self, "Coming Soon", "This feature is in development")
+
+    def on_tool_clicked(self):
 
         QMessageBox.about(self, "Coming Soon", "This feature is in development")
 
