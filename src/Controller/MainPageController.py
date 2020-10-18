@@ -1006,8 +1006,8 @@ class Transect(QtWidgets.QGraphicsScene):
     def plotResult(self):
         plt1.close('all')
         newList = [(x * self.pix_spacing) for x in self.distances]
-        self.thresholds[0] = newList[3]
-        self.thresholds[1] = newList[-3]
+        self.thresholds[0] = newList[1]
+        self.thresholds[1] = newList[len(newList)-1]
         self._points[self.thresholds[0]] = 0
         self._points[self.thresholds[1]] = 0
         self._figure = plt1.figure(num='Transect Graph')
@@ -1059,10 +1059,11 @@ class Transect(QtWidgets.QGraphicsScene):
                 # Update current plot
                 else:
                     self._line.set_data(x, y)
-                self.leftLine.set_xdata(x[0])
-                self.rightLine.set_xdata(x[1])
-                self.thresholds[0] = x[0]
-                self.thresholds[1] = x[1]
+                if len(x) >= 2:
+                    self.leftLine.set_xdata(x[0])
+                    self.rightLine.set_xdata(x[1])
+                    self.thresholds[0] = x[0]
+                    self.thresholds[1] = x[1]
 
                 for i in self._axes.bar(self.distances, self.values):
                     i.set_color('white')
