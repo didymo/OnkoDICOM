@@ -935,7 +935,7 @@ class Transect(QtWidgets.QGraphicsScene):
             y += dy
             self.points.append((round(x), round(y)))
 
-        print(self.points)
+
         # get the values of these points from the dataset
         self.getValues()
         # get their distances for the plot
@@ -968,9 +968,15 @@ class Transect(QtWidgets.QGraphicsScene):
         if self.isROIDraw:
             self.mainWindow.drawROI.draw_window.upperLimit = self.upperLimit
             self.mainWindow.drawROI.draw_window.lowerLimit = self.lowerLimit
+            self.mainWindow.drawROI.draw_window.update_view()
             image = self.img.toImage()
+            ellipse = None
             for i, j in self.roiPoints:
                 if i in range(512) and j in range(512):
+                    # Draw a circle in the centre of upper limit and lower limit
+                    if (self.lowerLimit + round((self.upperLimit - self.lowerLimit)/2) - self.data[i][j] <=3 ):
+                        ellipse = QGraphicsEllipseItem(i, j, 40, 40)
+                        ellipse.setPen(QtGui.QPen(QtGui.QColor("red")))
                     if self.data[i][j] >= self.lowerLimit and self.data[i][j] <= self.upperLimit:
                         image.setPixelColor(i, j, QtGui.QColor(QtGui.QRgba64.fromRgba(0, 30, 200, 255)))
             pixmap = QtGui.QPixmap.fromImage(image)
@@ -978,6 +984,7 @@ class Transect(QtWidgets.QGraphicsScene):
             label.setPixmap(pixmap)
             scene = QtWidgets.QGraphicsScene()
             scene.addWidget(label)
+            scene.addItem(ellipse)
             self.tabWindow.setScene(scene)
         else:
             self.mainWindow.dicom_view.update_view()

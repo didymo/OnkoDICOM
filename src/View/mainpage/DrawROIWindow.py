@@ -465,6 +465,7 @@ class UIDrawROIWindow():
             self.max_pixel_density_line_edit.setText(str(self.upperLimit))
 
 
+
         if eventChangedWindow:
             self.image_display(eventChangedWindow=True)
         else:
