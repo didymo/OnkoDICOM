@@ -878,7 +878,10 @@ class Transect(QtWidgets.QGraphicsScene):
         self.leftLine, self.rightLine = None, None
         self._dragging_point = None
         self._points = {}
+        self._valueTuples = {}
         self.thresholds = [10, 40]
+        self.upperLimit = None
+        self.lowerLimit = None
 
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
@@ -961,13 +964,39 @@ class Transect(QtWidgets.QGraphicsScene):
 
         #returns the main page back to a non-drawing environment
         if self.isROIDraw:
+            self.mainWindow.drawROI.draw_window.upperLimit = self.upperLimit
+            self.mainWindow.drawROI.draw_window.lowerLimit = self.lowerLimit
             self.mainWindow.drawROI.draw_window.update_view()
         else:
             self.mainWindow.dicom_view.update_view()
 
         event.canvas.figure.axes[0].has_been_closed = True
 
+    def find_limits(self, roiValues):
+        self.upperLimit = max(roiValues)
+        self.lowerLimit = min(roiValues)
 
+    def return_limits(self):
+        return [self.lowerLimit, self.upperLimit]
+
+    def draw_new_bar_colour(self):
+        newList = [(x * self.pixSpacing) for x in self.distances]
+
+        for i in self._axes.bar(newList, self.values):
+            i.set_color('white')
+        for x in range(len(newList)):
+            self._valueTuples[newList[x]] = self.values[x]
+        # Recalculate the distance and CT# to show ROI in histogram
+        roiList = []
+        roiValues = []
+        for x in range(len(newList)):
+            if (newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
+                roiList.append(newList[x])
+                roiValues.append(self._valueTuples[newList[x]])
+
+        self.find_limits(roiValues)
+        for i in self._axes.bar(roiList, roiValues):
+            i.set_color('r')
 
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
@@ -975,7 +1004,6 @@ class Transect(QtWidgets.QGraphicsScene):
         self._points[self.thresholds[0]] = 0
         self._points[self.thresholds[1]] = 0
         newList = [(x * self.pixSpacing) for x in self.distances]
-        # adding a dummy manager
         self._figure = plt1.figure(num='Transect Graph')
         new_manager = self._figure.canvas.manager
         new_manager.canvas.figure = self._figure
@@ -984,33 +1012,22 @@ class Transect(QtWidgets.QGraphicsScene):
         self._axes.has_been_closed = False
         # new list is axis x, self.values is axis y
         self._axes.step(newList, self.values, where='mid')
-
-        self._axes.plot(newList, self.values, color='lightblue', linewidth=3)
-
-        # x3 = np.linespace(10, 40, 1000)
-        # y1_new = np.linespace(240, 50, 1000)
-        # y2_new = np.linespace(67, 88, 1000)
-        # idx = np.argwhere(np.isclose(y1_new, y2_new, atol=0.1)).reshape(-1)
-        # self._axes.plot(x3[idx], y2_new[idx], 'ro')
-
         if(self.isROIDraw):
+            for x in range(len(newList)):
+                self._valueTuples[newList[x]] = self.values[x]
             self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
             self.rightLine = self._axes.axvline(self.thresholds[1], color='r')
             # Recalculate the distance and CT# to show ROI in histogram
-            self.ROIvalues = []
-            self.ROIdistance = []
-            for i, j in self.points:
-                if i in range(512) and j in range(512):
-                    temp = self.calculateDistance(
-                        i, j, round(self.pos2.x()), round(self.pos2.y()))
-                    if(temp >= self.thresholds[0] and temp <= self.thresholds[1]):
-                            self.ROIdistance.append(self.calculateDistance(
-                                i, j, round(self.pos2.x()), round(self.pos2.y())))
-                            #self.ROIvalues.append(self.data[i][j])
-            #self.ROIdistance.reverse()
+            roiList = []
+            roiValues = []
+            for x in range(len(newList)):
+                if(newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
+                    roiList.append(newList[x])
+                    roiValues.append(self._valueTuples[newList[x]])
 
-            #for i in self._axes.bar(self.ROIdistance, self.ROIvalues):
-               # i.set_color('r')
+            self.find_limits(roiValues)
+            for i in self._axes.bar(roiList, roiValues):
+               i.set_color('r')
 
 
         plt1.xlabel('Distance mm')
@@ -1039,6 +1056,7 @@ class Transect(QtWidgets.QGraphicsScene):
                 self.rightLine.set_xdata(x[1])
                 self.thresholds[0] = x[0]
                 self.thresholds[1] = x[1]
+                self.draw_new_bar_colour()
             self._figure.canvas.draw()
 
     def _add_point(self, x, y=None):

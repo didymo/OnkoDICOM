@@ -27,6 +27,8 @@ class UIDrawROIWindow():
         self.standard_names = []
         self.draw_roi_window_instance = draw_roi_window_instance
 
+        self.upperLimit = None
+        self.lowerLimit = None
         self.init_slider()
         self.init_view()
         self.init_metadata()
@@ -458,6 +460,10 @@ class UIDrawROIWindow():
          events in the DICOM View area.
          False by default.
         """
+        if self.upperLimit and self.lowerLimit:
+            self.min_pixel_density_line_edit.setText(str(self.lowerLimit))
+            self.max_pixel_density_line_edit.setText(str(self.upperLimit))
+
 
         if eventChangedWindow:
             self.image_display(eventChangedWindow=True)
