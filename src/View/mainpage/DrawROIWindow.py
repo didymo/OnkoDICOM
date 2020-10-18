@@ -679,24 +679,30 @@ class UIDrawROIWindow():
             min_pixel = int(min_pixel)
             max_pixel = int(max_pixel)
 
-            dt = self.window.dataset[id]
-            rowS = dt.PixelSpacing[0]
-            colS = dt.PixelSpacing[1]
+            if min_pixel <= max_pixel:
+                dt = self.window.dataset[id]
+                rowS = dt.PixelSpacing[0]
+                colS = dt.PixelSpacing[1]
 
-            pixel_array = dt._pixel_array
-            pixel_spacing = rowS / colS
+                pixel_array = dt._pixel_array
+                pixel_spacing = rowS / colS
 
-            print(pixel_array)
+                print(pixel_array)
 
-            new_pix = []
-            for x in pixel_array:
-                if (x > min_pixel).any() and (x < max_pixel).any():
-                    new_pix.append(x)
+                new_pix_array = []
 
-            plt.imshow(new_pix, cmap=plt.cm.bone)
-            plt.show()
+                for item in pixel_array:
+                    if (item > min_pixel).any() and (item < max_pixel).any():
+                        new_pix_array.append(item)
+
+                plt.imshow(new_pix_array, cmap=plt.cm.bone)
+                plt.show()
+
+            else:
+                QMessageBox.about(self, "Incorrect Input", "Please ensure maximum density is atleast higher than minimum density.")
+
         else:
-            QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct")
+            QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_save_clicked(self):
 
