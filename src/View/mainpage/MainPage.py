@@ -118,6 +118,7 @@ class UIMainWindow(object):
                                    "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
 
         self.pixel_values = convert_raw_data(self.dataset)
+        # A dictionary of PyQt5.QtGui.QPixMap objects
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 
         if self.has_rtss:

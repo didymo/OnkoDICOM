@@ -497,6 +497,7 @@ class UIDrawROIWindow():
         if eventChangedWindow:
             image = self.window.pixmapChangedWindow
         else:
+            #PyQt5.QtGui.QPixMap objects
             image = self.window.pixmaps[slider_id]
         image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         label = QtWidgets.QLabel()
@@ -777,9 +778,12 @@ class Drawing(QtWidgets.QGraphicsScene):
         super(Drawing, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
+
         self.addItem(QGraphicsPixmapItem(imagetoPaint))
         self.img = imagetoPaint
         self.data = dataset
+        self.values = []
+        self.getValues()
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
         self.rect = QtCore.QRect(250,300,20,20)
@@ -806,6 +810,12 @@ class Drawing(QtWidgets.QGraphicsScene):
         if min_distance < distance_threshold:
             return nearest_point
         return None
+
+    # This function gets the corresponding values of all the points in the drawn line from the dataset
+    def getValues(self):
+        for i in range(512):
+            for j in range(512):
+                self.values.append(self.data[i][j])
 
     def mousePressEvent(self, event):
         if self.item:

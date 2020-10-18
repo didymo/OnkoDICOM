@@ -871,6 +871,7 @@ class Transect(QtWidgets.QGraphicsScene):
         self.pos1 = QPoint()
         self.pos2 = QPoint()
         self.points = []
+        self.roiPoints = []
         self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
@@ -934,6 +935,7 @@ class Transect(QtWidgets.QGraphicsScene):
             y += dy
             self.points.append((round(x), round(y)))
 
+        print(self.points)
         # get the values of these points from the dataset
         self.getValues()
         # get their distances for the plot
@@ -966,7 +968,17 @@ class Transect(QtWidgets.QGraphicsScene):
         if self.isROIDraw:
             self.mainWindow.drawROI.draw_window.upperLimit = self.upperLimit
             self.mainWindow.drawROI.draw_window.lowerLimit = self.lowerLimit
-            self.mainWindow.drawROI.draw_window.update_view()
+            image = self.img.toImage()
+            for i, j in self.roiPoints:
+                if i in range(512) and j in range(512):
+                    if self.data[i][j] >= self.lowerLimit and self.data[i][j] <= self.upperLimit:
+                        image.setPixelColor(i, j, QtGui.QColor(QtGui.QRgba64.fromRgba(0, 30, 200, 255)))
+            pixmap = QtGui.QPixmap.fromImage(image)
+            label = QtWidgets.QLabel()
+            label.setPixmap(pixmap)
+            scene = QtWidgets.QGraphicsScene()
+            scene.addWidget(label)
+            self.tabWindow.setScene(scene)
         else:
             self.mainWindow.dicom_view.update_view()
 
@@ -993,6 +1005,12 @@ class Transect(QtWidgets.QGraphicsScene):
             if (newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
                 roiList.append(newList[x])
                 roiValues.append(self._valueTuples[newList[x]])
+        self.roiPoints.clear()
+        for i, j in self.points:
+            if i in range(512) and j in range(512):
+                for x in roiValues:
+                    if(self.data[i][j] == x):
+                        self.roiPoints.append((i,j))
 
         self.find_limits(roiValues)
         for i in self._axes.bar(roiList, roiValues):
@@ -1024,6 +1042,13 @@ class Transect(QtWidgets.QGraphicsScene):
                 if(newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
                     roiList.append(newList[x])
                     roiValues.append(self._valueTuples[newList[x]])
+
+            self.roiPoints.clear()
+            for i, j in self.points:
+                if i in range(512) and j in range(512):
+                    for x in roiValues:
+                        if (self.data[i][j] == x):
+                            self.roiPoints.append((i, j))
 
             self.find_limits(roiValues)
             for i in self._axes.bar(roiList, roiValues):
