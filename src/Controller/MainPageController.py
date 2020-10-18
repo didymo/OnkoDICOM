@@ -882,7 +882,7 @@ class Transect(QtWidgets.QGraphicsScene):
         self._dragging_point = None
         self._points = {}
         self._valueTuples = {}
-        self.thresholds = [10, 40]
+        self.thresholds = [4, 10]
         self.upperLimit = None
         self.lowerLimit = None
 
@@ -974,7 +974,6 @@ class Transect(QtWidgets.QGraphicsScene):
                     for x in self.roiValues:
                         if (self.data[i][j] == x):
                             self.roiPoints.append((i, j))
-            print(self.roiValues)
             self.mainWindow.drawROI.draw_window.upper_limit = self.upperLimit
             self.mainWindow.drawROI.draw_window.lower_limit = self.lowerLimit
             self.mainWindow.drawROI.draw_window.update_view()
@@ -1006,9 +1005,11 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
+        newList = [(x * self.pixSpacing) for x in self.distances]
+        self.thresholds[0] = newList[3]
+        self.thresholds[1] = newList[-3]
         self._points[self.thresholds[0]] = 0
         self._points[self.thresholds[1]] = 0
-        newList = [(x * self.pixSpacing) for x in self.distances]
         self._figure = plt1.figure(num='Transect Graph')
         new_manager = self._figure.canvas.manager
         new_manager.canvas.figure = self._figure
