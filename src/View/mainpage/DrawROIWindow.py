@@ -198,6 +198,7 @@ class UIDrawROIWindow():
             self.draw_roi_window_instance_save_button.sizeHint().height())
         self.draw_roi_window_instance_save_button.setProperty("QPushButtonClass", "success-button")
         self.draw_roi_window_instance_image_slice_action_box.addStretch(1)
+        self.draw_roi_window_instance_save_button.clicked.connect(self.on_save_clicked)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.draw_roi_window_instance_save_button)
 
         # Create a widget to hold the image slice box
@@ -694,6 +695,12 @@ class UIDrawROIWindow():
 
             plt.imshow(new_pix, cmap=plt.cm.bone)
             plt.show()
+        else:
+            QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct")
+
+    def on_save_clicked(self):
+
+        QMessageBox.about(self, "Coming Soon", "This feature is in development")
 
     def init_standard_names(self):
         """
