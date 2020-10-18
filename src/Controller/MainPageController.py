@@ -872,6 +872,8 @@ class Transect(QtWidgets.QGraphicsScene):
         self.pos2 = QPoint()
         self.points = []
         self.roiPoints = []
+        self.roiValues = []
+        self.roiList = []
         self.isROIDraw = isROIDraw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
@@ -935,7 +937,7 @@ class Transect(QtWidgets.QGraphicsScene):
             y += dy
             self.points.append((round(x), round(y)))
 
-        print(self.points)
+
         # get the values of these points from the dataset
         self.getValues()
         # get their distances for the plot
@@ -966,6 +968,13 @@ class Transect(QtWidgets.QGraphicsScene):
 
         #returns the main page back to a non-drawing environment
         if self.isROIDraw:
+            self.roiPoints.clear()
+            for i, j in self.points:
+                if i in range(512) and j in range(512):
+                    for x in self.roiValues:
+                        if (self.data[i][j] == x):
+                            self.roiPoints.append((i, j))
+            print(self.roiValues)
             self.mainWindow.drawROI.draw_window.upper_limit = self.upperLimit
             self.mainWindow.drawROI.draw_window.lower_limit = self.lowerLimit
             self.mainWindow.drawROI.draw_window.update_view()
@@ -973,10 +982,6 @@ class Transect(QtWidgets.QGraphicsScene):
             ellipse = None
             for i, j in self.roiPoints:
                 if i in range(512) and j in range(512):
-                    # Draw a circle in the centre of upper limit and lower limit
-                    if (self.lowerLimit + round((self.upperLimit - self.lowerLimit)/2) - self.data[i][j] <=3 ):
-                        ellipse = QGraphicsEllipseItem(i, j, 40, 40)
-                        ellipse.setPen(QtGui.QPen(QtGui.QColor("red")))
                     if self.data[i][j] >= self.lowerLimit and self.data[i][j] <= self.upperLimit:
                         image.setPixelColor(i, j, QtGui.QColor(QtGui.QRgba64.fromRgba(0, 30, 200, 255)))
             pixmap = QtGui.QPixmap.fromImage(image)
@@ -984,7 +989,6 @@ class Transect(QtWidgets.QGraphicsScene):
             label.setPixmap(pixmap)
             scene = QtWidgets.QGraphicsScene()
             scene.addWidget(label)
-            scene.addItem(ellipse)
             self.tabWindow.setScene(scene)
         else:
             self.mainWindow.dicom_view.update_view()
@@ -998,30 +1002,6 @@ class Transect(QtWidgets.QGraphicsScene):
     def return_limits(self):
         return [self.lowerLimit, self.upperLimit]
 
-    def draw_new_bar_colour(self):
-        newList = [(x * self.pixSpacing) for x in self.distances]
-
-        for i in self._axes.bar(newList, self.values):
-            i.set_color('white')
-        for x in range(len(newList)):
-            self._valueTuples[newList[x]] = self.values[x]
-        # Recalculate the distance and CT# to show ROI in histogram
-        roiList = []
-        roiValues = []
-        for x in range(len(newList)):
-            if (newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
-                roiList.append(newList[x])
-                roiValues.append(self._valueTuples[newList[x]])
-        self.roiPoints.clear()
-        for i, j in self.points:
-            if i in range(512) and j in range(512):
-                for x in roiValues:
-                    if(self.data[i][j] == x):
-                        self.roiPoints.append((i,j))
-
-        self.find_limits(roiValues)
-        for i in self._axes.bar(roiList, roiValues):
-            i.set_color('r')
 
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
@@ -1043,22 +1023,16 @@ class Transect(QtWidgets.QGraphicsScene):
             self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
             self.rightLine = self._axes.axvline(self.thresholds[1], color='r')
             # Recalculate the distance and CT# to show ROI in histogram
-            roiList = []
-            roiValues = []
+            self.roiList.clear()
+            self.roiValues.clear()
             for x in range(len(newList)):
                 if(newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
-                    roiList.append(newList[x])
-                    roiValues.append(self._valueTuples[newList[x]])
+                    self.roiList.append(newList[x])
+                    self.roiValues.append(self._valueTuples[newList[x]])
 
-            self.roiPoints.clear()
-            for i, j in self.points:
-                if i in range(512) and j in range(512):
-                    for x in roiValues:
-                        if (self.data[i][j] == x):
-                            self.roiPoints.append((i, j))
 
-            self.find_limits(roiValues)
-            for i in self._axes.bar(roiList, roiValues):
+            self.find_limits(self.roiValues)
+            for i in self._axes.bar(self.roiList, self.roiValues):
                i.set_color('r')
 
 
@@ -1088,7 +1062,21 @@ class Transect(QtWidgets.QGraphicsScene):
                 self.rightLine.set_xdata(x[1])
                 self.thresholds[0] = x[0]
                 self.thresholds[1] = x[1]
-                self.draw_new_bar_colour()
+
+                for i in self._axes.bar(self.distances, self.values):
+                    i.set_color('white')
+                for x in range(len(self.distances)):
+                    self._valueTuples[self.distances[x]] = self.values[x]
+                # Recalculate the distance and CT# to show ROI in histogram
+                self.roiList.clear()
+                self.roiValues.clear()
+                for x in range(len(self.distances)):
+                    if (self.distances[x] >= self.thresholds[0] and self.distances[x] <= self.thresholds[1]):
+                        self.roiList.append(self.distances[x])
+                        self.roiValues.append(self._valueTuples[self.distances[x]])
+
+                for i in self._axes.bar(self.roiList, self.roiValues):
+                    i.set_color('r')
             self._figure.canvas.draw()
 
     def _add_point(self, x, y=None):
