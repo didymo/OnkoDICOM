@@ -935,7 +935,7 @@ class Transect(QtWidgets.QGraphicsScene):
             y += dy
             self.points.append((round(x), round(y)))
 
-
+        print(self.points)
         # get the values of these points from the dataset
         self.getValues()
         # get their distances for the plot
@@ -966,8 +966,8 @@ class Transect(QtWidgets.QGraphicsScene):
 
         #returns the main page back to a non-drawing environment
         if self.isROIDraw:
-            self.mainWindow.drawROI.draw_window.upperLimit = self.upperLimit
-            self.mainWindow.drawROI.draw_window.lowerLimit = self.lowerLimit
+            self.mainWindow.drawROI.draw_window.upper_limit = self.upperLimit
+            self.mainWindow.drawROI.draw_window.lower_limit = self.lowerLimit
             self.mainWindow.drawROI.draw_window.update_view()
             image = self.img.toImage()
             ellipse = None

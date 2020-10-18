@@ -10,6 +10,8 @@ from PyQt5.Qt import Qt
 import os
 from src.Model import ROI
 from src.View.mainpage.DicomView import *
+import matplotlib.pyplot as plt
+
 
 class UIDrawROIWindow():
 
@@ -27,8 +29,8 @@ class UIDrawROIWindow():
         self.standard_names = []
         self.draw_roi_window_instance = draw_roi_window_instance
 
-        self.upperLimit = None
-        self.lowerLimit = None
+        self.upper_limit = None
+        self.lower_limit = None
         self.init_slider()
         self.init_view()
         self.init_metadata()
@@ -337,6 +339,7 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_action_go_button.resize(
             self.draw_roi_window_instance_action_go_button.sizeHint().width(),
             self.draw_roi_window_instance_action_go_button.sizeHint().height())
+        self.draw_roi_window_instance_action_go_button.clicked.connect(self.on_go_clicked)
         self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_go_button)
 
         # Create a widget to hold the image slice box
@@ -460,9 +463,9 @@ class UIDrawROIWindow():
          events in the DICOM View area.
          False by default.
         """
-        if self.upperLimit and self.lowerLimit:
-            self.min_pixel_density_line_edit.setText(str(self.lowerLimit))
-            self.max_pixel_density_line_edit.setText(str(self.upperLimit))
+        if self.upper_limit and self.lower_limit:
+            self.min_pixel_density_line_edit.setText(str(self.lower_limit))
+            self.max_pixel_density_line_edit.setText(str(self.upper_limit))
 
 
 
@@ -656,6 +659,41 @@ class UIDrawROIWindow():
         )
         self.view.setScene(self.drawingROI)
 
+    def on_go_clicked(self):
+        id = self.slider.value()
+
+        # Getting most updated selected slice
+        if (self.forward_pressed):
+            id = self.current_slice
+        elif (self.backward_pressed):
+            id = self.current_slice
+        elif (self.slider_changed):
+            id = self.slider.value()
+
+        min_pixel = self.min_pixel_density_line_edit.text()
+        max_pixel = self.max_pixel_density_line_edit.text()
+
+        if min_pixel.isdecimal() and max_pixel.isdecimal():
+
+            min_pixel = int(min_pixel)
+            max_pixel = int(max_pixel)
+
+            dt = self.window.dataset[id]
+            rowS = dt.PixelSpacing[0]
+            colS = dt.PixelSpacing[1]
+
+            pixel_array = dt._pixel_array
+            pixel_spacing = rowS / colS
+
+            print(pixel_array)
+
+            new_pix = []
+            for x in pixel_array:
+                if (x > min_pixel).any() and (x < max_pixel).any():
+                    new_pix.append(x)
+
+            plt.imshow(new_pix, cmap=plt.cm.bone)
+            plt.show()
 
     def init_standard_names(self):
         """
