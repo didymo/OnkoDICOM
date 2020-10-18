@@ -598,6 +598,8 @@ class UIDrawROIWindow():
         self.update_view()
         self.isthmus_width_max_line_edit.setText("5")
         self.internal_hole_max_line_edit.setText("9")
+        self.min_pixel_density_line_edit.setText("")
+        self.max_pixel_density_line_edit.setText("")
 
     def transect_handler(self):
         """
