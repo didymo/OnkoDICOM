@@ -486,13 +486,14 @@ class MenuHandler(object):
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        self.main_window.callClass.runTransect(
+        self.main_window.mainPageCallClass.runTransect(
             self.main_window,
             self.main_window.dicom_view.view,
             self.main_window.pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,
+            isROIDraw=False,
         )
 
     def add_on_options_handler(self):

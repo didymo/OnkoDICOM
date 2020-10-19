@@ -13,8 +13,11 @@ from pathlib import Path
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtWidgets import QGraphicsPixmapItem
+from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
 from dateutil.relativedelta import relativedelta
+
+
+from numpy import *
 
 from src.Model.Anon import *
 from src.View.mainpage.ClinicalDataDisplay import *
@@ -847,31 +850,46 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #  This Class handles the Transect functionality                                                                    #
 #                                                                                                                   #
 #####################################################################################################################
-
+import numpy as np
+from matplotlib.backend_bases import MouseEvent
 class Transect(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
+    def __init__(self, mainWindow, image_to_paint, dataset, rowS, colS, tabWindow, is_ROI_draw=False):
         super(Transect, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
-        self.addItem(QGraphicsPixmapItem(imagetoPaint))
-        self.img = imagetoPaint
+        self.addItem(QGraphicsPixmapItem(image_to_paint))
+        self.img = image_to_paint
         self.values = []
         self.distances = []
         self.data = dataset
-        self.pixSpacing = rowS / colS
+        self.pix_spacing = rowS / colS
         self._start = QPointF()
         self.drawing = True
         self._current_rect_item = None
         self.pos1 = QPoint()
         self.pos2 = QPoint()
         self.points = []
+        self.roi_points = []
+        self.roi_values = []
+        self.roi_list = []
+        self.is_ROI_draw = is_ROI_draw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
+        self._figure, self._axes, self._line = None, None, None
+        self.leftLine, self.rightLine = None, None
+        self._dragging_point = None
+        self._points = {}
+        self._valueTuples = {}
+        self.thresholds = [4, 10]
+        self.upper_limit = None
+        self.lower_limit = None
 
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
+        # Clear the current transect first
+        plt1.close()
         # If is the first time we can draw as we want a line per button press
         if self.drawing == True:
             self.pos1 = event.scenePos()
@@ -884,6 +902,8 @@ class Transect(QtWidgets.QGraphicsScene):
             r = QtCore.QLineF(self._start, self._start)
             self._current_rect_item.setLine(r)
 
+        # Second time generate mouse position
+
     # This function tracks the mouse and draws the line from the original press point
     def mouseMoveEvent(self, event):
         if self._current_rect_item is not None and self.drawing == True:
@@ -894,11 +914,15 @@ class Transect(QtWidgets.QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self.drawing == True:
             self.pos2 = event.scenePos()
-            self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
-                         round(self.pos2.x()), round(self.pos2.y()))
-            self.drawing = False
-            self.plotResult()
-            self._current_rect_item = None
+            # If a user just clicked one position
+            if self.pos1.x() == self.pos2.x() and self.pos1.y() == self.pos2.y():
+                self.drawing = False
+            else:
+                self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
+                             round(self.pos2.x()), round(self.pos2.y()))
+                self.drawing = False
+                self.plotResult()
+                self._current_rect_item = None
 
     # This function performs the DDA algorithm that locates all the points in the drawn line
     def drawDDA(self, x1, y1, x2, y2):
@@ -912,6 +936,7 @@ class Transect(QtWidgets.QGraphicsScene):
             x += dx
             y += dy
             self.points.append((round(x), round(y)))
+
 
         # get the values of these points from the dataset
         self.getValues()
@@ -940,27 +965,190 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function handles the closing event of the transect graph
     def on_close(self, event):
         plt1.close()
+
         #returns the main page back to a non-drawing environment
-        self.mainWindow.dicom_view.update_view()
+        if self.is_ROI_draw:
+            self.roi_points.clear()
+            for i, j in self.points:
+                if i in range(512) and j in range(512):
+                    for x in self.roi_values:
+                        if (self.data[i][j] == x):
+                            self.roi_points.append((i, j))
+            self.mainWindow.drawROI.draw_window.upper_limit = self.upper_limit
+            self.mainWindow.drawROI.draw_window.lower_limit = self.lower_limit
+            self.mainWindow.drawROI.draw_window.update_view()
+            image = self.img.toImage()
+            ellipse = None
+            for i, j in self.roi_points:
+                if i in range(512) and j in range(512):
+                    if self.data[i][j] >= self.lower_limit and self.data[i][j] <= self.upper_limit:
+                        image.setPixelColor(i, j, QtGui.QColor(QtGui.QRgba64.fromRgba(0, 30, 200, 255)))
+            pixmap = QtGui.QPixmap.fromImage(image)
+            label = QtWidgets.QLabel()
+            label.setPixmap(pixmap)
+            scene = QtWidgets.QGraphicsScene()
+            scene.addWidget(label)
+            self.tabWindow.setScene(scene)
+        else:
+            self.mainWindow.dicom_view.update_view()
+
         event.canvas.figure.axes[0].has_been_closed = True
+
+    def find_limits(self, roi_values):
+        self.upper_limit = max(roi_values)
+        self.lower_limit = min(roi_values)
+
+    def return_limits(self):
+        return [self.lower_limit, self.upper_limit]
+
 
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
-        newList = [(x * self.pixSpacing) for x in self.distances]
-        # adding a dummy manager
-        fig1 = plt1.figure(num='Transect Graph')
-        new_manager = fig1.canvas.manager
-        new_manager.canvas.figure = fig1
-        fig1.set_canvas(new_manager.canvas)
-        ax1 = fig1.add_subplot(111)
-        ax1.has_been_closed = False
-        ax1.step(newList, self.values, where='mid')
+        newList = [(x * self.pix_spacing) for x in self.distances]
+        self.thresholds[0] = newList[1]
+        self.thresholds[1] = newList[len(newList)-1]
+        self._points[self.thresholds[0]] = 0
+        self._points[self.thresholds[1]] = 0
+        self._figure = plt1.figure(num='Transect Graph')
+        new_manager = self._figure.canvas.manager
+        new_manager.canvas.figure = self._figure
+        self._figure.set_canvas(new_manager.canvas)
+        self._axes = self._figure.add_subplot(111)
+        self._axes.has_been_closed = False
+        # new list is axis x, self.values is axis y
+        self._axes.step(newList, self.values, where='mid')
+        if(self.is_ROI_draw):
+            for x in range(len(newList)):
+                self._valueTuples[newList[x]] = self.values[x]
+            self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
+            self.rightLine = self._axes.axvline(self.thresholds[1], color='r')
+            # Recalculate the distance and CT# to show ROI in histogram
+            self.roi_list.clear()
+            self.roi_values.clear()
+            for x in range(len(newList)):
+                if(newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
+                    self.roi_list.append(newList[x])
+                    self.roi_values.append(self._valueTuples[newList[x]])
+
+
+            self.find_limits(self.roi_values)
+            for i in self._axes.bar(self.roi_list, self.roi_values):
+               i.set_color('r')
+
+
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
         plt1.grid(True)
-        fig1.canvas.mpl_connect('close_event', self.on_close)
+        self._figure.canvas.mpl_connect('close_event', self.on_close)
+        self._figure.canvas.mpl_connect('button_press_event', self._on_click)
+        self._figure.canvas.mpl_connect('button_release_event', self._on_release)
+        self._figure.canvas.mpl_connect('motion_notify_event', self._on_motion)
+        self._update_plot()
         plt1.show()
+
+    def _update_plot(self):
+        if (self.is_ROI_draw):
+            if not self._points:
+                self._line.set_data([], [])
+            else:
+                x, y = zip(*sorted(self._points.items()))
+                # Add new plot
+                if not self._line:
+                    self._line, = self._axes.plot(x, y, "b", marker="o", markersize=10)
+                # Update current plot
+                else:
+                    self._line.set_data(x, y)
+                if len(x) >= 2:
+                    self.leftLine.set_xdata(x[0])
+                    self.rightLine.set_xdata(x[1])
+                    self.thresholds[0] = x[0]
+                    self.thresholds[1] = x[1]
+
+                for i in self._axes.bar(self.distances, self.values):
+                    i.set_color('white')
+                for x in range(len(self.distances)):
+                    self._valueTuples[self.distances[x]] = self.values[x]
+                # Recalculate the distance and CT# to show ROI in histogram
+                self.roi_list.clear()
+                self.roi_values.clear()
+                for x in range(len(self.distances)):
+                    if (self.distances[x] >= self.thresholds[0] and self.distances[x] <= self.thresholds[1]):
+                        self.roi_list.append(self.distances[x])
+                        self.roi_values.append(self._valueTuples[self.distances[x]])
+
+                for i in self._axes.bar(self.roi_list, self.roi_values):
+                    i.set_color('r')
+            self._figure.canvas.draw()
+
+    def _add_point(self, x, y=None):
+        if (self.is_ROI_draw):
+            if isinstance(x, MouseEvent):
+                x = int(x.xdata)
+            self._points[x] = 0
+            return x, 0
+
+    def _remove_point(self, x, _):
+        if (self.is_ROI_draw):
+            if x in self._points:
+                self._points.pop(x)
+
+    def _find_neighbor_point(self, event):
+        u""" Find point around mouse position
+
+        :rtype: ((int, int)|None)
+        :return: (x, y) if there are any point around mouse else None
+        """
+        if (self.is_ROI_draw):
+            distance_threshold = 50.0
+            nearest_point = None
+            min_distance = math.sqrt(2 * (100 ** 2))
+            for x, y in self._points.items():
+                distance = math.hypot(event.xdata - x, event.ydata - y)
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_point = (x, y)
+            if min_distance < distance_threshold:
+                return nearest_point
+            return None
+
+    def _on_click(self, event):
+        u""" callback method for mouse click event
+
+        :type event: MouseEvent
+        """
+        if (self.is_ROI_draw):
+            # left click
+            if event.button == 1 and event.inaxes in [self._axes]:
+                point = self._find_neighbor_point(event)
+                if point:
+                    self._dragging_point = point
+                self._update_plot()
+
+    def _on_release(self, event):
+        u""" callback method for mouse release event
+
+        :type event: MouseEvent
+        """
+        if (self.is_ROI_draw):
+            if event.button == 1 and event.inaxes in [self._axes] and self._dragging_point:
+                self._dragging_point = None
+                self._update_plot()
+
+    def _on_motion(self, event):
+        u""" callback method for mouse motion event
+
+        :type event: MouseEvent
+        """
+        if (self.is_ROI_draw):
+            if not self._dragging_point:
+                return
+            if event.xdata is None or event.ydata is None:
+                return
+            self._remove_point(*self._dragging_point)
+            self._dragging_point = self._add_point(event)
+            self._update_plot()
+
 
 
 #####################################################################################################################
@@ -995,7 +1183,7 @@ class MainPageCallClass:
         tabWindow.addTab(self.tab_cd, "")
 
     # This function runs Transect on button click
-    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
+    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
-                               dataset, rowS, colS, tabWindow)
+                               dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
