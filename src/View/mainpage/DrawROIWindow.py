@@ -661,6 +661,7 @@ class UIDrawROIWindow():
         )
         self.view.setScene(self.drawingROI)
 
+
     def on_go_clicked(self):
         id = self.slider.value()
 
@@ -683,16 +684,43 @@ class UIDrawROIWindow():
             if min_pixel <= max_pixel:
                 data_set = self.window.dataset[id]
 
+                """
+                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
+                pixel_array[x][y] will return the density of the pixel
+                """
                 pixel_array = data_set._pixel_array
 
-                new_pix_array = []
+                # This will contain the new pixel coordinates specifed by the min and max pixel density
+                target_pixel_coords = []
 
-                for item in pixel_array:
-                    if (item > min_pixel).any() and (item < max_pixel).any():
-                        new_pix_array.append(item)
+                for x_coord in range(512):
+                    for y_coord in range(512):
+                        if (pixel_array[x_coord][y_coord] >= min_pixel) and (pixel_array[x_coord][y_coord] <= max_pixel):
+                            target_pixel_coords.append((y_coord, x_coord))
 
-                plt.imshow(new_pix_array, cmap=plt.cm.bone)
-                plt.show()
+
+                """
+                For the meantime, a new image is created and the pixels specified are coloured. 
+                This will need to altered so that it creates a new layer over the existing image instead of replacing it.
+                """
+                pixels_in_image = self.window.pixmaps[id]
+                pixels_in_image = pixels_in_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+
+                # Convert QPixMap into Qimage
+                q_image = pixels_in_image.toImage()
+
+                for x_coord, y_coord in target_pixel_coords:
+                    q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
+
+                # Convert Qimage back to QPixMap
+                q_pixmaps = QtGui.QPixmap.fromImage(q_image)
+                label = QtWidgets.QLabel()
+                label.setPixmap(q_pixmaps)
+                scene = QtWidgets.QGraphicsScene()
+                scene.addWidget(label)
+
+                self.view.setScene(scene)
+
 
             else:
                 QMessageBox.about(self, "Incorrect Input", "Please ensure maximum density is atleast higher than minimum density.")
