@@ -5,7 +5,7 @@ from random import randint, seed
 from PyQt5 import QtWidgets, QtGui, QtCore
 from pandas import np
 
-from src.Controller.ROIOptionsController import RoiDeleteOptions
+from src.Controller.ROIOptionsController import RoiDeleteOptions, ROIDelOption
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
@@ -24,6 +24,9 @@ class NewStructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("roi_color_dict", self.color_dict)
 
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
+
+        dataset_rtss = self.patient_dict_container.get("dataset_rtss")
+        self.roi_delete_handler = ROIDelOption(self.rois, dataset_rtss, self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -163,10 +166,7 @@ class NewStructureTab(QtWidgets.QWidget):
         self.scroll_area.setWidget(self.scroll_area_content)
 
     def roi_delete_clicked(self):
-        dataset_rtss = self.patient_dict_container.get("dataset_rtss")
-        roi_delete_window = RoiDeleteOptions(self.rois, dataset_rtss)
-        roi_delete_window.deleting_rois_structure_tuple.connect(self.structure_modified)
-        roi_delete_window.show()
+        self.roi_delete_handler.show_roi_delete_options()
 
     def roi_draw_clicked(self):
         pass
