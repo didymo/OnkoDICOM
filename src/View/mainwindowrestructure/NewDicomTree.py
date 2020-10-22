@@ -19,6 +19,7 @@ class NewDicomTree(QtWidgets.QWidget):
         self.tree_view = QtWidgets.QTreeView()
         self.model_tree = QtGui.QStandardItemModel(0, 5)
         self.init_headers_tree()
+        self.tree_view.setModel(self.model_tree)
         self.init_parameters_tree()
 
         self.dicom_tree_layout.addWidget(self.selector, QtCore.Qt.AlignLeft)
@@ -31,7 +32,6 @@ class NewDicomTree(QtWidgets.QWidget):
         self.model_tree.setHeaderData(2, QtCore.Qt.Horizontal, "Tag")
         self.model_tree.setHeaderData(3, QtCore.Qt.Horizontal, "VM")
         self.model_tree.setHeaderData(4, QtCore.Qt.Horizontal, "VR")
-        self.tree_view.setModel(self.model_tree)
 
     def init_parameters_tree(self):
         self.tree_view.header().resizeSection(0, 250)
@@ -84,8 +84,7 @@ class NewDicomTree(QtWidgets.QWidget):
         :param name: Name of the selected dataset if not an image file
         :return:
         """
-
-        self.init_headers_tree()
+        self.model_tree.clear()
 
         if image_slice:
             filename = self.patient_dict_container.filepaths[id]
@@ -107,7 +106,9 @@ class NewDicomTree(QtWidgets.QWidget):
 
         parent_item = self.model_tree.invisibleRootItem()
         self.recurse_build_model(dict_tree, parent_item)
+        self.init_headers_tree()
         self.tree_view.setModel(self.model_tree)
+        self.init_parameters_tree()
         self.dicom_tree_layout.addWidget(self.tree_view)
 
     def recurse_build_model(self, dict_tree, parent):
