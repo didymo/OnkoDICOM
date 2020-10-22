@@ -7,6 +7,7 @@ from src.Model.Isodose import get_dose_pixluts
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainwindowrestructure.NewDVHTab import NewDVHTab
+from src.View.mainwindowrestructure.NewDicomTree import NewDicomTree
 from src.View.mainwindowrestructure.NewDicomView import NewDicomView
 from src.View.mainwindowrestructure.NewIsodoseTab import NewIsodoseTab
 from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
@@ -63,6 +64,9 @@ class UINewMainWindow:
 
         # Set RTDOSE attributes
         if patient_dict_container.has_modality("rtdose"):
+            dicom_tree_rtdose = DicomTree(filepaths['rtdose'])
+            patient_dict_container.set("dict_dicom_tree_rtdose", dicom_tree_rtdose.dict)
+
             patient_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
 
             patient_dict_container.set("selected_doses", [])
@@ -95,6 +99,9 @@ class UINewMainWindow:
                         if "BeamDose" in beam:
                             rxdose += beam.BeamDose * number_of_fractions * 100
             patient_dict_container.set("rxdose", rxdose)
+
+            dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
+            patient_dict_container.set("dict_dicom_tree_rtplan", dicom_tree_rtplan.dict)
 
 
         ##########################################
@@ -153,6 +160,9 @@ class UINewMainWindow:
         if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = NewDVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
+
+        self.dicom_tree = NewDicomTree()
+        self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
         splitter.addWidget(self.left_panel)
         splitter.addWidget(self.right_panel)
