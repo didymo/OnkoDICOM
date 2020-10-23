@@ -57,11 +57,8 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
-        self.button_open_patient.clicked.connect(self.open_new_patient)
         self.action_handler.action_open.triggered.connect(self.open_new_patient)
-        #self.menu_bar.actionOpen.triggered.connect(self.open_new_patient)
-        #self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomics_handler)
-        #self.pyradi_trigger.connect(self.pyradiomics_handler)
+        self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def open_new_patient(self):
         """
@@ -75,22 +72,22 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
         if confirmation_dialog == QMessageBox.Yes:
             self.open_patient_window.emit()
 
-    def pyradiomics_handler(self):
+    def pyradiomics_handler(self, path, filepaths, hashed_path):
         """
         Sends signal to initiate pyradiomics analysis
         """
         if which('plastimatch') is not None:
-            if self.hashed_path == '':
+            if hashed_path == '':
                 confirm_pyradi = QMessageBox.information(self, "Confirmation",
                                                     "Are you sure you want to perform pyradiomics? "
                                                     "Once started the process cannot be terminated until it finishes.",
                                                     QMessageBox.Yes, QMessageBox.No)
                 if confirm_pyradi == QMessageBox.Yes:
-                    self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+                    self.run_pyradiomics.emit(path, filepaths, hashed_path)
                 if confirm_pyradi == QMessageBox.No:
                     pass
             else:
-                self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+                self.run_pyradiomics.emit(path, filepaths, hashed_path)
         else:
             exe_not_found = QMessageBox.information(self, "Error",
                                                  "Plastimatch not installed. Please install Plastimatch "
