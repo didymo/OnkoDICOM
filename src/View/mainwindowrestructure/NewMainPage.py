@@ -127,11 +127,6 @@ class UINewMainWindow:
         with open(sheet_file) as fh:
             main_window_instance.setStyleSheet(fh.read())
 
-        # Create actions and set menu bar
-        self.action_handler = MainPageActionHandler(self)
-        self.menubar = NewMenuBar(self.action_handler)
-        main_window_instance.setMenuBar(self.menubar)
-
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
 
@@ -195,6 +190,11 @@ class UINewMainWindow:
 
         self.central_widget.setLayout(self.central_widget_layout)
         main_window_instance.setCentralWidget(self.central_widget)
+
+        # Create actions and set menu bar
+        self.action_handler = MainPageActionHandler(self)
+        self.menubar = NewMenuBar(self.action_handler)
+        main_window_instance.setMenuBar(self.menubar)
 
     def create_footer(self):
         self.footer.setFixedHeight(15)
@@ -371,7 +371,23 @@ class MainPageActionHandler:
                 )
 
     def transect_handler(self):
-        pass
+        """
+        Function triggered when the Transect button is pressed from the menu.
+        """
+        id = self.main_page.dicom_view.slider.value()
+        dt = self.patient_dict_container.dataset[id]
+        rowS = dt.PixelSpacing[0]
+        colS = dt.PixelSpacing[1]
+        dt.convert_pixel_data()
+        pixmap = self.patient_dict_container.get("pixmaps")[id]
+        self.main_page.call_class.runTransect(
+            self.main_page,
+            self.main_page.dicom_view.view,
+            pixmap,
+            dt._pixel_array.transpose(),
+            rowS,
+            colS
+        )
 
     def add_on_options_handler(self):
         pass
