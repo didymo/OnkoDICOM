@@ -1,8 +1,11 @@
+import webbrowser
+
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
+# TODO this class needs to be able to recognise when an RTSTRUCT/DVH is present, and add new actions accordingly
 class NewMenuBar(QtWidgets.QMenuBar):
 
     def __init__(self, action_handler):
@@ -23,9 +26,12 @@ class NewMenuBar(QtWidgets.QMenuBar):
         self.menu_export.setTitle("Export")
         self.addMenu(self.menu_export)
 
-        self.menu_help = QtWidgets.QMenu()
-        self.menu_help.setTitle("Help")
-        self.addMenu(self.menu_help)
+        # Help button opens OnkoDICOM website
+        self.action_help = QtWidgets.QAction()
+        self.action_help.setText("Help")
+        self.action_help.triggered.connect(lambda: webbrowser.open("https://onkodicom.com.au/"))
+
+        self.addAction(self.action_help)
 
         # Create sub-menu for Windowing
         self.menu_windowing = QtWidgets.QMenu(self.menu_tools)
