@@ -1,15 +1,14 @@
 import sys
 
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtGui, QtWidgets
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.mainwindowrestructure.NewMainPage import UINewMainWindow
 
 
 class MainPageActionHandler:
 
-    def __init__(self, main_page: UINewMainWindow):
+    def __init__(self, main_page):
         self.main_page = main_page
         self.patient_dict_container = PatientDictContainer()
 
@@ -116,6 +115,40 @@ class MainPageActionHandler:
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtWidgets.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
+
+        # Create Windowing menu
+        self.menu_windowing = QtWidgets.QMenu()
+        self.init_windowing_menu()
+
+    def init_windowing_menu(self):
+        icon_windowing = QtGui.QIcon()
+        icon_windowing.addPixmap(
+            QtGui.QPixmap(":/images/Icon/windowing.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.menu_windowing.setIcon(icon_windowing)
+        self.menu_windowing.setTitle("Windowing")
+
+        dict_windowing = self.patient_dict_container.get("dict_windowing")
+
+        # Get the right order for windowing names
+        names_ordered = sorted(dict_windowing.keys())
+        if "Normal" in dict_windowing.keys():
+            old_index = names_ordered.index("Normal")
+            names_ordered.insert(0, names_ordered.pop(old_index))
+
+        # Create actions for each windowing item
+        for name in names_ordered:
+            text = str(name)
+            print(text)
+            action_windowing_item = QtWidgets.QAction()
+            action_windowing_item.triggered.connect(
+                lambda state, text=name: self.action_handler.windowing_handler(state, text)
+            )
+            action_windowing_item.setText(text)
+            self.menu_windowing.addAction(action_windowing_item)
+
 
     def windowing_handler(self, state, text):
         """
