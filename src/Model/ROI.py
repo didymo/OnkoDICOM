@@ -70,6 +70,13 @@ def delete_roi(rtss, roi_name):
 
     return rtss
 
+def create_roi(rtss, roi_name, roi_coordinates):
+    print(rtss)
+
+    print(roi_name) # (3006, 0020)  Structure Set ROI Sequence --- ROI Name
+
+    print(len(roi_coordinates)) # Contour Data - DS: Array of roi_coordinates elements
+
 
 def get_raw_contour_data(rtss):
     """
