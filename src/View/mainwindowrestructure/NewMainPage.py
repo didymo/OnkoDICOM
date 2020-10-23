@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pydicom
@@ -44,9 +45,29 @@ class UINewMainWindow:
         patient_dict_container.set("window", window)
         patient_dict_container.set("level", level)
 
+        # Check to see if the imageWindowing.csv file exists
+        if os.path.exists('src/data/csv/imageWindowing.csv'):
+            # If it exists, read data from file into the self.dict_windowing variable
+            dict_windowing = {}
+            with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
+                next(fileInput)
+                dict_windowing["Normal"] = [window, level]
+                for row in fileInput:
+                    # Format: Organ - Scan - Window - Level
+                    items = [item for item in row.split(',')]
+                    dict_windowing[items[0]] = [int(items[2]), int(items[3])]
+        else:
+            # If csv does not exist, initialize dictionary with default values
+            dict_windowing = {"Normal": [window, level], "Lung": [1600, -300],
+                           "Bone": [1400, 700], "Brain": [160, 950],
+                           "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
+
+        patient_dict_container.set("dict_windowing", dict_windowing)
+
         pixel_values = convert_raw_data(dataset)
         pixmaps = get_pixmaps(pixel_values, window, level)
         patient_dict_container.set("pixmaps", pixmaps)
+        patient_dict_container.set("pixel_values", pixel_values)
 
         basic_info = get_basic_info(dataset[0])
         patient_dict_container.set("basic_info", basic_info)
@@ -192,6 +213,7 @@ class MainPageActionHandler:
 
     def __init__(self, main_page: UINewMainWindow):
         self.main_page = main_page
+        self.patient_dict_container = PatientDictContainer()
 
         ##############################
         # Init all actions and icons #
@@ -284,13 +306,34 @@ class MainPageActionHandler:
 
         # Export Clinical Data Action
         self.action_clinical_data_export = QtWidgets.QAction()
-        #self.action_clinical_data_export.triggered.connect("clinical data check")
+        # TODO self.action_clinical_data_export.triggered.connect(clinical data check)
 
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtWidgets.QAction()
 
     def windowing_handler(self, state, text):
-        pass
+        """
+        Function triggered when a window is selected from the menu.
+        :param state: Variable not used. Present to be able to use a lambda function.
+        :param text: The name of the window selected.
+        """
+        # Get the values for window and level from the dict
+        windowing_limits = self.patient_dict_container.get("dict_windowing")[text]
+
+        # Set window and level to the new values
+        window = windowing_limits[0]
+        level = windowing_limits[1]
+
+        # Update the dictionary of pixmaps with the update window and level values
+        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixel_values = self.patient_dict_container.get("pixel_values")
+        new_pixmaps = get_pixmaps(pixel_values, window, level)
+
+        self.patient_dict_container.set("window", window)
+        self.patient_dict_container.set("level", level)
+        self.patient_dict_container.set("pixmaps", new_pixmaps)
+
+        self.main_page.update_views()
 
     def anonymization_handler(self):
         pass
