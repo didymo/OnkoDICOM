@@ -6,7 +6,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
-from src.View.mainwindowrestructure.NewMainPage import UINewMainWindow
+from src.View.mainwindowrestructure import UINewMainWindow
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):

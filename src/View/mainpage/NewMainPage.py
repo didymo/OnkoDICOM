@@ -1,5 +1,4 @@
 import os
-import sys
 
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -12,14 +11,14 @@ from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
 from src.Model.Isodose import get_dose_pixluts, calculate_rxdose
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
-from src.View.mainwindowrestructure.NewDVHTab import NewDVHTab
-from src.View.mainwindowrestructure.NewDicomTree import NewDicomTree
-from src.View.mainwindowrestructure.NewDicomView import NewDicomView
-from src.View.mainwindowrestructure.NewIsodoseTab import NewIsodoseTab
-from src.View.mainwindowrestructure.NewMenuBar import NewMenuBar
-from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
-from src.View.mainwindowrestructure.NewStructureTab import NewStructureTab
-from src.View.mainwindowrestructure.NewToolBar import NewToolBar
+from src.View.mainpage.NewDVHTab import NewDVHTab
+from src.View.mainpage.NewDicomTree import NewDicomTree
+from src.View.mainpage.NewDicomView import NewDicomView
+from src.View.mainpage.NewIsodoseTab import NewIsodoseTab
+from src.View.mainpage.NewMenuBar import NewMenuBar
+from src.View.mainpage.NewPatientBar import NewPatientBar
+from src.View.mainpage.NewStructureTab import NewStructureTab
+from src.View.mainpage.NewToolBar import NewToolBar
 
 
 class UINewMainWindow:
