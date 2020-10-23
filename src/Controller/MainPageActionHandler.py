@@ -120,6 +120,20 @@ class MainPageActionHandler:
         self.menu_windowing = QtWidgets.QMenu()
         self.init_windowing_menu()
 
+        # Create Export menu
+        self.icon_export = QtGui.QIcon()
+        self.icon_export.addPixmap(
+            QtGui.QPixmap(":/images/Icon/export.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On,
+        )
+        self.menu_export = QtWidgets.QMenu()
+        self.menu_export.setTitle("Export")
+        self.menu_export.setIcon(self.icon_export)
+        self.menu_export.addAction(self.action_clinical_data_export)
+        self.menu_export.addAction(self.action_pyradiomics_export)
+
+
     def init_windowing_menu(self):
         self.menu_windowing.setIcon(self.icon_windowing)
         self.menu_windowing.setTitle("Windowing")
