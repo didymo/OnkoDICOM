@@ -134,7 +134,6 @@ class UINewMainWindow:
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
 
-        self.button_open_patient = QtWidgets.QPushButton("Open new patient")
         self.patient_bar = NewPatientBar()
 
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
@@ -187,7 +186,6 @@ class UINewMainWindow:
         self.create_footer()
 
         # Set layout
-        self.central_widget_layout.addWidget(self.button_open_patient)
         self.central_widget_layout.addWidget(self.patient_bar)
         self.central_widget_layout.addWidget(splitter)
         self.central_widget_layout.addWidget(self.footer)
