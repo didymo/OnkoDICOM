@@ -4,6 +4,7 @@ import sys
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
 from src.Model.Isodose import get_dose_pixluts, calculate_rxdose
@@ -22,6 +23,8 @@ class UINewMainWindow:
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
 
     def setup_ui(self, main_window_instance):
+        self.main_window_instance = main_window_instance
+        self.call_class = MainPageCallClass()
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
@@ -336,7 +339,21 @@ class MainPageActionHandler:
         self.main_page.update_views()
 
     def anonymization_handler(self):
-        pass
+        """
+        Function triggered when the Anonymization button is pressed from the menu.
+        """
+
+        save_reply = QtWidgets.QMessageBox.information(
+            self.main_page.main_window_instance,
+            "Confirmation",
+            "Are you sure you want to perform anonymization?",
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
+        )
+
+        if save_reply == QtWidgets.QMessageBox.Yes:
+            self.patient_dict_container.set("hashed_path", self.main_page.call_class.runAnonymization())
+
 
     def transect_handler(self):
         pass

@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
 from src.Model.Anon import *
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.ClinicalDataDisplay import *
 from src.View.mainpage.ClinicalDataForm import *
 
@@ -972,15 +973,15 @@ class Transect(QtWidgets.QGraphicsScene):
 class MainPageCallClass:
 
     # Initialisation function of the controller
-    def __init__(self, path, datasets, filepaths, raw_dvh):
-        self.path = path
-        self.dataset = datasets
-        self.filepaths = filepaths
-        self.raw_dvh = raw_dvh
+    def __init__(self):
+        self.patient_dict_container = PatientDictContainer()
+        self.path = self.patient_dict_container.path
+        self.dataset = self.patient_dict_container.dataset
+        self.filepaths = self.patient_dict_container.filepaths
 
     #This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
-        target_path = anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        target_path = anonymize(self.path, self.dataset, self.filepaths, raw_dvh)
         return target_path
 
     # This function displays the clinical data form
