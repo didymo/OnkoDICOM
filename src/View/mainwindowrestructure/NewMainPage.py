@@ -19,6 +19,7 @@ from src.View.mainwindowrestructure.NewIsodoseTab import NewIsodoseTab
 from src.View.mainwindowrestructure.NewMenuBar import NewMenuBar
 from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
 from src.View.mainwindowrestructure.NewStructureTab import NewStructureTab
+from src.View.mainwindowrestructure.NewToolBar import NewToolBar
 
 
 class UINewMainWindow:
@@ -194,10 +195,12 @@ class UINewMainWindow:
         self.central_widget.setLayout(self.central_widget_layout)
         main_window_instance.setCentralWidget(self.central_widget)
 
-        # Create actions and set menu bar
+        # Create actions and set menu and tool bars
         self.action_handler = MainPageActionHandler(self)
         self.menubar = NewMenuBar(self.action_handler)
         main_window_instance.setMenuBar(self.menubar)
+        self.toolbar = NewToolBar(self.action_handler)
+        main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
 
     def create_footer(self):
         self.footer.setFixedHeight(15)
