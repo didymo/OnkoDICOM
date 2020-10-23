@@ -5,6 +5,7 @@ import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Controller.AddOnOptionsController import AddOptions
+from src.Controller.MainPageActionHandler import MainPageActionHandler
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
