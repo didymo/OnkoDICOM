@@ -258,6 +258,7 @@ class MainPageActionHandler:
         self.action_zoom_in = QtWidgets.QAction()
         self.action_zoom_in.setIcon(icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
+        self.action_zoom_in.setText("Zoom In")
         self.action_zoom_in.triggered.connect(self.main_page.dicom_view.zoom_in)
 
         # Zoom Out Action
@@ -270,6 +271,7 @@ class MainPageActionHandler:
         self.action_zoom_out = QtWidgets.QAction()
         self.action_zoom_out.setIcon(icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
+        self.action_zoom_out.setText("Zoom Out")
         self.action_zoom_out.triggered.connect(self.main_page.dicom_view.zoom_out)
 
         # Windowing Action
@@ -282,6 +284,7 @@ class MainPageActionHandler:
         self.action_windowing = QtWidgets.QAction()
         self.action_windowing.setIcon(icon_windowing)
         self.action_windowing.setIconVisibleInMenu(True)
+        self.action_windowing.setText("Windowing")
 
         # Transect Action
         icon_transect = QtGui.QIcon()
@@ -293,6 +296,7 @@ class MainPageActionHandler:
         self.action_transect = QtWidgets.QAction()
         self.action_transect.setIcon(icon_transect)
         self.action_transect.setIconVisibleInMenu(True)
+        self.action_transect.setText("Transect")
         self.action_transect.triggered.connect(self.transect_handler)
 
         # Add-On Options Action
@@ -305,14 +309,17 @@ class MainPageActionHandler:
         self.action_add_ons = QtWidgets.QAction()
         self.action_add_ons.setIcon(icon_add_ons)
         self.action_add_ons.setIconVisibleInMenu(True)
+        self.action_add_ons.setText("Add-On Options")
         self.action_add_ons.triggered.connect(self.add_on_options_handler)
 
         # Export Clinical Data Action
         self.action_clinical_data_export = QtWidgets.QAction()
+        self.action_clinical_data_export.setText("Export Clinical Data")
         # TODO self.action_clinical_data_export.triggered.connect(clinical data check)
 
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtWidgets.QAction()
+        self.action_pyradiomics_export.setText("Export Pyradiomics")
 
     def windowing_handler(self, state, text):
         """
