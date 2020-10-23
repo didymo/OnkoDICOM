@@ -4,7 +4,7 @@ from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-class NewDicomTree(QtWidgets.QWidget):
+class DicomTreeView(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)

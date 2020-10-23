@@ -6,7 +6,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
-from src.View.mainwindowrestructure import UINewMainWindow
+from src.View.mainpage.MainPage import UIMainWindow
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
@@ -45,7 +45,7 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
         self.go_next_window.emit(progress_window)
 
 
-class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
+class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.pyqtSignal()

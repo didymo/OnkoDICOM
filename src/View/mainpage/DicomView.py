@@ -11,7 +11,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import get_contour_pixel
 
 
-class NewDicomView(QtWidgets.QWidget):
+class DicomView(QtWidgets.QWidget):
 
     def __init__(self, roi_color=None, iso_color=None):
         QtWidgets.QWidget.__init__(self)

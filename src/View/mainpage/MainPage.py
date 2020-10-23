@@ -7,21 +7,21 @@ from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
-from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
+from src.Model.GetPatientInfo import get_basic_info, dict_instanceUID, DicomTree
 from src.Model.Isodose import get_dose_pixluts, calculate_rxdose
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
-from src.View.mainpage.NewDVHTab import NewDVHTab
-from src.View.mainpage.NewDicomTree import NewDicomTree
-from src.View.mainpage.NewDicomView import NewDicomView
-from src.View.mainpage.NewIsodoseTab import NewIsodoseTab
-from src.View.mainpage.NewMenuBar import NewMenuBar
-from src.View.mainpage.NewPatientBar import NewPatientBar
+from src.View.mainpage.DVHTab import DVHTab
+from src.View.mainpage.DicomTreeView import DicomTreeView
+from src.View.mainpage.DicomView import DicomView
+from src.View.mainpage.IsodoseTab import IsodoseTab
+from src.View.mainpage.MenuBar import MenuBar
+from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.NewStructureTab import NewStructureTab
 from src.View.mainpage.NewToolBar import NewToolBar
 
 
-class UINewMainWindow:
+class UIMainWindow:
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
 
     def setup_ui(self, main_window_instance):
@@ -133,7 +133,7 @@ class UINewMainWindow:
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
 
-        self.patient_bar = NewPatientBar()
+        self.patient_bar = PatientBar()
 
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
@@ -150,7 +150,7 @@ class UINewMainWindow:
             self.left_panel.addTab(self.structures_tab, "Structures")
 
         if patient_dict_container.has_modality("rtdose"):
-            self.isodoses_tab = NewIsodoseTab()
+            self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
 
@@ -166,15 +166,15 @@ class UINewMainWindow:
         # Add DICOM view to right panel as a tab
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
-        self.dicom_view = NewDicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_view = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
-            self.dvh_tab = NewDVHTab()
+            self.dvh_tab = DVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
 
-        self.dicom_tree = NewDicomTree()
+        self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
         splitter.addWidget(self.left_panel)
@@ -194,7 +194,7 @@ class UINewMainWindow:
 
         # Create actions and set menu and tool bars
         self.action_handler = ActionHandler(self)
-        self.menubar = NewMenuBar(self.action_handler)
+        self.menubar = MenuBar(self.action_handler)
         main_window_instance.setMenuBar(self.menubar)
         self.toolbar = NewToolBar(self.action_handler)
         main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)

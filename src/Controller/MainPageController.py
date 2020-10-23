@@ -22,7 +22,6 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from legacy.src.View.mainpage.ClinicalDataDisplay import *
 from legacy.src.View.mainpage.ClinicalDataForm import *
 
-warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
 matplotlib.cbook.handle_exceptions = "raise"
 matplotlib.cbook.handle_exceptions = "ignore"

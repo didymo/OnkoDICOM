@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-class NewIsodoseTab(QtWidgets.QWidget):
+class IsodoseTab(QtWidgets.QWidget):
 
     request_update_isodoses = QtCore.pyqtSignal()
 

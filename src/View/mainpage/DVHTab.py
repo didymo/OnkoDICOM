@@ -13,7 +13,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 
 
-class NewDVHTab(QtWidgets.QWidget):
+class DVHTab(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)

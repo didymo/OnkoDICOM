@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-class NewPatientBar(QtWidgets.QWidget):
+class PatientBar(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)

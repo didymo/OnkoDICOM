@@ -6,7 +6,7 @@ from src.Controller.ActionHandler import ActionHandler
 
 
 # TODO this class needs to be able to recognise when an RTSTRUCT/DVH is present, and add new actions accordingly
-class NewMenuBar(QtWidgets.QMenuBar):
+class MenuBar(QtWidgets.QMenuBar):
 
     def __init__(self, action_handler: ActionHandler):
         QtWidgets.QMenuBar.__init__(self)
