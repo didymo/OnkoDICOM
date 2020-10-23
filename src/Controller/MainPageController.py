@@ -995,7 +995,6 @@ class Transect(QtWidgets.QGraphicsScene):
         event.canvas.figure.axes[0].has_been_closed = True
 
     def find_limits(self, roi_values):
-        print(roi_values)
         self.upper_limit = roi_values[len(roi_values)-1]
         self.lower_limit = roi_values[0]
         temp = 0
