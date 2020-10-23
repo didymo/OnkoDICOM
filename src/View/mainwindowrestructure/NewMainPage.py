@@ -352,8 +352,23 @@ class MainPageActionHandler:
         )
 
         if save_reply == QtWidgets.QMessageBox.Yes:
-            self.patient_dict_container.set("hashed_path", self.main_page.call_class.runAnonymization())
-
+            raw_dvh = self.patient_dict_container.get("raw_dvh")
+            hashed_path = self.main_page.call_class.runAnonymization(raw_dvh)
+            self.patient_dict_container.set("hashed_path", hashed_path)
+            # now that the radiomics data can just get copied across... maybe skip this?
+            radiomics_reply = QtWidgets.QMessageBox.information(
+                self.main_page.main_window_instance,
+                "Confirmation",
+                "Are you sure you want to perform radiomics?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.No
+            )
+            if radiomics_reply == QtWidgets.QMessageBox.Yes:
+                self.main_page.pyradi_trigger.emit(
+                    self.patient_dict_container.path,
+                    self.patient_dict_container.filepaths,
+                    hashed_path
+                )
 
     def transect_handler(self):
         pass
