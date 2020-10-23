@@ -18,9 +18,10 @@ class ActionHandler:
 
         # Open patient
         self.icon_open = QtGui.QIcon()
-        self.icon_open.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
-                            QtGui.QIcon.Normal,
-                            QtGui.QIcon.On)
+        self.icon_open.addPixmap(
+            QtGui.QPixmap("src/Icon/open_patient.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On)
         self.action_open = QtWidgets.QAction()
         self.action_open.setIcon(self.icon_open)
         self.action_open.setText("Open new patient")
@@ -29,7 +30,7 @@ class ActionHandler:
         # Save as Anonymous Action
         self.icon_save_as_anonymous = QtGui.QIcon()
         self.icon_save_as_anonymous.addPixmap(
-            QtGui.QPixmap(":/images/Icon/anonlock.png"),
+            QtGui.QPixmap("src/Icon/anonlock.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -46,7 +47,7 @@ class ActionHandler:
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
         self.icon_zoom_in.addPixmap(
-            QtGui.QPixmap(":/images/Icon/plus.png"),
+            QtGui.QPixmap("src/Icon/plus.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -59,7 +60,7 @@ class ActionHandler:
         # Zoom Out Action
         self.icon_zoom_out = QtGui.QIcon()
         self.icon_zoom_out.addPixmap(
-            QtGui.QPixmap(":/images/Icon/minus.png"),
+            QtGui.QPixmap("src/Icon/minus.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -72,7 +73,7 @@ class ActionHandler:
         # Windowing Action
         self.icon_windowing = QtGui.QIcon()
         self.icon_windowing.addPixmap(
-            QtGui.QPixmap(":/images/Icon/windowing.png"),
+            QtGui.QPixmap("src/Icon/windowing.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -84,7 +85,7 @@ class ActionHandler:
         # Transect Action
         self.icon_transect = QtGui.QIcon()
         self.icon_transect.addPixmap(
-            QtGui.QPixmap(":/images/Icon/transect.png"),
+            QtGui.QPixmap("src/Icon/transect.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -97,7 +98,7 @@ class ActionHandler:
         # Add-On Options Action
         self.icon_add_ons = QtGui.QIcon()
         self.icon_add_ons.addPixmap(
-            QtGui.QPixmap(":/images/Icon/management.png"),
+            QtGui.QPixmap("src/Icon/management.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -128,7 +129,7 @@ class ActionHandler:
         # Create Export menu
         self.icon_export = QtGui.QIcon()
         self.icon_export.addPixmap(
-            QtGui.QPixmap(":/images/Icon/export.png"),
+            QtGui.QPixmap("src/Icon/export.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On,
         )
