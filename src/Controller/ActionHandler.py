@@ -116,6 +116,11 @@ class ActionHandler:
         self.action_pyradiomics_export = QtWidgets.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
 
+        # Export DVH Action
+        self.action_dvh_export = QtWidgets.QAction()
+        self.action_dvh_export.setText("Export DVH")
+        self.action_dvh_export.triggered.connect(self.export_dvh_handler)
+
         # Create Windowing menu
         self.menu_windowing = QtWidgets.QMenu()
         self.init_windowing_menu()
@@ -131,6 +136,7 @@ class ActionHandler:
         self.menu_export.setTitle("Export")
         self.menu_export.addAction(self.action_clinical_data_export)
         self.menu_export.addAction(self.action_pyradiomics_export)
+        self.menu_export.addAction(self.action_dvh_export)
 
 
     def init_windowing_menu(self):
@@ -234,6 +240,15 @@ class ActionHandler:
 
     def add_on_options_handler(self):
         self.main_page.add_on_options_controller.show_add_on_options()
+
+    def export_dvh_handler(self):
+        if self.patient_dict_container.has_attribute("raw_dvh"):
+            self.main_page.dvh_tab.export_csv()
+        else:
+            QtWidgets.QMessageBox.information(self.main_page,
+                                              "Unable to export DVH",
+                                              "DVH cannot be exported as there is no DVH present.",
+                                              QtWidgets.QMessageBox.Ok)
 
     def action_exit_handler(self):
         sys.exit()
