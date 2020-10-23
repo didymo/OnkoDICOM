@@ -17,24 +17,24 @@ class MainPageActionHandler:
         ##############################
 
         # Open patient
-        icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
+        self.icon_open = QtGui.QIcon()
+        self.icon_open.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
                             QtGui.QIcon.Normal,
                             QtGui.QIcon.On)
         self.action_open = QtWidgets.QAction()
-        self.action_open.setIcon(icon_open)
+        self.action_open.setIcon(self.icon_open)
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
 
         # Save as Anonymous Action
-        icon_save_as_anonymous = QtGui.QIcon()
-        icon_save_as_anonymous.addPixmap(
+        self.icon_save_as_anonymous = QtGui.QIcon()
+        self.icon_save_as_anonymous.addPixmap(
             QtGui.QPixmap(":/images/Icon/anonlock.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_save_as_anonymous = QtWidgets.QAction()
-        self.action_save_as_anonymous.setIcon(icon_save_as_anonymous)
+        self.action_save_as_anonymous.setIcon(self.icon_save_as_anonymous)
         self.action_save_as_anonymous.setText("Save as Anonymous")
         self.action_save_as_anonymous.triggered.connect(self.anonymization_handler)
 
@@ -44,65 +44,65 @@ class MainPageActionHandler:
         self.action_exit.triggered.connect(self.action_exit_handler)
 
         # Zoom In Action
-        icon_zoom_in = QtGui.QIcon()
-        icon_zoom_in.addPixmap(
+        self.icon_zoom_in = QtGui.QIcon()
+        self.icon_zoom_in.addPixmap(
             QtGui.QPixmap(":/images/Icon/plus.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_zoom_in = QtWidgets.QAction()
-        self.action_zoom_in.setIcon(icon_zoom_in)
+        self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
         self.action_zoom_in.triggered.connect(self.main_page.dicom_view.zoom_in)
 
         # Zoom Out Action
-        icon_zoom_out = QtGui.QIcon()
-        icon_zoom_out.addPixmap(
+        self.icon_zoom_out = QtGui.QIcon()
+        self.icon_zoom_out.addPixmap(
             QtGui.QPixmap(":/images/Icon/minus.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_zoom_out = QtWidgets.QAction()
-        self.action_zoom_out.setIcon(icon_zoom_out)
+        self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
         self.action_zoom_out.triggered.connect(self.main_page.dicom_view.zoom_out)
 
         # Windowing Action
-        icon_windowing = QtGui.QIcon()
-        icon_windowing.addPixmap(
+        self.icon_windowing = QtGui.QIcon()
+        self.icon_windowing.addPixmap(
             QtGui.QPixmap(":/images/Icon/windowing.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_windowing = QtWidgets.QAction()
-        self.action_windowing.setIcon(icon_windowing)
+        self.action_windowing.setIcon(self.icon_windowing)
         self.action_windowing.setIconVisibleInMenu(True)
         self.action_windowing.setText("Windowing")
 
         # Transect Action
-        icon_transect = QtGui.QIcon()
-        icon_transect.addPixmap(
+        self.icon_transect = QtGui.QIcon()
+        self.icon_transect.addPixmap(
             QtGui.QPixmap(":/images/Icon/transect.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_transect = QtWidgets.QAction()
-        self.action_transect.setIcon(icon_transect)
+        self.action_transect.setIcon(self.icon_transect)
         self.action_transect.setIconVisibleInMenu(True)
         self.action_transect.setText("Transect")
         self.action_transect.triggered.connect(self.transect_handler)
 
         # Add-On Options Action
-        icon_add_ons = QtGui.QIcon()
-        icon_add_ons.addPixmap(
+        self.icon_add_ons = QtGui.QIcon()
+        self.icon_add_ons.addPixmap(
             QtGui.QPixmap(":/images/Icon/management.png"),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_add_ons = QtWidgets.QAction()
-        self.action_add_ons.setIcon(icon_add_ons)
+        self.action_add_ons.setIcon(self.icon_add_ons)
         self.action_add_ons.setIconVisibleInMenu(True)
         self.action_add_ons.setText("Add-On Options")
         self.action_add_ons.triggered.connect(self.add_on_options_handler)
@@ -121,13 +121,7 @@ class MainPageActionHandler:
         self.init_windowing_menu()
 
     def init_windowing_menu(self):
-        icon_windowing = QtGui.QIcon()
-        icon_windowing.addPixmap(
-            QtGui.QPixmap(":/images/Icon/windowing.png"),
-            QtGui.QIcon.Normal,
-            QtGui.QIcon.On
-        )
-        self.menu_windowing.setIcon(icon_windowing)
+        self.menu_windowing.setIcon(self.icon_windowing)
         self.menu_windowing.setTitle("Windowing")
 
         dict_windowing = self.patient_dict_container.get("dict_windowing")
