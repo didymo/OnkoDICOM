@@ -1,11 +1,11 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from src.Controller.MainPageActionHandler import MainPageActionHandler
+from src.Controller.ActionHandler import ActionHandler
 
 
 class NewToolBar(QtWidgets.QToolBar):
 
-    def __init__(self, action_handler: MainPageActionHandler):
+    def __init__(self, action_handler: ActionHandler):
         QtWidgets.QToolBar.__init__(self)
         self.action_handler = action_handler
         self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))

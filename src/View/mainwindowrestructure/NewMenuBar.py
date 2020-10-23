@@ -2,13 +2,13 @@ import webbrowser
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-from src.Controller.MainPageActionHandler import MainPageActionHandler
+from src.Controller.ActionHandler import ActionHandler
 
 
 # TODO this class needs to be able to recognise when an RTSTRUCT/DVH is present, and add new actions accordingly
 class NewMenuBar(QtWidgets.QMenuBar):
 
-    def __init__(self, action_handler: MainPageActionHandler):
+    def __init__(self, action_handler: ActionHandler):
         QtWidgets.QMenuBar.__init__(self)
         self.action_handler = action_handler
         self.setGeometry(QtCore.QRect(0, 0, 901, 35))

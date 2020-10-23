@@ -6,7 +6,7 @@ from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-class MainPageActionHandler:
+class ActionHandler:
 
     def __init__(self, main_page):
         self.main_page = main_page

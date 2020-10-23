@@ -5,7 +5,7 @@ import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Controller.AddOnOptionsController import AddOptions
-from src.Controller.MainPageActionHandler import MainPageActionHandler
+from src.Controller.ActionHandler import ActionHandler
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
@@ -196,7 +196,7 @@ class UINewMainWindow:
         main_window_instance.setCentralWidget(self.central_widget)
 
         # Create actions and set menu and tool bars
-        self.action_handler = MainPageActionHandler(self)
+        self.action_handler = ActionHandler(self)
         self.menubar = NewMenuBar(self.action_handler)
         main_window_instance.setMenuBar(self.menubar)
         self.toolbar = NewToolBar(self.action_handler)
