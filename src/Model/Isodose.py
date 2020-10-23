@@ -96,3 +96,25 @@ def get_dose_grid(rtd, z=0):
             return plane
 
         return np.array([])
+
+
+def calculate_rxdose(rtplan):
+    rxdose = 1
+    if ('DoseReferenceSequence' in rtplan and
+            rtplan.DoseReferenceSequence[0].DoseReferenceStructureType and
+            rtplan.DoseReferenceSequence[0].TargetPrescriptionDose):
+        rxdose = rtplan.DoseReferenceSequence[0].TargetPrescriptionDose * 100
+    # beam doses are to a point, not necessarily to the same point
+    # and don't necessarily add up to the prescribed dose to the target
+    # which is frequently to a SITE rather than to a POINT
+    elif rtplan.FractionGroupSequence:
+        fraction_group = rtplan.FractionGroupSequence[0]
+        if ("NumberOfFractionsPlanned" in fraction_group) and \
+                ("ReferencedBeamSequence" in fraction_group):
+            beams = fraction_group.ReferencedBeamSequence
+            number_of_fractions = fraction_group.NumberOfFractionsPlanned
+            for beam in beams:
+                if "BeamDose" in beam:
+                    rxdose += beam.BeamDose * number_of_fractions * 100
+
+    return rxdose

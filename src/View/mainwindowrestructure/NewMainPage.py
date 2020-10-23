@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
-from src.Model.Isodose import get_dose_pixluts
+from src.Model.Isodose import get_dose_pixluts, calculate_rxdose
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainwindowrestructure.NewDVHTab import NewDVHTab
@@ -82,23 +82,7 @@ class UINewMainWindow:
             # in which case there will *not* be a TargetPrescriptionDose
             # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose
             # will be encoded and have a value
-            rxdose = 1
-            if ('DoseReferenceSequence' in dataset['rtplan'] and
-                    dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType and
-                    dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose):
-                rxdose = dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
-            # beam doses are to a point, not necessarily to the same point
-            # and don't necessarily add up to the prescribed dose to the target
-            # which is frequently to a SITE rather than to a POINT
-            elif dataset['rtplan'].FractionGroupSequence:
-                fraction_group = dataset['rtplan'].FractionGroupSequence[0]
-                if ("NumberOfFractionsPlanned" in fraction_group) and \
-                        ("ReferencedBeamSequence" in fraction_group):
-                    beams = fraction_group.ReferencedBeamSequence
-                    number_of_fractions = fraction_group.NumberOfFractionsPlanned
-                    for beam in beams:
-                        if "BeamDose" in beam:
-                            rxdose += beam.BeamDose * number_of_fractions * 100
+            rxdose = calculate_rxdose(dataset["rtplan"])
             patient_dict_container.set("rxdose", rxdose)
 
             dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
