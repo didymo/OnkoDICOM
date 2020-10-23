@@ -1,3 +1,5 @@
+import sys
+
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -188,7 +190,7 @@ class UINewMainWindow:
 
 class MainPageActionHandler:
 
-    def __init__(self, main_page):
+    def __init__(self, main_page: UINewMainWindow):
         self.main_page = main_page
 
         ##############################
@@ -204,3 +206,106 @@ class MainPageActionHandler:
         self.action_open.setIcon(icon_open)
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
+
+        # Save as Anonymous Action
+        icon_save_as_anonymous = QtGui.QIcon()
+        icon_save_as_anonymous.addPixmap(
+            QtGui.QPixmap(":/images/Icon/anonlock.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_save_as_anonymous = QtWidgets.QAction()
+        self.action_save_as_anonymous.setText("Save as Anonymous")
+        self.action_save_as_anonymous.triggered.connect(self.anonymization_handler)
+
+        # Exit action
+        self.action_exit = QtWidgets.QAction()
+        self.action_exit.setText("Exit")
+        self.action_exit.triggered.connect(self.action_exit_handler)
+
+        # Zoom In Action
+        icon_zoom_in = QtGui.QIcon()
+        icon_zoom_in.addPixmap(
+            QtGui.QPixmap(":/images/Icon/plus.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_zoom_in = QtWidgets.QAction()
+        self.action_zoom_in.setIcon(icon_zoom_in)
+        self.action_zoom_in.setIconVisibleInMenu(True)
+        self.action_zoom_in.triggered.connect(self.main_page.dicom_view.zoom_in)
+
+        # Zoom Out Action
+        icon_zoom_out = QtGui.QIcon()
+        icon_zoom_out.addPixmap(
+            QtGui.QPixmap(":/images/Icon/minus.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_zoom_out = QtWidgets.QAction()
+        self.action_zoom_out.setIcon(icon_zoom_out)
+        self.action_zoom_out.setIconVisibleInMenu(True)
+        self.action_zoom_out.triggered.connect(self.main_page.dicom_view.zoom_out)
+
+        # Windowing Action
+        icon_windowing = QtGui.QIcon()
+        icon_windowing.addPixmap(
+            QtGui.QPixmap(":/images/Icon/windowing.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_windowing = QtWidgets.QAction()
+        self.action_windowing.setIcon(icon_windowing)
+        self.action_windowing.setIconVisibleInMenu(True)
+
+        # Transect Action
+        icon_transect = QtGui.QIcon()
+        icon_transect.addPixmap(
+            QtGui.QPixmap(":/images/Icon/transect.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_transect = QtWidgets.QAction()
+        self.action_transect.setIcon(icon_transect)
+        self.action_transect.setIconVisibleInMenu(True)
+        self.action_transect.triggered.connect(self.transect_handler)
+
+        # Add-On Options Action
+        icon_add_ons = QtGui.QIcon()
+        icon_add_ons.addPixmap(
+            QtGui.QPixmap(":/images/Icon/management.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_add_ons = QtWidgets.QAction()
+        self.action_add_ons.setIcon(icon_add_ons)
+        self.action_add_ons.setIconVisibleInMenu(True)
+        self.action_add_ons.triggered.connect(self.add_on_options_handler)
+
+        # Export Clinical Data Action
+        self.action_clinical_data_export = QtWidgets.QAction()
+        #self.action_clinical_data_export.triggered.connect("clinical data check")
+
+        # Export Pyradiomics Action
+        self.action_pyradiomics_export = QtWidgets.QAction()
+
+    def windowing_handler(self, state, text):
+        pass
+
+    def anonymization_handler(self):
+        pass
+
+    def transect_handler(self):
+        pass
+
+    def add_on_options_handler(self):
+        pass
+
+    def roi_draw_options_handler(self):
+        pass
+
+    def roi_delete_options_handler(self):
+        pass
+
+    def action_exit_handler(self):
+        sys.exit()
