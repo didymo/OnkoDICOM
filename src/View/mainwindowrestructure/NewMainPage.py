@@ -242,6 +242,7 @@ class MainPageActionHandler:
             QtGui.QIcon.On
         )
         self.action_save_as_anonymous = QtWidgets.QAction()
+        self.action_save_as_anonymous.setIcon(icon_save_as_anonymous)
         self.action_save_as_anonymous.setText("Save as Anonymous")
         self.action_save_as_anonymous.triggered.connect(self.anonymization_handler)
 
