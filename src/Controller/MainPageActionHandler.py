@@ -129,7 +129,6 @@ class MainPageActionHandler:
         )
         self.menu_export = QtWidgets.QMenu()
         self.menu_export.setTitle("Export")
-        self.menu_export.setIcon(self.icon_export)
         self.menu_export.addAction(self.action_clinical_data_export)
         self.menu_export.addAction(self.action_pyradiomics_export)
 
