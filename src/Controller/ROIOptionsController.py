@@ -31,10 +31,10 @@ class ROIDelOption:
 
 # Create the ROI Draw Options class based on the UI from the file in View/ROI Draw Option
 class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
-    def __init__(self, window):
+    def __init__(self, window, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
         self.window = window
-        self.setup_ui(self)
+        self.setup_ui(self, rois, dataset_rtss)
 
 
 # The class that will be called by the main page to access the ROI Options controller
@@ -45,5 +45,5 @@ class ROIDrawOption:
         self.window = window
 
     def show_roi_draw_options(self):
-        self.draw_window = RoiDrawOptions(self.window)
+        self.draw_window = RoiDrawOptions(self.window, self.window.rois, self.window.dataset_rtss)
         self.draw_window.show()

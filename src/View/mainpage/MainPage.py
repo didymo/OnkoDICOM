@@ -17,7 +17,6 @@ from src.View.mainpage.DicomTree import *
 from src.View.mainpage.MenuBar import *
 from src.View.mainpage.resources_rc import *
 
-
 class UIMainWindow(object):
 
     # To initiate progress bar for pyradiomics through anonymization
@@ -119,6 +118,7 @@ class UIMainWindow(object):
                                    "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
 
         self.pixel_values = convert_raw_data(self.dataset)
+        # A dictionary of PyQt5.QtGui.QPixMap objects
         self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
 
         if self.has_rtss:
@@ -160,7 +160,7 @@ class UIMainWindow(object):
         dictSlice_CT0 = dicomTreeSlice_CT0.dict
         self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
 
-        self.callClass = MainPageCallClass(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        self.mainPageCallClass = MainPageCallClass(self.path, self.dataset, self.filepaths, self.raw_dvh)
         self.callManager = AddOptions(self)
 
         ##########################################
@@ -180,7 +180,7 @@ class UIMainWindow(object):
         self.main_widget = QtWidgets.QWidget(MainWindow)
         self.main_widget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
-        self.main_layout.addWidget(self.drop_zone)
+        #self.main_layout.addWidget(self.drop_zone)
 
         # Patient Bar
         self.patient_bar = PatientBar(self)
@@ -226,7 +226,6 @@ class UIMainWindow(object):
         if self.raw_dvh is not None:
             self.left_layout.addWidget(self.struct_info.widget)
 
-
         # Main view
         self.tab2 = QtWidgets.QTabWidget(self.main_widget)
         self.tab2.setGeometry(QtCore.QRect(200, 40, 880, 561))
@@ -248,9 +247,9 @@ class UIMainWindow(object):
         # check for csv data
         reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(self.path + reg):
-            self.callClass.display_cd_form(self.tab2, self.path)
+            self.mainPageCallClass.display_cd_form(self.tab2, self.path)
         else:
-            self.callClass.display_cd_dat(self.tab2, self.path)
+            self.mainPageCallClass.display_cd_dat(self.tab2, self.path)
         self.tab2.setFocusPolicy(QtCore.Qt.NoFocus)
 
         splitter.addWidget(self.left_widget)
