@@ -1081,7 +1081,7 @@ class Transect(QtWidgets.QGraphicsScene):
                     if (self.distances[x] >= self.thresholds[0] and self.distances[x] <= self.thresholds[1]):
                         self.roi_list.append(self.distances[x])
                         self.roi_values.append(self._valueTuples[self.distances[x]])
-
+                self.find_limits(self.roi_values)
                 for i in self._axes.bar(self.roi_list, self.roi_values):
                     i.set_color('r')
             self._figure.canvas.draw()
