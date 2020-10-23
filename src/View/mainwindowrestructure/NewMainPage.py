@@ -4,6 +4,7 @@ import sys
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
@@ -25,6 +26,7 @@ class UINewMainWindow:
     def setup_ui(self, main_window_instance):
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
+        self.add_on_options_controller = AddOptions(self)
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
@@ -397,7 +399,7 @@ class MainPageActionHandler:
         )
 
     def add_on_options_handler(self):
-        pass
+        self.main_page.add_on_options_controller.show_add_on_options()
 
     def roi_draw_options_handler(self):
         pass
