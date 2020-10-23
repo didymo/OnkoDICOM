@@ -3,7 +3,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.mainpage.MainPage import UIMainWindow
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow

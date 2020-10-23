@@ -1,19 +1,13 @@
 import csv
 import math
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import QCoreApplication, QThreadPool
-from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
-    QLabel, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, QGraphicsPixmapItem, QGraphicsEllipseItem
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, QGraphicsPixmapItem, QGraphicsEllipseItem
 from PyQt5.Qt import Qt
-import os
 
 from src.Controller.MainPageController import MainPageCallClass
-from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.mainpage.DicomView import *
-import matplotlib.pyplot as plt
+from legacy.src.View.mainpage.DicomView import *
 
 
 class UIDrawROIWindow:

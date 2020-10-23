@@ -1,20 +1,15 @@
 import glob
 
-from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtGui import QDrag
-from PyQt5.QtWidgets import QLineEdit, QMessageBox, QFrame
+from PyQt5.QtWidgets import QFrame
 
-from src.Controller.AddOnOptionsController import AddOptions
-from src.Controller.ROIOptionsController import ROIDelOption
-from src.Controller.MainPageController import MainPageCallClass
-from src.View.mainpage.PatientBar import *
-from src.View.mainpage.StructureTab import *
-from src.View.mainpage.IsodoseTab import *
+from legacy.src.View.mainpage.PatientBar import *
+from legacy.src.View.mainpage.StructureTab import *
+from legacy.src.View.mainpage.IsodoseTab import *
 from src.View.mainpage.StructureInformation import *
-from src.View.mainpage.DicomView import *
-from src.View.mainpage.DVH import *
-from src.View.mainpage.DicomTree import *
-from src.View.mainpage.MenuBar import *
+from legacy.src.View.mainpage.DicomView import *
+from legacy.src.View.mainpage.DVH import *
+from legacy.src.View.mainpage.DicomTree import *
+from legacy.src.View.mainpage.MenuBar import *
 from src.View.mainpage.resources_rc import *
 
 class UIMainWindow(object):

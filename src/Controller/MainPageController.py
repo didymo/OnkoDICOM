@@ -5,15 +5,13 @@
 #####################################################################################################################
 
 import glob
-import math
 # removing warnings
-import warnings
 from pathlib import Path
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
 
@@ -21,8 +19,8 @@ from numpy import *
 
 from src.Model.Anon import *
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.mainpage.ClinicalDataDisplay import *
-from src.View.mainpage.ClinicalDataForm import *
+from legacy.src.View.mainpage.ClinicalDataDisplay import *
+from legacy.src.View.mainpage.ClinicalDataForm import *
 
 warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
@@ -851,7 +849,6 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #  This Class handles the Transect functionality                                                                    #
 #                                                                                                                   #
 #####################################################################################################################
-import numpy as np
 from matplotlib.backend_bases import MouseEvent
 class Transect(QtWidgets.QGraphicsScene):
 
