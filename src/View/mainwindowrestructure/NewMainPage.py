@@ -401,11 +401,5 @@ class MainPageActionHandler:
     def add_on_options_handler(self):
         self.main_page.add_on_options_controller.show_add_on_options()
 
-    def roi_draw_options_handler(self):
-        pass
-
-    def roi_delete_options_handler(self):
-        pass
-
     def action_exit_handler(self):
         sys.exit()
