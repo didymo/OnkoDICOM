@@ -1189,7 +1189,7 @@ class MainPageCallClass:
         tabWindow.addTab(self.tab_cd, "")
 
     # This function runs Transect on button click
-    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
+    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw=False):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
                                dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
