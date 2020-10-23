@@ -10,6 +10,7 @@ from src.View.mainwindowrestructure.NewDVHTab import NewDVHTab
 from src.View.mainwindowrestructure.NewDicomTree import NewDicomTree
 from src.View.mainwindowrestructure.NewDicomView import NewDicomView
 from src.View.mainwindowrestructure.NewIsodoseTab import NewIsodoseTab
+from src.View.mainwindowrestructure.NewMenuBar import NewMenuBar
 from src.View.mainwindowrestructure.NewPatientBar import NewPatientBar
 from src.View.mainwindowrestructure.NewStructureTab import NewStructureTab
 
@@ -116,6 +117,11 @@ class UINewMainWindow:
         with open(sheet_file) as fh:
             main_window_instance.setStyleSheet(fh.read())
 
+        # Create actions and set menu bar
+        self.action_handler = MainPageActionHandler(self)
+        self.menubar = NewMenuBar(self.action_handler)
+        main_window_instance.setMenuBar(self.menubar)
+
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
 
@@ -194,3 +200,23 @@ class UINewMainWindow:
         self.dicom_view.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+
+class MainPageActionHandler:
+
+    def __init__(self, main_page):
+        self.main_page = main_page
+
+        ##############################
+        # Init all actions and icons #
+        ##############################
+
+        # Open patient
+        icon_open = QtGui.QIcon()
+        icon_open.addPixmap(QtGui.QPixmap(":/images/Icon/open_patient.png"),
+                            QtGui.QIcon.Normal,
+                            QtGui.QIcon.On)
+        self.action_open = QtWidgets.QAction()
+        self.action_open.setIcon(icon_open)
+        self.action_open.setText("Open new patient")
+        self.action_open.setIconVisibleInMenu(True)

@@ -58,6 +58,7 @@ class MainWindow(QtWidgets.QMainWindow, UINewMainWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.button_open_patient.clicked.connect(self.open_new_patient)
+        self.action_handler.action_open.triggered.connect(self.open_new_patient)
         #self.menu_bar.actionOpen.triggered.connect(self.open_new_patient)
         #self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomics_handler)
         #self.pyradi_trigger.connect(self.pyradiomics_handler)
