@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, 
     QLabel, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, QGraphicsPixmapItem, QGraphicsEllipseItem
 from PyQt5.Qt import Qt
 import os
+
+from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DicomView import *
@@ -608,6 +610,7 @@ class UIDrawROIWindow:
     	Function triggered when the Transect button is pressed from the menu.
     	"""
 
+        pixmaps = self.patient_dict_container.get("pixmaps")
         id = self.slider.value()
 
         # Getting most updated selected slice
@@ -622,11 +625,10 @@ class UIDrawROIWindow:
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        # TODO fix this, it can't have window as a parameter.
-        self.window.mainPageCallClass.runTransect(
-            self.window,
+        MainPageCallClass().runTransect(
+            self.draw_roi_window_instance,
             self.view,
-            self.window.pixmaps[id],
+            pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,

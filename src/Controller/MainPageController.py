@@ -975,9 +975,9 @@ class Transect(QtWidgets.QGraphicsScene):
                     for x in self.roi_values:
                         if (self.data[i][j] == x):
                             self.roi_points.append((i, j))
-            self.mainWindow.drawROI.draw_window.upper_limit = self.upper_limit
-            self.mainWindow.drawROI.draw_window.lower_limit = self.lower_limit
-            self.mainWindow.drawROI.draw_window.update_view()
+            self.mainWindow.upper_limit = self.upper_limit
+            self.mainWindow.lower_limit = self.lower_limit
+            self.mainWindow.update_view()
             image = self.img.toImage()
             ellipse = None
             for i, j in self.roi_points:
