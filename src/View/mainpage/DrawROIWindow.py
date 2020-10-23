@@ -47,7 +47,7 @@ class UIDrawROIWindow():
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
-        self.image_slice_number_refine_button.setText(_translate("ImageSliceNumberDrawButton", "Refine"))
+        self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(
             _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
@@ -178,15 +178,15 @@ class UIDrawROIWindow():
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_transect_button)
 
         # Create a draw button
-        self.image_slice_number_refine_button = QPushButton()
-        self.image_slice_number_refine_button.setObjectName("ImageSliceNumberDrawButton")
-        self.image_slice_number_refine_button.setSizePolicy(
+        self.image_slice_number_draw_button = QPushButton()
+        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_draw_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
         self.image_slice_number_transect_button.resize(
-            self.image_slice_number_refine_button.sizeHint().width(),
-            self.image_slice_number_refine_button.sizeHint().height())
-        self.image_slice_number_refine_button.clicked.connect(self.on_draw_clicked)
-        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_refine_button)
+            self.image_slice_number_draw_button.sizeHint().width(),
+            self.image_slice_number_draw_button.sizeHint().height())
+        self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
+        self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_draw_button)
 
         # Create a save button to save all the changes
         self.draw_roi_window_instance_save_button = QPushButton()
@@ -639,76 +639,87 @@ class UIDrawROIWindow():
 
     def on_draw_clicked(self):
         """
-        Function triggered when the Transect button is pressed from the menu.
+        Function triggered when the Draw button is pressed from the menu.
         """
-        id = self.slider.value()
 
-        # Getting most updated selected slice
-        if (self.forward_pressed):
-            id = self.current_slice
-        elif (self.backward_pressed):
-            id = self.current_slice
-        elif (self.slider_changed):
+        if self.min_pixel_density_line_edit.text() == "" or self.max_pixel_density_line_edit.text() == "":
+            QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct.")
+        else:
             id = self.slider.value()
 
-        dt = self.window.dataset[id]
-        dt.convert_pixel_data()
+            # Getting most updated selected slice
+            if (self.forward_pressed):
+                id = self.current_slice
+            elif (self.backward_pressed):
+                id = self.current_slice
+            elif (self.slider_changed):
+                id = self.slider.value()
 
-        min_pixel = self.min_pixel_density_line_edit.text()
-        max_pixel = self.max_pixel_density_line_edit.text()
+            dt = self.window.dataset[id]
+            dt.convert_pixel_data()
 
-        if min_pixel.isdecimal() and max_pixel.isdecimal():
+            min_pixel = self.min_pixel_density_line_edit.text()
+            max_pixel = self.max_pixel_density_line_edit.text()
 
-            min_pixel = int(min_pixel)
-            max_pixel = int(max_pixel)
+            if min_pixel.isdecimal() and max_pixel.isdecimal():
 
-            if min_pixel <= max_pixel:
-                data_set = self.window.dataset[id]
+                min_pixel = int(min_pixel)
+                max_pixel = int(max_pixel)
 
-                """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-                """
-                pixel_array = data_set._pixel_array
+                if min_pixel <= max_pixel:
+                    data_set = self.window.dataset[id]
 
-                # This will contain the new pixel coordinates specifed by the min and max pixel density
-                target_pixel_coords = []
+                    """
+                    pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
+                    pixel_array[x][y] will return the density of the pixel
+                    """
+                    pixel_array = data_set._pixel_array
 
-                for x_coord in range(512):
-                    for y_coord in range(512):
-                        if (pixel_array[x_coord][y_coord] >= min_pixel) and (
-                                pixel_array[x_coord][y_coord] <= max_pixel):
-                            target_pixel_coords.append((y_coord, x_coord))
+                    # This will contain the new pixel coordinates specifed by the min and max pixel density
+                    target_pixel_coords = []
 
-                """
-                For the meantime, a new image is created and the pixels specified are coloured. 
-                This will need to altered so that it creates a new layer over the existing image instead of replacing it.
-                """
-                pixels_in_image = self.window.pixmaps[id]
-                pixels_in_image = pixels_in_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio,
-                                                         QtCore.Qt.SmoothTransformation)
+                    for x_coord in range(512):
+                        for y_coord in range(512):
+                            if (pixel_array[x_coord][y_coord] >= min_pixel) and (
+                                    pixel_array[x_coord][y_coord] <= max_pixel):
+                                target_pixel_coords.append((y_coord, x_coord))
 
-                # Convert QPixMap into Qimage
-                q_image = pixels_in_image.toImage()
+                    """
+                    For the meantime, a new image is created and the pixels specified are coloured. 
+                    This will need to altered so that it creates a new layer over the existing image instead of replacing it.
+                    """
+                    pixels_in_image = self.window.pixmaps[id]
+                    pixels_in_image = pixels_in_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio,
+                                                             QtCore.Qt.SmoothTransformation)
 
-                for x_coord, y_coord in target_pixel_coords:
-                    q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
+                    # Convert QPixMap into Qimage
+                    q_image = pixels_in_image.toImage()
 
-                # Convert Qimage back to QPixMap
-                q_pixmaps = QtGui.QPixmap.fromImage(q_image)
-                label = QtWidgets.QLabel()
-                label.setPixmap(q_pixmaps)
+                    for x_coord, y_coord in target_pixel_coords:
+                        q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
-            self.drawingROI = Drawing(
-                self.window,
-                self.window.pixmaps[id],
-                dt._pixel_array.transpose(),
-                self.view,
-                min_pixel,
-                max_pixel,
-                self.window.dataset[id]
-            )
-            self.view.setScene(self.drawingROI)
+                    # Convert Qimage back to QPixMap
+                    q_pixmaps = QtGui.QPixmap.fromImage(q_image)
+                    label = QtWidgets.QLabel()
+                    label.setPixmap(q_pixmaps)
+
+                else:
+                    QMessageBox.about(self, "Incorrect Input",
+                                      "Please ensure maximum density is atleast higher than minimum density.")
+
+                self.drawingROI = Drawing(
+                    self.window,
+                    self.window.pixmaps[id],
+                    dt._pixel_array.transpose(),
+                    self.view,
+                    min_pixel,
+                    max_pixel,
+                    self.window.dataset[id]
+                )
+                self.view.setScene(self.drawingROI)
+
+            else:
+                QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct.")
 
 
     def on_go_clicked(self):
@@ -778,10 +789,6 @@ class UIDrawROIWindow():
             QMessageBox.about(self, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_save_clicked(self):
-
-        QMessageBox.about(self, "Coming Soon", "This feature is in development")
-
-    def on_tool_clicked(self):
 
         QMessageBox.about(self, "Coming Soon", "This feature is in development")
 
