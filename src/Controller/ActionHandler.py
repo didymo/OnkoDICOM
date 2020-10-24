@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -252,4 +252,4 @@ class ActionHandler:
                                               QtWidgets.QMessageBox.Ok)
 
     def action_exit_handler(self):
-        sys.exit()
+        QtCore.QCoreApplication.exit(0)
