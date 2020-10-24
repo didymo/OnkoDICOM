@@ -92,7 +92,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             exe_not_found = QMessageBox.information(self, "Error",
                                                  "Plastimatch not installed. Please install Plastimatch "
                                                  "(https://sourceforge.net/projects/plastimatch/) to carry out "
-                                                 "pyradiomics analysis.")
+                                                 "pyradiomics analysis. If using Windows, please ensure that your "
+                                                 "system's PATH variable inlcudes the directory where Plastimatch's "
+                                                 "executable is installed.")
 
     def cleanup(self):
         patient_dict_container = PatientDictContainer()
