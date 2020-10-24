@@ -39,6 +39,11 @@ class ImageLoader(QObject):
         # if not ImageLoading.is_dataset_dicom_rt(read_data_dict):
         #    raise ImageLoading.NotRTSetError
 
+        # Initialize the PatientDictContainer singleton.
+        patient_dict_container = PatientDictContainer()
+        if not patient_dict_container.is_empty(): patient_dict_container.clear()
+        patient_dict_container.set_base_values(path, read_data_dict, file_names_dict)
+
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
         # interrupt flag has been set, in which case it will interrupt this method after the currently processing
         # function has finished running. It's not very pretty, and the thread will still run some functions for, in some
@@ -46,7 +51,7 @@ class ImageLoader(QObject):
         # the best solution I could come up with. If you have a cleaner alternative, please make your contribution.
         if interrupt_flag.is_set():
             print("stopped")
-            return
+            return False
 
         if 'rtss' in file_names_dict and 'rtdose' in file_names_dict:
             self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
@@ -63,21 +68,27 @@ class ImageLoader(QObject):
 
             if interrupt_flag.is_set():  # Stop loading.
                 print("stopped")
-                return
+                return False
 
             progress_callback.emit(("Getting contour data...", 30))
             dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
 
             if interrupt_flag.is_set():  # Stop loading.
                 print("stopped")
-                return
+                return False
 
             progress_callback.emit(("Getting pixel LUTs...", 50))
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             if interrupt_flag.is_set():  # Stop loading.
                 print("stopped")
-                return
+                return False
+
+            # Add RTSS values to PatientDictContainer
+            patient_dict_container.set("rois", rois)
+            patient_dict_container.set("raw_contour", dict_raw_contour_data)
+            patient_dict_container.set("num_points", dict_numpoints)
+            patient_dict_container.set("pixluts", dict_pixluts)
 
             if 'rtdose' in file_names_dict and self.calc_dvh:
                 dataset_rtdose = dcmread(file_names_dict['rtdose'])
@@ -95,25 +106,24 @@ class ImageLoader(QObject):
 
                 if interrupt_flag.is_set():  # Stop loading.
                     print("stopped")
-                    return
+                    return False
 
                 progress_callback.emit(("Converging to zero...", 80))
                 dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
 
                 if interrupt_flag.is_set():  # Stop loading.
                     print("stopped")
-                    return
+                    return False
 
-                return PatientDictContainer(path, read_data_dict, file_names_dict, rois=rois, raw_dvh=raw_dvh,
-                                            dvh_x_y=dvh_x_y, raw_contour=dict_raw_contour_data,
-                                            num_points=dict_numpoints, pixluts=dict_pixluts)
+                # Add DVH values to PatientDictContainer
+                patient_dict_container.set("raw_dvh", raw_dvh)
+                patient_dict_container.set("dvh_x_y", dvh_x_y)
 
+                return True
             else:
-                return PatientDictContainer(path, read_data_dict, file_names_dict, rois=rois,
-                                            raw_contour=dict_raw_contour_data, num_points=dict_numpoints,
-                                            pixluts=dict_pixluts)
+                return True
 
-        return PatientDictContainer(path, read_data_dict, file_names_dict)
+        return True
 
     def update_calc_dvh(self, advice):
         self.advised_calc_dvh = True

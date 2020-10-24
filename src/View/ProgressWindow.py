@@ -46,9 +46,9 @@ class ProgressWindow(QDialog):
 
         self.threadpool.start(worker)
 
-    def on_finish(self, results):
+    def on_finish(self, result):
         self.update_progress(("Initalizing patient window...", 90))
-        self.signal_loaded.emit((results, self))
+        self.signal_loaded.emit((result, self))
 
     def update_progress(self, progress_update):
         """
