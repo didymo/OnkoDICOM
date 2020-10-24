@@ -25,7 +25,7 @@ class PatientDictContainer(metaclass=Singleton):
 
         self.additional_data = None     # Any additional values that are required (e.g. rois, raw_dvh, raw_contour, etc)
 
-    def set_base_values(self, path, dataset, filepaths, **kwargs):
+    def set_initial_values(self, path, dataset, filepaths, **kwargs):
         """
         Used to initialize the data on the creation of a new patient.
         :param path:
@@ -52,13 +52,8 @@ class PatientDictContainer(metaclass=Singleton):
         """
         :return: True if class is empty
         """
-        if self.path is not None:
-            return False
-        if self.dataset is not None:
-            return False
-        if self.filepaths is not None:
-            return False
-        if self.additional_data is not None:
+        if self.path is not None or self.dataset is not None \
+                or self.filepaths is not None or self.additional_data is not None:
             return False
 
         return True
