@@ -1,29 +1,4 @@
 import collections
-import multiprocessing
-import sys
-import time
-
-import numpy as np
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import (
-    QBrush,
-    QColor,
-    QPainter,
-    QPainterPath,
-    QPen,
-    QPixmap,
-    QPolygon,
-    QPolygonF,
-)
-from PyQt5.QtWidgets import (
-    QApplication,
-    QGraphicsScene,
-    QGraphicsView,
-    QLabel,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
-)
 
 from src.Model.CalculateImages import *
 

@@ -1,6 +1,7 @@
 """ Contains functions required for isodose display """
 
 import numpy as np
+
 from src.Model.ROI import calculate_matrix
 
 

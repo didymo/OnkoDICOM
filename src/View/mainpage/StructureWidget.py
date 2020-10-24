@@ -1,7 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt
 from fuzzywuzzy import process
-from pydicom import Dataset
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.RenameROIWindow import RenameROIWindow

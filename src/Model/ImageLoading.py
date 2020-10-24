@@ -22,10 +22,9 @@ dictionary and the get_datasets() function should not need to be added to. (Of c
 case, however this alternative function promotes scalability and durability of the process).
 """
 import collections
-import os
 import re
-
 from multiprocessing import Queue, Process
+
 from dicompylercore import dvhcalc
 from pandas import np
 from pydicom import dcmread

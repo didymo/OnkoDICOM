@@ -1,5 +1,3 @@
-import sys
-
 from PyQt5 import QtGui, QtWidgets, QtCore
 
 from src.Model.CalculateImages import get_pixmaps

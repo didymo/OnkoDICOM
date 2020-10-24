@@ -3,8 +3,8 @@ import os
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.ActionHandler import ActionHandler
+from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, dict_instanceUID, DicomTree
@@ -16,9 +16,9 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
+from src.View.mainpage.NewToolBar import NewToolBar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
-from src.View.mainpage.NewToolBar import NewToolBar
 
 
 class UIMainWindow:

@@ -1,7 +1,5 @@
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow import *
-from src.Controller.AddOnOptionsController import *
-from pydicom import Dataset
 
 
 # Create the ROI Delete Options class based on the UI from the file in View/ROI Delete Option

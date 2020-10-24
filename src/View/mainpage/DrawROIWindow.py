@@ -1,13 +1,14 @@
 import csv
 import math
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, QGraphicsPixmapItem, QGraphicsEllipseItem
 from PyQt5.Qt import Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
+    QGraphicsPixmapItem, QGraphicsEllipseItem
 
+from legacy.src.View.mainpage.DicomView import *
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
-from legacy.src.View.mainpage.DicomView import *
 
 
 class UIDrawROIWindow:

@@ -1,5 +1,6 @@
-import pydicom
 import collections
+
+import pydicom
 
 
 def get_tree(ds, label=0):
