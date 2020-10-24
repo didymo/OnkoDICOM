@@ -2,9 +2,9 @@ import csv
 import math
 
 from PyQt5.Qt import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
-    QGraphicsPixmapItem, QGraphicsEllipseItem
+    QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget
 
 from legacy.src.View.mainpage.DicomView import *
 from src.Controller.MainPageController import MainPageCallClass
