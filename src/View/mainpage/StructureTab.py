@@ -12,7 +12,7 @@ from src.Model.ROI import ordered_list_rois
 from src.View.mainpage.StructureWidget import StructureWidget
 
 
-class NewStructureTab(QtWidgets.QWidget):
+class StructureTab(QtWidgets.QWidget):
 
     request_update_structures = QtCore.pyqtSignal()
 

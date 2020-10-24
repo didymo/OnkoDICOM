@@ -17,7 +17,7 @@ from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
 from src.View.mainpage.PatientBar import PatientBar
-from src.View.mainpage.NewStructureTab import NewStructureTab
+from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.NewToolBar import NewToolBar
 
 
@@ -145,7 +145,7 @@ class UIMainWindow:
 
         # Add structures tab to left panel
         if patient_dict_container.has_modality("rtss"):
-            self.structures_tab = NewStructureTab()
+            self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
             self.left_panel.addTab(self.structures_tab, "Structures")
 
