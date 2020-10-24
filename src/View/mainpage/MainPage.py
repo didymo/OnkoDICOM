@@ -8,7 +8,7 @@ from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, dict_instanceUID, DicomTree
-from src.Model.Isodose import get_dose_pixluts, calculate_rxdose
+from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainpage.DVHTab import DVHTab
@@ -100,7 +100,7 @@ class UIMainWindow:
             patient_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
 
             patient_dict_container.set("selected_doses", [])
-            patient_dict_container.set("rxdose", 1) # This will be overwritten if an RTPLAN is present. TODO calculate value w/o RTPLAN
+            patient_dict_container.set("rx_dose_in_cgray", 1) # This will be overwritten if an RTPLAN is present. TODO calculate value w/o RTPLAN
 
         # Set RTPLAN attributes
         if patient_dict_container.has_modality("rtplan"):
@@ -111,8 +111,8 @@ class UIMainWindow:
             # in which case there will *not* be a TargetPrescriptionDose
             # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose
             # will be encoded and have a value
-            rxdose = calculate_rxdose(dataset["rtplan"])
-            patient_dict_container.set("rxdose", rxdose)
+            rx_dose_in_cgray = calculate_rx_dose_in_cgray(dataset["rtplan"])
+            patient_dict_container.set("rx_dose_in_cgray", rx_dose_in_cgray)
 
             dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
             patient_dict_container.set("dict_dicom_tree_rtplan", dicom_tree_rtplan.dict)
