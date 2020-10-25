@@ -5,25 +5,23 @@
 #####################################################################################################################
 
 import glob
-import math
 # removing warnings
-import warnings
 from pathlib import Path
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
 
 
 from numpy import *
 
 from src.Model.Anon import *
-from src.View.mainpage.ClinicalDataDisplay import *
-from src.View.mainpage.ClinicalDataForm import *
+from src.Model.PatientDictContainer import PatientDictContainer
+from legacy.src.View.mainpage.ClinicalDataDisplay import *
+from legacy.src.View.mainpage.ClinicalDataForm import *
 
-warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
 matplotlib.cbook.handle_exceptions = "raise"
 matplotlib.cbook.handle_exceptions = "ignore"
@@ -850,7 +848,6 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #  This Class handles the Transect functionality                                                                    #
 #                                                                                                                   #
 #####################################################################################################################
-import numpy as np
 from matplotlib.backend_bases import MouseEvent
 class Transect(QtWidgets.QGraphicsScene):
 
@@ -974,9 +971,9 @@ class Transect(QtWidgets.QGraphicsScene):
                     for x in self.roi_values:
                         if (self.data[i][j] == x):
                             self.roi_points.append((i, j))
-            self.mainWindow.drawROI.draw_window.upper_limit = self.upper_limit
-            self.mainWindow.drawROI.draw_window.lower_limit = self.lower_limit
-            self.mainWindow.drawROI.draw_window.update_view()
+            self.mainWindow.upper_limit = self.upper_limit
+            self.mainWindow.lower_limit = self.lower_limit
+            self.mainWindow.update_view()
             image = self.img.toImage()
             ellipse = None
             for i, j in self.roi_points:
@@ -995,8 +992,13 @@ class Transect(QtWidgets.QGraphicsScene):
         event.canvas.figure.axes[0].has_been_closed = True
 
     def find_limits(self, roi_values):
-        self.upper_limit = max(roi_values)
-        self.lower_limit = min(roi_values)
+        self.upper_limit = roi_values[len(roi_values)-1]
+        self.lower_limit = roi_values[0]
+        temp = 0
+        if(self.lower_limit > self.upper_limit):
+            temp = self.upper_limit
+            self.upper_limit = self.lower_limit
+            self.lower_limit = temp
 
     def return_limits(self):
         return [self.lower_limit, self.upper_limit]
@@ -1076,7 +1078,7 @@ class Transect(QtWidgets.QGraphicsScene):
                     if (self.distances[x] >= self.thresholds[0] and self.distances[x] <= self.thresholds[1]):
                         self.roi_list.append(self.distances[x])
                         self.roi_values.append(self._valueTuples[self.distances[x]])
-
+                self.find_limits(self.roi_values)
                 for i in self._axes.bar(self.roi_list, self.roi_values):
                     i.set_color('r')
             self._figure.canvas.draw()
@@ -1160,15 +1162,15 @@ class Transect(QtWidgets.QGraphicsScene):
 class MainPageCallClass:
 
     # Initialisation function of the controller
-    def __init__(self, path, datasets, filepaths, raw_dvh):
-        self.path = path
-        self.dataset = datasets
-        self.filepaths = filepaths
-        self.raw_dvh = raw_dvh
+    def __init__(self):
+        self.patient_dict_container = PatientDictContainer()
+        self.path = self.patient_dict_container.path
+        self.dataset = self.patient_dict_container.dataset
+        self.filepaths = self.patient_dict_container.filepaths
 
     #This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
-        target_path = anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        target_path = anonymize(self.path, self.dataset, self.filepaths, raw_dvh)
         return target_path
 
     # This function displays the clinical data form
@@ -1183,7 +1185,7 @@ class MainPageCallClass:
         tabWindow.addTab(self.tab_cd, "")
 
     # This function runs Transect on button click
-    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw):
+    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw=False):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
                                dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)

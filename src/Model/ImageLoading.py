@@ -220,7 +220,7 @@ def get_roi_info(dataset_rtss):
     return dict_roi
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=None):
+def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=None, progress_callback=None):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
@@ -248,7 +248,7 @@ def calc_dvh_worker(rtss, dose, roi, queue, dose_limit=None):
     queue.put(dvh)
 
 
-def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
+def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None, progress_callback=None):
     """
     Multiprocessing variant of calc_dvh for fork-based platforms.
     """

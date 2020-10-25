@@ -2,10 +2,11 @@ from shutil import which
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
-from src.View.mainpage.MainPage import UIMainWindow
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
+from src.View.mainpage.MainPage import UIMainWindow
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
@@ -27,7 +28,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 
-    go_next_window = QtCore.pyqtSignal(tuple)
+    go_next_window = QtCore.pyqtSignal(object)
 
     # Initialisation function to display the UI
     def __init__(self, default_directory):
@@ -40,8 +41,8 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
             self.open_patient_directory_input_box.setText(default_directory)
             self.scan_directory_for_patient()
 
-    def open_patient(self, patient_attributes):
-        self.go_next_window.emit(patient_attributes)
+    def open_patient(self, progress_window):
+        self.go_next_window.emit(progress_window)
 
 
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
@@ -52,11 +53,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     run_pyradiomics = QtCore.pyqtSignal(str, dict, str)
 
     # Initialising the main window and setting up the UI
-    def __init__(self, patient_dict_container):
+    def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self, patient_dict_container)
-        self.menu_bar.actionOpen.triggered.connect(self.open_new_patient)
-        self.menu_bar.actionPyradiomics.triggered.connect(self.pyradiomics_handler)
+        self.setup_ui(self)
+        self.action_handler.action_open.triggered.connect(self.open_new_patient)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def open_new_patient(self):
@@ -71,30 +71,35 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         if confirmation_dialog == QMessageBox.Yes:
             self.open_patient_window.emit()
 
-    def pyradiomics_handler(self):
+    def pyradiomics_handler(self, path, filepaths, hashed_path):
         """
         Sends signal to initiate pyradiomics analysis
         """
         if which('plastimatch') is not None:
-            if self.hashed_path == '':
+            if hashed_path == '':
                 confirm_pyradi = QMessageBox.information(self, "Confirmation",
                                                     "Are you sure you want to perform pyradiomics? "
                                                     "Once started the process cannot be terminated until it finishes.",
                                                     QMessageBox.Yes, QMessageBox.No)
                 if confirm_pyradi == QMessageBox.Yes:
-                    self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+                    self.run_pyradiomics.emit(path, filepaths, hashed_path)
                 if confirm_pyradi == QMessageBox.No:
                     pass
             else:
-                self.run_pyradiomics.emit(self.path, self.filepaths, self.hashed_path)
+                self.run_pyradiomics.emit(path, filepaths, hashed_path)
         else:
             exe_not_found = QMessageBox.information(self, "Error",
                                                  "Plastimatch not installed. Please install Plastimatch "
                                                  "(https://sourceforge.net/projects/plastimatch/) to carry out "
                                                  "pyradiomics analysis.")
 
+    def cleanup(self):
+        patient_dict_container = PatientDictContainer()
+        patient_dict_container.clear()
+
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        if self.rtss_modified and hasattr(self, "structures_tab"):
+        patient_dict_container = PatientDictContainer()
+        if patient_dict_container.get("rtss_modified") and hasattr(self, "structures_tab"):
             confirmation_dialog = QMessageBox.information(self, 'Close without saving?',
                                                           'The RTSTRUCT file has been modified. Would you like to save '
                                                           'before exiting the program?',
@@ -103,10 +108,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             if confirmation_dialog == QMessageBox.Save:
                 self.structures_tab.save_new_rtss()
                 event.accept()
+                self.cleanup()
             elif confirmation_dialog == QMessageBox.Discard:
                 event.accept()
+                self.cleanup()
             else:
                 event.ignore()
+        else:
+            self.cleanup()
 
 
 class PyradiProgressBar(QtWidgets.QWidget):

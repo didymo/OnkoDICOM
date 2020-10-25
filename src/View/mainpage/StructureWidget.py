@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from fuzzywuzzy import process
 from pydicom import Dataset
 
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.RenameROIWindow import RenameROIWindow
 
 
@@ -13,6 +14,8 @@ class StructureWidget(QtWidgets.QWidget):
     def __init__(self, roi_id, color, text, structure_tab):
         super(StructureWidget, self).__init__()
 
+        patient_dict_container = PatientDictContainer()
+        self.dataset_rtss = patient_dict_container.get("dataset_rtss")
         self.roi_id = roi_id
         self.color = color
         self.text = text
@@ -85,7 +88,7 @@ class StructureWidget(QtWidgets.QWidget):
         if action == rename_action:
             rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                             self.structure_tab.standard_organ_names,
-                                            self.structure_tab.main_window.dataset_rtss,
+                                            self.dataset_rtss,
                                             self.roi_id, self.text, self.structure_renamed)
             rename_window.exec_()
 
@@ -93,18 +96,18 @@ class StructureWidget(QtWidgets.QWidget):
             if action == suggested_action1:
                 rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                                 self.structure_tab.standard_organ_names,
-                                                self.structure_tab.main_window.dataset_rtss,
+                                                self.dataset_rtss,
                                                 self.roi_id, self.text, self.structure_renamed, suggestions[0][0])
                 rename_window.exec_()
             elif action == suggested_action2:
                 rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                                 self.structure_tab.standard_organ_names,
-                                                self.structure_tab.main_window.dataset_rtss,
+                                                self.dataset_rtss,
                                                 self.roi_id, self.text, self.structure_renamed, suggestions[1][0])
                 rename_window.exec_()
             elif action == suggested_action3:
                 rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                                 self.structure_tab.standard_organ_names,
-                                                self.structure_tab.main_window.dataset_rtss,
+                                                self.dataset_rtss,
                                                 self.roi_id, self.text, self.structure_renamed, suggestions[2][0])
                 rename_window.exec_()

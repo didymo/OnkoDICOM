@@ -318,6 +318,13 @@ def get_roi_contour_pixel(dict_raw_ContourData, roi_list, dict_pixluts):
     return dict_pixels
 
 
+def ordered_list_rois(rois):
+    res = []
+    for id, value in rois.items():
+        res.append(id)
+    return sorted(res)
+
+
 # class Test(QWidget):
 #
 #     def __init__(self, pixmap, dict_rois_contours, roi_selected, curr_slice, parent=None):
