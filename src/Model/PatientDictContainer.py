@@ -28,11 +28,10 @@ class PatientDictContainer(metaclass=Singleton):
     def set_base_values(self, path, dataset, filepaths, **kwargs):
         """
         Used to initialize the data on the creation of a new patient.
-        :param path:
-        :param dataset:
-        :param filepaths:
-        :param kwargs:
-        :return:
+        :param path: The path of the loaded directory.
+        :param dataset: Dictionary where keys are slice number/RT modality and values are PyDicom dataset objects.
+        :param filepaths: Dictionary where keys are slice number/RT modality and values are filepaths.
+        :param kwargs: Any additional values that are required (e.g. rois, raw_dvh, raw_contour, etc)
         """
         self.path = path
         self.dataset = dataset
@@ -71,7 +70,6 @@ class PatientDictContainer(metaclass=Singleton):
 
     def get(self, keyword):
         """
-        TODO This method may not be necessary
         Gets a keyword argument and returns it.
         Example usages:
         patient_dict_container.get("rois")
