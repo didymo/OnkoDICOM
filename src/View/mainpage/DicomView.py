@@ -155,7 +155,7 @@ class DicomView(QtWidgets.QWidget):
             # sort selected_doses in ascending order so that the high dose isodose washes
             # paint over the lower dose isodose washes
             for sd in sorted(self.patient_dict_container.get("selected_doses")):
-                dose_level = sd * self.patient_dict_container.get("rxdose") / \
+                dose_level = sd * self.patient_dict_container.get("rx_dose_in_cgray") / \
                              (dataset_rtdose.DoseGridScaling * 10000)
                 contours = isodosegen.trace(dose_level)
                 contours = contours[:len(contours) // 2]

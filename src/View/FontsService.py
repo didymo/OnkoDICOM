@@ -1,6 +1,8 @@
-from PyQt5 import QtGui, QtWidgets
 import os
 import platform
+
+from PyQt5 import QtGui, QtWidgets
+
 
 class FontService:
 

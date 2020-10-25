@@ -4,15 +4,14 @@
 #                                                                                                    #
 ######################################################################################################
 import csv
-import sys
 import webbrowser
 from collections import deque
 
 from PyQt5.QtWidgets import QFileDialog
 
-from src.data.csv import *
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
+
 
 ######################################################################################################
 #                                                                                                    #

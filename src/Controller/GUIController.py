@@ -1,11 +1,12 @@
 from shutil import which
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
-from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.mainpage.MainPage import UIMainWindow
 
 
@@ -91,7 +92,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             exe_not_found = QMessageBox.information(self, "Error",
                                                  "Plastimatch not installed. Please install Plastimatch "
                                                  "(https://sourceforge.net/projects/plastimatch/) to carry out "
-                                                 "pyradiomics analysis.")
+                                                 "pyradiomics analysis. If using Windows, please ensure that your "
+                                                 "system's PATH variable inlcudes the directory where Plastimatch's "
+                                                 "executable is installed.")
 
     def cleanup(self):
         patient_dict_container = PatientDictContainer()

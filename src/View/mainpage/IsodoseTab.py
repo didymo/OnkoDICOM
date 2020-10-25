@@ -10,7 +10,7 @@ class IsodoseTab(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-        self.rxdose = self.patient_dict_container.get("rxdose")
+        self.rx_dose_in_cgray = self.patient_dict_container.get("rx_dose_in_cgray")
         self.color_dict = self.init_color_isod()
         self.color_squares = self.init_color_squares()
         self.checkboxes = self.init_checkboxes()
@@ -67,16 +67,16 @@ class IsodoseTab(QtWidgets.QWidget):
         """
         list_of_checkboxes = []
         # Values of Isodoses
-        val1 = int(1.07 * self.rxdose)
-        val2 = int(1.05 * self.rxdose)
-        val3 = int(1.00 * self.rxdose)
-        val4 = int(0.95 * self.rxdose)
-        val5 = int(0.90 * self.rxdose)
-        val6 = int(0.80 * self.rxdose)
-        val7 = int(0.70 * self.rxdose)
-        val8 = int(0.60 * self.rxdose)
-        val9 = int(0.30 * self.rxdose)
-        val10 = int(0.10 * self.rxdose)
+        val1 = int(1.07 * self.rx_dose_in_cgray)
+        val2 = int(1.05 * self.rx_dose_in_cgray)
+        val3 = int(1.00 * self.rx_dose_in_cgray)
+        val4 = int(0.95 * self.rx_dose_in_cgray)
+        val5 = int(0.90 * self.rx_dose_in_cgray)
+        val6 = int(0.80 * self.rx_dose_in_cgray)
+        val7 = int(0.70 * self.rx_dose_in_cgray)
+        val8 = int(0.60 * self.rx_dose_in_cgray)
+        val9 = int(0.30 * self.rx_dose_in_cgray)
+        val10 = int(0.10 * self.rx_dose_in_cgray)
 
         # Checkboxes
         checkbox1 = QtWidgets.QCheckBox("107 % / " + str(val1) + " cGy [Max]")

@@ -1,12 +1,11 @@
 import threading
-import time
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.Qt import Qt
 from PyQt5.QtCore import QCoreApplication, QThreadPool
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
-from PyQt5.Qt import Qt
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker

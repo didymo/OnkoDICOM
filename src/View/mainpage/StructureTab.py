@@ -3,16 +3,15 @@ from pathlib import Path
 from random import randint, seed
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from pandas import np
 
-from src.Controller.ROIOptionsController import RoiDeleteOptions, ROIDelOption, ROIDrawOption
+from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainpage.StructureWidget import StructureWidget
 
 
-class NewStructureTab(QtWidgets.QWidget):
+class StructureTab(QtWidgets.QWidget):
 
     request_update_structures = QtCore.pyqtSignal()
 

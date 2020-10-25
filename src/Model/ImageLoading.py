@@ -16,8 +16,8 @@ case, however this alternative function promotes scalability and durability of t
 """
 import collections
 import re
-
 from multiprocessing import Queue, Process
+
 from dicompylercore import dvhcalc
 from pandas import np
 from pydicom import dcmread

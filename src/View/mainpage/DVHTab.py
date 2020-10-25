@@ -2,9 +2,9 @@ import os
 import platform
 import threading
 
+import matplotlib.pylab as plt
 from PyQt5 import QtWidgets, QtCore
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pylab as plt
 from pandas import np
 
 from src.Model import ImageLoading

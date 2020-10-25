@@ -1,6 +1,5 @@
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow import *
-from src.Controller.AddOnOptionsController import *
 
 
 class RoiDeleteOptions(QtWidgets.QMainWindow, UIDeleteROIWindow):
