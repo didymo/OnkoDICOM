@@ -22,6 +22,11 @@ class PatientDictContainer(metaclass=Singleton):
     as different UI components are initialized and the user performs certain actions during runtime, new data will be
     added and old data will be updated. When the user chooses to open and work on a new dataset, this object will be
     completed cleaned in order to ensure that no unused data persists within the program's memory.
+
+    When a class needs to access the instance of this class, it can simply call the class' constructor and it will
+    return the only instance of this class.
+    Example usage:
+    patient_dict_container = PatientDictContainer()
     """
 
     def __init__(self):
