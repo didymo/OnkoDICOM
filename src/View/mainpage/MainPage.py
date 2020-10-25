@@ -25,6 +25,14 @@ class UIMainWindow:
     """
     The central class responsible for initializing most of the values stored in the PatientDictContainer model and
     defining the visual layout of the main window of OnkoDICOM.
+    No class has access to the attributes belonging to this class, except for the class's ActionHandler, which is used
+    to trigger actions within the main window. Components of this class (i.e. QWidget child classes such as
+    StructureTab, DicomView, DicomTree, etc.) should not be able to reference this class, and rather should exist
+    independently and only be able to communicate with the PatientDictContainer model. If a component needs to
+    communicate with another component, that should be accomplished by emitting signals within that components, and
+    having the slots for those signals within this class (as demonstrated by the update_views() method of this class).
+    If a class needs to trigger one of the actions defined in the ActionHandler, then the instance of the ActionHandler
+    itself can safely be passed into the class.
     """
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
 
