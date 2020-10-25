@@ -39,7 +39,7 @@ class ImageLoader(QObject):
         # if not ImageLoading.is_dataset_dicom_rt(read_data_dict):
         #    raise ImageLoading.NotRTSetError
 
-        # Initialize the PatientDictContainer singleton.
+        # Populate the initial values in the PatientDictContainer singleton.
         patient_dict_container = PatientDictContainer()
         if not patient_dict_container.is_empty(): patient_dict_container.clear()
         patient_dict_container.set_base_values(path, read_data_dict, file_names_dict)

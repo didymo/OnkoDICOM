@@ -7,6 +7,12 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class ActionHandler:
+    """
+    This class is responsible for initializing all of the actions that will be used by the MainPage and its components.
+    There exists a 1-to-1 relationship between this class and the MainPage. This class has access to the main page's
+    attributes and components, however this access should only be used to provide functionality to the actions defined
+    below. The instance of this class can be given to the main page's components in order to trigger actions.
+    """
 
     def __init__(self, main_page):
         self.main_page = main_page
