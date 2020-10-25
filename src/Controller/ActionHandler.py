@@ -7,7 +7,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 class ActionHandler:
 
     def __init__(self, main_page):
-        self.main_page = main_page
+        self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
 
         ##############################
@@ -53,7 +53,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.main_page.dicom_view.zoom_in)
+        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view.zoom_in)
 
         # Zoom Out Action
         self.icon_zoom_out = QtGui.QIcon()
@@ -66,7 +66,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.main_page.dicom_view.zoom_out)
+        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view.zoom_out)
 
         # Windowing Action
         self.icon_windowing = QtGui.QIcon()
@@ -137,7 +137,6 @@ class ActionHandler:
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
 
-
     def init_windowing_menu(self):
         self.menu_windowing.setIcon(self.icon_windowing)
         self.menu_windowing.setTitle("Windowing")
@@ -161,7 +160,6 @@ class ActionHandler:
             action_windowing_item.setText(text)
             self.menu_windowing.addAction(action_windowing_item)
 
-
     def windowing_handler(self, state, text):
         """
         Function triggered when a window is selected from the menu.
@@ -184,7 +182,7 @@ class ActionHandler:
         self.patient_dict_container.set("level", level)
         self.patient_dict_container.set("pixmaps", new_pixmaps)
 
-        self.main_page.update_views()
+        self.__main_page.update_views()
 
     def anonymization_handler(self):
         """
@@ -192,7 +190,7 @@ class ActionHandler:
         """
 
         save_reply = QtWidgets.QMessageBox.information(
-            self.main_page.main_window_instance,
+            self.__main_page.main_window_instance,
             "Confirmation",
             "Are you sure you want to perform anonymization?",
             QtWidgets.QMessageBox.Yes,
@@ -201,18 +199,18 @@ class ActionHandler:
 
         if save_reply == QtWidgets.QMessageBox.Yes:
             raw_dvh = self.patient_dict_container.get("raw_dvh")
-            hashed_path = self.main_page.call_class.runAnonymization(raw_dvh)
+            hashed_path = self.__main_page.call_class.runAnonymization(raw_dvh)
             self.patient_dict_container.set("hashed_path", hashed_path)
             # now that the radiomics data can just get copied across... maybe skip this?
             radiomics_reply = QtWidgets.QMessageBox.information(
-                self.main_page.main_window_instance,
+                self.__main_page.main_window_instance,
                 "Confirmation",
                 "Are you sure you want to perform radiomics?",
                 QtWidgets.QMessageBox.Yes,
                 QtWidgets.QMessageBox.No
             )
             if radiomics_reply == QtWidgets.QMessageBox.Yes:
-                self.main_page.pyradi_trigger.emit(
+                self.__main_page.pyradi_trigger.emit(
                     self.patient_dict_container.path,
                     self.patient_dict_container.filepaths,
                     hashed_path
@@ -222,15 +220,15 @@ class ActionHandler:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-        id = self.main_page.dicom_view.slider.value()
+        id = self.__main_page.dicom_view.slider.value()
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
         pixmap = self.patient_dict_container.get("pixmaps")[id]
-        self.main_page.call_class.runTransect(
-            self.main_page,
-            self.main_page.dicom_view.view,
+        self.__main_page.call_class.runTransect(
+            self.__main_page,
+            self.__main_page.dicom_view.view,
             pixmap,
             dt._pixel_array.transpose(),
             rowS,
@@ -238,13 +236,13 @@ class ActionHandler:
         )
 
     def add_on_options_handler(self):
-        self.main_page.add_on_options_controller.show_add_on_options()
+        self.__main_page.add_on_options_controller.show_add_on_options()
 
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
-            self.main_page.dvh_tab.export_csv()
+            self.__main_page.dvh_tab.export_csv()
         else:
-            QtWidgets.QMessageBox.information(self.main_page,
+            QtWidgets.QMessageBox.information(self.__main_page,
                                               "Unable to export DVH",
                                               "DVH cannot be exported as there is no DVH present.",
                                               QtWidgets.QMessageBox.Ok)
