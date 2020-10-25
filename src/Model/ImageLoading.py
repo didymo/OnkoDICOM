@@ -1,11 +1,4 @@
 """
-Skeleton for the interface between new boot window and existing patient window.
-Intention is to replace, recreate, or reuse most of the functionality served by the ProgressBar.Extended class.
-The functions in this file should be enough to generate the arguments required to create a MainWindow class.
-read_data_dict, file_names_dict, rois, raw_dvh, dvh_x_y, dict_raw_contour_data, dict_numpoints, dict_pixluts.
-The reason why some of these functions will be directly copied is because they currently exist as member functions
-of ProgressBar.Extended class and that class is to be deprecated/refactored with the new patient selection window.
-
 Format for allowed_classes:
 
 "SOPClassUID" : {
@@ -79,6 +72,11 @@ class NotAllowedClassError(Exception):
 
 def get_datasets(filepath_list):
     """
+    This function generates two dictionaries: the dictionary of PyDicom datasets, and the dictionary of filepaths.
+    These two dictionaries are used in the PatientDictContainer model as the class attributes: 'dataset' and 'filepaths'
+    The keys of both dictionaries are the dataset's slice number/RT modality. The values of the read_data_dict are
+    PyDicom Dataset objects, and the values of the file_names_dict are filepaths pointing to the location of the .dcm
+    file on the user's computer.
     :param filepath_list: List of all files to be searched.
     :return: Tuple (read_data_dict, file_names_dict)
     """
@@ -112,7 +110,7 @@ def get_datasets(filepath_list):
 
 def img_stack_displacement(orientation, position):
     """
-    Calcualte the projection of the image position patient along the axis perpendicular to the images themselves,
+    Calculate the projection of the image position patient along the axis perpendicular to the images themselves,
     i.e. along the stack axis. Intended use is for the sorting key to sort a stack of image datasets so that they are in
     order, regardless of whether the images are axial, coronal, or sagittal, and independent from the order in which the
     images were read in.
@@ -226,6 +224,8 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=Non
     :param rois: Dictionary of ROI information.
     :param interrupt_flag: A threading.Event() object that tells the function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
+    :param progress_callback: As this class is called by the multi-threading Worker class, it requires this parameter.
+    It is currently unused as no progress is reported to the calling class.
     :return: Dictionary of all the DVHs of all the ROIs of the patient.
     """
     dict_dvh = {}
