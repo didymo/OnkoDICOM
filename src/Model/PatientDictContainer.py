@@ -16,6 +16,13 @@ from src.Model.Singleton import Singleton
 
 
 class PatientDictContainer(metaclass=Singleton):
+    """
+    This Singleton class represents the model component of OnkoDICOM. It contains all data relating to the DICOM
+    datasets loaded by the user into the program. Initially, the object will contain the initial values set below, and
+    as different UI components are initialized and the user performs certain actions during runtime, new data will be
+    added and old data will be updated. When the user chooses to open and work on a new dataset, this object will be
+    completed cleaned in order to ensure that no unused data persists within the program's memory.
+    """
 
     def __init__(self):
         # Initialize base requirements
@@ -64,7 +71,9 @@ class PatientDictContainer(metaclass=Singleton):
 
     def set(self, key, value):
         """
-        Sets new attribute to the keyword arguments.
+        Adds a new value to the additional data attribute.
+        :param key: The key of the new item.
+        :param value: The value of the new item.
         """
         self.additional_data[key] = value
 
