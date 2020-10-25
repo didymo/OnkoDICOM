@@ -52,6 +52,9 @@ class IsodoseTab(QtWidgets.QWidget):
         return roi_color
 
     def init_color_squares(self):
+        """
+        Create a color square.
+        """
         list_of_squares = []
         for key, value in self.color_dict.items():
             list_of_squares.append(self.draw_color_square(value))
@@ -59,6 +62,9 @@ class IsodoseTab(QtWidgets.QWidget):
         return list_of_squares
 
     def init_checkboxes(self):
+        """
+        Initialize the checkbox objects.
+        """
         list_of_checkboxes = []
         # Values of Isodoses
         val1 = int(1.07 * self.rxdose)
