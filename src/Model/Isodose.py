@@ -1,6 +1,7 @@
 """ Contains functions required for isodose display """
 
 import numpy as np
+
 from src.Model.ROI import calculate_matrix
 
 
@@ -98,12 +99,14 @@ def get_dose_grid(rtd, z=0):
         return np.array([])
 
 
-def calculate_rxdose(rtplan):
-    rxdose = 1
+def calculate_rx_dose_in_cgray(rtplan):
+    GRAY_TO_CGRAY_SCALE_FACTOR = 100
+
+    rx_dose_in_cgray = 1
     if ('DoseReferenceSequence' in rtplan and
             rtplan.DoseReferenceSequence[0].DoseReferenceStructureType and
             rtplan.DoseReferenceSequence[0].TargetPrescriptionDose):
-        rxdose = rtplan.DoseReferenceSequence[0].TargetPrescriptionDose * 100
+        rx_dose_in_cgray = rtplan.DoseReferenceSequence[0].TargetPrescriptionDose * GRAY_TO_CGRAY_SCALE_FACTOR
     # beam doses are to a point, not necessarily to the same point
     # and don't necessarily add up to the prescribed dose to the target
     # which is frequently to a SITE rather than to a POINT
@@ -115,6 +118,6 @@ def calculate_rxdose(rtplan):
             number_of_fractions = fraction_group.NumberOfFractionsPlanned
             for beam in beams:
                 if "BeamDose" in beam:
-                    rxdose += beam.BeamDose * number_of_fractions * 100
+                    rx_dose_in_cgray += beam.BeamDose * number_of_fractions * GRAY_TO_CGRAY_SCALE_FACTOR
 
-    return rxdose
+    return rx_dose_in_cgray

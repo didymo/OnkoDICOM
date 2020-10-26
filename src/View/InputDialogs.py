@@ -1,10 +1,10 @@
 """This file holds all the user input pop up dialogs used from the software"""
 import re
-import sys
+
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QDialogButtonBox, QVBoxLayout, QFormLayout, QSpinBox, QLineEdit, \
+from PyQt5.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, \
     QDialog, \
-    QComboBox, QGroupBox, QMessageBox, QPlainTextEdit
+    QMessageBox
 
 """ This class creates the user input dialog for when Modifying or Adding a Windowing option """
 

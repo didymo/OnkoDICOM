@@ -13,14 +13,12 @@ import matplotlib.pyplot as plt1
 from PyQt5.QtCore import QPoint, QPointF
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from dateutil.relativedelta import relativedelta
-
-
 from numpy import *
 
-from src.Model.Anon import *
-from src.Model.PatientDictContainer import PatientDictContainer
 from legacy.src.View.mainpage.ClinicalDataDisplay import *
 from legacy.src.View.mainpage.ClinicalDataForm import *
+from src.Model.Anon import *
+from src.Model.PatientDictContainer import PatientDictContainer
 
 matplotlib.cbook.handle_exceptions = "print"  # default
 matplotlib.cbook.handle_exceptions = "raise"
