@@ -153,13 +153,16 @@ class ActionHandler:
         windowing_actions = []
         for name in names_ordered:
             text = str(name)
-            action_windowing_item = QtWidgets.QAction()
+            action_windowing_item = QtWidgets.QAction(self.menu_windowing)
             action_windowing_item.triggered.connect(
-                lambda state, text=name: self.action_handler.windowing_handler(state, text)
+                lambda state, text=name: self.windowing_handler(state, text)
             )
             action_windowing_item.setText(text)
             windowing_actions.append(action_windowing_item)
 
+        # For reasons beyond me, the actions have to be set as a child of the windowing menu *and* later be added to
+        # the menu as well. You can't do one or the other, otherwise the menu won't populate.
+        # Feel free to try fix (or at least explain why the action has to be set as the windowing menu's child twice)
         for item in windowing_actions:
             self.menu_windowing.addAction(item)
 
