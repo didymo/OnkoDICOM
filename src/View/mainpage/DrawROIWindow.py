@@ -30,7 +30,10 @@ class UIDrawROIWindow:
         self.standard_names = [] # Combination of organ and volume
         self.ROI_name = None  # Selected ROI name
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specifed by the min and max pixel density
+        self.target_pixel_coords_single_array = [] # 1D array of above
         self.draw_roi_window_instance = draw_roi_window_instance
+        self.colour = None
+        self.ds = None
 
         self.upper_limit = None
         self.lower_limit = None
@@ -666,6 +669,7 @@ class UIDrawROIWindow:
 
                 if min_pixel <= max_pixel:
                     data_set = self.patient_dict_container.dataset[id]
+                    self.ds = data_set
 
                     """
                     pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -684,11 +688,11 @@ class UIDrawROIWindow:
                                 self.target_pixel_coords.append((y_coord, x_coord, z_coord))
 
                     # Make 2D to 1D
-                    target_pixel_coords_single_array = []
+                    self.target_pixel_coords_single_array = []
                     for sublist in self.target_pixel_coords:
                         for item in sublist:
-                            target_pixel_coords_single_array.append(item)
-                    print(target_pixel_coords_single_array)
+                            self.target_pixel_coords_single_array.append(item)
+                    print(self.target_pixel_coords_single_array)
 
                     """
                     For the meantime, a new image is created and the pixels specified are coloured. 
@@ -729,7 +733,7 @@ class UIDrawROIWindow:
     def on_save_clicked(self):
 
         QMessageBox.about(self.draw_roi_window_instance, "Coming Soon", "This feature is in development")
-        ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords)
+        ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
 
     def init_standard_names(self):
         """
