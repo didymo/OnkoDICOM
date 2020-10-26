@@ -732,7 +732,6 @@ class UIDrawROIWindow:
 
     def on_save_clicked(self):
 
-        QMessageBox.about(self.draw_roi_window_instance, "Coming Soon", "This feature is in development")
         ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
 
     def init_standard_names(self):

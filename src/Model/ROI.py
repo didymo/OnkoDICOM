@@ -116,7 +116,7 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     for ROI_observations in RT_ROI_observations_sequence:
         ROI_observations.add_new(Tag("ObservationNumber"), 'IS', roi_number)
         ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS', roi_number)
-        ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', "ORGAN")
+        ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', "")
 
     original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
     rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
