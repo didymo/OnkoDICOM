@@ -74,18 +74,6 @@ class ActionHandler:
         self.action_zoom_out.setText("Zoom Out")
         self.action_zoom_out.triggered.connect(self.__main_page.dicom_view.zoom_out)
 
-        # Windowing Action
-        self.icon_windowing = QtGui.QIcon()
-        self.icon_windowing.addPixmap(
-            QtGui.QPixmap("src/Icon/windowing.png"),
-            QtGui.QIcon.Normal,
-            QtGui.QIcon.On
-        )
-        self.action_windowing = QtWidgets.QAction()
-        self.action_windowing.setIcon(self.icon_windowing)
-        self.action_windowing.setIconVisibleInMenu(True)
-        self.action_windowing.setText("Windowing")
-
         # Transect Action
         self.icon_transect = QtGui.QIcon()
         self.icon_transect.addPixmap(
@@ -127,6 +115,12 @@ class ActionHandler:
         self.action_dvh_export.triggered.connect(self.export_dvh_handler)
 
         # Create Windowing menu
+        self.icon_windowing = QtGui.QIcon()
+        self.icon_windowing.addPixmap(
+            QtGui.QPixmap("src/Icon/windowing.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
         self.menu_windowing = QtWidgets.QMenu()
         self.init_windowing_menu()
 
@@ -158,7 +152,6 @@ class ActionHandler:
         # Create actions for each windowing item
         for name in names_ordered:
             text = str(name)
-            print(text)
             action_windowing_item = QtWidgets.QAction()
             action_windowing_item.triggered.connect(
                 lambda state, text=name: self.action_handler.windowing_handler(state, text)
