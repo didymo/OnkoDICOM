@@ -3,6 +3,7 @@ from shutil import which
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMessageBox
 
+from src.Model.InitialModel import create_initial_model
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.PyradiProgressBar import PyradiExtended
@@ -56,6 +57,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # Initialising the main window and setting up the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
+        create_initial_model()
         self.setup_ui(self)
         self.action_handler.action_open.triggered.connect(self.open_new_patient)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
