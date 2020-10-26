@@ -10,8 +10,6 @@ import uuid
 import pandas as pd
 import pydicom
 
-from src.Model.CalculateDVHs import dvh2csv
-
 try:
     import pymedphys.experimental.pseudonymisation as pseudonymise
     from pymedphys._dicom.anonymise import create_filename_from_dataset
@@ -712,17 +710,17 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         os.makedirs(anonymised_patient_full_path, exist_ok=True)
         # workaround for pseudonymisation failing when faced with SQ that are identifiers.
         # it was designed to pseudonymise what is *in* a SQ.
-        identifying_keywords_less_sequences = [
-            x
-            for x in pseudonymise.get_default_pseudonymisation_keywords()
-            if not x.endswith("Sequence")
-        ]
+        # identifying_keywords_less_sequences = [
+        #     x
+        #     for x in pseudonymise.get_default_pseudonymisation_keywords()
+        #     if not x.endswith("Sequence")
+        # ]
         for key, dicom_object_as_dataset in new_dict_dataset.items():
             ds_pseudo = pmp_anonymise(
                 dicom_object_as_dataset,
                 keywords_to_leave_unchanged=["PatientSex"],
                 replacement_strategy=pseudonymise.pseudonymisation_dispatch,
-                identifying_keywords=identifying_keywords_less_sequences,
+                identifying_keywords=pseudonymise.get_default_pseudonymisation_keywords(),
             )
             # PatientSex has specific values that are valid.
             # pseudonymisation doesn't handle that any better

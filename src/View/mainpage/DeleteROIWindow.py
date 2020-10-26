@@ -1,10 +1,11 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidget,\
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidget, \
     QTreeWidgetItem, QMessageBox, QAbstractItemView, QSizePolicy
-import os
+
 from src.Model import ROI
+
 
 class UIDeleteROIWindow():
     def setup_ui(self, delete_roi_window_instance, regions_of_interest, dataset_rtss, deleting_rois_structure_tuple):

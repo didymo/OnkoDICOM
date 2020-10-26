@@ -1,8 +1,5 @@
-import os
-
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
-from pydicom import dcmread
 
 from src.Model import ROI
 

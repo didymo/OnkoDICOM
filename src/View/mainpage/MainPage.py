@@ -1,349 +1,233 @@
-import glob
+import os
 
-from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtGui import QDrag
-from PyQt5.QtWidgets import QLineEdit, QMessageBox, QFrame
+import pydicom
+from PyQt5 import QtCore, QtGui, QtWidgets
 
+from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
-from src.Controller.ROIOptionsController import ROIDelOption
 from src.Controller.MainPageController import MainPageCallClass
-from src.View.mainpage.PatientBar import *
-from src.View.mainpage.StructureTab import *
-from src.View.mainpage.IsodoseTab import *
-from src.View.mainpage.StructureInformation import *
-from src.View.mainpage.DicomView import *
-from src.View.mainpage.DVH import *
-from src.View.mainpage.DicomTree import *
-from src.View.mainpage.MenuBar import *
-from src.View.mainpage.resources_rc import *
+from src.Model.CalculateImages import convert_raw_data, get_pixmaps
+from src.Model.GetPatientInfo import get_basic_info, dict_instanceUID, DicomTree
+from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.ROI import ordered_list_rois
+from src.View.mainpage.DVHTab import DVHTab
+from src.View.mainpage.DicomTreeView import DicomTreeView
+from src.View.mainpage.DicomView import DicomView
+from src.View.mainpage.IsodoseTab import IsodoseTab
+from src.View.mainpage.MenuBar import MenuBar
+from src.View.mainpage.NewToolBar import NewToolBar
+from src.View.mainpage.PatientBar import PatientBar
+from src.View.mainpage.StructureTab import StructureTab
 
-class UIMainWindow(object):
 
-    # To initiate progress bar for pyradiomics through anonymization
+class UIMainWindow:
+    """
+    The central class responsible for initializing most of the values stored in the PatientDictContainer model and
+    defining the visual layout of the main window of OnkoDICOM.
+    No class has access to the attributes belonging to this class, except for the class's ActionHandler, which is used
+    to trigger actions within the main window. Components of this class (i.e. QWidget child classes such as
+    StructureTab, DicomView, DicomTree, etc.) should not be able to reference this class, and rather should exist
+    independently and only be able to communicate with the PatientDictContainer model. If a component needs to
+    communicate with another component, that should be accomplished by emitting signals within that components, and
+    having the slots for those signals within this class (as demonstrated by the update_views() method of this class).
+    If a class needs to trigger one of the actions defined in the ActionHandler, then the instance of the ActionHandler
+    itself can safely be passed into the class.
+    """
     pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
 
-    def setupUi(self, MainWindow, patient_dict_container):
+    def setup_ui(self, main_window_instance):
+        self.main_window_instance = main_window_instance
+        self.call_class = MainPageCallClass()
+        self.add_on_options_controller = AddOptions(self)
 
         ##############################
         #  LOAD PATIENT INFORMATION  #
         ##############################
-        self.dataset = patient_dict_container.dataset
-        self.raw_dvh = patient_dict_container.get("raw_dvh")
-        self.dvh_x_y = patient_dict_container.get("dvh_x_y")
+        patient_dict_container = PatientDictContainer()
 
-        self.has_rtss = True if patient_dict_container.has('rtss') else False
-        self.has_rtdose = True if patient_dict_container.has('rtdose') else False
-        
-        # Dictionary whose key is the ROI number as specified in the RTSS file
-        # and whose value is a dictionary with keys 'uid', 'name' and 'algorithm'
-        self.rois = patient_dict_container.get("rois")
-        # Contain the ordered list of ROI numbers.
-        # Used to manage the case of missing integers in an ordered series of ROI numbers (for example 1 2 4 7)
-        if self.has_rtss:
-            self.list_roi_numbers = self.ordered_list_rois()
-        
-        self.filepaths = patient_dict_container.filepaths
-        self.path = patient_dict_container.path
-        if self.has_rtdose:
-            self.dose_pixluts = get_dose_pixluts(self.dataset)
-        self.hashed_path = ''     # Path to hashed patient directory
+        dataset = patient_dict_container.dataset
+        filepaths = patient_dict_container.filepaths
+        patient_dict_container.set("rtss_modified", False)
 
-        self.rxdose = 1
-        if patient_dict_container.has("rtplan"):
-            # the TargetPrescriptionDose is type 3 (optional), so it may not be there
-            # However, it is preferable to the sum of the beam doses
-            # DoseReferenceStructureType is type 1 (value is mandatory), 
-            # but it can have a value of ORGAN_AT_RISK rather than TARGET
-            # in which case there will *not* be a TargetPrescriptionDose
-            # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose 
-            # will be encoded and have a value
-            if ('DoseReferenceSequence' in self.dataset['rtplan'] and
-                self.dataset['rtplan'].DoseReferenceSequence[0].DoseReferenceStructureType and
-                self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose ):
-                self.rxdose = self.dataset['rtplan'].DoseReferenceSequence[0].TargetPrescriptionDose * 100
-            # beam doses are to a point, not necessarily to the same point
-            # and don't necessarily add up to the prescribed dose to the target
-            # which is frequently to a SITE rather than to a POINT
-            elif self.dataset['rtplan'].FractionGroupSequence:
-                fraction_group = self.dataset['rtplan'].FractionGroupSequence[0]
-                if ("NumberOfFractionsPlanned" in fraction_group) and \
-                        ("ReferencedBeamSequence" in fraction_group):
-                    beams = fraction_group.ReferencedBeamSequence
-                    number_of_fractions = fraction_group.NumberOfFractionsPlanned
-                    for beam in beams:
-                        if "BeamDose" in beam:
-                            self.rxdose += beam.BeamDose * number_of_fractions * 100
-        self.rxdose = round(self.rxdose)
+        if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
+            window = int(dataset[0].WindowWidth)
+        elif isinstance(dataset[0].WindowWidth, pydicom.multival.MultiValue):
+            window = int(dataset[0].WindowWidth[1])
 
-        # Commented out as rx dose dialogue no longer needed.
-        #dose_check_dialog = Rxdose_Check(self.rxdose)
-        #dose_check_dialog.exec()
-        #self.rxdose = dose_check_dialog.get_dose()
+        if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
+            level = int(dataset[0].WindowCenter)
+        elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
+            level = int(dataset[0].WindowCenter[1])
 
-        # WindowWidth and WindowCenter values in the DICOM file can be either
-        # a list or a float. The following lines of code check what instance
-        # the values belong to and sets the window and level values accordingly
-        # The values are converted from the type pydicom.valuerep.DSfloat to
-        # int for processing later on in the program
-        if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
-                self.window = int(self.dataset[0].WindowWidth)
-        elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
-            self.window = int(self.dataset[0].WindowWidth[1])
-
-        if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
-            self.level = int(self.dataset[0].WindowCenter)
-        elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            self.level = int(self.dataset[0].WindowCenter[1])
-
-        # Variables to check for the mouse position when altering the window and
-        # level values
-        self.x1, self.y1 = 256, 256
+        patient_dict_container.set("window", window)
+        patient_dict_container.set("level", level)
 
         # Check to see if the imageWindowing.csv file exists
         if os.path.exists('src/data/csv/imageWindowing.csv'):
             # If it exists, read data from file into the self.dict_windowing variable
-            self.dict_windowing = {}
+            dict_windowing = {}
             with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
                 next(fileInput)
-                self.dict_windowing["Normal"] = [self.window, self.level]
+                dict_windowing["Normal"] = [window, level]
                 for row in fileInput:
                     # Format: Organ - Scan - Window - Level
                     items = [item for item in row.split(',')]
-                    self.dict_windowing[items[0]] = [
-                        int(items[2]), int(items[3])]
+                    dict_windowing[items[0]] = [int(items[2]), int(items[3])]
         else:
             # If csv does not exist, initialize dictionary with default values
-            self.dict_windowing = {"Normal": [self.window, self.level], "Lung": [1600, -300],
-                                   "Bone": [1400, 700], "Brain": [160, 950],
-                                   "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
+            dict_windowing = {"Normal": [window, level], "Lung": [1600, -300],
+                           "Bone": [1400, 700], "Brain": [160, 950],
+                           "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
 
-        self.pixel_values = convert_raw_data(self.dataset)
-        # A dictionary of PyQt5.QtGui.QPixMap objects
-        self.pixmaps = get_pixmaps(self.pixel_values, self.window, self.level)
+        patient_dict_container.set("dict_windowing", dict_windowing)
 
-        if self.has_rtss:
-            self.file_rtss = self.filepaths['rtss']
-            self.dataset_rtss = pydicom.dcmread(self.file_rtss, force=True)
+        pixel_values = convert_raw_data(dataset)
+        pixmaps = get_pixmaps(pixel_values, window, level)
+        patient_dict_container.set("pixmaps", pixmaps)
+        patient_dict_container.set("pixel_values", pixel_values)
 
-        self.rtss_modified = False  # Flag that changes the first time the rtss file is modified.
+        basic_info = get_basic_info(dataset[0])
+        patient_dict_container.set("basic_info", basic_info)
 
-        if self.has_rtdose:
-            self.file_rtdose = self.filepaths['rtdose']
-            self.dataset_rtdose = pydicom.dcmread(self.file_rtdose, force=True)
+        # Set RTSS attributes
+        if patient_dict_container.has_modality("rtss"):
+            patient_dict_container.set("file_rtss", filepaths['rtss'])
+            patient_dict_container.set("dataset_rtss", dataset['rtss'])
 
-        self.dict_UID = dict_instanceUID(self.dataset)
-        self.selected_rois = []
-        self.selected_doses = []
+            dicom_tree_rtss = DicomTree(filepaths['rtss'])
+            patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
 
-        self.basicInfo = get_basic_info(self.dataset[0])
-        self.dict_pixluts = patient_dict_container.get("pixluts")
-        self.dict_raw_ContourData = patient_dict_container.get("raw_contour")
-        self.dict_NumPoints = patient_dict_container.get("num_points")
+            patient_dict_container.set("list_roi_numbers", ordered_list_rois(patient_dict_container.get("rois")))
+            patient_dict_container.set("selected_rois", [])
 
-        self.dict_polygons = {}
+            patient_dict_container.set("dict_uid", dict_instanceUID(dataset))
+            patient_dict_container.set("dict_polygons", {})
 
-        self.zoom = 1
+        # Set RTDOSE attributes
+        if patient_dict_container.has_modality("rtdose"):
+            dicom_tree_rtdose = DicomTree(filepaths['rtdose'])
+            patient_dict_container.set("dict_dicom_tree_rtdose", dicom_tree_rtdose.dict)
 
-        # DICOM Tree for RTSS file
-        if self.has_rtss:
-            self.dicomTree_rtss = DicomTree(self.file_rtss)
-            self.dictDicomTree_rtss = self.dicomTree_rtss.dict
+            patient_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
 
-        # DICOM Tree for RT Dose file
-        if self.has_rtdose:
-            self.dicomTree_rtdose = DicomTree(self.file_rtdose)
-            self.dictDicomTree_rtdose = self.dicomTree_rtdose.dict
+            patient_dict_container.set("selected_doses", [])
+            patient_dict_container.set("rx_dose_in_cgray", 1) # This will be overwritten if an RTPLAN is present. TODO calculate value w/o RTPLAN
 
-        # Patient Position
-        filename_CT0 = self.filepaths[0]
-        dicomTreeSlice_CT0 = DicomTree(filename_CT0)
-        dictSlice_CT0 = dicomTreeSlice_CT0.dict
-        self.patient_HFS = dictSlice_CT0['Patient Position'][0][:2] == 'HF'
+        # Set RTPLAN attributes
+        if patient_dict_container.has_modality("rtplan"):
+            # the TargetPrescriptionDose is type 3 (optional), so it may not be there
+            # However, it is preferable to the sum of the beam doses
+            # DoseReferenceStructureType is type 1 (value is mandatory),
+            # but it can have a value of ORGAN_AT_RISK rather than TARGET
+            # in which case there will *not* be a TargetPrescriptionDose
+            # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose
+            # will be encoded and have a value
+            rx_dose_in_cgray = calculate_rx_dose_in_cgray(dataset["rtplan"])
+            patient_dict_container.set("rx_dose_in_cgray", rx_dose_in_cgray)
 
-        self.mainPageCallClass = MainPageCallClass(self.path, self.dataset, self.filepaths, self.raw_dvh)
-        self.callManager = AddOptions(self)
+            dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
+            patient_dict_container.set("dict_dicom_tree_rtplan", dicom_tree_rtplan.dict)
+
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
+        main_window_instance.setMinimumSize(1080, 700)
+        main_window_instance.setWindowTitle("OnkoDICOM")
+        main_window_instance.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
 
-        # Main Window
-        MainWindow.setMinimumSize(1080, 700)
-        MainWindow.setWindowTitle("OnkoDICOM")
-        MainWindow.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        # Import stylesheet
+        sheet_file = "src/res/stylesheet.qss"
+        with open(sheet_file) as fh:
+            main_window_instance.setStyleSheet(fh.read())
 
-        # Drag and Drop Patient area
-        self.drop_zone = DragDropZone()
-        self.drop_zone.setParent(self)
+        self.central_widget = QtWidgets.QWidget()
+        self.central_widget_layout = QtWidgets.QVBoxLayout()
 
-        # Main Container and Layout
-        self.main_widget = QtWidgets.QWidget(MainWindow)
-        self.main_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
-        self.main_layout.addWidget(self.drop_zone)
+        self.patient_bar = PatientBar()
 
-        # Patient Bar
-        self.patient_bar = PatientBar(self)
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
-        # Functionalities Container and Layout
-        # (Structure/Isodoses tab, Structure Information tab, DICOM View / DVH / DICOM Tree / Clinical Data tab)
-        self.function_widget = QtWidgets.QWidget(MainWindow)
-        self.function_widget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.function_layout = QtWidgets.QHBoxLayout(self.function_widget)
-        self.function_layout.setContentsMargins(0, 0, 0, 0)
+        # Left panel contains stuctures tab, isodoses tab, and structure information
+        self.left_panel = QtWidgets.QTabWidget()
+        self.left_panel.setMinimumWidth(230)
+        self.left_panel.setMaximumWidth(500)
+        self.left_panel_layout = QtWidgets.QHBoxLayout(self.left_panel)
 
-        splitter = QtWidgets.QSplitter(Qt.Horizontal)
+        # Add structures tab to left panel
+        if patient_dict_container.has_modality("rtss"):
+            self.structures_tab = StructureTab()
+            self.structures_tab.request_update_structures.connect(self.update_views)
+            self.left_panel.addTab(self.structures_tab, "Structures")
 
-        # Left Column
-        self.left_widget = QtWidgets.QWidget(self.main_widget)
-        self.left_layout = QtWidgets.QVBoxLayout(self.left_widget)
-        self.left_layout.setContentsMargins(0, 0, 0, 0)
-        self.left_widget.setMinimumWidth(230)
-        self.left_widget.setMaximumWidth(500)
+        if patient_dict_container.has_modality("rtdose"):
+            self.isodoses_tab = IsodoseTab()
+            self.isodoses_tab.request_update_isodoses.connect(self.update_views)
+            self.left_panel.addTab(self.isodoses_tab, "Isodoses")
 
-        if not self.has_rtss and not self.has_rtdose:
-            self.left_widget.hide()
-        
-        # Left Top Column: Structure and Isodoses Tabs
-        self.tab1 = QtWidgets.QTabWidget(self.left_widget)
-        self.tab1.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.tab1.setGeometry(QtCore.QRect(0, 40, 200, 361))
+        self.left_panel_layout.addWidget(self.left_panel)
 
-        # Left Column: Structures tab
-        if self.has_rtss:
-            self.structures_tab = StructureTab(self)
-        # Left Column: Isodoses tab
-        if self.has_rtdose:
-            self.isodoses_tab = IsodosesTab(self)
+        # Hide left panel if no rtss or rtdose
+        if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
+            self.left_panel.hide()
 
-        # Structure Information (bottom left of the window)
-        if self.raw_dvh is not None:
-            self.struct_info = StructureInformation(self)
+        # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
+        self.right_panel = QtWidgets.QTabWidget()
 
-        if self.has_rtss or self.has_rtdose:
-            self.left_layout.addWidget(self.tab1)
+        # Add DICOM view to right panel as a tab
+        roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
+        iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
+        self.dicom_view = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.right_panel.addTab(self.dicom_view, "DICOM View")
 
-        if self.raw_dvh is not None:
-            self.left_layout.addWidget(self.struct_info.widget)
+        # Add DVH tab to right panel as a tab
+        if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
+            self.dvh_tab = DVHTab()
+            self.right_panel.addTab(self.dvh_tab, "DVH")
 
-        # Main view
-        self.tab2 = QtWidgets.QTabWidget(self.main_widget)
-        self.tab2.setGeometry(QtCore.QRect(200, 40, 880, 561))
-        self.tab2.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+        self.dicom_tree = DicomTreeView()
+        self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
-        # Main view: DICOM View
-        self.dicom_view = DicomView(self)
+        splitter.addWidget(self.left_panel)
+        splitter.addWidget(self.right_panel)
 
-        # Main view: DVH
-        if self.raw_dvh is not None:
-            self.dvh = DVH(self)
-
-        # Main view: DICOM Tree
-        self.dicom_tree = DicomTreeUI(self)
-
-        # Main view: Clinical Data
-        self.tab2_clinical_data = QtWidgets.QWidget()
-        self.tab2_clinical_data.setFocusPolicy(QtCore.Qt.NoFocus)
-        # check for csv data
-        reg = '/CSV/ClinicalData*[.csv]'
-        if not glob.glob(self.path + reg):
-            self.mainPageCallClass.display_cd_form(self.tab2, self.path)
-        else:
-            self.mainPageCallClass.display_cd_dat(self.tab2, self.path)
-        self.tab2.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        splitter.addWidget(self.left_widget)
-        splitter.addWidget(self.tab2)
-        self.function_layout.addWidget(splitter)
-
-        self.main_layout.addWidget(self.function_widget)
-
-        self.tab1.raise_()
-        self.tab2.raise_()
-        
+        # Create footer
+        self.footer = QtWidgets.QWidget()
         self.create_footer()
 
-        MainWindow.setCentralWidget(self.main_widget)
-        clinical_tab_index = 3 if self.raw_dvh is not None else 2
-        self.tab2.setTabText(clinical_tab_index, "Clinical Data")
-        # self.tab2.setTabText(self.tab2.indexOf(self.tab2_clinical_data), _translate("MainWindow", "Clinical Data"))
+        # Set layout
+        self.central_widget_layout.addWidget(self.patient_bar)
+        self.central_widget_layout.addWidget(splitter)
+        self.central_widget_layout.addWidget(self.footer)
 
-        # Menu and Tool bars
-        self.menu_bar = MenuBar(self)
+        self.central_widget.setLayout(self.central_widget_layout)
+        main_window_instance.setCentralWidget(self.central_widget)
 
-        self.tab1.setCurrentIndex(0)
-        self.tab2.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-        if self.has_rtss:
-            self.callROI = ROIDelOption(self)
-
-        self.drawROI = ROIDrawOption(self)
+        # Create actions and set menu and tool bars
+        self.action_handler = ActionHandler(self)
+        self.menubar = MenuBar(self.action_handler)
+        main_window_instance.setMenuBar(self.menubar)
+        self.toolbar = NewToolBar(self.action_handler)
+        main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
 
     def create_footer(self):
-        # Bottom Layer
-        self.bottom_widget = QtWidgets.QWidget(self.main_widget)
-        self.bottom_widget.setMaximumHeight(35)
-        self.hLayout_bottom = QtWidgets.QHBoxLayout(self.bottom_widget)
-        self.hLayout_bottom.setContentsMargins(0, 0, 0, 0)
+        self.footer.setFixedHeight(15)
+        layout_footer = QtWidgets.QHBoxLayout(self.footer)
+        layout_footer.setContentsMargins(0, 0, 0, 0)
 
-        # Bottom Layer: "@OnkoDICOM_2019" label
-        self.label = QtWidgets.QLabel(self.bottom_widget)
-        self.label.setAlignment(QtCore.Qt.AlignRight)
-        self.label.setStyleSheet("font: 9pt \"Laksaman\";")
-        self.label.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.label.setText("@OnkoDICOM 2019")
+        label_footer = QtWidgets.QLabel("@OnkoDICOM 2019-20")
+        label_footer.setAlignment(QtCore.Qt.AlignRight)
 
-        self.hLayout_bottom.addWidget(self.label)
+        layout_footer.addWidget(label_footer)
 
-        self.main_layout.addWidget(self.bottom_widget)
-        self.bottom_widget.raise_()
-
-
-    def ordered_list_rois(self):
-        res = []
-        for id, value in self.rois.items():
-            res.append(id)
-        return sorted(res)
-
-
-    ####### CLINICAL DATA #######
-
-    def clinicalDataCheck(self):
-        reg = '/CSV/ClinicalData*[.csv]'
-        if not glob.glob(self.path + reg):
-            SaveReply = QtWidgets.QMessageBox.warning(self, "Message",
-                                                "You need to complete the Clinical Data form for this patient!",
-                                                QtWidgets.QMessageBox.Ok)
-            if SaveReply == QtWidgets.QMessageBox.Ok:
-                self.tab2.setCurrentIndex(3)
-        else:
-            SaveReply = QtWidgets.QMessageBox.information(self, "Message",
-                                                          "A Clinical Data file exists for this patient! If you wish \n"
-                                                          "to update it you can do so in the Clinical Data tab.",
-                                                          QtWidgets.QMessageBox.Ok)
-            if SaveReply == QtWidgets.QMessageBox.Ok:
-                pass
-
-# Class that allows for drag and drop of patient directories
-class DragDropZone(QFrame):
-    def __init__(self, parent=None):
-        QFrame.__init__(self)
-        self.setAcceptDrops(True)
-        self.setObjectName('drag_drop_zone')
-        self.setMaximumHeight(15)
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.setDropAction(Qt.CopyAction)
-            event.accept()
-
-            path = event.mimeData().text()
-            print(path)
-            # Send the path to the intial DICOM Directory search to determine it is a compatible Dicom File.
+    def update_views(self):
+        """
+        This function is a slot for signals to request the updating of the DICOM View and DVH tabs in order to reflect
+        changes made by other components of the main window (for example, when a structure in the structures tab is
+        selected, this method needs to be called in order for the DICOM view window to be updated to show the new
+        region of interest.
+        """
+        self.dicom_view.update_view()
+        if hasattr(self, 'dvh_tab'):
+            self.dvh_tab.update_plot()

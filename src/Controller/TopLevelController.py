@@ -6,11 +6,13 @@ from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, MainW
 class Controller:
 
     # Initialisation function that creates an instance of each window
-    def __init__(self):
+    def __init__(self, default_directory=None):
         self.welcome_window = QtWidgets.QMainWindow()
         self.open_patient_window = QtWidgets.QMainWindow()
         self.main_window = QtWidgets.QMainWindow()
         self.pyradi_progressbar = QtWidgets.QWidget()
+        self.default_directory = default_directory  # This will contain a filepath of a folder that is dragged onto
+        # the executable icon
 
     def show_welcome(self):
         """
@@ -30,19 +32,17 @@ class Controller:
         if self.main_window.isVisible():
             self.main_window.close()
 
-        self.open_patient_window = OpenPatientWindow()
-        self.open_patient_window.patient_info_initialized.connect(self.show_main_window)
+        self.open_patient_window = OpenPatientWindow(self.default_directory)
+        self.open_patient_window.go_next_window.connect(self.show_main_window)
         self.open_patient_window.show()
 
-    def show_main_window(self, patient_attributes):
+    def show_main_window(self, progress_window):
         """
         Displays the main patient window after completing the loading.
         :param patient_attributes: A tuple of (PatientDictContainer, ProgressWindow)
         :return:
         """
-        patient_dict_container = patient_attributes[0]
-        progress_window = patient_attributes[1]
-        self.main_window = MainWindow(patient_dict_container)
+        self.main_window = MainWindow()
         self.main_window.open_patient_window.connect(self.show_open_patient)
         self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
 

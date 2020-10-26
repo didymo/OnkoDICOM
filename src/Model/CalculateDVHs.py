@@ -1,7 +1,8 @@
-import numpy as np
-from dicompylercore import dvhcalc, dvh, dicomparser
 import multiprocessing
+
+import numpy as np
 import pandas as pd
+from dicompylercore import dvhcalc
 
 
 def get_roi_info(ds_rtss):

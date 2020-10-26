@@ -1,12 +1,11 @@
 import threading
-import time
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.Qt import Qt
 from PyQt5.QtCore import QCoreApplication, QThreadPool
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
-from PyQt5.Qt import Qt
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
@@ -15,7 +14,7 @@ from src.View.resources_open_patient_rc import *
 
 
 class UIOpenPatientWindow(object):
-    patient_info_initialized = QtCore.pyqtSignal(tuple)
+    patient_info_initialized = QtCore.pyqtSignal(object)
 
     def setup_ui(self, open_patient_window_instance):
         stylesheet = open("src/res/stylesheet.qss").read()
@@ -270,8 +269,8 @@ class UIOpenPatientWindow(object):
         """
         Executes when the progress bar finishes loaded the selected files.
         """
-        if results[0] is not None:  # Will be NoneType if loading was interrupted.
-            self.patient_info_initialized.emit(results)
+        if results[0] is True:  # Will be NoneType if loading was interrupted.
+            self.patient_info_initialized.emit(results[1])  # Emits the progress window.
 
     def on_loading_error(self, error_code):
         """
