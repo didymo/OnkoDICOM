@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QP
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget
 
 from src.Controller.MainPageController import MainPageCallClass
+from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -27,7 +28,9 @@ class UIDrawROIWindow:
         self.slider_changed = None
         self.standard_organ_names = []
         self.standard_volume_names = []
-        self.standard_names = []
+        self.standard_names = [] # Combination of organ and volume
+        self.ROI_name = None  # Selected ROI name
+        self.target_pixel_coords = []  # This will contain the new pixel coordinates specifed by the min and max pixel density
         self.draw_roi_window_instance = draw_roi_window_instance
 
         self.upper_limit = None
@@ -669,15 +672,13 @@ class UIDrawROIWindow:
                     pixel_array[x][y] will return the density of the pixel
                     """
                     pixel_array = data_set._pixel_array
-
-                    # This will contain the new pixel coordinates specifed by the min and max pixel density
-                    target_pixel_coords = []
+                    self.target_pixel_coords = []
 
                     for x_coord in range(512):
                         for y_coord in range(512):
                             if (pixel_array[x_coord][y_coord] >= min_pixel) and (
                                     pixel_array[x_coord][y_coord] <= max_pixel):
-                                target_pixel_coords.append((y_coord, x_coord))
+                                self.target_pixel_coords.append((y_coord, x_coord))
 
                     """
                     For the meantime, a new image is created and the pixels specified are coloured. 
@@ -690,7 +691,7 @@ class UIDrawROIWindow:
                     # Convert QPixMap into Qimage
                     q_image = pixels_in_image.toImage()
 
-                    for x_coord, y_coord in target_pixel_coords:
+                    for x_coord, y_coord in self.target_pixel_coords:
                         q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
                     # Convert Qimage back to QPixMap
@@ -715,77 +716,10 @@ class UIDrawROIWindow:
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
-
-    def on_go_clicked(self):
-        pixmaps = self.patient_dict_container.get("pixmaps")
-        id = self.slider.value()
-
-        # Getting most updated selected slice
-        if (self.forward_pressed):
-            id = self.current_slice
-        elif (self.backward_pressed):
-            id = self.current_slice
-        elif (self.slider_changed):
-            id = self.slider.value()
-
-        min_pixel = self.min_pixel_density_line_edit.text()
-        max_pixel = self.max_pixel_density_line_edit.text()
-
-        if min_pixel.isdecimal() and max_pixel.isdecimal():
-
-            min_pixel = int(min_pixel)
-            max_pixel = int(max_pixel)
-
-            if min_pixel <= max_pixel:
-                data_set = self.patient_dict_container.dataset[id]
-
-                """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-                """
-                pixel_array = data_set._pixel_array
-
-                # This will contain the new pixel coordinates specifed by the min and max pixel density
-                target_pixel_coords = []
-
-                for x_coord in range(512):
-                    for y_coord in range(512):
-                        if (pixel_array[x_coord][y_coord] >= min_pixel) and (pixel_array[x_coord][y_coord] <= max_pixel):
-                            target_pixel_coords.append((y_coord, x_coord))
-
-
-                """
-                For the meantime, a new image is created and the pixels specified are coloured. 
-                This will need to altered so that it creates a new layer over the existing image instead of replacing it.
-                """
-                pixels_in_image = pixmaps[id]
-                pixels_in_image = pixels_in_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-
-                # Convert QPixMap into Qimage
-                q_image = pixels_in_image.toImage()
-
-                for x_coord, y_coord in target_pixel_coords:
-                    q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
-
-                # Convert Qimage back to QPixMap
-                q_pixmaps = QtGui.QPixmap.fromImage(q_image)
-                label = QtWidgets.QLabel()
-                label.setPixmap(q_pixmaps)
-                scene = QtWidgets.QGraphicsScene()
-                scene.addWidget(label)
-
-                self.view.setScene(scene)
-
-
-            else:
-                QMessageBox.about(self.draw_roi_window_instance, "Incorrect Input", "Please ensure maximum density is atleast higher than minimum density.")
-
-        else:
-            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
-
     def on_save_clicked(self):
 
         QMessageBox.about(self.draw_roi_window_instance, "Coming Soon", "This feature is in development")
+        ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords)
 
     def init_standard_names(self):
         """
@@ -815,7 +749,8 @@ class UIDrawROIWindow:
         self.select_ROI.exec_()
 
     def set_selected_roi_name(self, roi_name):
-        self.roi_name_line_edit.setText(roi_name)
+        self.ROI_name = roi_name
+        self.roi_name_line_edit.setText(self.ROI_name)
 
 #####################################################################################################################
 #                                                                                                                   #

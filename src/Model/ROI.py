@@ -46,11 +46,24 @@ def delete_roi(rtss, roi_name):
     return rtss
 
 def create_roi(rtss, roi_name, roi_coordinates):
-    print(rtss)
+   # print(rtss)
 
-    print(roi_name) # (3006, 0020)  Structure Set ROI Sequence --- ROI Name
+   # print(roi_name) # (3006, 0020)  Structure Set ROI Sequence --- ROI Name
 
-    print(len(roi_coordinates)) # Contour Data - DS: Array of roi_coordinates elements
+   #print(roi_coordinates) # Contour Data - DS: Array of roi_coordinates elements
+
+   structures = {}
+   for item in rtss.StructureSetROISequence:
+       structures[item.ROINumber] = item.ROIName
+
+   roi_seq = rtss.ROIContourSequence
+   for contour in roi_seq[0].ContourSequence:
+       image_item = contour.ContourImageSequence[0]
+       if image_item.ReferencedSOPInstanceUID == '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001131':
+           print('ROI Name: ', structures[roi_seq[3].ReferencedROINumber])
+           print('Coordinates: ', contour.ContourData)
+
+    #print(get_raw_contour_data(rtss))
 
 
 def get_raw_contour_data(rtss):
