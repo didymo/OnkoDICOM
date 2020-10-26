@@ -1,6 +1,5 @@
 import csv
 import math
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
@@ -656,6 +655,7 @@ class UIDrawROIWindow:
             dt = self.patient_dict_container.dataset[id]
             dt.convert_pixel_data()
 
+
             min_pixel = self.min_pixel_density_line_edit.text()
             max_pixel = self.max_pixel_density_line_edit.text()
 
@@ -672,13 +672,23 @@ class UIDrawROIWindow:
                     pixel_array[x][y] will return the density of the pixel
                     """
                     pixel_array = data_set._pixel_array
+
                     self.target_pixel_coords = []
+
+                    z_coord = int(data_set.SliceLocation)
 
                     for x_coord in range(512):
                         for y_coord in range(512):
                             if (pixel_array[x_coord][y_coord] >= min_pixel) and (
                                     pixel_array[x_coord][y_coord] <= max_pixel):
-                                self.target_pixel_coords.append((y_coord, x_coord))
+                                self.target_pixel_coords.append((y_coord, x_coord, z_coord))
+
+                    # Make 2D to 1D
+                    target_pixel_coords_single_array = []
+                    for sublist in self.target_pixel_coords:
+                        for item in sublist:
+                            target_pixel_coords_single_array.append(item)
+                    print(target_pixel_coords_single_array)
 
                     """
                     For the meantime, a new image is created and the pixels specified are coloured. 
@@ -691,7 +701,7 @@ class UIDrawROIWindow:
                     # Convert QPixMap into Qimage
                     q_image = pixels_in_image.toImage()
 
-                    for x_coord, y_coord in self.target_pixel_coords:
+                    for x_coord, y_coord, z_coord in self.target_pixel_coords:
                         q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
                     # Convert Qimage back to QPixMap

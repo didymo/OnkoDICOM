@@ -1,5 +1,8 @@
 import collections
 
+import pydicom
+from pydicom.tag import Tag
+
 from src.Model.CalculateImages import *
 
 
@@ -46,24 +49,29 @@ def delete_roi(rtss, roi_name):
     return rtss
 
 def create_roi(rtss, roi_name, roi_coordinates):
-   # print(rtss)
 
-   # print(roi_name) # (3006, 0020)  Structure Set ROI Sequence --- ROI Name
+   ReferencedFrameOfReferenceUID = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
+   ROINumber = rtss["StructureSetROISequence"].value[-1].ROINumber
 
-   #print(roi_coordinates) # Contour Data - DS: Array of roi_coordinates elements
+   # Saving a new StructureSetROISequence
+   rtss["StructureSetROISequence"].value[-1].add_new(Tag("ROINumber"), 'IS', ROINumber)
+   rtss["StructureSetROISequence"].value[-1].add_new(Tag("ReferencedFrameOfReferenceUID"), 'UI',
+                                                     ReferencedFrameOfReferenceUID)
+   rtss["StructureSetROISequence"].value[-1].add_new(Tag("ROIName"), 'LO', roi_name)
+   rtss["StructureSetROISequence"].value[-1].add_new(Tag("ROIGenerationAlgorithm"), 'CS', "")
 
-   structures = {}
-   for item in rtss.StructureSetROISequence:
-       structures[item.ROINumber] = item.ROIName
+   print(rtss)
 
-   roi_seq = rtss.ROIContourSequence
-   for contour in roi_seq[0].ContourSequence:
-       image_item = contour.ContourImageSequence[0]
-       if image_item.ReferencedSOPInstanceUID == '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001131':
-           print('ROI Name: ', structures[roi_seq[3].ReferencedROINumber])
-           print('Coordinates: ', contour.ContourData)
+   # Saving a new ROIContourSequence
+   for i, elem in enumerate(rtss["ROIContourSequence"]):
+       color = elem.ROIDisplayColor
+       contour = elem.ContourSequence
+       #print(contour)
 
-    #print(get_raw_contour_data(rtss))
+
+
+    # To save
+    #pydicom.filewriter.dcmwrite("rtss.dcm", rtss, write_like_original=True)
 
 
 def get_raw_contour_data(rtss):
