@@ -18,7 +18,6 @@ class DicomView(QtWidgets.QWidget):
         self.patient_dict_container = PatientDictContainer()
         self.roi_color = roi_color
         self.iso_color = iso_color
-        self.pixmaps = self.patient_dict_container.get("pixmaps")
         self.zoom = 1
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
@@ -38,9 +37,10 @@ class DicomView(QtWidgets.QWidget):
         self.update_view()
 
     def init_slider(self):
+        pixmaps = self.patient_dict_container.get("pixmaps")
         self.slider.setMinimum(0)
-        self.slider.setMaximum(len(self.pixmaps) - 1)
-        self.slider.setValue(int(len(self.pixmaps) / 2))
+        self.slider.setMaximum(len(pixmaps) - 1)
+        self.slider.setValue(int(len(pixmaps) / 2))
         self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.slider.setTickInterval(1)
         self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
@@ -71,8 +71,9 @@ class DicomView(QtWidgets.QWidget):
         self.view.setScene(self.scene)
 
     def image_display(self):
+        pixmaps = self.patient_dict_container.get("pixmaps")
         slider_id = self.slider.value()
-        image = self.pixmaps[slider_id]
+        image = pixmaps[slider_id]
         image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         label = QtWidgets.QLabel()
         label.setPixmap(image)

@@ -180,13 +180,12 @@ class ActionHandler:
         level = windowing_limits[1]
 
         # Update the dictionary of pixmaps with the update window and level values
-        pixmaps = self.patient_dict_container.get("pixmaps")
         pixel_values = self.patient_dict_container.get("pixel_values")
-        new_pixmaps = get_pixmaps(pixel_values, window, level)
+        pixmaps = get_pixmaps(pixel_values, window, level)
 
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
-        self.patient_dict_container.set("pixmaps", new_pixmaps)
+        self.patient_dict_container.set("pixmaps", pixmaps)
 
         self.__main_page.update_views()
 
