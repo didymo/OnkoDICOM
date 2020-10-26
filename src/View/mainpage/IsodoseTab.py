@@ -81,6 +81,7 @@ class IsodoseTab(QtWidgets.QWidget):
             if first_iteration:
                 checkbox = QtWidgets.QCheckBox("%s %% / %s cGy [Max]" % (str(isodose_percentages[i]),
                                                                          str(list_of_doses[i])))
+                first_iteration = False
             else:
                 checkbox = QtWidgets.QCheckBox("%s %% / %s cGy" % (str(isodose_percentages[i]), str(list_of_doses[i])))
             checkbox.clicked.connect(lambda state, text=isodose_percentages[i]: self.checked_dose(state, text))
