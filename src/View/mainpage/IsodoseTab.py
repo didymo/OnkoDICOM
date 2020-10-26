@@ -2,6 +2,8 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from src.Model.PatientDictContainer import PatientDictContainer
 
+isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
+
 
 class IsodoseTab(QtWidgets.QWidget):
 
@@ -33,21 +35,22 @@ class IsodoseTab(QtWidgets.QWidget):
 
     def init_color_isod(self):
         """
-        Create a dictionary containing the colors for each isodose.
+        Create a list containing the colors for each isodose.
 
-        :return: Dictionary where the key is the percentage of isodose and the value a QColor object.
+        :return: List of QColor objects that correspond to each isodose as defined outside the class..
         """
-        roi_color = dict()
-        roi_color[107] = QtGui.QColor(131, 0, 0)
-        roi_color[105] = QtGui.QColor(185, 0, 0)
-        roi_color[100] = QtGui.QColor(255, 46, 0)
-        roi_color[95] = QtGui.QColor(255, 161, 0)
-        roi_color[90] = QtGui.QColor(253, 255, 0)
-        roi_color[80] = QtGui.QColor(0, 255, 0)
-        roi_color[70] = QtGui.QColor(0, 143, 0)
-        roi_color[60] = QtGui.QColor(0, 255, 255)
-        roi_color[30] = QtGui.QColor(33, 0, 255)
-        roi_color[10] = QtGui.QColor(11, 0, 134)
+        roi_color = {
+            107: QtGui.QColor(131, 0, 0),
+            105: QtGui.QColor(185, 0, 0),
+            100: QtGui.QColor(255, 46, 0),
+            95: QtGui.QColor(255, 161, 0),
+            90: QtGui.QColor(253, 255, 0),
+            80: QtGui.QColor(0, 255, 0),
+            70: QtGui.QColor(0, 143, 0),
+            60: QtGui.QColor(0, 255, 255),
+            30: QtGui.QColor(33, 0, 255),
+            10: QtGui.QColor(11, 0, 134)
+        }
 
         return roi_color
 
@@ -56,8 +59,8 @@ class IsodoseTab(QtWidgets.QWidget):
         Create a color square.
         """
         list_of_squares = []
-        for key, value in self.color_dict.items():
-            list_of_squares.append(self.draw_color_square(value))
+        for key, color in self.color_dict.items():
+            list_of_squares.append(self.draw_color_square(color))
 
         return list_of_squares
 
@@ -67,64 +70,24 @@ class IsodoseTab(QtWidgets.QWidget):
         """
         list_of_checkboxes = []
         # Values of Isodoses
-        val1 = int(1.07 * self.rx_dose_in_cgray)
-        val2 = int(1.05 * self.rx_dose_in_cgray)
-        val3 = int(1.00 * self.rx_dose_in_cgray)
-        val4 = int(0.95 * self.rx_dose_in_cgray)
-        val5 = int(0.90 * self.rx_dose_in_cgray)
-        val6 = int(0.80 * self.rx_dose_in_cgray)
-        val7 = int(0.70 * self.rx_dose_in_cgray)
-        val8 = int(0.60 * self.rx_dose_in_cgray)
-        val9 = int(0.30 * self.rx_dose_in_cgray)
-        val10 = int(0.10 * self.rx_dose_in_cgray)
+        list_of_doses = []
+        for percentage in isodose_percentages:
+            dose = int(self.rx_dose_in_cgray * (percentage / 100))
+            list_of_doses.append(dose)
 
         # Checkboxes
-        checkbox1 = QtWidgets.QCheckBox("107 % / " + str(val1) + " cGy [Max]")
-        checkbox2 = QtWidgets.QCheckBox("105 % / " + str(val2) + " cGy")
-        checkbox3 = QtWidgets.QCheckBox("100 % / " + str(val3) + " cGy")
-        checkbox4 = QtWidgets.QCheckBox("95 % / " + str(val4) + " cGy")
-        checkbox5 = QtWidgets.QCheckBox("90 % / " + str(val5) + " cGy")
-        checkbox6 = QtWidgets.QCheckBox("80 % / " + str(val6) + " cGy")
-        checkbox7 = QtWidgets.QCheckBox("70 % / " + str(val7) + " cGy")
-        checkbox8 = QtWidgets.QCheckBox("60 % / " + str(val8) + " cGy")
-        checkbox9 = QtWidgets.QCheckBox("30 % / " + str(val9) + " cGy")
-        checkbox10 = QtWidgets.QCheckBox("10 % / " + str(val10) + " cGy")
-
-        checkbox1.clicked.connect(lambda state, text=107: self.checked_dose(state, text))
-        checkbox2.clicked.connect(lambda state, text=105: self.checked_dose(state, text))
-        checkbox3.clicked.connect(lambda state, text=100: self.checked_dose(state, text))
-        checkbox4.clicked.connect(lambda state, text=95: self.checked_dose(state, text))
-        checkbox5.clicked.connect(lambda state, text=90: self.checked_dose(state, text))
-        checkbox6.clicked.connect(lambda state, text=80: self.checked_dose(state, text))
-        checkbox7.clicked.connect(lambda state, text=70: self.checked_dose(state, text))
-        checkbox8.clicked.connect(lambda state, text=60: self.checked_dose(state, text))
-        checkbox9.clicked.connect(lambda state, text=30: self.checked_dose(state, text))
-        checkbox10.clicked.connect(lambda state, text=10: self.checked_dose(state, text))
-
-        checkbox1.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox2.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox3.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox4.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox5.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox6.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox7.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox8.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox9.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox10.setStyleSheet("font: 10pt \"Laksaman\";")
-
-        list_of_checkboxes.append(checkbox1)
-        list_of_checkboxes.append(checkbox2)
-        list_of_checkboxes.append(checkbox3)
-        list_of_checkboxes.append(checkbox4)
-        list_of_checkboxes.append(checkbox5)
-        list_of_checkboxes.append(checkbox6)
-        list_of_checkboxes.append(checkbox7)
-        list_of_checkboxes.append(checkbox8)
-        list_of_checkboxes.append(checkbox9)
-        list_of_checkboxes.append(checkbox10)
+        first_iteration = True
+        for i in range(10):
+            if first_iteration:
+                checkbox = QtWidgets.QCheckBox("%s %% / %s cGy [Max]" % (str(isodose_percentages[i]),
+                                                                         str(list_of_doses[i])))
+            else:
+                checkbox = QtWidgets.QCheckBox("%s %% / %s cGy" % (str(isodose_percentages[i]), str(list_of_doses[i])))
+            checkbox.clicked.connect(lambda state, text=isodose_percentages[i]: self.checked_dose(state, text))
+            checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+            list_of_checkboxes.append(checkbox)
 
         return list_of_checkboxes
-
 
     # Function triggered when a dose level selected
     # Updates the list of selected isodoses and dicom view
