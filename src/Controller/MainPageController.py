@@ -1032,10 +1032,6 @@ class Transect(QtWidgets.QGraphicsScene):
                     self.roi_values.append(self._valueTuples[newList[x]])
 
 
-            self.find_limits(self.roi_values)
-            for i in self._axes.bar(self.roi_list, self.roi_values):
-               i.set_color('r')
-
 
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
@@ -1077,8 +1073,6 @@ class Transect(QtWidgets.QGraphicsScene):
                         self.roi_list.append(self.distances[x])
                         self.roi_values.append(self._valueTuples[self.distances[x]])
                 self.find_limits(self.roi_values)
-                for i in self._axes.bar(self.roi_list, self.roi_values):
-                    i.set_color('r')
             self._figure.canvas.draw()
 
     def _add_point(self, x, y=None):
