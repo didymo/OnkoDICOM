@@ -150,6 +150,7 @@ class ActionHandler:
             names_ordered.insert(0, names_ordered.pop(old_index))
 
         # Create actions for each windowing item
+        windowing_actions = []
         for name in names_ordered:
             text = str(name)
             action_windowing_item = QtWidgets.QAction()
@@ -157,7 +158,10 @@ class ActionHandler:
                 lambda state, text=name: self.action_handler.windowing_handler(state, text)
             )
             action_windowing_item.setText(text)
-            self.menu_windowing.addAction(action_windowing_item)
+            windowing_actions.append(action_windowing_item)
+
+        for item in windowing_actions:
+            self.menu_windowing.addAction(item)
 
     def windowing_handler(self, state, text):
         """
