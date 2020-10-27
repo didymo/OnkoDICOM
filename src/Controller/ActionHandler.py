@@ -74,18 +74,6 @@ class ActionHandler:
         self.action_zoom_out.setText("Zoom Out")
         self.action_zoom_out.triggered.connect(self.__main_page.dicom_view.zoom_out)
 
-        # Windowing Action
-        self.icon_windowing = QtGui.QIcon()
-        self.icon_windowing.addPixmap(
-            QtGui.QPixmap("src/Icon/windowing.png"),
-            QtGui.QIcon.Normal,
-            QtGui.QIcon.On
-        )
-        self.action_windowing = QtWidgets.QAction()
-        self.action_windowing.setIcon(self.icon_windowing)
-        self.action_windowing.setIconVisibleInMenu(True)
-        self.action_windowing.setText("Windowing")
-
         # Transect Action
         self.icon_transect = QtGui.QIcon()
         self.icon_transect.addPixmap(
@@ -127,6 +115,12 @@ class ActionHandler:
         self.action_dvh_export.triggered.connect(self.export_dvh_handler)
 
         # Create Windowing menu
+        self.icon_windowing = QtGui.QIcon()
+        self.icon_windowing.addPixmap(
+            QtGui.QPixmap("src/Icon/windowing.png"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
         self.menu_windowing = QtWidgets.QMenu()
         self.init_windowing_menu()
 
@@ -156,15 +150,21 @@ class ActionHandler:
             names_ordered.insert(0, names_ordered.pop(old_index))
 
         # Create actions for each windowing item
+        windowing_actions = []
         for name in names_ordered:
             text = str(name)
-            print(text)
-            action_windowing_item = QtWidgets.QAction()
+            action_windowing_item = QtWidgets.QAction(self.menu_windowing)
             action_windowing_item.triggered.connect(
-                lambda state, text=name: self.action_handler.windowing_handler(state, text)
+                lambda state, text=name: self.windowing_handler(state, text)
             )
             action_windowing_item.setText(text)
-            self.menu_windowing.addAction(action_windowing_item)
+            windowing_actions.append(action_windowing_item)
+
+        # For reasons beyond me, the actions have to be set as a child of the windowing menu *and* later be added to
+        # the menu as well. You can't do one or the other, otherwise the menu won't populate.
+        # Feel free to try fix (or at least explain why the action has to be set as the windowing menu's child twice)
+        for item in windowing_actions:
+            self.menu_windowing.addAction(item)
 
     def windowing_handler(self, state, text):
         """
@@ -180,13 +180,12 @@ class ActionHandler:
         level = windowing_limits[1]
 
         # Update the dictionary of pixmaps with the update window and level values
-        pixmaps = self.patient_dict_container.get("pixmaps")
         pixel_values = self.patient_dict_container.get("pixel_values")
-        new_pixmaps = get_pixmaps(pixel_values, window, level)
+        pixmaps = get_pixmaps(pixel_values, window, level)
 
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
-        self.patient_dict_container.set("pixmaps", new_pixmaps)
+        self.patient_dict_container.set("pixmaps", pixmaps)
 
         self.__main_page.update_views()
 

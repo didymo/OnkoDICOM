@@ -7,7 +7,7 @@ import csv
 import webbrowser
 from collections import deque
 
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
