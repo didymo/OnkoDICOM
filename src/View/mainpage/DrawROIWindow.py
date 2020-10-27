@@ -953,6 +953,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         for x_coord, y_coord in self.target_pixel_coords:
             for xc_coord, yc_coord in self._circlePoints:
                 if (x_coord == xc_coord and y_coord == yc_coord):
+                    # self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
                     self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(0, 0, 0, 200)))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)

@@ -866,7 +866,6 @@ class Transect(QtWidgets.QGraphicsScene):
         self.pos1 = QPoint()
         self.pos2 = QPoint()
         self.points = []
-        self.roi_points = []
         self.roi_values = []
         self.roi_list = []
         self.is_ROI_draw = is_ROI_draw
@@ -963,27 +962,9 @@ class Transect(QtWidgets.QGraphicsScene):
 
         #returns the main page back to a non-drawing environment
         if self.is_ROI_draw:
-            self.roi_points.clear()
-            for i, j in self.points:
-                if i in range(512) and j in range(512):
-                    for x in self.roi_values:
-                        if (self.data[i][j] == x):
-                            self.roi_points.append((i, j))
             self.mainWindow.upper_limit = self.upper_limit
             self.mainWindow.lower_limit = self.lower_limit
             self.mainWindow.update_view()
-            image = self.img.toImage()
-            ellipse = None
-            for i, j in self.roi_points:
-                if i in range(512) and j in range(512):
-                    if self.data[i][j] >= self.lower_limit and self.data[i][j] <= self.upper_limit:
-                        image.setPixelColor(i, j, QtGui.QColor(QtGui.QRgba64.fromRgba(0, 30, 200, 255)))
-            pixmap = QtGui.QPixmap.fromImage(image)
-            label = QtWidgets.QLabel()
-            label.setPixmap(pixmap)
-            scene = QtWidgets.QGraphicsScene()
-            scene.addWidget(label)
-            self.tabWindow.setScene(scene)
         else:
             self.mainWindow.dicom_view.update_view()
 
