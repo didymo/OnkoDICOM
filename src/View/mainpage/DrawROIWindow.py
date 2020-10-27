@@ -1,5 +1,7 @@
 import csv
 import math
+
+import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
@@ -658,10 +660,14 @@ class UIDrawROIWindow:
             dt = self.patient_dict_container.dataset[id]
             dt.convert_pixel_data()
 
+            # Path to the selected .dcm file
+            location = self.patient_dict_container.filepaths[id]
+            self.ds = pydicom.dcmread(location)
 
             min_pixel = self.min_pixel_density_line_edit.text()
             max_pixel = self.max_pixel_density_line_edit.text()
 
+            # If they are number inputs
             if min_pixel.isdecimal() and max_pixel.isdecimal():
 
                 min_pixel = int(min_pixel)
@@ -669,7 +675,6 @@ class UIDrawROIWindow:
 
                 if min_pixel <= max_pixel:
                     data_set = self.patient_dict_container.dataset[id]
-                    self.ds = data_set
 
                     """
                     pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -692,7 +697,6 @@ class UIDrawROIWindow:
                     for sublist in self.target_pixel_coords:
                         for item in sublist:
                             self.target_pixel_coords_single_array.append(item)
-                    print(self.target_pixel_coords_single_array)
 
                     """
                     For the meantime, a new image is created and the pixels specified are coloured. 
@@ -731,8 +735,13 @@ class UIDrawROIWindow:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_save_clicked(self):
+        # Make sure the user has clicked Draw first
+        if self.ds != None:
+            ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+        else:
+            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
+                              "Please ensure you have drawn your ROI first.")
 
-        ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
 
     def init_standard_names(self):
         """
