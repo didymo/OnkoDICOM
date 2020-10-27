@@ -738,6 +738,8 @@ class UIDrawROIWindow:
         # Make sure the user has clicked Draw first
         if self.ds != None:
             ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+            QMessageBox.about(self.draw_roi_window_instance, "Success",
+                              "New ROI has been saved to RTSS!")
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")

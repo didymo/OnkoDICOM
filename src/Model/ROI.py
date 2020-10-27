@@ -1,4 +1,6 @@
 import collections
+import random
+
 import pydicom
 from pydicom import Sequence, Dataset
 from pydicom.tag import Tag
@@ -57,7 +59,12 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
     referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
     roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber+1
-    rgb = [10, 50, 100]  # Colour TBC
+
+    # Colour TBC
+    r1 = random.randint(0,255)
+    r2 = random.randint(0,255)
+    r3 = random.randint(0,255)
+    rgb = [r1,r2,r3]
 
     # Saving a new StructureSetROISequence
     structure_set_sequence = Sequence([Dataset()])
