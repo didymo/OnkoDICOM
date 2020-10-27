@@ -682,7 +682,7 @@ class UIDrawROIWindow:
                     """
                     pixel_array = data_set._pixel_array
 
-                    self.target_pixel_coords = []
+                    self.target_pixel_coords.clear()
 
                     z_coord = int(data_set.SliceLocation)
 
@@ -693,7 +693,7 @@ class UIDrawROIWindow:
                                 self.target_pixel_coords.append((y_coord, x_coord, z_coord))
 
                     # Make 2D to 1D
-                    self.target_pixel_coords_single_array = []
+                    self.target_pixel_coords_single_array.clear()
                     for sublist in self.target_pixel_coords:
                         for item in sublist:
                             self.target_pixel_coords_single_array.append(item)
