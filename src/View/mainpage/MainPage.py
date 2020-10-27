@@ -1,3 +1,5 @@
+import glob
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from src.Controller.ActionHandler import ActionHandler
@@ -93,6 +95,13 @@ class UIMainWindow:
 
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
+
+        # Create Clinical Data tab
+        reg = '/CSV/ClinicalData*[.csv]'
+        if not glob.glob(patient_dict_container.path + reg):
+            self.call_class.display_cd_form(self.right_panel, patient_dict_container.path)
+        else:
+            self.call_class.display_cd_dat(self.right_panel, patient_dict_container.path)
 
         splitter.addWidget(self.left_panel)
         splitter.addWidget(self.right_panel)
