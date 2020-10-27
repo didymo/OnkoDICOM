@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from pandas import np
 
+from src.Model.GetPatientInfo import DicomTree
+
 try:
     from matplotlib import _cntr as cntr
 except ImportError:
@@ -18,7 +20,6 @@ class DicomView(QtWidgets.QWidget):
         self.patient_dict_container = PatientDictContainer()
         self.roi_color = roi_color
         self.iso_color = iso_color
-        self.pixmaps = self.patient_dict_container.get("pixmaps")
         self.zoom = 1
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
@@ -35,12 +36,26 @@ class DicomView(QtWidgets.QWidget):
         self.dicom_view_layout.addWidget(self.slider)
         self.setLayout(self.dicom_view_layout)
 
+        # Init metadata widgets
+        self.metadata_layout = QtWidgets.QGridLayout(self.view)
+        self.label_image_id = QtWidgets.QLabel(self.view)
+        self.label_image_pos = QtWidgets.QLabel(self.view)
+        self.label_wl = QtWidgets.QLabel(self.view)
+        self.label_image_size = QtWidgets.QLabel(self.view)
+        self.label_zoom = QtWidgets.QLabel(self.view)
+        self.label_patient_pos = QtWidgets.QLabel(self.view)
+        self.init_metadata()
+
         self.update_view()
 
     def init_slider(self):
+        """
+        Create a slider for the DICOM Image View.
+        """
+        pixmaps = self.patient_dict_container.get("pixmaps")
         self.slider.setMinimum(0)
-        self.slider.setMaximum(len(self.pixmaps) - 1)
-        self.slider.setValue(int(len(self.pixmaps) / 2))
+        self.slider.setMaximum(len(pixmaps) - 1)
+        self.slider.setValue(int(len(pixmaps) / 2))
         self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.slider.setTickInterval(1)
         self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
@@ -48,15 +63,65 @@ class DicomView(QtWidgets.QWidget):
         self.slider.valueChanged.connect(self.value_changed)
 
     def init_view(self):
+        """
+        Create a view widget for DICOM image.
+        """
         self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.view.setBackgroundBrush(background_brush)
         self.view.setGeometry(QtCore.QRect(0, 0, 877, 517))
 
+    def init_metadata(self):
+        """
+        Create and place metadata on the view widget.
+        """
+        # Position of the labels on the DICOM view.
+        self.label_image_id.setAlignment(QtCore.Qt.AlignTop)
+        self.label_image_pos.setAlignment(QtCore.Qt.AlignTop)
+        self.label_wl.setAlignment(QtCore.Qt.AlignRight)
+        self.label_image_size.setAlignment(QtCore.Qt.AlignBottom)
+        self.label_zoom.setAlignment(QtCore.Qt.AlignBottom)
+        self.label_patient_pos.setAlignment(QtCore.Qt.AlignBottom)
+
+        # Set all labels to white
+        stylesheet = "QLabel { color : white; }"
+        self.label_image_id.setStyleSheet(stylesheet)
+        self.label_image_pos.setStyleSheet(stylesheet)
+        self.label_wl.setStyleSheet(stylesheet)
+        self.label_image_size.setStyleSheet(stylesheet)
+        self.label_zoom.setStyleSheet(stylesheet)
+        self.label_patient_pos.setStyleSheet(stylesheet)
+
+        # Horizontal Spacer to put metadata on the left and right of the screen
+        h_spacer = QtWidgets.QSpacerItem(10, 100, hPolicy=QtWidgets.QSizePolicy.Expanding,
+                                        vPolicy=QtWidgets.QSizePolicy.Expanding)
+        # Vertical Spacer to put metadata on the top and bottom of the screen
+        v_spacer = QtWidgets.QSpacerItem(100, 10, hPolicy=QtWidgets.QSizePolicy.Expanding,
+                                        vPolicy=QtWidgets.QSizePolicy.Expanding)
+        # Spacer of fixed size to make the metadata still visible when the scrollbar appears
+        fixed_spacer = QtWidgets.QSpacerItem(13, 15, hPolicy=QtWidgets.QSizePolicy.Fixed,
+                                             vPolicy=QtWidgets.QSizePolicy.Fixed)
+
+        self.metadata_layout.addWidget(self.label_image_id, 0, 0, 1, 1)
+        self.metadata_layout.addWidget(self.label_image_pos, 1, 0, 1, 1)
+        self.metadata_layout.addItem(v_spacer, 2, 0, 1, 4)
+        self.metadata_layout.addWidget(self.label_image_size, 3, 0, 1, 1)
+        self.metadata_layout.addWidget(self.label_zoom, 4, 0, 1, 1)
+        self.metadata_layout.addItem(fixed_spacer, 5, 0, 1, 4)
+
+        self.metadata_layout.addItem(h_spacer, 0, 1, 6, 1)
+        self.metadata_layout.addWidget(self.label_wl, 0, 2, 1, 1)
+        self.metadata_layout.addWidget(self.label_patient_pos, 4, 2, 1, 1)
+        self.metadata_layout.addItem(fixed_spacer, 0, 3, 6, 1)
+
     def value_changed(self):
         self.update_view()
 
     def update_view(self, zoom_change=False):
+        """
+        Update the view of the DICOM Image.
+        :param zoom_change: Boolean indicating whether the user wants to change the zoom. False by default.
+        """
         self.image_display()
 
         if zoom_change:
@@ -68,11 +133,16 @@ class DicomView(QtWidgets.QWidget):
         if self.patient_dict_container.get("selected_doses"):
             self.isodose_display()
 
+        self.update_metadata()
         self.view.setScene(self.scene)
 
     def image_display(self):
+        """
+        Update the image to be displayed on the DICOM View.
+        """
+        pixmaps = self.patient_dict_container.get("pixmaps")
         slider_id = self.slider.value()
-        image = self.pixmaps[slider_id]
+        image = pixmaps[slider_id]
         image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         label = QtWidgets.QLabel()
         label.setPixmap(image)
@@ -181,6 +251,40 @@ class DicomView(QtWidgets.QWidget):
                 pen = self.get_qpen(pen_color, iso_line, line_width)
                 for i in range(len(polygons)):
                     self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(brush_color))
+
+    def update_metadata(self):
+        """
+        Update metadata displayed on the DICOM Image view.
+        """
+        # Retrieve dictionary from the dataset of the slice
+        id = self.slider.value()
+        filename = self.patient_dict_container.filepaths[id]
+        dicom_tree_slice = DicomTree(filename)
+        dict_slice = dicom_tree_slice.dict
+
+        # Information to display
+        current_slice = dict_slice['Instance Number'][0]
+        total_slices = len(self.patient_dict_container.get("pixmaps"))
+        row_img = dict_slice['Rows'][0]
+        col_img = dict_slice['Columns'][0]
+        patient_pos = dict_slice['Patient Position'][0]
+        window = self.patient_dict_container.get("window")
+        level = self.patient_dict_container.get("level")
+        slice_pos = dict_slice['Slice Location'][0]
+
+        # For formatting
+        if self.zoom == 1:
+            zoom = 1
+        else:
+            zoom = float("{0:.2f}".format(self.zoom))
+
+        # Update labels
+        self.label_image_id.setText("Image: %s / %s" % (str(current_slice), str(total_slices)))
+        self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
+        self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
+        self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
+        self.label_zoom.setText("Zoom: %s:%s" % (str(zoom), str(zoom)))
+        self.label_patient_pos.setText("Patient Position: %s" % (str(current_slice)))
 
     def calc_roi_polygon(self, curr_roi, curr_slice, dict_rois_contours):
         """
