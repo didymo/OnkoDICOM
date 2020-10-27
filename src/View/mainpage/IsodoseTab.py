@@ -37,7 +37,7 @@ class IsodoseTab(QtWidgets.QWidget):
         """
         Create a list containing the colors for each isodose.
 
-        :return: List of QColor objects that correspond to each isodose as defined outside the class..
+        :return: Dictionary where the key is the percentage of isodose and the value a QColor object.
         """
         roi_color = {
             107: QtGui.QColor(131, 0, 0),
