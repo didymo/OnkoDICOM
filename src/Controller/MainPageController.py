@@ -363,7 +363,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 os.mkdir(os.path.join(str(self.path), 'CSV'))
             new_file = os.path.join(str(self.path), 'CSV/ClinicalData_' + self.pID + '.csv')
             # open the file to save the clinical data in
-            f = open(new_file, 'w')
+            f = open(new_file, 'w', newline='')
             # The headers of the file
             columnNames = ['PatientID', 'Gender', 'Country_of_Birth',
                            'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10', 'T_Stage',
