@@ -131,11 +131,11 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
     #print(rtss)
     patient_dict_container = PatientDictContainer()
-    if patient_dict_container.filepaths["rtss"]:
-        rtss_location = patient_dict_container.filepaths["rtss"]
 
-        # To save
-        pydicom.filewriter.dcmwrite(rtss_location, rtss, write_like_original=True)
+    rtss_location = patient_dict_container.filepaths["rtss"]
+
+    # To save
+    pydicom.filewriter.dcmwrite(rtss_location, rtss, write_like_original=True)
 
 
 def get_raw_contour_data(rtss):
