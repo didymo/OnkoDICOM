@@ -940,23 +940,24 @@ class Drawing(QtWidgets.QGraphicsScene):
             for j in range(512):
                 self.values.append(self.data[i][j])
 
-    def calculate_circle_points(self, x,y, r):
+    def calculate_circle_points(self, x , y, r):
         self._circlePoints.clear()
         degree = math.pi/8
-        for i in range(44):
+        for i in range(300):
             x1 = round(x + 19*math.cos(degree))
-            y1 = round(x + 19*math.sin(degree))
+            y1 = round(y + 19*math.sin(degree))
             degree = degree + 1/44
             self._circlePoints.append((x1, y1))
 
     def compare(self):
-
-        # for x_coord, y_coord in self.target_pixel_coords:
-        #     for xc_coord, yc_coord in self._circlePoints:
-        #         if not (x_coord == xc_coord and y_coord == yc_coord):
-        #             self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
+        for x_coord, y_coord in self.target_pixel_coords:
+            for xc_coord, yc_coord in self._circlePoints:
+                if (x_coord == xc_coord and y_coord == yc_coord):
+                    self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(0, 0, 0, 200)))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
+        self.label.setPixmap(self.q_pixmaps)
+        self.addWidget(self.label)
 
     def mousePressEvent(self, event):
         if self.item:
@@ -973,11 +974,12 @@ class Drawing(QtWidgets.QGraphicsScene):
         x = event.scenePos().x() - 19
         y = event.scenePos().y() - 19
         r = 19
-        self.calculate_circle_points(x,y,r)
+        self.calculate_circle_points(x + 19,y + 19,r)
         #  x = a + r .cos(t), y = b+r.sin(t)
         self.item = QGraphicsEllipseItem(event.scenePos().x() -19, event.scenePos().y() -19, 40, 40)
         self.item.setPen(QPen(QColor("blue")))
         self.addItem(self.item)
+        self.compare()
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -988,7 +990,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             x = event.scenePos().x() - 19
             y = event.scenePos().y() - 19
             r = 19
-            self.calculate_circle_points(x, y, r)
+            self.calculate_circle_points(x + 19 , y + 19, r)
             self.compare()
             self.item.setRect(event.scenePos().x() -19, event.scenePos().y() -19, 40, 40)
         self.update()
@@ -997,4 +999,5 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
+        self.compare()
         self.update()
