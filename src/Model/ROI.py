@@ -129,12 +129,13 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
     rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
 
-    print(rtss)
+    #print(rtss)
     patient_dict_container = PatientDictContainer()
-    rtss_location = patient_dict_container.filepaths["rtss"]
+    if patient_dict_container.filepaths["rtss"]:
+        rtss_location = patient_dict_container.filepaths["rtss"]
 
-    # To save
-    pydicom.filewriter.dcmwrite(rtss_location, rtss, write_like_original=True)
+        # To save
+        pydicom.filewriter.dcmwrite(rtss_location, rtss, write_like_original=True)
 
 
 def get_raw_contour_data(rtss):
