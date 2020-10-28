@@ -62,7 +62,7 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
         :param data_set: Data Set of selected DICOM image file
         :return: rtss, with added ROI
         """
-
+    number_of_contour_points = len(roi_coordinates) / 3
     referenced_sop_class_uid = ""
     referenced_sop_instance_uid = ""
     # Optional Tag
@@ -119,8 +119,8 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
                     contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
             contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
-            contour.add_new(Tag("NumberOfContourPoints"), "IS", 10)
-            contour.add_new(Tag("ContourNumber"), "IS", 5)
+            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
+            contour.add_new(Tag("ContourNumber"), "IS", 1)
             contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
 
         roi_contour.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
