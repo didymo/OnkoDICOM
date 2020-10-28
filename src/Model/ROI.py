@@ -53,6 +53,15 @@ def delete_roi(rtss, roi_name):
 
 
 def create_roi(rtss, roi_name, roi_coordinates, data_set):
+    """
+        Create new ROI to rtss
+
+        :param rtss: dataset of RTSS
+        :param roi_name: ROIName
+        :param roi_coordinates: Coordinates of pixels for new ROI
+        :param data_set: Data Set of selected DICOM image file
+        :return: rtss, with added ROI
+        """
 
     # Optional Tag
     if data_set.get("ReferencedImageSequence"):
@@ -134,9 +143,7 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
     rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
 
-    #print(rtss)
     patient_dict_container = PatientDictContainer()
-
     #rtss_location = patient_dict_container.filepaths["rtss"]
 
     # To save
