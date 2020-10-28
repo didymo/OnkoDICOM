@@ -63,13 +63,12 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
         :return: rtss, with added ROI
         """
 
+    referenced_sop_class_uid = ""
+    referenced_sop_instance_uid = ""
     # Optional Tag
     if data_set.get("ReferencedImageSequence"):
         referenced_sop_class_uid = data_set.ReferencedImageSequence[0].ReferencedSOPClassUID
         referenced_sop_instance_uid = data_set.ReferencedImageSequence[0].ReferencedSOPInstanceUID
-    else:
-        referenced_sop_class_uid = ""
-        referenced_sop_instance_uid = ""
 
     referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
     roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber+1
@@ -111,12 +110,13 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
         # ROI Sequence
         for contour in contour_sequence:
-            contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+            if data_set.get("ReferencedImageSequence"):
+                contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
 
             # Contour Sequence
-            for contour_image in contour_image_sequence:
-                contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI", referenced_sop_class_uid)  # CT Image Storage
-                contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+                for contour_image in contour_image_sequence:
+                    contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI", referenced_sop_class_uid)  # CT Image Storage
+                    contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
             contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
             contour.add_new(Tag("NumberOfContourPoints"), "IS", 10)
