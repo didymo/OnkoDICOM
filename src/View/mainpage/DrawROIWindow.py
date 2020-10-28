@@ -965,10 +965,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
                 pixel_array[x][y] will return the density of the pixel
             """
-            for x_coord , y_coord in self.target_pixel_coords:
-                for xc_coord, yc_coord in self.pixel_coords_remove:
-                    if not (x_coord == xc_coord and y_coord == yc_coord):
-                        self.draw_roi_window_instance.target_pixel_coords.append((x_coord, y_coord, z_coord))
+            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords if item not in self.pixel_coords_remove]
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
