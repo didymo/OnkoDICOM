@@ -743,6 +743,7 @@ class UIDrawROIWindow:
             self.signal_roi_drawn.emit((new_rtss, {"draw": (self.ROI_name, new_filepath)}))
             QMessageBox.about(self.draw_roi_window_instance, "Success",
                               "New ROI has been saved to RTSS!")
+            self.close()
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
