@@ -869,6 +869,8 @@ class Drawing(QtWidgets.QGraphicsScene):
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
             pixel_array[x][y] will return the density of the pixel
             """
+
+            z_coord = int(data_set.SliceLocation)
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
 
@@ -882,7 +884,10 @@ class Drawing(QtWidgets.QGraphicsScene):
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
                 pixel_array[x][y] will return the density of the pixel
             """
-            self.draw_roi_window_instance.target_pixel_coords = [item for item in self.target_pixel_coords]
+            for x_coord , y_coord in self.target_pixel_coords:
+                for xc_coord, yc_coord in self.pixel_coords_remove:
+                    if not (x_coord == xc_coord and y_coord == yc_coord):
+                        self.draw_roi_window_instance.target_pixel_coords.append((x_coord, y_coord, z_coord))
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
@@ -956,11 +961,15 @@ class Drawing(QtWidgets.QGraphicsScene):
     def update_data(self):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
+            z_coord = int(data_set.SliceLocation)
             """
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
                 pixel_array[x][y] will return the density of the pixel
             """
-            self.draw_roi_window_instance.target_pixel_coords = [item for item in self.target_pixel_coords if item not in self.pixel_coords_remove]
+            for x_coord , y_coord in self.target_pixel_coords:
+                for xc_coord, yc_coord in self.pixel_coords_remove:
+                    if not (x_coord == xc_coord and y_coord == yc_coord):
+                        self.draw_roi_window_instance.target_pixel_coords.append((x_coord, y_coord, z_coord))
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
@@ -970,7 +979,6 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def wheelEvent(self, event):
         delta = event.delta()
-        print (delta)
 
     def mousePressEvent(self, event):
         if self.item:
