@@ -3,21 +3,22 @@
 #   This file handles all the processes within the Main page window of the software                                 #
 #                                                                                                                   #
 #####################################################################################################################
-
+import csv
 import glob
 # removing warnings
+import math
+import os
 from pathlib import Path
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
-from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtWidgets import QGraphicsPixmapItem
+from PyQt5 import QtWidgets, QtCore, QtGui
 from dateutil.relativedelta import relativedelta
-from numpy import *
+from networkx.tests.test_convert_pandas import pd
 
-from legacy.src.View.mainpage.ClinicalDataDisplay import *
-from legacy.src.View.mainpage.ClinicalDataForm import *
-from src.Model.Anon import *
+from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
+from src.View.mainpage.ClinicalDataForm import Ui_Form
+from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
 
 matplotlib.cbook.handle_exceptions = "print"  # default
@@ -295,9 +296,9 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's gender. \n"
         if (len(self.ui.line_BP.text()) == 0):
             message = message + "Input patient's birth place. \n"
-        if (self.ui.date_of_birth.date() > QDate.currentDate()):
+        if (self.ui.date_of_birth.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of birth cannot be in the future. \n"
-        if (self.ui.date_diagnosis.date() > QDate.currentDate()):
+        if (self.ui.date_diagnosis.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of diagnosis cannot be in the future. \n"
         if (len(self.ui.line_icd.text()) == 0):
             message = message + "Input patient's ICD 10. \n"
@@ -327,7 +328,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's Brachy. \n"
         if (str(self.ui.Hormone.currentText()) == "Select..."):
             message = message + "Select patient's Hormone. \n"
-        if (self.ui.Dt_Last_Existence.date() > QDate.currentDate()):
+        if (self.ui.Dt_Last_Existence.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of last existence cannot be in the future. \n"
         if (str(self.ui.Death.currentText()) == "Select..."):
             message = message + "Select patient's Death. \n"
@@ -339,11 +340,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's Regional Control. \n"
         if (str(self.ui.Distant_Control.currentText()) == "Select..."):
             message = message + "Select patient's Distant Control. \n"
-        if (self.ui.Dt_local_failure.date() > QDate.currentDate()):
+        if (self.ui.Dt_local_failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of local failure cannot be in the future. \n"
-        if (self.ui.Dt_REgional_failure.date() > QDate.currentDate()):
+        if (self.ui.Dt_REgional_failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of regional failure cannot be in the future. \n"
-        if (self.ui.Dt_Distant_Failure.date() > QDate.currentDate()):
+        if (self.ui.Dt_Distant_Failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of distant failure cannot be in the future. \n"
 
 #####################################################################################################################
@@ -362,7 +363,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 os.mkdir(os.path.join(str(self.path), 'CSV'))
             new_file = os.path.join(str(self.path), 'CSV/ClinicalData_' + self.pID + '.csv')
             # open the file to save the clinical data in
-            f = open(new_file, 'w')
+            f = open(new_file, 'w', newline='')
             # The headers of the file
             columnNames = ['PatientID', 'Gender', 'Country_of_Birth',
                            'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10', 'T_Stage',
@@ -483,18 +484,19 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 open('src/data/records.pkl', 'w+')
                 df.to_pickle('src/data/records.pkl')
             # display the successful saving message pop up
-            SaveReply = QMessageBox.information(self, "Message",
+            SaveReply = QtWidgets.QMessageBox.information(self, "Message",
                                                 "The Clinical Data was saved successfully in your directory!",
-                                                QMessageBox.Ok)
-            if SaveReply == QMessageBox.Ok:
+                                                QtWidgets.QMessageBox.Ok)
+            if SaveReply == QtWidgets.QMessageBox.Ok:
                 # when they press okay on the pop up, display the clinical data entries
                 self.display_cd_dat()
 
         else:
             # the form did not pass the validation so display the corresponding errors to be fixed, no csv created
-            buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "The following issues need to be addressed: \n" + message, QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+            buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
+                                              "The following issues need to be addressed: \n" + message,
+                                                        QtWidgets.QMessageBox.Ok)
+            if buttonReply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
 
@@ -814,13 +816,13 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                     check = True
             if not check:
                 # the sensitive data for this patient is missing so no editing can be performed
-                buttonReply = QMessageBox.warning(self, "Error Message",
+                buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
                                                   "The software has no previous records of this patient.\n"
                                                   "If you wish, you can create a new clinical data file by \n"
                                                   "deleting the current one from the directory and reloading \n"
                                                   "the patient files."
-                                                  , QMessageBox.Ok)
-                if buttonReply == QMessageBox.Ok:
+                                                  , QtWidgets.QMessageBox.Ok)
+                if buttonReply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
                 self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
@@ -830,13 +832,13 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 self.tabWindow.setCurrentIndex(3)
         else:
             # the sensitive data file is missing so no editing can be performed
-            buttonReply = QMessageBox.warning(self, "Error Message",
+            buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
                                               "The software has no previous records of this patient.\n"
                                               "If you wish, you can create a new clinical data file by \n"
                                               "deleting the current one from the directory and reloading \n"
                                               "the patient files."
-                                              , QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+                                              , QtWidgets.QMessageBox.Ok)
+            if buttonReply == QtWidgets.QMessageBox.Ok:
                 pass
 
 
@@ -854,17 +856,17 @@ class Transect(QtWidgets.QGraphicsScene):
         super(Transect, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
-        self.addItem(QGraphicsPixmapItem(image_to_paint))
+        self.addItem(QtWidgets.QGraphicsPixmapItem(image_to_paint))
         self.img = image_to_paint
         self.values = []
         self.distances = []
         self.data = dataset
         self.pix_spacing = rowS / colS
-        self._start = QPointF()
+        self._start = QtCore.QPointF()
         self.drawing = True
         self._current_rect_item = None
-        self.pos1 = QPoint()
-        self.pos2 = QPoint()
+        self.pos1 = QtCore.QPoint()
+        self.pos2 = QtCore.QPoint()
         self.points = []
         self.roi_points = []
         self.roi_values = []
@@ -1175,12 +1177,12 @@ class MainPageCallClass:
     def display_cd_form(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataForm(
             tabWindow, file_path, self.dataset, self.filepaths)
-        tabWindow.addTab(self.tab_cd, "")
+        tabWindow.addTab(self.tab_cd, "Clinical Data")
 
     # This function displays the clinical data entries in view mode
     def display_cd_dat(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataDisplay(tabWindow, file_path, self.dataset, self.filepaths)
-        tabWindow.addTab(self.tab_cd, "")
+        tabWindow.addTab(self.tab_cd, "Clinical Data")
 
     # This function runs Transect on button click
     def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw=False):
