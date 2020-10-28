@@ -738,9 +738,8 @@ class UIDrawROIWindow:
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
         if self.ds is not None:
-            new_rtss, new_filepath = ROI.create_roi(self.dataset_rtss, self.ROI_name,
-                                                    self.target_pixel_coords_single_array, self.ds)
-            self.signal_roi_drawn.emit((new_rtss, {"draw": (self.ROI_name, new_filepath)}))
+            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+            self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
             QMessageBox.about(self.draw_roi_window_instance, "Success",
                               "New ROI has been saved to RTSS!")
             self.close()

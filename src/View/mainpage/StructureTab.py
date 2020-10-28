@@ -179,8 +179,7 @@ class StructureTab(QtWidgets.QWidget):
         description_of_changes follows the format {"type_of_change": value_of_change}.
         Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
         {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
-        {"draw": ("AORTA", "../new_rtss.dcm")} represents that a new structure AORTA has been made, and the filepath
-        of the new structure file.
+        {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
         """
 
         new_dataset = changes[0]
@@ -206,9 +205,12 @@ class StructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("selected_rois", [])
 
         if "draw" in change_description:
-            dicom_tree_rtss = DicomTree(change_description["draw"][1])
+            dicom_tree_rtss = DicomTree(None)
+            dicom_tree_rtss.dataset = new_dataset
+            dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(dicom_tree_rtss.dataset)
             self.patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
             self.color_dict = self.init_color_roi()
+            self.patient_dict_container.set("roi_color_dict", self.color_dict)
 
 
         if self.patient_dict_container.has_modality("raw_dvh"):
