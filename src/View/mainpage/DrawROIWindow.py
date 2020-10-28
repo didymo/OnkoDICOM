@@ -926,11 +926,11 @@ class Drawing(QtWidgets.QGraphicsScene):
             # Convert QPixMap into Qimage
             self.q_image = self.img.toImage()
             for x_coord, y_coord in self.target_pixel_coords:
-                c = self.q_image.pixel(y_coord, x_coord)
+                c = self.q_image.pixel(x_coord, y_coord)
                 colors = QColor(c).getRgbF()
                 self.accordingColorList.append((x_coord, y_coord, colors))
 
-            for x_coord, y_coord in self.target_pixel_coords:
+            for x_coord, y_coord, colors in self.accordingColorList:
                 self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
             # Convert Qimage back to QPixMap
