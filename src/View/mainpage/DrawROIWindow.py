@@ -869,7 +869,6 @@ class Drawing(QtWidgets.QGraphicsScene):
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
             pixel_array[x][y] will return the density of the pixel
             """
-
             z_coord = int(data_set.SliceLocation)
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
