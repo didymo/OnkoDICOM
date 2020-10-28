@@ -1,3 +1,4 @@
+import copy
 import csv
 import math
 
@@ -892,6 +893,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.pixel_array = None
         # This will contain the new pixel coordinates specifed by the min and max pixel density
         self.target_pixel_coords = []
+        self.accordingColorList = []
+        self.copy = []
         self.q_image = None
         self.q_image = None
         self.q_pixmaps = None
@@ -913,7 +916,8 @@ class Drawing(QtWidgets.QGraphicsScene):
                 for y_coord in range(512):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
-                        self.target_pixel_coords.append((y_coord, x_coord))
+                                self.target_pixel_coords.append((y_coord, x_coord))
+
 
             """
             For the meantime, a new image is created and the pixels specified are coloured. 
@@ -921,6 +925,10 @@ class Drawing(QtWidgets.QGraphicsScene):
             """
             # Convert QPixMap into Qimage
             self.q_image = self.img.toImage()
+            for x_coord, y_coord in self.target_pixel_coords:
+                c = self.q_image.pixel(y_coord, x_coord)
+                colors = QColor(c).getRgbF()
+                self.accordingColorList.append((x_coord, y_coord, colors))
 
             for x_coord, y_coord in self.target_pixel_coords:
                 self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
@@ -964,11 +972,10 @@ class Drawing(QtWidgets.QGraphicsScene):
             self._circlePoints.append((x1, y1))
 
     def compare(self):
-        for x_coord, y_coord in self.target_pixel_coords:
-            for xc_coord, yc_coord in self._circlePoints:
+        for x_coord, y_coord, colors in self.accordingColorList:
+            for xc_coord, yc_coord in self._circlePoints[:]:
                 if (x_coord == xc_coord and y_coord == yc_coord):
-                    # self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
-                    self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(0, 0, 0, 200)))
+                    self.q_image.setPixelColor(x_coord, y_coord, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
         self.label.setPixmap(self.q_pixmaps)
@@ -1014,5 +1021,4 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
-        self.compare()
         self.update()
