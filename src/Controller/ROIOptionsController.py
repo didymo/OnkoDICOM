@@ -19,14 +19,15 @@ class ROIDelOption:
     The class that will be called by the main page to access the ROI Options controller
     """
 
-    def __init__(self, rois, dataset_rtss, structure_modified_function):
+    def __init__(self, dataset_rtss, structure_modified_function):
         super(ROIDelOption, self).__init__()
-        self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.structure_modified_function = structure_modified_function
 
     def show_roi_delete_options(self):
-        self.options_window = RoiDeleteOptions(self.rois, self.dataset_rtss)
+        patient_dict_container = PatientDictContainer()
+        rois = patient_dict_container.get("rois")
+        self.options_window = RoiDeleteOptions(rois, self.dataset_rtss)
         self.options_window.deleting_rois_structure_tuple.connect(self.structure_modified_function)
         self.options_window.show()
 
@@ -47,13 +48,14 @@ class ROIDrawOption:
     The class that will be called by the main page to access the ROI Options controller
     """
 
-    def __init__(self, rois, dataset_rtss, structure_modified_function):
+    def __init__(self, dataset_rtss, structure_modified_function):
         super(ROIDrawOption, self).__init__()
-        self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.structure_modified_function = structure_modified_function
 
     def show_roi_draw_options(self):
-        self.draw_window = RoiDrawOptions(self.rois, self.dataset_rtss)
+        patient_dict_container = PatientDictContainer()
+        rois = patient_dict_container.get("rois")
+        self.draw_window = RoiDrawOptions(rois, self.dataset_rtss)
         self.draw_window.signal_roi_drawn.connect(self.structure_modified_function)
         self.draw_window.show()

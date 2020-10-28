@@ -26,8 +26,8 @@ class StructureTab(QtWidgets.QWidget):
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
         dataset_rtss = self.patient_dict_container.get("dataset_rtss")
-        self.roi_delete_handler = ROIDelOption(self.rois, dataset_rtss, self.structure_modified)
-        self.roi_draw_handler = ROIDrawOption(self.rois, dataset_rtss, self.structure_modified)
+        self.roi_delete_handler = ROIDelOption(dataset_rtss, self.structure_modified)
+        self.roi_draw_handler = ROIDrawOption(dataset_rtss, self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -211,7 +211,6 @@ class StructureTab(QtWidgets.QWidget):
             self.patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
             self.color_dict = self.init_color_roi()
             self.patient_dict_container.set("roi_color_dict", self.color_dict)
-
 
         if self.patient_dict_container.has_modality("raw_dvh"):
             # Rename structures in DVH list
