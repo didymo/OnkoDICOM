@@ -61,10 +61,10 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber+1
 
     # Colour TBC
-    r1 = random.randint(0,255)
-    r2 = random.randint(0,255)
-    r3 = random.randint(0,255)
-    rgb = [r1,r2,r3]
+    red = random.randint(0,255)
+    green = random.randint(0,255)
+    blue = random.randint(0,255)
+    rgb = [red, green, blue]
 
     # Saving a new StructureSetROISequence
     structure_set_sequence = Sequence([Dataset()])
@@ -102,7 +102,7 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
             # Contour Sequence
             for contour_image in contour_image_sequence:
                 contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI", referenced_sop_class_uid)  # CT Image Storage
-                contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid) #Placeholder
+                contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
             contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
             contour.add_new(Tag("NumberOfContourPoints"), "IS", 10)
