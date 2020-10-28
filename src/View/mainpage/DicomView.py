@@ -18,7 +18,6 @@ class DicomView(QtWidgets.QWidget):
     def __init__(self, roi_color=None, iso_color=None):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-        self.roi_color = roi_color
         self.iso_color = iso_color
         self.zoom = 1
 
@@ -187,7 +186,7 @@ class DicomView(QtWidgets.QWidget):
             else:
                 polygons = self.patient_dict_container.get("dict_polygons")[roi_name][curr_slice]
 
-            color = self.roi_color[roi]
+            color = self.patient_dict_container.get("roi_color_dict")[roi]
             with open('src/data/line&fill_configuration', 'r') as stream:
                 elements = stream.readlines()
                 if len(elements) > 0:
