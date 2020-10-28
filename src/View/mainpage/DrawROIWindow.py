@@ -694,7 +694,6 @@ class UIDrawROIWindow:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_save_clicked(self):
-
         # Make sure the user has clicked Draw first
         if self.ds is not None:
             new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
@@ -856,7 +855,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.target_pixel_coords = []
         self.pixel_coords_remove = []
         self.accordingColorList = []
-        self.copy = []
         self.q_image = None
         self.q_image = None
         self.q_pixmaps = None
@@ -879,6 +877,18 @@ class Drawing(QtWidgets.QGraphicsScene):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
                                 self.target_pixel_coords.append((y_coord, x_coord))
+
+            """
+                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
+                pixel_array[x][y] will return the density of the pixel
+            """
+            self.draw_roi_window_instance.target_pixel_coords = [item for item in self.target_pixel_coords]
+
+            # Make 2D to 1D
+            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            for sublist in self.draw_roi_window_instance.target_pixel_coords:
+                for item in sublist:
+                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
 
             """
@@ -954,10 +964,13 @@ class Drawing(QtWidgets.QGraphicsScene):
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
-            for sublist in self.target_pixel_coords:
+            for sublist in self.draw_roi_window_instance.target_pixel_coords:
                 for item in sublist:
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
+    def wheelEvent(self, event):
+        delta = event.delta()
+        print (delta)
 
     def mousePressEvent(self, event):
         if self.item:
@@ -974,9 +987,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         x = event.scenePos().x() - 19
         y = event.scenePos().y() - 19
         r = 19
-        self.calculate_circle_points(x + 19,y + 19,r)
+        self.calculate_circle_points(x + 19, y + 19, r)
         #  x = a + r .cos(t), y = b+r.sin(t)
-        self.item = QGraphicsEllipseItem(event.scenePos().x() -19, event.scenePos().y() -19, 40, 40)
+        self.item = QGraphicsEllipseItem(event.scenePos().x() - 19, event.scenePos().y() - 19, 40, 40)
         self.item.setPen(QPen(QColor("blue")))
         self.addItem(self.item)
         self.compare()
@@ -987,12 +1000,12 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
         if self.item and self.isPressed:
-            x = event.scenePos().x() - 19
-            y = event.scenePos().y() - 19
             r = 19
-            self.calculate_circle_points(x + 19 , y + 19, r)
+            x = event.scenePos().x() - r
+            y = event.scenePos().y() - r
+            self.calculate_circle_points(x + r, y + r, r)
             self.compare()
-            self.item.setRect(event.scenePos().x() -19, event.scenePos().y() -19, 40, 40)
+            self.item.setRect(event.scenePos().x() - r, event.scenePos().y() - r, 40, 40)
         self.update()
 
     def mouseReleaseEvent(self, event):
