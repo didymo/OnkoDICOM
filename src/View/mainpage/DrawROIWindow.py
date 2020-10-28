@@ -1,6 +1,8 @@
+import copy
 import csv
 import math
 
+import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
@@ -8,18 +10,20 @@ from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QP
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget
 
 from src.Controller.MainPageController import MainPageCallClass
+from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class UIDrawROIWindow:
 
-    def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss):
+    def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss, signal_roi_drawn):
 
         self.patient_dict_container = PatientDictContainer()
 
         self.rois = rois
         self.dataset_rtss = dataset_rtss
+        self.signal_roi_drawn = signal_roi_drawn
 
         self.current_slice = 0
         self.forward_pressed = None
@@ -27,8 +31,13 @@ class UIDrawROIWindow:
         self.slider_changed = None
         self.standard_organ_names = []
         self.standard_volume_names = []
-        self.standard_names = []
+        self.standard_names = [] # Combination of organ and volume
+        self.ROI_name = None  # Selected ROI name
+        self.target_pixel_coords = []  # This will contain the new pixel coordinates specifed by the min and max pixel density
+        self.target_pixel_coords_single_array = [] # 1D array of above
         self.draw_roi_window_instance = draw_roi_window_instance
+        self.colour = None
+        self.ds = None
 
         self.upper_limit = None
         self.lower_limit = None
@@ -632,52 +641,20 @@ class UIDrawROIWindow:
             dt = self.patient_dict_container.dataset[id]
             dt.convert_pixel_data()
 
+            # Path to the selected .dcm file
+            location = self.patient_dict_container.filepaths[id]
+            self.ds = pydicom.dcmread(location)
+
             min_pixel = self.min_pixel_density_line_edit.text()
             max_pixel = self.max_pixel_density_line_edit.text()
 
+            # If they are number inputs
             if min_pixel.isdecimal() and max_pixel.isdecimal():
 
                 min_pixel = int(min_pixel)
                 max_pixel = int(max_pixel)
 
-                if min_pixel <= max_pixel:
-                    data_set = self.patient_dict_container.dataset[id]
-
-                    """
-                    pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                    pixel_array[x][y] will return the density of the pixel
-                    """
-                    pixel_array = data_set._pixel_array
-
-                    # This will contain the new pixel coordinates specifed by the min and max pixel density
-                    target_pixel_coords = []
-
-                    for x_coord in range(512):
-                        for y_coord in range(512):
-                            if (pixel_array[x_coord][y_coord] >= min_pixel) and (
-                                    pixel_array[x_coord][y_coord] <= max_pixel):
-                                target_pixel_coords.append((y_coord, x_coord))
-
-                    """
-                    For the meantime, a new image is created and the pixels specified are coloured. 
-                    This will need to altered so that it creates a new layer over the existing image instead of replacing it.
-                    """
-                    pixels_in_image = pixmaps[id]
-                    pixels_in_image = pixels_in_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio,
-                                                             QtCore.Qt.SmoothTransformation)
-
-                    # Convert QPixMap into Qimage
-                    q_image = pixels_in_image.toImage()
-
-                    for x_coord, y_coord in target_pixel_coords:
-                        q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
-
-                    # Convert Qimage back to QPixMap
-                    q_pixmaps = QtGui.QPixmap.fromImage(q_image)
-                    label = QtWidgets.QLabel()
-                    label.setPixmap(q_pixmaps)
-
-                else:
+                if min_pixel >= max_pixel:
                     QMessageBox.about(self.draw_roi_window_instance, "Incorrect Input",
                                       "Please ensure maximum density is atleast higher than minimum density.")
 
@@ -687,87 +664,28 @@ class UIDrawROIWindow:
                     self.view,
                     min_pixel,
                     max_pixel,
-                    self.patient_dict_container.dataset[id]
+                    self.patient_dict_container.dataset[id],
+                    self.draw_roi_window_instance
                 )
                 self.view.setScene(self.drawingROI)
 
             else:
-                QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
-                                  "Not all values are specified or correct.")
-
-    def on_go_clicked(self):
-        pixmaps = self.patient_dict_container.get("pixmaps")
-        id = self.slider.value()
-
-        # Getting most updated selected slice
-        if (self.forward_pressed):
-            id = self.current_slice
-        elif (self.backward_pressed):
-            id = self.current_slice
-        elif (self.slider_changed):
-            id = self.slider.value()
-
-        min_pixel = self.min_pixel_density_line_edit.text()
-        max_pixel = self.max_pixel_density_line_edit.text()
-
-        if min_pixel.isdecimal() and max_pixel.isdecimal():
-
-            min_pixel = int(min_pixel)
-            max_pixel = int(max_pixel)
-
-            if min_pixel <= max_pixel:
-                data_set = self.patient_dict_container.dataset[id]
-
-                """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-                """
-                pixel_array = data_set._pixel_array
-
-                # This will contain the new pixel coordinates specifed by the min and max pixel density
-                target_pixel_coords = []
-
-                for x_coord in range(512):
-                    for y_coord in range(512):
-                        if (pixel_array[x_coord][y_coord] >= min_pixel) and (
-                                pixel_array[x_coord][y_coord] <= max_pixel):
-                            target_pixel_coords.append((y_coord, x_coord))
-
-                """
-                For the meantime, a new image is created and the pixels specified are coloured. 
-                This will need to altered so that it creates a new layer over the existing image instead of replacing it.
-                """
-                pixels_in_image = pixmaps[id]
-                pixels_in_image = pixels_in_image.scaled(512, 512, QtCore.Qt.KeepAspectRatio,
-                                                         QtCore.Qt.SmoothTransformation)
-
-                # Convert QPixMap into Qimage
-                q_image = pixels_in_image.toImage()
-
-                for x_coord, y_coord in target_pixel_coords:
-                    q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
-
-                # Convert Qimage back to QPixMap
-                q_pixmaps = QtGui.QPixmap.fromImage(q_image)
-                label = QtWidgets.QLabel()
-                label.setPixmap(q_pixmaps)
-                scene = QtWidgets.QGraphicsScene()
-                scene.addWidget(label)
-
-                self.view.setScene(scene)
-
-
-            else:
-                QMessageBox.about(self.draw_roi_window_instance, "Incorrect Input",
-                                  "Please ensure maximum density is atleast higher than minimum density.")
-
-        else:
-            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
-                              "Not all values are specified or correct.")
+                QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_save_clicked(self):
+        # Make sure the user has clicked Draw first
+        if self.ds is not None:
+            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+            self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
+            QMessageBox.about(self.draw_roi_window_instance, "Success",
+                              "New ROI has been saved to RTSS!")
+            self.close()
+        else:
+            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
+                              "Please ensure you have drawn your ROI first.")
 
-        QMessageBox.about(self.draw_roi_window_instance, "Coming Soon", "This feature is in development")
+        print(new_rtss)
+
 
     def init_standard_names(self):
         """
@@ -797,7 +715,8 @@ class UIDrawROIWindow:
         self.select_ROI.exec_()
 
     def set_selected_roi_name(self, roi_name):
-        self.roi_name_line_edit.setText(roi_name)
+        self.ROI_name = roi_name
+        self.roi_name_line_edit.setText(self.ROI_name)
 
 
 #####################################################################################################################
@@ -891,10 +810,11 @@ class SelectROIPopUp(QDialog):
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, tabWindow, min_pixel, max_pixel, dataset):
+    def __init__(self, imagetoPaint, pixmapdata, tabWindow, min_pixel, max_pixel, dataset, draw_roi_window_instance):
         super(Drawing, self).__init__()
 
-        # create the canvas to draw the line on and all its necessary components
+        #create the canvas to draw the line on and all its necessary components
+        self.draw_roi_window_instance = draw_roi_window_instance
         self.min_pixel = min_pixel
         self.max_pixel = max_pixel
         self.addItem(QGraphicsPixmapItem(imagetoPaint))
@@ -914,6 +834,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.pixel_array = None
         # This will contain the new pixel coordinates specifed by the min and max pixel density
         self.target_pixel_coords = []
+        self.pixel_coords_remove = []
+        self.accordingColorList = []
         self.q_image = None
         self.q_image = None
         self.q_pixmaps = None
@@ -928,22 +850,41 @@ class Drawing(QtWidgets.QGraphicsScene):
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
             pixel_array[x][y] will return the density of the pixel
             """
+            z_coord = int(data_set.SliceLocation)
             self.pixel_array = data_set._pixel_array
-
+            self.q_image = self.img.toImage()
             for x_coord in range(512):
                 for y_coord in range(512):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
-                        self.target_pixel_coords.append((y_coord, x_coord))
+                                self.target_pixel_coords.append((y_coord, x_coord))
+
+            """
+                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
+                pixel_array[x][y] will return the density of the pixel
+            """
+
+            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords]
+            # Make 2D to 1D
+            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            for sublist in self.draw_roi_window_instance.target_pixel_coords:
+                for item in sublist:
+                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
+
+            print(self.draw_roi_window_instance.target_pixel_coords_single_array)
+
 
             """
             For the meantime, a new image is created and the pixels specified are coloured. 
             This will need to altered so that it creates a new layer over the existing image instead of replacing it.
             """
             # Convert QPixMap into Qimage
-            self.q_image = self.img.toImage()
-
             for x_coord, y_coord in self.target_pixel_coords:
+                c = self.q_image.pixel(x_coord, y_coord)
+                colors = QColor(c).getRgbF()
+                self.accordingColorList.append((x_coord, y_coord, colors))
+
+            for x_coord, y_coord, colors in self.accordingColorList:
                 self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
             # Convert Qimage back to QPixMap
@@ -975,23 +916,44 @@ class Drawing(QtWidgets.QGraphicsScene):
             for j in range(512):
                 self.values.append(self.data[i][j])
 
-    def calculate_circle_points(self, x, y, r):
+    def calculate_circle_points(self, x , y, r):
         self._circlePoints.clear()
-        degree = math.pi / 8
-        for i in range(44):
-            x1 = round(x + 19 * math.cos(degree))
-            y1 = round(x + 19 * math.sin(degree))
-            degree = degree + 1 / 44
+        degree = math.pi/8
+        for i in range(300):
+            x1 = round(x + 19*math.cos(degree))
+            y1 = round(y + 19*math.sin(degree))
+            degree = degree + 1/44
             self._circlePoints.append((x1, y1))
 
     def compare(self):
-
-        # for x_coord, y_coord in self.target_pixel_coords:
-        #     for xc_coord, yc_coord in self._circlePoints:
-        #         if not (x_coord == xc_coord and y_coord == yc_coord):
-        #             self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
+        for x_coord, y_coord, colors in self.accordingColorList[:]:
+            for xc_coord, yc_coord in self._circlePoints[:]:
+                if (x_coord == xc_coord and y_coord == yc_coord):
+                    self.q_image.setPixelColor(x_coord, y_coord, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
+                    self.pixel_coords_remove.append((x_coord, y_coord))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
+        self.label.setPixmap(self.q_pixmaps)
+        self.addWidget(self.label)
+
+    def update_data(self):
+        if self.min_pixel <= self.max_pixel:
+            data_set = self.dataset
+            z_coord = int(data_set.SliceLocation)
+            """
+                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
+                pixel_array[x][y] will return the density of the pixel
+            """
+            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords if item not in self.pixel_coords_remove]
+
+            # Make 2D to 1D
+            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            for sublist in self.draw_roi_window_instance.target_pixel_coords:
+                for item in sublist:
+                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
+
+    def wheelEvent(self, event):
+        delta = event.delta()
 
     def mousePressEvent(self, event):
         if self.item:
@@ -1008,11 +970,12 @@ class Drawing(QtWidgets.QGraphicsScene):
         x = event.scenePos().x() - 19
         y = event.scenePos().y() - 19
         r = 19
-        self.calculate_circle_points(x, y, r)
+        self.calculate_circle_points(x + 19, y + 19, r)
         #  x = a + r .cos(t), y = b+r.sin(t)
         self.item = QGraphicsEllipseItem(event.scenePos().x() - 19, event.scenePos().y() - 19, 40, 40)
         self.item.setPen(QPen(QColor("blue")))
         self.addItem(self.item)
+        self.compare()
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -1020,16 +983,17 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
         if self.item and self.isPressed:
-            x = event.scenePos().x() - 19
-            y = event.scenePos().y() - 19
             r = 19
-            self.calculate_circle_points(x, y, r)
+            x = event.scenePos().x() - r
+            y = event.scenePos().y() - r
+            self.calculate_circle_points(x + r, y + r, r)
             self.compare()
-            self.item.setRect(event.scenePos().x() - 19, event.scenePos().y() - 19, 40, 40)
+            self.item.setRect(event.scenePos().x() - r, event.scenePos().y() - r, 40, 40)
         self.update()
 
     def mouseReleaseEvent(self, event):
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
+        self.update_data()
         self.update()
