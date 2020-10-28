@@ -748,6 +748,8 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
 
+        print(new_rtss)
+
 
     def init_standard_names(self):
         """
