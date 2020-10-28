@@ -62,9 +62,11 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
         :param data_set: Data Set of selected DICOM image file
         :return: rtss, with added ROI
         """
+
     number_of_contour_points = len(roi_coordinates) / 3
     referenced_sop_class_uid = ""
     referenced_sop_instance_uid = ""
+
     # Optional Tag
     if data_set.get("ReferencedImageSequence"):
         referenced_sop_class_uid = data_set.ReferencedImageSequence[0].ReferencedSOPClassUID
@@ -143,11 +145,8 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
     rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
 
-    patient_dict_container = PatientDictContainer()
+    #patient_dict_container = PatientDictContainer()
     #rtss_location = patient_dict_container.filepaths["rtss"]
-
-    # To save
-    #pydicom.filewriter.dcmwrite(rtss_location, rtss, write_like_original=True)
 
     return rtss
 

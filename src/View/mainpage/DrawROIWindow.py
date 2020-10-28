@@ -34,7 +34,7 @@ class UIDrawROIWindow:
         self.standard_names = [] # Combination of organ and volume
         self.ROI_name = None  # Selected ROI name
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specifed by the min and max pixel density
-        self.target_pixel_coords_single_array = [] # 1D array of above
+        self.target_pixel_coords_single_array = [] # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
         self.colour = None
         self.ds = None
@@ -72,10 +72,7 @@ class UIDrawROIWindow:
         self.max_pixel_density_line_edit.setText(_translate("MaxPixelDensityInput", ""))
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
-        # self.draw_roi_window_instance_action_tool_button.setText(
-        #     _translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
-        # self.draw_roi_window_instance_action_go_button.setText(
-        #     _translate("DrawRoiWindowInstanceActionGoButton", "Go"))
+
 
     def init_view(self):
         """
@@ -211,15 +208,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_image_slice_action_widget)
         self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
 
-        # Create a new Label to hold the pixmap
-        # self.image_slice_number_image_view = QLabel()
-        # self.image_slice_number_image_view.setPixmap(QPixmap("src/res/images/Capture.png"))
-        # self.image_slice_number_image_view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        # self.image_slice_number_image_view.resize(
-        #   self.image_slice_number_image_view.sizeHint().width(), self.image_slice_number_image_view.sizeHint().height())
-        # self.draw_roi_window_instance_vertical_box.addWidget(self.image_slice_number_image_view)
-        # self.draw_roi_window_instance_vertical_box.setStretch(1, 4)
-
         # Creating a horizontal box to hold the ROI view and slider
         self.draw_roi_window_instance_view_box = QHBoxLayout()
         self.draw_roi_window_instance_view_box.setObjectName("DrawRoiWindowInstanceViewBox")
@@ -311,28 +299,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_action_reset_button.clicked.connect(self.on_reset_clicked)
         self.draw_roi_window_instance_action_reset_button.setProperty("QPushButtonClass", "fail-button")
         self.draw_roi_window_instance_size_and_density_box.addWidget(self.draw_roi_window_instance_action_reset_button)
-
-        # # Create a button to tool the draw
-        # self.draw_roi_window_instance_action_tool_button = QPushButton()
-        # self.draw_roi_window_instance_action_tool_button.setObjectName("DrawRoiWindowInstanceActionToolButton")
-        # self.draw_roi_window_instance_action_tool_button.setSizePolicy(
-        #     QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        # self.draw_roi_window_instance_action_tool_button.resize(
-        #     self.draw_roi_window_instance_action_tool_button.sizeHint().width(),
-        #     self.draw_roi_window_instance_action_tool_button.sizeHint().height())
-        # self.draw_roi_window_instance_action_tool_button.clicked.connect(self.on_tool_clicked)
-        # self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_tool_button)
-
-        # Create a button for running seed algorithm
-        # self.draw_roi_window_instance_action_go_button = QPushButton()
-        # self.draw_roi_window_instance_action_go_button.setObjectName("DrawRoiWindowInstanceActionGoButton")
-        # self.draw_roi_window_instance_action_go_button.setSizePolicy(
-        #     QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        # self.draw_roi_window_instance_action_go_button.resize(
-        #     self.draw_roi_window_instance_action_go_button.sizeHint().width(),
-        #     self.draw_roi_window_instance_action_go_button.sizeHint().height())
-        # self.draw_roi_window_instance_action_go_button.clicked.connect(self.on_go_clicked)
-        # self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_go_button)
 
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_view_widget = QWidget()
@@ -685,8 +651,6 @@ class UIDrawROIWindow:
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
-
-        print(new_rtss)
 
 
     def init_standard_names(self):
