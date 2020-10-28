@@ -6,6 +6,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.View.mainpage.StructureWidget import StructureWidget
@@ -26,7 +27,7 @@ class StructureTab(QtWidgets.QWidget):
 
         dataset_rtss = self.patient_dict_container.get("dataset_rtss")
         self.roi_delete_handler = ROIDelOption(self.rois, dataset_rtss, self.structure_modified)
-        self.roi_draw_handler = ROIDrawOption(self.rois, dataset_rtss)
+        self.roi_draw_handler = ROIDrawOption(self.rois, dataset_rtss, self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -178,6 +179,8 @@ class StructureTab(QtWidgets.QWidget):
         description_of_changes follows the format {"type_of_change": value_of_change}.
         Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
         {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
+        {"draw": ("AORTA", "../new_rtss.dcm")} represents that a new structure AORTA has been made, and the filepath
+        of the new structure file.
         """
 
         new_dataset = changes[0]
@@ -201,6 +204,12 @@ class StructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("num_points", contour_data[1])
         self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(self.patient_dict_container.get("rois")))
         self.patient_dict_container.set("selected_rois", [])
+
+        if "draw" in change_description:
+            dicom_tree_rtss = DicomTree(change_description["draw"][1])
+            self.patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+            self.color_dict = self.init_color_roi()
+
 
         if self.patient_dict_container.has_modality("raw_dvh"):
             # Rename structures in DVH list

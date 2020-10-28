@@ -16,12 +16,13 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 class UIDrawROIWindow:
 
-    def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss):
+    def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss, signal_roi_drawn):
 
         self.patient_dict_container = PatientDictContainer()
 
         self.rois = rois
         self.dataset_rtss = dataset_rtss
+        self.signal_roi_drawn = signal_roi_drawn
 
         self.current_slice = 0
         self.forward_pressed = None
@@ -736,8 +737,10 @@ class UIDrawROIWindow:
 
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
-        if self.ds != None:
-            ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+        if self.ds is not None:
+            new_rtss, new_filepath = ROI.create_roi(self.dataset_rtss, self.ROI_name,
+                                                    self.target_pixel_coords_single_array, self.ds)
+            self.signal_roi_drawn.emit((new_rtss, {"draw": (self.ROI_name, new_filepath)}))
             QMessageBox.about(self.draw_roi_window_instance, "Success",
                               "New ROI has been saved to RTSS!")
         else:

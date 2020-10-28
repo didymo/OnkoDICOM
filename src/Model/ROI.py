@@ -137,6 +137,8 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     # To save
     pydicom.filewriter.dcmwrite(rtss_location, rtss, write_like_original=True)
 
+    return rtss, rtss_location
+
 
 def get_raw_contour_data(rtss):
     """
