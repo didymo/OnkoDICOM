@@ -247,7 +247,6 @@ def get_raw_contour_data(rtss):
     dict_ROI = {}
     dict_NumPoints = {}
     for roi in rtss.ROIContourSequence:
-        ROIDisplayColor = roi.ROIDisplayColor
         ReferencedROINumber = roi.ReferencedROINumber
         ROIName = dict_id[ReferencedROINumber]
         dict_contour = collections.defaultdict(list)

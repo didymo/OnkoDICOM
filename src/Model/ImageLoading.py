@@ -327,24 +327,22 @@ def get_raw_contour_data(dataset_rtss):
     dict_roi = {}
     dict_numpoints = {}
     for roi in dataset_rtss.ROIContourSequence:
-        if 'ROIDisplayColor' in roi:
-            ROIDisplayColor = roi.ROIDisplayColor
-            ReferencedROINumber = roi.ReferencedROINumber
-            ROIName = dict_id[ReferencedROINumber]
-            dict_contour = collections.defaultdict(list)
-            roi_points_count = 0
-            if 'ContourSequence' in roi:
-                for slice in roi.ContourSequence:
-                    if 'ContourImageSequence' in slice:
-                        for contour_img in slice.ContourImageSequence:
-                            ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
-                        ContourGeometricType = slice.ContourGeometricType
-                        NumberOfContourPoints = slice.NumberOfContourPoints
-                        roi_points_count += int(NumberOfContourPoints)
-                        ContourData = slice.ContourData
-                        dict_contour[ReferencedSOPInstanceUID].append(ContourData)
-            dict_roi[ROIName] = dict_contour
-            dict_numpoints[ROIName] = roi_points_count
+        ReferencedROINumber = roi.ReferencedROINumber
+        ROIName = dict_id[ReferencedROINumber]
+        dict_contour = collections.defaultdict(list)
+        roi_points_count = 0
+        if 'ContourSequence' in roi:
+            for slice in roi.ContourSequence:
+                if 'ContourImageSequence' in slice:
+                    for contour_img in slice.ContourImageSequence:
+                        ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
+                    ContourGeometricType = slice.ContourGeometricType
+                    NumberOfContourPoints = slice.NumberOfContourPoints
+                    roi_points_count += int(NumberOfContourPoints)
+                    ContourData = slice.ContourData
+                    dict_contour[ReferencedSOPInstanceUID].append(ContourData)
+        dict_roi[ROIName] = dict_contour
+        dict_numpoints[ROIName] = roi_points_count
 
     return dict_roi, dict_numpoints
 
