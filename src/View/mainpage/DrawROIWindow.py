@@ -923,7 +923,6 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def wheelEvent(self, event):
         delta = event.delta() / 120
-        print(delta)
         if(self.draw_tool_radius == 19 and delta == 1):
             self.draw_tool_radius = 19 + 5
         elif(self.draw_tool_radius == 24 and delta == -1):
