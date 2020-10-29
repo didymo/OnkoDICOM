@@ -25,9 +25,8 @@ class StructureTab(QtWidgets.QWidget):
 
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
-        dataset_rtss = self.patient_dict_container.get("dataset_rtss")
-        self.roi_delete_handler = ROIDelOption(dataset_rtss, self.structure_modified)
-        self.roi_draw_handler = ROIDrawOption(dataset_rtss, self.structure_modified)
+        self.roi_delete_handler = ROIDelOption(self.structure_modified)
+        self.roi_draw_handler = ROIDrawOption(self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
