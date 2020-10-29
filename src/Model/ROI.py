@@ -412,6 +412,23 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     return pixels
 
 
+def pixel_to_rcs(pixlut, x, y):
+    """
+    :param pixlut: Transformation matrix
+    :param x: Pixel X value (greater than 0, less than the slice's Columns data element)
+    :param y: Pixel Y value (greater than 0, less than the slice's Rows data element)
+    :return: The pixel coordinate converted to an RCS point as set by the image slice.
+    """
+
+    np_x = np.array(pixlut[0])
+    np_y = np.array(pixlut[1])
+
+    x_on_pixlut = np_x[x - 1]
+    y_on_pixlut = np_y[y - 1]
+
+    return x_on_pixlut, y_on_pixlut
+
+
 def get_contour_pixel(
         dict_raw_ContourData,
         roi_selected,
