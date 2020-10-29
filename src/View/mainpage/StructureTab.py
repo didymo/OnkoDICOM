@@ -200,6 +200,8 @@ class StructureTab(QtWidgets.QWidget):
         contour_data = ImageLoading.get_raw_contour_data(new_dataset)
         self.patient_dict_container.set("raw_contour", contour_data[0])
         self.patient_dict_container.set("num_points", contour_data[1])
+        pixluts = ImageLoading.get_pixluts(self.patient_dict_container.dataset)
+        self.patient_dict_container.set("pixluts", pixluts)
         self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(self.patient_dict_container.get("rois")))
         self.patient_dict_container.set("selected_rois", [])
 
