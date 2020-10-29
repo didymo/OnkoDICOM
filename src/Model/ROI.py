@@ -130,8 +130,8 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
     roi_exists = False
 
     # Check to see if the ROI already exists
-    for roi_number_index in range(number_of_rois):
-        if roi_name in existing_rois[roi_number_index + 1]["name"]:
+    for key, value in existing_rois.items():
+        if roi_name in value:
             roi_exists = True
 
     if not roi_exists:
