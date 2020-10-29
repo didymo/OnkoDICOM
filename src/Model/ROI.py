@@ -137,13 +137,8 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
     if not roi_exists:
         number_of_contour_points = len(roi_coordinates) / 3
-        referenced_sop_class_uid = ""
-        referenced_sop_instance_uid = ""
-
-        # Optional Tag
-        if data_set.get("ReferencedImageSequence"):
-            referenced_sop_class_uid = data_set.ReferencedImageSequence[0].ReferencedSOPClassUID
-            referenced_sop_instance_uid = data_set.ReferencedImageSequence[0].ReferencedSOPInstanceUID
+        referenced_sop_class_uid = data_set.SOPClassUID
+        referenced_sop_instance_uid = data_set.SOPInstanceUID
 
         referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
         roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
