@@ -8,6 +8,8 @@ from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget
+from pandas import np
+from scipy.spatial.qhull import ConvexHull
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
@@ -641,7 +643,12 @@ class UIDrawROIWindow:
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
         if self.ds is not None:
-            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+            hull = self.calculate_convex_hull_of_points()
+            single_array = []
+            for sublist in hull:
+                for item in sublist:
+                    single_array.append(item)
+            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
             self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
             QMessageBox.about(self.draw_roi_window_instance, "Warning",
                               "This feature is still in development. The ROI will appear in your structures tab,"
@@ -652,6 +659,24 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
 
+    def calculate_convex_hull_of_points(self):
+        z_of_slice = 0
+        points = []
+        for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
+            z_of_slice = item[2]
+            points.append([item[0], item[1]])
+
+        np_points = np.array(points)
+        convex_hull = ConvexHull(np_points)
+        hull_indices = convex_hull.vertices
+        hull_pts = np_points[hull_indices, :]
+
+        new_pixel_coords = []
+        for i in hull_pts:
+            x, y, z = i[0], i[1], z_of_slice
+            new_pixel_coords.append((x, y, z))
+
+        return new_pixel_coords
 
     def init_standard_names(self):
         """
@@ -853,6 +878,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords]
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            # Convert pixel coordinates to RCS coordinates.
             for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
                 z = item[2]
                 x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
@@ -943,6 +969,7 @@ class Drawing(QtWidgets.QGraphicsScene):
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            # Convert pixel coordinates to RCS coordinates.
             for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
                 z = item[2]
                 x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
