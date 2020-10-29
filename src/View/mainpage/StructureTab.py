@@ -279,10 +279,14 @@ class StructureTab(QtWidgets.QWidget):
         self.request_update_structures.emit()
 
     def save_new_rtss(self, event=None):
-        rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")).parent)
-        save_filepath = save_filepath = QtWidgets.QFileDialog.getSaveFileName(self.parentWidget(), "Save file",
-                                                                              rtss_directory)[0]
-        if save_filepath != "":
-            self.patient_dict_container.get("dataset_rtss").save_as(save_filepath)
+        rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
+
+        confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                 "Are you sure you want to save the modified RTSTRUCT file? This will "
+                                                 "overwrite the existing file. This is not reversible.",
+                                                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+
+        if confirm_save == QtWidgets.QMessageBox.Yes:
+            self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
             QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
             self.patient_dict_container.set("rtss_modified", False)
