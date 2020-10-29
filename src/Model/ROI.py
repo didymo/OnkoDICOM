@@ -51,6 +51,66 @@ def delete_roi(rtss, roi_name):
 
     return rtss
 
+def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
+    """
+        Add new contour image sequence ROI to rtss
+
+        :param rtss: dataset of RTSS
+        :param roi_name: ROIName
+        :param roi_coordinates: Coordinates of pixels for new ROI
+        :param data_set: Data Set of selected DICOM image file
+        :return: rtss, with added ROI
+    """
+
+    # Creating a new ROIContourSequence, ContourSequence, ContourImageSequence
+    roi_contour_sequence = Sequence([Dataset()])
+    contour_sequence = Sequence([Dataset()])
+    contour_image_sequence = Sequence([Dataset()])
+
+    # Original File
+    original_ROI_contour = rtss.ROIContourSequence
+
+    number_of_contour_points = len(roi_coordinates) / 3
+    referenced_sop_class_uid = ""
+    referenced_sop_instance_uid = ""
+
+    # Optional Tag
+    if data_set.get("ReferencedImageSequence"):
+        referenced_sop_class_uid = data_set.ReferencedImageSequence[0].ReferencedSOPClassUID
+        referenced_sop_instance_uid = data_set.ReferencedImageSequence[0].ReferencedSOPInstanceUID
+
+    referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
+    roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
+    new_contour_number = len(rtss.ROIContourSequence[0].ContourSequence) + 1
+
+    # ROI Contour Sequence
+    for roi_contour in roi_contour_sequence:
+        roi_contour.add_new(Tag("ContourSequence"), "SQ", contour_sequence)
+
+        # ROI Sequence
+        for contour in contour_sequence:
+            if data_set.get("ReferencedImageSequence"):
+                contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+
+                # Contour Sequence
+                for contour_image in contour_image_sequence:
+                    contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
+                                          referenced_sop_class_uid)  # CT Image Storage
+                    contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+
+
+            contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
+            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
+            contour.add_new(Tag("ContourNumber"), "IS", new_contour_number)
+            contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+
+    # Combine original ROIContourSequence with new
+    original_ROI_contour.extend(roi_contour_sequence)
+
+    rtss.add_new(Tag("ROIContourSequence"), "SQ", original_ROI_contour)
+
+    return rtss
+
 
 def create_roi(rtss, roi_name, roi_coordinates, data_set):
     """
@@ -63,90 +123,109 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
         :return: rtss, with added ROI
         """
 
-    number_of_contour_points = len(roi_coordinates) / 3
-    referenced_sop_class_uid = ""
-    referenced_sop_instance_uid = ""
+    patient_dict_container = PatientDictContainer()
+    existing_rois = patient_dict_container.get("rois")
+    number_of_rois = len(existing_rois)
 
-    # Optional Tag
-    if data_set.get("ReferencedImageSequence"):
-        referenced_sop_class_uid = data_set.ReferencedImageSequence[0].ReferencedSOPClassUID
-        referenced_sop_instance_uid = data_set.ReferencedImageSequence[0].ReferencedSOPInstanceUID
+    roi_exists = False
 
-    referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
-    roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber+1
+    # Check to see if the ROI already exists
+    for roi_number_index in range(number_of_rois):
+        if roi_name in existing_rois[roi_number_index + 1]["name"]:
+            roi_exists = True
 
-    # Colour TBC
-    red = random.randint(0,255)
-    green = random.randint(0,255)
-    blue = random.randint(0,255)
-    rgb = [red, green, blue]
+    if not roi_exists:
+        number_of_contour_points = len(roi_coordinates) / 3
+        referenced_sop_class_uid = ""
+        referenced_sop_instance_uid = ""
 
-    # Saving a new StructureSetROISequence
-    structure_set_sequence = Sequence([Dataset()])
+        # Optional Tag
+        if data_set.get("ReferencedImageSequence"):
+            referenced_sop_class_uid = data_set.ReferencedImageSequence[0].ReferencedSOPClassUID
+            referenced_sop_instance_uid = data_set.ReferencedImageSequence[0].ReferencedSOPInstanceUID
 
-    original_structure_set = rtss.StructureSetROISequence
+        referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
+        roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
 
-    for structure_set in structure_set_sequence:
-        structure_set.add_new(Tag("ROINumber"), 'IS', roi_number)
-        structure_set.add_new(Tag("ReferencedFrameOfReferenceUID"), 'UI',
-                              referenced_frame_of_reference_uid)
-        structure_set.add_new(Tag("ROIName"), 'LO', roi_name)
-        structure_set.add_new(Tag("ROIGenerationAlgorithm"), 'CS', "")
+        # Colour TBC
+        red = random.randint(0, 255)
+        green = random.randint(0, 255)
+        blue = random.randint(0, 255)
+        rgb = [red, green, blue]
 
-    # Combine old and new structure set
-    original_structure_set.extend(structure_set_sequence)
-    rtss.add_new(Tag("StructureSetROISequence"), "SQ", original_structure_set)
+        # Saving a new StructureSetROISequence
+        structure_set_sequence = Sequence([Dataset()])
 
-    # Saving a new ROIContourSequence, ContourSequence, ContourImageSequence
-    roi_contour_sequence = Sequence([Dataset()])
-    contour_sequence = Sequence([Dataset()])
-    contour_image_sequence = Sequence([Dataset()])
+        original_structure_set = rtss.StructureSetROISequence
 
-    # Original File
-    original_ROI_contour = rtss.ROIContourSequence
+        for structure_set in structure_set_sequence:
+            structure_set.add_new(Tag("ROINumber"), 'IS', roi_number)
+            structure_set.add_new(Tag("ReferencedFrameOfReferenceUID"), 'UI',
+                                  referenced_frame_of_reference_uid)
+            structure_set.add_new(Tag("ROIName"), 'LO', roi_name)
+            structure_set.add_new(Tag("ROIGenerationAlgorithm"), 'CS', "")
 
-    # ROI Contour Sequence
-    for roi_contour in roi_contour_sequence:
-        roi_contour.add_new(Tag("ROIDisplayColor"), "IS", rgb)
-        roi_contour.add_new(Tag("ContourSequence"), "SQ", contour_sequence)
+        # Combine old and new structure set
+        original_structure_set.extend(structure_set_sequence)
+        rtss.add_new(Tag("StructureSetROISequence"), "SQ", original_structure_set)
 
-        # ROI Sequence
-        for contour in contour_sequence:
-            if data_set.get("ReferencedImageSequence"):
-                contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+        # Saving a new ROIContourSequence, ContourSequence, ContourImageSequence
+        roi_contour_sequence = Sequence([Dataset()])
+        contour_sequence = Sequence([Dataset()])
+        contour_image_sequence = Sequence([Dataset()])
 
-            # Contour Sequence
-                for contour_image in contour_image_sequence:
-                    contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI", referenced_sop_class_uid)  # CT Image Storage
-                    contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+        # Original File
+        original_ROI_contour = rtss.ROIContourSequence
 
-            contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
-            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
-            contour.add_new(Tag("ContourNumber"), "IS", 1)
-            contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+        # ROI Contour Sequence
+        for roi_contour in roi_contour_sequence:
+            roi_contour.add_new(Tag("ROIDisplayColor"), "IS", rgb)
+            roi_contour.add_new(Tag("ContourSequence"), "SQ", contour_sequence)
 
-        roi_contour.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
+            # ROI Sequence
+            for contour in contour_sequence:
+                if data_set.get("ReferencedImageSequence"):
+                    contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
 
-    # Combine original ROIContourSequence with new
-    original_ROI_contour.extend(roi_contour_sequence)
+                    # Contour Sequence
+                    for contour_image in contour_image_sequence:
+                        contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
+                                              referenced_sop_class_uid)  # CT Image Storage
+                        contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
-    rtss.add_new(Tag("ROIContourSequence"), "SQ", original_ROI_contour)
+                contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
+                contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
+                contour.add_new(Tag("ContourNumber"), "IS", 1)
+                contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
 
-    # Saving a new RTROIObservationsSequence
-    RT_ROI_observations_sequence = Sequence([Dataset()])
+            roi_contour.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
 
-    original_ROI_observation_sequence = rtss.RTROIObservationsSequence
+        # Combine original ROIContourSequence with new
+        original_ROI_contour.extend(roi_contour_sequence)
 
-    for ROI_observations in RT_ROI_observations_sequence:
-        ROI_observations.add_new(Tag("ObservationNumber"), 'IS', roi_number)
-        ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS', roi_number)
-        ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', "")
+        rtss.add_new(Tag("ROIContourSequence"), "SQ", original_ROI_contour)
 
-    original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
-    rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
+        # Saving a new RTROIObservationsSequence
+        RT_ROI_observations_sequence = Sequence([Dataset()])
 
-    #patient_dict_container = PatientDictContainer()
-    #rtss_location = patient_dict_container.filepaths["rtss"]
+        original_ROI_observation_sequence = rtss.RTROIObservationsSequence
+
+        for ROI_observations in RT_ROI_observations_sequence:
+            ROI_observations.add_new(Tag("ObservationNumber"), 'IS', roi_number)
+            ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS', roi_number)
+            ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', "")
+
+        original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
+        rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
+
+        # patient_dict_container = PatientDictContainer()
+        # rtss_location = patient_dict_container.filepaths["rtss"]
+
+        # print(rtss)
+
+    else:
+        # Add contour image data to existing ROI
+        rtss = add_to_roi(rtss, roi_name, roi_coordinates, data_set)
 
     return rtss
 

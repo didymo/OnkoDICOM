@@ -82,10 +82,12 @@ class DVHTab(QtWidgets.QWidget):
                 # Bincenters, obtained from the dvh object, give the x axis values
                 # (Doses originally in Gy unit)
                 bincenters = self.dvh_x_y[roi]['bincenters']
+                #print(self.dvh_x_y[roi])
 
                 # Counts, obtained from the dvh object, give the y axis values
                 # (values between 0 and dvh.volume)
                 counts = self.dvh_x_y[roi]['counts']
+
 
                 # Color of the line is the same as the color shown in the left column of the window
                 color = self.roi_color[roi]

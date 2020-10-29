@@ -681,6 +681,22 @@ class UIDrawROIWindow:
         self.select_ROI.exec_()
 
     def set_selected_roi_name(self, roi_name):
+
+        roi_exists = False
+
+        patient_dict_container = PatientDictContainer()
+        existing_rois = patient_dict_container.get("rois")
+        number_of_rois = len(existing_rois)
+
+        # Check to see if the ROI already exists
+        for roi_number_index in range(number_of_rois):
+            if roi_name in existing_rois[roi_number_index + 1]["name"]:
+                roi_exists = True
+
+        if roi_exists:
+            QMessageBox.about(self.draw_roi_window_instance, "ROI already exists in RTSS",
+                              "Any new creations will be added to that ROI.")
+
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
 
@@ -823,7 +839,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 for y_coord in range(512):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
-                                self.target_pixel_coords.append((y_coord, x_coord))
+                        self.target_pixel_coords.append((y_coord, x_coord))
 
             """
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -837,7 +853,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 for item in sublist:
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
-            print(self.draw_roi_window_instance.target_pixel_coords_single_array)
+           #print(self.draw_roi_window_instance.target_pixel_coords_single_array)
 
 
             """
