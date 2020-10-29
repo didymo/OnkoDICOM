@@ -187,7 +187,7 @@ class StructureTab(QtWidgets.QWidget):
 
         # If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
         # to save their new file.
-        if not self.patient_dict_container.get("rtss_modified"):
+        if self.patient_dict_container.get("rtss_modified") is False:
             self.show_modified_indicator()
 
         # If this is the first change made to the RTSS file, update the dataset with the new one so that OnkoDICOM
@@ -241,8 +241,8 @@ class StructureTab(QtWidgets.QWidget):
         self.update_content()
 
     def show_modified_indicator(self):
-        modified_indicator_widget = QtWidgets.QWidget()
-        modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
+        self.modified_indicator_widget = QtWidgets.QWidget()
+        self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
         modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
 
@@ -254,9 +254,9 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_text.setStyleSheet("color: red")
         modified_indicator_layout.addWidget(modified_indicator_text)
 
-        modified_indicator_widget.setLayout(modified_indicator_layout)
-        modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
-        self.structure_tab_layout.addWidget(modified_indicator_widget)
+        self.modified_indicator_widget.setLayout(modified_indicator_layout)
+        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
+        self.structure_tab_layout.addWidget(self.modified_indicator_widget)
 
     def structure_checked(self, state, roi_id):
         """
@@ -290,3 +290,4 @@ class StructureTab(QtWidgets.QWidget):
             self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
             QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
             self.patient_dict_container.set("rtss_modified", False)
+            self.modified_indicator_widget.setParent(None)
