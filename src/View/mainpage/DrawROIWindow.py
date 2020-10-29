@@ -828,6 +828,9 @@ class Drawing(QtWidgets.QGraphicsScene):
     def _display_pixel_color(self):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
+            patient_dict_container = PatientDictContainer()
+            dict_pixluts = patient_dict_container.get("pixluts")
+            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
 
             """
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -850,6 +853,10 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords]
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
+                z = item[2]
+                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
+                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
             for sublist in self.draw_roi_window_instance.target_pixel_coords:
                 for item in sublist:
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
@@ -925,6 +932,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
             z_coord = int(data_set.SliceLocation)
+            patient_dict_container = PatientDictContainer()
+            dict_pixluts = patient_dict_container.get("pixluts")
+            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
             """
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
                 pixel_array[x][y] will return the density of the pixel
@@ -933,6 +943,10 @@ class Drawing(QtWidgets.QGraphicsScene):
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
+                z = item[2]
+                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
+                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
             for sublist in self.draw_roi_window_instance.target_pixel_coords:
                 for item in sublist:
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
