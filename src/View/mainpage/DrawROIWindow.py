@@ -34,7 +34,7 @@ class UIDrawROIWindow:
         self.standard_names = [] # Combination of organ and volume
         self.ROI_name = None  # Selected ROI name
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specifed by the min and max pixel density
-        self.target_pixel_coords_single_array = [] # 1D array of above
+        self.target_pixel_coords_single_array = [] # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
         self.colour = None
         self.ds = None
@@ -44,8 +44,8 @@ class UIDrawROIWindow:
         self.init_slider()
         self.init_view()
         self.init_metadata()
-        self.update_view()
         self.init_layout()
+        self.update_view()
         self.show_ROI_names()
 
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
@@ -72,12 +72,6 @@ class UIDrawROIWindow:
         self.max_pixel_density_line_edit.setText(_translate("MaxPixelDensityInput", ""))
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
-        # self.draw_roi_window_instance_action_tool_button.setText(
-        #     _translate("DrawRoiWindowInstanceActionToolButton", "Tool"))
-        # self.draw_roi_window_instance_action_go_button.setText(
-        #     _translate("DrawRoiWindowInstanceActionGoButton", "Go"))
-
-
 
 
     def init_view(self):
@@ -89,17 +83,10 @@ class UIDrawROIWindow:
         self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.view.setBackgroundBrush(background_brush)
-        self.view.setGeometry(QtCore.QRect(0, 0, 877, 517))
+        self.view.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum);
+        self.view.resize(self.view.sizeHint().width(), self.view.sizeHint().height())
         # Set event filter on the DICOM View area
         self.view.viewport().installEventFilter(self.draw_roi_window_instance)
-
-        # Create a line edit for containing the image slice number
-        self.image_slice_number_line_edit = QLineEdit()
-        self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
-        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(),
-                                                 self.image_slice_number_line_edit.sizeHint().height())
-        self.image_slice_number_line_edit.setEnabled(False)
 
     def init_layout(self):
         """
@@ -117,7 +104,6 @@ class UIDrawROIWindow:
 
         # Creating a vertical box to hold the details
         self.draw_roi_window_instance_vertical_box = QVBoxLayout()
-
         self.draw_roi_window_instance_vertical_box.setObjectName("DrawRoiWindowInstanceVerticalBox")
 
         # Creating a horizontal box to hold the image slice number, move up and down the image slice  and save button
@@ -127,15 +113,12 @@ class UIDrawROIWindow:
         # Create a label for denoting the ROI name
         self.roi_name_label = QLabel()
         self.roi_name_label.setObjectName("ROINameLabel")
-        self.roi_name_label.setAlignment(Qt.AlignLeft)
-        self.roi_name_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.roi_name_label.resize(
-            self.roi_name_label.sizeHint().width(), self.roi_name_label.sizeHint().height())
+        self.roi_name_label.setAlignment(Qt.AlignRight)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.roi_name_label)
 
         self.roi_name_line_edit = QLineEdit()
         self.roi_name_line_edit.setObjectName("ROINameLineEdit")
-        self.roi_name_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.roi_name_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.roi_name_line_edit.resize(self.roi_name_line_edit.sizeHint().width(),
                                        self.roi_name_line_edit.sizeHint().height())
         self.roi_name_line_edit.setEnabled(False)
@@ -145,23 +128,26 @@ class UIDrawROIWindow:
         self.image_slice_number_label = QLabel()
         self.image_slice_number_label.setObjectName("ImageSliceNumberLabel")
         self.image_slice_number_label.setAlignment(Qt.AlignRight)
-        self.image_slice_number_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.image_slice_number_label.resize(
-            self.image_slice_number_label.sizeHint().width(), self.image_slice_number_label.sizeHint().height())
         self.draw_roi_window_instance_image_slice_action_box.addStretch(1)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_label)
 
+        # Create a line edit for containing the image slice number
+        self.image_slice_number_line_edit = QLineEdit()
+        self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
+        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
+        self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(),
+                                                 self.image_slice_number_line_edit.sizeHint().height())
+        self.image_slice_number_line_edit.setEnabled(False)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_line_edit)
 
         # Create a button to move backward to the previous image
         self.image_slice_number_move_backward_button = QPushButton()
         self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
         self.image_slice_number_move_backward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.image_slice_number_move_backward_button.resize(
             self.image_slice_number_move_backward_button.sizeHint().width(),
             self.image_slice_number_move_backward_button.sizeHint().height())
-
         self.image_slice_number_move_backward_button.clicked.connect(self.on_backward_clicked)
         self.draw_roi_window_instance_image_slice_action_box.addWidget(self.image_slice_number_move_backward_button)
 
@@ -169,7 +155,7 @@ class UIDrawROIWindow:
         self.image_slice_number_move_forward_button = QPushButton()
         self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
         self.image_slice_number_move_forward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.image_slice_number_move_forward_button.resize(
             self.image_slice_number_move_forward_button.sizeHint().width(),
             self.image_slice_number_move_forward_button.sizeHint().height())
@@ -180,7 +166,7 @@ class UIDrawROIWindow:
         self.image_slice_number_transect_button = QPushButton()
         self.image_slice_number_transect_button.setObjectName("ImageSliceNumberTransectButton")
         self.image_slice_number_transect_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.image_slice_number_transect_button.resize(
             self.image_slice_number_transect_button.sizeHint().width(),
             self.image_slice_number_transect_button.sizeHint().height())
@@ -191,7 +177,7 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button = QPushButton()
         self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
         self.image_slice_number_draw_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.image_slice_number_transect_button.resize(
             self.image_slice_number_draw_button.sizeHint().width(),
             self.image_slice_number_draw_button.sizeHint().height())
@@ -202,7 +188,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_save_button = QPushButton()
         self.draw_roi_window_instance_save_button.setObjectName("DrawRoiWindowInstanceSaveButton")
         self.draw_roi_window_instance_save_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.draw_roi_window_instance_save_button.resize(
             self.draw_roi_window_instance_save_button.sizeHint().width(),
             self.draw_roi_window_instance_save_button.sizeHint().height())
@@ -217,142 +203,102 @@ class UIDrawROIWindow:
             "DrawRoiWindowInstanceImageSliceActionWidget")
         self.draw_roi_window_instance_image_slice_action_widget.setLayout(
             self.draw_roi_window_instance_image_slice_action_box)
+        self.draw_roi_window_instance_image_slice_action_widget.setSizePolicy(QSizePolicy.MinimumExpanding,
+                                                                              QSizePolicy.Fixed)
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_image_slice_action_widget)
         self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
 
-        # Create a new Label to hold the pixmap
-        # self.image_slice_number_image_view = QLabel()
-        # self.image_slice_number_image_view.setPixmap(QPixmap("src/res/images/Capture.png"))
-        # self.image_slice_number_image_view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        # self.image_slice_number_image_view.resize(
-        #   self.image_slice_number_image_view.sizeHint().width(), self.image_slice_number_image_view.sizeHint().height())
-        # self.draw_roi_window_instance_vertical_box.addWidget(self.image_slice_number_image_view)
-        # self.draw_roi_window_instance_vertical_box.setStretch(1, 4)
-
         # Creating a horizontal box to hold the ROI view and slider
         self.draw_roi_window_instance_view_box = QHBoxLayout()
-        self.draw_roi_window_instance_view_box.setObjectName("DrawRoiWindowInstanceActionBox")
+        self.draw_roi_window_instance_view_box.setObjectName("DrawRoiWindowInstanceViewBox")
 
         # Add View and Slider into horizontal box
+        self.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.slider.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
+        self.view.resize(self.view.sizeHint().width(), self.view.sizeHint().height())
+        self.slider.resize(self.slider.sizeHint().width(), self.slider.sizeHint().height())
         self.draw_roi_window_instance_view_box.addWidget(self.view)
         self.draw_roi_window_instance_view_box.addWidget(self.slider)
 
-        # # Creating a horizontal box to hold the ROI draw action buttons: clear, tool
-        self.draw_roi_window_instance_action_box = QHBoxLayout()
-        self.draw_roi_window_instance_action_box.setObjectName("DrawRoiWindowInstanceActionBox")
 
         # Creating a horizontal box to hold the ROI draw min and max pixel density
-        self.draw_roi_window_instance_action_box_2 = QHBoxLayout()
-        self.draw_roi_window_instance_action_box_2.setObjectName("DrawRoiWindowInstanceActionBox")
+        self.draw_roi_window_instance_size_and_density_box = QHBoxLayout()
+        self.draw_roi_window_instance_size_and_density_box.setObjectName("DrawRoiWindowInstanceSizeAndDensityBox")
 
         # Create a label for denoting the internal hole size
         self.internal_hole_max_label = QLabel()
         self.internal_hole_max_label.setObjectName("InternalHoleLabel")
-        self.internal_hole_max_label.setAlignment(Qt.AlignLeft)
-        self.internal_hole_max_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.internal_hole_max_label.resize(
-            self.internal_hole_max_label.sizeHint().width(), self.internal_hole_max_label.sizeHint().height())
-        self.draw_roi_window_instance_action_box.addWidget(self.internal_hole_max_label)
+        self.internal_hole_max_label.setAlignment(Qt.AlignRight)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.internal_hole_max_label)
 
         # Create input for max internal hole size
         self.internal_hole_max_line_edit = QLineEdit()
         self.internal_hole_max_line_edit.setObjectName("InternalHoleInput")
-        self.internal_hole_max_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.internal_hole_max_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.internal_hole_max_line_edit.resize(self.internal_hole_max_line_edit.sizeHint().width(),
-                                       self.internal_hole_max_line_edit.sizeHint().height())
+                                                self.internal_hole_max_line_edit.sizeHint().height())
         self.internal_hole_max_line_edit.setEnabled(True)
-        self.draw_roi_window_instance_action_box.addWidget(self.internal_hole_max_line_edit)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.internal_hole_max_line_edit)
 
         # Create a label for denoting the isthmus width size
         self.isthmus_width_max_label = QLabel()
         self.isthmus_width_max_label.setObjectName("IsthmusWidthLabel")
-        self.isthmus_width_max_label.setAlignment(Qt.AlignLeft)
-        self.isthmus_width_max_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.isthmus_width_max_label.resize(
-            self.isthmus_width_max_label.sizeHint().width(), self.isthmus_width_max_label.sizeHint().height())
-        self.draw_roi_window_instance_action_box.addWidget(self.isthmus_width_max_label)
+        self.isthmus_width_max_label.setAlignment(Qt.AlignRight)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.isthmus_width_max_label)
 
         # Create input for max isthmus width size
         self.isthmus_width_max_line_edit = QLineEdit()
         self.isthmus_width_max_line_edit.setObjectName("IsthmusWidthInput")
-        self.isthmus_width_max_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.isthmus_width_max_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.isthmus_width_max_line_edit.resize(self.isthmus_width_max_line_edit.sizeHint().width(),
                                                 self.isthmus_width_max_line_edit.sizeHint().height())
         self.isthmus_width_max_line_edit.setEnabled(True)
-        self.draw_roi_window_instance_action_box.addWidget(self.isthmus_width_max_line_edit)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.isthmus_width_max_line_edit)
 
         # Create a label for denoting the minimum pixel density
         self.min_pixel_density_label = QLabel()
         self.min_pixel_density_label.setObjectName("MinPixelDensityLabel")
-        self.min_pixel_density_label.setAlignment(Qt.AlignLeft)
-        self.min_pixel_density_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.min_pixel_density_label.resize(
-            self.min_pixel_density_label.sizeHint().width(), self.min_pixel_density_label.sizeHint().height())
-        self.draw_roi_window_instance_action_box.addWidget(self.min_pixel_density_label)
-
+        self.min_pixel_density_label.setAlignment(Qt.AlignRight)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.min_pixel_density_label)
 
         # Create input for min pixel size
         self.min_pixel_density_line_edit = QLineEdit()
         self.min_pixel_density_line_edit.setObjectName("MinPixelDensityInput")
-        self.min_pixel_density_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.min_pixel_density_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.min_pixel_density_line_edit.resize(self.min_pixel_density_line_edit.sizeHint().width(),
                                                 self.min_pixel_density_line_edit.sizeHint().height())
         self.min_pixel_density_line_edit.setEnabled(True)
-        self.draw_roi_window_instance_action_box.addWidget(self.min_pixel_density_line_edit)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.min_pixel_density_line_edit)
 
         # Create a label for denoting the minimum pixel density
         self.max_pixel_density_label = QLabel()
         self.max_pixel_density_label.setObjectName("MaxPixelDensityLabel")
-        self.max_pixel_density_label.setAlignment(Qt.AlignLeft)
-        self.max_pixel_density_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.max_pixel_density_label.resize(
-            self.max_pixel_density_label.sizeHint().width(), self.max_pixel_density_label.sizeHint().height())
-        self.draw_roi_window_instance_action_box.addWidget(self.max_pixel_density_label)
+        self.max_pixel_density_label.setAlignment(Qt.AlignRight)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.max_pixel_density_label)
 
         # Create input for min pixel size
         self.max_pixel_density_line_edit = QLineEdit()
         self.max_pixel_density_line_edit.setObjectName("MaxPixelDensityInput")
-        self.max_pixel_density_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.max_pixel_density_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.max_pixel_density_line_edit.resize(self.max_pixel_density_line_edit.sizeHint().width(),
                                                 self.max_pixel_density_line_edit.sizeHint().height())
         self.max_pixel_density_line_edit.setEnabled(True)
-        self.draw_roi_window_instance_action_box.addWidget(self.max_pixel_density_line_edit)
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.max_pixel_density_line_edit)
 
         # Place buttons to the right of the screen
-        self.draw_roi_window_instance_action_box.addStretch(1)
+        self.draw_roi_window_instance_size_and_density_box.addStretch(1)
 
         # Create a button to clear the draw
         self.draw_roi_window_instance_action_reset_button = QPushButton()
         self.draw_roi_window_instance_action_reset_button.setObjectName("DrawRoiWindowInstanceActionClearButton")
         self.draw_roi_window_instance_action_reset_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.draw_roi_window_instance_action_reset_button.resize(
             self.draw_roi_window_instance_action_reset_button.sizeHint().width(),
             self.draw_roi_window_instance_action_reset_button.sizeHint().height())
         self.draw_roi_window_instance_action_reset_button.clicked.connect(self.on_reset_clicked)
-        self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_reset_button)
-
-        # # Create a button to tool the draw
-        # self.draw_roi_window_instance_action_tool_button = QPushButton()
-        # self.draw_roi_window_instance_action_tool_button.setObjectName("DrawRoiWindowInstanceActionToolButton")
-        # self.draw_roi_window_instance_action_tool_button.setSizePolicy(
-        #     QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        # self.draw_roi_window_instance_action_tool_button.resize(
-        #     self.draw_roi_window_instance_action_tool_button.sizeHint().width(),
-        #     self.draw_roi_window_instance_action_tool_button.sizeHint().height())
-        # self.draw_roi_window_instance_action_tool_button.clicked.connect(self.on_tool_clicked)
-        # self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_tool_button)
-
-        # Create a button for running seed algorithm
-        # self.draw_roi_window_instance_action_go_button = QPushButton()
-        # self.draw_roi_window_instance_action_go_button.setObjectName("DrawRoiWindowInstanceActionGoButton")
-        # self.draw_roi_window_instance_action_go_button.setSizePolicy(
-        #     QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-        # self.draw_roi_window_instance_action_go_button.resize(
-        #     self.draw_roi_window_instance_action_go_button.sizeHint().width(),
-        #     self.draw_roi_window_instance_action_go_button.sizeHint().height())
-        # self.draw_roi_window_instance_action_go_button.clicked.connect(self.on_go_clicked)
-        # self.draw_roi_window_instance_action_box.addWidget(self.draw_roi_window_instance_action_go_button)
+        self.draw_roi_window_instance_action_reset_button.setProperty("QPushButtonClass", "fail-button")
+        self.draw_roi_window_instance_size_and_density_box.addWidget(self.draw_roi_window_instance_action_reset_button)
 
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_view_widget = QWidget()
@@ -361,16 +307,17 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_view_widget.setLayout(
             self.draw_roi_window_instance_view_box)
         self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_view_widget)
-        self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
+        self.draw_roi_window_instance_vertical_box.setStretch(1, 10)
 
         # Create a widget to hold the image slice box
-        self.draw_roi_window_instance_action_widget = QWidget()
-        self.draw_roi_window_instance_action_widget.setObjectName(
+        self.draw_roi_window_instance_size_and_density_widget = QWidget()
+        self.draw_roi_window_instance_size_and_density_widget.setObjectName(
             "DrawRoiWindowInstanceActionWidget")
-        self.draw_roi_window_instance_action_widget.setLayout(
-            self.draw_roi_window_instance_action_box)
-        self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_action_widget)
-        self.draw_roi_window_instance_vertical_box.setStretch(0, 1)
+        self.draw_roi_window_instance_size_and_density_widget.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.draw_roi_window_instance_size_and_density_widget.setLayout(
+            self.draw_roi_window_instance_size_and_density_box)
+        self.draw_roi_window_instance_vertical_box.addWidget(self.draw_roi_window_instance_size_and_density_widget)
+        self.draw_roi_window_instance_vertical_box.setStretch(2, 1)
 
         # Create a new central widget to hold the vertical box layout
         self.draw_roi_window_instance_central_widget = QWidget()
@@ -477,8 +424,6 @@ class UIDrawROIWindow:
             self.min_pixel_density_line_edit.setText(str(self.lower_limit))
             self.max_pixel_density_line_edit.setText(str(self.upper_limit))
 
-
-
         if eventChangedWindow:
             self.image_display(eventChangedWindow=True)
         else:
@@ -505,7 +450,7 @@ class UIDrawROIWindow:
         if (self.slider_changed):
             slider_id = self.slider.value()
 
-        #PyQt5.QtGui.QPixMap objects
+        # PyQt5.QtGui.QPixMap objects
         pixmaps = self.patient_dict_container.get("pixmaps")
         image = pixmaps[slider_id]
         image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
@@ -593,7 +538,6 @@ class UIDrawROIWindow:
 
         # Forward will only execute if current image slice is below the total number of slices.
         if int(image_slice_number) < total_slices:
-
             # increments slice by 1
             self.current_slice = int(image_slice_number)
 
@@ -647,7 +591,8 @@ class UIDrawROIWindow:
         pixmaps = self.patient_dict_container.get("pixmaps")
 
         if self.min_pixel_density_line_edit.text() == "" or self.max_pixel_density_line_edit.text() == "":
-            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
+            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
+                              "Not all values are specified or correct.")
         else:
             id = self.slider.value()
 
@@ -698,14 +643,14 @@ class UIDrawROIWindow:
         if self.ds is not None:
             new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
             self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
-            QMessageBox.about(self.draw_roi_window_instance, "Success",
-                              "New ROI has been saved to RTSS!")
+            QMessageBox.about(self.draw_roi_window_instance, "Warning",
+                              "This feature is still in development. The ROI will appear in your structures tab,"
+                                                                    " but may demonstrate some technical issues "
+                                                                    "when performing tasks.")
             self.close()
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
-
-        print(new_rtss)
 
 
     def init_standard_names(self):
@@ -738,6 +683,7 @@ class UIDrawROIWindow:
     def set_selected_roi_name(self, roi_name):
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
+
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -821,6 +767,7 @@ class SelectROIPopUp(QDialog):
     def on_cancel_clicked(self):
         self.close()
 
+
 #####################################################################################################################
 #                                                                                                                   #
 #  This Class handles the Drawing functionality                                                                    #
@@ -842,7 +789,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.values = []
         self.getValues()
         self.tabWindow = tabWindow
-        self.rect = QtCore.QRect(250,300,20,20)
+        self.rect = QtCore.QRect(250, 300, 20, 20)
         self.update()
         self._points = {}
         self._circlePoints = []
@@ -870,11 +817,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
             pixel_array[x][y] will return the density of the pixel
             """
-
             z_coord = int(data_set.SliceLocation)
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
-
             for x_coord in range(512):
                 for y_coord in range(512):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
