@@ -256,7 +256,12 @@ class StructureTab(QtWidgets.QWidget):
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
         self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
+
+        # Temporarily remove the ROI modify buttons, add this indicator, then add them back again.
+        # This ensure that the modifier appears above the ROI modify buttons.
+        self.structure_tab_layout.removeWidget(self.roi_buttons)
         self.structure_tab_layout.addWidget(self.modified_indicator_widget)
+        self.structure_tab_layout.addWidget(self.roi_buttons)
 
     def structure_checked(self, state, roi_id):
         """
