@@ -689,9 +689,11 @@ class UIDrawROIWindow:
         number_of_rois = len(existing_rois)
 
         # Check to see if the ROI already exists
-        for roi_number_index in range(number_of_rois):
-            if roi_name in existing_rois[roi_number_index + 1]["name"]:
+        for key, value in existing_rois.items():
+            if roi_name in value['name']:
                 roi_exists = True
+
+        print(roi_exists)
 
         if roi_exists:
             QMessageBox.about(self.draw_roi_window_instance, "ROI already exists in RTSS",
