@@ -859,6 +859,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.q_image = None
         self.q_pixmaps = None
         self.label = QtWidgets.QLabel()
+        self.draw_tool_radius = 19
         self._display_pixel_color()
 
     def _display_pixel_color(self):
@@ -940,11 +941,13 @@ class Drawing(QtWidgets.QGraphicsScene):
     def calculate_circle_points(self, x , y, r):
         self._circlePoints.clear()
         degree = math.pi/8
-        for i in range(300):
-            x1 = round(x + 19*math.cos(degree))
-            y1 = round(y + 19*math.sin(degree))
-            degree = degree + 1/44
-            self._circlePoints.append((x1, y1))
+        for j in range((r - 2),r):
+            for i in range(300):
+                x1 = round(x + j*math.cos(degree))
+                y1 = round(y + j*math.sin(degree))
+                degree = degree + 1/44
+                self._circlePoints.append((x1, y1))
+            j = j+1
 
     def compare(self):
         for x_coord, y_coord, colors in self.accordingColorList[:]:
@@ -974,7 +977,27 @@ class Drawing(QtWidgets.QGraphicsScene):
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
     def wheelEvent(self, event):
-        delta = event.delta()
+        delta = event.delta() / 120
+        print(delta)
+        if(self.draw_tool_radius == 19 and delta == 1):
+            self.draw_tool_radius = 19 + 5
+        elif(self.draw_tool_radius == 24 and delta == -1):
+            self.draw_tool_radius = 19
+        elif(self.draw_tool_radius == 19 and delta == -1):
+            self.draw_tool_radius = 19 - 6
+        elif(self.draw_tool_radius == 13 and delta == 1):
+            self.draw_tool_radius = 19
+        elif (self.draw_tool_radius == 13 and delta == -1):
+            self.draw_tool_radius = 13 - 5
+        elif (self.draw_tool_radius == 13 and delta == 1):
+            self.draw_tool_radius = 13 + 5
+
+        x = event.scenePos().x() - self.draw_tool_radius
+        y = event.scenePos().y() - self.draw_tool_radius
+        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
+        self.item.setRect(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius,
+                          (self.draw_tool_radius + 21), (self.draw_tool_radius + 21))
+
 
     def mousePressEvent(self, event):
         if self.item:
@@ -988,12 +1011,11 @@ class Drawing(QtWidgets.QGraphicsScene):
         super().mousePressEvent(event)
         # event.scenePos().x() - 5, event.scenePos().y() - 5
         # event.scenePos().x() - 33, event.scenePos().y() - 33
-        x = event.scenePos().x() - 19
-        y = event.scenePos().y() - 19
-        r = 19
-        self.calculate_circle_points(x + 19, y + 19, r)
+        x = event.scenePos().x() - self.draw_tool_radius
+        y = event.scenePos().y() - self.draw_tool_radius
+        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
         #  x = a + r .cos(t), y = b+r.sin(t)
-        self.item = QGraphicsEllipseItem(event.scenePos().x() - 19, event.scenePos().y() - 19, 40, 40)
+        self.item = QGraphicsEllipseItem(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius, (self.draw_tool_radius+ 21), (self.draw_tool_radius + 21))
         self.item.setPen(QPen(QColor("blue")))
         self.addItem(self.item)
         self.compare()
@@ -1005,11 +1027,11 @@ class Drawing(QtWidgets.QGraphicsScene):
         super().mouseMoveEvent(event)
         if self.item and self.isPressed:
             r = 19
-            x = event.scenePos().x() - r
-            y = event.scenePos().y() - r
-            self.calculate_circle_points(x + r, y + r, r)
+            x = event.scenePos().x() - self.draw_tool_radius
+            y = event.scenePos().y() - self.draw_tool_radius
+            self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
             self.compare()
-            self.item.setRect(event.scenePos().x() - r, event.scenePos().y() - r, 40, 40)
+            self.item.setRect(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius, (self.draw_tool_radius + 21), (self.draw_tool_radius+ 21))
         self.update()
 
     def mouseReleaseEvent(self, event):
