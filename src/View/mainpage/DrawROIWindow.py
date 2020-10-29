@@ -693,8 +693,6 @@ class UIDrawROIWindow:
             if roi_name in value['name']:
                 roi_exists = True
 
-        print(roi_exists)
-
         if roi_exists:
             QMessageBox.about(self.draw_roi_window_instance, "ROI already exists in RTSS",
                               "Any new creations will be added to that ROI.")
