@@ -189,7 +189,7 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
                                               referenced_sop_class_uid)  # CT Image Storage
                         contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
-                contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
+                contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
                 contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
                 contour.add_new(Tag("ContourNumber"), "IS", 1)
                 contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
