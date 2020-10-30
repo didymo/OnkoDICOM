@@ -8,11 +8,7 @@ from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget
-from pandas import np
-from scipy.spatial.qhull import ConvexHull, Delaunay
 import alphashape
-from shapely import geometry
-from shapely.ops import polygonize, cascaded_union
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
@@ -720,14 +716,18 @@ class UIDrawROIWindow:
         alpha = 0.95 * alphashape.optimizealpha(points)
         hull = alphashape.alphashape(points, alpha)
         hull_pts = hull.exterior.coords.xy
-        #print(hull_pts)
-
-        for val in hull_pts:
-            print(val)
 
         new_pixel_coords = []
-        for hull_x, hull_y in hull_pts:
-            x, y, z = hull_x, hull_y, z_of_slice
+        x_values = []
+        y_values = []
+        for x_value in hull_pts[0]:
+            x_values.append(x_value)
+
+        for y_value in hull_pts[1]:
+            y_values.append(y_value)
+
+        for i in range(len(x_values)):
+            x, y, z = x_values[i], y_values[i], z_of_slice
             new_pixel_coords.append((x, y, z))
 
         return new_pixel_coords
