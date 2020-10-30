@@ -997,9 +997,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         elif(self.draw_tool_radius == 13 and delta == 1):
             self.draw_tool_radius = 19
         elif (self.draw_tool_radius == 13 and delta == -1):
-            self.draw_tool_radius = 13 - 5
-        elif (self.draw_tool_radius == 13 and delta == 1):
-            self.draw_tool_radius = 13 + 5
+            self.draw_tool_radius = 13 - 6
+        elif (self.draw_tool_radius == 7 and delta == 1):
+            self.draw_tool_radius = 13 + 6
 
         x = event.scenePos().x() - self.draw_tool_radius
         y = event.scenePos().y() - self.draw_tool_radius
