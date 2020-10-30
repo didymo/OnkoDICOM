@@ -115,14 +115,14 @@ class StructureTab(QtWidgets.QWidget):
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
         icon_roi_delete.addPixmap(
-            QtGui.QPixmap(':/images/Icon/ROIdelete.png'),
+            QtGui.QPixmap('src/Icon/ROIdelete.png'),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
 
         icon_roi_draw = QtGui.QIcon()
         icon_roi_draw.addPixmap(
-            QtGui.QPixmap(':/images/Icon/ROI_Brush.png'),
+            QtGui.QPixmap('src/Icon/ROI_Brush.png'),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
