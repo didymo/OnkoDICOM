@@ -240,8 +240,22 @@ class UIDrawROIWindow:
         icon_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
+        # Create a bounding box button
+        self.image_slice_number_box_draw_button = QPushButton()
+        self.image_slice_number_box_draw_button.setObjectName("ImageSliceNumberBoxDrawButton")
+        self.image_slice_number_box_draw_button.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.Minimum
+        )
+        self.image_slice_number_box_draw_button.resize(
+            self.image_slice_number_box_draw_button.sizeHint().width(),
+            self.image_slice_number_box_draw_button.sizeHint().height()
+        )
+        self.image_slice_number_box_draw_button.clicked.connect(self.on_box_draw_clicked)
+        icon_box_draw = QtGui.QIcon()
+        icon_box_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
+        self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
+        self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_box_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
-
 
         # Create a label for denoting the max internal hole size
         self.internal_hole_max_label = QLabel()
@@ -710,6 +724,15 @@ class UIDrawROIWindow:
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
+    def on_box_draw_clicked(self):
+        id = self.slider.value()
+        dt = self.patient_dict_container.dataset[id]
+        dt.convert_pixel_data()
+        pixmaps = self.patient_dict_container.get("pixmaps")
+
+        self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
+        self.view.setScene(self.bounds_box_draw)
+
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
         if self.ds is not None:
@@ -910,7 +933,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.data = pixmapdata
         self.values = []
         self.getValues()
-        self.tabWindow = tabWindow
         self.rect = QtCore.QRect(250, 300, 20, 20)
         self.update()
         self._points = {}
@@ -1068,3 +1090,64 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
         self.update()
+
+
+class DrawBoundingBox(QtWidgets.QGraphicsScene):
+    """
+    Object responsible for updating and displaying the bounds of the ROI draw.
+    """
+
+    def __init__(self, image_to_paint, pixmap_data):
+        super().__init__()
+        self.addItem(QGraphicsPixmapItem(image_to_paint))
+        self.img = image_to_paint
+        self.pixmap_data = pixmap_data
+        self.drawing = False
+        self.start_x = None
+        self.start_y = None
+        self.end_x = None
+        self.end_y = None
+        self.box = None
+
+    def draw_bounding_box(self, new_box=False):
+        if new_box:
+            self.box = QtWidgets.QGraphicsRectItem(self.start_x, self.start_y, 0, 0)
+            self.box.setPen(QtGui.QPen(QtGui.QColor("red")))
+            self.addItem(self.box)
+        else:
+            if self.start_x < self.end_x:
+                x = self.start_x
+                width = self.end_x - self.start_x
+            else:
+                x = self.end_x
+                width = self.start_x - self.end_x
+
+            if self.start_y < self.end_y:
+                y = self.start_y
+                height = self.end_y - self.start_y
+            else:
+                y = self.end_y
+                height = self.start_y - self.end_y
+
+            self.box.setRect(x, y, width, height)
+
+    def mousePressEvent(self, event):
+        if self.box:
+            self.removeItem(self.box)
+        self.drawing = True
+        self.start_x = event.scenePos().x()
+        self.start_y = event.scenePos().y()
+        self.draw_bounding_box(new_box=True)
+
+    def mouseMoveEvent(self, event):
+        if self.drawing:
+            self.end_x = event.scenePos().x()
+            self.end_y = event.scenePos().y()
+            self.draw_bounding_box()
+
+    def mouseReleaseEvent(self, event):
+        if self.drawing:
+            self.drawing = False
+            self.end_x = event.scenePos().x()
+            self.end_y = event.scenePos().y()
+            self.draw_bounding_box()
