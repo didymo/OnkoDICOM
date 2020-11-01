@@ -19,6 +19,8 @@ QLabel[QLabelClass~="tree-view-label"] {
 QLabel[QLabelClass~="tree-view-label-keep-delete"] {
     color: #f5f5f5;
 }
+
+
 QPushButton {
     margin: 4px;
     padding: 0 16px;
@@ -62,6 +64,7 @@ QPushButton[QPushButtonClass="fail-button"]:pressed {
     background-color: #c2160a;
 }
 
+
 /* Welcome Page */
 QLabel#WelcomeWindowLabel {
     font-weight: bold;
@@ -77,6 +80,7 @@ QLabel#OpenPatientDirectoryPrompt, QLabel#OpenPatientDirectoryResultLabel {
     padding: 0 8px;
 }
 
+
 /* Open Patient */
 QLineEdit {
     border-bottom: 3px solid #b3b3b3;
@@ -90,6 +94,7 @@ QLineEdit:hover {
 QLineEdit:focus {
     border-bottom: 3px solid #5c2eb8;
 }
+
 
 QTreeView#OpenPatientWindowPatientsTree {
     margin: 0 12px 4px 12px;
@@ -145,6 +150,40 @@ QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
         image: url('./src/res/images/qtree/collapse-tree.png');
 }
+
+
+QTabWidget::pane {
+    border: 0;
+    padding-top: 4px;
+    background-color: white;
+}
+QTabBar {
+    background-color: rgb(244, 245, 245);
+}
+QTabBar::tab {
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 3px solid #b3b3b3;
+    border-left: 0;
+    margin: 0;
+    padding: 0 12px;
+    background-color: rgb(244, 245, 245);
+    text-align: center;
+    height: 36px;
+    width: 100%;
+}
+QTabBar::tab:hover {
+    background-color: #b299e6;
+    border-bottom: 3px solid #9370DB;
+}
+QTabBar::tab:pressed {
+    background-color: #5c2eb8;
+}
+QTabBar::tab:selected {
+    background-color: white;
+    border-bottom: 3px solid #5c2eb8;
+}
+
 
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
     padding: 0px;
