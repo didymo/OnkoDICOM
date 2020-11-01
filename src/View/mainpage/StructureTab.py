@@ -25,9 +25,8 @@ class StructureTab(QtWidgets.QWidget):
 
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
-        dataset_rtss = self.patient_dict_container.get("dataset_rtss")
-        self.roi_delete_handler = ROIDelOption(dataset_rtss, self.structure_modified)
-        self.roi_draw_handler = ROIDrawOption(dataset_rtss, self.structure_modified)
+        self.roi_delete_handler = ROIDelOption(self.structure_modified)
+        self.roi_draw_handler = ROIDrawOption(self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -116,14 +115,14 @@ class StructureTab(QtWidgets.QWidget):
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
         icon_roi_delete.addPixmap(
-            QtGui.QPixmap(':/images/Icon/ROIdelete.png'),
+            QtGui.QPixmap('src/Icon/ROIdelete.png'),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
 
         icon_roi_draw = QtGui.QIcon()
         icon_roi_draw.addPixmap(
-            QtGui.QPixmap(':/images/Icon/ROI_Brush.png'),
+            QtGui.QPixmap('src/Icon/ROI_Brush.png'),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -201,6 +200,8 @@ class StructureTab(QtWidgets.QWidget):
         contour_data = ImageLoading.get_raw_contour_data(new_dataset)
         self.patient_dict_container.set("raw_contour", contour_data[0])
         self.patient_dict_container.set("num_points", contour_data[1])
+        pixluts = ImageLoading.get_pixluts(self.patient_dict_container.dataset)
+        self.patient_dict_container.set("pixluts", pixluts)
         self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(self.patient_dict_container.get("rois")))
         self.patient_dict_container.set("selected_rois", [])
 
