@@ -713,7 +713,6 @@ class UIDrawROIWindow:
                 self.drawingROI = Drawing(
                     pixmaps[id],
                     dt._pixel_array.transpose(),
-                    self.view,
                     min_pixel,
                     max_pixel,
                     self.patient_dict_container.dataset[id],
@@ -921,7 +920,7 @@ class SelectROIPopUp(QDialog):
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, tabWindow, min_pixel, max_pixel, dataset, draw_roi_window_instance):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance):
         super(Drawing, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
@@ -946,7 +945,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.target_pixel_coords = []
         self.accordingColorList = []
         self.q_image = None
-        self.q_image = None
         self.q_pixmaps = None
         self.label = QtWidgets.QLabel()
         self.draw_tool_radius = 19
@@ -959,6 +957,16 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
+            if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
+                min_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().x())
+                min_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().y())
+                max_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().width() + min_x)
+                max_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().height() + min_y)
+            else:
+                min_x = 0
+                min_y = 0
+                max_x = data_set.Rows
+                max_y = data_set.Columns
 
             """
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -966,8 +974,8 @@ class Drawing(QtWidgets.QGraphicsScene):
             """
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
-            for x_coord in range(data_set.Columns):
-                for y_coord in range(data_set.Rows):
+            for x_coord in range(min_y, max_y):
+                for y_coord in range(min_x, max_x):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
                         self.target_pixel_coords.append((y_coord, x_coord))
