@@ -8,6 +8,7 @@ from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget
+import alphashape
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
@@ -641,7 +642,14 @@ class UIDrawROIWindow:
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
         if self.ds is not None:
-            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, self.target_pixel_coords_single_array, self.ds)
+            # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
+            # to be converted to
+            hull = self.calculate_convex_hull_of_points()
+            single_array = []
+            for sublist in hull:
+                for item in sublist:
+                    single_array.append(item)
+            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
             self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
             QMessageBox.about(self.draw_roi_window_instance, "Warning",
                               "This feature is still in development. The ROI will appear in your structures tab,"
@@ -652,6 +660,31 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
 
+    def calculate_convex_hull_of_points(self):
+        z_of_slice = 0
+        points = []
+        for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
+            z_of_slice = item[2]
+            points.append([item[0], item[1]])
+
+        alpha = 0.95 * alphashape.optimizealpha(points)
+        hull = alphashape.alphashape(points, alpha)
+        hull_pts = hull.exterior.coords.xy
+
+        new_pixel_coords = []
+        x_values = []
+        y_values = []
+        for x_value in hull_pts[0]:
+            x_values.append(x_value)
+
+        for y_value in hull_pts[1]:
+            y_values.append(y_value)
+
+        for i in range(len(x_values)):
+            x, y, z = x_values[i], y_values[i], z_of_slice
+            new_pixel_coords.append((x, y, z))
+
+        return new_pixel_coords
 
     def init_standard_names(self):
         """
@@ -681,6 +714,22 @@ class UIDrawROIWindow:
         self.select_ROI.exec_()
 
     def set_selected_roi_name(self, roi_name):
+
+        roi_exists = False
+
+        patient_dict_container = PatientDictContainer()
+        existing_rois = patient_dict_container.get("rois")
+        number_of_rois = len(existing_rois)
+
+        # Check to see if the ROI already exists
+        for key, value in existing_rois.items():
+            if roi_name in value['name']:
+                roi_exists = True
+
+        if roi_exists:
+            QMessageBox.about(self.draw_roi_window_instance, "ROI already exists in RTSS",
+                              "Would you like to continue?")
+
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
 
@@ -806,11 +855,15 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.q_image = None
         self.q_pixmaps = None
         self.label = QtWidgets.QLabel()
+        self.draw_tool_radius = 19
         self._display_pixel_color()
 
     def _display_pixel_color(self):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
+            patient_dict_container = PatientDictContainer()
+            dict_pixluts = patient_dict_container.get("pixluts")
+            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
 
             """
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -823,7 +876,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 for y_coord in range(512):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
-                                self.target_pixel_coords.append((y_coord, x_coord))
+                        self.target_pixel_coords.append((y_coord, x_coord))
 
             """
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
@@ -833,11 +886,16 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords]
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            # Convert pixel coordinates to RCS coordinates.
+            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
+                z = item[2]
+                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
+                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
             for sublist in self.draw_roi_window_instance.target_pixel_coords:
                 for item in sublist:
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
-            print(self.draw_roi_window_instance.target_pixel_coords_single_array)
+           #print(self.draw_roi_window_instance.target_pixel_coords_single_array)
 
 
             """
@@ -885,11 +943,13 @@ class Drawing(QtWidgets.QGraphicsScene):
     def calculate_circle_points(self, x , y, r):
         self._circlePoints.clear()
         degree = math.pi/8
-        for i in range(300):
-            x1 = round(x + 19*math.cos(degree))
-            y1 = round(y + 19*math.sin(degree))
-            degree = degree + 1/44
-            self._circlePoints.append((x1, y1))
+        for j in range((r - 2),r):
+            for i in range(300):
+                x1 = round(x + j*math.cos(degree))
+                y1 = round(y + j*math.sin(degree))
+                degree = degree + 1/44
+                self._circlePoints.append((x1, y1))
+            j = j+1
 
     def compare(self):
         for x_coord, y_coord, colors in self.accordingColorList[:]:
@@ -906,6 +966,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
             z_coord = int(data_set.SliceLocation)
+            patient_dict_container = PatientDictContainer()
+            dict_pixluts = patient_dict_container.get("pixluts")
+            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
             """
                 pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
                 pixel_array[x][y] will return the density of the pixel
@@ -914,12 +977,36 @@ class Drawing(QtWidgets.QGraphicsScene):
 
             # Make 2D to 1D
             self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
+            # Convert pixel coordinates to RCS coordinates.
+            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
+                z = item[2]
+                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
+                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
             for sublist in self.draw_roi_window_instance.target_pixel_coords:
                 for item in sublist:
                     self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
     def wheelEvent(self, event):
-        delta = event.delta()
+        delta = event.delta() / 120
+        if(self.draw_tool_radius == 19 and delta == 1):
+            self.draw_tool_radius = 19 + 5
+        elif(self.draw_tool_radius == 24 and delta == -1):
+            self.draw_tool_radius = 19
+        elif(self.draw_tool_radius == 19 and delta == -1):
+            self.draw_tool_radius = 19 - 6
+        elif(self.draw_tool_radius == 13 and delta == 1):
+            self.draw_tool_radius = 19
+        elif (self.draw_tool_radius == 13 and delta == -1):
+            self.draw_tool_radius = 13 - 6
+        elif (self.draw_tool_radius == 7 and delta == 1):
+            self.draw_tool_radius = 13 + 6
+
+        x = event.scenePos().x() - self.draw_tool_radius
+        y = event.scenePos().y() - self.draw_tool_radius
+        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
+        self.item.setRect(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius,
+                          (self.draw_tool_radius + 21), (self.draw_tool_radius + 21))
+
 
     def mousePressEvent(self, event):
         if self.item:
@@ -933,12 +1020,11 @@ class Drawing(QtWidgets.QGraphicsScene):
         super().mousePressEvent(event)
         # event.scenePos().x() - 5, event.scenePos().y() - 5
         # event.scenePos().x() - 33, event.scenePos().y() - 33
-        x = event.scenePos().x() - 19
-        y = event.scenePos().y() - 19
-        r = 19
-        self.calculate_circle_points(x + 19, y + 19, r)
+        x = event.scenePos().x() - self.draw_tool_radius
+        y = event.scenePos().y() - self.draw_tool_radius
+        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
         #  x = a + r .cos(t), y = b+r.sin(t)
-        self.item = QGraphicsEllipseItem(event.scenePos().x() - 19, event.scenePos().y() - 19, 40, 40)
+        self.item = QGraphicsEllipseItem(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius, (self.draw_tool_radius+ 21), (self.draw_tool_radius + 21))
         self.item.setPen(QPen(QColor("blue")))
         self.addItem(self.item)
         self.compare()
@@ -950,11 +1036,11 @@ class Drawing(QtWidgets.QGraphicsScene):
         super().mouseMoveEvent(event)
         if self.item and self.isPressed:
             r = 19
-            x = event.scenePos().x() - r
-            y = event.scenePos().y() - r
-            self.calculate_circle_points(x + r, y + r, r)
+            x = event.scenePos().x() - self.draw_tool_radius
+            y = event.scenePos().y() - self.draw_tool_radius
+            self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
             self.compare()
-            self.item.setRect(event.scenePos().x() - r, event.scenePos().y() - r, 40, 40)
+            self.item.setRect(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius, (self.draw_tool_radius + 21), (self.draw_tool_radius+ 21))
         self.update()
 
     def mouseReleaseEvent(self, event):
