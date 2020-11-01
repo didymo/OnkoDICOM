@@ -152,6 +152,9 @@ QTreeView::branch:open:has-children:has-siblings  {
 }
 
 
+QTabWidget::tab-bar {
+    alignment: left;
+}
 QTabWidget::pane {
     border: 0;
     padding-top: 4px;
