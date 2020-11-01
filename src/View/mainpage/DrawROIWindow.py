@@ -740,8 +740,7 @@ class UIDrawROIWindow:
         points = []
 
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0], item[1], z_coord) for item in self.drawingROI.target_pixel_coords
-                               if item not in self.drawingROI.pixel_coords_remove]
+        target_pixel_coords = [(item[0], item[1], z_coord) for item in self.drawingROI.target_pixel_coords]
 
         # Convert the pixels to an RCS location and move them to a list of points.
         for i, item in enumerate(target_pixel_coords):
@@ -930,7 +929,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.pixel_array = None
         # This will contain the new pixel coordinates specifed by the min and max pixel density
         self.target_pixel_coords = []
-        self.pixel_coords_remove = []
         self.accordingColorList = []
         self.q_image = None
         self.q_image = None
@@ -1015,7 +1013,8 @@ class Drawing(QtWidgets.QGraphicsScene):
             distance = numpy.linalg.norm(clicked_point - point_to_check)
             if distance <= self.draw_tool_radius:
                 self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
-                self.pixel_coords_remove.append((x, y))
+                self.target_pixel_coords.remove((x, y))
+                self.accordingColorList.remove((x, y, colors))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
         self.label.setPixmap(self.q_pixmaps)
