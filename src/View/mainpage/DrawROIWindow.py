@@ -950,8 +950,8 @@ class Drawing(QtWidgets.QGraphicsScene):
             """
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
-            for x_coord in range(512):
-                for y_coord in range(512):
+            for x_coord in range(data_set.Columns):
+                for y_coord in range(data_set.Rows):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
                         self.target_pixel_coords.append((y_coord, x_coord))
