@@ -29,6 +29,7 @@ QPushButton {
     font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
     font-size: 14px;
     text-align: center;
+    qproperty-iconSize: 18px;
 }
 QPushButton:hover { /* +10% saturation */
     background-color: #b299e6;
