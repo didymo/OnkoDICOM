@@ -1112,7 +1112,10 @@ class DrawBoundingBox(QtWidgets.QGraphicsScene):
     def draw_bounding_box(self, new_box=False):
         if new_box:
             self.box = QtWidgets.QGraphicsRectItem(self.start_x, self.start_y, 0, 0)
-            self.box.setPen(QtGui.QPen(QtGui.QColor("red")))
+            pen = QtGui.QPen(QtGui.QColor("red"))
+            pen.setStyle(QtCore.Qt.DashDotDotLine)
+            pen.setWidth(0)
+            self.box.setPen(pen)
             self.addItem(self.box)
         else:
             if self.start_x < self.end_x:
