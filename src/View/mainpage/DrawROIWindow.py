@@ -1,14 +1,13 @@
-import copy
 import csv
 import math
 
+import numpy
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.Qt import Qt
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
-    QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout, QFrame
+    QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
 
 from src.Controller.MainPageController import MainPageCallClass
@@ -1004,34 +1003,19 @@ class Drawing(QtWidgets.QGraphicsScene):
             for j in range(512):
                 self.values.append(self.data[i][j])
 
-    def calculate_circle_points(self, x, y, r):
-        """
-        Calculates all locations within the given radius of the given selected point.
-        :param x: X location of the selected point.
-        :param y: Y location of the selected point.
-        :param r: Radius to be searched.
-        """
-        self._circlePoints.clear()
-        degree = math.pi/8
-        for j in range((r - 2), r):
-            for i in range(300):
-                x1 = round(x + j*math.cos(degree))
-                y1 = round(y + j*math.sin(degree))
-                degree = degree + 1/44
-                self._circlePoints.append((x1, y1))
-            j = j+1
-
-    def remove_pixels_within_circle(self):
+    def remove_pixels_within_circle(self, clicked_x, clicked_y):
         """
         Removes all highlighted pixels within the selected circle and updates the image.
-        :return:
         """
-        for x_coord, y_coord, colors in self.accordingColorList[:]:
-            for xc_coord, yc_coord in self._circlePoints[:]:
-                if x_coord == xc_coord and y_coord == yc_coord:
-                    self.q_image.setPixelColor(x_coord, y_coord,
-                                               QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
-                    self.pixel_coords_remove.append((x_coord, y_coord))
+        # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
+        # than the radius, remove it from the highlighted pixels.
+        for x, y, colors in self.accordingColorList[:]:
+            clicked_point = numpy.array((clicked_x, clicked_y))
+            point_to_check = numpy.array((x, y))
+            distance = numpy.linalg.norm(clicked_point - point_to_check)
+            if distance <= self.draw_tool_radius:
+                self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
+                self.pixel_coords_remove.append((x, y))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
         self.label.setPixmap(self.q_pixmaps)
@@ -1046,7 +1030,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         x = event_x - self.draw_tool_radius
         y = event_y - self.draw_tool_radius
-        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
         if new_circle:
             self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
             self.cursor.setPen(QPen(QColor("blue")))
@@ -1076,7 +1059,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
         self.draw_cursor(event.scenePos().x(), event.scenePos().y(), new_circle=True)
-        self.remove_pixels_within_circle()
+        self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -1085,7 +1068,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         super().mouseMoveEvent(event)
         if self.cursor and self.isPressed:
             self.draw_cursor(event.scenePos().x(), event.scenePos().y())
-            self.remove_pixels_within_circle()
+            self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
         self.update()
 
     def mouseReleaseEvent(self, event):
