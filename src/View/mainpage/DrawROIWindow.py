@@ -40,6 +40,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance = draw_roi_window_instance
         self.colour = None
         self.ds = None
+        self.zoom = 1.0
 
         self.upper_limit = None
         self.lower_limit = None
@@ -73,6 +74,7 @@ class UIDrawROIWindow:
         self.min_pixel_density_line_edit.setText(_translate("MinPixelDensityInput", ""))
         self.max_pixel_density_label.setText(_translate("MaxPixelDensityLabel", "Maximum density (pixels): "))
         self.max_pixel_density_line_edit.setText(_translate("MaxPixelDensityInput", ""))
+        self.draw_roi_window_viewport_zoom_label.setText(_translate("DrawRoiWindowViewportZoomLabel", "Zoom: "))
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
 
@@ -86,8 +88,6 @@ class UIDrawROIWindow:
         self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.view.setBackgroundBrush(background_brush)
-        self.view.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum);
-        self.view.resize(self.view.sizeHint().width(), self.view.sizeHint().height())
         # Set event filter on the DICOM View area
         self.view.viewport().installEventFilter(self.draw_roi_window_instance)
 
@@ -136,6 +136,51 @@ class UIDrawROIWindow:
         self.draw_roi_window_input_container_box.addRow(self.image_slice_number_label, self.image_slice_number_line_edit)
 
 
+        # Create a horizontal box for containing the zoom function
+        self.draw_roi_window_viewport_zoom_box = QHBoxLayout()
+        self.draw_roi_window_viewport_zoom_box.setObjectName("DrawRoiWindowViewportZoomBox")
+        # Create a label for zooming
+        self.draw_roi_window_viewport_zoom_label = QLabel()
+        self.draw_roi_window_viewport_zoom_label.setObjectName("DrawRoiWindowViewportZoomLabel")
+        # Create an input box for zoom factor
+        self.draw_roi_window_viewport_zoom_input = QLineEdit()
+        self.draw_roi_window_viewport_zoom_input.setObjectName("DrawRoiWindowViewportZoomInput")
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+        self.draw_roi_window_viewport_zoom_input.setEnabled(False)
+        self.draw_roi_window_viewport_zoom_input.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.draw_roi_window_viewport_zoom_input.resize(self.draw_roi_window_viewport_zoom_input.sizeHint().width(),
+                                                        self.draw_roi_window_viewport_zoom_input.sizeHint().height())
+        # Create 2 buttons for zooming in and out
+        # Zoom In Button
+        self.draw_roi_window_viewport_zoom_in_button = QPushButton()
+        self.draw_roi_window_viewport_zoom_in_button.setObjectName("DrawRoiWindowViewportZoomInButton")
+        self.draw_roi_window_viewport_zoom_in_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.draw_roi_window_viewport_zoom_in_button.resize(QSize(24, 24))
+        self.draw_roi_window_viewport_zoom_in_button.setProperty("QPushButtonClass", "zoom-button")
+        icon_zoom_in = QtGui.QIcon()
+        icon_zoom_in.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/zoom_in_icon.png'))
+        self.draw_roi_window_viewport_zoom_in_button.setIcon(icon_zoom_in)
+        self.draw_roi_window_viewport_zoom_in_button.clicked.connect(self.on_zoom_in_clicked)
+        # Zoom Out Button
+        self.draw_roi_window_viewport_zoom_out_button = QPushButton()
+        self.draw_roi_window_viewport_zoom_out_button.setObjectName("DrawRoiWindowViewportZoomOutButton")
+        self.draw_roi_window_viewport_zoom_out_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.draw_roi_window_viewport_zoom_out_button.resize(QSize(24, 24))
+        self.draw_roi_window_viewport_zoom_out_button.setProperty("QPushButtonClass", "zoom-button")
+        icon_zoom_out = QtGui.QIcon()
+        icon_zoom_out.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/zoom_out_icon.png'))
+        self.draw_roi_window_viewport_zoom_out_button.setIcon(icon_zoom_out)
+        self.draw_roi_window_viewport_zoom_out_button.clicked.connect(self.on_zoom_out_clicked)
+        self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_label)
+        self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_input)
+        self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_in_button)
+        self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_out_button)
+        self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_viewport_zoom_box)
+
+
         # Create a horizontal box for forward and backward button
         self.draw_roi_window_backward_forward_box = QHBoxLayout()
         self.draw_roi_window_backward_forward_box.setObjectName("DrawRoiWindowBackwardForwardBox")
@@ -182,20 +227,20 @@ class UIDrawROIWindow:
         self.image_slice_number_transect_button.clicked.connect(self.transect_handler)
         icon_transect = QtGui.QIcon()
         icon_transect.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/transect_icon.png'))
-        self.image_slice_number_transect_button.setIcon(icon_move_forward)
+        self.image_slice_number_transect_button.setIcon(icon_transect)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_transect_button)
         # Create a draw button
         self.image_slice_number_draw_button = QPushButton()
         self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
         self.image_slice_number_draw_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_transect_button.resize(
+        self.image_slice_number_draw_button.resize(
             self.image_slice_number_draw_button.sizeHint().width(),
             self.image_slice_number_draw_button.sizeHint().height())
         self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
         icon_draw = QtGui.QIcon()
         icon_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
-        self.image_slice_number_transect_button.setIcon(icon_draw)
+        self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
 
@@ -303,9 +348,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_view_box = QHBoxLayout()
         self.draw_roi_window_instance_view_box.setObjectName("DrawRoiWindowInstanceViewBox")
         # Add View and Slider into horizontal box
-        self.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.slider.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
-        self.view.resize(self.view.sizeHint().width(), self.view.sizeHint().height())
         self.slider.resize(self.slider.sizeHint().width(), self.slider.sizeHint().height())
         self.draw_roi_window_instance_view_box.addWidget(self.view)
         self.draw_roi_window_instance_view_box.addWidget(self.slider)
@@ -402,6 +445,24 @@ class UIDrawROIWindow:
         self.layout_view.addWidget(self.text_patientPos, 4, 2, 1, 1)
         self.layout_view.addItem(fixed_spacer, 0, 3, 6, 1)
 
+    def on_zoom_in_clicked(self):
+        """
+        This function is used for zooming in button
+        """
+        self.zoom *= 1.05
+        self.update_view(zoomChange=True)
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+
+    def on_zoom_out_clicked(self):
+        """
+        This function is used for zooming out button
+        """
+        self.zoom /= 1.05
+        self.update_view(zoomChange=True)
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+
     def on_cancel_button_clicked(self):
         """
         This function is used for canceling the drawing
@@ -432,6 +493,10 @@ class UIDrawROIWindow:
          events in the DICOM View area.
          False by default.
         """
+
+        if zoomChange:
+            self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
+
         if self.upper_limit and self.lower_limit:
             self.min_pixel_density_line_edit.setText(str(self.lower_limit))
             self.max_pixel_density_line_edit.setText(str(self.upper_limit))
@@ -508,14 +573,11 @@ class UIDrawROIWindow:
             # logging.error('Image Position (Patient) coordinates :' + str(imagePosPatientCoordinates))
             slice_pos = imagePosPatientCoordinates[2]
 
-        # For formatting
-        zoom = 1
-
         self.text_imageID.setText(_translate("MainWindow", "Image: " + str(current_slice) + " / " + str(total_slices)))
         self.text_imagePos.setText(_translate("MainWindow", "Position: " + str(slice_pos) + " mm"))
         self.text_WL.setText(_translate("MainWindow", "W/L: " + str(window) + "/" + str(level)))
         self.text_imageSize.setText(_translate("MainWindow", "Image Size: " + str(row_img) + "x" + str(col_img) + "px"))
-        self.text_zoom.setText(_translate("MainWindow", "Zoom: " + str(zoom) + ":" + str(zoom)))
+        self.text_zoom.setText(_translate("MainWindow", "Zoom: " + "{:.2f}".format(self.zoom * 100) + "%"))
         self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
         self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
 
