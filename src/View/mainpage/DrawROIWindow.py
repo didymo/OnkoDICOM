@@ -640,11 +640,13 @@ class UIDrawROIWindow:
         self.internal_hole_max_line_edit.setText("9")
         self.min_pixel_density_line_edit.setText("")
         self.max_pixel_density_line_edit.setText("")
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
 
     def transect_handler(self):
         """
-    	Function triggered when the Transect button is pressed from the menu.
-    	"""
+        Function triggered when the Transect button is pressed from the menu.
+        """
 
         pixmaps = self.patient_dict_container.get("pixmaps")
         id = self.slider.value()
