@@ -48,7 +48,6 @@ class UIDrawROIWindow:
         self.init_metadata()
         self.init_layout()
         self.update_view()
-        self.show_ROI_names()
 
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
 
@@ -766,33 +765,6 @@ class UIDrawROIWindow:
 
         return new_pixel_coords
 
-    def init_standard_names(self):
-        """
-        Create two lists containing standard organ and standard volume names as set by the Add-On options.
-        """
-        with open('src/data/csv/organName.csv', 'r') as f:
-            self.standard_organ_names = []
-
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_organ_names.append(row[0])
-
-        with open('src/data/csv/volumeName.csv', 'r') as f:
-            self.standard_volume_names = []
-
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_volume_names.append(row[1])
-
-        self.standard_names = self.standard_organ_names + self.standard_volume_names
-
-    def show_ROI_names(self):
-        self.init_standard_names()
-        self.select_ROI = SelectROIPopUp(self.standard_names, self.draw_roi_window_instance)
-        self.select_ROI.exec_()
-
     def set_selected_roi_name(self, roi_name):
 
         roi_exists = False
@@ -820,16 +792,15 @@ class UIDrawROIWindow:
 #                                                                                                                   #
 #####################################################################################################################
 class SelectROIPopUp(QDialog):
-    parent_window = None
+    signal_roi_name = QtCore.pyqtSignal(str)
 
-    def __init__(self, standard_names, parent_window):
-        super(SelectROIPopUp, self).__init__()
-        self.parent_window = parent_window
+    def __init__(self):
         QDialog.__init__(self)
 
         stylesheet = open("src/res/stylesheet.qss").read()
         self.setStyleSheet(stylesheet)
-        self.standard_names = standard_names
+        self.standard_names = []
+        self.init_standard_names()
 
         self.setWindowTitle("Select A Region of Interest To Draw")
         self.setMinimumSize(350, 180)
@@ -872,6 +843,28 @@ class SelectROIPopUp(QDialog):
 
         self.list_of_ROIs.clicked.connect(self.on_roi_clicked)
 
+    def init_standard_names(self):
+        """
+        Create two lists containing standard organ and standard volume names as set by the Add-On options.
+        """
+        with open('src/data/csv/organName.csv', 'r') as f:
+            standard_organ_names = []
+
+            csv_input = csv.reader(f)
+            header = next(f)  # Ignore the "header" of the column
+            for row in csv_input:
+                standard_organ_names.append(row[0])
+
+        with open('src/data/csv/volumeName.csv', 'r') as f:
+            standard_volume_names = []
+
+            csv_input = csv.reader(f)
+            header = next(f)  # Ignore the "header" of the column
+            for row in csv_input:
+                standard_volume_names.append(row[1])
+
+        self.standard_names = standard_organ_names + standard_volume_names
+
     def on_text_edited(self, text):
         self.list_of_ROIs.clear()
         text_upper_case = text.upper()
@@ -890,7 +883,7 @@ class SelectROIPopUp(QDialog):
             self.roi_name = str(roi.text())
 
             # Call function on UIDrawWindow so it has selected ROI
-            UIDrawROIWindow.set_selected_roi_name(self.parent_window, self.roi_name)
+            self.signal_roi_name.emit(self.roi_name)
             self.close()
 
     def on_cancel_clicked(self):
