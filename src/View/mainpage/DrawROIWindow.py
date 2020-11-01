@@ -58,6 +58,7 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
+        self.image_slice_number_box_draw_button.setText(_translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(
@@ -227,19 +228,6 @@ class UIDrawROIWindow:
         icon_transect.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/transect_icon.png'))
         self.image_slice_number_transect_button.setIcon(icon_transect)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_transect_button)
-        # Create a draw button
-        self.image_slice_number_draw_button = QPushButton()
-        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
-        self.image_slice_number_draw_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_draw_button.resize(
-            self.image_slice_number_draw_button.sizeHint().width(),
-            self.image_slice_number_draw_button.sizeHint().height())
-        self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
-        icon_draw = QtGui.QIcon()
-        icon_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
-        self.image_slice_number_draw_button.setIcon(icon_draw)
-        self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         # Create a bounding box button
         self.image_slice_number_box_draw_button = QPushButton()
         self.image_slice_number_box_draw_button.setObjectName("ImageSliceNumberBoxDrawButton")
@@ -255,6 +243,19 @@ class UIDrawROIWindow:
         icon_box_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_box_draw_button)
+        # Create a draw button
+        self.image_slice_number_draw_button = QPushButton()
+        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_draw_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_draw_button.resize(
+            self.image_slice_number_draw_button.sizeHint().width(),
+            self.image_slice_number_draw_button.sizeHint().height())
+        self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
+        icon_draw = QtGui.QIcon()
+        icon_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
+        self.image_slice_number_draw_button.setIcon(icon_draw)
+        self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
 
         # Create a label for denoting the max internal hole size
