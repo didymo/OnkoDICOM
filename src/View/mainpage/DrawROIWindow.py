@@ -716,8 +716,8 @@ class UIDrawROIWindow:
         # Make sure the user has clicked Draw first
         if self.ds is not None:
             # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
-            # to be converted to
-            hull = self.calculate_convex_hull_of_points()
+            # to be converted to a concave hull.
+            hull = self.calculate_concave_hull_of_points()
             single_array = []
             for sublist in hull:
                 for item in sublist:
@@ -733,13 +733,22 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
 
-    def calculate_convex_hull_of_points(self):
-        z_of_slice = 0
+    def calculate_concave_hull_of_points(self):
+        slider_id = self.slider.value()
+        dataset = self.patient_dict_container.dataset[slider_id]
+        pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+        z_coord = dataset.SliceLocation
         points = []
-        for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
-            z_of_slice = item[2]
-            points.append([item[0], item[1]])
 
+        # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
+        target_pixel_coords = [(item[0], item[1], z_coord) for item in self.drawingROI.target_pixel_coords
+                               if item not in self.drawingROI.pixel_coords_remove]
+
+        # Convert the pixels to an RCS location and move them to a list of points.
+        for i, item in enumerate(target_pixel_coords):
+            points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
+
+        # Calculate the concave hull of the points.
         alpha = 0.95 * alphashape.optimizealpha(points)
         hull = alphashape.alphashape(points, alpha)
         hull_pts = hull.exterior.coords.xy
@@ -754,7 +763,7 @@ class UIDrawROIWindow:
             y_values.append(y_value)
 
         for i in range(len(x_values)):
-            x, y, z = x_values[i], y_values[i], z_of_slice
+            x, y, z = x_values[i], y_values[i], z_coord
             new_pixel_coords.append((x, y, z))
 
         return new_pixel_coords
@@ -934,15 +943,11 @@ class Drawing(QtWidgets.QGraphicsScene):
     def _display_pixel_color(self):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
-            patient_dict_container = PatientDictContainer()
-            dict_pixluts = patient_dict_container.get("pixluts")
-            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
 
             """
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
             pixel_array[x][y] will return the density of the pixel
             """
-            z_coord = int(data_set.SliceLocation)
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
             for x_coord in range(512):
@@ -950,26 +955,6 @@ class Drawing(QtWidgets.QGraphicsScene):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
                         self.target_pixel_coords.append((y_coord, x_coord))
-
-            """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-            """
-
-            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords]
-            # Make 2D to 1D
-            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
-            # Convert pixel coordinates to RCS coordinates.
-            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
-                z = item[2]
-                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
-                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
-            for sublist in self.draw_roi_window_instance.target_pixel_coords:
-                for item in sublist:
-                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
-
-           #print(self.draw_roi_window_instance.target_pixel_coords_single_array)
-
 
             """
             For the meantime, a new image is created and the pixels specified are coloured. 
@@ -1028,36 +1013,13 @@ class Drawing(QtWidgets.QGraphicsScene):
         for x_coord, y_coord, colors in self.accordingColorList[:]:
             for xc_coord, yc_coord in self._circlePoints[:]:
                 if (x_coord == xc_coord and y_coord == yc_coord):
-                    self.q_image.setPixelColor(x_coord, y_coord, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
+                    self.q_image.setPixelColor(x_coord, y_coord,
+                                               QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
                     self.pixel_coords_remove.append((x_coord, y_coord))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
         self.label.setPixmap(self.q_pixmaps)
         self.addWidget(self.label)
-
-    def update_data(self):
-        if self.min_pixel <= self.max_pixel:
-            data_set = self.dataset
-            z_coord = int(data_set.SliceLocation)
-            patient_dict_container = PatientDictContainer()
-            dict_pixluts = patient_dict_container.get("pixluts")
-            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
-            """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-            """
-            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords if item not in self.pixel_coords_remove]
-
-            # Make 2D to 1D
-            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
-            # Convert pixel coordinates to RCS coordinates.
-            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
-                z = item[2]
-                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
-                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
-            for sublist in self.draw_roi_window_instance.target_pixel_coords:
-                for item in sublist:
-                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
 
     def wheelEvent(self, event):
         delta = event.delta() / 120
@@ -1120,5 +1082,4 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
-        self.update_data()
         self.update()
