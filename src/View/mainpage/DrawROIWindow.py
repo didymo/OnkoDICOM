@@ -107,6 +107,7 @@ class UIDrawROIWindow:
         # Creating a form box to hold all buttons and input fields
         self.draw_roi_window_input_container_box = QFormLayout()
         self.draw_roi_window_input_container_box.setObjectName("DrawRoiWindowInputContainerBox")
+        self.draw_roi_window_input_container_box.setLabelAlignment(Qt.AlignLeft)
 
 
         # Create a label for denoting the ROI name

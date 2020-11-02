@@ -1,6 +1,7 @@
 import glob
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QPixmap, QIcon
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -40,14 +41,14 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        main_window_instance.setMinimumSize(1080, 700)
-        main_window_instance.setWindowTitle("OnkoDICOM")
-        main_window_instance.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        stylesheet = open("src/res/stylesheet.qss").read()
+        window_icon = QIcon()
+        window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
+        self.main_window_instance.setMinimumSize(1080, 700)
+        self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
+        self.main_window_instance.setWindowIcon(window_icon)
+        self.main_window_instance.setStyleSheet(stylesheet)
 
-        # Import stylesheet
-        sheet_file = "src/res/stylesheet.qss"
-        with open(sheet_file) as fh:
-            main_window_instance.setStyleSheet(fh.read())
 
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QtWidgets.QVBoxLayout()
@@ -58,7 +59,7 @@ class UIMainWindow:
 
         # Left panel contains stuctures tab, isodoses tab, and structure information
         self.left_panel = QtWidgets.QTabWidget()
-        self.left_panel.setMinimumWidth(230)
+        self.left_panel.setMinimumWidth(300)
         self.left_panel.setMaximumWidth(500)
         self.left_panel_layout = QtWidgets.QHBoxLayout(self.left_panel)
 
@@ -126,14 +127,15 @@ class UIMainWindow:
         self.central_widget_layout.addWidget(self.footer)
 
         self.central_widget.setLayout(self.central_widget_layout)
-        main_window_instance.setCentralWidget(self.central_widget)
+        self.main_window_instance.setCentralWidget(self.central_widget)
 
         # Create actions and set menu and tool bars
         self.action_handler = ActionHandler(self)
         self.menubar = MenuBar(self.action_handler)
-        main_window_instance.setMenuBar(self.menubar)
+        self.main_window_instance.setMenuBar(self.menubar)
         self.toolbar = NewToolBar(self.action_handler)
-        main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.setWindowTitle("OnkoDICOM")
 
     def create_footer(self):
         self.footer.setFixedHeight(15)
