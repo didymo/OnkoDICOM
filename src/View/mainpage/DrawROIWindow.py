@@ -1,14 +1,13 @@
-import copy
 import csv
 import math
 
+import numpy
 import pydicom
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.Qt import Qt
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
-    QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout, QFrame
+    QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
 
 from src.Controller.MainPageController import MainPageCallClass
@@ -49,7 +48,6 @@ class UIDrawROIWindow:
         self.init_metadata()
         self.init_layout()
         self.update_view()
-        self.show_ROI_names()
 
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
 
@@ -60,6 +58,7 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
+        self.image_slice_number_box_draw_button.setText(_translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
         self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
         self.image_slice_number_move_backward_button.setText(
@@ -108,6 +107,7 @@ class UIDrawROIWindow:
         # Creating a form box to hold all buttons and input fields
         self.draw_roi_window_input_container_box = QFormLayout()
         self.draw_roi_window_input_container_box.setObjectName("DrawRoiWindowInputContainerBox")
+        self.draw_roi_window_input_container_box.setLabelAlignment(Qt.AlignLeft)
 
 
         # Create a label for denoting the ROI name
@@ -229,6 +229,21 @@ class UIDrawROIWindow:
         icon_transect.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/transect_icon.png'))
         self.image_slice_number_transect_button.setIcon(icon_transect)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_transect_button)
+        # Create a bounding box button
+        self.image_slice_number_box_draw_button = QPushButton()
+        self.image_slice_number_box_draw_button.setObjectName("ImageSliceNumberBoxDrawButton")
+        self.image_slice_number_box_draw_button.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.Minimum
+        )
+        self.image_slice_number_box_draw_button.resize(
+            self.image_slice_number_box_draw_button.sizeHint().width(),
+            self.image_slice_number_box_draw_button.sizeHint().height()
+        )
+        self.image_slice_number_box_draw_button.clicked.connect(self.on_box_draw_clicked)
+        icon_box_draw = QtGui.QIcon()
+        icon_box_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
+        self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
+        self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_box_draw_button)
         # Create a draw button
         self.image_slice_number_draw_button = QPushButton()
         self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
@@ -243,7 +258,6 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
-
 
         # Create a label for denoting the max internal hole size
         self.internal_hole_max_label = QLabel()
@@ -627,11 +641,13 @@ class UIDrawROIWindow:
         self.internal_hole_max_line_edit.setText("9")
         self.min_pixel_density_line_edit.setText("")
         self.max_pixel_density_line_edit.setText("")
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
 
     def transect_handler(self):
         """
-    	Function triggered when the Transect button is pressed from the menu.
-    	"""
+        Function triggered when the Transect button is pressed from the menu.
+        """
 
         pixmaps = self.patient_dict_container.get("pixmaps")
         id = self.slider.value()
@@ -701,7 +717,6 @@ class UIDrawROIWindow:
                 self.drawingROI = Drawing(
                     pixmaps[id],
                     dt._pixel_array.transpose(),
-                    self.view,
                     min_pixel,
                     max_pixel,
                     self.patient_dict_container.dataset[id],
@@ -712,12 +727,21 @@ class UIDrawROIWindow:
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
+    def on_box_draw_clicked(self):
+        id = self.slider.value()
+        dt = self.patient_dict_container.dataset[id]
+        dt.convert_pixel_data()
+        pixmaps = self.patient_dict_container.get("pixmaps")
+
+        self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
+        self.view.setScene(self.bounds_box_draw)
+
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
         if self.ds is not None:
             # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
-            # to be converted to
-            hull = self.calculate_convex_hull_of_points()
+            # to be converted to a concave hull.
+            hull = self.calculate_concave_hull_of_points()
             single_array = []
             for sublist in hull:
                 for item in sublist:
@@ -733,13 +757,21 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
 
-    def calculate_convex_hull_of_points(self):
-        z_of_slice = 0
+    def calculate_concave_hull_of_points(self):
+        slider_id = self.slider.value()
+        dataset = self.patient_dict_container.dataset[slider_id]
+        pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+        z_coord = dataset.SliceLocation
         points = []
-        for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
-            z_of_slice = item[2]
-            points.append([item[0], item[1]])
 
+        # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
+        target_pixel_coords = [(item[0], item[1], z_coord) for item in self.drawingROI.target_pixel_coords]
+
+        # Convert the pixels to an RCS location and move them to a list of points.
+        for i, item in enumerate(target_pixel_coords):
+            points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
+
+        # Calculate the concave hull of the points.
         alpha = 0.95 * alphashape.optimizealpha(points)
         hull = alphashape.alphashape(points, alpha)
         hull_pts = hull.exterior.coords.xy
@@ -754,37 +786,10 @@ class UIDrawROIWindow:
             y_values.append(y_value)
 
         for i in range(len(x_values)):
-            x, y, z = x_values[i], y_values[i], z_of_slice
+            x, y, z = x_values[i], y_values[i], z_coord
             new_pixel_coords.append((x, y, z))
 
         return new_pixel_coords
-
-    def init_standard_names(self):
-        """
-        Create two lists containing standard organ and standard volume names as set by the Add-On options.
-        """
-        with open('src/data/csv/organName.csv', 'r') as f:
-            self.standard_organ_names = []
-
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_organ_names.append(row[0])
-
-        with open('src/data/csv/volumeName.csv', 'r') as f:
-            self.standard_volume_names = []
-
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_volume_names.append(row[1])
-
-        self.standard_names = self.standard_organ_names + self.standard_volume_names
-
-    def show_ROI_names(self):
-        self.init_standard_names()
-        self.select_ROI = SelectROIPopUp(self.standard_names, self.draw_roi_window_instance)
-        self.select_ROI.exec_()
 
     def set_selected_roi_name(self, roi_name):
 
@@ -813,16 +818,15 @@ class UIDrawROIWindow:
 #                                                                                                                   #
 #####################################################################################################################
 class SelectROIPopUp(QDialog):
-    parent_window = None
+    signal_roi_name = QtCore.pyqtSignal(str)
 
-    def __init__(self, standard_names, parent_window):
-        super(SelectROIPopUp, self).__init__()
-        self.parent_window = parent_window
+    def __init__(self):
         QDialog.__init__(self)
 
         stylesheet = open("src/res/stylesheet.qss").read()
         self.setStyleSheet(stylesheet)
-        self.standard_names = standard_names
+        self.standard_names = []
+        self.init_standard_names()
 
         self.setWindowTitle("Select A Region of Interest To Draw")
         self.setMinimumSize(350, 180)
@@ -865,6 +869,28 @@ class SelectROIPopUp(QDialog):
 
         self.list_of_ROIs.clicked.connect(self.on_roi_clicked)
 
+    def init_standard_names(self):
+        """
+        Create two lists containing standard organ and standard volume names as set by the Add-On options.
+        """
+        with open('src/data/csv/organName.csv', 'r') as f:
+            standard_organ_names = []
+
+            csv_input = csv.reader(f)
+            header = next(f)  # Ignore the "header" of the column
+            for row in csv_input:
+                standard_organ_names.append(row[0])
+
+        with open('src/data/csv/volumeName.csv', 'r') as f:
+            standard_volume_names = []
+
+            csv_input = csv.reader(f)
+            header = next(f)  # Ignore the "header" of the column
+            for row in csv_input:
+                standard_volume_names.append(row[1])
+
+        self.standard_names = standard_organ_names + standard_volume_names
+
     def on_text_edited(self, text):
         self.list_of_ROIs.clear()
         text_upper_case = text.upper()
@@ -883,7 +909,7 @@ class SelectROIPopUp(QDialog):
             self.roi_name = str(roi.text())
 
             # Call function on UIDrawWindow so it has selected ROI
-            UIDrawROIWindow.set_selected_roi_name(self.parent_window, self.roi_name)
+            self.signal_roi_name.emit(self.roi_name)
             self.close()
 
     def on_cancel_clicked(self):
@@ -898,7 +924,7 @@ class SelectROIPopUp(QDialog):
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, tabWindow, min_pixel, max_pixel, dataset, draw_roi_window_instance):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance):
         super(Drawing, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
@@ -910,21 +936,18 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.data = pixmapdata
         self.values = []
         self.getValues()
-        self.tabWindow = tabWindow
         self.rect = QtCore.QRect(250, 300, 20, 20)
         self.update()
         self._points = {}
         self._circlePoints = []
         self.drag_position = QtCore.QPoint()
-        self.item = None
+        self.cursor = None
         self.isPressed = False
         self.dataset = dataset
         self.pixel_array = None
         # This will contain the new pixel coordinates specifed by the min and max pixel density
         self.target_pixel_coords = []
-        self.pixel_coords_remove = []
         self.accordingColorList = []
-        self.q_image = None
         self.q_image = None
         self.q_pixmaps = None
         self.label = QtWidgets.QLabel()
@@ -932,44 +955,34 @@ class Drawing(QtWidgets.QGraphicsScene):
         self._display_pixel_color()
 
     def _display_pixel_color(self):
+        """
+        Creates the initial list of pixel values within the given minimum and maximum densities, then displays them
+        on the view.
+        """
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
-            patient_dict_container = PatientDictContainer()
-            dict_pixluts = patient_dict_container.get("pixluts")
-            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
+            if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
+                min_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().x())
+                min_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().y())
+                max_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().width() + min_x)
+                max_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().height() + min_y)
+            else:
+                min_x = 0
+                min_y = 0
+                max_x = data_set.Rows
+                max_y = data_set.Columns
 
             """
             pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
             pixel_array[x][y] will return the density of the pixel
             """
-            z_coord = int(data_set.SliceLocation)
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
-            for x_coord in range(512):
-                for y_coord in range(512):
+            for x_coord in range(min_y, max_y):
+                for y_coord in range(min_x, max_x):
                     if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
                             self.pixel_array[x_coord][y_coord] <= self.max_pixel):
                         self.target_pixel_coords.append((y_coord, x_coord))
-
-            """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-            """
-
-            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords]
-            # Make 2D to 1D
-            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
-            # Convert pixel coordinates to RCS coordinates.
-            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
-                z = item[2]
-                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
-                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
-            for sublist in self.draw_roi_window_instance.target_pixel_coords:
-                for item in sublist:
-                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
-
-           #print(self.draw_roi_window_instance.target_pixel_coords_single_array)
-
 
             """
             For the meantime, a new image is created and the pixels specified are coloured. 
@@ -989,9 +1002,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.label.setPixmap(self.q_pixmaps)
             self.addWidget(self.label)
 
-    # This function is for if we want to choose and drag the circle
     def _find_neighbor_point(self, event):
-        u""" Find point around mouse position
+        """
+        Find point around mouse position. This function is for if we want to choose and drag the circle
         :rtype: ((int, int)|None)
         :return: (x, y) if there are any point around mouse else None
         """
@@ -1007,83 +1020,63 @@ class Drawing(QtWidgets.QGraphicsScene):
             return nearest_point
         return None
 
-    # This function gets the corresponding values of all the points in the drawn line from the dataset
     def getValues(self):
+        """
+        This function gets the corresponding values of all the points in the drawn line from the dataset.
+        """
         for i in range(512):
             for j in range(512):
                 self.values.append(self.data[i][j])
 
-    def calculate_circle_points(self, x , y, r):
-        self._circlePoints.clear()
-        degree = math.pi/8
-        for j in range((r - 2),r):
-            for i in range(300):
-                x1 = round(x + j*math.cos(degree))
-                y1 = round(y + j*math.sin(degree))
-                degree = degree + 1/44
-                self._circlePoints.append((x1, y1))
-            j = j+1
-
-    def compare(self):
-        for x_coord, y_coord, colors in self.accordingColorList[:]:
-            for xc_coord, yc_coord in self._circlePoints[:]:
-                if (x_coord == xc_coord and y_coord == yc_coord):
-                    self.q_image.setPixelColor(x_coord, y_coord, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
-                    self.pixel_coords_remove.append((x_coord, y_coord))
+    def remove_pixels_within_circle(self, clicked_x, clicked_y):
+        """
+        Removes all highlighted pixels within the selected circle and updates the image.
+        """
+        # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
+        # than the radius, remove it from the highlighted pixels.
+        for x, y, colors in self.accordingColorList[:]:
+            clicked_point = numpy.array((clicked_x, clicked_y))
+            point_to_check = numpy.array((x, y))
+            distance = numpy.linalg.norm(clicked_point - point_to_check)
+            if distance <= self.draw_tool_radius:
+                self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
+                self.target_pixel_coords.remove((x, y))
+                self.accordingColorList.remove((x, y, colors))
 
         self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
         self.label.setPixmap(self.q_pixmaps)
         self.addWidget(self.label)
 
-    def update_data(self):
-        if self.min_pixel <= self.max_pixel:
-            data_set = self.dataset
-            z_coord = int(data_set.SliceLocation)
-            patient_dict_container = PatientDictContainer()
-            dict_pixluts = patient_dict_container.get("pixluts")
-            curr_pixlut = dict_pixluts[data_set.SOPInstanceUID]
-            """
-                pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-                pixel_array[x][y] will return the density of the pixel
-            """
-            self.draw_roi_window_instance.target_pixel_coords = [ (item[0], item[1], z_coord) for item in self.target_pixel_coords if item not in self.pixel_coords_remove]
-
-            # Make 2D to 1D
-            self.draw_roi_window_instance.target_pixel_coords_single_array.clear()
-            # Convert pixel coordinates to RCS coordinates.
-            for i, item in enumerate(self.draw_roi_window_instance.target_pixel_coords):
-                z = item[2]
-                x, y = ROI.pixel_to_rcs(curr_pixlut, item[0], item[1])
-                self.draw_roi_window_instance.target_pixel_coords[i] = (x, y, z)
-            for sublist in self.draw_roi_window_instance.target_pixel_coords:
-                for item in sublist:
-                    self.draw_roi_window_instance.target_pixel_coords_single_array.append(item)
+    def draw_cursor(self, event_x, event_y, new_circle=False):
+        """
+        Draws a blue circle where the user clicked.
+        :param event_x: QGraphicsScene event attribute: event.scenePos().x()
+        :param event_y: QGraphicsScene event attribute: event.scenePos().y()
+        :param new_circle: True when the circle object is being created rather than updated.
+        """
+        x = event_x - self.draw_tool_radius
+        y = event_y - self.draw_tool_radius
+        if new_circle:
+            self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
+            self.cursor.setPen(QPen(QColor("blue")))
+            self.addItem(self.cursor)
+        else:
+            self.cursor.setRect(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
 
     def wheelEvent(self, event):
         delta = event.delta() / 120
-        if(self.draw_tool_radius == 19 and delta == 1):
-            self.draw_tool_radius = 19 + 5
-        elif(self.draw_tool_radius == 24 and delta == -1):
-            self.draw_tool_radius = 19
-        elif(self.draw_tool_radius == 19 and delta == -1):
-            self.draw_tool_radius = 19 - 6
-        elif(self.draw_tool_radius == 13 and delta == 1):
-            self.draw_tool_radius = 19
-        elif (self.draw_tool_radius == 13 and delta == -1):
-            self.draw_tool_radius = 13 - 6
-        elif (self.draw_tool_radius == 7 and delta == 1):
-            self.draw_tool_radius = 13 + 6
+        change = int(delta * 6)
 
-        x = event.scenePos().x() - self.draw_tool_radius
-        y = event.scenePos().y() - self.draw_tool_radius
-        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
-        self.item.setRect(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius,
-                          (self.draw_tool_radius + 21), (self.draw_tool_radius + 21))
+        if delta <= -1:
+            self.draw_tool_radius = max(self.draw_tool_radius + change, 7)
+        elif delta >= 1:
+            self.draw_tool_radius = min(self.draw_tool_radius + change, 25)
 
+        self.draw_cursor(event.scenePos().x(), event.scenePos().y())
 
     def mousePressEvent(self, event):
-        if self.item:
-            self.removeItem(self.item)
+        if self.cursor:
+            self.removeItem(self.cursor)
         self.isPressed = True
         if (
                 2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
@@ -1091,34 +1084,85 @@ class Drawing(QtWidgets.QGraphicsScene):
         ):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
-        # event.scenePos().x() - 5, event.scenePos().y() - 5
-        # event.scenePos().x() - 33, event.scenePos().y() - 33
-        x = event.scenePos().x() - self.draw_tool_radius
-        y = event.scenePos().y() - self.draw_tool_radius
-        self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
-        #  x = a + r .cos(t), y = b+r.sin(t)
-        self.item = QGraphicsEllipseItem(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius, (self.draw_tool_radius+ 21), (self.draw_tool_radius + 21))
-        self.item.setPen(QPen(QColor("blue")))
-        self.addItem(self.item)
-        self.compare()
+        self.draw_cursor(event.scenePos().x(), event.scenePos().y(), new_circle=True)
+        self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
         self.update()
 
     def mouseMoveEvent(self, event):
         if not self.drag_position.isNull():
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
-        if self.item and self.isPressed:
-            r = 19
-            x = event.scenePos().x() - self.draw_tool_radius
-            y = event.scenePos().y() - self.draw_tool_radius
-            self.calculate_circle_points(x + self.draw_tool_radius, y + self.draw_tool_radius, self.draw_tool_radius)
-            self.compare()
-            self.item.setRect(event.scenePos().x() - self.draw_tool_radius, event.scenePos().y() - self.draw_tool_radius, (self.draw_tool_radius + 21), (self.draw_tool_radius+ 21))
+        if self.cursor and self.isPressed:
+            self.draw_cursor(event.scenePos().x(), event.scenePos().y())
+            self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
         self.update()
 
     def mouseReleaseEvent(self, event):
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
-        self.update_data()
         self.update()
+
+
+class DrawBoundingBox(QtWidgets.QGraphicsScene):
+    """
+    Object responsible for updating and displaying the bounds of the ROI draw.
+    """
+
+    def __init__(self, image_to_paint, pixmap_data):
+        super().__init__()
+        self.addItem(QGraphicsPixmapItem(image_to_paint))
+        self.img = image_to_paint
+        self.pixmap_data = pixmap_data
+        self.drawing = False
+        self.start_x = None
+        self.start_y = None
+        self.end_x = None
+        self.end_y = None
+        self.box = None
+
+    def draw_bounding_box(self, new_box=False):
+        if new_box:
+            self.box = QtWidgets.QGraphicsRectItem(self.start_x, self.start_y, 0, 0)
+            pen = QtGui.QPen(QtGui.QColor("red"))
+            pen.setStyle(QtCore.Qt.DashDotDotLine)
+            pen.setWidth(0)
+            self.box.setPen(pen)
+            self.addItem(self.box)
+        else:
+            if self.start_x < self.end_x:
+                x = self.start_x
+                width = self.end_x - self.start_x
+            else:
+                x = self.end_x
+                width = self.start_x - self.end_x
+
+            if self.start_y < self.end_y:
+                y = self.start_y
+                height = self.end_y - self.start_y
+            else:
+                y = self.end_y
+                height = self.start_y - self.end_y
+
+            self.box.setRect(x, y, width, height)
+
+    def mousePressEvent(self, event):
+        if self.box:
+            self.removeItem(self.box)
+        self.drawing = True
+        self.start_x = event.scenePos().x()
+        self.start_y = event.scenePos().y()
+        self.draw_bounding_box(new_box=True)
+
+    def mouseMoveEvent(self, event):
+        if self.drawing:
+            self.end_x = event.scenePos().x()
+            self.end_y = event.scenePos().y()
+            self.draw_bounding_box()
+
+    def mouseReleaseEvent(self, event):
+        if self.drawing:
+            self.drawing = False
+            self.end_x = event.scenePos().x()
+            self.end_y = event.scenePos().y()
+            self.draw_bounding_box()
