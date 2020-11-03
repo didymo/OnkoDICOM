@@ -53,9 +53,16 @@ class ROIDrawOption:
         self.structure_modified_function = structure_modified_function
 
     def show_roi_draw_options(self):
+        self.choose_roi_name_window = SelectROIPopUp()
+        self.choose_roi_name_window.signal_roi_name.connect(self.roi_name_selected)
+        self.choose_roi_name_window.show()
+
+    def roi_name_selected(self, roi_name):
         patient_dict_container = PatientDictContainer()
         rois = patient_dict_container.get("rois")
         dataset_rtss = patient_dict_container.get("dataset_rtss")
         self.draw_window = RoiDrawOptions(rois, dataset_rtss)
+        self.draw_window.set_selected_roi_name(roi_name)
         self.draw_window.signal_roi_drawn.connect(self.structure_modified_function)
         self.draw_window.show()
+
