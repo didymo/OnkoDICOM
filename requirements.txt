@@ -1,3 +1,4 @@
+pytest
 alphashape
 numpy~=1.19
 pandas
