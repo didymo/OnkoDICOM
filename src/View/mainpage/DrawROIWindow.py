@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QP
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
 import keyboard
+from shapely.geometry import MultiPolygon
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
@@ -357,6 +358,17 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_save_button.clicked.connect(self.on_save_clicked)
         self.draw_roi_window_cancel_save_box.addWidget(self.draw_roi_window_instance_save_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cancel_save_box)
+
+        # Create a contour preview button and alpha selection input
+        self.row_preview_layout = QtWidgets.QHBoxLayout()
+        self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
+        self.button_contour_preview.clicked.connect(self.on_preview_clicked)
+        self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
+        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
+        self.row_preview_layout.addWidget(self.button_contour_preview)
+        self.row_preview_layout.addWidget(self.label_alpha_value)
+        self.row_preview_layout.addWidget(self.input_alpha_value)
+        self.draw_roi_window_input_container_box.addRow(self.row_preview_layout)
 
 
         # Creating a horizontal box to hold the ROI view and slider
@@ -743,17 +755,23 @@ class UIDrawROIWindow:
             # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
             # to be converted to a concave hull.
             hull = self.calculate_concave_hull_of_points()
-            single_array = []
-            for sublist in hull:
-                for item in sublist:
-                    single_array.append(item)
-            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
-            self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
-            QMessageBox.about(self.draw_roi_window_instance, "Warning",
-                              "This feature is still in development. The ROI will appear in your structures tab,"
-                                                                    " but may demonstrate some technical issues "
-                                                                    "when performing tasks.")
-            self.close()
+            if hull is not None:
+                single_array = []
+                for sublist in hull:
+                    for item in sublist:
+                        single_array.append(item)
+                new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
+                self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
+                QMessageBox.about(self.draw_roi_window_instance, "Warning",
+                                  "This feature is still in development. The ROI will appear in your structures tab,"
+                                                                        " but may demonstrate some technical issues "
+                                                                        "when performing tasks.")
+                self.close()
+            else:
+                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
+                                  "Selected points will generate multiple contours, which is not currently supported. "
+                                  "If the region you are drawing is not meant to generate multiple contours, please "
+                                  "ajust your selected alpha value.")
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
@@ -773,8 +791,11 @@ class UIDrawROIWindow:
             points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
 
         # Calculate the concave hull of the points.
-        alpha = 0.95 * alphashape.optimizealpha(points)
+        #alpha = 0.95 * alphashape.optimizealpha(points)
+        alpha = float(self.input_alpha_value.text())
         hull = alphashape.alphashape(points, alpha)
+        if isinstance(hull, MultiPolygon):
+            return None
         hull_pts = hull.exterior.coords.xy
 
         new_pixel_coords = []
@@ -791,6 +812,9 @@ class UIDrawROIWindow:
             new_pixel_coords.append((x, y, z))
 
         return new_pixel_coords
+
+    def on_preview_clicked(self):
+        pass
 
     def set_selected_roi_name(self, roi_name):
 
