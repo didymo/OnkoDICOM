@@ -824,7 +824,14 @@ class UIDrawROIWindow:
 
     def on_preview_clicked(self):
         if hasattr(self, 'drawingROI'):
-            pass  # display contour on image
+            list_of_points = self.calculate_concave_hull_of_points()
+            if list_of_points is not None:
+                self.drawingROI.draw_contour_preview(list_of_points)
+            else:
+                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
+                                  "Selected points will generate multiple contours, which is not currently supported. "
+                                  "If the region you are drawing is not meant to generate multiple contours, please "
+                                  "ajust your selected alpha value.")
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
@@ -980,6 +987,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self._circlePoints = []
         self.drag_position = QtCore.QPoint()
         self.cursor = None
+        self.polygon_preview = None
         self.isPressed = False
         self.dataset = dataset
         self.pixel_array = None
@@ -1098,8 +1106,26 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
             self.cursor.setPen(QPen(QColor("blue")))
             self.addItem(self.cursor)
-        else:
+        elif self.cursor is not None:
             self.cursor.setRect(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
+
+    def draw_contour_preview(self, list_of_points):
+        """
+        Draws a polygon onto the view so the user can preview what their contour will look like once exported.
+        :param list_of_points: A list of points ordered to form a polygon.
+        """
+        qpoint_list = []
+        for point in list_of_points:
+            qpoint = QtCore.QPoint(point[0], point[1])
+            qpoint_list.append(qpoint)
+        if self.polygon_preview is not None:        # Erase the existing preview
+            self.removeItem(self.polygon_preview)
+        polygon = QtGui.QPolygonF(qpoint_list)
+        self.polygon_preview = QtWidgets.QGraphicsPolygonItem(polygon)
+        pen = QtGui.QPen(QtGui.QColor("yellow"))
+        pen.setStyle(QtCore.Qt.DashDotDotLine)
+        self.polygon_preview.setPen(pen)
+        self.addItem(self.polygon_preview)
 
     def wheelEvent(self, event):
         delta = event.delta() / 120
