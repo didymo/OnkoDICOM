@@ -924,7 +924,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         y = event_y - self.draw_tool_radius
         if new_circle:
             self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
-            self.cursor.setPen(QPen(QColor("blue")))
+            pen = QPen(QColor("blue"))
+            pen.setWidth(0)
+            self.cursor.setPen(pen)
             self.cursor.setZValue(1)
             self.addItem(self.cursor)
         elif self.cursor is not None:
