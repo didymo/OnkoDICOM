@@ -9,6 +9,8 @@ from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
+import keyboard
+from shapely.geometry import MultiPolygon
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
@@ -356,6 +358,17 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_save_button.clicked.connect(self.on_save_clicked)
         self.draw_roi_window_cancel_save_box.addWidget(self.draw_roi_window_instance_save_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cancel_save_box)
+
+        # Create a contour preview button and alpha selection input
+        self.row_preview_layout = QtWidgets.QHBoxLayout()
+        self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
+        self.button_contour_preview.clicked.connect(self.on_preview_clicked)
+        self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
+        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
+        self.row_preview_layout.addWidget(self.button_contour_preview)
+        self.row_preview_layout.addWidget(self.label_alpha_value)
+        self.row_preview_layout.addWidget(self.input_alpha_value)
+        self.draw_roi_window_input_container_box.addRow(self.row_preview_layout)
 
 
         # Creating a horizontal box to hold the ROI view and slider
@@ -741,55 +754,72 @@ class UIDrawROIWindow:
         if self.ds is not None:
             # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
             # to be converted to a concave hull.
-            hull = self.calculate_concave_hull_of_points()
-            single_array = []
-            for sublist in hull:
-                for item in sublist:
-                    single_array.append(item)
-            new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
-            self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
-            QMessageBox.about(self.draw_roi_window_instance, "Warning",
-                              "This feature is still in development. The ROI will appear in your structures tab,"
-                                                                    " but may demonstrate some technical issues "
-                                                                    "when performing tasks.")
-            self.close()
+            pixel_hull = self.calculate_concave_hull_of_points()
+            if pixel_hull is not None:
+                hull = self.convert_hull_to_rcs(pixel_hull)
+                single_array = []
+                for sublist in hull:
+                    for item in sublist:
+                        single_array.append(item)
+                new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
+                self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
+                QMessageBox.about(self.draw_roi_window_instance, "Warning",
+                                  "This feature is still in development. The ROI will appear in your structures tab,"
+                                                                        " but may demonstrate some technical issues "
+                                                                        "when performing tasks.")
+                self.close()
+            else:
+                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
+                                  "Selected points will generate multiple contours, which is not currently supported. "
+                                  "If the region you are drawing is not meant to generate multiple contours, please "
+                                  "ajust your selected alpha value.")
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
 
     def calculate_concave_hull_of_points(self):
+        # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
+        target_pixel_coords = [(item[0], item[1]) for item in self.drawingROI.target_pixel_coords]
+
+        # Calculate the concave hull of the points.
+        #alpha = 0.95 * alphashape.optimizealpha(points)
+        alpha = float(self.input_alpha_value.text())
+        hull = alphashape.alphashape(target_pixel_coords, alpha)
+        if isinstance(hull, MultiPolygon):
+            return None
+
+        hull_xy = hull.exterior.coords.xy
+
+        points = []
+        for i in range(len(hull_xy[0])):
+            points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
+
+        return points
+
+    def convert_hull_to_rcs(self, hull_pts):
         slider_id = self.slider.value()
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
         z_coord = dataset.SliceLocation
         points = []
 
-        # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0], item[1], z_coord) for item in self.drawingROI.target_pixel_coords]
-
         # Convert the pixels to an RCS location and move them to a list of points.
-        for i, item in enumerate(target_pixel_coords):
+        for i, item in enumerate(hull_pts):
             points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
 
-        # Calculate the concave hull of the points.
-        alpha = 0.95 * alphashape.optimizealpha(points)
-        hull = alphashape.alphashape(points, alpha)
-        hull_pts = hull.exterior.coords.xy
+        contour_data = []
+        for p in points:
+            coords = (p[0], p[1], z_coord)
+            contour_data.append(coords)
 
-        new_pixel_coords = []
-        x_values = []
-        y_values = []
-        for x_value in hull_pts[0]:
-            x_values.append(x_value)
+        return contour_data
 
-        for y_value in hull_pts[1]:
-            y_values.append(y_value)
-
-        for i in range(len(x_values)):
-            x, y, z = x_values[i], y_values[i], z_coord
-            new_pixel_coords.append((x, y, z))
-
-        return new_pixel_coords
+    def on_preview_clicked(self):
+        if hasattr(self, 'drawingROI'):
+            pass  # display contour on image
+        else:
+            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
+                              "Please ensure you have drawn your ROI first.")
 
     def set_selected_roi_name(self, roi_name):
 
@@ -1067,9 +1097,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         delta = event.delta() / 120
         change = int(delta * 6)
 
-        if delta <= -1:
+        if delta <= -1 and keyboard.is_pressed("ctrl"):
             self.draw_tool_radius = max(self.draw_tool_radius + change, 7)
-        elif delta >= 1:
+        elif delta >= 1 and keyboard.is_pressed("ctrl"):
             self.draw_tool_radius = min(self.draw_tool_radius + change, 25)
 
         self.draw_cursor(event.scenePos().x(), event.scenePos().y())
