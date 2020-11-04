@@ -754,8 +754,9 @@ class UIDrawROIWindow:
         if self.ds is not None:
             # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
             # to be converted to a concave hull.
-            hull = self.calculate_concave_hull_of_points()
-            if hull is not None:
+            pixel_hull = self.calculate_concave_hull_of_points()
+            if pixel_hull is not None:
+                hull = self.convert_hull_to_rcs(pixel_hull)
                 single_array = []
                 for sublist in hull:
                     for item in sublist:
@@ -777,41 +778,41 @@ class UIDrawROIWindow:
                               "Please ensure you have drawn your ROI first.")
 
     def calculate_concave_hull_of_points(self):
+        # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
+        target_pixel_coords = [(item[0], item[1]) for item in self.drawingROI.target_pixel_coords]
+
+        # Calculate the concave hull of the points.
+        #alpha = 0.95 * alphashape.optimizealpha(points)
+        alpha = float(self.input_alpha_value.text())
+        hull = alphashape.alphashape(target_pixel_coords, alpha)
+        if isinstance(hull, MultiPolygon):
+            return None
+
+        hull_xy = hull.exterior.coords.xy
+
+        points = []
+        for i in range(len(hull_xy[0])):
+            points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
+
+        return points
+
+    def convert_hull_to_rcs(self, hull_pts):
         slider_id = self.slider.value()
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
         z_coord = dataset.SliceLocation
         points = []
 
-        # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0], item[1], z_coord) for item in self.drawingROI.target_pixel_coords]
-
         # Convert the pixels to an RCS location and move them to a list of points.
-        for i, item in enumerate(target_pixel_coords):
+        for i, item in enumerate(hull_pts):
             points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
 
-        # Calculate the concave hull of the points.
-        #alpha = 0.95 * alphashape.optimizealpha(points)
-        alpha = float(self.input_alpha_value.text())
-        hull = alphashape.alphashape(points, alpha)
-        if isinstance(hull, MultiPolygon):
-            return None
-        hull_pts = hull.exterior.coords.xy
+        contour_data = []
+        for p in points:
+            coords = (p[0], p[1], z_coord)
+            contour_data.append(coords)
 
-        new_pixel_coords = []
-        x_values = []
-        y_values = []
-        for x_value in hull_pts[0]:
-            x_values.append(x_value)
-
-        for y_value in hull_pts[1]:
-            y_values.append(y_value)
-
-        for i in range(len(x_values)):
-            x, y, z = x_values[i], y_values[i], z_coord
-            new_pixel_coords.append((x, y, z))
-
-        return new_pixel_coords
+        return contour_data
 
     def on_preview_clicked(self):
         if hasattr(self, 'drawingROI'):
