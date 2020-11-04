@@ -966,7 +966,7 @@ class Transect(QtWidgets.QGraphicsScene):
         if self.is_ROI_draw:
             self.mainWindow.upper_limit = self.upper_limit
             self.mainWindow.lower_limit = self.lower_limit
-            self.mainWindow.update_view()
+            self.mainWindow.dicom_view.update_view()
         else:
             self.mainWindow.dicom_view.update_view()
 
