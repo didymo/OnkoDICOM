@@ -777,6 +777,10 @@ class UIDrawROIWindow:
                               "Please ensure you have drawn your ROI first.")
 
     def calculate_concave_hull_of_points(self):
+        """
+        Return the alpha shape of the highlighted pixels using the alpha entered by the user.
+        :return: List of points ordered to form a polygon.
+        """
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
         target_pixel_coords = [(item[0], item[1]) for item in self.drawingROI.target_pixel_coords]
 
@@ -796,6 +800,11 @@ class UIDrawROIWindow:
         return points
 
     def convert_hull_to_rcs(self, hull_pts):
+        """
+        Converts all the pixel coordinates in the given polygon to RCS coordinates based off the CT image's matrix.
+        :param hull_pts: List of pixel coordinates ordered to form a polygon.
+        :return: List of RCS coordinates ordered to form a polygon
+        """
         slider_id = self.slider.value()
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
