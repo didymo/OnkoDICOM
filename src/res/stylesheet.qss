@@ -83,13 +83,13 @@ QLabel#OpenPatientDirectoryPrompt, QLabel#OpenPatientDirectoryResultLabel {
 QLabel[PatientBarClass="label"] {
     font-size: 12px;
     font-weight: bold;
-    text-align: left;
+    text-align: right;
+    margin-right: 2px;
 }
 QLabel[PatientBarClass="value"] {
-    margin-top: 16px;
     font-size: 12px;
-    font-style: italic;
     text-align: left;
+    margin-right: 8px;
 }
 
 /* Open Patient */

@@ -14,7 +14,7 @@ class PatientBar(QtWidgets.QWidget):
         # Init layout
         self.patient_bar_layout = QHBoxLayout()
         self.patient_bar_layout.setObjectName("PatientBarLayout")
-        self.patient_bar_layout.setSpacing(10)
+        self.patient_bar_layout.setSpacing(0)
 
         # Create patient icon
         self.patient_bar_icon = QLabel()
@@ -30,11 +30,11 @@ class PatientBar(QtWidgets.QWidget):
         self.patient_bar_name_info.resize(self.patient_bar_name_info.sizeHint().width(),
                                           self.patient_bar_name_info.sizeHint().height())
         self.patient_bar_name_info.setProperty("PatientBarClass", "value")
-        self.patient_bar_name_info_label = QLabel(self.patient_bar_name_info)
+        self.patient_bar_name_info_label = QLabel()
         self.patient_bar_name_info_label.setObjectName("PatientBarNameInfoLabel")
-        self.patient_bar_name_info_label.setText("Name")
+        self.patient_bar_name_info_label.setText("Name:")
         self.patient_bar_name_info_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-        self.patient_bar_name_info_label.resize(self.patient_bar_name_info.sizeHint().width(),
+        self.patient_bar_name_info_label.resize(self.patient_bar_name_info_label.sizeHint().width(),
                                           self.patient_bar_name_info_label.sizeHint().height())
         self.patient_bar_name_info_label.setProperty("PatientBarClass", "label")
 
@@ -46,11 +46,11 @@ class PatientBar(QtWidgets.QWidget):
         self.patient_bar_id_info.resize(self.patient_bar_id_info.sizeHint().width(),
                                           self.patient_bar_id_info.sizeHint().height())
         self.patient_bar_id_info.setProperty("PatientBarClass", "value")
-        self.patient_bar_id_info_label = QLabel(self.patient_bar_id_info)
+        self.patient_bar_id_info_label = QLabel()
         self.patient_bar_id_info_label.setObjectName("PatientBarIdInfoLabel")
-        self.patient_bar_id_info_label.setText("ID")
+        self.patient_bar_id_info_label.setText("ID:")
         self.patient_bar_id_info_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-        self.patient_bar_id_info_label.resize(self.patient_bar_id_info.sizeHint().width(),
+        self.patient_bar_id_info_label.resize(self.patient_bar_id_info_label.sizeHint().width(),
                                                 self.patient_bar_id_info_label.sizeHint().height())
         self.patient_bar_id_info_label.setProperty("PatientBarClass", "label")
 
@@ -62,11 +62,11 @@ class PatientBar(QtWidgets.QWidget):
         self.patient_bar_gender_info.resize(self.patient_bar_gender_info.sizeHint().width(),
                                         self.patient_bar_gender_info.sizeHint().height())
         self.patient_bar_gender_info.setProperty("PatientBarClass", "value")
-        self.patient_bar_gender_info_label = QLabel(self.patient_bar_gender_info)
+        self.patient_bar_gender_info_label = QLabel()
         self.patient_bar_gender_info_label.setObjectName("PatientBarGenderInfoLabel")
-        self.patient_bar_gender_info_label.setText("Gender")
+        self.patient_bar_gender_info_label.setText("Gender:")
         self.patient_bar_gender_info_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-        self.patient_bar_gender_info_label.resize(self.patient_bar_gender_info.sizeHint().width(),
+        self.patient_bar_gender_info_label.resize(self.patient_bar_gender_info_label.sizeHint().width(),
                                               self.patient_bar_gender_info_label.sizeHint().height())
         self.patient_bar_gender_info_label.setProperty("PatientBarClass", "label")
 
@@ -78,18 +78,22 @@ class PatientBar(QtWidgets.QWidget):
         self.patient_bar_dob_info.resize(self.patient_bar_dob_info.sizeHint().width(),
                                             self.patient_bar_dob_info.sizeHint().height())
         self.patient_bar_dob_info.setProperty("PatientBarClass", "value")
-        self.patient_bar_dob_info_label = QLabel(self.patient_bar_dob_info)
+        self.patient_bar_dob_info_label = QLabel()
         self.patient_bar_dob_info_label.setObjectName("PatientBarDobInfoLabel")
-        self.patient_bar_dob_info_label.setText("DoB")
+        self.patient_bar_dob_info_label.setText("DoB:")
         self.patient_bar_dob_info_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-        self.patient_bar_dob_info_label.resize(self.patient_bar_dob_info.sizeHint().width(),
+        self.patient_bar_dob_info_label.resize(self.patient_bar_dob_info_label.sizeHint().width(),
                                                   self.patient_bar_dob_info_label.sizeHint().height())
         self.patient_bar_dob_info_label.setProperty("PatientBarClass", "label")
         # # Set layout
         self.patient_bar_layout.addWidget(self.patient_bar_icon)
+        self.patient_bar_layout.addWidget(self.patient_bar_name_info_label)
         self.patient_bar_layout.addWidget(self.patient_bar_name_info)
+        self.patient_bar_layout.addWidget(self.patient_bar_id_info_label)
         self.patient_bar_layout.addWidget(self.patient_bar_id_info)
+        self.patient_bar_layout.addWidget(self.patient_bar_gender_info_label)
         self.patient_bar_layout.addWidget(self.patient_bar_gender_info)
+        self.patient_bar_layout.addWidget(self.patient_bar_dob_info_label)
         self.patient_bar_layout.addWidget(self.patient_bar_dob_info)
         self.setLayout(self.patient_bar_layout)
         self.resize(self.sizeHint().width(), self.sizeHint().height())
