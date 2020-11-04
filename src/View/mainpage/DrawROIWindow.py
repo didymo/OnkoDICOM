@@ -814,7 +814,11 @@ class UIDrawROIWindow:
         return new_pixel_coords
 
     def on_preview_clicked(self):
-        pass
+        if hasattr(self, 'drawingROI'):
+            pass  # display contour on image
+        else:
+            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
+                              "Please ensure you have drawn your ROI first.")
 
     def set_selected_roi_name(self, roi_name):
 
