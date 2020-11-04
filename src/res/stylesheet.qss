@@ -102,7 +102,7 @@ QLineEdit {
 QLineEdit:hover {
     border-bottom: 3px solid #9370DB;
 }
-QLineEdit:focus:!hover {
+QLineEdit:focus {
     border-bottom: 3px solid #5c2eb8;
 }
 
@@ -158,7 +158,6 @@ QTreeView::branch:closed:has-children:has-siblings {
         border-image: none;
         image: url('./src/res/images/qtree/expand-tree.png');
 }
-
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
@@ -202,6 +201,21 @@ QTabBar::tab:selected {
 }
 
 
+QToolBar, QToolButton {
+    background-color: rgb(244, 245, 245);
+    border: 0;
+    margin: 0;
+    padding: 2px;
+}
+QToolButton:hover:!focus {
+    background-color: #ededed;
+}
+QToolButton:!hover:focus {
+    background-color: #b299e6;
+}
+QToolButton:pressed, QToolButton:pressed:hover, QToolButton:pressed:focus {
+    background-color: #b5b5b5;
+}
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
     padding: 0px;
     border-radius: 2px;

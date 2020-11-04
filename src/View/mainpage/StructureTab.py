@@ -246,7 +246,7 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap("src/Icon/alert.png"))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap("src/res/images/btn-icons/alert_icon.png"))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
         modified_indicator_text = QtWidgets.QLabel("Structures have been modified")

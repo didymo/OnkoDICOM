@@ -15,7 +15,7 @@ class Dialog_Windowing(QDialog):
 
         # Passing the current values if it is an existing option or empty if its a new one
         self.win_name = win_name
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
         self.scan = scan
         self.upper_level = upper_level
         self.lower_level = lower_level
@@ -79,7 +79,7 @@ class Dialog_Organ(QDialog):
 
         # Passing the current values if it is an existing option or empty if its a new one
         self.standard_name = standard_name
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
         self.fma_id = fma_id
         self.organ = organ
         self.url = url
@@ -146,7 +146,7 @@ class Dialog_Volume(QDialog):
         self.volume_name = volume_name
 
         # Creating the UI components
-        self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        self.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.standard_name_text = QLineEdit()
         self.standard_name_text.setText(self.standard_name)
@@ -191,7 +191,7 @@ class Dialog_Volume(QDialog):
 #
 #         self.dose = dose
 #         self.notes = notes
-#         self.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+#         self.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
 #         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
 #         self.iso_dose = QLineEdit()
 #         self.iso_dose.setText(self.dose)

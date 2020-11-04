@@ -12,7 +12,7 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
-from src.View.mainpage.NewToolBar import NewToolBar
+from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 
@@ -130,7 +130,7 @@ class UIMainWindow:
         self.action_handler = ActionHandler(self)
         self.menubar = MenuBar(self.action_handler)
         self.main_window_instance.setMenuBar(self.menubar)
-        self.toolbar = NewToolBar(self.action_handler)
+        self.toolbar = Toolbar(self.action_handler)
         self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
         self.main_window_instance.setWindowTitle("OnkoDICOM")
 

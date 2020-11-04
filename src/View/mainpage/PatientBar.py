@@ -20,7 +20,7 @@ class PatientBar(QtWidgets.QWidget):
         self.patient_bar_icon = QLabel()
         self.patient_bar_icon.setObjectName("PatientBarIcon")
         self.patient_bar_icon.setText("")
-        self.patient_bar_icon.setPixmap(QtGui.QPixmap("src/Icon/patient.png"))
+        self.patient_bar_icon.setPixmap(QtGui.QPixmap("src/res/images/btn-icons/patient.png"))
 
         # Create patient name
         self.patient_bar_name_info = QLabel()

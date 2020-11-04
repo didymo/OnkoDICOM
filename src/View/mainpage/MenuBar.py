@@ -1,6 +1,7 @@
 import webbrowser
 
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import Qt
 
 from src.Controller.ActionHandler import ActionHandler
 
@@ -12,6 +13,7 @@ class MenuBar(QtWidgets.QMenuBar):
         QtWidgets.QMenuBar.__init__(self)
         self.action_handler = action_handler
         self.setGeometry(QtCore.QRect(0, 0, 901, 35))
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
 
         # Menu Bar: File, Tools, Export, Help
         self.menu_file = QtWidgets.QMenu()
@@ -41,6 +43,9 @@ class MenuBar(QtWidgets.QMenuBar):
         # Add actions to Tool menu
         self.menu_tools.addAction(self.action_handler.action_zoom_in)
         self.menu_tools.addAction(self.action_handler.action_zoom_out)
+        self.menu_tools.addSeparator()
         self.menu_tools.addMenu(self.action_handler.menu_windowing)
+        self.menu_tools.addSeparator()
         self.menu_tools.addAction(self.action_handler.action_transect)
+        self.menu_tools.addSeparator()
         self.menu_tools.addAction(self.action_handler.action_add_ons)
