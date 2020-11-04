@@ -782,7 +782,7 @@ class UIDrawROIWindow:
         :return: List of points ordered to form a polygon.
         """
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0], item[1]) for item in self.drawingROI.target_pixel_coords]
+        target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in self.drawingROI.target_pixel_coords]
 
         # Calculate the concave hull of the points.
         #alpha = 0.95 * alphashape.optimizealpha(points)
