@@ -163,11 +163,9 @@ class DicomView(QtWidgets.QWidget):
         pixmaps = self.patient_dict_container.get("pixmaps")
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
-        image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        label = QtWidgets.QLabel()
-        label.setPixmap(image)
+        label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addWidget(label)
+        self.scene.addItem(label)
 
     def roi_display(self):
         """
