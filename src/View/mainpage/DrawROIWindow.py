@@ -947,10 +947,10 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def wheelEvent(self, event):
         delta = event.delta() / 120
-        change = int(delta * 6)
+        change = int(delta * 3)
 
         if delta <= -1:
-            self.draw_tool_radius = max(self.draw_tool_radius + change, 7)
+            self.draw_tool_radius = max(self.draw_tool_radius + change, 4)
         elif delta >= 1:
             self.draw_tool_radius = min(self.draw_tool_radius + change, 25)
 
