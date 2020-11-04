@@ -856,9 +856,9 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
             # Convert Qimage back to QPixMap
-            self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
-            self.label.setPixmap(self.q_pixmaps)
-            self.addWidget(self.label)
+            self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap.fromImage(self.q_image))
+            # self.label.setPixmap(self.q_pixmaps)
+            self.addItem(self.q_pixmaps)
 
     def _find_neighbor_point(self, event):
         """
@@ -886,6 +886,14 @@ class Drawing(QtWidgets.QGraphicsScene):
             for j in range(512):
                 self.values.append(self.data[i][j])
 
+    def refresh_image(self):
+        """
+        Convert QImage containing modified CT slice with highlighted pixels into a QPixmap, and then display it onto
+        the view.
+        """
+        self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap.fromImage(self.q_image))
+        self.addItem(self.q_pixmaps)
+
     def remove_pixels_within_circle(self, clicked_x, clicked_y):
         """
         Removes all highlighted pixels within the selected circle and updates the image.
@@ -901,9 +909,9 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.target_pixel_coords.remove((x, y))
                 self.accordingColorList.remove((x, y, colors))
 
-        self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
-        self.label.setPixmap(self.q_pixmaps)
-        self.addWidget(self.label)
+        self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap.fromImage(self.q_image))
+        # self.label.setPixmap(self.q_pixmaps)
+        self.addItem(self.q_pixmaps)
 
     def draw_cursor(self, event_x, event_y, new_circle=False):
         """
@@ -917,6 +925,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         if new_circle:
             self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
             self.cursor.setPen(QPen(QColor("blue")))
+            self.cursor.setZValue(1)
             self.addItem(self.cursor)
         elif self.cursor is not None:
             self.cursor.setRect(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
