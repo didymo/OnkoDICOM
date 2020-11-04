@@ -491,6 +491,13 @@ class UIDrawROIWindow:
             isROIDraw=True,
         )
 
+    def on_transect_close(self):
+        if self.upper_limit and self.lower_limit:
+            self.min_pixel_density_line_edit.setText(str(self.lower_limit))
+            self.max_pixel_density_line_edit.setText(str(self.upper_limit))
+
+        self.dicom_view.update_view()
+
     def on_draw_clicked(self):
         """
         Function triggered when the Draw button is pressed from the menu.
