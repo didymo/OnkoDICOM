@@ -9,7 +9,6 @@ from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
-import keyboard
 from shapely.geometry import MultiPolygon
 
 from src.Controller.MainPageController import MainPageCallClass
@@ -1097,9 +1096,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         delta = event.delta() / 120
         change = int(delta * 6)
 
-        if delta <= -1 and keyboard.is_pressed("ctrl"):
+        if delta <= -1:
             self.draw_tool_radius = max(self.draw_tool_radius + change, 7)
-        elif delta >= 1 and keyboard.is_pressed("ctrl"):
+        elif delta >= 1:
             self.draw_tool_radius = min(self.draw_tool_radius + change, 25)
 
         self.draw_cursor(event.scenePos().x(), event.scenePos().y())
