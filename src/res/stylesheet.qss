@@ -2,6 +2,19 @@ QMainWindow {
     background-color: rgb(244, 245, 245);
 }
 
+QProgressBar {
+    border-radius: 2px;
+    background-color: #b299e6;
+    color: rgb(230, 230, 235);
+    max-height: 32px;
+    text-align: center;
+    font-weight: semi-bold;
+}
+QProgressBar::chunk {
+    background-color: #5c2eb8;
+    width: 20px;
+}
+
 QLabel {
     color: black;
 }
