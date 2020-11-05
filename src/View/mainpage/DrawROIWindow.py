@@ -165,8 +165,8 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_out_button.clicked.connect(self.on_zoom_out_clicked)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_label)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_input)
-        self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_in_button)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_out_button)
+        self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_in_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_viewport_zoom_box)
 
 
@@ -230,7 +230,7 @@ class UIDrawROIWindow:
         )
         self.image_slice_number_box_draw_button.clicked.connect(self.on_box_draw_clicked)
         icon_box_draw = QtGui.QIcon()
-        icon_box_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
+        icon_box_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_bound_icon.png'))
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_box_draw_button)
         # Create a draw button
@@ -247,6 +247,20 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
+
+        # Create a contour preview button and alpha selection input
+        self.row_preview_layout = QtWidgets.QHBoxLayout()
+        self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
+        self.button_contour_preview.clicked.connect(self.on_preview_clicked)
+        self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
+        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
+        self.row_preview_layout.addWidget(self.button_contour_preview)
+        self.row_preview_layout.addWidget(self.label_alpha_value)
+        self.row_preview_layout.addWidget(self.input_alpha_value)
+        self.draw_roi_window_input_container_box.addRow(self.row_preview_layout)
+        icon_preview = QtGui.QIcon()
+        icon_preview.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/preview_icon.png'))
+        self.button_contour_preview.setIcon(icon_preview)
 
         # Create a label for denoting the max internal hole size
         self.internal_hole_max_label = QLabel()
@@ -345,17 +359,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_save_button.clicked.connect(self.on_save_clicked)
         self.draw_roi_window_cancel_save_box.addWidget(self.draw_roi_window_instance_save_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cancel_save_box)
-
-        # Create a contour preview button and alpha selection input
-        self.row_preview_layout = QtWidgets.QHBoxLayout()
-        self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
-        self.button_contour_preview.clicked.connect(self.on_preview_clicked)
-        self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
-        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
-        self.row_preview_layout.addWidget(self.button_contour_preview)
-        self.row_preview_layout.addWidget(self.label_alpha_value)
-        self.row_preview_layout.addWidget(self.input_alpha_value)
-        self.draw_roi_window_input_container_box.addRow(self.row_preview_layout)
 
 
         # Creating a horizontal box to hold the ROI view and slider

@@ -80,6 +80,17 @@ QLabel#OpenPatientDirectoryPrompt, QLabel#OpenPatientDirectoryResultLabel {
     padding: 0 8px;
 }
 
+QLabel[PatientBarClass="label"] {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: right;
+    margin-right: 2px;
+}
+QLabel[PatientBarClass="value"] {
+    font-size: 12px;
+    text-align: left;
+    margin-right: 8px;
+}
 
 /* Open Patient */
 QLineEdit {
@@ -95,7 +106,7 @@ QLineEdit:focus {
     border-bottom: 3px solid #5c2eb8;
 }
 
-
+/*This part is the styling for QTreeView in general*/
 QTreeView#OpenPatientWindowPatientsTree {
     margin: 0 12px 4px 12px;
 }
@@ -104,18 +115,21 @@ QTreeView::item {
     min-height: 36px;
     font-size: 14px;
 }
-QTreeView::item:hover {
-
+QTreeView::item:hover:!focus {
     background-color: #b299e6;
-    border: 2px solid #9370DB;
-    border-radius: 2px;
 }
-QTreeView::item:focus {
+QTreeView::item:focus:!hover {
     border: 2px solid #9370DB;
-    border-radius: 2px;
 }
-QTreeView::item:selected {
-    background-color: #b299e6;
+QTreeView::item:selected:hover:!focus, QTreeView::item:selected:hover {
+    background-color: #5c2eb8;
+    color: white;
+    border: 2px solid rgb(200, 200, 200);
+}
+QTreeView::item:selected:!hover:focus {
+    background-color: #5c2eb8;
+    color: white;
+    border: 2px solid #9370DB;
 }
 QTreeView::indicator {
     width: 30px;
@@ -144,7 +158,6 @@ QTreeView::branch:closed:has-children:has-siblings {
         border-image: none;
         image: url('./src/res/images/qtree/expand-tree.png');
 }
-
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
@@ -188,6 +201,21 @@ QTabBar::tab:selected {
 }
 
 
+QToolBar, QToolButton {
+    background-color: rgb(244, 245, 245);
+    border: 0;
+    margin: 0;
+    padding: 2px;
+}
+QToolButton:hover:!focus {
+    background-color: #ededed;
+}
+QToolButton:!hover:focus {
+    background-color: #b299e6;
+}
+QToolButton:pressed, QToolButton:pressed:hover, QToolButton:pressed:focus {
+    background-color: #b5b5b5;
+}
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
     padding: 0px;
     border-radius: 2px;

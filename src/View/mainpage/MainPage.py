@@ -12,7 +12,7 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
-from src.View.mainpage.NewToolBar import NewToolBar
+from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 
@@ -61,7 +61,6 @@ class UIMainWindow:
         self.left_panel = QtWidgets.QTabWidget()
         self.left_panel.setMinimumWidth(300)
         self.left_panel.setMaximumWidth(500)
-        self.left_panel_layout = QtWidgets.QHBoxLayout(self.left_panel)
 
         # Add structures tab to left panel
         if patient_dict_container.has_modality("rtss"):
@@ -73,8 +72,6 @@ class UIMainWindow:
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
-
-        self.left_panel_layout.addWidget(self.left_panel)
 
         # Hide left panel if no rtss or rtdose
         if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
@@ -133,7 +130,7 @@ class UIMainWindow:
         self.action_handler = ActionHandler(self)
         self.menubar = MenuBar(self.action_handler)
         self.main_window_instance.setMenuBar(self.menubar)
-        self.toolbar = NewToolBar(self.action_handler)
+        self.toolbar = Toolbar(self.action_handler)
         self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
         self.main_window_instance.setWindowTitle("OnkoDICOM")
 

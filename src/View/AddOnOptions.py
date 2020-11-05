@@ -29,7 +29,7 @@ class UIAddOnOptions(object):
         add_on_options.setObjectName("Add_On_Options")
         add_on_options.setMinimumSize(766, 600)
         add_on_options.setStyleSheet("")
-        add_on_options.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        add_on_options.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
 
         _translate = QtCore.QCoreApplication.translate
         add_on_options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))

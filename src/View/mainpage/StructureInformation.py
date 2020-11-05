@@ -33,7 +33,7 @@ class StructureInformation(object):
 		# Structure Information: Information Icon
 		icon = QtWidgets.QLabel(self.widget)
 		icon.setText("")
-		icon.setPixmap(QtGui.QPixmap(":/images/Icon/info.png"))
+		icon.setPixmap(QtGui.QPixmap(":/images//res/images/btn-icons/info.png"))
 
 		# Structure Information: Header
 		label = QtWidgets.QLabel(self.widget)
