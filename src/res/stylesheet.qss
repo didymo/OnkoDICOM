@@ -3,7 +3,6 @@ QMainWindow {
 }
 
 QProgressBar {
-    border-radius: 2px;
     background-color: #b299e6;
     color: rgb(230, 230, 235);
     max-height: 32px;
