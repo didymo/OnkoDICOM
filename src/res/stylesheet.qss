@@ -15,6 +15,47 @@ QProgressBar::chunk {
     width: 20px;
 }
 
+QCheckBox {
+    spacing: 5px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+QCheckBox::indicator:unchecked {
+    image: url(./src/res/images/widget-icons/checkbox_unchecked.png);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(./src/res/images/widget-icons/checkbox_unchecked_hover.png);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(./src/res/images/widget-icons/checkbox_unchecked_pressed.png);
+}
+
+QCheckBox::indicator:checked {
+    image: url(./src/res/images/widget-icons/checkbox_checked.png);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(./src/res/images/widget-icons/checkbox_checked_hover.png);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(./src/res/images/widget-icons/checkbox_checked_pressed.png);
+}
+
+QCheckBox::indicator:indeterminate:hover {
+    image: url(./src/res/images/widget-icons/checkbox_indeterminate_hover.png);
+}
+
+QCheckBox::indicator:indeterminate:pressed {
+    image: url(./src/res/images/widget-icons/checkbox_indeterminate_pressed.png);
+}
+
 QLabel {
     color: black;
 }
