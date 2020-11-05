@@ -9,15 +9,16 @@ from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
-import keyboard
 from shapely.geometry import MultiPolygon
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.mainpage.DicomView import DicomView
 
 
+# noinspection PyAttributeOutsideInit
 class UIDrawROIWindow:
 
     def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss, signal_roi_drawn):
@@ -45,11 +46,8 @@ class UIDrawROIWindow:
 
         self.upper_limit = None
         self.lower_limit = None
-        self.init_slider()
-        self.init_view()
-        self.init_metadata()
+        self.dicom_view = DicomView()
         self.init_layout()
-        self.update_view()
 
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
 
@@ -80,17 +78,6 @@ class UIDrawROIWindow:
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
 
 
-    def init_view(self):
-        """
-        Create a view widget for DICOM image.
-        """
-        self.view = QtWidgets.QGraphicsView()
-        # Add antialiasing and smoothing when zooming in
-        self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
-        background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
-        self.view.setBackgroundBrush(background_brush)
-        # Set event filter on the DICOM View area
-        self.view.viewport().installEventFilter(self.draw_roi_window_instance)
 
     def init_layout(self):
         """
@@ -378,10 +365,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_view_box = QHBoxLayout()
         self.draw_roi_window_instance_view_box.setObjectName("DrawRoiWindowInstanceViewBox")
         # Add View and Slider into horizontal box
-        self.slider.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
-        self.slider.resize(self.slider.sizeHint().width(), self.slider.sizeHint().height())
-        self.draw_roi_window_instance_view_box.addWidget(self.view)
-        self.draw_roi_window_instance_view_box.addWidget(self.slider)
+        self.draw_roi_window_instance_view_box.addWidget(self.dicom_view)
         # Create a widget to hold the image slice box
         self.draw_roi_window_instance_view_widget = QWidget()
         self.draw_roi_window_instance_view_widget.setObjectName(
@@ -407,80 +391,12 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance.setCentralWidget(self.draw_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
-    def init_slider(self):
-        """
-        Create a slider for the DICOM Image View.
-        """
-        pixmaps = self.patient_dict_container.get("pixmaps")
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(len(pixmaps) - 1)
-        self.slider.setValue(int(len(pixmaps) / 2))
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
-        self.slider.setTickInterval(1)
-        self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
-                                  "y2:1, stop:0 #fff, stop:1 #ddd);border: 1px solid #444;border-radius: 4px;}")
-        self.slider.valueChanged.connect(self.value_changed)
-        self.slider.setGeometry(QtCore.QRect(0, 0, 50, 1000))
-        self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
-
-    def init_metadata(self):
-        """
-        Create and place metadata on the view widget.
-        """
-        self.layout_view = QtWidgets.QGridLayout(self.view)
-        self.layout_view.setHorizontalSpacing(0)
-
-        # Initialize text on DICOM View
-        self.text_imageID = QtWidgets.QLabel(self.view)
-        self.text_imagePos = QtWidgets.QLabel(self.view)
-        self.text_WL = QtWidgets.QLabel(self.view)
-        self.text_imageSize = QtWidgets.QLabel(self.view)
-        self.text_zoom = QtWidgets.QLabel(self.view)
-        self.text_patientPos = QtWidgets.QLabel(self.view)
-        # # Position of the texts on DICOM View
-        self.text_imageID.setAlignment(QtCore.Qt.AlignTop)
-        self.text_imagePos.setAlignment(QtCore.Qt.AlignTop)
-        self.text_WL.setAlignment(QtCore.Qt.AlignRight)
-        self.text_imageSize.setAlignment(QtCore.Qt.AlignBottom)
-        self.text_zoom.setAlignment(QtCore.Qt.AlignBottom)
-        self.text_patientPos.setAlignment(QtCore.Qt.AlignRight)
-        # Set all the texts in white
-        self.text_imageID.setStyleSheet("QLabel { color : white; }")
-        self.text_imagePos.setStyleSheet("QLabel { color : white; }")
-        self.text_WL.setStyleSheet("QLabel { color : white; }")
-        self.text_imageSize.setStyleSheet("QLabel { color : white; }")
-        self.text_zoom.setStyleSheet("QLabel { color : white; }")
-        self.text_patientPos.setStyleSheet("QLabel { color : white; }")
-
-        # Horizontal Spacer to put metadata on the left and right of the screen
-        hspacer = QtWidgets.QSpacerItem(10, 100, hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                        vPolicy=QtWidgets.QSizePolicy.Expanding)
-        # Vertical Spacer to put metadata on the top and bottom of the screen
-        vspacer = QtWidgets.QSpacerItem(100, 10, hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                        vPolicy=QtWidgets.QSizePolicy.Expanding)
-        # Spacer of fixed size to make the metadata still visible when the scrollbar appears
-        fixed_spacer = QtWidgets.QSpacerItem(13, 15, hPolicy=QtWidgets.QSizePolicy.Fixed,
-                                             vPolicy=QtWidgets.QSizePolicy.Fixed)
-
-        self.layout_view.addWidget(self.text_imageID, 0, 0, 1, 1)
-        self.layout_view.addWidget(self.text_imagePos, 1, 0, 1, 1)
-        self.layout_view.addItem(vspacer, 2, 0, 1, 4)
-        self.layout_view.addWidget(self.text_imageSize, 3, 0, 1, 1)
-        self.layout_view.addWidget(self.text_zoom, 4, 0, 1, 1)
-        self.layout_view.addItem(fixed_spacer, 5, 0, 1, 4)
-
-        self.layout_view.addItem(hspacer, 0, 1, 6, 1)
-        self.layout_view.addWidget(self.text_WL, 0, 2, 1, 1)
-        self.layout_view.addWidget(self.text_patientPos, 4, 2, 1, 1)
-        self.layout_view.addItem(fixed_spacer, 0, 3, 6, 1)
-
     def on_zoom_in_clicked(self):
         """
         This function is used for zooming in button
         """
-        self.zoom *= 1.05
-        self.update_view(zoomChange=True)
+        self.dicom_view.zoom *= 1.05
+        self.dicom_view.update_view(zoom_change=True)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
@@ -488,128 +404,16 @@ class UIDrawROIWindow:
         """
         This function is used for zooming out button
         """
-        self.zoom /= 1.05
-        self.update_view(zoomChange=True)
+        self.dicom_view.zoom /= 1.05
+        self.dicom_view.update_view(zoom_change=True)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
     def on_cancel_button_clicked(self):
         """
         This function is used for canceling the drawing
-
         """
         self.close()
-
-    def value_changed(self):
-        """
-        Function triggered when the value of the slider has changed.
-        Update the view.
-        """
-        self.forward_pressed = False
-        self.backward_pressed = False
-        self.slider_changed = True
-        self.update_view()
-
-    def update_view(self, zoomChange=False, eventChangedWindow=False):
-        """
-        Update the view of the DICOM Image.
-
-        :param zoomChange:
-         Boolean indicating whether the user wants to change the zoom.
-         False by default.
-
-        :param eventChangedWindow:
-         Boolean indicating if the user is altering the window and level values through mouse movement and button press
-         events in the DICOM View area.
-         False by default.
-        """
-
-        if zoomChange:
-            self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
-
-        if self.upper_limit and self.lower_limit:
-            self.min_pixel_density_line_edit.setText(str(self.lower_limit))
-            self.max_pixel_density_line_edit.setText(str(self.upper_limit))
-
-        if eventChangedWindow:
-            self.image_display(eventChangedWindow=True)
-        else:
-            self.image_display()
-
-        self.update_metadata()
-        self.view.setScene(self.scene)
-
-    def image_display(self, eventChangedWindow=False):
-        """
-        Update the image to be displayed on the DICOM View.
-
-        :param eventChangedWindow:
-         Boolean indicating if the user is altering the window and level values through mouse movement and button press
-         events in the DICOM View area.
-         False by default.
-        """
-
-        slider_id = self.slider.value()
-        if (self.forward_pressed):
-            slider_id = self.current_slice
-        if (self.backward_pressed):
-            slider_id = self.current_slice
-        if (self.slider_changed):
-            slider_id = self.slider.value()
-
-        # PyQt5.QtGui.QPixMap objects
-        pixmaps = self.patient_dict_container.get("pixmaps")
-        image = pixmaps[slider_id]
-        image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        label = QtWidgets.QLabel()
-        label.setPixmap(image)
-        self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addWidget(label)
-
-    def update_metadata(self):
-        """
-        Update metadata displayed on the DICOM Image view.
-        """
-        _translate = QtCore.QCoreApplication.translate
-
-        # Getting most updated selected slice
-        id = self.slider.value()
-        if (self.forward_pressed):
-            id = self.current_slice
-        elif (self.backward_pressed):
-            id = self.current_slice
-        elif (self.slider_changed):
-            id = self.slider.value()
-
-        filename = self.patient_dict_container.filepaths[id]
-        dicomtree_slice = DicomTree(filename)
-        dict_slice = dicomtree_slice.dict
-
-        # Information to display
-        pixmaps = self.patient_dict_container.get("pixmaps")
-        current_slice = dict_slice['Instance Number'][0]
-        total_slices = len(pixmaps)
-        row_img = dict_slice['Rows'][0]
-        col_img = dict_slice['Columns'][0]
-        patient_pos = dict_slice['Patient Position'][0]
-        window = self.patient_dict_container.get("window")
-        level = self.patient_dict_container.get("level")
-        try:
-            slice_pos = dict_slice['Slice Location'][0]
-        except:
-            imagePosPatient = dict_slice['Image Position (Patient)']
-            # logging.error('Image Position (Patient):' + str(imagePosPatient))
-            imagePosPatientCoordinates = imagePosPatient[0]
-            # logging.error('Image Position (Patient) coordinates :' + str(imagePosPatientCoordinates))
-            slice_pos = imagePosPatientCoordinates[2]
-
-        self.text_imageID.setText(_translate("MainWindow", "Image: " + str(current_slice) + " / " + str(total_slices)))
-        self.text_imagePos.setText(_translate("MainWindow", "Position: " + str(slice_pos) + " mm"))
-        self.text_WL.setText(_translate("MainWindow", "W/L: " + str(window) + "/" + str(level)))
-        self.text_imageSize.setText(_translate("MainWindow", "Image Size: " + str(row_img) + "x" + str(col_img) + "px"))
-        self.text_zoom.setText(_translate("MainWindow", "Zoom: " + "{:.2f}".format(self.zoom * 100) + "%"))
-        self.text_patientPos.setText(_translate("MainWindow", "Patient Position: " + patient_pos))
-        self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(current_slice)))
 
     def on_backward_clicked(self):
         self.backward_pressed = True
@@ -626,9 +430,9 @@ class UIDrawROIWindow:
             self.current_slice = self.current_slice - 2
 
             # Update slider to move to correct position
-            self.slider.setValue(self.current_slice)
+            self.dicom_view.slider.setValue(self.current_slice)
 
-            self.update_view()
+            self.dicom_view.update_view()
 
     def on_forward_clicked(self):
         pixmaps = self.patient_dict_container.get("pixmaps")
@@ -646,13 +450,13 @@ class UIDrawROIWindow:
             self.current_slice = int(image_slice_number)
 
             # Update slider to move to correct position
-            self.slider.setValue(self.current_slice)
+            self.dicom_view.slider.setValue(self.current_slice)
 
-            self.update_view()
+            self.dicom_view.update_view()
 
     def on_reset_clicked(self):
-        self.image_display()
-        self.update_view()
+        self.dicom_view.image_display()
+        self.dicom_view.update_view()
         self.isthmus_width_max_line_edit.setText("5")
         self.internal_hole_max_line_edit.setText("9")
         self.min_pixel_density_line_edit.setText("")
@@ -666,7 +470,7 @@ class UIDrawROIWindow:
         """
 
         pixmaps = self.patient_dict_container.get("pixmaps")
-        id = self.slider.value()
+        id = self.dicom_view.slider.value()
 
         # Getting most updated selected slice
         if (self.forward_pressed):
@@ -674,7 +478,7 @@ class UIDrawROIWindow:
         elif (self.backward_pressed):
             id = self.current_slice
         elif (self.slider_changed):
-            id = self.slider.value()
+            id = self.dicom_view.slider.value()
 
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
@@ -682,13 +486,20 @@ class UIDrawROIWindow:
         dt.convert_pixel_data()
         MainPageCallClass().runTransect(
             self.draw_roi_window_instance,
-            self.view,
+            self.dicom_view.view,
             pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,
             isROIDraw=True,
         )
+
+    def on_transect_close(self):
+        if self.upper_limit and self.lower_limit:
+            self.min_pixel_density_line_edit.setText(str(self.lower_limit))
+            self.max_pixel_density_line_edit.setText(str(self.upper_limit))
+
+        self.dicom_view.update_view()
 
     def on_draw_clicked(self):
         """
@@ -700,7 +511,7 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Not all values are specified or correct.")
         else:
-            id = self.slider.value()
+            id = self.dicom_view.slider.value()
 
             # Getting most updated selected slice
             if (self.forward_pressed):
@@ -708,7 +519,7 @@ class UIDrawROIWindow:
             elif (self.backward_pressed):
                 id = self.current_slice
             elif (self.slider_changed):
-                id = self.slider.value()
+                id = self.dicom_view.slider.value()
 
             dt = self.patient_dict_container.dataset[id]
             dt.convert_pixel_data()
@@ -738,19 +549,19 @@ class UIDrawROIWindow:
                     self.patient_dict_container.dataset[id],
                     self.draw_roi_window_instance
                 )
-                self.view.setScene(self.drawingROI)
+                self.dicom_view.view.setScene(self.drawingROI)
 
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
     def on_box_draw_clicked(self):
-        id = self.slider.value()
+        id = self.dicom_view.slider.value()
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         pixmaps = self.patient_dict_container.get("pixmaps")
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
-        self.view.setScene(self.bounds_box_draw)
+        self.dicom_view.view.setScene(self.bounds_box_draw)
 
     def on_save_clicked(self):
         # Make sure the user has clicked Draw first
@@ -781,8 +592,12 @@ class UIDrawROIWindow:
                               "Please ensure you have drawn your ROI first.")
 
     def calculate_concave_hull_of_points(self):
+        """
+        Return the alpha shape of the highlighted pixels using the alpha entered by the user.
+        :return: List of points ordered to form a polygon.
+        """
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0], item[1]) for item in self.drawingROI.target_pixel_coords]
+        target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in self.drawingROI.target_pixel_coords]
 
         # Calculate the concave hull of the points.
         #alpha = 0.95 * alphashape.optimizealpha(points)
@@ -800,7 +615,12 @@ class UIDrawROIWindow:
         return points
 
     def convert_hull_to_rcs(self, hull_pts):
-        slider_id = self.slider.value()
+        """
+        Converts all the pixel coordinates in the given polygon to RCS coordinates based off the CT image's matrix.
+        :param hull_pts: List of pixel coordinates ordered to form a polygon.
+        :return: List of RCS coordinates ordered to form a polygon
+        """
+        slider_id = self.dicom_view.slider.value()
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
         z_coord = dataset.SliceLocation
@@ -818,8 +638,15 @@ class UIDrawROIWindow:
         return contour_data
 
     def on_preview_clicked(self):
-        if hasattr(self, 'drawingROI'):
-            pass  # display contour on image
+        if hasattr(self, 'drawingROI') and len(self.drawingROI.target_pixel_coords) > 0:
+            list_of_points = self.calculate_concave_hull_of_points()
+            if list_of_points is not None:
+                self.drawingROI.draw_contour_preview(list_of_points)
+            else:
+                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
+                                  "Selected points will generate multiple contours, which is not currently supported. "
+                                  "If the region you are drawing is not meant to generate multiple contours, please "
+                                  "ajust your selected alpha value.")
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
@@ -975,6 +802,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self._circlePoints = []
         self.drag_position = QtCore.QPoint()
         self.cursor = None
+        self.polygon_preview = None
         self.isPressed = False
         self.dataset = dataset
         self.pixel_array = None
@@ -1030,10 +858,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             for x_coord, y_coord, colors in self.accordingColorList:
                 self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
 
-            # Convert Qimage back to QPixMap
-            self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
-            self.label.setPixmap(self.q_pixmaps)
-            self.addWidget(self.label)
+            self.refresh_image()
 
     def _find_neighbor_point(self, event):
         """
@@ -1061,6 +886,14 @@ class Drawing(QtWidgets.QGraphicsScene):
             for j in range(512):
                 self.values.append(self.data[i][j])
 
+    def refresh_image(self):
+        """
+        Convert QImage containing modified CT slice with highlighted pixels into a QPixmap, and then display it onto
+        the view.
+        """
+        self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap.fromImage(self.q_image))
+        self.addItem(self.q_pixmaps)
+
     def remove_pixels_within_circle(self, clicked_x, clicked_y):
         """
         Removes all highlighted pixels within the selected circle and updates the image.
@@ -1076,9 +909,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.target_pixel_coords.remove((x, y))
                 self.accordingColorList.remove((x, y, colors))
 
-        self.q_pixmaps = QtGui.QPixmap.fromImage(self.q_image)
-        self.label.setPixmap(self.q_pixmaps)
-        self.addWidget(self.label)
+        self.refresh_image()
 
     def draw_cursor(self, event_x, event_y, new_circle=False):
         """
@@ -1091,18 +922,39 @@ class Drawing(QtWidgets.QGraphicsScene):
         y = event_y - self.draw_tool_radius
         if new_circle:
             self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
-            self.cursor.setPen(QPen(QColor("blue")))
+            pen = QPen(QColor("blue"))
+            pen.setWidth(0)
+            self.cursor.setPen(pen)
+            self.cursor.setZValue(1)
             self.addItem(self.cursor)
-        else:
+        elif self.cursor is not None:
             self.cursor.setRect(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
+
+    def draw_contour_preview(self, list_of_points):
+        """
+        Draws a polygon onto the view so the user can preview what their contour will look like once exported.
+        :param list_of_points: A list of points ordered to form a polygon.
+        """
+        qpoint_list = []
+        for point in list_of_points:
+            qpoint = QtCore.QPoint(point[0], point[1])
+            qpoint_list.append(qpoint)
+        if self.polygon_preview is not None:        # Erase the existing preview
+            self.removeItem(self.polygon_preview)
+        polygon = QtGui.QPolygonF(qpoint_list)
+        self.polygon_preview = QtWidgets.QGraphicsPolygonItem(polygon)
+        pen = QtGui.QPen(QtGui.QColor("yellow"))
+        pen.setStyle(QtCore.Qt.DashDotDotLine)
+        self.polygon_preview.setPen(pen)
+        self.addItem(self.polygon_preview)
 
     def wheelEvent(self, event):
         delta = event.delta() / 120
-        change = int(delta * 6)
+        change = int(delta * 3)
 
-        if delta <= -1 and keyboard.is_pressed("ctrl"):
-            self.draw_tool_radius = max(self.draw_tool_radius + change, 7)
-        elif delta >= 1 and keyboard.is_pressed("ctrl"):
+        if delta <= -1:
+            self.draw_tool_radius = max(self.draw_tool_radius + change, 4)
+        elif delta >= 1:
             self.draw_tool_radius = min(self.draw_tool_radius + change, 25)
 
         self.draw_cursor(event.scenePos().x(), event.scenePos().y())

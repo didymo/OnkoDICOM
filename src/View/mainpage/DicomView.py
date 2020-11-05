@@ -1,8 +1,6 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from pandas import np
 
-from src.Model.GetPatientInfo import DicomTree
-
 try:
     from matplotlib import _cntr as cntr
 except ImportError:
@@ -36,13 +34,13 @@ class DicomView(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Init metadata widgets
-        self.metadata_layout = QtWidgets.QGridLayout(self.view)
-        self.label_image_id = QtWidgets.QLabel(self.view)
-        self.label_image_pos = QtWidgets.QLabel(self.view)
-        self.label_wl = QtWidgets.QLabel(self.view)
-        self.label_image_size = QtWidgets.QLabel(self.view)
-        self.label_zoom = QtWidgets.QLabel(self.view)
-        self.label_patient_pos = QtWidgets.QLabel(self.view)
+        self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
+        self.label_image_id = QtWidgets.QLabel()
+        self.label_image_pos = QtWidgets.QLabel()
+        self.label_wl = QtWidgets.QLabel()
+        self.label_image_size = QtWidgets.QLabel()
+        self.label_zoom = QtWidgets.QLabel()
+        self.label_patient_pos = QtWidgets.QLabel()
         self.init_metadata()
 
         self.update_view()
@@ -78,7 +76,7 @@ class DicomView(QtWidgets.QWidget):
         self.label_wl.setAlignment(QtCore.Qt.AlignRight)
         self.label_image_size.setAlignment(QtCore.Qt.AlignBottom)
         self.label_zoom.setAlignment(QtCore.Qt.AlignBottom)
-        self.label_patient_pos.setAlignment(QtCore.Qt.AlignBottom)
+        self.label_patient_pos.setAlignment(QtCore.Qt.AlignRight)
 
         # Set all labels to white
         stylesheet = "QLabel { color : white; }"
@@ -89,27 +87,52 @@ class DicomView(QtWidgets.QWidget):
         self.label_zoom.setStyleSheet(stylesheet)
         self.label_patient_pos.setStyleSheet(stylesheet)
 
-        # Horizontal Spacer to put metadata on the left and right of the screen
-        h_spacer = QtWidgets.QSpacerItem(10, 100, hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                        vPolicy=QtWidgets.QSizePolicy.Expanding)
-        # Vertical Spacer to put metadata on the top and bottom of the screen
-        v_spacer = QtWidgets.QSpacerItem(100, 10, hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                        vPolicy=QtWidgets.QSizePolicy.Expanding)
-        # Spacer of fixed size to make the metadata still visible when the scrollbar appears
-        fixed_spacer = QtWidgets.QSpacerItem(13, 15, hPolicy=QtWidgets.QSizePolicy.Fixed,
-                                             vPolicy=QtWidgets.QSizePolicy.Fixed)
+        # The following layout was originally accomplished using a QGridLayout with QSpaceItems to anchor the labels
+        # to the corners of the DICOM view. This caused a reintroduction of the tedious memory issues that were fixed
+        # with the restructure. The following was rewritten to not use QSpaceItems because they, for reasons unknown,
+        # caused a memory leak resulting in the entire patient dictionary not being cleared from memory correctly,
+        # leaving hundreds of additional megabytes unused in memory each time a new patient was opened.
 
-        self.metadata_layout.addWidget(self.label_image_id, 0, 0, 1, 1)
-        self.metadata_layout.addWidget(self.label_image_pos, 1, 0, 1, 1)
-        self.metadata_layout.addItem(v_spacer, 2, 0, 1, 4)
-        self.metadata_layout.addWidget(self.label_image_size, 3, 0, 1, 1)
-        self.metadata_layout.addWidget(self.label_zoom, 4, 0, 1, 1)
-        self.metadata_layout.addItem(fixed_spacer, 5, 0, 1, 4)
+        # Create a widget to contain the two top-left labels
+        top_left_widget = QtWidgets.QWidget()
+        top_left = QtWidgets.QVBoxLayout(top_left_widget)
+        top_left.addWidget(self.label_image_id, QtCore.Qt.AlignTop)
+        top_left.addWidget(self.label_image_pos, QtCore.Qt.AlignTop)
 
-        self.metadata_layout.addItem(h_spacer, 0, 1, 6, 1)
-        self.metadata_layout.addWidget(self.label_wl, 0, 2, 1, 1)
-        self.metadata_layout.addWidget(self.label_patient_pos, 4, 2, 1, 1)
-        self.metadata_layout.addItem(fixed_spacer, 0, 3, 6, 1)
+        # Create a widget to contain the top-right label
+        top_right_widget = QtWidgets.QWidget()
+        top_right = QtWidgets.QVBoxLayout(top_right_widget)
+        top_right.addWidget(self.label_wl, QtCore.Qt.AlignTop)
+
+        # Create a widget to contain the two top widgets
+        top_widget = QtWidgets.QWidget()
+        top_widget.setFixedHeight(100)
+        top = QtWidgets.QHBoxLayout(top_widget)
+        top.addWidget(top_left_widget, QtCore.Qt.AlignLeft)
+        top.addWidget(top_right_widget, QtCore.Qt.AlignRight)
+
+        # Create a widget to contain the two bottom-left labels
+        bottom_left_widget = QtWidgets.QWidget()
+        bottom_left = QtWidgets.QVBoxLayout(bottom_left_widget)
+        bottom_left.addWidget(self.label_image_size, QtCore.Qt.AlignBottom)
+        bottom_left.addWidget(self.label_zoom, QtCore.Qt.AlignBottom)
+
+        # Create a widget to contain the bottom-right label
+        bottom_right_widget = QtWidgets.QWidget()
+        bottom_right = QtWidgets.QVBoxLayout(bottom_right_widget)
+        bottom_right.addWidget(self.label_patient_pos, QtCore.Qt.AlignBottom)
+
+        # Create a widget to contain the two bottom widgets
+        bottom_widget = QtWidgets.QWidget()
+        bottom_widget.setFixedHeight(100)
+        bottom = QtWidgets.QHBoxLayout(bottom_widget)
+        bottom.addWidget(bottom_left_widget, QtCore.Qt.AlignLeft)
+        bottom.addWidget(bottom_right_widget, QtCore.Qt.AlignRight)
+
+        # Add the bottom and top widgets to the view
+        self.metadata_layout.addWidget(top_widget, QtCore.Qt.AlignTop)
+        self.metadata_layout.addStretch()
+        self.metadata_layout.addWidget(bottom_widget, QtCore.Qt.AlignBottom)
 
     def value_changed(self):
         self.update_view()
@@ -140,11 +163,9 @@ class DicomView(QtWidgets.QWidget):
         pixmaps = self.patient_dict_container.get("pixmaps")
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
-        image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        label = QtWidgets.QLabel()
-        label.setPixmap(image)
+        label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addWidget(label)
+        self.scene.addItem(label)
 
     def roi_display(self):
         """
@@ -255,19 +276,17 @@ class DicomView(QtWidgets.QWidget):
         """
         # Retrieve dictionary from the dataset of the slice
         id = self.slider.value()
-        filename = self.patient_dict_container.filepaths[id]
-        dicom_tree_slice = DicomTree(filename)
-        dict_slice = dicom_tree_slice.dict
+        dataset = self.patient_dict_container.dataset[id]
 
         # Information to display
-        current_slice = dict_slice['Instance Number'][0]
+        current_slice = dataset['InstanceNumber'].value
         total_slices = len(self.patient_dict_container.get("pixmaps"))
-        row_img = dict_slice['Rows'][0]
-        col_img = dict_slice['Columns'][0]
-        patient_pos = dict_slice['Patient Position'][0]
+        row_img = dataset['Rows'].value
+        col_img = dataset['Columns'].value
+        patient_pos = dataset['PatientPosition'].value
         window = self.patient_dict_container.get("window")
         level = self.patient_dict_container.get("level")
-        slice_pos = dict_slice['Slice Location'][0]
+        slice_pos = dataset['SliceLocation'].value
 
         # For formatting
         if self.zoom == 1:
@@ -281,7 +300,7 @@ class DicomView(QtWidgets.QWidget):
         self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
         self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
         self.label_zoom.setText("Zoom: %s:%s" % (str(zoom), str(zoom)))
-        self.label_patient_pos.setText("Patient Position: %s" % (str(current_slice)))
+        self.label_patient_pos.setText("Patient Position: %s" % (str(patient_pos)))
 
     def calc_roi_polygon(self, curr_roi, curr_slice, dict_rois_contours):
         """
@@ -292,6 +311,22 @@ class DicomView(QtWidgets.QWidget):
          the current slice
         :return: List of polygons of type QPolygonF.
         """
+        # TODO Implement support for showing "holes" in contours.
+        # Possible process for this is:
+        # 1. Calculate the areas of each contour on the slice
+        # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+        # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
+        # largest contour.
+        # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
+        # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
+        # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
+        # This process should provide fast and reliable results, however it should be noted that this method may fall
+        # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
+        # solution to that may be to compare every contour against one another and determine which ones have holes
+        # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
+        # holes. This second solution would definitely lead to more accurate representation of contours, but could
+        # possibly be too slow to be viable.
+
         list_polygons = []
         pixel_list = dict_rois_contours[curr_roi][curr_slice]
         for i in range(len(pixel_list)):
