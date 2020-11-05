@@ -63,7 +63,7 @@ class DicomTreeView(QtWidgets.QWidget):
 
         combobox.activated.connect(self.item_selected)
         combobox.setFixedSize(QtCore.QSize(200, 31))
-
+        combobox.setObjectName("DicomTreeviewComboBox")
         return combobox
 
     def item_selected(self, index):

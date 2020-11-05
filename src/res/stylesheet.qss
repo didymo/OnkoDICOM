@@ -2,6 +2,60 @@ QMainWindow {
     background-color: rgb(244, 245, 245);
 }
 
+QProgressBar {
+    border-radius: 1px;
+    background-color: #b299e6;
+    color: rgb(230, 230, 235);
+    max-height: 32px;
+    text-align: center;
+    font-weight: semi-bold;
+}
+QProgressBar::chunk {
+    background-color: #5c2eb8;
+    width: 20px;
+}
+
+QCheckBox {
+    spacing: 5px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+QCheckBox::indicator:unchecked {
+    image: url(./src/res/images/widget-icons/checkbox_unchecked.png);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(./src/res/images/widget-icons/checkbox_unchecked_hover.png);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(./src/res/images/widget-icons/checkbox_unchecked_pressed.png);
+}
+
+QCheckBox::indicator:checked {
+    image: url(./src/res/images/widget-icons/checkbox_checked.png);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(./src/res/images/widget-icons/checkbox_checked_hover.png);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(./src/res/images/widget-icons/checkbox_checked_pressed.png);
+}
+
+QCheckBox::indicator:indeterminate:hover {
+    image: url(./src/res/images/widget-icons/checkbox_indeterminate_hover.png);
+}
+
+QCheckBox::indicator:indeterminate:pressed {
+    image: url(./src/res/images/widget-icons/checkbox_indeterminate_pressed.png);
+}
+
 QLabel {
     color: black;
 }
@@ -94,12 +148,19 @@ QLabel[PatientBarClass="value"] {
 
 /* Open Patient */
 QLineEdit {
+    margin: 4px;
+    padding: 0 4px;
+    min-height: 36px;
     border-bottom: 3px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
     background-color: rgb(244, 245, 245);
 }
+QLineEdit:disabled {
+    background-color: #b9b9b9;
+}
 QLineEdit:hover {
+    background-color: rgb(230, 230, 235);
     border-bottom: 3px solid #9370DB;
 }
 QLineEdit:focus {
@@ -170,7 +231,7 @@ QTabWidget::tab-bar {
 }
 QTabWidget::pane {
     border: 0;
-    padding-top: 4px;
+    padding-top: 2px;
     background-color: white;
 }
 QTabBar {
@@ -216,6 +277,106 @@ QToolButton:!hover:focus {
 QToolButton:pressed, QToolButton:pressed:hover, QToolButton:pressed:focus {
     background-color: #b5b5b5;
 }
+
+
+QComboBox, QDateEdit {
+    margin: 4px;
+    padding: 0 4px;
+    min-height: 36px;
+    border-bottom: 3px solid #b3b3b3;
+    border-radius: 0;
+    font-size: 14px;
+    background-color: rgb(244, 245, 245);
+}
+QComboBox:disabled, QDateEdit:disabled {
+    background-color: #b9b9b9;
+}
+QComboBox:!hover:!focus, QDateEdit:!hover:!focus {
+    border-bottom: 3px solid #b3b3b3;
+}
+QComboBox:hover:!focus, QComboBox:hover:focus,
+ QDateEdit:hover:!focus, QDateEdit:hover:focus{
+    background-color: rgb(230, 230, 235);
+    border-bottom: 3px solid #b299e6;
+}
+QComboBox:focus:!hover, QDateEdit:focus:!hover {
+    border-bottom: 3px solid #5c2eb8;
+}
+QComboBox:hover:on:!focus, QComboBox:focus:on:!hover,
+ QDateEdit:hover:on:!focus, QDateEdit:focus:on:!hover{
+    background: rgb(230, 230, 235);
+    border-bottom: 3px solid #5c2eb8;
+}
+QComboBox::drop-down, QDateEdit::drop-down {
+    border: 0;
+    width: 21px;
+}
+QComboBox::down-arrow, QDateEdit::down-arrow {
+    image: url('./src/res/images/qcombobox/expand-box.png');
+    width: 15px;
+}
+
+QComboBox#DicomTreeviewComboBox {
+    margin: 0;
+    background-color: white;
+}
+
+
+QCalendarWidget QTableView, QTableView {
+    background-color: white;
+    alternate-background-color: rgb(230, 230, 235);
+    selection-background-color: #b299e6;
+}
+QCalendarWidget QMenu {
+    color: black;
+    background-color: white;
+}
+QCalendarWidget QMenu::item {
+    padding: 8px 4px 8px 4px;
+    min-height: 24px;
+    font-size: 14px;
+    text-align: left;
+}
+QCalendarWidget QMenu::item:selected {
+    background-color: #b299e6;
+}
+QCalendarWidget QMenu::item:pressed {
+    color: white;
+    background-color: #5c2eb8;
+}
+QCalendarWidget QSpinBox {
+    color: black;
+    background-color: white;
+    selection-color: white;
+    selection-background-color: #5c2eb8;
+}
+QCalendarWidget QToolButton {
+    background-color: rgb(230, 230, 235);
+    color:black;
+    font-size: 14px;
+}
+QCalendarWidget QToolButton:hover:!focus {
+    background-color: rgb(215, 215, 220);
+}
+QCalendarWidget QToolButton:focus:!hover {
+    border: 1px solid #5c2eb8;
+}
+QCalendarWidget QToolButton:pressed:hover:!focus {
+    background-color: #b299e6;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: rgb(230, 230, 235);
+    color: black;
+}
+QCalendarWidget QToolButton#qt_calendar_prevmonth {
+    icon-size: 24px;
+    qproperty-icon: url(./src/res/images/qcalendarwidget/left_icon.png);
+}
+QCalendarWidget QToolButton#qt_calendar_nextmonth {
+    icon-size: 24px;
+    qproperty-icon: url(./src/res/images/qcalendarwidget/right_icon.png);
+}
+
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
     padding: 0px;
     border-radius: 2px;
@@ -225,4 +386,7 @@ QWidget#DeleteRoiWindowKeepWidget {
 }
 QWidget#DeleteRoiWindowDeleteWidget {
     background-color: #d32f2f ;
+}
+QWidget#ScrollAreaWidgetContents {
+    background-color: rgb(244, 245, 245);
 }
