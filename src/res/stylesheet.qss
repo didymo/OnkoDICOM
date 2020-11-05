@@ -322,7 +322,7 @@ QComboBox#DicomTreeviewComboBox {
 }
 
 
-QCalendarWidget QTableView {
+QCalendarWidget QTableView, QTableView {
     background-color: white;
     alternate-background-color: rgb(230, 230, 235);
     selection-background-color: #b299e6;
@@ -376,7 +376,6 @@ QCalendarWidget QToolButton#qt_calendar_nextmonth {
     icon-size: 24px;
     qproperty-icon: url(./src/res/images/qcalendarwidget/right_icon.png);
 }
-
 
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
     padding: 0px;
