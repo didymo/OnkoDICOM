@@ -267,6 +267,63 @@ QComboBox#DicomTreeviewComboBox {
     background-color: white;
 }
 
+
+QCalendarWidget QTableView {
+    background-color: white;
+    alternate-background-color: rgb(230, 230, 235);
+    selection-background-color: #b299e6;
+}
+QCalendarWidget QMenu {
+    color: black;
+    background-color: white;
+}
+QCalendarWidget QMenu::item {
+    padding: 8px 4px 8px 4px;
+    min-height: 24px;
+    font-size: 14px;
+    text-align: left;
+}
+QCalendarWidget QMenu::item:selected {
+    background-color: #b299e6;
+}
+QCalendarWidget QMenu::item:pressed {
+    color: white;
+    background-color: #5c2eb8;
+}
+QCalendarWidget QSpinBox {
+    color: black;
+    background-color: white;
+    selection-color: white;
+    selection-background-color: #5c2eb8;
+}
+QCalendarWidget QToolButton {
+    background-color: rgb(230, 230, 235);
+    color:black;
+    font-size: 14px;
+}
+QCalendarWidget QToolButton:hover:!focus {
+    background-color: rgb(215, 215, 220);
+}
+QCalendarWidget QToolButton:focus:!hover {
+    border: 1px solid #5c2eb8;
+}
+QCalendarWidget QToolButton:pressed:hover:!focus {
+    background-color: #b299e6;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: rgb(230, 230, 235);
+    color: black;
+}
+QCalendarWidget QToolButton#qt_calendar_prevmonth {
+    icon-size: 24px;
+    qproperty-icon: url(./src/res/images/qcalendarwidget/left_icon.png);
+}
+QCalendarWidget QToolButton#qt_calendar_nextmonth {
+    icon-size: 24px;
+    qproperty-icon: url(./src/res/images/qcalendarwidget/right_icon.png);
+}
+
+
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
     padding: 0px;
     border-radius: 2px;
@@ -277,7 +334,6 @@ QWidget#DeleteRoiWindowKeepWidget {
 QWidget#DeleteRoiWindowDeleteWidget {
     background-color: #d32f2f ;
 }
-
 QWidget#ScrollAreaWidgetContents {
     background-color: rgb(244, 245, 245);
 }
