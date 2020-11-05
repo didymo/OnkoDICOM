@@ -55,8 +55,6 @@ class DicomView(QtWidgets.QWidget):
         self.slider.setValue(int(len(pixmaps) / 2))
         self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.slider.setTickInterval(1)
-        self.slider.setStyleSheet("QSlider::handle:vertical:hover {background: qlineargradient(x1:0, y1:0, x2:1, "
-                                  "y2:1, stop:0 #fff, stop:1 #ddd);border: 1px solid #444;border-radius: 4px;}")
         self.slider.valueChanged.connect(self.value_changed)
 
     def init_view(self):
@@ -165,11 +163,9 @@ class DicomView(QtWidgets.QWidget):
         pixmaps = self.patient_dict_container.get("pixmaps")
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
-        image = image.scaled(512, 512, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        label = QtWidgets.QLabel()
-        label.setPixmap(image)
+        label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addWidget(label)
+        self.scene.addItem(label)
 
     def roi_display(self):
         """
@@ -315,6 +311,22 @@ class DicomView(QtWidgets.QWidget):
          the current slice
         :return: List of polygons of type QPolygonF.
         """
+        # TODO Implement support for showing "holes" in contours.
+        # Possible process for this is:
+        # 1. Calculate the areas of each contour on the slice
+        # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+        # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
+        # largest contour.
+        # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
+        # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
+        # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
+        # This process should provide fast and reliable results, however it should be noted that this method may fall
+        # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
+        # solution to that may be to compare every contour against one another and determine which ones have holes
+        # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
+        # holes. This second solution would definitely lead to more accurate representation of contours, but could
+        # possibly be too slow to be viable.
+
         list_polygons = []
         pixel_list = dict_rois_contours[curr_roi][curr_slice]
         for i in range(len(pixel_list)):

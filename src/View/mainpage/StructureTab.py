@@ -115,26 +115,24 @@ class StructureTab(QtWidgets.QWidget):
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
         icon_roi_delete.addPixmap(
-            QtGui.QPixmap('src/Icon/ROIdelete.png'),
+            QtGui.QPixmap('src/res/images/btn-icons/delete_icon.png'),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
 
         icon_roi_draw = QtGui.QIcon()
         icon_roi_draw.addPixmap(
-            QtGui.QPixmap('src/Icon/ROI_Brush.png'),
+            QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
 
         #self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
-        self.button_roi_delete.setMinimumHeight(50)
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
         self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
 
         #self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
-        self.button_roi_draw.setMinimumHeight(50)
         self.button_roi_draw.setIcon(icon_roi_draw)
         self.button_roi_draw.setText("Draw ROI")
         self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
@@ -248,7 +246,7 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap("src/Icon/alert.png"))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap("src/res/images/btn-icons/alert_icon.png"))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
         modified_indicator_text = QtWidgets.QLabel("Structures have been modified")
