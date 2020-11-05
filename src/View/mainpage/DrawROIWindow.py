@@ -638,7 +638,7 @@ class UIDrawROIWindow:
         return contour_data
 
     def on_preview_clicked(self):
-        if hasattr(self, 'drawingROI'):
+        if hasattr(self, 'drawingROI') and len(self.drawingROI.target_pixel_coords) > 0:
             list_of_points = self.calculate_concave_hull_of_points()
             if list_of_points is not None:
                 self.drawingROI.draw_contour_preview(list_of_points)
