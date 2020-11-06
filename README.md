@@ -1,4 +1,5 @@
-<img src="https://github.com/didymo/OnkoDICOM/blob/team2020/src/res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250">
+<p align="center"><img src="https://github.com/didymo/OnkoDICOM/blob/team2020/src/res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250"></p>
+
 # Onko
 OnkoDICOM was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image sets (DICOM-RT, CT, MRI, PET) using open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. OnkoDICOM is cross platform, open source software, and welcomes contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
 
