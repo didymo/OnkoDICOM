@@ -193,12 +193,14 @@ class CalculateDVHProgressWindow(QtWidgets.QDialog):
         dataset_rtdose = self.patient_dict_container.dataset["rtdose"]
         rois = self.patient_dict_container.get("rois")
 
+        dict_thickness = ImageLoading.get_thickness_dict(dataset_rtss, self.patient_dict_container.dataset)
+
         interrupt_flag = threading.Event()
         fork_safe_platforms = ['Linux']
         if platform.system() in fork_safe_platforms:
-            worker = Worker(ImageLoading.multi_calc_dvh, dataset_rtss, dataset_rtdose, rois)
+            worker = Worker(ImageLoading.multi_calc_dvh, dataset_rtss, dataset_rtdose, rois, dict_thickness)
         else:
-            worker = Worker(ImageLoading.calc_dvhs, dataset_rtss, dataset_rtdose, rois, interrupt_flag)
+            worker = Worker(ImageLoading.calc_dvhs, dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)
 
         worker.signals.result.connect(self.dvh_calculated)
 
