@@ -60,8 +60,6 @@ You can execute Onko by running
 - Make sure you install pyinstaller
 	`pip install pyinstaller`
 - Now from here, we will choose the OS and run as follows:
-For Windows Users:
-`pyinstaller OnkoDICOM-Windows.spec`
-For Linux Users:
-`pyinstaller OnkoDICOM-Linux.spec`
+..* For Windows Users: `pyinstaller OnkoDICOM-Windows.spec`
+..* For Linux Users: `pyinstaller OnkoDICOM-Linux.spec`
 - Open up the dist folder in the same location as the repository, the distributable application will be in there
