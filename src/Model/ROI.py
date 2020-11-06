@@ -1,10 +1,12 @@
 import collections
+import datetime
 import random
+from copy import deepcopy, copy as shallowcopy
+from typing import Dict, List
 
 import pydicom
-from pydicom import Sequence, Dataset
+from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
-
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -494,3 +496,130 @@ def ordered_list_rois(rois):
     for id, value in rois.items():
         res.append(id)
     return sorted(res)
+
+
+def create_initial_rtss_from_ct(img_ds:pydicom.dataset.Dataset, ct_uid_list=[])->pydicom.dataset.Dataset:
+    """Pre-populate an RT Structure Set based on a single CT (or MR) and a list of image UIDs
+        The caller should update the Structure Set Label, Name, and Description, which are
+        set to "OnkoDICOM" plus the StudyID from the CT, and must add 
+        Structure Set ROI Sequence, ROI Contour Sequence, and RT ROI Observations Sequence
+
+    Parameters
+    ----------
+    img_ds : pydicom.dataset.Dataset
+        A CT or MR image that the RT Structure Set will be "drawn" on
+    ct_uid_list : list, optional
+        list of UIDs (as strings) of the entire image volume that the RT SS references, by default []
+
+    Returns
+    -------
+    pydicom.dataset.Dataset
+        the half-baked RT SS, ready for Structure Set ROI Sequence, ROI Contour Sequence,
+        and RT ROI Observations Sequence
+
+    Raises
+    ------
+    ValueError
+        [description]
+    """
+    if (img_ds is None):
+        raise ValueError("No CT data to initialize RT SS")
+
+    now = datetime.datetime.now()
+    dicom_date = now.strftime("%Y%m%d")
+    dicom_time = now.strftime("%H%M")
+
+    top_level_tags_to_copy:list = [ Tag("PatientName"),
+        Tag("PatientID"), 
+        Tag("PatientBirthDate"),
+        Tag("PatientSex"),
+        Tag("StudyDate"), 
+        Tag("StudyTime"),
+        Tag("ReferringPhysicianName"),
+        Tag("StudyDescription"), 
+        Tag("StudyInstanceUID"),
+        Tag("StudyID"),
+        Tag("RequestingService"),
+        Tag("PatientAge"),
+        Tag("PatientSize"), 
+        Tag("PatientWeight"), 
+        Tag("MedicalAlerts"),
+        Tag("Allergies"), 
+        Tag("PregnancyStatus"), 
+        Tag("FrameOfReferenceUID"),
+        Tag("PositionReferenceIndicator"), 
+        Tag("InstitutionName"), 
+        Tag("InstitutionAddress")
+    ]  
+
+    rt_ss = pydicom.dataset.Dataset()
+
+    for tag in top_level_tags_to_copy:
+        print("Tag ", tag)
+        if tag in img_ds:
+            print("value of tag in image: ", img_ds[tag])
+            rt_ss[tag] = deepcopy(img_ds[tag])
+    
+    # Best to modify the Structure Set Lable with something more interesting in the application.
+    # and populate the Name and Description from the application also.
+    print("Study ID is ", rt_ss.StudyID)
+    rt_ss.StructureSetLabel = "OnkoDICOM rtss of " + rt_ss.StudyID
+    rt_ss.StructureSetName = rt_ss.StructureSetLabel
+    rt_ss.StructureSetDescription = rt_ss.StructureSetLabel
+
+    # referenced_study_sequence_item = pydicom.dataset.Dataset()
+    # referenced_study_sequence_item["ReferencedSOPInstanceUID"] = img_ds.StudyInstanceUID
+    # referenced_study_sequence_item["ReferencedSOPClassUID"] = img_ds.SOPClassUID
+
+    # rt_ss.ReferencedStudySequence = [referenced_study_sequence_item]
+
+    # General Equipment Module
+    rt_ss.Manufacturer = "OnkoDICOM"
+    rt_ss.ManufacturersModelName = "OnkoDICOM"
+    # TODO: Pull this off build information in some way
+    rt_ss.SoftwareVersions = "2020"
+    
+    # RT Series Module
+    rt_ss.SeriesInstanceUID = pydicom.uid.generate_uid()
+    rt_ss.Modality = "RTSTRUCT"
+    rt_ss.SeriesDate = dicom_date
+    rt_ss.SeriesTime = dicom_time
+    rt_ss.SeriesNumber = 1
+
+    # RT Referenced Frame Of Reference Sequence, Structure Set Module
+    rt_ref_frame_of_ref_sequence_item = pydicom.dataset.Dataset()
+    rt_ref_frame_of_ref_sequence_item.FrameOfReferenceUID = img_ds.FrameOfReferenceUID
+    rt_ss.ReferencedFrameOfReferenceSequence = [rt_ref_frame_of_ref_sequence_item]
+    
+    rt_ref_study_sequence_item = pydicom.dataset.Dataset()
+    rt_ref_study_sequence_item.ReferencedSOPInstanceUID = img_ds.StudyInstanceUID
+    rt_ref_study_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+
+    rt_ref_series_sequence_item = pydicom.dataset.Dataset()
+    rt_ref_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
+
+    contour_image_sequence = []
+    for uid in ct_uid_list:
+        contour_image_sequence_item = pydicom.dataset.Dataset()
+        contour_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+        contour_image_sequence_item.ReferencedSOPInstanceUID = uid
+        contour_image_sequence.append(contour_image_sequence_item)
+    
+    rt_ref_frame_of_ref_sequence_item.ContourImageSequence = contour_image_sequence
+    rt_ref_study_sequence_item.RTReferencedSeriesSequence = [rt_ref_series_sequence_item]
+    rt_ref_frame_of_ref_sequence_item.RTReferencedStudySequence = [rt_ref_study_sequence_item]
+    
+    rt_ss.StructureSetROISequence = []
+    rt_ss.ROIContourSequence = []
+    rt_ss.RTROIObservationsSequence = []
+    rt_ss.SOPClassUID = "1.2.840.10008.5.1.4.1.1.481.3"
+    rt_ss.SOPInstanceUID = pydicom.uid.generate_uid()
+
+    
+    rt_ss.InstanceCreationDate = rt_ss.StructureSetDate = dicom_date
+    
+    rt_ss.InstanceCreationTime = rt_ss.StructureSetTime = dicom_time
+    rt_ss.is_little_endian = True
+    rt_ss.is_implicit_VR = True
+    return rt_ss
+
