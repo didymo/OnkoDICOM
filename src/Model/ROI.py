@@ -596,13 +596,27 @@ def create_initial_rtss_from_ct(img_ds:pydicom.dataset.Dataset, ct_uid_list=[])-
     rt_ref_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
 
     contour_image_sequence = []
+    referenced_image_sequence = []
     for uid in ct_uid_list:
         contour_image_sequence_item = pydicom.dataset.Dataset()
+        referenced_image_sequence_item = pydicom.dataset.Dataset()
+        referenced_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
         contour_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+        referenced_image_sequence_item.ReferencedSOPInstanceUID = uid
         contour_image_sequence_item.ReferencedSOPInstanceUID = uid
         contour_image_sequence.append(contour_image_sequence_item)
+        referenced_image_sequence.append(referenced_image_sequence_item)
     
     rt_ref_frame_of_ref_sequence_item.ContourImageSequence = contour_image_sequence
+    rt_ss.ReferencedImageSequence = referenced_image_sequence
+
+    referenced_series_sequence_item = pydicom.dataset.Dataset()
+    referenced_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
+    # acceptable to copy because the contents of each reference sequence item only include
+    # SOP Class and SOP Instance, and not additional elements that are in referenced image seq
+    # but not referenced instance seq
+    referenced_series_sequence_item.ReferencedInstanceSequence = shallowcopy(referenced_image_sequence)
+    rt_ss.ReferencedSeriesSequence = [referenced_series_sequence_item]
     rt_ref_study_sequence_item.RTReferencedSeriesSequence = [rt_ref_series_sequence_item]
     rt_ref_frame_of_ref_sequence_item.RTReferencedStudySequence = [rt_ref_study_sequence_item]
     
