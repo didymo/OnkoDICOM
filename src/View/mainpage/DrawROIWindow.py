@@ -47,6 +47,7 @@ class UIDrawROIWindow:
         self.upper_limit = None
         self.lower_limit = None
         self.dicom_view = DicomView()
+        self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
 
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
@@ -57,6 +58,7 @@ class UIDrawROIWindow:
         self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
         self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
+        self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(self.dicom_view.current_slice_number)))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
         self.image_slice_number_box_draw_button.setText(_translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
@@ -391,13 +393,16 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance.setCentralWidget(self.draw_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
+    def slider_value_changed(self):
+        self.image_slice_number_line_edit.setText(str(self.dicom_view.current_slice_number))
+
     def on_zoom_in_clicked(self):
         """
         This function is used for zooming in button
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
     def on_zoom_out_clicked(self):
@@ -406,7 +411,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
     def on_cancel_button_clicked(self):
@@ -420,7 +425,7 @@ class UIDrawROIWindow:
         self.forward_pressed = False
         self.slider_changed = False
 
-        image_slice_number = self.image_slice_number_line_edit.text()
+        image_slice_number = self.dicom_view.current_slice_number
 
         # Backward will only execute if current image slice is above 1.
         if int(image_slice_number) > 1:
@@ -431,7 +436,7 @@ class UIDrawROIWindow:
 
             # Update slider to move to correct position
             self.dicom_view.slider.setValue(self.current_slice)
-
+            self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
             self.dicom_view.update_view()
 
     def on_forward_clicked(self):
@@ -442,7 +447,7 @@ class UIDrawROIWindow:
         self.forward_pressed = True
         self.slider_changed = False
 
-        image_slice_number = self.image_slice_number_line_edit.text()
+        image_slice_number = self.dicom_view.current_slice_number
 
         # Forward will only execute if current image slice is below the total number of slices.
         if int(image_slice_number) < total_slices:
@@ -451,7 +456,7 @@ class UIDrawROIWindow:
 
             # Update slider to move to correct position
             self.dicom_view.slider.setValue(self.current_slice)
-
+            self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
             self.dicom_view.update_view()
 
     def on_reset_clicked(self):
