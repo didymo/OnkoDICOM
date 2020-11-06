@@ -68,4 +68,14 @@ For Windows Users:
 For Linux Users:
 
 `pyinstaller OnkoDICOM-Linux.spec`
+
+For Mac Users:
+
+`pyinstaller OnkoDICOM-Darwin.spec`
 - Open up the dist folder in the same location as the repository, the distributable application will be in there
+NOTE: RIGHT NOW THE ONLY WAY TO RUN THE MAC EXECUTABLE IS THROUGH A LAUNCHER SCRIPT IN THE SAME FOLDER THAT HAVE THE FOLLOWING CONTENT:
+
+launcher.sh
+
+`#!/bin/bash
+./OnkoDICOM.app/Contents/MacOS/OnkoDICOM`
