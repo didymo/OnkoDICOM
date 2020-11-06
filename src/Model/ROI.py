@@ -616,6 +616,7 @@ def create_initial_rtss_from_ct(img_ds:pydicom.dataset.Dataset, ct_uid_list=[])-
     # SOP Class and SOP Instance, and not additional elements that are in referenced image seq
     # but not referenced instance seq
     referenced_series_sequence_item.ReferencedInstanceSequence = shallowcopy(referenced_image_sequence)
+    rt_ss.ReferencedSeriesSequence = [referenced_series_sequence_item]
     rt_ref_study_sequence_item.RTReferencedSeriesSequence = [rt_ref_series_sequence_item]
     rt_ref_frame_of_ref_sequence_item.RTReferencedStudySequence = [rt_ref_study_sequence_item]
     
