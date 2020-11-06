@@ -158,6 +158,7 @@ QLineEdit {
 }
 QLineEdit:disabled {
     background-color: #b9b9b9;
+    color: black;
 }
 QLineEdit:hover {
     background-color: rgb(230, 230, 235);
