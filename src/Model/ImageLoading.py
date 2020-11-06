@@ -15,6 +15,7 @@ dictionary and the get_datasets() function should not need to be added to. (Of c
 case, however this alternative function promotes scalability and durability of the process).
 """
 import collections
+import math
 import re
 from multiprocessing import Queue, Process
 
@@ -217,11 +218,54 @@ def get_roi_info(dataset_rtss):
     return dict_roi
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=None, progress_callback=None):
+def get_thickness_dict(dataset_rtss, read_data_dict):
+    """
+    Calculates and returns thicknesses for all ROIs in the RTSTRUCT that only contain one contour.
+    The process used to calculate thickness is courtesy of @sjswerdloff
+    :param dataset_rtss: RTSTRUCT DICOM dataset object.
+    :param read_data_dict:
+    :return: Dictionary of ROI thicknesses where the key is the ROI number and the value is the thickness.
+    """
+    # Generate a dict where keys are ROI numbers for structures with only one contour.
+    # Value of each key is the SOPInstanceUID of the CT slice the contour is positioned on.
+    single_contour_rois = {}
+    for contour in dataset_rtss.ROIContourSequence:
+        if len(contour.ContourSequence) == 1:
+            single_contour_rois[contour.ReferencedROINumber] = \
+                contour.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
+
+    dict_thickness = {}
+    for roi_number, sop_instance_uid in single_contour_rois.items():
+        # Get the slice numbers the slices before and after the slice the ROI is positioned on.
+        slice_key = None
+        for key, ds in read_data_dict.items():
+            if ds.SOPInstanceUID == sop_instance_uid:
+                slice_key = key
+
+        # Get the Image Position (Patient) from the two slices.
+        position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
+        position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+
+        # Calculate displacement between slices
+        displacement = position_after - position_before
+
+        # Finally, calculate thickness.
+        thickness = math.sqrt(displacement[0] * displacement[0]
+                              + displacement[1] * displacement[1]
+                              + displacement[2] * displacement[2]) / 2
+
+        dict_thickness[roi_number] = thickness
+
+    return dict_thickness
+
+
+def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None,
+              progress_callback=None):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
     :param rois: Dictionary of ROI information.
+    :param dict_thickness: Dictionary where the keys are ROI numbers and the values are thicknesses of the ROI.
     :param interrupt_flag: A threading.Event() object that tells the function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
     :param progress_callback: As this class is called by the multi-threading Worker class, it requires this parameter.
@@ -234,20 +278,23 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=Non
         roi_list.append(key)
 
     for roi in roi_list:
-        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit)
+        thickness = None
+        if roi in dict_thickness:
+            thickness = dict_thickness[roi]
+        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit, thickness=thickness)
         if interrupt_flag.is_set():  # Stop calculating at the next DVH.
             return
 
     return dict_dvh
 
 
-def calc_dvh_worker(rtss, dose, roi, queue, dose_limit=None):
+def calc_dvh_worker(rtss, dose, roi, queue, thickness, dose_limit=None):
     dvh = {}
-    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit, thickness=thickness)
     queue.put(dvh)
 
 
-def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None, progress_callback=None):
+def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limit=None, progress_callback=None):
     """
     Multiprocessing variant of calc_dvh for fork-based platforms.
     """
@@ -260,7 +307,11 @@ def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None, progress
         roi_list.append(key)
 
     for i in range(len(roi_list)):
-        p = Process(target=calc_dvh_worker, args=(dataset_rtss, dataset_rtdose, roi_list[i], queue, dose_limit,))
+        thickness = None
+        if roi_list[i] in dict_thickness:
+            thickness = dict_thickness[roi_list[i]]
+        p = Process(target=calc_dvh_worker, args=(dataset_rtss, dataset_rtdose, roi_list[i],
+                                                  queue, thickness, dose_limit,))
         processes.append(p)
         p.start()
 
