@@ -62,16 +62,9 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
         :return: rtss, with added ROI
     """
 
-    print("Function has been activated")
-
     # Creating a new ROIContourSequence, ContourSequence, ContourImageSequence
-    roi_contour_sequence = Sequence([Dataset()])
     contour_sequence = Sequence([Dataset()])
     contour_image_sequence = Sequence([Dataset()])
-
-    # Original File
-    original_ROI_contour = rtss.ROIContourSequence
-    original_ROI_contour_image = rtss.ROIContourSequence[0].ContourSequence
 
     number_of_contour_points = len(roi_coordinates) / 3
     referenced_sop_class_uid = data_set.SOPClassUID
@@ -93,8 +86,6 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
             position = index
 
     new_contour_number = len(rtss.ROIContourSequence[position].ContourSequence) + 1
-    print(new_contour_number)
-    print(position)
 
     # ROI Sequence
     for contour in contour_sequence:
@@ -113,10 +104,6 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
         contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
 
     rtss.ROIContourSequence[position].ContourSequence.extend(contour_sequence)
-
-    print(contour_sequence)
-    #rtss.add_new(Tag("ContourSequence"), "SQ", original_ROI_contour_image)
-    print(rtss)
 
     return rtss
 
