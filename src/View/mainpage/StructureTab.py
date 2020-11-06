@@ -202,6 +202,7 @@ class StructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("pixluts", pixluts)
         self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(self.patient_dict_container.get("rois")))
         self.patient_dict_container.set("selected_rois", [])
+        self.patient_dict_container.set("dict_polygons", {})
 
         if "draw" in change_description:
             dicom_tree_rtss = DicomTree(None)
