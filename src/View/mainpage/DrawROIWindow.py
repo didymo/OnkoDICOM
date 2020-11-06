@@ -397,7 +397,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
     def on_zoom_out_clicked(self):
@@ -406,7 +406,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
     def on_cancel_button_clicked(self):

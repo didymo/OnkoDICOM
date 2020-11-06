@@ -288,18 +288,12 @@ class DicomView(QtWidgets.QWidget):
         level = self.patient_dict_container.get("level")
         slice_pos = dataset['SliceLocation'].value
 
-        # For formatting
-        if self.zoom == 1:
-            zoom = 1
-        else:
-            zoom = float("{0:.2f}".format(self.zoom))
-
         # Update labels
         self.label_image_id.setText("Image: %s / %s" % (str(current_slice), str(total_slices)))
         self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
         self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
         self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
-        self.label_zoom.setText("Zoom: %s:%s" % (str(zoom), str(zoom)))
+        self.label_zoom.setText("Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
         self.label_patient_pos.setText("Patient Position: %s" % (str(patient_pos)))
 
     def calc_roi_polygon(self, curr_roi, curr_slice, dict_rois_contours):
