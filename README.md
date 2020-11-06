@@ -1,5 +1,7 @@
+<img src="https://github.com/didymo/OnkoDICOM/blob/team2020/src/res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250">
 # Onko
 OnkoDICOM was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image sets (DICOM-RT, CT, MRI, PET) using open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. OnkoDICOM is cross platform, open source software, and welcomes contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
+
 
 OnkoDICOM was inspired by the [dicompyler project](https://github.com/bastula/dicompyler).
 
@@ -28,11 +30,15 @@ your choice, in this case it's envOnkoDICOM.
 
 `cd OnkoDICOM`
 
-`virtualenv --python=python3 envOnkoDICOM`
+`virtualenv --python=python3 venv`
 
 Activate the virtual environment
 
-`source envOnkoDICOM/bin/activate`
+`source venv/bin/activate`
+
+OR
+
+`venv/Scripts/activate.bat`
 
 Install the requirements
 
@@ -44,3 +50,17 @@ Install the requirements
 You can execute Onko by running
 
 `python main.py`
+
+
+# COMPILATION GUIDE
+##### General Steps:
+- Ensure you have installed virtualenv with Python 3.7.x
+- Create a virtual environment like above and then activate the virtual environment
+- Make sure you install pyinstaller
+	`pip install pyinstaller`
+- Now from here, we will choose the OS and run as follows:
+For Windows Users:
+`pyinstaller OnkoDICOM-Windows.spec`
+For Linux Users:
+`pyinstaller OnkoDICOM-Linux.spec`
+- Open up the dist folder in the same location as the repository, the distributable application will be in there
