@@ -73,9 +73,18 @@ For Mac Users:
 
 `pyinstaller OnkoDICOM-Darwin.spec`
 - Open up the dist folder in the same location as the repository, the distributable application will be in there
-NOTE: RIGHT NOW THE ONLY WAY TO RUN THE MAC EXECUTABLE IS THROUGH A LAUNCHER SCRIPT IN THE SAME FOLDER THAT HAVE THE FOLLOWING CONTENT:
+###### NOTE
+If you are experiencing any issue with opening the application up via the dist folder on Mac,
+what you have to do is very simple once we have our bundled App we must enter to its content to the tcl folder.
 
-launcher.sh
+`cd OnkoDICOM.app/Contents/Resources/tcl`
 
-`#!/bin/bash
-./OnkoDICOM.app/Contents/MacOS/OnkoDICOM`
+Open up  `init.tcl`  and find where it says:
+
+`package require -exact Tcl 8.6.8`
+
+We must replace it with:
+
+`package require -exact Tcl 8.5.9`
+
+Once this is done, our application will open normally with a double click.
