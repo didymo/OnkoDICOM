@@ -2,7 +2,6 @@ import collections
 import datetime
 import random
 from copy import deepcopy, copy as shallowcopy
-from typing import Dict, List
 
 import pydicom
 from pydicom import Dataset, Sequence
@@ -53,6 +52,7 @@ def delete_roi(rtss, roi_name):
 
     return rtss
 
+
 def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
     """
         Add new contour image sequence ROI to rtss
@@ -72,8 +72,6 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
     referenced_sop_class_uid = data_set.SOPClassUID
     referenced_sop_instance_uid = data_set.SOPInstanceUID
 
-    referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
-
     existing_roi_number = None
     for item in rtss["StructureSetROISequence"]:
         if item.ROIName == roi_name:
@@ -83,7 +81,6 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
 
     # Get the index of the ROI
     for index, contour in enumerate(rtss.ROIContourSequence):
-        print(contour.ReferencedROINumber)
         if contour.ReferencedROINumber == existing_roi_number:
             position = index
 
@@ -123,15 +120,12 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
     patient_dict_container = PatientDictContainer()
     existing_rois = patient_dict_container.get("rois")
-    number_of_rois = len(existing_rois)
     roi_exists = False
 
     # This is for adding a new slice to an already existing ROI. For Future Development.
     # Check to see if the ROI already exists
     for key, value in existing_rois.items():
-        print(value)
         if value["name"] == roi_name:
-            print(value["name"])
             roi_exists = True
 
     if not roi_exists:
@@ -212,11 +206,6 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
         original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
         rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
-
-        # patient_dict_container = PatientDictContainer()
-        # rtss_location = patient_dict_container.filepaths["rtss"]
-
-        # print(rtss)
 
     else:
         # Add contour image data to existing ROI
