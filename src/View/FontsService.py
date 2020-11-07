@@ -2,7 +2,7 @@ import os
 import platform
 
 from PyQt5 import QtGui, QtWidgets
-
+from src.Controller.PathHandler import resource_path
 
 class FontService:
 
