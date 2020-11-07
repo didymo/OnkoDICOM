@@ -7,7 +7,7 @@ from src.Model.GetPatientInfo import get_basic_info, DicomTree, dict_instanceUID
 from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
-
+from src.Controller.PathHandler import resource_path
 
 def create_initial_model():
     """
@@ -38,10 +38,10 @@ def create_initial_model():
     patient_dict_container.set("level", level)
 
     # Check to see if the imageWindowing.csv file exists
-    if os.path.exists('src/data/csv/imageWindowing.csv'):
+    if os.path.exists(resource_path('src/data/csv/imageWindowing.csv')):
         # If it exists, read data from file into the self.dict_windowing variable
         dict_windowing = {}
-        with open('src/data/csv/imageWindowing.csv', "r") as fileInput:
+        with open(resource_path('src/data/csv/imageWindowing.csv'), "r") as fileInput:
             next(fileInput)
             dict_windowing["Normal"] = [window, level]
             for row in fileInput:

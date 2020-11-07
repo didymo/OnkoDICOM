@@ -2,6 +2,7 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
 
 from src.Model import ROI
+from src.Controller.PathHandler import resource_path
 
 
 class RenameROIWindow(QDialog):
@@ -10,7 +11,7 @@ class RenameROIWindow(QDialog):
                  suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
-        stylesheet = open("src/res/stylesheet.qss").read()
+        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
         self.setStyleSheet(stylesheet)
 
         self.standard_volume_names = standard_volume_names
@@ -25,7 +26,7 @@ class RenameROIWindow(QDialog):
         self.setMinimumSize(300, 90)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
+        self.icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Enter a new name:")

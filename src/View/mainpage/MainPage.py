@@ -16,6 +16,8 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 
+from src.Controller.PathHandler import resource_path
+
 
 class UIMainWindow:
     """
@@ -41,9 +43,9 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        stylesheet = open("src/res/stylesheet.qss").read()
+        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)

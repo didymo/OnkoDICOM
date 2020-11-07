@@ -2,6 +2,7 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Controller.PathHandler import resource_path
 
 
 class ActionHandler:
@@ -23,7 +24,7 @@ class ActionHandler:
         # Open patient
         self.icon_open = QtGui.QIcon()
         self.icon_open.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/open_patient_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/open_patient_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On)
         self.action_open = QtWidgets.QAction()
@@ -34,7 +35,7 @@ class ActionHandler:
         # Save as Anonymous Action
         self.icon_save_as_anonymous = QtGui.QIcon()
         self.icon_save_as_anonymous.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/anonlock_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/anonlock_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -51,7 +52,7 @@ class ActionHandler:
         # Zoom Out Action
         self.icon_zoom_out = QtGui.QIcon()
         self.icon_zoom_out.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/zoom_out_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/zoom_out_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -64,7 +65,7 @@ class ActionHandler:
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
         self.icon_zoom_in.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/zoom_in_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/zoom_in_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -77,7 +78,7 @@ class ActionHandler:
         # Transect Action
         self.icon_transect = QtGui.QIcon()
         self.icon_transect.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/transect_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/transect_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -90,7 +91,7 @@ class ActionHandler:
         # Add-On Options Action
         self.icon_add_ons = QtGui.QIcon()
         self.icon_add_ons.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/management_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/management_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -117,7 +118,7 @@ class ActionHandler:
         # Create Windowing menu
         self.icon_windowing = QtGui.QIcon()
         self.icon_windowing.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/windowing_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/windowing_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -127,7 +128,7 @@ class ActionHandler:
         # Create Export menu
         self.icon_export = QtGui.QIcon()
         self.icon_export.addPixmap(
-            QtGui.QPixmap("src/res/images/btn-icons/export_purple_icon.png"),
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/export_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On,
         )

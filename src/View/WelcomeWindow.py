@@ -1,13 +1,13 @@
 from src.View.OpenPatientWindow import *
-
+from src.Controller.PathHandler import resource_path
 
 class UIWelcomeWindow(object):
 
     # the ui constructor function
     def setup_ui(self, welcome_window_instance):
-        stylesheet = open("src/res/stylesheet.qss").read()
+        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
         window_icon = QtGui.QIcon()
-        window_icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
+        window_icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_window_instance.setObjectName("WelcomeWindowInstance")
         welcome_window_instance.setWindowIcon(window_icon)
         welcome_window_instance.setFixedSize(840, 530)
@@ -20,7 +20,7 @@ class UIWelcomeWindow(object):
         # Set up the Logo Holder for the Welcome Window
         self.logo_holder = QtWidgets.QHBoxLayout()
         self.welcome_window_logo = QtWidgets.QLabel()
-        self.welcome_window_logo.setPixmap(QtGui.QPixmap("src/res/images/image.png"))
+        self.welcome_window_logo.setPixmap(QtGui.QPixmap(resource_path("src/res/images/image.png")))
         self.welcome_window_logo.setScaledContents(True)
         self.welcome_window_logo.setObjectName("WelcomeWindowLogo")
         self.welcome_window_logo.setFixedSize(480, 260)

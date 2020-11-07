@@ -9,6 +9,7 @@ from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
+from src.Controller.PathHandler import resource_path
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
@@ -141,7 +142,7 @@ class PyradiProgressBar(QtWidgets.QWidget):
         centerPoint = QtWidgets.QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         self.w.move(qtRectangle.topLeft())
-        self.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
+        self.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))
 
         self.setGeometry(300, 300, 460, 100)
         self.label = QtWidgets.QLabel(self)
