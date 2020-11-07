@@ -695,7 +695,11 @@ class SelectROIPopUp(QDialog):
     def __init__(self):
         QDialog.__init__(self)
 
-        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         self.setStyleSheet(stylesheet)
         self.standard_names = []
         self.init_standard_names()
