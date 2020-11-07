@@ -4,11 +4,11 @@ block_cipher = None
 
 added_files = [
     ('src', 'src'),
-    ('/Users/hdinh/Library/Python/3.7/lib/python/site-packages/country_list/country_data', 'country_list/country_data')
+    ('venv/lib/python/site-packages/country_list/country_data', 'country_list/country_data')
 ]
 
 a = Analysis(['main.py'],
-             pathex=['/Users/hdinh/Library/Python/3.7/lib/python/site-packages/'],
+             pathex=['venv/lib/python/site-packages/'],
              binaries=[],
              datas=added_files,
              hiddenimports=[],
@@ -50,6 +50,7 @@ App = BUNDLE(exe,
                         'CFBundleTypeIconFile': 'onkodicom.icns',
                         'CFBundleExecutable': 'OnkoDICOM',
                         'CFBundleTypeRole': 'None',
+			'CFBundleShortVersionString': '1.0.0',
                         'LSItemContentTypes': ['au.com.onkodicom'],
                         'LSHandlerRank': 'Owner'
                         }
