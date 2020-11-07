@@ -48,6 +48,8 @@ App = BUNDLE(exe,
                     {
                         'CFBundleTypeName': 'OnkoDICOM',
                         'CFBundleTypeIconFile': 'onkodicom.icns',
+                        'CFBundleExecutable': 'OnkoDICOM',
+                        'CFBundleTypeRole': 'None',
                         'LSItemContentTypes': ['au.com.onkodicom'],
                         'LSHandlerRank': 'Owner'
                         }

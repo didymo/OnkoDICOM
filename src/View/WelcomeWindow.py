@@ -1,11 +1,16 @@
 from src.View.OpenPatientWindow import *
 from src.Controller.PathHandler import resource_path
+import platform
 
 class UIWelcomeWindow(object):
 
     # the ui constructor function
     def setup_ui(self, welcome_window_instance):
-        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QtGui.QIcon()
         window_icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_window_instance.setObjectName("WelcomeWindowInstance")

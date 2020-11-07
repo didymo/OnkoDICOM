@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
+import platform
 
 class UIAddOnOptions(object):
     """
@@ -26,7 +27,13 @@ class UIAddOnOptions(object):
         """
         Create the window and the components for each option view.
         """
-        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
+        self.stylesheet_path = ""
+        
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
         add_on_options.setMinimumSize(766, 600)
         add_on_options.setStyleSheet(stylesheet)

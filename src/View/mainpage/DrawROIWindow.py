@@ -18,6 +18,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DicomView import DicomView
 
 from src.Controller.PathHandler import resource_path
+import platform
 
 
 # noinspection PyAttributeOutsideInit
@@ -91,7 +92,11 @@ class UIDrawROIWindow:
         """
 
         # Initialise a DrawROIWindow
-        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.draw_roi_window_instance.setObjectName("DrawRoiWindowInstance")
@@ -690,7 +695,7 @@ class SelectROIPopUp(QDialog):
     def __init__(self):
         QDialog.__init__(self)
 
-        stylesheet = open("src/res/stylesheet.qss").read()
+        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
         self.setStyleSheet(stylesheet)
         self.standard_names = []
         self.init_standard_names()

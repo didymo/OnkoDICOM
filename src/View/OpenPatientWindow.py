@@ -13,13 +13,18 @@ from src.View.ProgressWindow import ProgressWindow
 from src.View.resources_open_patient_rc import *
 
 from src.Controller.PathHandler import resource_path
+import platform
 
 
 class UIOpenPatientWindow(object):
     patient_info_initialized = QtCore.pyqtSignal(object)
 
     def setup_ui(self, open_patient_window_instance):
-        stylesheet = open(resource_path("src/res/stylesheet.qss")).read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         open_patient_window_instance.setObjectName("OpenPatientWindowInstance")

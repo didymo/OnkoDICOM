@@ -32,7 +32,9 @@ if __name__ == "__main__":
     if platform.system() == 'Windows':
         f = QFont("Segoe UI", 9)
         app.setFont(f)
-
+    elif platform.system() == 'Darwin':
+        f = QFont("Helvetica Neue", 13)
+        app.setFont(f)
     if len(sys.argv) > 1:
         controller = Controller(default_directory=sys.argv[1])
         controller.show_open_patient()
