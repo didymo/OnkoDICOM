@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QCompleter
 from country_list import countries_for_language
-
+from src.Controller.PathHandler import resource_path
 
 # Load the list of countries
 countries = dict(countries_for_language('en'))
@@ -18,15 +18,15 @@ for i, v in enumerate(countries):
     data.append(countries[v])
 
 # Load the diseases and format them
-with open('src/data/ICD10_Topography.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Topography.csv'), 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
     icd.pop(0)
-with open('src/data/ICD10_Topography_C.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Topography_C.csv'), 'r') as f:
     reader = csv.reader(f)
     icdc = list(reader)
     icdc.pop(0)
-with open('src/data/ICD10_Morphology.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Morphology.csv'), 'r') as f:
     reader = csv.reader(f)
     hist = list(reader)
     hist.pop(0)
@@ -748,7 +748,7 @@ class Ui_CD_Display(object):
         self.Edit_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon_edit = QtGui.QIcon()
         icon_edit.addPixmap(
-            QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'),
+            QtGui.QPixmap(resource_path('src/res/images/btn-icons/draw_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )

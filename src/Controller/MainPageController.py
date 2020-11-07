@@ -20,6 +20,7 @@ from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
 from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Controller.PathHandler import resource_path
 
 matplotlib.cbook.handle_exceptions = "print"  # default
 matplotlib.cbook.handle_exceptions = "raise"
@@ -37,15 +38,15 @@ matplotlib.cbook.handle_exceptions = "ignore"
 message = ""
 
 # reading the csv files containing the available diseases
-with open('src/data/ICD10_Topography.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Topography.csv'), 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
     icd.pop(0)
-with open('src/data/ICD10_Topography_C.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Topography_C.csv'), 'r') as f:
     reader = csv.reader(f)
     icdc = list(reader)
     icdc.pop(0)
-with open('src/data/ICD10_Morphology.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Morphology.csv'), 'r') as f:
     reader = csv.reader(f)
     hist = list(reader)
     hist.pop(0)
@@ -452,7 +453,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 writer.writerow(dataRow)
 
             # save the dates in binary file with patient ID, for future editing
-            fileName = Path('src/data/records.pkl')
+            fileName = Path(resource_path('src/data/records.pkl'))
             df = pd.DataFrame(columns=['PID', 'DOB', 'DOD', 'DOLE'])
             dt = [self.pID, self.ui.date_of_birth.date().toString("dd/MM/yyyy"),
                   self.ui.date_diagnosis.date().toString("dd/MM/yyyy"),
@@ -462,7 +463,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             if fileName.exists():
 
                 # Check to see if this patient has had a record saved in this file before
-                new_df = pd.read_pickle('src/data/records.pkl')
+                new_df = pd.read_pickle(resource_path('src/data/records.pkl'))
                 check = False
                 for i in new_df.index:
                     if new_df.at[i, 'PID'] == self.pID:
@@ -478,11 +479,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 if check:
                     #save under the same PID
                     new_df.append(df, ignore_index=True)
-                    new_df.to_pickle('src/data/records.pkl')
+                    new_df.to_pickle(resource_path('src/data/records.pkl'))
             else:
                 #save new row of credentials
-                open('src/data/records.pkl', 'w+')
-                df.to_pickle('src/data/records.pkl')
+                open(resource_path('src/data/records.pkl', 'w+'))
+                df.to_pickle(resource_path('src/data/records.pkl'))
             # display the successful saving message pop up
             SaveReply = QtWidgets.QMessageBox.information(self, "Message",
                                                 "The Clinical Data was saved successfully in your directory!",
@@ -559,7 +560,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         # date of diagnosis
         # date of last existence
         # Create a dtype with the binary data format and the desired column names
-        df = pd.read_pickle('src/data/records.pkl')
+        df = pd.read_pickle(resource_path('src/data/records.pkl'))
         for i in df.index:
             if df.at[i, 'PID'] == self.pID:
                 self.ui.date_of_birth.setDate(
@@ -808,8 +809,8 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
     #call edit mode when the edit button is pressed
     def edit_mode(self):
         #check if the sensitive data is saved to enable editing
-        if os.path.exists('src/data/records.pkl'):
-            df = pd.read_pickle('src/data/records.pkl')
+        if os.path.exists(resource_path('src/data/records.pkl')):
+            df = pd.read_pickle(resource_path('src/data/records.pkl'))
             check = False
             for i in df.index:
                 if df.at[i, 'PID'] == self.dataset[0].PatientID:

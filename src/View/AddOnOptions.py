@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from src.Controller.PathHandler import resource_path
+import platform
 
 class UIAddOnOptions(object):
     """
@@ -26,11 +27,17 @@ class UIAddOnOptions(object):
         """
         Create the window and the components for each option view.
         """
-        stylesheet = open("src/res/stylesheet.qss").read()
+        self.stylesheet_path = ""
+        
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
         add_on_options.setMinimumSize(766, 600)
         add_on_options.setStyleSheet(stylesheet)
-        add_on_options.setWindowIcon(QtGui.QIcon("src/res/images/btn-icons/onkodicom_icon.png"))
+        add_on_options.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))
 
         _translate = QtCore.QCoreApplication.translate
         add_on_options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))

@@ -16,6 +16,8 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 
+from src.Controller.PathHandler import resource_path
+import platform
 
 class UIMainWindow:
     """
@@ -41,9 +43,13 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        stylesheet = open("src/res/stylesheet.qss").read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)

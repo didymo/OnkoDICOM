@@ -17,6 +17,9 @@ from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DicomView import DicomView
 
+from src.Controller.PathHandler import resource_path
+import platform
+
 
 # noinspection PyAttributeOutsideInit
 class UIDrawROIWindow:
@@ -89,9 +92,13 @@ class UIDrawROIWindow:
         """
 
         # Initialise a DrawROIWindow
-        stylesheet = open("src/res/stylesheet.qss").read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.draw_roi_window_instance.setObjectName("DrawRoiWindowInstance")
         self.draw_roi_window_instance.setWindowIcon(window_icon)
 
@@ -151,7 +158,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_in_button.resize(QSize(24, 24))
         self.draw_roi_window_viewport_zoom_in_button.setProperty("QPushButtonClass", "zoom-button")
         icon_zoom_in = QtGui.QIcon()
-        icon_zoom_in.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/zoom_in_icon.png'))
+        icon_zoom_in.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/zoom_in_icon.png')))
         self.draw_roi_window_viewport_zoom_in_button.setIcon(icon_zoom_in)
         self.draw_roi_window_viewport_zoom_in_button.clicked.connect(self.on_zoom_in_clicked)
         # Zoom Out Button
@@ -162,7 +169,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_out_button.resize(QSize(24, 24))
         self.draw_roi_window_viewport_zoom_out_button.setProperty("QPushButtonClass", "zoom-button")
         icon_zoom_out = QtGui.QIcon()
-        icon_zoom_out.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/zoom_out_icon.png'))
+        icon_zoom_out.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/zoom_out_icon.png')))
         self.draw_roi_window_viewport_zoom_out_button.setIcon(icon_zoom_out)
         self.draw_roi_window_viewport_zoom_out_button.clicked.connect(self.on_zoom_out_clicked)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_label)
@@ -185,7 +192,7 @@ class UIDrawROIWindow:
             self.image_slice_number_move_backward_button.sizeHint().height())
         self.image_slice_number_move_backward_button.clicked.connect(self.on_backward_clicked)
         icon_move_backward = QtGui.QIcon()
-        icon_move_backward.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/backward_slide_icon.png'))
+        icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/backward_slide_icon.png')))
         self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
         self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_backward_button)
         # Create a button to move forward to the next image
@@ -198,7 +205,7 @@ class UIDrawROIWindow:
             self.image_slice_number_move_forward_button.sizeHint().height())
         self.image_slice_number_move_forward_button.clicked.connect(self.on_forward_clicked)
         icon_move_forward = QtGui.QIcon()
-        icon_move_forward.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/forward_slide_icon.png'))
+        icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/forward_slide_icon.png')))
         self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
         self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_forward_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_backward_forward_box)
@@ -217,7 +224,7 @@ class UIDrawROIWindow:
             self.image_slice_number_transect_button.sizeHint().height())
         self.image_slice_number_transect_button.clicked.connect(self.transect_handler)
         icon_transect = QtGui.QIcon()
-        icon_transect.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/transect_icon.png'))
+        icon_transect.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/transect_icon.png')))
         self.image_slice_number_transect_button.setIcon(icon_transect)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_transect_button)
         # Create a bounding box button
@@ -232,7 +239,7 @@ class UIDrawROIWindow:
         )
         self.image_slice_number_box_draw_button.clicked.connect(self.on_box_draw_clicked)
         icon_box_draw = QtGui.QIcon()
-        icon_box_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_bound_icon.png'))
+        icon_box_draw.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/draw_bound_icon.png')))
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_box_draw_button)
         # Create a draw button
@@ -245,7 +252,7 @@ class UIDrawROIWindow:
             self.image_slice_number_draw_button.sizeHint().height())
         self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
         icon_draw = QtGui.QIcon()
-        icon_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/draw_icon.png'))
+        icon_draw.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/draw_icon.png')))
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
@@ -261,7 +268,7 @@ class UIDrawROIWindow:
         self.row_preview_layout.addWidget(self.input_alpha_value)
         self.draw_roi_window_input_container_box.addRow(self.row_preview_layout)
         icon_preview = QtGui.QIcon()
-        icon_preview.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/preview_icon.png'))
+        icon_preview.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/preview_icon.png')))
         self.button_contour_preview.setIcon(icon_preview)
 
         # Create a label for denoting the max internal hole size
@@ -323,7 +330,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_action_reset_button.clicked.connect(self.on_reset_clicked)
         self.draw_roi_window_instance_action_reset_button.setProperty("QPushButtonClass", "fail-button")
         icon_clear_roi_draw = QtGui.QIcon()
-        icon_clear_roi_draw.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/reset_roi_draw_icon.png'))
+        icon_clear_roi_draw.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/reset_roi_draw_icon.png')))
         self.draw_roi_window_instance_action_reset_button.setIcon(icon_clear_roi_draw)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_instance_action_reset_button)
 
@@ -343,7 +350,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_cancel_button.clicked.connect(self.on_cancel_button_clicked)
         self.draw_roi_window_instance_cancel_button.setProperty("QPushButtonClass", "fail-button")
         icon_cancel = QtGui.QIcon()
-        icon_cancel.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/cancel_icon.png'))
+        icon_cancel.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/cancel_icon.png')))
         self.draw_roi_window_instance_cancel_button.setIcon(icon_cancel)
         self.draw_roi_window_cancel_save_box.addWidget(self.draw_roi_window_instance_cancel_button)
         # Create a save button to save all the changes
@@ -356,7 +363,7 @@ class UIDrawROIWindow:
             self.draw_roi_window_instance_save_button.sizeHint().height())
         self.draw_roi_window_instance_save_button.setProperty("QPushButtonClass", "success-button")
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap('src/res/images/btn-icons/save_icon.png'))
+        icon_save.addPixmap(QtGui.QPixmap(resource_path('src/res/images/btn-icons/save_icon.png')))
         self.draw_roi_window_instance_save_button.setIcon(icon_save)
         self.draw_roi_window_instance_save_button.clicked.connect(self.on_save_clicked)
         self.draw_roi_window_cancel_save_box.addWidget(self.draw_roi_window_instance_save_button)
@@ -688,7 +695,11 @@ class SelectROIPopUp(QDialog):
     def __init__(self):
         QDialog.__init__(self)
 
-        stylesheet = open("src/res/stylesheet.qss").read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         self.setStyleSheet(stylesheet)
         self.standard_names = []
         self.init_standard_names()
@@ -697,7 +708,7 @@ class SelectROIPopUp(QDialog):
         self.setMinimumSize(350, 180)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Search for ROI:")
@@ -738,7 +749,7 @@ class SelectROIPopUp(QDialog):
         """
         Create two lists containing standard organ and standard volume names as set by the Add-On options.
         """
-        with open('src/data/csv/organName.csv', 'r') as f:
+        with open(resource_path('src/data/csv/organName.csv'), 'r') as f:
             standard_organ_names = []
 
             csv_input = csv.reader(f)
@@ -746,7 +757,7 @@ class SelectROIPopUp(QDialog):
             for row in csv_input:
                 standard_organ_names.append(row[0])
 
-        with open('src/data/csv/volumeName.csv', 'r') as f:
+        with open(resource_path('src/data/csv/volumeName.csv'), 'r') as f:
             standard_volume_names = []
 
             csv_input = csv.reader(f)

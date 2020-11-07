@@ -3,8 +3,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidget, \
     QTreeWidgetItem, QMessageBox, QAbstractItemView, QSizePolicy
-
+from src.Controller.PathHandler import resource_path
 from src.Model import ROI
+import platform
 
 
 class UIDeleteROIWindow():
@@ -20,9 +21,13 @@ class UIDeleteROIWindow():
         self.deleting_rois_structure_tuple = deleting_rois_structure_tuple
 
         # Initialise a DeleteROIWindow
-        stylesheet = open("src/res/stylesheet.qss").read()
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap("src/res/images/icon.ico"), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         delete_roi_window_instance.setObjectName("DeleteRoiWindowInstance")
         delete_roi_window_instance.setWindowIcon(window_icon)
         delete_roi_window_instance.resize(800, 606)
