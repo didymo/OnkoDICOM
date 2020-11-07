@@ -151,8 +151,9 @@ class DVHTab(QtWidgets.QWidget):
 
     def update_plot(self):
         if self.dvh_calculated:
-            # Get new list of selected rois
-            self.selected_rois = self.patient_dict_container.get("selected_rois")
+            # Get new list of selected rois that have DVHs calculated
+            self.selected_rois = [roi for roi in self.patient_dict_container.get("selected_rois")
+                                  if roi in self.raw_dvh.keys()]
 
             # Clear the current layout
             self.clear_layout()
