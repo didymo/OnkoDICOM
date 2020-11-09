@@ -187,7 +187,8 @@ class ActionHandler:
         if self.patient_dict_container.get("rtss_modified"):
             self.__main_page.structures_tab.save_new_rtss()
         else:
-            QtWidgets.QMessageBox.Information(self, "File not saved", "No changes to the RTSTRUCT file detected.")
+            QtWidgets.QMessageBox.information(self.__main_page, "File not saved",
+                                              "No changes to the RTSTRUCT file detected.")
 
     def windowing_handler(self, state, text):
         """
