@@ -26,7 +26,6 @@ class DVHTab(QtWidgets.QWidget):
         self.plot = None
 
         self.selected_rois = self.patient_dict_container.get("selected_rois")
-        self.roi_color = self.patient_dict_container.get("roi_color_dict")
 
         self.dvh_tab_layout = QtWidgets.QVBoxLayout()
 
@@ -91,7 +90,7 @@ class DVHTab(QtWidgets.QWidget):
 
 
                 # Color of the line is the same as the color shown in the left column of the window
-                color = self.roi_color[roi]
+                color = self.patient_dict_container.get("roi_color_dict")[roi]
                 color_R = color.red() / 255
                 color_G = color.green() / 255
                 color_B = color.blue() / 255
