@@ -4,6 +4,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QToolBar, QToolButton, QWidget, QSizePolicy
 
 from src.Controller.ActionHandler import ActionHandler
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class Toolbar(QToolBar):
@@ -11,6 +12,7 @@ class Toolbar(QToolBar):
     def __init__(self, action_handler: ActionHandler):
         QToolBar.__init__(self)
         self.action_handler = action_handler
+        self.patient_dict_container = PatientDictContainer()
         self.setCursor(QCursor(Qt.PointingHandCursor))
         self.setMovable(False)
         self.setFloatable(False)
@@ -47,3 +49,5 @@ class Toolbar(QToolBar):
         self.addWidget(spacer)
         self.addWidget(self.button_export)
         self.addAction(self.action_handler.action_save_as_anonymous)
+        if self.patient_dict_container.has_modality('rtss'):
+            self.addAction(self.action_handler.action_save_structure)
