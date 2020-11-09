@@ -3,10 +3,11 @@ import platform
 import threading
 
 import matplotlib.pylab as plt
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from pandas import np
 
+from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2csv
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -158,6 +159,10 @@ class DVHTab(QtWidgets.QWidget):
             # Clear the current layout
             self.clear_layout()
 
+            # If the DVH has become outdated, show the user an indicator advising them such.
+            if self.patient_dict_container.get("dvh_outdated"):
+                self.display_outdated_indicator()
+
             # Re-draw the plot and add to layout
             self.init_layout_dvh()
 
@@ -173,6 +178,26 @@ class DVHTab(QtWidgets.QWidget):
         save_reply = QtWidgets.QMessageBox.information(self, "Message",
                                                       "The DVH Data was saved successfully in your directory!",
                                                       QtWidgets.QMessageBox.Ok)
+
+    def display_outdated_indicator(self):
+        self.modified_indicator_widget = QtWidgets.QWidget()
+        self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
+        #self.modified_indicator_widget.setFixedHeight(35)
+        modified_indicator_layout = QtWidgets.QHBoxLayout()
+        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
+
+        modified_indicator_icon = QtWidgets.QLabel()
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/alert_icon.png")))
+        modified_indicator_layout.addWidget(modified_indicator_icon)
+
+        modified_indicator_text = QtWidgets.QLabel("Contours have been modified since DVH calculation. Some DVHs may "
+                                                   "now be out of date.")
+        modified_indicator_text.setStyleSheet("color: red")
+        modified_indicator_layout.addWidget(modified_indicator_text)
+
+        self.modified_indicator_widget.setLayout(modified_indicator_layout)
+
+        self.dvh_tab_layout.addWidget(self.modified_indicator_widget, QtCore.Qt.AlignTop)
 
 
 class CalculateDVHProgressWindow(QtWidgets.QDialog):
