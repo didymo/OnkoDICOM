@@ -64,6 +64,8 @@ def create_initial_model():
     basic_info = get_basic_info(dataset[0])
     patient_dict_container.set("basic_info", basic_info)
 
+    patient_dict_container.set("dict_uid", dict_instanceUID(dataset))
+
     # Set RTSS attributes
     if patient_dict_container.has_modality("rtss"):
         patient_dict_container.set("file_rtss", filepaths['rtss'])
@@ -75,7 +77,6 @@ def create_initial_model():
         patient_dict_container.set("list_roi_numbers", ordered_list_rois(patient_dict_container.get("rois")))
         patient_dict_container.set("selected_rois", [])
 
-        patient_dict_container.set("dict_uid", dict_instanceUID(dataset))
         patient_dict_container.set("dict_polygons", {})
 
     # Set RTDOSE attributes
