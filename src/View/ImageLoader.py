@@ -121,6 +121,7 @@ class ImageLoader(QObject):
                 # Add DVH values to PatientDictContainer
                 patient_dict_container.set("raw_dvh", raw_dvh)
                 patient_dict_container.set("dvh_x_y", dvh_x_y)
+                patient_dict_container.set("dvh_outdated", False)
 
                 return True
             else:

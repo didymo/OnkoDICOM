@@ -211,6 +211,9 @@ class StructureTab(QtWidgets.QWidget):
             self.patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
             self.color_dict = self.init_color_roi()
             self.patient_dict_container.set("roi_color_dict", self.color_dict)
+            if self.patient_dict_container.has_attribute("raw_dvh"):
+                # DVH will be outdated once changes to it are made, and recalculation will be required.
+                self.patient_dict_container.set("dvh_outdated", True)
 
         if self.patient_dict_container.has_modality("raw_dvh"):
             # Rename structures in DVH list
