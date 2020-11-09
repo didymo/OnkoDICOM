@@ -19,6 +19,7 @@ from src.View.mainpage.StructureTab import StructureTab
 from src.Controller.PathHandler import resource_path
 import platform
 
+
 class UIMainWindow:
     """
     The central class responsible for initializing most of the values stored in the PatientDictContainer model and

@@ -122,6 +122,7 @@ class ActionHandler:
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtWidgets.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
+        self.action_pyradiomics_export.triggered.connect(self.pyradiomics_export_handler)
 
         # Export DVH Action
         self.action_dvh_export = QtWidgets.QAction()
@@ -234,7 +235,7 @@ class ActionHandler:
             radiomics_reply = QtWidgets.QMessageBox.information(
                 self.__main_page.main_window_instance,
                 "Confirmation",
-                "Are you sure you want to perform radiomics?",
+                "Anonymization complete. Would you like to perform radiomics?",
                 QtWidgets.QMessageBox.Yes,
                 QtWidgets.QMessageBox.No
             )
@@ -275,6 +276,10 @@ class ActionHandler:
                                               "Unable to export DVH",
                                               "DVH cannot be exported as there is no DVH present.",
                                               QtWidgets.QMessageBox.Ok)
+
+    def pyradiomics_export_handler(self):
+        self.__main_page.pyradi_trigger.emit(self.patient_dict_container.path,
+                                             self.patient_dict_container.filepaths, '')
 
     def action_exit_handler(self):
         QtCore.QCoreApplication.exit(0)
