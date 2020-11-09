@@ -32,6 +32,19 @@ class ActionHandler:
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
 
+        # Save RTSTRUCT changes action
+        self.icon_save_structure = QtGui.QIcon()
+        self.icon_save_structure.addPixmap(
+            QtGui.QPixmap(resource_path("src/res/images/btn-icons/save_all_purple_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_save_structure = QtWidgets.QAction()
+        self.action_save_structure.setIcon(self.icon_save_structure)
+        self.action_save_structure.setText("Save RTSTRUCT changes")
+        self.action_save_structure.setIconVisibleInMenu(True)
+        self.action_save_structure.triggered.connect(self.save_struct_handler)
+
         # Save as Anonymous Action
         self.icon_save_as_anonymous = QtGui.QIcon()
         self.icon_save_as_anonymous.addPixmap(
@@ -166,6 +179,15 @@ class ActionHandler:
         # Feel free to try fix (or at least explain why the action has to be set as the windowing menu's child twice)
         for item in windowing_actions:
             self.menu_windowing.addAction(item)
+
+    def save_struct_handler(self):
+        """
+        If there are changes to the RTSTRUCT detected, save the changes to disk.
+        """
+        if self.patient_dict_container.get("rtss_modified"):
+            self.__main_page.structures_tab.save_new_rtss()
+        else:
+            QtWidgets.QMessageBox.Information(self, "File not saved", "No changes to the RTSTRUCT file detected.")
 
     def windowing_handler(self, state, text):
         """
