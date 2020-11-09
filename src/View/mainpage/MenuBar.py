@@ -4,14 +4,15 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 
 from src.Controller.ActionHandler import ActionHandler
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
-# TODO this class needs to be able to recognise when an RTSTRUCT/DVH is present, and add new actions accordingly
 class MenuBar(QtWidgets.QMenuBar):
 
     def __init__(self, action_handler: ActionHandler):
         QtWidgets.QMenuBar.__init__(self)
         self.action_handler = action_handler
+        self.patient_dict_container = PatientDictContainer()
         self.setGeometry(QtCore.QRect(0, 0, 901, 35))
         self.setContextMenuPolicy(Qt.PreventContextMenu)
 
@@ -36,6 +37,8 @@ class MenuBar(QtWidgets.QMenuBar):
         # Add actions to File menu
         self.menu_file.addAction(self.action_handler.action_open)
         self.menu_file.addSeparator()
+        if self.patient_dict_container.has_modality('rtss'):
+            self.menu_file.addAction(self.action_handler.action_save_structure)
         self.menu_file.addAction(self.action_handler.action_save_as_anonymous)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_handler.action_exit)
