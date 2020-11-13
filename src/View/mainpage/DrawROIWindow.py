@@ -1,5 +1,6 @@
 import csv
 import math
+import threading
 
 import numpy
 import pydicom
@@ -15,6 +16,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Worker import Worker
 from src.View.mainpage.DicomView import DicomView
 
 from src.Controller.PathHandler import resource_path
@@ -587,10 +589,11 @@ class UIDrawROIWindow:
                 for sublist in hull:
                     for item in sublist:
                         single_array.append(item)
-                new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
-                self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
-                QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
-                self.close()
+                # new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
+                progress_window = SaveROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+                progress_window.signal_roi_saved.connect(self.roi_saved)
+                progress_window.start_saving(self.dataset_rtss, self.ROI_name, single_array, self.ds)
+                progress_window.show()
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
                                   "Selected points will generate multiple contours, which is not currently supported. "
@@ -599,6 +602,11 @@ class UIDrawROIWindow:
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
+
+    def roi_saved(self, new_rtss):
+        self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
+        QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
+        self.close()
 
     def calculate_concave_hull_of_points(self):
         """
@@ -679,6 +687,31 @@ class UIDrawROIWindow:
 
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
+
+
+class SaveROIProgressWindow(QtWidgets.QDialog):
+
+    signal_roi_saved = QtCore.pyqtSignal(pydicom.Dataset)
+
+    def __init__(self, *args, **kwargs):
+        super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
+        layout = QtWidgets.QVBoxLayout()
+        text = QtWidgets.QLabel("Creating ROI...")
+        layout.addWidget(text)
+        self.setWindowTitle("Please wait...")
+        self.setFixedWidth(150)
+        self.setLayout(layout)
+
+        self.threadpool = QtCore.QThreadPool()
+
+    def start_saving(self, dataset_rtss, roi_name, single_array, ds):
+        worker = Worker(ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
+        worker.signals.result.connect(self.roi_saved)
+        self.threadpool.start(worker)
+
+    def roi_saved(self, result):
+        self.signal_roi_saved.emit(result)
+        self.close()
 
 
 #####################################################################################################################
