@@ -589,10 +589,7 @@ class UIDrawROIWindow:
                         single_array.append(item)
                 new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
                 self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
-                QMessageBox.about(self.draw_roi_window_instance, "Warning",
-                                  "This feature is still in development. The ROI will appear in your structures tab,"
-                                                                        " but may demonstrate some technical issues "
-                                                                        "when performing tasks.")
+                QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
                 self.close()
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
