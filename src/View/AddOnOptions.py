@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from src.Controller.PathHandler import resource_path
+import platform
 
 class UIAddOnOptions(object):
     """
@@ -26,10 +27,17 @@ class UIAddOnOptions(object):
         """
         Create the window and the components for each option view.
         """
+        self.stylesheet_path = ""
+        
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
         add_on_options.setMinimumSize(766, 600)
-        add_on_options.setStyleSheet("")
-        add_on_options.setWindowIcon(QtGui.QIcon("src/Icon/DONE.png"))
+        add_on_options.setStyleSheet(stylesheet)
+        add_on_options.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))
 
         _translate = QtCore.QCoreApplication.translate
         add_on_options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))
@@ -97,13 +105,6 @@ class UIAddOnOptions(object):
         self.cancel_button = QtWidgets.QPushButton(self.widget)
         self.cancel_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.cancel_button.setFixedSize(101, 31)
-        self.cancel_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                         " font: 57 11pt \\\"Ubuntu\\\";\n"
-                                         "\n"
-                                         "font-weight: bold;\n"
-                                         "color: rgb(85, 87, 83);")
-
         _translate = QtCore.QCoreApplication.translate
         self.cancel_button.setText(_translate("Add_On_Options", "Cancel"))
 
@@ -114,12 +115,6 @@ class UIAddOnOptions(object):
         self.apply_button = QtWidgets.QPushButton(self.widget)
         self.apply_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.apply_button.setFixedSize(111, 31)
-        self.apply_button.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                        "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                        "color:rgb(75,0,130);\n"
-                                        "font-weight: bold;")
-
         _translate = QtCore.QCoreApplication.translate
         self.apply_button.setText(_translate("Add_On_Options", "Apply"))
 
@@ -130,16 +125,12 @@ class UIAddOnOptions(object):
         #label that holds the chosen option from the tree
         self.optionTitle = QtWidgets.QLabel(self.widget)
         self.optionTitle.setGeometry(QtCore.QRect(290, 50, 281, 31))
-        self.optionTitle.setStyleSheet("font: 57 12pt \"Ubuntu\";\n"
-                                       "font-weight: bold;")
         _translate = QtCore.QCoreApplication.translate
         self.optionTitle.setText(_translate("Add_On_Options", "User Options"))
 
         # Description holder widget
         self.table_modules = QtWidgets.QLabel(self.widget)
         self.table_modules.setGeometry(QtCore.QRect(290, 90, 451, 70))
-        self.table_modules.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
-                                         "color:rgb(0,0,0);\n")
         self.table_modules.setText(
             " Here are listed all the user options used in Onko. By using \n "
             "Add-On Options you will be able to Add/Modify/Delete the \n"
@@ -150,8 +141,6 @@ class UIAddOnOptions(object):
         Create a tree view that holds the different options.
         """
         self.treeList = QtWidgets.QTreeView(self.widget)
-        self.treeList.setGeometry(QtCore.QRect(10, 40, 256, 461))
-        self.treeList.setStyleSheet("QTreeView::item { padding: 10px }")
         self.treeList.setHeaderHidden(True)
 
         #Triggering the view change according to the row selected in the tree
@@ -295,13 +284,8 @@ class WindowingOptions(object):
         Create a button to add a new window view.
         """
         self.window.add_new_window = QtWidgets.QPushButton(self.window.widget)
-        self.window.add_new_window.setFixedSize(141, 31)
         self.window.add_new_window.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_new_window.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                          "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                          "color:rgb(75,0,130);\n"
-                                          "font-weight: bold;")
         self.window.add_new_window.setVisible(False)
 
         _translate = QtCore.QCoreApplication.translate
@@ -349,14 +333,8 @@ class StandardOrganOptions(object):
         Create a button to add a new standard organ name.
         """
         self.window.add_standard_organ_name = QtWidgets.QPushButton(self.window.widget)
-        self.window.add_standard_organ_name.setFixedSize(161, 31)
         self.window.add_standard_organ_name.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_standard_organ_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                                   "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                                   "color:rgb(75,0,130);\n"
-                                                   "font-weight: bold;")
         self.window.add_standard_organ_name.setVisible(False)
-
         _translate = QtCore.QCoreApplication.translate
         self.window.add_standard_organ_name.setText(_translate("Add_On_Options", "Add Standard Name"))
 
@@ -366,13 +344,7 @@ class StandardOrganOptions(object):
         """
         self.window.import_organ_csv = QtWidgets.QPushButton(self.window.widget)
         self.window.import_organ_csv.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.import_organ_csv.setFixedSize(161, 31)
-        self.window.import_organ_csv.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                            "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                            "color:rgb(75,0,130);\n"
-                                            "font-weight: bold;")
         self.window.import_organ_csv.setVisible(False)
-
         _translate = QtCore.QCoreApplication.translate
         self.window.import_organ_csv.setText(_translate("Add_On_Options", "Import Spreadsheet"))
 
@@ -419,13 +391,7 @@ class StandardVolumeOptions(object):
         """
         self.window.add_standard_volume_name = QtWidgets.QPushButton(self.window.widget)
         self.window.add_standard_volume_name.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_standard_volume_name.setFixedSize(161, 31)
-        self.window.add_standard_volume_name.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                                    "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                                    "color:rgb(75,0,130);\n"
-                                                    "font-weight: bold;")
         self.window.add_standard_volume_name.setVisible(False)
-
         _translate = QtCore.QCoreApplication.translate
         self.window.add_standard_volume_name.setText(_translate("Add_On_Options", "Add Standard Name"))
 
@@ -466,11 +432,6 @@ class RoiFromIsodoseOptions(object):
         self.window.add_new_roi = QtWidgets.QPushButton(self.window.widget)
         self.window.add_new_roi.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_new_roi.setFixedSize(161, 31)
-        self.window.add_new_roi.setStyleSheet("background-color: rgb(238, 238, 236);\n"
-                                       "font: 57 11pt \\\"Ubuntu\\\";\n"
-                                       "color:rgb(75,0,130);\n"
-                                       "font-weight: bold;")
         self.window.add_new_roi.setVisible(False)
 
         _translate = QtCore.QCoreApplication.translate
@@ -515,7 +476,6 @@ class PatientHashId(object):
         Create a table to hold all the patients and their hash that the software has anonymised.
         """
         self.window.table_Ids = QtWidgets.QTableWidget(self.window.widget)
-        # self.window.table_Ids.setFixedHeight(370)
         self.window.table_Ids.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.window.table_Ids.setColumnCount(2)
         self.window.table_Ids.setHorizontalHeaderLabels([" Patient ID ", " Hash ID "])
@@ -534,11 +494,7 @@ class PatientHashId(object):
         Create a note for the user about data privacy.
         """
         self.window.note = QtWidgets.QLabel(self.window.widget)
-        # self.window.note.setGeometry(QtCore.QRect(295, 457, 451, 50))
-        self.window.note.setStyleSheet("font: 57 11pt \\\"Ubuntu\\\";\n"
-                                "color:rgb(0,0,0)")
         self.window.note.setVisible(False)
-
         _translate = QtCore.QCoreApplication.translate
         self.window.note.setText(_translate("Add_On_Options",
                                      "Note: This is a list of all the patients anonymized using Onko.\n "

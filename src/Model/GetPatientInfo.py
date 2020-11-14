@@ -1,5 +1,6 @@
-import pydicom
 import collections
+
+import pydicom
 
 
 def get_tree(ds, label=0):
@@ -91,8 +92,9 @@ class DicomTree(object):
         :param filename: dicom file path
         """
         self.filename = filename
-        self.dataset = self.read_dcm(filename)
-        self.dict = self.dataset_to_dict(self.dataset)
+        if self.filename is not None:
+            self.dataset = self.read_dcm(filename)
+            self.dict = self.dataset_to_dict(self.dataset)
 
     def read_dcm(self, filename):
         """

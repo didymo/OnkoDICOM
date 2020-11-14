@@ -4,10 +4,11 @@
 """
 
 import os
+
 import pandas as pd
+from PyQt5 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
-from PyQt5 import QtCore
 
 
 class PyradiExtended(QtCore.QThread):

@@ -1,6 +1,8 @@
-from PyQt5 import QtGui, QtWidgets
 import os
 import platform
+
+from PyQt5 import QtGui, QtWidgets
+from src.Controller.PathHandler import resource_path
 
 class FontService:
 
@@ -18,7 +20,7 @@ class FontService:
 		print(" *** Importing fonts: *** ")
 		for root, dirs, files in os.walk(path_to_fonts):
 			for font_file in files:
-				QtGui.QFontDatabase.addApplicationFont(os.path.join(root, font_file))
+				QtGui.QFontDatabase.addApplicationFont(resource_path(os.path.join(root, font_file)))
 				print("Added font: " + font_file)
 		print(" *** Imported fonts *** \n\n\n")
 

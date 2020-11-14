@@ -1,20 +1,28 @@
-import os
-
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
-from pydicom import dcmread
 
 from src.Model import ROI
+from src.Controller.PathHandler import resource_path
+import platform
 
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, rename_signal, suggested_text="", *args, **kwargs):
+    def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, roi_name, rename_signal,
+                 suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
+
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "src/res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
+        self.setStyleSheet(stylesheet)
 
         self.standard_volume_names = standard_volume_names
         self.standard_organ_names = standard_organ_names
         self.rtss = rtss
         self.roi_id = roi_id
+        self.roi_name = roi_name
         self.rename_signal = rename_signal
         self.suggested_text = suggested_text
 
@@ -22,7 +30,7 @@ class RenameROIWindow(QDialog):
         self.setMinimumSize(300, 90)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap("src/res/images/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
+        self.icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Enter a new name:")
@@ -68,6 +76,7 @@ class RenameROIWindow(QDialog):
         self.layout.addWidget(self.list_of_ROIs)
         self.setLayout(self.layout)
 
+
     def on_text_edited(self, text):
         if text in self.standard_volume_names or text in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: green")
@@ -98,7 +107,8 @@ class RenameROIWindow(QDialog):
         # up towards the main page and then 'replaces' the current rtss. at some point the user is given the
         # option of saving this new rtss file. when the rtss file is replaced it also recalculates the rois and
         # reload the structure widget's structures.
-        self.rename_signal.emit(new_dataset)
+        print()
+        self.rename_signal.emit((new_dataset, {"rename": [self.roi_name, new_name]}))
         self.close()
 
     def on_ROI_clicked(self):

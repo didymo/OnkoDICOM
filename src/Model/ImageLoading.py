@@ -1,11 +1,4 @@
 """
-Skeleton for the interface between new boot window and existing patient window.
-Intention is to replace, recreate, or reuse most of the functionality served by the ProgressBar.Extended class.
-The functions in this file should be enough to generate the arguments required to create a MainWindow class.
-read_data_dict, file_names_dict, rois, raw_dvh, dvh_x_y, dict_raw_contour_data, dict_numpoints, dict_pixluts.
-The reason why some of these functions will be directly copied is because they currently exist as member functions
-of ProgressBar.Extended class and that class is to be deprecated/refactored with the new patient selection window.
-
 Format for allowed_classes:
 
 "SOPClassUID" : {
@@ -22,10 +15,10 @@ dictionary and the get_datasets() function should not need to be added to. (Of c
 case, however this alternative function promotes scalability and durability of the process).
 """
 import collections
-import os
+import math
 import re
-
 from multiprocessing import Queue, Process
+
 from dicompylercore import dvhcalc
 from pandas import np
 from pydicom import dcmread
@@ -80,6 +73,11 @@ class NotAllowedClassError(Exception):
 
 def get_datasets(filepath_list):
     """
+    This function generates two dictionaries: the dictionary of PyDicom datasets, and the dictionary of filepaths.
+    These two dictionaries are used in the PatientDictContainer model as the class attributes: 'dataset' and 'filepaths'
+    The keys of both dictionaries are the dataset's slice number/RT modality. The values of the read_data_dict are
+    PyDicom Dataset objects, and the values of the file_names_dict are filepaths pointing to the location of the .dcm
+    file on the user's computer.
     :param filepath_list: List of all files to be searched.
     :return: Tuple (read_data_dict, file_names_dict)
     """
@@ -113,7 +111,7 @@ def get_datasets(filepath_list):
 
 def img_stack_displacement(orientation, position):
     """
-    Calcualte the projection of the image position patient along the axis perpendicular to the images themselves,
+    Calculate the projection of the image position patient along the axis perpendicular to the images themselves,
     i.e. along the stack axis. Intended use is for the sorting key to sort a stack of image datasets so that they are in
     order, regardless of whether the images are axial, coronal, or sagittal, and independent from the order in which the
     images were read in.
@@ -220,13 +218,71 @@ def get_roi_info(dataset_rtss):
     return dict_roi
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=None):
+def get_thickness_dict(dataset_rtss, read_data_dict):
+    """
+    Calculates and returns thicknesses for all ROIs in the RTSTRUCT that only contain one contour.
+    The process used to calculate thickness is courtesy of @sjswerdloff
+    :param dataset_rtss: RTSTRUCT DICOM dataset object.
+    :param read_data_dict:
+    :return: Dictionary of ROI thicknesses where the key is the ROI number and the value is the thickness.
+    """
+    # Generate a dict where keys are ROI numbers for structures with only one contour.
+    # Value of each key is the SOPInstanceUID of the CT slice the contour is positioned on.
+    single_contour_rois = {}
+    for contour in dataset_rtss.ROIContourSequence:
+        if len(contour.ContourSequence) == 1:
+            single_contour_rois[contour.ReferencedROINumber] = \
+                contour.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
+
+    dict_thickness = {}
+    for roi_number, sop_instance_uid in single_contour_rois.items():
+        # Get the slice numbers the slices before and after the slice the ROI is positioned on.
+        slice_key = None
+        for key, ds in read_data_dict.items():
+            if ds.SOPInstanceUID == sop_instance_uid:
+                slice_key = key
+
+        # Get the Image Position (Patient) from the two slices.
+        try:
+            position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
+            position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+
+            # Calculate displacement between slices
+            displacement = position_after - position_before
+
+        except KeyError:
+            # If the image slice is either at the top of bottom of the set, use the length of the displacement to the
+            # adjacent slice as the thickness.
+            if slice_key == 1:  # If the image slice is at the bottom of the set.
+                position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
+                position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+                displacement = position_after - position_current
+            else:
+                position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
+                position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
+                displacement = position_current - position_before
+
+        # Finally, calculate thickness.
+        thickness = math.sqrt(displacement[0] * displacement[0]
+                              + displacement[1] * displacement[1]
+                              + displacement[2] * displacement[2]) / 2
+
+        dict_thickness[roi_number] = thickness
+
+    return dict_thickness
+
+
+def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None,
+              progress_callback=None):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
     :param rois: Dictionary of ROI information.
+    :param dict_thickness: Dictionary where the keys are ROI numbers and the values are thicknesses of the ROI.
     :param interrupt_flag: A threading.Event() object that tells the function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
+    :param progress_callback: As this class is called by the multi-threading Worker class, it requires this parameter.
+    It is currently unused as no progress is reported to the calling class.
     :return: Dictionary of all the DVHs of all the ROIs of the patient.
     """
     dict_dvh = {}
@@ -235,20 +291,23 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, interrupt_flag, dose_limit=Non
         roi_list.append(key)
 
     for roi in roi_list:
-        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit)
+        thickness = None
+        if roi in dict_thickness:
+            thickness = dict_thickness[roi]
+        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit, thickness=thickness)
         if interrupt_flag.is_set():  # Stop calculating at the next DVH.
             return
 
     return dict_dvh
 
 
-def calc_dvh_worker(rtss, dose, roi, queue, dose_limit=None):
+def calc_dvh_worker(rtss, dose, roi, queue, thickness, dose_limit=None):
     dvh = {}
-    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit)
+    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit, thickness=thickness)
     queue.put(dvh)
 
 
-def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
+def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limit=None, progress_callback=None):
     """
     Multiprocessing variant of calc_dvh for fork-based platforms.
     """
@@ -261,7 +320,11 @@ def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dose_limit=None):
         roi_list.append(key)
 
     for i in range(len(roi_list)):
-        p = Process(target=calc_dvh_worker, args=(dataset_rtss, dataset_rtdose, roi_list[i], queue, dose_limit,))
+        thickness = None
+        if roi_list[i] in dict_thickness:
+            thickness = dict_thickness[roi_list[i]]
+        p = Process(target=calc_dvh_worker, args=(dataset_rtss, dataset_rtdose, roi_list[i],
+                                                  queue, thickness, dose_limit,))
         processes.append(p)
         p.start()
 
@@ -328,24 +391,22 @@ def get_raw_contour_data(dataset_rtss):
     dict_roi = {}
     dict_numpoints = {}
     for roi in dataset_rtss.ROIContourSequence:
-        if 'ROIDisplayColor' in roi:
-            ROIDisplayColor = roi.ROIDisplayColor
-            ReferencedROINumber = roi.ReferencedROINumber
-            ROIName = dict_id[ReferencedROINumber]
-            dict_contour = collections.defaultdict(list)
-            roi_points_count = 0
-            if 'ContourSequence' in roi:
-                for slice in roi.ContourSequence:
-                    if 'ContourImageSequence' in slice:
-                        for contour_img in slice.ContourImageSequence:
-                            ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
-                        ContourGeometricType = slice.ContourGeometricType
-                        NumberOfContourPoints = slice.NumberOfContourPoints
-                        roi_points_count += int(NumberOfContourPoints)
-                        ContourData = slice.ContourData
-                        dict_contour[ReferencedSOPInstanceUID].append(ContourData)
-            dict_roi[ROIName] = dict_contour
-            dict_numpoints[ROIName] = roi_points_count
+        ReferencedROINumber = roi.ReferencedROINumber
+        ROIName = dict_id[ReferencedROINumber]
+        dict_contour = collections.defaultdict(list)
+        roi_points_count = 0
+        if 'ContourSequence' in roi:
+            for slice in roi.ContourSequence:
+                if 'ContourImageSequence' in slice:
+                    for contour_img in slice.ContourImageSequence:
+                        ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
+                    ContourGeometricType = slice.ContourGeometricType
+                    NumberOfContourPoints = slice.NumberOfContourPoints
+                    roi_points_count += int(NumberOfContourPoints)
+                    ContourData = slice.ContourData
+                    dict_contour[ReferencedSOPInstanceUID].append(ContourData)
+        dict_roi[ROIName] = dict_contour
+        dict_numpoints[ROIName] = roi_points_count
 
     return dict_roi, dict_numpoints
 

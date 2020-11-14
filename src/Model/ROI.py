@@ -1,31 +1,13 @@
 import collections
-import multiprocessing
-import sys
-import time
+import datetime
+import random
+from copy import deepcopy, copy as shallowcopy
 
-import numpy as np
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import (
-    QBrush,
-    QColor,
-    QPainter,
-    QPainterPath,
-    QPen,
-    QPixmap,
-    QPolygon,
-    QPolygonF,
-)
-from PyQt5.QtWidgets import (
-    QApplication,
-    QGraphicsScene,
-    QGraphicsView,
-    QLabel,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
-)
-
+import pydicom
+from pydicom import Dataset, Sequence
+from pydicom.tag import Tag
 from src.Model.CalculateImages import *
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
 def rename_roi(rtss, roi_id, new_name):
@@ -71,6 +53,167 @@ def delete_roi(rtss, roi_name):
     return rtss
 
 
+def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
+    """
+        Add new contour image sequence ROI to rtss
+
+        :param rtss: dataset of RTSS
+        :param roi_name: ROIName
+        :param roi_coordinates: Coordinates of pixels for new ROI
+        :param data_set: Data Set of selected DICOM image file
+        :return: rtss, with added ROI
+    """
+
+    # Creating a new ROIContourSequence, ContourSequence, ContourImageSequence
+    contour_sequence = Sequence([Dataset()])
+    contour_image_sequence = Sequence([Dataset()])
+
+    number_of_contour_points = len(roi_coordinates) / 3
+    referenced_sop_class_uid = data_set.SOPClassUID
+    referenced_sop_instance_uid = data_set.SOPInstanceUID
+
+    existing_roi_number = None
+    for item in rtss["StructureSetROISequence"]:
+        if item.ROIName == roi_name:
+            existing_roi_number = item.ROINumber
+
+    position = None
+
+    # Get the index of the ROI
+    for index, contour in enumerate(rtss.ROIContourSequence):
+        if contour.ReferencedROINumber == existing_roi_number:
+            position = index
+
+    new_contour_number = len(rtss.ROIContourSequence[position].ContourSequence) + 1
+
+    # ROI Sequence
+    for contour in contour_sequence:
+        if data_set.get("ReferencedImageSequence"):
+            contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+
+            # Contour Sequence
+            for contour_image in contour_image_sequence:
+                contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
+                                      referenced_sop_class_uid)  # CT Image Storage
+                contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+
+        contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
+        contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
+        contour.add_new(Tag("ContourNumber"), "IS", new_contour_number)
+        contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+
+    rtss.ROIContourSequence[position].ContourSequence.extend(contour_sequence)
+
+    return rtss
+
+
+def create_roi(rtss, roi_name, roi_coordinates, data_set):
+    """
+        Create new ROI to rtss
+
+        :param rtss: dataset of RTSS
+        :param roi_name: ROIName
+        :param roi_coordinates: Coordinates of pixels for new ROI
+        :param data_set: Data Set of selected DICOM image file
+        :return: rtss, with added ROI
+        """
+
+    patient_dict_container = PatientDictContainer()
+    existing_rois = patient_dict_container.get("rois")
+    roi_exists = False
+
+    # This is for adding a new slice to an already existing ROI. For Future Development.
+    # Check to see if the ROI already exists
+    for key, value in existing_rois.items():
+        if value["name"] == roi_name:
+            roi_exists = True
+
+    if not roi_exists:
+        number_of_contour_points = len(roi_coordinates) / 3
+        referenced_sop_class_uid = data_set.SOPClassUID
+        referenced_sop_instance_uid = data_set.SOPInstanceUID
+
+        referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
+        roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
+
+        # Colour TBC
+        red = random.randint(0, 255)
+        green = random.randint(0, 255)
+        blue = random.randint(0, 255)
+        rgb = [red, green, blue]
+
+        # Saving a new StructureSetROISequence
+        structure_set_sequence = Sequence([Dataset()])
+
+        original_structure_set = rtss.StructureSetROISequence
+
+        for structure_set in structure_set_sequence:
+            structure_set.add_new(Tag("ROINumber"), 'IS', roi_number)
+            structure_set.add_new(Tag("ReferencedFrameOfReferenceUID"), 'UI',
+                                  referenced_frame_of_reference_uid)
+            structure_set.add_new(Tag("ROIName"), 'LO', roi_name)
+            structure_set.add_new(Tag("ROIGenerationAlgorithm"), 'CS', "")
+
+        # Combine old and new structure set
+        original_structure_set.extend(structure_set_sequence)
+        rtss.add_new(Tag("StructureSetROISequence"), "SQ", original_structure_set)
+
+        # Saving a new ROIContourSequence, ContourSequence, ContourImageSequence
+        roi_contour_sequence = Sequence([Dataset()])
+        contour_sequence = Sequence([Dataset()])
+        contour_image_sequence = Sequence([Dataset()])
+
+        # Original File
+        original_ROI_contour = rtss.ROIContourSequence
+
+        # ROI Contour Sequence
+        for roi_contour in roi_contour_sequence:
+            roi_contour.add_new(Tag("ROIDisplayColor"), "IS", rgb)
+            roi_contour.add_new(Tag("ContourSequence"), "SQ", contour_sequence)
+
+            # ROI Sequence
+            for contour in contour_sequence:
+                if data_set.get("ReferencedImageSequence"):
+                    contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+
+                    # Contour Sequence
+                    for contour_image in contour_image_sequence:
+                        contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
+                                              referenced_sop_class_uid)  # CT Image Storage
+                        contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+
+                contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
+                contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
+                contour.add_new(Tag("ContourNumber"), "IS", 1)
+                contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+
+            roi_contour.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
+
+        # Combine original ROIContourSequence with new
+        original_ROI_contour.extend(roi_contour_sequence)
+
+        rtss.add_new(Tag("ROIContourSequence"), "SQ", original_ROI_contour)
+
+        # Saving a new RTROIObservationsSequence
+        RT_ROI_observations_sequence = Sequence([Dataset()])
+
+        original_ROI_observation_sequence = rtss.RTROIObservationsSequence
+
+        for ROI_observations in RT_ROI_observations_sequence:
+            ROI_observations.add_new(Tag("ObservationNumber"), 'IS', roi_number)
+            ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS', roi_number)
+            ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', "")
+
+        original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
+        rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
+
+    else:
+        # Add contour image data to existing ROI
+        rtss = add_to_roi(rtss, roi_name, roi_coordinates, data_set)
+
+    return rtss
+
+
 def get_raw_contour_data(rtss):
     """
     Get raw contour data of ROI in RT Structure Set
@@ -88,7 +231,6 @@ def get_raw_contour_data(rtss):
     dict_ROI = {}
     dict_NumPoints = {}
     for roi in rtss.ROIContourSequence:
-        ROIDisplayColor = roi.ROIDisplayColor
         ReferencedROINumber = roi.ReferencedROINumber
         ROIName = dict_id[ReferencedROINumber]
         dict_contour = collections.defaultdict(list)
@@ -258,13 +400,30 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     return pixels
 
 
+def pixel_to_rcs(pixlut, x, y):
+    """
+    :param pixlut: Transformation matrix
+    :param x: Pixel X value (greater than 0, less than the slice's Columns data element)
+    :param y: Pixel Y value (greater than 0, less than the slice's Rows data element)
+    :return: The pixel coordinate converted to an RCS point as set by the image slice.
+    """
+
+    np_x = np.array(pixlut[0])
+    np_y = np.array(pixlut[1])
+
+    x_on_pixlut = np_x[x - 1]
+    y_on_pixlut = np_y[y - 1]
+
+    return x_on_pixlut, y_on_pixlut
+
+
 def get_contour_pixel(
-    dict_raw_ContourData,
-    roi_selected,
-    dict_pixluts,
-    curr_slice,
-    prone=False,
-    feetfirst=False,
+        dict_raw_ContourData,
+        roi_selected,
+        dict_pixluts,
+        curr_slice,
+        prone=False,
+        feetfirst=False,
 ):
     """
     Get pixels of contours of all rois selected within current slice.
@@ -318,82 +477,149 @@ def get_roi_contour_pixel(dict_raw_ContourData, roi_list, dict_pixluts):
     return dict_pixels
 
 
-# class Test(QWidget):
-#
-#     def __init__(self, pixmap, dict_rois_contours, roi_selected, curr_slice, parent=None):
-#         QWidget.__init__(self, parent)
-#         self.label = QLabel()
-#
-#         self.pixmap = pixmap
-#         self.dict_rois_contours = dict_rois_contours
-#         self.curr_roi = roi_selected[0]
-#         self.curr_slice = curr_slice
-#
-#         self.label.setPixmap(self.pixmap)
-#
-#         self.polygons = self.calcPolygonF(self.curr_roi)
-#
-#         self.scene = QGraphicsScene()
-#         self.scene.addWidget(self.label)
-#         self.pen = QPen(QColor(122, 163, 39, 128))
-#         self.pen.setStyle(3)
-#         self.pen.setWidth(1)
-#         for i in range(len(self.polygons)):
-#             self.scene.addPolygon(self.polygons[i], self.pen, QBrush(QColor(122, 163, 39, 128)))
-#         self.view = QGraphicsView(self.scene)
-#         self.view.setScene(self.scene)
-#
-#         layout = QVBoxLayout()
-#         layout.addWidget(self.view)
-#         self.setLayout(layout)
-#         self.show()
-#
-#     def calcPolygonF(self, curr_roi):
-#         list_polygons = []
-#         pixel_list = self.dict_rois_contours[curr_roi][self.curr_slice]
-#         for i in range(len(pixel_list)):
-#             list_qpoints = []
-#             contour = pixel_list[i]
-#             for point in contour:
-#                 curr_qpoint = QPoint(point[0], point[1])
-#                 list_qpoints.append(curr_qpoint)
-#             curr_polygon = QPolygonF(list_qpoints)
-#             list_polygons.append(curr_polygon)
-#         return list_polygons
-#
-#
-# if __name__ == '__main__':
-#     path = '/home/xudong/Desktop/RawDICOM.India-20191001T080723Z-001/RawDICOM.India'
-#     dict_ds, dict_path = get_datasets(path)
-#     rtss = dict_ds['rtss']
-#     start_time = time.time()
-#     dict_raw_ContourData, dict_NumPoints = get_raw_ContourData(rtss)
-#     contourdata_time = time.time()
-#     print('time of read raw contour data = ', contourdata_time - start_time)
-#     dict_pixluts = get_pixluts(dict_ds)
-#     pixluts_time = time.time()
-#     print('time of pixluts = ', pixluts_time - contourdata_time)
-#     roi_selected = ['REST_COMMON LUNG', 'rt lung', 'lt lung']
-#     curr_slice = '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115'
-#     # Contours of selected ROIs within current slice
-#
-#     dict_rois_contours = get_contour_pixel(dict_raw_ContourData, roi_selected, dict_pixluts, curr_slice)
-#     pixel_time = time.time()
-#     print('time of pixels', pixel_time - pixluts_time)
-#
-#     app = QApplication(sys.argv)
-#
-#     for key in dict_ds:
-#         ds = dict_ds[key]
-#         if ds.SOPInstanceUID == '1.3.12.2.1107.5.1.4.49601.30000017081104561168700001115':
-#             ds.convert_pixel_data()
-#             np_pixels = ds._pixel_array
-#             print('HIT')
-#             pixmap = scaled_pixmap(np_pixels, 1500, 400)
-#             break
-#
-#
-#     start_time = time.time()
-#     w = Test(pixmap, dict_rois_contours, roi_selected, curr_slice)
-#     print('time of display = ', time.time() - start_time)
-#     app.exec_()
+def ordered_list_rois(rois):
+    res = []
+    for id, value in rois.items():
+        res.append(id)
+    return sorted(res)
+
+
+def create_initial_rtss_from_ct(img_ds:pydicom.dataset.Dataset, ct_uid_list=[])->pydicom.dataset.Dataset:
+    """Pre-populate an RT Structure Set based on a single CT (or MR) and a list of image UIDs
+        The caller should update the Structure Set Label, Name, and Description, which are
+        set to "OnkoDICOM" plus the StudyID from the CT, and must add 
+        Structure Set ROI Sequence, ROI Contour Sequence, and RT ROI Observations Sequence
+
+    Parameters
+    ----------
+    img_ds : pydicom.dataset.Dataset
+        A CT or MR image that the RT Structure Set will be "drawn" on
+    ct_uid_list : list, optional
+        list of UIDs (as strings) of the entire image volume that the RT SS references, by default []
+
+    Returns
+    -------
+    pydicom.dataset.Dataset
+        the half-baked RT SS, ready for Structure Set ROI Sequence, ROI Contour Sequence,
+        and RT ROI Observations Sequence
+
+    Raises
+    ------
+    ValueError
+        [description]
+    """
+    if (img_ds is None):
+        raise ValueError("No CT data to initialize RT SS")
+
+    now = datetime.datetime.now()
+    dicom_date = now.strftime("%Y%m%d")
+    dicom_time = now.strftime("%H%M")
+
+    top_level_tags_to_copy:list = [ Tag("PatientName"),
+        Tag("PatientID"), 
+        Tag("PatientBirthDate"),
+        Tag("PatientSex"),
+        Tag("StudyDate"), 
+        Tag("StudyTime"),
+        Tag("ReferringPhysicianName"),
+        Tag("StudyDescription"), 
+        Tag("StudyInstanceUID"),
+        Tag("StudyID"),
+        Tag("RequestingService"),
+        Tag("PatientAge"),
+        Tag("PatientSize"), 
+        Tag("PatientWeight"), 
+        Tag("MedicalAlerts"),
+        Tag("Allergies"), 
+        Tag("PregnancyStatus"), 
+        Tag("FrameOfReferenceUID"),
+        Tag("PositionReferenceIndicator"), 
+        Tag("InstitutionName"), 
+        Tag("InstitutionAddress")
+    ]  
+
+    rt_ss = pydicom.dataset.Dataset()
+
+    for tag in top_level_tags_to_copy:
+        print("Tag ", tag)
+        if tag in img_ds:
+            print("value of tag in image: ", img_ds[tag])
+            rt_ss[tag] = deepcopy(img_ds[tag])
+    
+    # Best to modify the Structure Set Lable with something more interesting in the application.
+    # and populate the Name and Description from the application also.
+    print("Study ID is ", rt_ss.StudyID)
+    rt_ss.StructureSetLabel = "OnkoDICOM rtss of " + rt_ss.StudyID
+    rt_ss.StructureSetName = rt_ss.StructureSetLabel
+    rt_ss.StructureSetDescription = rt_ss.StructureSetLabel
+
+    # referenced_study_sequence_item = pydicom.dataset.Dataset()
+    # referenced_study_sequence_item["ReferencedSOPInstanceUID"] = img_ds.StudyInstanceUID
+    # referenced_study_sequence_item["ReferencedSOPClassUID"] = img_ds.SOPClassUID
+
+    # rt_ss.ReferencedStudySequence = [referenced_study_sequence_item]
+
+    # General Equipment Module
+    rt_ss.Manufacturer = "OnkoDICOM"
+    rt_ss.ManufacturersModelName = "OnkoDICOM"
+    # TODO: Pull this off build information in some way
+    rt_ss.SoftwareVersions = "2020"
+    
+    # RT Series Module
+    rt_ss.SeriesInstanceUID = pydicom.uid.generate_uid()
+    rt_ss.Modality = "RTSTRUCT"
+    rt_ss.SeriesDate = dicom_date
+    rt_ss.SeriesTime = dicom_time
+    rt_ss.SeriesNumber = 1
+
+    # RT Referenced Frame Of Reference Sequence, Structure Set Module
+    rt_ref_frame_of_ref_sequence_item = pydicom.dataset.Dataset()
+    rt_ref_frame_of_ref_sequence_item.FrameOfReferenceUID = img_ds.FrameOfReferenceUID
+    rt_ss.ReferencedFrameOfReferenceSequence = [rt_ref_frame_of_ref_sequence_item]
+    
+    rt_ref_study_sequence_item = pydicom.dataset.Dataset()
+    rt_ref_study_sequence_item.ReferencedSOPInstanceUID = img_ds.StudyInstanceUID
+    rt_ref_study_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+
+    rt_ref_series_sequence_item = pydicom.dataset.Dataset()
+    rt_ref_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
+
+    contour_image_sequence = []
+    referenced_image_sequence = []
+    for uid in ct_uid_list:
+        contour_image_sequence_item = pydicom.dataset.Dataset()
+        referenced_image_sequence_item = pydicom.dataset.Dataset()
+        referenced_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+        contour_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+        referenced_image_sequence_item.ReferencedSOPInstanceUID = uid
+        contour_image_sequence_item.ReferencedSOPInstanceUID = uid
+        contour_image_sequence.append(contour_image_sequence_item)
+        referenced_image_sequence.append(referenced_image_sequence_item)
+    
+    rt_ref_frame_of_ref_sequence_item.ContourImageSequence = contour_image_sequence
+    rt_ss.ReferencedImageSequence = referenced_image_sequence
+
+    referenced_series_sequence_item = pydicom.dataset.Dataset()
+    referenced_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
+    # acceptable to copy because the contents of each reference sequence item only include
+    # SOP Class and SOP Instance, and not additional elements that are in referenced image seq
+    # but not referenced instance seq
+    referenced_series_sequence_item.ReferencedInstanceSequence = shallowcopy(referenced_image_sequence)
+    rt_ss.ReferencedSeriesSequence = [referenced_series_sequence_item]
+    rt_ref_study_sequence_item.RTReferencedSeriesSequence = [rt_ref_series_sequence_item]
+    rt_ref_frame_of_ref_sequence_item.RTReferencedStudySequence = [rt_ref_study_sequence_item]
+    
+    rt_ss.StructureSetROISequence = []
+    rt_ss.ROIContourSequence = []
+    rt_ss.RTROIObservationsSequence = []
+    rt_ss.SOPClassUID = "1.2.840.10008.5.1.4.1.1.481.3"
+    rt_ss.SOPInstanceUID = pydicom.uid.generate_uid()
+
+    
+    rt_ss.InstanceCreationDate = rt_ss.StructureSetDate = dicom_date
+    
+    rt_ss.InstanceCreationTime = rt_ss.StructureSetTime = dicom_time
+    rt_ss.is_little_endian = True
+    rt_ss.is_implicit_VR = True
+    return rt_ss
+

@@ -3,24 +3,25 @@
 #   This file handles all the processes within the Main page window of the software                                 #
 #                                                                                                                   #
 #####################################################################################################################
-
+import csv
 import glob
-import math
 # removing warnings
-import warnings
+import math
+import os
 from pathlib import Path
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
-from PyQt5.QtCore import QPoint, QPointF
-from PyQt5.QtWidgets import QGraphicsPixmapItem
+from PyQt5 import QtWidgets, QtCore, QtGui
 from dateutil.relativedelta import relativedelta
+from networkx.tests.test_convert_pandas import pd
 
-from src.Model.Anon import *
-from src.View.mainpage.ClinicalDataDisplay import *
-from src.View.mainpage.ClinicalDataForm import *
+from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
+from src.View.mainpage.ClinicalDataForm import Ui_Form
+from src.Model.Anon import anonymize
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.Controller.PathHandler import resource_path
 
-warnings.filterwarnings("ignore")
 matplotlib.cbook.handle_exceptions = "print"  # default
 matplotlib.cbook.handle_exceptions = "raise"
 matplotlib.cbook.handle_exceptions = "ignore"
@@ -37,15 +38,15 @@ matplotlib.cbook.handle_exceptions = "ignore"
 message = ""
 
 # reading the csv files containing the available diseases
-with open('src/data/ICD10_Topography.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Topography.csv'), 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
     icd.pop(0)
-with open('src/data/ICD10_Topography_C.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Topography_C.csv'), 'r') as f:
     reader = csv.reader(f)
     icdc = list(reader)
     icdc.pop(0)
-with open('src/data/ICD10_Morphology.csv', 'r') as f:
+with open(resource_path('src/data/ICD10_Morphology.csv'), 'r') as f:
     reader = csv.reader(f)
     hist = list(reader)
     hist.pop(0)
@@ -296,9 +297,9 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's gender. \n"
         if (len(self.ui.line_BP.text()) == 0):
             message = message + "Input patient's birth place. \n"
-        if (self.ui.date_of_birth.date() > QDate.currentDate()):
+        if (self.ui.date_of_birth.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of birth cannot be in the future. \n"
-        if (self.ui.date_diagnosis.date() > QDate.currentDate()):
+        if (self.ui.date_diagnosis.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of diagnosis cannot be in the future. \n"
         if (len(self.ui.line_icd.text()) == 0):
             message = message + "Input patient's ICD 10. \n"
@@ -328,7 +329,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's Brachy. \n"
         if (str(self.ui.Hormone.currentText()) == "Select..."):
             message = message + "Select patient's Hormone. \n"
-        if (self.ui.Dt_Last_Existence.date() > QDate.currentDate()):
+        if (self.ui.Dt_Last_Existence.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of last existence cannot be in the future. \n"
         if (str(self.ui.Death.currentText()) == "Select..."):
             message = message + "Select patient's Death. \n"
@@ -340,11 +341,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Select patient's Regional Control. \n"
         if (str(self.ui.Distant_Control.currentText()) == "Select..."):
             message = message + "Select patient's Distant Control. \n"
-        if (self.ui.Dt_local_failure.date() > QDate.currentDate()):
+        if (self.ui.Dt_local_failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of local failure cannot be in the future. \n"
-        if (self.ui.Dt_REgional_failure.date() > QDate.currentDate()):
+        if (self.ui.Dt_REgional_failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of regional failure cannot be in the future. \n"
-        if (self.ui.Dt_Distant_Failure.date() > QDate.currentDate()):
+        if (self.ui.Dt_Distant_Failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of distant failure cannot be in the future. \n"
 
 #####################################################################################################################
@@ -363,7 +364,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 os.mkdir(os.path.join(str(self.path), 'CSV'))
             new_file = os.path.join(str(self.path), 'CSV/ClinicalData_' + self.pID + '.csv')
             # open the file to save the clinical data in
-            f = open(new_file, 'w')
+            f = open(new_file, 'w', newline='')
             # The headers of the file
             columnNames = ['PatientID', 'Gender', 'Country_of_Birth',
                            'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10', 'T_Stage',
@@ -452,7 +453,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 writer.writerow(dataRow)
 
             # save the dates in binary file with patient ID, for future editing
-            fileName = Path('src/data/records.pkl')
+            fileName = Path(resource_path('src/data/records.pkl'))
             df = pd.DataFrame(columns=['PID', 'DOB', 'DOD', 'DOLE'])
             dt = [self.pID, self.ui.date_of_birth.date().toString("dd/MM/yyyy"),
                   self.ui.date_diagnosis.date().toString("dd/MM/yyyy"),
@@ -462,7 +463,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             if fileName.exists():
 
                 # Check to see if this patient has had a record saved in this file before
-                new_df = pd.read_pickle('src/data/records.pkl')
+                new_df = pd.read_pickle(resource_path('src/data/records.pkl'))
                 check = False
                 for i in new_df.index:
                     if new_df.at[i, 'PID'] == self.pID:
@@ -478,24 +479,25 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 if check:
                     #save under the same PID
                     new_df.append(df, ignore_index=True)
-                    new_df.to_pickle('src/data/records.pkl')
+                    new_df.to_pickle(resource_path('src/data/records.pkl'))
             else:
                 #save new row of credentials
-                open('src/data/records.pkl', 'w+')
-                df.to_pickle('src/data/records.pkl')
+                open(resource_path('src/data/records.pkl', 'w+'))
+                df.to_pickle(resource_path('src/data/records.pkl'))
             # display the successful saving message pop up
-            SaveReply = QMessageBox.information(self, "Message",
+            SaveReply = QtWidgets.QMessageBox.information(self, "Message",
                                                 "The Clinical Data was saved successfully in your directory!",
-                                                QMessageBox.Ok)
-            if SaveReply == QMessageBox.Ok:
+                                                QtWidgets.QMessageBox.Ok)
+            if SaveReply == QtWidgets.QMessageBox.Ok:
                 # when they press okay on the pop up, display the clinical data entries
                 self.display_cd_dat()
 
         else:
             # the form did not pass the validation so display the corresponding errors to be fixed, no csv created
-            buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "The following issues need to be addressed: \n" + message, QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+            buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
+                                              "The following issues need to be addressed: \n" + message,
+                                                        QtWidgets.QMessageBox.Ok)
+            if buttonReply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
 
@@ -558,7 +560,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         # date of diagnosis
         # date of last existence
         # Create a dtype with the binary data format and the desired column names
-        df = pd.read_pickle('src/data/records.pkl')
+        df = pd.read_pickle(resource_path('src/data/records.pkl'))
         for i in df.index:
             if df.at[i, 'PID'] == self.pID:
                 self.ui.date_of_birth.setDate(
@@ -807,21 +809,21 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
     #call edit mode when the edit button is pressed
     def edit_mode(self):
         #check if the sensitive data is saved to enable editing
-        if os.path.exists('src/data/records.pkl'):
-            df = pd.read_pickle('src/data/records.pkl')
+        if os.path.exists(resource_path('src/data/records.pkl')):
+            df = pd.read_pickle(resource_path('src/data/records.pkl'))
             check = False
             for i in df.index:
                 if df.at[i, 'PID'] == self.dataset[0].PatientID:
                     check = True
             if not check:
                 # the sensitive data for this patient is missing so no editing can be performed
-                buttonReply = QMessageBox.warning(self, "Error Message",
+                buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
                                                   "The software has no previous records of this patient.\n"
                                                   "If you wish, you can create a new clinical data file by \n"
                                                   "deleting the current one from the directory and reloading \n"
                                                   "the patient files."
-                                                  , QMessageBox.Ok)
-                if buttonReply == QMessageBox.Ok:
+                                                  , QtWidgets.QMessageBox.Ok)
+                if buttonReply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
                 self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
@@ -831,13 +833,13 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 self.tabWindow.setCurrentIndex(3)
         else:
             # the sensitive data file is missing so no editing can be performed
-            buttonReply = QMessageBox.warning(self, "Error Message",
+            buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
                                               "The software has no previous records of this patient.\n"
                                               "If you wish, you can create a new clinical data file by \n"
                                               "deleting the current one from the directory and reloading \n"
                                               "the patient files."
-                                              , QMessageBox.Ok)
-            if buttonReply == QMessageBox.Ok:
+                                              , QtWidgets.QMessageBox.Ok)
+            if buttonReply == QtWidgets.QMessageBox.Ok:
                 pass
 
 
@@ -847,31 +849,44 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #  This Class handles the Transect functionality                                                                    #
 #                                                                                                                   #
 #####################################################################################################################
-
+from matplotlib.backend_bases import MouseEvent
 class Transect(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, mainWindow, imagetoPaint, dataset, rowS, colS, tabWindow):
+    def __init__(self, mainWindow, image_to_paint, dataset, rowS, colS, tabWindow, is_ROI_draw=False):
         super(Transect, self).__init__()
 
         #create the canvas to draw the line on and all its necessary components
-        self.addItem(QGraphicsPixmapItem(imagetoPaint))
-        self.img = imagetoPaint
+        self.addItem(QtWidgets.QGraphicsPixmapItem(image_to_paint))
+        self.img = image_to_paint
         self.values = []
         self.distances = []
         self.data = dataset
-        self.pixSpacing = rowS / colS
-        self._start = QPointF()
+        self.pix_spacing = rowS / colS
+        self._start = QtCore.QPointF()
         self.drawing = True
         self._current_rect_item = None
-        self.pos1 = QPoint()
-        self.pos2 = QPoint()
+        self.pos1 = QtCore.QPoint()
+        self.pos2 = QtCore.QPoint()
         self.points = []
+        self.roi_values = []
+        self.roi_list = []
+        self.is_ROI_draw = is_ROI_draw
         self.tabWindow = tabWindow
         self.mainWindow = mainWindow
+        self._figure, self._axes, self._line = None, None, None
+        self.leftLine, self.rightLine = None, None
+        self._dragging_point = None
+        self._points = {}
+        self._valueTuples = {}
+        self.thresholds = [4, 10]
+        self.upper_limit = None
+        self.lower_limit = None
 
     # This function starts the line draw when the mouse is pressed into the 2D view of the scan
     def mousePressEvent(self, event):
+        # Clear the current transect first
+        plt1.close()
         # If is the first time we can draw as we want a line per button press
         if self.drawing == True:
             self.pos1 = event.scenePos()
@@ -884,6 +899,8 @@ class Transect(QtWidgets.QGraphicsScene):
             r = QtCore.QLineF(self._start, self._start)
             self._current_rect_item.setLine(r)
 
+        # Second time generate mouse position
+
     # This function tracks the mouse and draws the line from the original press point
     def mouseMoveEvent(self, event):
         if self._current_rect_item is not None and self.drawing == True:
@@ -894,11 +911,15 @@ class Transect(QtWidgets.QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self.drawing == True:
             self.pos2 = event.scenePos()
-            self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
-                         round(self.pos2.x()), round(self.pos2.y()))
-            self.drawing = False
-            self.plotResult()
-            self._current_rect_item = None
+            # If a user just clicked one position
+            if self.pos1.x() == self.pos2.x() and self.pos1.y() == self.pos2.y():
+                self.drawing = False
+            else:
+                self.drawDDA(round(self.pos1.x()), round(self.pos1.y()),
+                             round(self.pos2.x()), round(self.pos2.y()))
+                self.drawing = False
+                self.plotResult()
+                self._current_rect_item = None
 
     # This function performs the DDA algorithm that locates all the points in the drawn line
     def drawDDA(self, x1, y1, x2, y2):
@@ -912,6 +933,7 @@ class Transect(QtWidgets.QGraphicsScene):
             x += dx
             y += dy
             self.points.append((round(x), round(y)))
+
 
         # get the values of these points from the dataset
         self.getValues()
@@ -940,27 +962,171 @@ class Transect(QtWidgets.QGraphicsScene):
     # This function handles the closing event of the transect graph
     def on_close(self, event):
         plt1.close()
+
         #returns the main page back to a non-drawing environment
-        self.mainWindow.dicom_view.update_view()
+        if self.is_ROI_draw:
+            self.mainWindow.upper_limit = self.upper_limit
+            self.mainWindow.lower_limit = self.lower_limit
+            self.mainWindow.on_transect_close()
+        else:
+            self.mainWindow.dicom_view.update_view()
+
         event.canvas.figure.axes[0].has_been_closed = True
+
+    def find_limits(self, roi_values):
+        self.upper_limit = roi_values[len(roi_values)-1]
+        self.lower_limit = roi_values[0]
+        temp = 0
+        if(self.lower_limit > self.upper_limit):
+            temp = self.upper_limit
+            self.upper_limit = self.lower_limit
+            self.lower_limit = temp
+
+    def return_limits(self):
+        return [self.lower_limit, self.upper_limit]
+
 
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
-        newList = [(x * self.pixSpacing) for x in self.distances]
-        # adding a dummy manager
-        fig1 = plt1.figure(num='Transect Graph')
-        new_manager = fig1.canvas.manager
-        new_manager.canvas.figure = fig1
-        fig1.set_canvas(new_manager.canvas)
-        ax1 = fig1.add_subplot(111)
-        ax1.has_been_closed = False
-        ax1.step(newList, self.values, where='mid')
+        newList = [(x * self.pix_spacing) for x in self.distances]
+        self.thresholds[0] = newList[1]
+        self.thresholds[1] = newList[len(newList)-1]
+        self._points[self.thresholds[0]] = 0
+        self._points[self.thresholds[1]] = 0
+        self._figure = plt1.figure(num='Transect Graph')
+        new_manager = self._figure.canvas.manager
+        new_manager.canvas.figure = self._figure
+        self._figure.set_canvas(new_manager.canvas)
+        self._axes = self._figure.add_subplot(111)
+        self._axes.has_been_closed = False
+        # new list is axis x, self.values is axis y
+        self._axes.step(newList, self.values, where='mid')
+        if(self.is_ROI_draw):
+            for x in range(len(newList)):
+                self._valueTuples[newList[x]] = self.values[x]
+            self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
+            self.rightLine = self._axes.axvline(self.thresholds[1], color='r')
+            # Recalculate the distance and CT# to show ROI in histogram
+            self.roi_list.clear()
+            self.roi_values.clear()
+            for x in range(len(newList)):
+                if(newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
+                    self.roi_list.append(newList[x])
+                    self.roi_values.append(self._valueTuples[newList[x]])
+
+
+
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
         plt1.grid(True)
-        fig1.canvas.mpl_connect('close_event', self.on_close)
+        self._figure.canvas.mpl_connect('close_event', self.on_close)
+        self._figure.canvas.mpl_connect('button_press_event', self._on_click)
+        self._figure.canvas.mpl_connect('button_release_event', self._on_release)
+        self._figure.canvas.mpl_connect('motion_notify_event', self._on_motion)
+        self._update_plot()
         plt1.show()
+
+    def _update_plot(self):
+        if (self.is_ROI_draw):
+            if not self._points:
+                self._line.set_data([], [])
+            else:
+                x, y = zip(*sorted(self._points.items()))
+                # Add new plot
+                if not self._line:
+                    self._line, = self._axes.plot(x, y, "b", marker="o", markersize=10)
+                # Update current plot
+                else:
+                    self._line.set_data(x, y)
+                if len(x) >= 2:
+                    self.leftLine.set_xdata(x[0])
+                    self.rightLine.set_xdata(x[1])
+                    self.thresholds[0] = x[0]
+                    self.thresholds[1] = x[1]
+
+                for i in self._axes.bar(self.distances, self.values):
+                    i.set_color('white')
+                for x in range(len(self.distances)):
+                    self._valueTuples[self.distances[x]] = self.values[x]
+                # Recalculate the distance and CT# to show ROI in histogram
+                self.roi_list.clear()
+                self.roi_values.clear()
+                for x in range(len(self.distances)):
+                    if (self.distances[x] >= self.thresholds[0] and self.distances[x] <= self.thresholds[1]):
+                        self.roi_list.append(self.distances[x])
+                        self.roi_values.append(self._valueTuples[self.distances[x]])
+                self.find_limits(self.roi_values)
+            self._figure.canvas.draw()
+
+    def _add_point(self, x, y=None):
+        if (self.is_ROI_draw):
+            if isinstance(x, MouseEvent):
+                x = int(x.xdata)
+            self._points[x] = 0
+            return x, 0
+
+    def _remove_point(self, x, _):
+        if (self.is_ROI_draw):
+            if x in self._points:
+                self._points.pop(x)
+
+    def _find_neighbor_point(self, event):
+        u""" Find point around mouse position
+
+        :rtype: ((int, int)|None)
+        :return: (x, y) if there are any point around mouse else None
+        """
+        if (self.is_ROI_draw):
+            distance_threshold = 50.0
+            nearest_point = None
+            min_distance = math.sqrt(2 * (100 ** 2))
+            for x, y in self._points.items():
+                distance = math.hypot(event.xdata - x, event.ydata - y)
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_point = (x, y)
+            if min_distance < distance_threshold:
+                return nearest_point
+            return None
+
+    def _on_click(self, event):
+        u""" callback method for mouse click event
+
+        :type event: MouseEvent
+        """
+        if (self.is_ROI_draw):
+            # left click
+            if event.button == 1 and event.inaxes in [self._axes]:
+                point = self._find_neighbor_point(event)
+                if point:
+                    self._dragging_point = point
+                self._update_plot()
+
+    def _on_release(self, event):
+        u""" callback method for mouse release event
+
+        :type event: MouseEvent
+        """
+        if (self.is_ROI_draw):
+            if event.button == 1 and event.inaxes in [self._axes] and self._dragging_point:
+                self._dragging_point = None
+                self._update_plot()
+
+    def _on_motion(self, event):
+        u""" callback method for mouse motion event
+
+        :type event: MouseEvent
+        """
+        if (self.is_ROI_draw):
+            if not self._dragging_point:
+                return
+            if event.xdata is None or event.ydata is None:
+                return
+            self._remove_point(*self._dragging_point)
+            self._dragging_point = self._add_point(event)
+            self._update_plot()
+
 
 
 #####################################################################################################################
@@ -972,30 +1138,30 @@ class Transect(QtWidgets.QGraphicsScene):
 class MainPageCallClass:
 
     # Initialisation function of the controller
-    def __init__(self, path, datasets, filepaths, raw_dvh):
-        self.path = path
-        self.dataset = datasets
-        self.filepaths = filepaths
-        self.raw_dvh = raw_dvh
+    def __init__(self):
+        self.patient_dict_container = PatientDictContainer()
+        self.path = self.patient_dict_container.path
+        self.dataset = self.patient_dict_container.dataset
+        self.filepaths = self.patient_dict_container.filepaths
 
     #This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
-        target_path = anonymize(self.path, self.dataset, self.filepaths, self.raw_dvh)
+        target_path = anonymize(self.path, self.dataset, self.filepaths, raw_dvh)
         return target_path
 
     # This function displays the clinical data form
     def display_cd_form(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataForm(
             tabWindow, file_path, self.dataset, self.filepaths)
-        tabWindow.addTab(self.tab_cd, "")
+        tabWindow.addTab(self.tab_cd, "Clinical Data")
 
     # This function displays the clinical data entries in view mode
     def display_cd_dat(self, tabWindow, file_path):
         self.tab_cd = ClinicalDataDisplay(tabWindow, file_path, self.dataset, self.filepaths)
-        tabWindow.addTab(self.tab_cd, "")
+        tabWindow.addTab(self.tab_cd, "Clinical Data")
 
     # This function runs Transect on button click
-    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS):
+    def runTransect(self, mainWindow, tabWindow, imagetoPaint, dataset, rowS, colS, isROIDraw=False):
         self.tab_ct = Transect(mainWindow, imagetoPaint,
-                               dataset, rowS, colS, tabWindow)
+                               dataset, rowS, colS, tabWindow, isROIDraw)
         tabWindow.setScene(self.tab_ct)
