@@ -14,6 +14,8 @@ class WorkerSignals(QObject):
 class Worker(QRunnable):
     """
     Multi-threading worker class that is executed by a QThreadPool.
+    The purpose of this class is to provide a simple way of executing any function on a separate thread, which proves
+    especially useful in a GUI project when a long calculation needs to run in a separate thread to the GUI thread.
     Example usage:
     calcpi_worker = Worker(calculate_pi, 500)   # Calculates pi to 500 decimal places
     calcpi_worker.signals.result.connect(display_result)
@@ -33,7 +35,24 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
-        self.kwargs['progress_callback'] = self.signals.progress
+        # When the constructor for this class is called with a keyword argument 'progress_callback' set to True, this
+        # will allow the worker's progress signal to be connected to. However, this means that the function being called
+        # into the new thread will require a progress_callback parameter (which will, within the function being called,
+        # be a reference to the worker's progress signal). Within the called function, the progress_callback parameter
+        # can be emitted to.
+        # Below is an example of how to utilize this aspect of the Worker class.
+
+        # Creating a worker and connecting to it's callback:
+        #   worker = Worker(slow_calc_fn, list_of_inputs, progress_callback=True)
+        #   worker.signals.progress.connect(self.update_progress_bar)
+
+        # Defining the function to use and emitting signals to the callback
+        #   def slow_calc_fn(list_of_inputs, progress_callback):
+        #       progress = do_part_of_calc(...)
+        #       progress_callback.emit(progress)
+
+        if 'progress_callback' in self.kwargs and self.kwargs['progress_callback'] is True:
+            self.kwargs['progress_callback'] = self.signals.progress
 
     @pyqtSlot()
     def run(self):

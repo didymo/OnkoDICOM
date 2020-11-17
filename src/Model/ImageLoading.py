@@ -272,8 +272,7 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
     return dict_thickness
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None,
-              progress_callback=None):
+def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
@@ -281,8 +280,6 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag
     :param dict_thickness: Dictionary where the keys are ROI numbers and the values are thicknesses of the ROI.
     :param interrupt_flag: A threading.Event() object that tells the function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
-    :param progress_callback: As this class is called by the multi-threading Worker class, it requires this parameter.
-    It is currently unused as no progress is reported to the calling class.
     :return: Dictionary of all the DVHs of all the ROIs of the patient.
     """
     dict_dvh = {}
@@ -307,7 +304,7 @@ def calc_dvh_worker(rtss, dose, roi, queue, thickness, dose_limit=None):
     queue.put(dvh)
 
 
-def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limit=None, progress_callback=None):
+def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limit=None):
     """
     Multiprocessing variant of calc_dvh for fork-based platforms.
     """
