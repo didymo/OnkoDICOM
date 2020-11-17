@@ -208,7 +208,8 @@ class UIOpenPatientWindow(object):
             self.interrupt_flag.clear()
 
             # Then, create a new thread that will load the selected folder
-            worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath, self.interrupt_flag)
+            worker = Worker(DICOMDirectorySearch.get_dicom_structure, self.filepath,
+                            self.interrupt_flag, progress_callback=True)
             worker.signals.result.connect(self.on_search_complete)
             worker.signals.progress.connect(self.search_progress)
 

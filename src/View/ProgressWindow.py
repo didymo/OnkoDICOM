@@ -39,7 +39,7 @@ class ProgressWindow(QDialog):
         image_loader = ImageLoader(selected_files, self)
         image_loader.signal_request_calc_dvh.connect(self.prompt_calc_dvh)
 
-        worker = Worker(image_loader.load, self.interrupt_flag)
+        worker = Worker(image_loader.load, self.interrupt_flag, progress_callback=True)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)
         worker.signals.progress.connect(self.update_progress)
