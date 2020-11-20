@@ -16,3 +16,4 @@ matplotlib==3.2.0
 PyWavelets==0.5.2
 dataclasses==0.7;python_version=="3.6.*"
 networkx
+pytest-qt
