@@ -26,7 +26,7 @@ def test_calculate_matrix():
 
 def test_create_roi():
     rt_ss = dataset.Dataset()
-    
+
     rt_ss.StructureSetROISequence = []
     rt_ss.StructureSetROISequence.append(dataset.Dataset())
     rt_ss.StructureSetROISequence[0].ReferencedFrameOfReferenceUID = "1.2.3"
