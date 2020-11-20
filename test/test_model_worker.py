@@ -7,6 +7,9 @@ from src.Model.Worker import Worker
 
 # qtbot is a pytest fixture used to test PyQt5. Part of the pytest-qt plugin.
 def test_worker_progress_callback(qtbot):
+    """
+    Testing for the progress_callback parameter being present in the called function when progress_callback=True
+    """
     func_to_test = Mock()
     w = Worker(func_to_test, "test", 3, progress_callback=True)
 
@@ -22,6 +25,9 @@ def test_worker_progress_callback(qtbot):
 
 
 def test_worker_progress_callback_false(qtbot):
+    """
+    Testing for the progress_callback parameter not being present in the called function when progress_callback=False
+    """
     func_to_test = Mock()
     w = Worker(func_to_test, "test", 3, progress_callback=False)
 
@@ -35,6 +41,9 @@ def test_worker_progress_callback_false(qtbot):
 
 
 def test_worker_no_progress_callback(qtbot):
+    """
+    Testing for the progress_callback parameter not being present in the called function when no progress_callback
+    """
     func_to_test = Mock()
     w = Worker(func_to_test, "test", 3)
 
@@ -48,6 +57,9 @@ def test_worker_no_progress_callback(qtbot):
 
 
 def test_worker_result_signal(qtbot):
+    """
+    Testing return value of worker's called function through result signal.
+    """
     func_to_test = Mock(return_value=5)
     func_result = Mock()
 
@@ -63,6 +75,9 @@ def test_worker_result_signal(qtbot):
 
 
 def test_worker_error_signal(qtbot):
+    """
+    Testing return value of worker's called function through result signal.
+    """
     func_to_test = Mock(side_effect=ValueError())
     func_error = Mock()
 
