@@ -173,14 +173,14 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
 
             # ROI Sequence
             for contour in contour_sequence:
-                if data_set.get("ReferencedImageSequence"):
-                    contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+                # if data_set.get("ReferencedImageSequence"):
+                contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
 
-                    # Contour Sequence
-                    for contour_image in contour_image_sequence:
-                        contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
-                                              referenced_sop_class_uid)  # CT Image Storage
-                        contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+                # Contour Sequence
+                for contour_image in contour_image_sequence:
+                    contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
+                                            referenced_sop_class_uid)  # CT Image Storage
+                    contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
                 contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
                 contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
