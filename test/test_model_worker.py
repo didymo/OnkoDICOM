@@ -60,3 +60,18 @@ def test_worker_result_signal(qtbot):
 
     func_to_test.assert_called_with("test", 3)
     func_result.assert_called_with(5)
+
+
+def test_worker_error_signal(qtbot):
+    func_to_test = Mock(side_effect=ValueError())
+    func_error = Mock()
+
+    w = Worker(func_to_test, "test", 3)
+    w.signals.error.connect(func_error)
+
+    threadpool = QThreadPool()
+    with qtbot.waitSignal(w.signals.finished) as blocker:
+        threadpool.start(w)
+
+    func_to_test.assert_called_with("test", 3)
+    assert isinstance(func_error.call_args.args[0][1], ValueError)
