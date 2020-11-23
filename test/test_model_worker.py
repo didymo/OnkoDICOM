@@ -100,4 +100,4 @@ def test_worker_error_signal(qtbot):
     # print("first part of first arg:", func_error.call_args.args[0][0])
     # print("second part of first arg:", func_error.call_args.args[0][1])
     # print("third part of first arg: ", func_error.call_args.args[0][2])
-    assert isinstance(func_error.call_args.args[0][0], type(ValueError))
+    assert isinstance(func_error.call_args.args[0][1], ValueError)
