@@ -1,7 +1,7 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
+import pytest
 from PyQt5.QtCore import QThreadPool
-
 from src.Model.Worker import Worker
 
 
@@ -79,7 +79,7 @@ def test_worker_error_signal(qtbot):
     Testing return value of worker's called function through result signal.
     """
     func_to_test = Mock(side_effect=ValueError())
-    func_error = Mock()
+    func_error = MagicMock()
 
     w = Worker(func_to_test, "test", 3)
     w.signals.error.connect(func_error)
@@ -89,8 +89,15 @@ def test_worker_error_signal(qtbot):
         threadpool.start(w)
 
     func_to_test.assert_called_with("test", 3)
-    print("Call args: ", func_error.call_args)
-    print("First arg: ", func_error.call_args.args[0])
-    print("first part of first arg:", func_error.call_args.args[0][0])
-    print("second part of first arg:", func_error.call_args.args[0][1])    
-    assert isinstance(func_error.call_args.args[0][1], ValueError)
+    # with pytest.raises(ValueError):
+    #     func_error()
+
+    # print("Call args: ", func_error.call_args)
+    
+    # print("args of call args: ", func_error.call_args.args)
+    # print("kwargs of call args: ", func_error.call_args.kwargs)
+    # print("First arg: ", func_error.call_args.args[0])
+    # print("first part of first arg:", func_error.call_args.args[0][0])
+    # print("second part of first arg:", func_error.call_args.args[0][1])
+    # print("third part of first arg: ", func_error.call_args.args[0][2])
+    assert isinstance(func_error.call_args.args[0][0], type(ValueError))
