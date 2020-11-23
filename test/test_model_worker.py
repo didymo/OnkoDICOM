@@ -88,17 +88,8 @@ def test_worker_error_signal(qtbot):
     with qtbot.waitSignal(w.signals.finished) as blocker:
         threadpool.start(w)
 
-    func_to_test.assert_called_with("test", 3)
-    # with pytest.raises(ValueError):
-    #     func_error()
     kall = func_error.call_args
     args, kwargs = kall
-    # print("Call args: ", func_error.call_args)
     
-    print("args of call args: ", args)
-    print("kwargs of call args: ", kwargs)
-    # print("First arg: ", func_error.call_args.args[0])
-    # print("first part of first arg:", func_error.call_args.args[0][0])
-    # print("second part of first arg:", func_error.call_args.args[0][1])
-    # print("third part of first arg: ", func_error.call_args.args[0][2])
+    func_to_test.assert_called_with("test", 3)
     assert isinstance(args[0][1], ValueError)

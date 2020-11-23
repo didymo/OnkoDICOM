@@ -36,4 +36,3 @@ jobs:
         herbstluftwm &
         sleep 1
         python -m pytest test
-
