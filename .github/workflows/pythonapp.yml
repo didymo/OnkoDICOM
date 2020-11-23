@@ -18,6 +18,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install -r --no-deps requirements-without-deps.txt
         pip install pytest-xvfb pytest-qt
     - name: Lint with flake8
       run: |
