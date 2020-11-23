@@ -89,4 +89,8 @@ def test_worker_error_signal(qtbot):
         threadpool.start(w)
 
     func_to_test.assert_called_with("test", 3)
+    print("Call args: ", func_error.call_args)
+    print("First arg: ", func_error.call_args.args[0])
+    print("first part of first arg:", func_error.call_args.args[0][0])
+    print("second part of first arg:", func_error.call_args.args[0][1])    
     assert isinstance(func_error.call_args.args[0][1], ValueError)
