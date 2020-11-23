@@ -1,7 +1,7 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
+import pytest
 from PyQt5.QtCore import QThreadPool
-
 from src.Model.Worker import Worker
 
 
@@ -79,7 +79,7 @@ def test_worker_error_signal(qtbot):
     Testing return value of worker's called function through result signal.
     """
     func_to_test = Mock(side_effect=ValueError())
-    func_error = Mock()
+    func_error = MagicMock()
 
     w = Worker(func_to_test, "test", 3)
     w.signals.error.connect(func_error)
@@ -88,5 +88,8 @@ def test_worker_error_signal(qtbot):
     with qtbot.waitSignal(w.signals.finished) as blocker:
         threadpool.start(w)
 
+    kall = func_error.call_args
+    args, kwargs = kall
+    
     func_to_test.assert_called_with("test", 3)
-    assert isinstance(func_error.call_args.args[0][1], ValueError)
+    assert isinstance(args[0][1], ValueError)
