@@ -1,3 +1,4 @@
+import logging
 import sys
 import traceback
 
@@ -66,7 +67,7 @@ class Worker(QRunnable):
             result = self.fn(*self.args, **self.kwargs)
         except:
             # Emit signal error when exception occurs
-            traceback.print_exc()
+            logging.exception(traceback.format_exc())
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         else:
