@@ -67,7 +67,9 @@ class Worker(QRunnable):
             result = self.fn(*self.args, **self.kwargs)
         except:
             # Emit signal error when exception occurs
-            logging.exception(traceback.format_exc())
+            logging.exception(traceback.format_exc())       # Log the traceback
+            # exctype: the type of the exception being handled (a subclass of BaseException)
+            # value: the exception instance (an instance of the exception type)
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         else:
