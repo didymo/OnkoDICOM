@@ -52,9 +52,9 @@ class Worker(QRunnable):
         #       progress = do_part_of_calc(...)
         #       progress_callback.emit(progress)
 
-        if 'progress_callback' in self.kwargs and self.kwargs['progress_callback'] is True:
+        if 'progress_callback' in self.kwargs and self.kwargs['progress_callback']:
             self.kwargs['progress_callback'] = self.signals.progress
-        elif 'progress_callback' in self.kwargs and self.kwargs['progress_callback'] is False:
+        elif 'progress_callback' in self.kwargs and not self.kwargs['progress_callback']:
             del self.kwargs['progress_callback']
 
     @pyqtSlot()
