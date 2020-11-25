@@ -7,7 +7,6 @@ scikit-build
 scipy
 dicompyler-core
 pydicom
-pyradiomics
 PyQt5
 country-list
 git+https://github.com/matplotlib/legacycontour.git

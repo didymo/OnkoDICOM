@@ -1,3 +1,4 @@
+import logging
 import sys
 import traceback
 
@@ -51,8 +52,10 @@ class Worker(QRunnable):
         #       progress = do_part_of_calc(...)
         #       progress_callback.emit(progress)
 
-        if 'progress_callback' in self.kwargs and self.kwargs['progress_callback'] is True:
+        if 'progress_callback' in self.kwargs and self.kwargs['progress_callback']:
             self.kwargs['progress_callback'] = self.signals.progress
+        elif 'progress_callback' in self.kwargs and not self.kwargs['progress_callback']:
+            del self.kwargs['progress_callback']
 
     @pyqtSlot()
     def run(self):
@@ -64,7 +67,9 @@ class Worker(QRunnable):
             result = self.fn(*self.args, **self.kwargs)
         except:
             # Emit signal error when exception occurs
-            traceback.print_exc()
+            logging.exception(traceback.format_exc())       # Log the traceback
+            # exctype: the type of the exception being handled (a subclass of BaseException)
+            # value: the exception instance (an instance of the exception type)
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         else:
