@@ -49,13 +49,16 @@ def test_add_to_roi():
     updated_rtss = create_roi(rt_ss, roi_name, roi_coordinates, image_ds)
     # clearly the above is an opportunity to factor out to a fixture or similar
     rtss_with_added_roi = add_to_roi(updated_rtss, roi_name, roi_coordinates, image_ds)
+    first_contour = rtss_with_added_roi.ROIContourSequence[0].ContourSequence[0]
+    second_contour = rtss_with_added_roi.ROIContourSequence[0].ContourSequence[1]
     assert (
-        rtss_with_added_roi.ROIContourSequence[0]
-        .ContourSequence[1]
+        second_contour
         .ContourImageSequence[0]
         .ReferencedSOPClassUID
         == image_ds.SOPClassUID
     )
+    assert(first_contour.ContourGeometricType == "OPEN_PLANAR")
+    assert (second_contour.ContourGeometricType == "OPEN_PLANAR")
 
 
 def test_create_roi():
@@ -71,7 +74,7 @@ def test_create_roi():
     rt_ss.RTROIObservationsSequence = []
 
     roi_name = "NewTestROI"
-    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0]  # a right triangle
+    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]  # a closed right triangle
     image_ds = dataset.Dataset()
     image_ds.SOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
     image_ds.SOPInstanceUID = "1.2.3.4.5.6.7.8.9"
@@ -82,10 +85,13 @@ def test_create_roi():
     if patient_dict_container.get("rois") is not None:
         print("rois are present in patient dict container")
     updated_rtss = create_roi(rt_ss, roi_name, roi_coordinates, image_ds)
+    first_contour = updated_rtss.ROIContourSequence[0].ContourSequence[0]
     assert (
-        updated_rtss.ROIContourSequence[0]
-        .ContourSequence[0]
+        first_contour
         .ContourImageSequence[0]
         .ReferencedSOPClassUID
         == image_ds.SOPClassUID
     )
+    assert (first_contour.ContourGeometricType == "CLOSED_PLANAR")
+    assert (rt_ss.RTROIObservationsSequence[0].RTROIInterpretedType == "ORGAN")
+    
