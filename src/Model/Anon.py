@@ -12,7 +12,7 @@ import pydicom
 
 try:
     import pymedphys.experimental.pseudonymisation as pseudonymise
-    from pymedphys._dicom.anonymise import create_filename_from_dataset
+    from pymedphys._dicom.anonymise.core import create_filename_from_dataset
     from pymedphys.dicom import anonymise as pmp_anonymise
 
     FEATURE_TOGGLE_PSEUDONYMISE = True
@@ -718,7 +718,8 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         for key, dicom_object_as_dataset in new_dict_dataset.items():
             ds_pseudo = pmp_anonymise(
                 dicom_object_as_dataset,
-                keywords_to_leave_unchanged=["PatientSex"],
+                # TODO: remove PatientWeight when pymedphys fixes it's bug regarding VR of type DS
+                keywords_to_leave_unchanged=["PatientSex", "PatientWeight"],
                 replacement_strategy=pseudonymise.pseudonymisation_dispatch,
                 identifying_keywords=pseudonymise.get_default_pseudonymisation_keywords(),
             )
