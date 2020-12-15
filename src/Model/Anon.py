@@ -637,11 +637,7 @@ def _workaround_hacks_for_pmp_pseudo(ds_input: pydicom.dataset.Dataset):
     ds_input : pydicom.dataset.Dataset
         The DICOM object to be pseudonymised, presumably having some kind of content that causes problems for pymedphys
     """
-    # remove any UTC information that will trip up pymedphys 0.34 and earlier.
-    if "AcquisitionDateTime" in ds_input:
-        ds_input.AcquisitionDateTime = (
-            str(ds_input.AcquisitionDateTime).split("-")[0].split("+")[0]
-        )
+    pass
 
 
 def anonymize(path, Datasets, FilePaths, rawdvh):
@@ -751,11 +747,11 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         #     if not x.endswith("Sequence")
         # ]
         for key, dicom_object_as_dataset in new_dict_dataset.items():
-            _workaround_hacks_for_pmp_pseudo(dicom_object_as_dataset)
+            # _workaround_hacks_for_pmp_pseudo(dicom_object_as_dataset)
             ds_pseudo = pmp_anonymise(
                 dicom_object_as_dataset,
-                # TODO: remove PatientWeight when pymedphys fixes it's bug regarding VR of type DS
-                keywords_to_leave_unchanged=["PatientSex", "PatientWeight"],
+                # Leave PatientWeight and PatientSize unmodified per @AAM
+                keywords_to_leave_unchanged=["PatientSex", "PatientWeight", "PatientSize"],
                 replacement_strategy=pseudonymise.pseudonymisation_dispatch,
                 identifying_keywords=pseudonymise.get_default_pseudonymisation_keywords(),
             )
