@@ -105,9 +105,15 @@ class RenameROIWindow(QDialog):
                     self.feedback_text.setText("Entered text exists but should be in capitals")
 
     def on_rename_clicked(self):
-        new_name = self.input_field.text()
-        new_dataset = ROI.rename_roi(self.rtss, self.roi_id, new_name)
-        self.rename_signal.emit((new_dataset, {"rename": [self.roi_name, new_name]}))
+        self.new_name = self.input_field.text()
+        progress_window = RenameROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+        progress_window.signal_roi_renamed.connect(self.on_roi_renamed)
+        progress_window.start_renaming(self.rtss, self.roi_id, self.new_name)
+        progress_window.show()
+
+    def on_roi_renamed(self, new_rtss):
+        self.rename_signal.emit((new_rtss, {"rename": [self.roi_name, self.new_name]}))
+        QtWidgets.QMessageBox.about(self, "Saved", "Region of interest successfully renamed!")
         self.close()
 
     def on_ROI_clicked(self):
@@ -128,7 +134,7 @@ class RenameROIProgressWindow(QtWidgets.QDialog):
     def __init__(self, *args, **kwargs):
         super(RenameROIProgressWindow, self).__init__(*args, **kwargs)
         layout = QtWidgets.QVBoxLayout()
-        text = QtWidgets.QLabel("Renaming ROIs...")
+        text = QtWidgets.QLabel("Renaming ROI...")
         layout.addWidget(text)
         self.setWindowTitle("Please wait...")
         self.setFixedWidth(150)
@@ -144,7 +150,7 @@ class RenameROIProgressWindow(QtWidgets.QDialog):
         :param new_name: The name the ROI will be changed to.
         """
         worker = Worker(ROI.rename_roi, dataset_rtss, roi_id, new_name)
-        worker.signals.result.connect(self.roi_deleted)
+        worker.signals.result.connect(self.roi_renamed)
         self.threadpool.start(worker)
 
     def roi_renamed(self, result):
