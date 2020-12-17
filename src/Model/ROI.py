@@ -26,6 +26,16 @@ def rename_roi(rtss, roi_id, new_name):
     return rtss
 
 
+def delete_list_of_rois(rtss, rois_to_delete):
+    """
+    Call the delete_roi function for each ROI in the given list.
+    :param rtss: Dataset of RTSS.
+    :param rois_to_delete: List of ROI names.
+    """
+    for item in rois_to_delete:
+        delete_roi(rtss, item)
+
+
 def delete_roi(rtss, roi_name):
     """
     Delete ROI by name
