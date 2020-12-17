@@ -12,14 +12,24 @@ import pydicom
 
 try:
     import pymedphys.experimental.pseudonymisation as pseudonymise
-    from pymedphys._dicom.anonymise import create_filename_from_dataset
+
+    try:
+        # pymedphys 0.33.x
+        from pymedphys._dicom.anonymise import create_filename_from_dataset
+
+        logging.warning(
+            "Using deprecated version of pymedphys, please upgrade to 0.34.0 or newer"
+        )
+    except:
+        # pymedphys 0.34.x
+        from pymedphys._dicom.anonymise.core import create_filename_from_dataset
     from pymedphys.dicom import anonymise as pmp_anonymise
 
     FEATURE_TOGGLE_PSEUDONYMISE = True
 except ImportError as ePymedphysImportFailed:
     FEATURE_TOGGLE_PSEUDONYMISE = False
     logging.error(ePymedphysImportFailed)
-    pass
+    raise
 
 
 # ========================================Anonymization code ===================================
@@ -28,7 +38,7 @@ except ImportError as ePymedphysImportFailed:
 ## ===================================HASH Function================================================
 def _gen_md5_and_sha1_hash(input):
     """generate a digest by generating a SHA1 digest and then applying an MD5 hash to the SHA1
-    digest 
+    digest
 
     Parameters
     ----------
@@ -60,7 +70,7 @@ def _trim_bracketing_single_quotes(repval_string):
 def _create_reidentification_item(dicom_object_as_dataset):
     """Construct a re-identification key/value pair
     where the key is a concatenation of the patient name and the patient id with the + symbol
-    e.g. "Jones^David^Xavier + ABC123" 
+    e.g. "Jones^David^Xavier + ABC123"
     and the value is the hash of the patient name (e.g. hash of Jones^David^Xavier)
     The string values do not include quotes.
 
@@ -180,7 +190,7 @@ def _check_identity_mapping_file_exists(fileName):
 
 
 def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
-    """ Creates or appends a csv file whose rows contain
+    """Creates or appends a csv file whose rows contain
     the original patient identifer and the anonymised identifier
 
     Parameters
@@ -193,7 +203,7 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
 
     csv_filename: ``str``
             The unqualified name of the desired or already available CSV file.
-            However, if the file name provided is not patientHash.csv, the file will be 
+            However, if the file name provided is not patientHash.csv, the file will be
             overwritten.  If the file name is patientHash.csv, then the partially qualified
             path src/data/csv/patientHash.csv relative to the current working directory
             will be utilised.  If the partially qualified path does not already exists,
@@ -201,7 +211,7 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
 
     Returns
     -------
-      
+
     """
     # print("Csv file name is : ",csv_filename)
     # chcek if the patientHash.csv exist
@@ -241,11 +251,18 @@ def _create_reidentification_spreadsheet(pname, sha1_pname, csv_filename):
         print("updating csv")
         row = [pname, sha1_pname]
         rows = {0: row}
-        sheet = pd.DataFrame.from_dict(rows, orient="index", columns=csv_header,)
+        sheet = pd.DataFrame.from_dict(
+            rows,
+            orient="index",
+            columns=csv_header,
+        )
 
         # print("intending to update with:")
         # print(sheet)
-        df_identifier = pd.read_csv(csv_filePath, header=0,)
+        df_identifier = pd.read_csv(
+            csv_filePath,
+            header=0,
+        )
         # print("Before updating:")
         # print(df_identifier)
         updated_df = df_identifier.append(sheet, ignore_index=True)
@@ -365,9 +382,9 @@ def _check_file_hashed(file_name, new_dict_dataset, key, matching_text):
         dict of the Patient's DICOM data objects
 
     key: ``str``|``int``
-        key in to new_dict_dataset identifying which dataset to use for finding the 
+        key in to new_dict_dataset identifying which dataset to use for finding the
         PatientsName which is presumed to be Hashed
-    
+
     matching_text: ``str``
         the text that indicates whether the file contains hashed data or not based on
     the assumption that the filename will contain the text if it contains hashed data.
@@ -425,11 +442,11 @@ def _build_anonymisation_folder_name(
     Parameters
     ----------
     dicom_object_as_dataset : ``pydicom.dataset.Dataset``
-        Any one of the DICOM objects for the patient, but specifically the one where the 
+        Any one of the DICOM objects for the patient, but specifically the one where the
         patient name is considered to be correct and complete
     patient_folder_path : ``str``
         the partially or fully qualified path from which the hierarchy of files for the patient
-        were read.  
+        were read.
     file_previously_hashed : ``bool``
         Whether the data in hand should be assumed to have had the identifiers already anonymised
 
@@ -461,8 +478,8 @@ def _anonymise_dicom_data(path, new_dict_dataset, all_filepaths):
     path: ``str``
         The top level directory in which to create a subdirectory for the anonymised data
 
-    new_dict_dataset: ``dict`` 
-        keys are of type ``str`` and either DICOM Object type identifiers or integer value of count of 
+    new_dict_dataset: ``dict``
+        keys are of type ``str`` and either DICOM Object type identifiers or integer value of count of
         volumetric image slices.
         values are pydicom.dataset.Dataset
 
@@ -611,6 +628,18 @@ def _file_previously_anonymised(file_path):
     return "Hashed" in os.path.basename(file_path)
 
 
+def _workaround_hacks_for_pmp_pseudo(ds_input: pydicom.dataset.Dataset):
+    """holding tank for workarounds while waiting for fixes to pymedphys pseudonymisation
+    the dataset passed in is modified, so this is all about intended side effects
+
+    Parameters
+    ----------
+    ds_input : pydicom.dataset.Dataset
+        The DICOM object to be pseudonymised, presumably having some kind of content that causes problems for pymedphys
+    """
+    pass
+
+
 def anonymize(path, Datasets, FilePaths, rawdvh):
     """
     Create an anonymised copy of an entire patient data set, including
@@ -633,8 +662,8 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         The list of fully or partially qualified (relative to current working directory) filenames
         pointing to the patient's DICOM data
 
-    rawdvh: ``dict`` with key = ROINumber, value = DVH 
-        a representation of the Dose Volume Histogram 
+    rawdvh: ``dict`` with key = ROINumber, value = DVH
+        a representation of the Dose Volume Histogram
 
     Returns
     -------
@@ -670,7 +699,9 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
     # but there's no point in using it if the current data is already anonymised
     # the sha1_pname (md5 and sha1 hash) is no longer used directly,
     # instead use hashed_patient_id
-    pname_ID, sha1_pname = _create_reidentification_item(first_dicom_object,)
+    pname_ID, sha1_pname = _create_reidentification_item(
+        first_dicom_object,
+    )
 
     if not FEATURE_TOGGLE_PSEUDONYMISE:
         if not file_previously_anonymised:
@@ -716,9 +747,11 @@ def anonymize(path, Datasets, FilePaths, rawdvh):
         #     if not x.endswith("Sequence")
         # ]
         for key, dicom_object_as_dataset in new_dict_dataset.items():
+            # _workaround_hacks_for_pmp_pseudo(dicom_object_as_dataset)
             ds_pseudo = pmp_anonymise(
                 dicom_object_as_dataset,
-                keywords_to_leave_unchanged=["PatientSex"],
+                # Leave PatientWeight and PatientSize unmodified per @AAM
+                keywords_to_leave_unchanged=["PatientSex", "PatientWeight", "PatientSize"],
                 replacement_strategy=pseudonymise.pseudonymisation_dispatch,
                 identifying_keywords=pseudonymise.get_default_pseudonymisation_keywords(),
             )
@@ -777,7 +810,7 @@ def _export_anonymised_clinical_data(
     destination_csv_directory,
 ):
     """Reads in the previously stored spreadsheet/ CSV file, replaces the patient ID
-    in the contents of the CSV, and writes it out with a filename using the anonymised 
+    in the contents of the CSV, and writes it out with a filename using the anonymised
     patient id to the anonymised patient directory tree.  If there are additional column
     updates, address those as well (note that column updates are "same value in each row")
 
@@ -811,7 +844,7 @@ def _export_anonymised_pyradiomics_data(
     export_nrrd_files=False,
 ):
     """Reads in the previously stored spreadsheet/ CSV file, replaces the patient ID
-    in the contents of the CSV, and writes it out with a filename using the anonymised 
+    in the contents of the CSV, and writes it out with a filename using the anonymised
     patient id to the anonymised patient directory tree.  If there are additional column
     updates, address those as well (note that column updates are "same value in each row")
 
@@ -926,7 +959,7 @@ def _export_anonymised_spreadsheet_data(
     additional_column_updates=None,
 ):
     """Reads in the previously stored spreadsheet/ CSV file, replaces the patient ID
-    in the contents of the CSV, and writes it out with a filename using the anonymised 
+    in the contents of the CSV, and writes it out with a filename using the anonymised
     patient id to the anonymised patient directory tree.  If there are additional column
     updates, address those as well (note that column updates are "same value in each row")
 
@@ -964,8 +997,10 @@ def _export_anonymised_spreadsheet_data(
         current_patient_top_directory, "CSV"
     )
 
-    original_spreadsheet_data_full_file_path = spreadsheet_data_original_directory.joinpath(
-        spreadsheet_data_original_file_name
+    original_spreadsheet_data_full_file_path = (
+        spreadsheet_data_original_directory.joinpath(
+            spreadsheet_data_original_file_name
+        )
     )
     print(
         "The full path of the spreadsheet file to check:",
@@ -1053,7 +1088,7 @@ def _export_anonymised_dvh_data(
     destination_csv_directory,
 ):
     """Reads in the previously stored spreadsheet/ CSV file, replaces the patient ID
-    in the contents of the CSV, and writes it out with a filename using the anonymised 
+    in the contents of the CSV, and writes it out with a filename using the anonymised
     patient id to the anonymised patient directory tree.  If there are additional column
     updates, address those as well (note that column updates are "same value in each row")
 

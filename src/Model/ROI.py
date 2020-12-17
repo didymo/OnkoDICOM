@@ -1,8 +1,10 @@
 import collections
 import datetime
 import random
-from copy import deepcopy, copy as shallowcopy
+from copy import copy as shallowcopy
+from copy import deepcopy
 
+import numpy as np
 import pydicom
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
@@ -88,26 +90,32 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
 
     # ROI Sequence
     for contour in contour_sequence:
-        if data_set.get("ReferencedImageSequence"):
-            contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
+        # if data_set.get("ReferencedImageSequence"):
+        contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
 
-            # Contour Sequence
-            for contour_image in contour_image_sequence:
-                contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
-                                      referenced_sop_class_uid)  # CT Image Storage
-                contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
+        # Contour Sequence
+        for contour_image in contour_image_sequence:
+            contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
+                                    referenced_sop_class_uid)  # CT Image Storage
+            contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
-        contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
-        contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
+        
         contour.add_new(Tag("ContourNumber"), "IS", new_contour_number)
-        contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+        if not _is_closed_contour(roi_coordinates):
+            contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
+            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)                
+            contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+        else:
+            contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
+            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points-1)                
+            contour.add_new(Tag("ContourData"), "DS", roi_coordinates[0:-3])
 
     rtss.ROIContourSequence[position].ContourSequence.extend(contour_sequence)
 
     return rtss
 
 
-def create_roi(rtss, roi_name, roi_coordinates, data_set):
+def create_roi(rtss, roi_name, roi_coordinates, data_set, rt_roi_interpreted_type="ORGAN"):
     """
         Create new ROI to rtss
 
@@ -182,10 +190,15 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
                                             referenced_sop_class_uid)  # CT Image Storage
                     contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
-                contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
-                contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
                 contour.add_new(Tag("ContourNumber"), "IS", 1)
-                contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+                if not _is_closed_contour(roi_coordinates):
+                    contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
+                    contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)                
+                    contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
+                else:
+                    contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
+                    contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points-1)                
+                    contour.add_new(Tag("ContourData"), "DS", roi_coordinates[0:-3])
 
             roi_contour.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
 
@@ -200,9 +213,10 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
         original_ROI_observation_sequence = rtss.RTROIObservationsSequence
 
         for ROI_observations in RT_ROI_observations_sequence:
+            # TODO: Check to make sure that there aren't multiple observations per ROI, e.g. increment from existing Observation Numbers?
             ROI_observations.add_new(Tag("ObservationNumber"), 'IS', roi_number)
             ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS', roi_number)
-            ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', "")
+            ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS', rt_roi_interpreted_type)
 
         original_ROI_observation_sequence.extend(RT_ROI_observations_sequence)
         rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_ROI_observation_sequence)
@@ -212,6 +226,20 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set):
         rtss = add_to_roi(rtss, roi_name, roi_coordinates, data_set)
 
     return rtss
+
+def _within_tolerance(a:float,b:float, tol=0.01):
+    return (abs(a-b) < tol)
+
+def _is_closed_contour(roi_coordinates):
+    if len(roi_coordinates) % 3 != 0:
+        return False
+    
+    first_contour_point = roi_coordinates[:3]
+    last_contour_point = roi_coordinates[-3:]
+    closed = map(_within_tolerance,first_contour_point, last_contour_point)
+    if False in closed:
+        return False
+    return True
 
 
 def get_raw_contour_data(rtss):
