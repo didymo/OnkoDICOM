@@ -24,15 +24,21 @@ def create_initial_model():
     filepaths = patient_dict_container.filepaths
     patient_dict_container.set("rtss_modified", False)
 
-    if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
-        window = int(dataset[0].WindowWidth)
-    elif isinstance(dataset[0].WindowWidth, pydicom.multival.MultiValue):
-        window = int(dataset[0].WindowWidth[1])
+    if ('WindowWidth' in dataset[0]):
+        if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
+            window = int(dataset[0].WindowWidth)
+        elif isinstance(dataset[0].WindowWidth, pydicom.multival.MultiValue):
+            window = int(dataset[0].WindowWidth[1])
+    else:
+        window = int(400)
 
-    if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
-        level = int(dataset[0].WindowCenter)
-    elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
-        level = int(dataset[0].WindowCenter[1])
+    if ('WindowCenter' in dataset[0]):
+        if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
+            level = int(dataset[0].WindowCenter)
+        elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
+            level = int(dataset[0].WindowCenter[1])
+    else:
+        level = int(800)
 
     patient_dict_container.set("window", window)
     patient_dict_container.set("level", level)
