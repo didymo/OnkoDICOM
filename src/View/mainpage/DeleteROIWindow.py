@@ -1,4 +1,5 @@
-from PyQt5 import QtCore, QtGui
+import pydicom
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidget, \
@@ -6,6 +7,8 @@ from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, QPushButt
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 import platform
+
+from src.Model.Worker import Worker
 
 
 class UIDeleteROIWindow():
@@ -311,6 +314,39 @@ class UIDeleteROIWindow():
             self.close()
 
 
+class DeleteROIProgressWindow(QtWidgets.QDialog):
+    """
+    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
+    thread where the new RTSTRUCT is modified.
+    """
 
+    signal_roi_deleted = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
 
+    def __init__(self, *args, **kwargs):
+        super(DeleteROIProgressWindow, self).__init__(*args, **kwargs)
+        layout = QtWidgets.QVBoxLayout()
+        text = QtWidgets.QLabel("Deleting ROIs...")
+        layout.addWidget(text)
+        self.setWindowTitle("Please wait...")
+        self.setFixedWidth(150)
+        self.setLayout(layout)
 
+        self.threadpool = QtCore.QThreadPool()
+
+    def start_deleting(self, dataset_rtss, rois_to_delete):
+        """
+        Creates a thread that generates the new dataset object.
+        :param dataset_rtss: Dataset of RTSS
+        :param rois_to_delete: List of ROI names to be deleted
+        """
+        worker = Worker(ROI.delete_list_of_rois, dataset_rtss, rois_to_delete)
+        worker.signals.result.connect(self.roi_deleted)
+        self.threadpool.start(worker)
+
+    def roi_deleted(self, result):
+        """
+        This method is called when the second thread completes generation of the new dataset object.
+        :param result: The resulting dataset from the ROI.delete_roi function.
+        """
+        self.signal_roi_deleted.emit(result)
+        self.close()
