@@ -307,11 +307,15 @@ class UIDeleteROIWindow():
                                                       'Would you like to continue?',
                                                       QMessageBox.Yes | QMessageBox.No)
         if confirmation_dialog == QMessageBox.Yes:
-            for item in self.regions_of_interest_to_delete:
-                new_dataset = ROI.delete_roi(self.dataset_rtss, item)
+            progress_window = DeleteROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+            progress_window.signal_roi_deleted.connect(self.on_rois_deleted)
+            progress_window.start_deleting(self.dataset_rtss, self.regions_of_interest_to_delete)
+            progress_window.show()
 
-            self.deleting_rois_structure_tuple.emit((new_dataset, {"delete": self.regions_of_interest_to_delete}))
-            self.close()
+    def on_rois_deleted(self, new_rtss):
+        self.deleting_rois_structure_tuple.emit((new_rtss, {"delete": self.regions_of_interest_to_delete}))
+        QMessageBox.about(self, "Saved", "Regions of interest successfully deleted!")
+        self.close()
 
 
 class DeleteROIProgressWindow(QtWidgets.QDialog):
