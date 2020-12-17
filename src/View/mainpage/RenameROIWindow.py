@@ -1,9 +1,13 @@
-from PyQt5 import QtGui
+import pydicom
+from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
 
 from src.Model import ROI
 from src.Controller.PathHandler import resource_path
 import platform
+
+from src.Model.Worker import Worker
+
 
 class RenameROIWindow(QDialog):
 
@@ -103,11 +107,6 @@ class RenameROIWindow(QDialog):
     def on_rename_clicked(self):
         new_name = self.input_field.text()
         new_dataset = ROI.rename_roi(self.rtss, self.roi_id, new_name)
-        # TODO rather than save this so a file straight away, the dataset is sent as part of the signal further
-        # up towards the main page and then 'replaces' the current rtss. at some point the user is given the
-        # option of saving this new rtss file. when the rtss file is replaced it also recalculates the rois and
-        # reload the structure widget's structures.
-        print()
         self.rename_signal.emit((new_dataset, {"rename": [self.roi_name, new_name]}))
         self.close()
 
@@ -116,3 +115,42 @@ class RenameROIWindow(QDialog):
         # Excluding headers from being clicked.
         if not str(clicked_ROI.text()).startswith("------------Standard"):
             self.input_field.setText(str(clicked_ROI.text()))
+
+
+class RenameROIProgressWindow(QtWidgets.QDialog):
+    """
+    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
+    thread where the new RTSTRUCT is modified.
+    """
+
+    signal_roi_renamed = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
+
+    def __init__(self, *args, **kwargs):
+        super(RenameROIProgressWindow, self).__init__(*args, **kwargs)
+        layout = QtWidgets.QVBoxLayout()
+        text = QtWidgets.QLabel("Renaming ROIs...")
+        layout.addWidget(text)
+        self.setWindowTitle("Please wait...")
+        self.setFixedWidth(150)
+        self.setLayout(layout)
+
+        self.threadpool = QtCore.QThreadPool()
+
+    def start_renaming(self, dataset_rtss, roi_id, new_name):
+        """
+        Creates a thread that generates the new dataset object.
+        :param dataset_rtss: Dataset of RTSS.
+        :param roi_id: ID of the ROI to be renamed.
+        :param new_name: The name the ROI will be changed to.
+        """
+        worker = Worker(ROI.rename_roi, dataset_rtss, roi_id, new_name)
+        worker.signals.result.connect(self.roi_deleted)
+        self.threadpool.start(worker)
+
+    def roi_renamed(self, result):
+        """
+        This method is called when the second thread completes generation of the new dataset object.
+        :param result: The resulting dataset from the ROI.rename_roi function.
+        """
+        self.signal_roi_renamed.emit(result)
+        self.close()
