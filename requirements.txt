@@ -1,8 +1,5 @@
 alphashape
-numpy~=1.19
 pandas
-cython
-cpython
 scikit-build
 scipy
 dicompyler-core
@@ -15,3 +12,6 @@ matplotlib==3.2.0
 PyWavelets==0.5.2
 dataclasses==0.7;python_version=="3.6.*"
 networkx
+pymedphys>=0.35
+git+https://github.com/Radiomics/pyradiomics.git
+pytest
