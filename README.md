@@ -1,7 +1,10 @@
 <p align="center"><img src="src/res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250"></p>
 
 # Onko
-OnkoDICOM was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image sets (DICOM-RT, CT, MRI, PET) using open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. OnkoDICOM is cross platform, open source software, and welcomes contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
+OnkoDICOM was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image
+sets (DICOM-RT, CT, MRI, PET) using open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and
+matplotlib. OnkoDICOM is cross platform, open source software, and welcomes contributions from the wider community via
+GitHub https://github.com/didymo/OnkoDICOM.
 
 
 OnkoDICOM was inspired by the [dicompyler project](https://github.com/bastula/dicompyler).
@@ -22,31 +25,36 @@ installed by running this command in the terminal.
 
 `sudo apt install virtualenv git python3-dev gcc`
 
+If you are installing onto Windows, you will need to have installed Visual Studio Build Tools, and a 64-bit version of
+Python.
+
 Clone the Onko repository
 
 `git clone https://github.com/didymo/OnkoDICOM.git`
 
 Enter the directory and create a virtual environment with a name of
-your choice, in this case it's envOnkoDICOM.
+your choice, in this case it's venv.
 
 `cd OnkoDICOM`
 
 `virtualenv --python=python3 venv`
 
+Note that when cloning into a PyCharm workspace, it is recommended to create a virtual environment from the terminal
+_outside_ of PyCharm, as PyCharm's built-in virtual environment creation often leads to issues with the pip version.
+
 Activate the virtual environment
 
 `source venv/bin/activate`
 
-OR
+OR for Windows
 
 `venv/Scripts/activate.bat`
 
 Install the requirements
 
+`pip install -r pre-requirements.txt`
+
 `pip install -r requirements.txt`
-
-`pip install --no-deps -r requirements-without-deps.txt`
-
 
 You can execute Onko by running
 
