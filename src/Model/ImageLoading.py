@@ -230,9 +230,13 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
     # Value of each key is the SOPInstanceUID of the CT slice the contour is positioned on.
     single_contour_rois = {}
     for contour in dataset_rtss.ROIContourSequence:
-        if len(contour.ContourSequence) == 1:
-            single_contour_rois[contour.ReferencedROINumber] = \
-                contour.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
+        try:
+            if len(contour.ContourSequence) == 1:        
+                single_contour_rois[contour.ReferencedROINumber] = \
+                    contour.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
+            
+        except AttributeError:
+            pass
 
     dict_thickness = {}
     for roi_number, sop_instance_uid in single_contour_rois.items():
