@@ -80,15 +80,22 @@ class UIMainWindow(object):
         # the values belong to and sets the window and level values accordingly
         # The values are converted from the type pydicom.valuerep.DSfloat to
         # int for processing later on in the program
-        if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
-                self.window = int(self.dataset[0].WindowWidth)
-        elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
-            self.window = int(self.dataset[0].WindowWidth[1])
 
-        if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
-            self.level = int(self.dataset[0].WindowCenter)
-        elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            self.level = int(self.dataset[0].WindowCenter[1])
+        if ('WindowWidth' in self.dataset[0]):
+            if isinstance(self.dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
+                    self.window = int(self.dataset[0].WindowWidth)
+            elif isinstance(self.dataset[0].WindowWidth, pydicom.multival.MultiValue):
+                self.window = int(self.dataset[0].WindowWidth[1])
+        else:
+            self.window = int(400)
+        
+        if ('WindowCenter' in self.dataset[0]):
+            if isinstance(self.dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
+                self.level = int(self.dataset[0].WindowCenter)
+            elif isinstance(self.dataset[0].WindowCenter, pydicom.multival.MultiValue):
+                self.level = int(self.dataset[0].WindowCenter[1])
+        else:
+            self.level = int(800)
 
         # Variables to check for the mouse position when altering the window and
         # level values
