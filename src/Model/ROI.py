@@ -26,6 +26,19 @@ def rename_roi(rtss, roi_id, new_name):
     return rtss
 
 
+def delete_list_of_rois(rtss, rois_to_delete):
+    """
+    Call the delete_roi function for each ROI in the given list.
+    :param rtss: Dataset of RTSS.
+    :param rois_to_delete: List of ROI names.
+    :return: Updated RTSS with deleted ROIs.
+    """
+    for roi_name in rois_to_delete:
+        rtss = delete_roi(rtss, roi_name)
+
+    return rtss
+
+
 def delete_roi(rtss, roi_name):
     """
     Delete ROI by name
@@ -650,4 +663,3 @@ def create_initial_rtss_from_ct(img_ds:pydicom.dataset.Dataset, ct_uid_list=[])-
     rt_ss.is_little_endian = True
     rt_ss.is_implicit_VR = True
     return rt_ss
-

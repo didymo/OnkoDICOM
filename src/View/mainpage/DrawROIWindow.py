@@ -1,5 +1,6 @@
 import csv
 import math
+import threading
 
 import numpy
 import pydicom
@@ -15,6 +16,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Worker import Worker
 from src.View.mainpage.DicomView import DicomView
 
 from src.Controller.PathHandler import resource_path
@@ -582,18 +584,19 @@ class UIDrawROIWindow:
             # to be converted to a concave hull.
             pixel_hull = self.calculate_concave_hull_of_points()
             if pixel_hull is not None:
-                hull = self.convert_hull_to_rcs(pixel_hull)
+                hull = self.convert_hull_to_rcs(pixel_hull)  # Convert the polygon's pixel points to RCS locations.
+                # The list of points will need to be converted into a single-dimensional array, as RTSTRUCT contour
+                # data is stored in such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...]
                 single_array = []
                 for sublist in hull:
                     for item in sublist:
                         single_array.append(item)
-                new_rtss = ROI.create_roi(self.dataset_rtss, self.ROI_name, single_array, self.ds)
-                self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
-                QMessageBox.about(self.draw_roi_window_instance, "Warning",
-                                  "This feature is still in development. The ROI will appear in your structures tab,"
-                                                                        " but may demonstrate some technical issues "
-                                                                        "when performing tasks.")
-                self.close()
+
+                # Create a popup window that modifies the RTSTRUCT and tells the user that processing is happening.
+                progress_window = SaveROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+                progress_window.signal_roi_saved.connect(self.roi_saved)
+                progress_window.start_saving(self.dataset_rtss, self.ROI_name, single_array, self.ds)
+                progress_window.show()
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
                                   "Selected points will generate multiple contours, which is not currently supported. "
@@ -602,6 +605,11 @@ class UIDrawROIWindow:
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
+
+    def roi_saved(self, new_rtss):
+        self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
+        QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
+        self.close()
 
     def calculate_concave_hull_of_points(self):
         """
@@ -682,6 +690,46 @@ class UIDrawROIWindow:
 
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
+
+
+class SaveROIProgressWindow(QtWidgets.QDialog):
+    """
+    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
+    thread where the new RTSTRUCT is modified.
+    """
+
+    signal_roi_saved = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
+
+    def __init__(self, *args, **kwargs):
+        super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
+        layout = QtWidgets.QVBoxLayout()
+        text = QtWidgets.QLabel("Creating ROI...")
+        layout.addWidget(text)
+        self.setWindowTitle("Please wait...")
+        self.setFixedWidth(150)
+        self.setLayout(layout)
+
+        self.threadpool = QtCore.QThreadPool()
+
+    def start_saving(self, dataset_rtss, roi_name, single_array, ds):
+        """
+        Creates a thread that generates the new dataset object.
+        :param dataset_rtss: dataset of RTSS
+        :param roi_name: ROIName
+        :param single_array: Coordinates of pixels for new ROI
+        :param ds: Data Set of selected DICOM image file
+        """
+        worker = Worker(ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
+        worker.signals.result.connect(self.roi_saved)
+        self.threadpool.start(worker)
+
+    def roi_saved(self, result):
+        """
+        This method is called when the second thread completes generation of the new dataset object.
+        :param result: The resulting dataset from the ROI.create_roi function.
+        """
+        self.signal_roi_saved.emit(result)
+        self.close()
 
 
 #####################################################################################################################
