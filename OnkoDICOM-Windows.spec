@@ -1,17 +1,26 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import glob
+import logging
+
 block_cipher = None
+
+# Search the numpy .libs directory for the libopenblas .dll file.
+libopenblas_dll = glob.glob("venv/Lib/site-packages/numpy/.libs/*.dll")[0]
+logging.info("Found libopenblas dll: " + libopenblas_dll)
 
 added_files = [
     ('src', 'src'),
-    ('venv/Lib/site-packages/country_list/country_data', 'country_list/country_data')
+    ('venv/Lib/site-packages/country_list/country_data', 'country_list/country_data'),
+    ('venv/Lib/site-packages/pymedphys/_trf/decode/config.json', 'pymedphys/_trf/decode'),
+    ('venv/Lib/site-packages/pymedphys/_imports/imports.py', 'pymedphys/_imports')
 ]
 
 a = Analysis(['main.py'],
              pathex=['venv/Lib/site-packages'],
-             binaries=[],
+             binaries=[(libopenblas_dll, '.')],
              datas=added_files,
-             hiddenimports=[],
+             hiddenimports=['scipy.spatial.transform._rotation_groups'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

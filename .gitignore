@@ -10,3 +10,7 @@ venv/
 src/data/csv/patientHash.csv
 Hash_map.csv
 *.pyo
+
+# Ignore compile results
+build/
+dist/
