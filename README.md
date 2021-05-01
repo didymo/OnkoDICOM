@@ -6,13 +6,13 @@ OnkoDICOM is am Open Source DICOM-RT viewer with enhanced capabilities that make
 The enhanced capabilities of OnkoDICOM 
 1. pseudo-anonymisation, 
 2. spreadsheet exports
-a. DVHs of all ROIs
-b. PyRadiomics output from all ROIs (currently ~132 features)
-c. clinical description of the patient's disease which can be updated.
+- DVHs of all ROIs
+- PyRadiomics output from all ROIs (currently ~132 features)
+- clinical description of the patient's disease which can be updated.
 3. ROI manipulation
-a. rename ROI to Standarised Name (correlated with FMA_ID and customisable)
-b. delete ROI (for all those 'Rings of Bob' and other ROIs used in plan creation)
-c. add ROI (at present this requires a RTSTRUCT file be present, uses a pixel value definition and manual cleaning on a single slice)
+- rename ROI to Standarised Name (correlated with FMA_ID and customisable)
+- delete ROI (for all those 'Rings of Bob' and other ROIs used in plan creation)
+- add ROI (at present this requires a RTSTRUCT file be present, uses a pixel value definition and manual cleaning on a single slice)
 
 OnkoDICOM is built on open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. Although built in Python, its forms are cross platform, and  we welcome contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
 
