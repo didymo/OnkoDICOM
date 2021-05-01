@@ -4,12 +4,13 @@
 OnkoDICOM is am Open Source DICOM-RT viewer with enhanced capabilities that make it useful for research in the field of Radiation Oncology. It was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image, but Radiation Therapists and Radiation Physicists will find tools included that are useful when manipulating image sets like DICOM-RT, CT, MRI, and PET.
 
 The enhanced capabilities of OnkoDICOM 
-1. pseudo-anonymisation, 
-2. spreadsheet exports
+1. pseudo-anonymisation
+- at each pseudoanonymisation, the image set is copied to a new directory and the doublet of 'Old_ID':'New_ID' is written into a CSV file that the user can archive securely for future reference if needed.  
+3. spreadsheet exports
 - DVHs of all ROIs
 - PyRadiomics output from all ROIs (currently ~132 features)
 - clinical description of the patient's disease which can be updated.
-3. ROI manipulation
+4. ROI manipulation
 - rename ROI to Standarised Name (correlated with FMA_ID and customisable)
 - delete ROI (for all those 'Rings of Bob' and other ROIs used in plan creation)
 - add ROI (at present this requires a RTSTRUCT file be present, uses a pixel value definition and manual cleaning on a single slice)
