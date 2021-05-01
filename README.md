@@ -20,4 +20,4 @@ OnkoDICOM is built on open source technologies, such as pydicom, dicompyler-core
 OnkoDICOM was inspired by the [dicompyler project](https://github.com/bastula/dicompyler).
 
 ### Installation
-Installation instructions for Ubuntu and Windows can be located in [the project's wiki](wiki/Installation-Instructions).
+Installation instructions for Ubuntu and Windows can be located in [the project's wiki](https://github.com/didymo/OnkoDICOM/wiki/Installation-Instructions).
