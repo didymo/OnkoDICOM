@@ -1,14 +1,22 @@
 <p align="center"><img src="src/res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250"></p>
 
 # Onko
-OnkoDICOM was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image
-sets (DICOM-RT, CT, MRI, PET) using open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and
-matplotlib. OnkoDICOM is cross platform, open source software, and welcomes contributions from the wider community via
-GitHub https://github.com/didymo/OnkoDICOM.
+OnkoDICOM is am Open Source DICOM-RT viewer with enhanced capabilities that make it useful for research in the field of Radiation Oncology. It was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image, but Radiation Therapists and Radiation Physicists will find tools included that are useful when manipulating image sets like DICOM-RT, CT, MRI, and PET.
 
+The enhanced capabilities of OnkoDICOM 
+1. pseudo-anonymisation, 
+2. spreadsheet exports
+a. DVHs of all ROIs
+b. PyRadiomics output from all ROIs (currently ~132 features)
+c. clinical description of the patient's disease which can be updated.
+3. ROI manipulation
+a. rename ROI to Standarised Name (correlated with FMA_ID and customisable)
+b. delete ROI (for all those 'Rings of Bob' and other ROIs used in plan creation)
+c. add ROI (at present this requires a RTSTRUCT file be present, uses a pixel value definition and manual cleaning on a single slice)
+
+OnkoDICOM is built on open source technologies, such as pydicom, dicompyler-core, Pyqt5, PIL, and matplotlib. Although built in Python, its forms are cross platform, and  we welcome contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
 
 OnkoDICOM was inspired by the [dicompyler project](https://github.com/bastula/dicompyler).
-
 
 # Installation
 *These instructions are based off this
