@@ -21,3 +21,5 @@ OnkoDICOM was inspired by the [dicompyler project](https://github.com/bastula/di
 
 ### Installation
 Installation instructions for Ubuntu and Windows can be located in [the project's wiki](https://github.com/didymo/OnkoDICOM/wiki/Installation-Instructions).
+
+Note that in order to utilise OnkoDICOM's radiomics toolset, the external program Plastimatch will need to be installed. [Plastimatch installation instructions](https://github.com/didymo/OnkoDICOM/wiki/Installation-Instructions#plastimatch).
