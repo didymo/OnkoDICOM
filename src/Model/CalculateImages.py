@@ -50,6 +50,8 @@ def scaled_pixmap(np_pixels, window, level):
     :param level: Level value of windowing function
     :return: pixmap, a QPixmap of the slice
     """
+    # The numpy pixel array is converted to a signed int before any additional operations are applied.
+    # This is due to the pydicom.dataset.Dataset.convert_pixel_data() function returning a numpy array of dtype uint16.
     np_pixels = np_pixels.astype(np.int16)
 
     if window != 0 and level != 0:
