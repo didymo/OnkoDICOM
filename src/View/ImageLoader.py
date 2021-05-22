@@ -2,14 +2,13 @@ import os
 import platform
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import QObject
 from pydicom import dcmread
 
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-class ImageLoader(QObject):
+class ImageLoader(QtCore.QObject):
     """
     This class is responsible for initializing and creating all the values required to create an instance of
     the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
