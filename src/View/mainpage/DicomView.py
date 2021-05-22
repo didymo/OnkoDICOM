@@ -1,5 +1,5 @@
+import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
-from pandas import np
 
 try:
     from matplotlib import _cntr as cntr
