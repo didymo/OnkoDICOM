@@ -12,6 +12,6 @@ matplotlib==3.2.0
 PyWavelets==0.5.2
 dataclasses==0.7;python_version=="3.6.*"
 networkx
-pymedphys>=0.35
+pymedphys>=0.35,<=0.37.1
 git+https://github.com/Radiomics/pyradiomics.git
 pytest
