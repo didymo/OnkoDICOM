@@ -1,14 +1,13 @@
 import os
 import warnings
-
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtGui import QFont
-
-warnings.filterwarnings("ignore")
 import sys
 import platform
+
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtGui import QFont
+
 from src.Controller.TopLevelController import Controller
-import importlib
+warnings.filterwarnings("ignore")
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 
@@ -16,6 +15,7 @@ if __name__ == "__main__":
 
     # On some configurations error traceback is not being displayed when the program crashes. This is a workaround.
     sys._excepthook = sys.excepthook
+
     def exception_hook(exctype, value, traceback):
         print(exctype, value, traceback)
         sys._excepthook(exctype, value, traceback)

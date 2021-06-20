@@ -1,7 +1,7 @@
 from shutil import which
 
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWidgets import QMessageBox
+from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtWidgets import QMessageBox
 
 from src.Model.InitialModel import create_initial_model
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -14,7 +14,7 @@ from src.Controller.PathHandler import resource_path
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
-    go_next_window = QtCore.pyqtSignal()
+    go_next_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self):
@@ -31,7 +31,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 
-    go_next_window = QtCore.pyqtSignal(object)
+    go_next_window = QtCore.Signal(object)
 
     # Initialisation function to display the UI
     def __init__(self, default_directory):
@@ -51,9 +51,9 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     # When a new patient file is opened from the main window
-    open_patient_window = QtCore.pyqtSignal()
+    open_patient_window = QtCore.Signal()
     # When the pyradiomics button is pressed
-    run_pyradiomics = QtCore.pyqtSignal(str, dict, str)
+    run_pyradiomics = QtCore.Signal(str, dict, str)
 
     # Initialising the main window and setting up the UI
     def __init__(self):
@@ -125,7 +125,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
 
 class PyradiProgressBar(QtWidgets.QWidget):
-    progress_complete = QtCore.pyqtSignal()
+    progress_complete = QtCore.Signal()
 
     def __init__(self, path, filepaths, target_path):
         super().__init__()
@@ -139,7 +139,7 @@ class PyradiProgressBar(QtWidgets.QWidget):
             | QtCore.Qt.WindowMinimizeButtonHint
         )
         qtRectangle = self.w.frameGeometry()
-        centerPoint = QtWidgets.QDesktopWidget().availableGeometry().center()
+        centerPoint = QtGui.QScreen.availableGeometry(QtWidgets.QApplication.primaryScreen()).center()
         qtRectangle.moveCenter(centerPoint)
         self.w.move(qtRectangle.topLeft())
         self.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))

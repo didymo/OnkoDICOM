@@ -4,7 +4,6 @@ scikit-build
 scipy
 dicompyler-core
 pydicom
-PyQt5
 country-list
 git+https://github.com/matplotlib/legacycontour.git
 fuzzywuzzy
@@ -15,3 +14,4 @@ networkx
 pymedphys>=0.35,<=0.37.1
 git+https://github.com/Radiomics/pyradiomics.git
 pytest
+pyside6

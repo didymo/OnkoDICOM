@@ -1,10 +1,9 @@
 import threading
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.Qt import Qt
-from PyQt5.QtCore import QCoreApplication, QThreadPool
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
+from PySide6 import QtGui, QtWidgets
+from PySide6.QtCore import QCoreApplication, QThreadPool, Qt
+from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
 
 from src.Model import DICOMDirectorySearch
@@ -17,7 +16,7 @@ import platform
 
 
 class UIOpenPatientWindow(object):
-    patient_info_initialized = QtCore.pyqtSignal(object)
+    patient_info_initialized = QtCore.Signal(object)
 
     def setup_ui(self, open_patient_window_instance):
         if platform.system() == 'Darwin':
@@ -312,6 +311,7 @@ class UIOpenPatientWindow(object):
         recurse(self.open_patient_window_patients_tree.invisibleRootItem())
         return checked_items
 
+
 # This is to allow for dropping a directory into the input text.
 class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
 
@@ -325,13 +325,13 @@ class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
     def dragEnterEvent(self, event):
         data = event.mimeData()
         urls = data.urls()
-        if (urls and urls[0].scheme() == 'file'):
+        if urls and urls[0].scheme() == 'file':
             event.acceptProposedAction()
 
     def dropEvent(self, event):
         data = event.mimeData()
         urls = data.urls()
-        if (urls and urls[0].scheme() == 'file'):
+        if urls and urls[0].scheme() == 'file':
             # Removes the doubled intro slash
             dicom_file_path = str(urls[0].path())[1:]
             # Pastes the directory into the text field
