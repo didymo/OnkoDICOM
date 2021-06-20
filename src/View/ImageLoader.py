@@ -1,8 +1,8 @@
 import os
 import platform
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QObject
+from PySide6 import QtCore
+from PySide6.QtCore import QObject
 from pydicom import dcmread
 
 from src.Model import ImageLoading
@@ -15,7 +15,7 @@ class ImageLoader(QObject):
     the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
     """
 
-    signal_request_calc_dvh = QtCore.pyqtSignal()
+    signal_request_calc_dvh = QtCore.Signal()
 
     def __init__(self, selected_files, parent_window, *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)

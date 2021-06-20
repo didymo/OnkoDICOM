@@ -1,4 +1,4 @@
-from PyQt5.Qt import Qt
+from PySide6.QtCore import Qt
 
 from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
@@ -123,7 +123,7 @@ class Patient:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
         for study in self.studies:
@@ -208,7 +208,7 @@ class Study:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
         for series in self.series:

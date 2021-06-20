@@ -2,14 +2,14 @@ import logging
 import sys
 import traceback
 
-from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
+from PySide6.QtCore import QObject, Signal, QRunnable, Slot
 
 
 class WorkerSignals(QObject):
-    finished = pyqtSignal()
-    error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
-    progress = pyqtSignal(object)
+    finished = Signal()
+    error = Signal(tuple)
+    result = Signal(object)
+    progress = Signal(object)
 
 
 class Worker(QRunnable):
@@ -57,7 +57,7 @@ class Worker(QRunnable):
         elif 'progress_callback' in self.kwargs and not self.kwargs['progress_callback']:
             del self.kwargs['progress_callback']
 
-    @pyqtSlot()
+    @Slot()
     def run(self):
         """
         Executed on threadpool.start(..)

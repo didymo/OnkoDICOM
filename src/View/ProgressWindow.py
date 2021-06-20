@@ -1,8 +1,8 @@
 import threading
 
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtCore import QThreadPool
-from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QMessageBox
+from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtCore import QThreadPool
+from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QMessageBox
 
 from src.Model import ImageLoading
 from src.Model.Worker import Worker
@@ -10,9 +10,9 @@ from src.View.ImageLoader import ImageLoader
 
 
 class ProgressWindow(QDialog):
-    signal_loaded = QtCore.pyqtSignal(tuple)
-    signal_error = QtCore.pyqtSignal(int)
-    signal_advise_calc_dvh = QtCore.pyqtSignal(bool)
+    signal_loaded = QtCore.Signal(tuple)
+    signal_error = QtCore.Signal(int)
+    signal_advise_calc_dvh = QtCore.Signal(bool)
 
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)

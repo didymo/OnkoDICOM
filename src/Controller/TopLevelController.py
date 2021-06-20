@@ -33,7 +33,7 @@ class Controller:
             self.main_window.close()
 
         self.open_patient_window = OpenPatientWindow(self.default_directory)
-        self.open_patient_window.go_next_window.connect(self.show_main_window)
+        # self.open_patient_window.go_next_window.connect(self.show_main_window)
         self.open_patient_window.show()
 
     def show_main_window(self, progress_window):
