@@ -1,16 +1,15 @@
 """This file holds all the user input pop up dialogs used from the software"""
 import re
 
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, \
+from PySide6 import QtGui
+from PySide6.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, \
     QDialog, \
     QMessageBox
 from src.Controller.PathHandler import resource_path
 
-""" This class creates the user input dialog for when Modifying or Adding a Windowing option """
 
 class Dialog_Windowing(QDialog):
-
+    """ This class creates the user input dialog for when Modifying or Adding a Windowing option """
     def __init__(self, win_name, scan, upper_level, lower_level):
         super(Dialog_Windowing, self).__init__()
 
@@ -71,10 +70,8 @@ class Dialog_Windowing(QDialog):
                 pass
 
 
-""" This class creates the user input dialog for when Modifying or Adding a Standard Organ name option """
-
 class Dialog_Organ(QDialog):
-
+    """ This class creates the user input dialog for when Modifying or Adding a Standard Organ name option """
     def __init__(self, standard_name, fma_id, organ, url):
         super(Dialog_Organ, self).__init__()
 
@@ -135,10 +132,8 @@ class Dialog_Organ(QDialog):
                 pass
 
 
-""" This class creates the user input dialog for when Modifying or Adding a Standard Organ name option  """
-
 class Dialog_Volume(QDialog):
-
+    """ This class creates the user input dialog for when Modifying or Adding a Standard Organ name option  """
     def __init__(self, standard_name, volume_name):
         super(Dialog_Volume, self).__init__()
 

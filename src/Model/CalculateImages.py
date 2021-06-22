@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5 import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 
 
 def convert_raw_data(ds):

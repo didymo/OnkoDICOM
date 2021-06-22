@@ -5,9 +5,8 @@
 #####################################################################################################################
 import csv
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QCompleter
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import QCompleter
 from country_list import countries_for_language
 from src.Controller.PathHandler import resource_path
 
@@ -52,6 +51,7 @@ for items in hist:
         strg = strg + item
     new_hist.append(strg)
     strg = ''
+
 
 class Ui_CD_Display(object):
     """
@@ -320,7 +320,7 @@ class Ui_CD_Display(object):
         self.layout_content.addWidget(self.label_N_Stage, 5, 3)
         self.layout_content.addWidget(self.N_stage, 5, 4)
         self.layout_content.addWidget(self.label_M_Stage, 5, 6)
-        self.label_M_Stage.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_M_Stage.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
         self.layout_content.addWidget(self.M_stage, 5, 7)
         self.layout_content.addWidget(self.label_Overall_Stage, 5, 9)
         self.layout_content.addWidget(self.Overall_Stage, 5, 10)

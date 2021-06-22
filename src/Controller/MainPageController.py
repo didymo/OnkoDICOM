@@ -12,7 +12,7 @@ from pathlib import Path
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore
 from dateutil.relativedelta import relativedelta
 from networkx.tests.test_convert_pandas import pd
 
@@ -91,7 +91,7 @@ def calculate_years(year1, year2):
 #####################################################################################################################
 
 class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
-    open_patient_window = QtCore.pyqtSignal(str)
+    open_patient_window = QtCore.Signal(str)
 
     # Initialisation function of the form's UI
     def __init__(self, tabWindow, path, ds, fn):
@@ -654,7 +654,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 #####################################################################################################################
 
 class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
-    open_patient_window = QtCore.pyqtSignal(str)
+    open_patient_window = QtCore.Signal(str)
 
     # Initialisation function of the display of the clinical data of the patient
     def __init__(self, tabWindow, path, ds, fn):

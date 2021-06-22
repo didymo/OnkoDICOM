@@ -9,6 +9,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.Controller.PathHandler import resource_path
 
+
 def create_initial_model():
     """
     This function initializes all the attributes in the PatientDictContainer model required for the operation of the

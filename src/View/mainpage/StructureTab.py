@@ -2,7 +2,7 @@ import csv
 from pathlib import Path
 from random import randint, seed
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
@@ -12,9 +12,10 @@ from src.Model.ROI import ordered_list_rois
 from src.View.mainpage.StructureWidget import StructureWidget
 from src.Controller.PathHandler import resource_path
 
+
 class StructureTab(QtWidgets.QWidget):
 
-    request_update_structures = QtCore.pyqtSignal()
+    request_update_structures = QtCore.Signal()
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
@@ -39,7 +40,7 @@ class StructureTab(QtWidgets.QWidget):
         self.layout_content = QtWidgets.QVBoxLayout(self.scroll_area_content)
         self.layout_content.setContentsMargins(0, 0, 0, 0)
         self.layout_content.setSpacing(0)
-        self.layout_content.setAlignment(QtCore.Qt.AlignTop)
+        self.layout_content.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
         # Create list of standard organ and volume names
         self.standard_organ_names = []
@@ -127,12 +128,12 @@ class StructureTab(QtWidgets.QWidget):
             QtGui.QIcon.On
         )
 
-        #self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        # self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
         self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
 
-        #self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        # self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_draw.setIcon(icon_roi_draw)
         self.button_roi_draw.setText("Draw ROI")
         self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
@@ -247,7 +248,7 @@ class StructureTab(QtWidgets.QWidget):
         self.modified_indicator_widget = QtWidgets.QWidget()
         self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
-        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
+        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
         modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/alert_icon.png")))

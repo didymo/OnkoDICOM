@@ -1,7 +1,6 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QToolBar, QToolButton, QWidget, QSizePolicy
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QToolBar, QToolButton, QWidget, QSizePolicy
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Model.PatientDictContainer import PatientDictContainer

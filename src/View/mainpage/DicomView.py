@@ -1,10 +1,5 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
-from pandas import np
-
-try:
-    from matplotlib import _cntr as cntr
-except ImportError:
-    import legacycontour._cntr as cntr
+from PySide6 import QtWidgets, QtCore, QtGui
+from skimage import measure
 
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -74,12 +69,12 @@ class DicomView(QtWidgets.QWidget):
         Create and place metadata on the view widget.
         """
         # Position of the labels on the DICOM view.
-        self.label_image_id.setAlignment(QtCore.Qt.AlignTop)
-        self.label_image_pos.setAlignment(QtCore.Qt.AlignTop)
-        self.label_wl.setAlignment(QtCore.Qt.AlignRight)
-        self.label_image_size.setAlignment(QtCore.Qt.AlignBottom)
-        self.label_zoom.setAlignment(QtCore.Qt.AlignBottom)
-        self.label_patient_pos.setAlignment(QtCore.Qt.AlignRight)
+        self.label_image_id.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.label_image_pos.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.label_wl.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+        self.label_image_size.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        self.label_zoom.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        self.label_patient_pos.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         # Set all labels to white
         stylesheet = "QLabel { color : white; }"
@@ -99,43 +94,43 @@ class DicomView(QtWidgets.QWidget):
         # Create a widget to contain the two top-left labels
         top_left_widget = QtWidgets.QWidget()
         top_left = QtWidgets.QVBoxLayout(top_left_widget)
-        top_left.addWidget(self.label_image_id, QtCore.Qt.AlignTop)
-        top_left.addWidget(self.label_image_pos, QtCore.Qt.AlignTop)
+        top_left.addWidget(self.label_image_id, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        top_left.addWidget(self.label_image_pos, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
         # Create a widget to contain the top-right label
         top_right_widget = QtWidgets.QWidget()
         top_right = QtWidgets.QVBoxLayout(top_right_widget)
-        top_right.addWidget(self.label_wl, QtCore.Qt.AlignTop)
+        top_right.addWidget(self.label_wl, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
         # Create a widget to contain the two top widgets
         top_widget = QtWidgets.QWidget()
         top_widget.setFixedHeight(100)
         top = QtWidgets.QHBoxLayout(top_widget)
-        top.addWidget(top_left_widget, QtCore.Qt.AlignLeft)
-        top.addWidget(top_right_widget, QtCore.Qt.AlignRight)
+        top.addWidget(top_left_widget, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+        top.addWidget(top_right_widget, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         # Create a widget to contain the two bottom-left labels
         bottom_left_widget = QtWidgets.QWidget()
         bottom_left = QtWidgets.QVBoxLayout(bottom_left_widget)
-        bottom_left.addWidget(self.label_image_size, QtCore.Qt.AlignBottom)
-        bottom_left.addWidget(self.label_zoom, QtCore.Qt.AlignBottom)
+        bottom_left.addWidget(self.label_image_size, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        bottom_left.addWidget(self.label_zoom, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
         # Create a widget to contain the bottom-right label
         bottom_right_widget = QtWidgets.QWidget()
         bottom_right = QtWidgets.QVBoxLayout(bottom_right_widget)
-        bottom_right.addWidget(self.label_patient_pos, QtCore.Qt.AlignBottom)
+        bottom_right.addWidget(self.label_patient_pos, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
         # Create a widget to contain the two bottom widgets
         bottom_widget = QtWidgets.QWidget()
         bottom_widget.setFixedHeight(100)
         bottom = QtWidgets.QHBoxLayout(bottom_widget)
-        bottom.addWidget(bottom_left_widget, QtCore.Qt.AlignLeft)
-        bottom.addWidget(bottom_right_widget, QtCore.Qt.AlignRight)
+        bottom.addWidget(bottom_left_widget, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+        bottom.addWidget(bottom_right_widget, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         # Add the bottom and top widgets to the view
-        self.metadata_layout.addWidget(top_widget, QtCore.Qt.AlignTop)
+        self.metadata_layout.addWidget(top_widget, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.metadata_layout.addStretch()
-        self.metadata_layout.addWidget(bottom_widget, QtCore.Qt.AlignBottom)
+        self.metadata_layout.addWidget(bottom_widget, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
     def value_changed(self):
         self.update_view()
@@ -237,19 +232,12 @@ class DicomView(QtWidgets.QWidget):
         grid = get_dose_grid(dataset_rtdose, float(z))
 
         if not (grid == []):
-            x, y = np.meshgrid(
-                np.arange(grid.shape[1]), np.arange(grid.shape[0]))
-
-            # Instantiate the isodose generator for this slice
-            isodosegen = cntr.Cntr(x, y, grid)
-
             # sort selected_doses in ascending order so that the high dose isodose washes
             # paint over the lower dose isodose washes
             for sd in sorted(self.patient_dict_container.get("selected_doses")):
                 dose_level = sd * self.patient_dict_container.get("rx_dose_in_cgray") / \
                              (dataset_rtdose.DoseGridScaling * 10000)
-                contours = isodosegen.trace(dose_level)
-                contours = contours[:len(contours) // 2]
+                contours = measure.find_contours(grid, dose_level)
 
                 polygons = self.calc_dose_polygon(
                     self.patient_dict_container.get("dose_pixluts")[curr_slice_uid], contours)
@@ -351,7 +339,7 @@ class DicomView(QtWidgets.QWidget):
             # Slicing controls how many points considered for visualization
             # Essentially effects sharpness of edges, fewer points equals "smoother" edges
             for point in contour[::2]:
-                curr_qpoint = QtCore.QPoint(dose_pixluts[0][int(point[0])], dose_pixluts[1][int(point[1])])
+                curr_qpoint = QtCore.QPoint(dose_pixluts[0][int(point[1])], dose_pixluts[1][int(point[0])])
                 list_qpoints.append(curr_qpoint)
             curr_polygon = QtGui.QPolygonF(list_qpoints)
             list_polygons.append(curr_polygon)
@@ -369,7 +357,7 @@ class DicomView(QtWidgets.QWidget):
         :return: QPen object.
         """
         pen = QtGui.QPen(color)
-        pen.setStyle(style)
+        pen.setStyle(QtCore.Qt.PenStyle(style))
         pen.setWidthF(widthF)
         return pen
 

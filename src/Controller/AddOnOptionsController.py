@@ -7,7 +7,7 @@ import csv
 import webbrowser
 from collections import deque
 
-from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
+from PySide6.QtWidgets import QFileDialog, QTableWidgetItem
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
@@ -103,15 +103,15 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.import_organ_csv.clicked.connect(self.import_organs)
 
         # adding the right click menus for each table
-        self.table_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.table_view.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(
             self.on_customContextMenuRequested_Window
         )
-        self.table_organ.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.table_organ.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_organ.customContextMenuRequested.connect(
             self.on_customContextMenuRequested_Organ
         )
-        self.table_volume.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.table_volume.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_volume.customContextMenuRequested.connect(
             self.on_customContextMenuRequested_Volume
         )
@@ -135,7 +135,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     #                                                                                                    #
     ######################################################################################################
     # windowing
-    @QtCore.pyqtSlot(QtCore.QPoint)
+    @QtCore.Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Window(self, pos):
         # gets the position of the right click for the windowing table
         it = self.table_view.itemAt(pos)
@@ -173,7 +173,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_view.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     # standard organ name table
-    @QtCore.pyqtSlot(QtCore.QPoint)
+    @QtCore.Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Organ(self, pos):
         it = self.table_organ.itemAt(pos)
         if it is None:
@@ -206,7 +206,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_organ.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     # standard volume table
-    @QtCore.pyqtSlot(QtCore.QPoint)
+    @QtCore.Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Volume(self, pos):
         it = self.table_volume.itemAt(pos)
         if it is None:

@@ -1,7 +1,7 @@
 import glob
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QPixmap, QIcon
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtGui import QPixmap, QIcon
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -33,7 +33,7 @@ class UIMainWindow:
     If a class needs to trigger one of the actions defined in the ActionHandler, then the instance of the ActionHandler
     itself can safely be passed into the class.
     """
-    pyradi_trigger = QtCore.pyqtSignal(str, dict, str)
+    pyradi_trigger = QtCore.Signal(str, dict, str)
 
     def setup_ui(self, main_window_instance):
         self.main_window_instance = main_window_instance
@@ -147,7 +147,7 @@ class UIMainWindow:
         layout_footer.setContentsMargins(0, 0, 0, 0)
 
         label_footer = QtWidgets.QLabel("@OnkoDICOM 2019-20")
-        label_footer.setAlignment(QtCore.Qt.AlignRight)
+        label_footer.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         layout_footer.addWidget(label_footer)
 

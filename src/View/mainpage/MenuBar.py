@@ -1,7 +1,7 @@
 import webbrowser
 
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6.QtCore import Qt
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -28,7 +28,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.addMenu(self.action_handler.menu_export)
 
         # Help button opens OnkoDICOM website
-        self.action_help = QtWidgets.QAction()
+        self.action_help = QtGui.QAction()
         self.action_help.setText("Help")
         self.action_help.triggered.connect(lambda: webbrowser.open("https://onkodicom.com.au/"))
 
