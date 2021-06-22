@@ -19,8 +19,8 @@ import math
 import re
 from multiprocessing import Queue, Process
 
+import numpy as np
 from dicompylercore import dvhcalc
-from pandas import np
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
