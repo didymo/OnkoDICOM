@@ -6,7 +6,7 @@ class RoiDeleteOptions(QtWidgets.QMainWindow, UIDeleteROIWindow):
     """
     Create the ROI Delete Options class based on the UI from the file in View/ROI Delete Option
     """
-    deleting_rois_structure_tuple = QtCore.pyqtSignal(tuple)  # new PyDicom dataset
+    deleting_rois_structure_tuple = QtCore.Signal(tuple)  # new PyDicom dataset
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDeleteOptions, self).__init__()
@@ -36,7 +36,7 @@ class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
     """
     Create the ROI Draw Options class based on the UI from the file in View/ROI Draw Option
     """
-    signal_roi_drawn = QtCore.pyqtSignal(tuple)
+    signal_roi_drawn = QtCore.Signal(tuple)
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
