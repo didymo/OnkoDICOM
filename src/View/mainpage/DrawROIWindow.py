@@ -4,10 +4,10 @@ import threading
 
 import numpy
 import pydicom
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QPen
-from PyQt5.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon, QPixmap, QColor, QPen
+from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
 import alphashape
 from shapely.geometry import MultiPolygon
@@ -698,7 +698,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_saved = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_saved = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
 
     def __init__(self, *args, **kwargs):
         super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
@@ -738,7 +738,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
 #                                                                                                                   #
 #####################################################################################################################
 class SelectROIPopUp(QDialog):
-    signal_roi_name = QtCore.pyqtSignal(str)
+    signal_roi_name = QtCore.Signal(str)
 
     def __init__(self):
         QDialog.__init__(self)
@@ -920,7 +920,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.accordingColorList.append((x_coord, y_coord, colors))
 
             for x_coord, y_coord, colors in self.accordingColorList:
-                self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba(90, 250, 175, 200)))
+                self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba64(90, 250, 175, 200)))
 
             self.refresh_image()
 
