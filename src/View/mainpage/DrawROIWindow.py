@@ -919,8 +919,10 @@ class Drawing(QtWidgets.QGraphicsScene):
                 colors = QColor(c).getRgbF()
                 self.accordingColorList.append((x_coord, y_coord, colors))
 
+            color = QtGui.QColor()
+            color.setRgb(90, 250, 175, 200)
             for x_coord, y_coord, colors in self.accordingColorList:
-                self.q_image.setPixelColor(x_coord, y_coord, QColor(QtGui.QRgba64.fromRgba64(90, 250, 175, 200)))
+                self.q_image.setPixelColor(x_coord, y_coord, color)
 
             self.refresh_image()
 
