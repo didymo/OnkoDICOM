@@ -1,8 +1,17 @@
-import pytest
-from unittest.mock import MagicMock, Mock
+from unittest import mock
+from unittest.mock import Mock
 
 from PySide6.QtCore import QThreadPool
+
 from src.Model.Worker import Worker
+
+
+class FakeClass:
+    def func_result(self, result):
+        pass
+
+    def func_error(self, error):
+        pass
 
 
 # qtbot is a pytest fixture used to test PyQt5. Part of the pytest-qt plugin.
@@ -56,40 +65,42 @@ def test_worker_no_progress_callback(qtbot):
     func_to_test.assert_called_with("test", 3)
 
 
-def test_worker_result_signal(qtbot):
+def test_worker_result_signal(qtbot, monkeypatch):
     """
     Testing return value of worker's called function through result signal.
     """
-    func_to_test = Mock(return_value=5)
-    func_result = Mock()
+    thing = FakeClass()
+    thing.func_to_test = Mock(return_value=5, unsafe=True)
+    w = Worker(thing.func_to_test, "test", 3)
 
-    w = Worker(func_to_test, "test", 3)
-    w.signals.result.connect(func_result)
+    with mock.patch.object(FakeClass, 'func_result', wraps=thing.func_result) as mock_func_result:
+        w.signals.result.connect(thing.func_result)
+        threadpool = QThreadPool()
+        with qtbot.waitSignal(w.signals.finished) as blocker:
+            threadpool.start(w)
 
-    threadpool = QThreadPool()
-    with qtbot.waitSignal(w.signals.finished) as blocker:
-        threadpool.start(w)
-
-    func_to_test.assert_called_with("test", 3)
-    func_result.assert_called_with(5)
+        thing.func_to_test.assert_called_with("test", 3)
+        mock_func_result.assert_called_with(5)
 
 
 def test_worker_error_signal(qtbot):
     """
     Testing return value of worker's called function through result signal.
     """
-    func_to_test = Mock(side_effect=ValueError())
-    func_error = MagicMock()
 
-    w = Worker(func_to_test, "test", 3)
-    w.signals.error.connect(func_error)
+    thing = FakeClass()
+    thing.func_to_test = Mock(side_effect=ValueError())
 
-    threadpool = QThreadPool()
-    with qtbot.waitSignal(w.signals.finished) as blocker:
-        threadpool.start(w)
+    w = Worker(thing.func_to_test, "test", 3)
 
-    kall = func_error.call_args
-    args, kwargs = kall
-    
-    func_to_test.assert_called_with("test", 3)
-    assert isinstance(args[0][1], ValueError)
+    with mock.patch.object(FakeClass, 'func_error', wraps=thing.func_error):
+        w.signals.error.connect(thing.func_error)
+        threadpool = QThreadPool()
+        with qtbot.waitSignal(w.signals.finished) as blocker:
+            threadpool.start(w)
+
+        kall = thing.func_error.call_args
+        args, kwargs = kall
+
+        thing.func_to_test.assert_called_with("test", 3)
+        assert isinstance(args[0][1], ValueError)
