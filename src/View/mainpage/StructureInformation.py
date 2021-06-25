@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore, QtGui
 
 
 class StructureInformation(object):
@@ -21,7 +21,6 @@ class StructureInformation(object):
 		self.list_info = self.get_struct_info()
 		self.setup_ui()
 
-
 	def setup_ui(self):
 		"""
 		Set up the UI for the Structure Information section.
@@ -37,7 +36,7 @@ class StructureInformation(object):
 
 		# Structure Information: Header
 		label = QtWidgets.QLabel(self.widget)
-		label.setFont(QtGui.QFont("Laksaman", weight=QtGui.QFont.Bold, pointSize=10))
+		label.setFont(QtGui.QFont("Laksaman", pointSize=10, weight=700))
 
 
 		# Structure Information: "Volume"
@@ -132,15 +131,14 @@ class StructureInformation(object):
 		max_dose_unit.setText(_translate("MainWindow", "cGy"))
 		mean_dose_unit.setText(_translate("MainWindow", "cGy"))
 
-
 	def get_struct_info(self):
 		"""
 		Dictionary for all the ROI structures containing information about the volume, the min, max and mean doses.
 
 		:return:
-		 Dictionary where:
-		  - the key is the id of the ROI structure
-		  - the value is a dictionary whose keys are volume, min, max and mean.
+		Dictionary where:
+			- the key is the id of the ROI structure
+			- the value is a dictionary whose keys are volume, min, max and mean.
 		"""
 
 		res = dict()
@@ -158,16 +156,15 @@ class StructureInformation(object):
 				struct_info['max'] = '-'
 				struct_info['mean'] = '-'
 
-
 			# The volume of the ROI is greater than 0
 			else:
 				"""
 				The min dose is the last dose (in cGy) where the percentage of volume
-				 receiving this dose is equal to 100%.
+				receiving this dose is equal to 100%.
 				The mean dose is the last dose (in cGy) where the percentage of volume
-				 receiving this dose is greater than 50%.
+				receiving this dose is greater than 50%.
 				The max dose is the last dose (in cGy) where the percentage of volume
-				 receiving this dose is greater than 0%.
+				receiving this dose is greater than 0%.
 				"""
 				volume_percent = 100 * counts / dvh.volume
 				# index is used as a cursor to get the min, mean and max doses.
@@ -201,8 +198,6 @@ class StructureInformation(object):
 
 		return res
 
-
-
 	def selector_combobox(self):
 		"""
 		:return: Combobox to select the ROI structure.
@@ -227,7 +222,7 @@ class StructureInformation(object):
 		Show the information of the ROI structure selected.
 
 		:param index:
-		 index of the item selected
+		index of the item selected
 		"""
 		_translate = QtCore.QCoreApplication.translate
 

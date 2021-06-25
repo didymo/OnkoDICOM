@@ -8,8 +8,8 @@
 
 import pydicom
 import sys
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import QApplication, QTreeView
+from PySide6 import QtGui
+from PySide6.QtWidgets import QApplication, QTreeView
 import collections
 
 
