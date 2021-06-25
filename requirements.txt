@@ -13,5 +13,6 @@ dataclasses==0.7;python_version=="3.6.*"
 networkx
 pymedphys>=0.35,<=0.37.1
 git+https://github.com/Radiomics/pyradiomics.git
+pytest-qt
 pytest
 pyside6

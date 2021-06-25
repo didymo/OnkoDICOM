@@ -1,7 +1,7 @@
+import pytest
 from unittest.mock import MagicMock, Mock
 
-import pytest
-from PyQt5.QtCore import QThreadPool
+from PySide6.QtCore import QThreadPool
 from src.Model.Worker import Worker
 
 
