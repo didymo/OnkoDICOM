@@ -5,7 +5,7 @@ import numpy as np
 
 import matplotlib.pylab as plt
 from PySide6 import QtWidgets, QtCore, QtGui
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
