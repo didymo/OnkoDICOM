@@ -1,2 +1,0 @@
-PatientID,Gender,Country_of_Birth,AgeAtDiagnosis,DxYear,Histology,ICD10,T_Stage,N_Stage,M_Stage,OverallStage,Tx_Intent,Surgery,Rad,Chemo,Immuno,Brachy,Hormone,Death,CancerDeath,Survival_Duration,LocalControl,DateOfLocalFailure,LC_Duration,RegionalControl,DateOfRegionalFailure,RC_Duration,DistantControl,DateOfDistantFailure,DC_Duration
-2211ac8f-8218-3c91-a898-762b49985c6d,Male,Slovakia,53,2016,9061/3,C62.1,T1,N0,M0,I,Cure,Pri,Adj,No,No,No,No,0,,3.54,0,,3.54,0,,3.54,0,,3.54
