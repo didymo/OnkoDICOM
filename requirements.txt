@@ -7,7 +7,7 @@ pydicom
 country-list
 scikit-image
 fuzzywuzzy
-PyWavelets==0.5.2
+PyWavelets==1.1.1
 dataclasses==0.7;python_version=="3.6.*"
 networkx
 pymedphys>=0.35,<=0.37.1
