@@ -7,34 +7,9 @@ from src.Model.InitialModel import create_initial_model
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.PyradiProgressBar import PyradiExtended
-from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
 from src.Controller.PathHandler import resource_path
-
-class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
-    update_directory = QtCore.Signal(str)
-    go_next_window = QtCore.Signal()
-
-    # Initialisation function to display the UI
-    def __init__(self):
-        QtWidgets.QMainWindow.__init__(self)
-        self.setup_ui(self)
-        self.configured.connect(self.update_new_directory)
-        self.skip_button.clicked.connect(self.go_open_patient_window)
-
-    def update_new_directory(self, new_directory):
-        """
-            Function to update the default directory
-        """
-        self.update_directory.emit(new_directory)
-        self.go_open_patient_window()
-
-    def go_open_patient_window(self):
-        """
-            Function to progress to the OpenPatientWindow
-        """
-        self.go_next_window.emit()
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
@@ -163,10 +138,10 @@ class PyradiProgressBar(QtWidgets.QWidget):
             | QtCore.Qt.WindowTitleHint
             | QtCore.Qt.WindowMinimizeButtonHint
         )
-        qt_rectangle = self.w.frameGeometry()
-        center_point = QtGui.QScreen.availableGeometry(QtWidgets.QApplication.primaryScreen()).center()
-        qt_rectangle.moveCenter(center_point)
-        self.w.move(qt_rectangle.topLeft())
+        qtRectangle = self.w.frameGeometry()
+        centerPoint = QtGui.QScreen.availableGeometry(QtWidgets.QApplication.primaryScreen()).center()
+        qtRectangle.moveCenter(centerPoint)
+        self.w.move(qtRectangle.topLeft())
         self.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))
 
         self.setGeometry(300, 300, 460, 100)

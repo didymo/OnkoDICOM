@@ -23,7 +23,7 @@ class UIOpenPatientWindow(object):
             self.stylesheet_path = "src/res/stylesheet.qss"
         else:
             self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
-
+        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("src/res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         open_patient_window_instance.setObjectName("OpenPatientWindowInstance")
@@ -38,7 +38,7 @@ class UIOpenPatientWindow(object):
         self.open_patient_directory_prompt = QLabel()
         self.open_patient_directory_prompt.setObjectName("OpenPatientDirectoryPrompt")
         self.open_patient_directory_prompt.setAlignment(Qt.AlignLeft)
-        self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_directory_prompt)
+        self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_directory_prompt);
 
         # Create a horizontal box to hold the input box for the directory and the choose button
         self.open_patient_directory_input_horizontal_box = QHBoxLayout()
@@ -164,9 +164,7 @@ class UIOpenPatientWindow(object):
         open_patient_window_instance.setCentralWidget(self.open_patient_window_instance_central_widget)
 
         # Set the current stylesheet to the instance and connect it back to the caller through slot
-        _stylesheet = open(resource_path(self.stylesheet_path)).read()
-        open_patient_window_instance.setStyleSheet(_stylesheet)
-
+        open_patient_window_instance.setStyleSheet(stylesheet)
         QtCore.QMetaObject.connectSlotsByName(open_patient_window_instance)
 
     def retranslate_ui(self, open_patient_window_instance):
@@ -336,9 +334,6 @@ class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
         if urls and urls[0].scheme() == 'file':
             # Removes the doubled intro slash
             dicom_file_path = str(urls[0].path())[1:]
-            # add / for not Windows machines
-            if platform.system() != 'Windows':
-                dicom_file_path = "/" + dicom_file_path
             # Pastes the directory into the text field
             self.setText(dicom_file_path)
             UIOpenPatientWindow.scan_directory_for_patient(self.parent_window)

@@ -6,7 +6,6 @@ import platform
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QFont
 
-from src.Model.Configuration import Configuration
 from src.Controller.TopLevelController import Controller
 warnings.filterwarnings("ignore")
 
@@ -36,19 +35,11 @@ if __name__ == "__main__":
     elif platform.system() == 'Darwin':
         f = QFont("Helvetica Neue", 13)
         app.setFont(f)
-
     if len(sys.argv) > 1:
         controller = Controller(default_directory=sys.argv[1])
         controller.show_open_patient()
     else:
-        # Connect to the SQLite database stored in the hidden directory
-        configuration = Configuration()
-        default_dir = configuration.get_default_dir()
-        if default_dir is None:
-            controller = Controller()
-            controller.show_first_time_welcome()
-        else:
-            controller = Controller(default_directory=default_dir)
-            controller.show_welcome()
+        controller = Controller()
+        controller.show_welcome()
 
     sys.exit(app.exec_())
