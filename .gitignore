@@ -7,7 +7,7 @@ venv/
 # Ignore .pyc
 *.pyc
 *.pkl
-src/data/csv/patientHash.csv
+data/csv/patientHash.csv
 Hash_map.csv
 *.pyo
 
