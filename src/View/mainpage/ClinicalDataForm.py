@@ -757,7 +757,7 @@ class Ui_Form(object):
         self.Save_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon_save = QtGui.QIcon()
         icon_save.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/save_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/save_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )

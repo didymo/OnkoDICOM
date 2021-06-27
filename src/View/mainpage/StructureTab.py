@@ -115,14 +115,14 @@ class StructureTab(QtWidgets.QWidget):
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
         icon_roi_delete.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/delete_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/delete_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
 
         icon_roi_draw = QtGui.QIcon()
         icon_roi_draw.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/draw_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/draw_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -250,7 +250,7 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/alert_icon.png")))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/alert_icon.png")))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
         modified_indicator_text = QtWidgets.QLabel("Structures have been modified")

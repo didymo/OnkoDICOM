@@ -15,7 +15,7 @@ class FontService:
 		if(current_os == 'Windows'):
 			path_to_fonts += '\\src\\res\\fonts\\'
 		else:
-			path_to_fonts += '/src/res/fonts/'
+			path_to_fonts += '/res/fonts/'
 		path_to_fonts += current_os
 		print(" *** Importing fonts: *** ")
 		for root, dirs, files in os.walk(path_to_fonts):

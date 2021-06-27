@@ -142,7 +142,7 @@ class PyradiProgressBar(QtWidgets.QWidget):
         centerPoint = QtWidgets.QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         self.w.move(qtRectangle.topLeft())
-        self.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))
+        self.setWindowIcon(QtGui.QIcon(resource_path("res/images/btn-icons/onkodicom_icon.png")))
 
         self.setGeometry(300, 300, 460, 100)
         self.label = QtWidgets.QLabel(self)

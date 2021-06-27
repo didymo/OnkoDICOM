@@ -748,7 +748,7 @@ class Ui_CD_Display(object):
         self.Edit_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon_edit = QtGui.QIcon()
         icon_edit.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/draw_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/draw_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
