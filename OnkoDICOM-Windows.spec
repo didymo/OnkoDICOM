@@ -1,16 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-
-import glob
-import logging
+from PyInstaller.utils.hooks import collect_dynamic_libs
 
 block_cipher = None
 
-# Search the numpy .libs directory for the libopenblas .dll file.
-libopenblas_dll = glob.glob("venv/Lib/site-packages/numpy/.libs/*.dll")[0]
-logging.info("Found libopenblas dll: " + libopenblas_dll)
-
 added_files = [
-    ('src', 'src'),
+    ('res', 'res'),
+    ('data', 'data'),
     ('venv/Lib/site-packages/country_list/country_data', 'country_list/country_data'),
     ('venv/Lib/site-packages/pymedphys/_trf/decode/config.json', 'pymedphys/_trf/decode'),
     ('venv/Lib/site-packages/pymedphys/_imports/imports.py', 'pymedphys/_imports')
@@ -18,7 +13,7 @@ added_files = [
 
 a = Analysis(['main.py'],
              pathex=['venv/Lib/site-packages'],
-             binaries=[(libopenblas_dll, '.')],
+             binaries=collect_dynamic_libs("rtree"),
              datas=added_files,
              hiddenimports=['scipy.spatial.transform._rotation_groups'],
              hookspath=[],
