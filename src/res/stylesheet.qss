@@ -82,6 +82,18 @@ QPushButton[QPushButtonClass="fail-button"]:pressed {
     background-color: #c2160a;
 }
 
+/* First Time Welcome Page */
+QLabel#FirstTimeWelcomeWindowLabel {
+    font-weight: bold;
+    font-size: 18pt;
+}
+QLabel#FirstTimeWelcomeWindowSlogan, QLabel#FirstTimeWelcomeWindowPrompt {
+    font-weight: semi-bold;
+    font-size: 16px;
+}
+QLabel#FirstTimeWelcomeWindowPrompt {
+    padding: 0 8px;
+}
 
 /* Welcome Page */
 QLabel#WelcomeWindowLabel {
