@@ -30,7 +30,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True , icon='src/res/images/icon.ico')
+          console=True , icon='res/images/icon.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
