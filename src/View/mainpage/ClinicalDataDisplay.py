@@ -18,15 +18,15 @@ for i, v in enumerate(countries):
     data.append(countries[v])
 
 # Load the diseases and format them
-with open(resource_path('src/data/ICD10_Topography.csv'), 'r') as f:
+with open(resource_path('data/ICD10_Topography.csv'), 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
     icd.pop(0)
-with open(resource_path('src/data/ICD10_Topography_C.csv'), 'r') as f:
+with open(resource_path('data/ICD10_Topography_C.csv'), 'r') as f:
     reader = csv.reader(f)
     icdc = list(reader)
     icdc.pop(0)
-with open(resource_path('src/data/ICD10_Morphology.csv'), 'r') as f:
+with open(resource_path('data/ICD10_Morphology.csv'), 'r') as f:
     reader = csv.reader(f)
     hist = list(reader)
     hist.pop(0)
