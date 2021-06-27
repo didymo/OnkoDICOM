@@ -49,7 +49,7 @@ def test_check_specific_csv_file_exists():
             )
             assert not was_file_present
             assert not os.path.exists(full_path_to_file)
-            expected_path = test_path.joinpath("src", "data", "csv", csv_filename)
+            expected_path = test_path.joinpath("data", "csv", csv_filename)
             specified_path = pathlib.Path().joinpath(full_path_to_file)
             assert expected_path == specified_path
             os.makedirs(os.path.dirname(specified_path))
@@ -86,7 +86,7 @@ def test_create_hash_csv():
             # print(str(e_info))
 
             csv_filename = "patientHash.csv"
-            expected_path = test_path.joinpath("src", "data", "csv", csv_filename)
+            expected_path = test_path.joinpath("data", "csv", csv_filename)
             # the _create_reidentification_spreadsheet() will fail unless the path is already in place
             # it will not create the directories on its own.
             # so... create the directory in advance for the csv file
