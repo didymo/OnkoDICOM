@@ -165,16 +165,15 @@ class ActionHandler:
             names_ordered.insert(0, names_ordered.pop(old_index))
 
         # Create actions for each windowing item
+        def generate_triggered_handler(text_):
+            def handler(state):
+                self.windowing_handler(state, text_)
+            return handler
         windowing_actions = []
         for name in names_ordered:
             text = str(name)
             action_windowing_item = QtGui.QAction(self.menu_windowing)
-
-            def generate_triggered_handler(text_=text):
-                def handler(state):
-                    self.windowing_handler(state, text_)
-                return handler
-            action_windowing_item.triggered.connect(generate_triggered_handler())
+            action_windowing_item.triggered.connect(generate_triggered_handler(text))
             action_windowing_item.setText(text)
             windowing_actions.append(action_windowing_item)
 

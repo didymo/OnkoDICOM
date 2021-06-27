@@ -76,6 +76,10 @@ class IsodoseTab(QtWidgets.QWidget):
             list_of_doses.append(dose)
 
         # Checkboxes
+        def generate_clicked_handler(text):
+            def handler(state):
+                self.checked_dose(state, text)
+            return handler
         first_iteration = True
         for i in range(10):
             if first_iteration:
@@ -84,7 +88,7 @@ class IsodoseTab(QtWidgets.QWidget):
                 first_iteration = False
             else:
                 checkbox = QtWidgets.QCheckBox("%s %% / %s cGy" % (str(isodose_percentages[i]), str(list_of_doses[i])))
-            checkbox.clicked.connect(lambda state, text=isodose_percentages[i]: self.checked_dose(state, text))
+            checkbox.clicked.connect(generate_clicked_handler(isodose_percentages[i]))
             checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
             list_of_checkboxes.append(checkbox)
 
