@@ -25,35 +25,35 @@ QCheckBox::indicator {
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(./src/res/images/widget-icons/checkbox_unchecked.png);
+    image: url(./res/images/widget-icons/checkbox_unchecked.png);
 }
 
 QCheckBox::indicator:unchecked:hover {
-    image: url(./src/res/images/widget-icons/checkbox_unchecked_hover.png);
+    image: url(./res/images/widget-icons/checkbox_unchecked_hover.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(./src/res/images/widget-icons/checkbox_unchecked_pressed.png);
+    image: url(./res/images/widget-icons/checkbox_unchecked_pressed.png);
 }
 
 QCheckBox::indicator:checked {
-    image: url(./src/res/images/widget-icons/checkbox_checked.png);
+    image: url(./res/images/widget-icons/checkbox_checked.png);
 }
 
 QCheckBox::indicator:checked:hover {
-    image: url(./src/res/images/widget-icons/checkbox_checked_hover.png);
+    image: url(./res/images/widget-icons/checkbox_checked_hover.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(./src/res/images/widget-icons/checkbox_checked_pressed.png);
+    image: url(./res/images/widget-icons/checkbox_checked_pressed.png);
 }
 
 QCheckBox::indicator:indeterminate:hover {
-    image: url(./src/res/images/widget-icons/checkbox_indeterminate_hover.png);
+    image: url(./res/images/widget-icons/checkbox_indeterminate_hover.png);
 }
 
 QCheckBox::indicator:indeterminate:pressed {
-    image: url(./src/res/images/widget-icons/checkbox_indeterminate_pressed.png);
+    image: url(./res/images/widget-icons/checkbox_indeterminate_pressed.png);
 }
 
 QLabel {
@@ -198,32 +198,32 @@ QTreeView::indicator {
     height: 30px;
 }
 QTreeView::indicator:unchecked {
-    image: url('./src/res/images/widget-icons/checkbox_unchecked.png');
+    image: url('./res/images/widget-icons/checkbox_unchecked.png');
 }
 QTreeView::indicator:indeterminate {
-    image: url('./src/res/images/widget-icons/checkbox_indeterminate_checked.png');
+    image: url('./res/images/widget-icons/checkbox_indeterminate_checked.png');
 }
 QTreeView::indicator:checked {
-    image: url('./src/res/images/widget-icons/checkbox_checked.png');
+    image: url('./res/images/widget-icons/checkbox_checked.png');
 }
 QTreeView::branch:has-siblings:!adjoins-item {
-    border-image: url('./src/res/images/qtree/vline.png') 0;
+    border-image: url('./res/images/qtree/vline.png') 0;
 }
 QTreeView::branch:has-siblings:adjoins-item {
-    border-image: url('./src/res/images/qtree/branch-more.png') 0;
+    border-image: url('./res/images/qtree/branch-more.png') 0;
 }
 QTreeView::branch:!has-children:!has-siblings:adjoins-item {
-    border-image: url('./src/res/images/qtree/branch-end.png') 0;
+    border-image: url('./res/images/qtree/branch-end.png') 0;
 }
 QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings {
         border-image: none;
-        image: url('./src/res/images/qtree/expand-tree.png');
+        image: url('./res/images/qtree/expand-tree.png');
 }
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
-        image: url('./src/res/images/qtree/collapse-tree.png');
+        image: url('./res/images/qtree/collapse-tree.png');
 }
 
 
@@ -314,7 +314,7 @@ QComboBox::drop-down, QDateEdit::drop-down {
     width: 21px;
 }
 QComboBox::down-arrow, QDateEdit::down-arrow {
-    image: url('./src/res/images/qcombobox/expand-box.png');
+    image: url('./res/images/qcombobox/expand-box.png');
     width: 15px;
 }
 
@@ -374,11 +374,11 @@ QCalendarWidget QWidget#qt_calendar_navigationbar {
 }
 QCalendarWidget QToolButton#qt_calendar_prevmonth {
     icon-size: 24px;
-    qproperty-icon: url(./src/res/images/qcalendarwidget/left_icon.png);
+    qproperty-icon: url(./res/images/qcalendarwidget/left_icon.png);
 }
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
     icon-size: 24px;
-    qproperty-icon: url(./src/res/images/qcalendarwidget/right_icon.png);
+    qproperty-icon: url(./res/images/qcalendarwidget/right_icon.png);
 }
 
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {

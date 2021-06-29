@@ -30,14 +30,14 @@ class UIAddOnOptions(object):
         self.stylesheet_path = ""
         
         if platform.system() == 'Darwin':
-            self.stylesheet_path = "src/res/stylesheet.qss"
+            self.stylesheet_path = "res/stylesheet.qss"
         else:
-            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
         add_on_options.setMinimumSize(766, 600)
         add_on_options.setStyleSheet(stylesheet)
-        add_on_options.setWindowIcon(QtGui.QIcon(resource_path("src/res/images/btn-icons/onkodicom_icon.png")))
+        add_on_options.setWindowIcon(QtGui.QIcon(resource_path("res/images/btn-icons/onkodicom_icon.png")))
 
         _translate = QtCore.QCoreApplication.translate
         add_on_options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))

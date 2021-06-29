@@ -16,9 +16,9 @@ class RenameROIWindow(QDialog):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
         if platform.system() == 'Darwin':
-            self.stylesheet_path = "src/res/stylesheet.qss"
+            self.stylesheet_path = "res/stylesheet.qss"
         else:
-            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         self.setStyleSheet(stylesheet)
 
@@ -34,7 +34,7 @@ class RenameROIWindow(QDialog):
         self.setMinimumSize(300, 90)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
+        self.icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Enter a new name:")
