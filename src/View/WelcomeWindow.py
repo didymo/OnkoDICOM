@@ -8,12 +8,12 @@ class UIWelcomeWindow(object):
     # the ui constructor function
     def setup_ui(self, welcome_window_instance):
         if platform.system() == 'Darwin':
-            self.stylesheet_path = "src/res/stylesheet.qss"
+            self.stylesheet_path = "res/stylesheet.qss"
         else:
-            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QtGui.QIcon()
-        window_icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
+        window_icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_window_instance.setObjectName("WelcomeWindowInstance")
         welcome_window_instance.setWindowIcon(window_icon)
         welcome_window_instance.setFixedSize(840, 530)
@@ -25,7 +25,7 @@ class UIWelcomeWindow(object):
         # Set up the Logo Holder for the Welcome Window
         self.logo_holder = QtWidgets.QHBoxLayout()
         self.welcome_window_logo = QtWidgets.QLabel()
-        self.welcome_window_logo.setPixmap(QtGui.QPixmap(resource_path("src/res/images/image.png")))
+        self.welcome_window_logo.setPixmap(QtGui.QPixmap(resource_path("res/images/image.png")))
         self.welcome_window_logo.setScaledContents(True)
         self.welcome_window_logo.setObjectName("WelcomeWindowLogo")
         self.welcome_window_logo.setFixedSize(480, 260)

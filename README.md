@@ -1,4 +1,4 @@
-<p align="center"><img src="src/res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250"></p>
+<p align="center"><img src="res/images/onkodicom_main_banner.png?raw=true" alt="main-icon-onko-dicom" width="250"></p>
 
 # Onko
 OnkoDICOM is an Open Source DICOM-RT viewer with enhanced capabilities that make it useful for research in the field of Radiation Oncology. It was created with Radiation Oncologists to allow Radiation Oncologists to do research on DICOM standard image, but Radiation Therapists and Radiation Physicists will find tools included that are useful when manipulating image sets like DICOM-RT, CT, MRI, and PET.

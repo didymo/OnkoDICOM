@@ -170,7 +170,7 @@ def _check_identity_mapping_file_exists(fileName):
     print("file name:-- ", fileName)  # printing file name
 
     if fileName == "patientHash.csv":
-        data_folder_path = "/src/data/csv/"
+        data_folder_path = "/data/csv/"
         cwd = os.getcwd()  # getting the current working directory
         file_path = (
             cwd + data_folder_path + fileName

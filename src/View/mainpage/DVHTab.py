@@ -185,7 +185,7 @@ class DVHTab(QtWidgets.QWidget):
         modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/alert_icon.png")))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/alert_icon.png")))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
         modified_indicator_text = QtWidgets.QLabel("Contours have been modified since DVH calculation. Some DVHs may "

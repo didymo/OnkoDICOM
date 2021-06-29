@@ -1,0 +1,840 @@
+Code,Description
+A00.0 ,"Cholera due to Vibrio cholerae 01, biovar cholerae"
+A00.1 ,"Cholera due to Vibrio cholerae 01, biovar el tor"
+A00.9 ,"Cholera, unspecified"
+A01.0 ,Typhoid fever
+A01.1 ,Paratyphoid fever A
+A01.2 ,Paratyphoid fever B
+A01.3 ,Paratyphoid fever C
+A01.4 ,"Paratyphoid fever, unspecified"
+A02.0 ,Salmonella gastro-enteritis
+A02.1 ,Salmonella septicaemia
+A02.2 ,Localised Salmonella infections
+A02.8 ,Other specified Salmonella infections
+A02.9 ,"Salmonella infection, unspecified"
+A03.0 ,Shigellosis due to Shigella dysenteriae
+A03.1 ,Shigellosis due to Shigella flexneri
+A03.2 ,Shigellosis due to Shigella boydii
+A03.3 ,Shigellosis due to Shigella sonnei
+A03.8 ,Other shigellosis
+A03.9 ,"Shigellosis, unspecified"
+A04.1 ,Enterotoxigenic Escherichia coli infection
+A04.2 ,Enteroinvasive Escherichia coli infection
+A04.3 ,Enterohaemorrhagic Escherichia coli infection
+A04.4 ,Other intestinal Escherichia coli infections
+A04.5 ,Campylobacter enteritis
+A04.6 ,Enteritis due to Yersinia enterocolitica
+A04.7 ,Enterocolitis due to Clostridium difficile
+A04.8 ,Other specified bacterial intestinal infections
+A04.9 ,"Bacterial intestinal infection, unspecified"
+A05.0 ,Foodborne staphylococcal intoxication
+A05.1 ,Botulism
+A05.2 ,Foodborne Clostridium perfringens [Clostridium welchii] intoxication
+A05.3 ,Foodborne Vibrio parahaemolyticus intoxication
+A05.4 ,Foodborne Bacillus cereus intoxication
+A05.8 ,Other specified bacterial foodborne intoxications
+A05.9 ,"Bacterial foodborne intoxication, unspecified"
+A06.0 ,Acute amoebic dysentery
+A06.1 ,Chronic intestinal amoebiasis
+A06.2 ,Amoebic nondysenteric colitis
+A06.3 ,Amoeboma of intestine
+A06.4 ,Amoebic liver abscess
+A06.5 ,Amoebic lung abscess
+A06.6 ,Amoebic brain abscess
+A06.7 ,Cutaneous amoebiasis
+A06.8 ,Amoebic infection of other sites
+A06.9 ,"Amoebiasis, unspecified"
+A07.0 ,Balantidiasis
+A07.1 ,Giardiasis [lambliasis]
+A07.2 ,Cryptosporidiosis
+A07.3 ,Isosporiasis
+A07.8 ,Other specified protozoal intestinal diseases
+A07.9 ,"Protozoal intestinal disease, unspecified"
+A08.0 ,Rotaviral enteritis
+A08.1 ,Acute gastro-enteropathy due to Norwalk agent
+A08.2 ,Adenoviral enteritis
+A08.3 ,Other viral enteritis
+A08.4 ,"Viral intestinal infection, unspecified"
+A08.5 ,Other specified intestinal infections
+A09   ,Diarrhoea and gastro-enteritis of presumed infectious origin
+A15.0 ,"Tuberculosis of lung, confirmed by sputum microscopy with or without culture"
+A15.1 ,"Tuberculosis of lung, confirmed by culture only"
+A15.2 ,"Tuberculosis of lung, confirmed histologically"
+A15.3 ,"Tuberculosis of lung, confirmed by unspecified means"
+A15.4 ,"Tuberculosis of intrathoracic lymph nodes, confirmed bacteriologically and histologically"
+A15.5 ,"Tuberculosis of larynx, trachea and bronchus, confirmed bacteriologically and histologically"
+A15.6 ,"Tuberculous pleurisy, confirmed bacteriologically and histologically"
+A15.7 ,"Primary respiratory tuberculosis, confirmed bacteriologically and histologically"
+A15.8 ,"Other respiratory tuberculosis, confirmed bacteriologically and histologically"
+A15.9 ,"Respiratory tuberculosis unspecified, confirmed bacteriologically and histologically"
+A16.0 ,"Tuberculosis of lung, bacteriologically and histologically negative"
+A16.1 ,"Tuberculosis of lung, bacteriological and histological examination not done"
+A16.2 ,"Tuberculosis of lung, without mention of bacteriological or histological confirmation"
+A16.3 ,"Tuberculosis of intrathoracic lymph nodes, without mention of bacteriological or histological confirmation"
+A16.4 ,"Tuberculosis of larynx, trachea and bronchus, without mention of bacteriological or histological confirmation"
+A16.5 ,"Tuberculous pleurisy, without mention of bacteriological or histological confirmation"
+A16.7,Primary respiratory tuberculosis without mention of bacteriological or histological confirmation
+A16.8 ,"Other respiratory tuberculosis, without mention of bacteriological or histological confirmation"
+A16.9 ,"Respiratory tuberculosis unspecified, without mention of bacteriological or histological confirmation"
+A17.0,Tuberculous meningitis
+A17.1 ,Meningeal tuberculoma
+A17.8 ,Other tuberculosis of nervous system
+A17.9 ,"Tuberculosis of nervous system, unspecified"
+A18.0 ,Tuberculosis of bones and joints
+A18.1 ,Tuberculosis of genito-urinary system
+A18.2 ,Tuberculous peripheral lymphadenopathy
+A18.3,"Tuberculosis of intestines, peritoneum and mesenteric glands"
+A18.4 ,Tuberculosis of skin and subcutaneous tissue
+A18.5 ,Tuberculosis of eye
+A18.6 ,Tuberculosis of ear
+A18.7 ,Tuberculosis of adrenal glands
+A18.8 ,Tuberculosis of other specified organs
+A19.0 ,Acute miliary tuberculosis of a single specified site
+A19.1 ,Acute miliary tuberculosis of multiple sites
+A19.2 ,"Acute miliary tuberculosis, unspecified"
+A19.8 ,Other miliary tuberculosis
+A19.9 ,"Miliary tuberculosis, unspecified"
+A20.0 ,Bubonic plague
+A20.1 ,Cellulocutaneous plague
+A20.2 ,Pneumonic plague
+A20.3 ,Plague meningitis
+A20.7 ,Septicaemic plague
+A20.8 ,Other forms of plague
+A20.9 ,"Plague, unspecified"
+A21.0 ,Ulceroglandular tularaemia
+A21.1 ,Oculoglandular tularaemia
+A21.2 ,Pulmonary tularaemia
+A21.3 ,Gastro-intestinal tularaemia
+A21.7 ,Generalised tularaemia
+A21.8 ,Other forms of tularaemia
+A21.9 ,"Tularaemia, unspecified"
+A22.0 ,Cutaneous anthrax
+A22.1 ,Pulmonary anthrax
+A22.2 ,Gastro-intestinal anthrax
+A22.7 ,Anthrax septicaemia
+A22.8 ,Other forms of anthrax
+A22.9 ,"Anthrax, unspecified"
+A23.0 ,Brucellosis due to Brucella melitensis
+A23.1 ,Brucellosis due to Brucella abortus
+A23.2 ,Brucellosis due to Brucella suis
+A23.3 ,Brucellosis due to Brucella canis
+A23.8 ,Other brucellosis
+A23.9 ,"Brucellosis, unspecified"
+A24.0 ,Glanders
+A24.1 ,Acute and fulminating melioidosis
+A24.2 ,Subacute and chronic melioidosis
+A24.3 ,Other melioidosis
+A24.4 ,"Melioidosis, unspecified"
+A25.1 ,Streptobacillosis
+A25.9 ,"Rat-bite fever, unspecified"
+A26.0 ,Cutaneous erysipeloid
+A26.7 ,Erysipelothrix septicaemia
+A26.8 ,Other forms of erysipeloid
+A26.9 ,"Erysipeloid, unspecified"
+A27.0 ,Leptospirosis icterohaemorrhagica
+A27.8 ,Other forms of leptospirosis
+A27.9 ,"Leptospirosis, unspecified"
+A28.0 ,Pasteurellosis
+A28.1 ,Cat-scratch disease
+A28.2 ,Extraintestinal yersiniosis
+A28.8 ,"Other specified zoonotic bacterial diseases, not elsewhere classified"
+A28.9 ,"Zoonotic bacterial disease, unspecified"
+A30.0 ,Indeterminate leprosy
+A30.1 ,Tuberculoid leprosy
+A30.2 ,Borderline tuberculoid leprosy
+A30.3 ,Borderline leprosy
+A30.4 ,Borderline lepromatous leprosy
+A30.5 ,Lepromatous leprosy
+A30.8 ,Other forms of leprosy
+A30.9 ,"Leprosy, unspecified"
+A31.0 ,Pulmonary mycobacterial infection
+A31.1 ,Cutaneous mycobacterial infection
+A31.8 ,Other mycobacterial infections
+A31.9 ,"Mycobacterial infection, unspecified"
+A32.0 ,Cutaneous listeriosis
+A32.1 ,Listerial meningitis and meningoencephalitis
+A32.7 ,Listerial septicaemia
+A32.8 ,Other forms of listeriosis
+A32.9 ,"Listeriosis, unspecified"
+A33 ,Tetanus neonatorum
+A34 ,Obstetrical tetanus
+A35 ,Other tetanus
+A36.0 ,Pharyngeal diphtheria
+A36.1 ,Nasopharyngeal diphtheria
+A36.2 ,Laryngeal diphtheria
+A36.3 ,Cutaneous diphtheria
+A36.8 ,Other diphtheria
+A36.9 ,"Diphtheria, unspecified"
+A37.0 ,Whooping cough due to Bordetella pertussis
+A37.1 ,Whooping cough due to Bordetella parapertussis
+A37.8 ,Whooping cough due to other Bordetella species
+A37.9 ,"Whooping cough, unspecified"
+A38 ,Scarlet fever
+A39.0 ,Meningococcal meningitis
+A39.1 ,Waterhouse-Friderichsen syndrome
+A39.2 ,Acute meningococcaemia
+A39.3 ,Chronic meningococcaemia
+A39.4 ,"Meningococcaemia, unspecified"
+A39.5,Meningococcal heart disease
+A39.8 ,Other meningococcal infections
+A39.9 ,"Meningococcal infection, unspecified"
+A40.0 ,"Septicaemia due to streptococcus, group A"
+A40.1 ,"Septicaemia due to streptococcus, group B"
+A40.2 ,"Septicaemia due to streptococcus, group D"
+A40.3 ,Septicaemia due to Streptococcus pneumoniae
+A40.8 ,Other streptococcal septicaemia
+A40.9 ,"Streptococcal septicaemia, unspecified"
+A41.0 ,Septicaemia due to Staphylococcus aureus
+A41.1 ,Septicaemia due to other specified staphylococcus
+A41.2 ,Septicaemia due to unspecified staphylococcus
+A41.3 ,Septicaemia due to Haemophilus influenzae
+A41.4 ,Septicaemia due to anaerobes
+A41.5 ,Septicaemia due to other Gram-negative organisms
+A41.8 ,Other specified septicaemia
+A41.9 ,"Septicaemia, unspecified"
+A42.0 ,Pulmonary actinomycosis
+A42.1 ,Abdominal actinomycosis
+A42.2 ,Cervicofacial actinomycosis
+A42.7 ,Actinomycotic septicaemia
+A42.8 ,Other forms of actinomycosis
+A42.9 ,"Actinomycosis, unspecified"
+A43.0 ,Pulmonary nocardiosis
+A43.1 ,Cutaneous nocardiosis
+A43.8 ,Other forms of nocardiosis
+A43.9 ,"Nocardiosis, unspecified"
+A44.0 ,Systemic bartonellosis
+A44.1 ,Cutaneous and mucocutaneous bartonellosis
+A44.8 ,Other forms of bartonellosis
+A44.9 ,"Bartonellosis, unspecified"
+A46 ,Erysipelas
+A48.0 ,Gas gangrene
+A48.1 ,Legionnaires' disease
+A48.2 ,Nonpneumonic Legionnaires' disease [Pontiac fever]
+A48.3 ,Toxic shock syndrome
+A48.4,Brazilian purpuric fever
+A48.8 ,Other specified bacterial diseases
+A49.0 ,"Staphylococcal infection, unspecified"
+A49.1 ,"Streptococcal infection, unspecified"
+A49.2 ,"Haemophilus influenzae infection, unspecified"
+A49.3 ,"Mycoplasma infection, unspecified"
+A49.8 ,Other bacterial infections of unspecified site
+A49.9 ,"Bacterial infection, unspecified"
+A50.0 ,"Early congenital syphilis, symptomatic"
+A50.1 ,"Early congenital syphilis, latent"
+A50.2 ,"Early congenital syphilis, unspecified"
+A50.3 ,Late congenital syphilitic oculopathy
+A50.4 ,Late congenital neurosyphilis [juvenile neurosyphilis]
+A50.5 ,"Other late congenital syphilis, symptomatic"
+A50.6 ,"Late congenital syphilis, latent"
+A50.7 ,"Late congenital syphilis, unspecified"
+A50.9 ,"Congenital syphilis, unspecified"
+A51.0 ,Primary genital syphilis
+A51.1 ,Primary anal syphilis
+A51.2 ,Primary syphilis of other sites
+A51.3 ,Secondary syphilis of skin and mucous membranes
+A51.4 ,Other secondary syphilis
+A51.5 ,"Early syphilis, latent"
+A51.9 ,"Early syphilis, unspecified"
+A52.0 ,Cardiovascular syphilis
+A52.1 ,Symptomatic neurosyphilis
+A52.2 ,Asymptomatic neurosyphilis
+A52.3 ,"Neurosyphilis, unspecified"
+A52.7 ,Other symptomatic late syphilis
+A52.8 ,"Late syphilis, latent"
+A52.9 ,"Late syphilis, unspecified"
+A53.0 ,"Latent syphilis, unspecified as early or late"
+A53.9 ,"Syphilis, unspecified"
+A54.0 ,Gonococcal infection of lower genito-urinary tract without periurethral or accessory gland abscess
+A54.1 ,Gonococcal infection of lower genito-urinary tract with periurethral and accessory gland abscess
+A54.2 ,Gonococcal pelviperitonitis and other gonococcal genito-urinary infections
+A54.3 ,Gonococcal infection of eye
+A54.4 ,Gonococcal infection of musculoskeletal system
+A54.5 ,Gonococcal pharyngitis
+A54.6 ,Gonococcal infection of anus and rectum
+A54.8 ,Other gonococcal infections
+A54.9 ,"Gonococcal infection, unspecified"
+A55 ,Chlamydial lymphogranuloma (venereum)
+A56.0 ,Chlamydial infection of lower genito-urinary tract
+A56.1 ,Chlamydial infection of pelviperitoneum and other genito-urinary organs
+A56.2 ,"Chlamydial infection of genito-urinary tract, unspecified"
+A56.3 ,Chlamydial infection of anus and rectum
+A56.4 ,Chlamydial infection of pharynx
+A56.8 ,Sexually transmitted chlamydial infection of other sites
+A57 ,Chancroid
+A58 ,Granuloma inguinale
+A59.0 ,Urogenital trichomoniasis
+A59.8,Trichomoniasis of other sites
+A59.9 ,"Trichomoniasis, unspecified"
+A60.0 ,Herpesviral infection of genitalia and urogenital tract
+A60.1 ,Herpesviral infection of perianal skin and rectum
+A60.9 ,"Anogenital herpesviral infection, unspecified"
+A63.0,Anogenital (venereal) warts
+A63.8,Other specified predominantly sexually transmitted diseases
+A64 ,Unspecified sexually transmitted disease
+A65 ,Non-venereal syphilis
+A66.0 ,Initial lesions of yaws
+A66.1 ,Multiple papillomata and wet crab yaws
+A66.2 ,Other early skin lesions of yaws
+A66.3 ,Hyperkeratosis of yaws
+A66.4 ,Gummata and ulcers of yaws
+A66.5 ,Gangosa
+A66.6 ,Bone and joint lesions of yaws
+A66.7 ,Other manifestations of yaws
+A66.8 ,Latent yaws
+A66.9 ,"Yaws, unspecified"
+A67.0 ,Primary lesions of pinta
+A67.1 ,Intermediate lesions of pinta
+A67.2 ,Late lesions of pinta
+A67.3 ,Mixed lesions of pinta
+A67.9 ,"Pinta, unspecified"
+A68.0,Louse-borne relapsing fever
+A68.1 ,Tick-borne relapsing fever
+A68.9 ,"Relapsing fever, unspecified"
+A69.0 ,Necrotising ulcerative stomatitis
+A69.1 ,Other Vincent's infections
+A69.2 ,Lyme disease
+A69.8 ,Other specified spirochaetal infections
+A69.9 ,"Spirochaetal infection, unspecified"
+A70 ,Chlamydia psittaci infection
+A71.0 ,Initial stage of trachoma
+A71.1 ,Active stage of trachoma
+A71.9 ,"Trachoma, unspecified"
+A74.0 ,Chlamydial conjunctivitis
+A74.8 ,Other chlamydial diseases
+A74.9 ,"Chlamydial infection, unspecified"
+A75.0 ,Epidemic louse-borne typhus fever due to Rickettsia prowazekii
+A75.1 ,Recrudescent typhus [Brill's disease]
+A75.2 ,Typhus fever due to Rickettsia typhi
+A75.3,Typhus fever due to Rickettsia tsutsugamushi
+A75.9 ,"Typhus fever, unspecified"
+A77.0 ,Spotted fever due to Rickettsia rickettsii
+A77.1 ,Spotted fever due to Rickettsia conorii
+A77.2 ,Spotted fever due to Rickettsia siberica
+A77.3 ,Spotted fever due to Rickettsia australis
+A77.8 ,Other spotted fevers
+A77.9 ,"Spotted fever, unspecified"
+A78 ,Q fever
+A79.0 ,Trench fever
+A79.1 ,Rickettsialpox due to Rickettsia akari
+A79.8 ,Other specified rickettsioses
+A79.9 ,"Rickettsiosis, unspecified"
+A80.0 ,"Acute paralytic poliomyelitis, vaccine-associated"
+A80.1 ,"Acute paralytic poliomyelitis, wild virus, imported"
+A80.2 ,"Acute paralytic poliomyelitis, wild virus, indigenous"
+A80.3,"Acute paralytic poliomyelitis, other and unspecified"
+A80.4,Acute nonparalytic poliomyelitis
+A80.9 ,"Acute poliomyelitis, unspecified"
+A81.0 ,Creutzfeldt-Jakob disease
+A81.1 ,Subacute sclerosing panencephalitis
+A81.2 ,Progressive multifocal leukoencephalopathy
+A81.8 ,Other atypical virus infections of central nervous system
+A81.9 ,"Atypical virus infection of central nervous system, unspecified"
+A82.0 ,Sylvatic rabies
+A82.1 ,Urban rabies
+A82.9 ,"Rabies, unspecified"
+A83.0 ,Japanese encephalitis
+A83.1 ,Western equine encephalitis
+A83.2 ,Eastern equine encephalitis
+A83.3 ,St. Louis encephalitis
+A83.4 ,Australian encephalitis
+A83.5 ,California encephalitis
+A83.6 ,Rocio virus disease
+A83.8 ,Other mosquito-borne viral encephalitis
+A83.9 ,"Mosquito-borne viral encephalitis, unspecified"
+A84.0 ,Far Eastern tick-borne encephalitis [Russian spring-summer encephalitis]
+A84.1 ,Central European tick-borne encephalitis
+A84.8 ,Other tick-borne viral encephalitis
+A84.9 ,"Tick-borne viral encephalitis, unspecified"
+A85.0 ,Enteroviral encephalitis
+A85.1 ,Adenoviral encephalitis
+A85.2 ,"Arthropod-borne viral encephalitis, unspecified"
+A85.8 ,Other specified viral encephalitis
+A86 ,Unspecified viral encephalitis
+A87.0 ,Enteroviral meningitis
+A87.1 ,Adenoviral meningitis
+A87.2 ,Lymphocytic choriomeningitis
+A87.8 ,Other viral meningitis
+A87.9 ,"Viral meningitis, unspecified"
+A88.0 ,Enteroviral exanthematous fever [Boston exanthem]
+A88.1 ,Epidemic vertigo
+A88.8 ,Other specified viral infections of central nervous system
+A89 ,Unspecified viral infection of central nervous system
+A90 ,Dengue fever [classical dengue]
+A91 ,Dengue haemorrhagic fever
+A92.0 ,Chikungunya virus disease
+A92.1 ,O'nyong-nyong fever
+A92.2 ,Venezuelan equine fever
+A92.3 ,West Nile fever
+A92.4 ,Rift Valley fever
+A92.8 ,Other specified mosquito-borne viral fevers
+A92.9 ,"Mosquito-borne viral fever, unspecified"
+A93.1 ,Sandfly fever
+A93.2 ,Colorado tick fever
+A93.8 ,Other specified arthropod-borne viral fevers
+A94 ,Unspecified arthropod-borne viral fever
+A95.0 ,Sylvatic yellow fever
+A95.1 ,Urban yellow fever
+A95.9 ,"Yellow fever, unspecified"
+A96.0 ,Junin haemorrhagic fever
+A96.1 ,Machupo haemorrhagic fever
+A96.2 ,Lassa fever
+A96.8 ,Other arenaviral haemorrhagic fevers
+A96.9 ,"Arenaviral haemorrhagic fever, unspecified"
+A98.0 ,Crimean-Congo haemorrhagic fever
+A98.1 ,Omsk haemorrhagic fever
+A98.2 ,Kyasanur Forest disease
+A98.3 ,Marburg virus disease
+A98.4 ,Ebola virus disease
+A98.5 ,Haemorrhagic fever with renal syndrome
+A98.8 ,Other specified viral haemorrhagic fevers
+A99 ,Unspecified viral haemorrhagic fever
+D00.0 ,"Lip, oral cavity and pharynx"
+D00.1 ,Oesophagus
+D00.2 ,Stomach
+D01.0 ,Colon
+D01.1 ,Rectosigmoid junction
+D01.2 ,Rectum
+D01.3 ,Anus and anal canal
+D01.4 ,Other and unspecified parts of intestine
+D01.5 ,"Liver, gallbladder and bile ducts"
+D01.7,Other specified digestive organs
+D01.9 ,"Digestive organ, unspecified"
+D02.0 ,Larynx
+D02.1 ,Trachea
+D02.2 ,Bronchus and lung
+D02.3 ,Other parts of respiratory system
+D02.4 ,"Respiratory system, unspecified"
+D03.0 ,Melanoma in situ of lip
+D03.1 ,"Melanoma in situ of eyelid, including canthus"
+D03.2 ,Melanoma in situ of ear and external auricular canal
+D03.3,Melanoma in situ of other and unspecified parts of face
+D03.4 ,Melanoma in situ of scalp and neck
+D03.5,Melanoma in situ of trunk
+D03.6 ,"Melanoma in situ of upper limb, including shoulder"
+D03.7 ,"Melanoma in situ of lower limb, including hip"
+D03.8 ,Melanoma in situ of other sites
+D03.9 ,"Melanoma in situ, unspecified"
+D04.0 ,Skin of lip
+D04.1 ,"Skin of eyelid, including canthus"
+D04.2 ,Skin of ear and external auricular canal
+D04.3 ,Skin of other and unspecified parts of face
+D04.4 ,Skin of scalp and neck
+D04.5 ,Skin of trunk
+D04.6 ,"Skin of upper limb, including shoulder"
+D04.7 ,"Skin of lower limb, including hip"
+D04.8 ,Skin of other sites
+D04.9 ,"Skin, unspecified"
+D05.0 ,Lobular carcinoma in situ
+D05.1 ,Intraductal carcinoma in situ
+D05.7 ,Other carcinoma in situ of breast
+D05.9 ,"Carcinoma in situ of breast, unspecified"
+D06.0 ,Endocervix
+D06.1 ,Exocervix
+D06.7 ,Other parts of cervix
+D06.9 ,"Cervix, unspecified"
+D07.0 ,Endometrium
+D07.1 ,Vulva
+D07.2 ,Vagina
+D07.3 ,Other and unspecified female genital organs
+D07.4 ,Penis
+D07.5 ,Prostate
+D07.6 ,Other and unspecified male genital organs
+D09.0 ,Bladder
+D09.1 ,Other and unspecified urinary organs
+D09.2 ,Eye
+D09.3 ,Thyroid and other endocrine glands
+D09.7 ,Carcinoma in situ of other specified sites
+D09.9 ,"Carcinoma in situ, unspecified"
+D10.0 ,Lip
+D10.1 ,Tongue
+D10.2 ,Floor of mouth
+D10.3 ,Other and unspecified parts of mouth
+D10.4 ,Tonsil
+D10.5 ,Other parts of oropharynx
+D10.6 ,Nasopharynx
+D10.7 ,Hypopharynx
+D10.9 ,"Pharynx, unspecified"
+D12.0 ,Caecum
+D12.1 ,Appendix
+D12.2 ,Ascending colon
+D12.3 ,Transverse colon
+D12.4 ,Descending colon
+D12.5,Sigmoid colon
+D12.6 ,"Colon, unspecified"
+D12.7 ,Rectosigmoid junction
+D12.8 ,Rectum
+D12.9 ,Anus and anal canal
+D13.0 ,Oesophagus
+D13.1 ,Stomach
+D13.2 ,Duodenum
+D13.3 ,Other and unspecified parts of small intestine
+D13.4 ,Liver
+D13.5 ,Extrahepatic bile ducts
+D13.6 ,Pancreas
+D13.7 ,Endocrine pancreas
+D13.9 ,Ill-defined sites within the digestive system
+D14.0 ,"Middle ear, nasal cavity and accessory sinuses"
+D14.1 ,Larynx
+D14.2 ,Trachea
+D14.3 ,Bronchus and lung
+D14.4 ,"Respiratory system, unspecified"
+D15.0 ,Thymus
+D15.1 ,Heart
+D15.2 ,Mediastinum
+D15.7 ,Other specified intrathoracic organs
+D15.9 ,"Intrathoracic organ, unspecified"
+D16.0 ,Scapula and long bones of upper limb
+D16.1 ,Short bones of upper limb
+D16.2 ,Long bones of lower limb
+D16.3 ,Short bones of lower limb
+D16.4 ,Bones of skull and face
+D16.5 ,Lower jaw bone
+D16.6 ,Vertebral column
+D16.7 ,"Ribs, sternum and clavicle"
+D16.8 ,"Pelvic bones, sacrum and coccyx"
+D16.9 ,"Bone and articular cartilage, unspecified"
+D17.0 ,"Benign lipomatous neoplasm of skin and subcutaneous tissue of head, face and neck"
+D17.1 ,Benign lipomatous neoplasm of skin and subcutaneous tissue of trunk
+D17.2 ,Benign lipomatous neoplasm of skin and subcutaneous tissue of limbs
+D17.3 ,Benign lipomatous neoplasm of skin and subcutaneous tissue of other and unspecified sites
+D17.4 ,Benign lipomatous neoplasm of intrathoracic organs
+D17.5 ,Benign lipomatous neoplasm of intra-abdominal organs
+D17.6 ,Benign lipomatous neoplasm of spermatic cord
+D17.7 ,Benign lipomatous neoplasm of other sites
+D17.9 ,"Benign lipomatous neoplasm, unspecified"
+D18.0 ,"Haemangioma, any site"
+D18.1 ,"Lymphangioma, any site"
+D19.0 ,Mesothelial tissue of pleura
+D19.1 ,Mesothelial tissue of peritoneum
+D19.7 ,Mesothelial tissue of other sites
+D19.9 ,"Mesothelial tissue, unspecified"
+D20.0 ,Retroperitoneum
+D20.1 ,Peritoneum
+D21.0 ,"Connective and other soft tissue of head, face and neck"
+D21.1 ,"Connective and other soft tissue of upper limb, including shoulder"
+D21.2 ,"Connective and other soft tissue of lower limb, including hip"
+D21.3 ,Connective and other soft tissue of thorax
+D21.4 ,Connective and other soft tissue of abdomen
+D21.5 ,Connective and other soft tissue of pelvis
+D21.6 ,"Connective and other soft tissue of trunk, unspecified"
+D21.9 ,"Connective and other soft tissue, unspecified"
+D22.0 ,Melanocytic naevi of lip
+D22.1 ,"Melanocytic naevi of eyelid, including canthus"
+D22.2 ,Melanocytic naevi of ear and external auricular canal
+D22.3,Melanocytic naevi of other and unspecified parts of face
+D22.4 ,Melanocytic naevi of scalp and neck
+D22.5 ,Melanocytic naevi of trunk
+D22.6 ,"Melanocytic naevi of upper limb, including shoulder"
+D22.7 ,"Melanocytic naevi of lower limb, including hip"
+D22.9 ,"Melanocytic naevi, unspecified"
+D23.0 ,Skin of lip
+D23.1 ,"Skin of eyelid, including canthus"
+D23.2 ,Skin of ear and external auricular canal
+D23.3 ,Skin of other and unspecified parts of face
+D23.4 ,Skin of scalp and neck
+D23.5 ,Skin of trunk
+D23.6 ,"Skin of upper limb, including shoulder"
+D23.7 ,"Skin of lower limb, including hip"
+D23.9 ,"Skin, unspecified"
+D24 ,Benign neoplasm of breast
+D25.0 ,Submucous leiomyoma of uterus
+D25.1 ,Intramural leiomyoma of uterus
+D25.2 ,Subserosal leiomyoma of uterus
+D25.9 ,"Leiomyoma of uterus, unspecified"
+D26.0 ,Cervix uteri
+D26.1 ,Corpus uteri
+D26.7 ,Other parts of uterus
+D26.9 ,"Uterus, unspecified"
+D27 ,Benign neoplasm of ovary
+D28.0 ,Vulva
+D28.1 ,Vagina
+D28.2 ,Uterine tubes and ligaments
+D28.7 ,Other specified female genital organs
+D28.9 ,"Female genital organ, unspecified"
+D29.0 ,Penis
+D29.1 ,Prostate
+D29.2 ,Testis
+D29.3 ,Epididymis
+D29.4 ,Scrotum
+D29.7 ,Other male genital organs
+D29.9 ,"Male genital organ, unspecified"
+D30.0 ,Kidney
+D30.1 ,Renal pelvis
+D30.2 ,Ureter
+D30.3 ,Bladder
+D30.4 ,Urethra
+D30.7 ,Other urinary organs
+D30.9 ,"Urinary organ, unspecified"
+D31.0 ,Conjunctiva
+D31.1 ,Cornea
+D31.2 ,Retina
+D31.3 ,Choroid
+D31.4 ,Ciliary body
+D31.5 ,Lachrymal gland and duct
+D31.6 ,"Orbit, unspecified"
+D31.9 ,"Eye, unspecified"
+D32.0,Cerebral meninges
+D32.1 ,Spinal meninges
+D32.9 ,"Meninges, unspecified"
+D33.0 ,"Brain, supratentorial"
+D33.1 ,"Brain, infratentorial"
+D33.2,"Brain, unspecified"
+D33.3 ,Cranial nerves
+D33.4 ,Spinal cord
+D33.7 ,Other specified parts of central nervous system
+D33.9 ,"Central nervous system, unspecified"
+D34 ,Benign neoplasm of thyroid gland
+D35.0 ,Adrenal gland
+D35.1 ,Parathyroid gland
+D35.2 ,Pituitary gland
+D35.3 ,Craniopharyngeal duct
+D35.4 ,Pineal gland
+D35.5 ,Carotid body
+D35.6 ,Aortic body and other paraganglia
+D35.7 ,Other specified endocrine glands
+D35.8 ,Pluriglandular involvement
+D35.9 ,"Endocrine gland, unspecified"
+D36.0 ,Lymph nodes
+D36.1 ,Peripheral nerves and autonomic nervous system
+D36.7 ,Other specified sites
+D36.9 ,Benign neoplasm of unspecified site
+D37.0 ,"Lip, oral cavity and pharynx"
+D37.1 ,Stomach
+D37.2 ,Small intestine
+D37.3 ,Appendix
+D37.4 ,Colon
+D37.5 ,Rectum
+D37.6 ,"Liver, gallbladder and bile ducts"
+D37.7 ,Other digestive organs
+D37.9 ,"Digestive organ, unspecified"
+D38.0 ,Larynx
+D38.1 ,"Trachea, bronchus and lung"
+D38.2 ,Pleura
+D38.3 ,Mediastinum
+D38.4 ,Thymus
+D38.5 ,Other respiratory organs
+D38.6 ,"Respiratory organ, unspecified"
+D39.0 ,Uterus
+D39.1 ,Ovary
+D39.2 ,Placenta
+D39.7 ,Other female genital organs
+D39.9 ,"Female genital organ, unspecified"
+D40.0 ,Prostate
+D40.1 ,Testis
+D40.7 ,Other male genital organs
+D40.9 ,"Male genital organ, unspecified"
+D41.0 ,Kidney
+D41.1 ,Renal pelvis
+D41.2 ,Ureter
+D41.3 ,Urethra
+D41.4 ,Bladder
+D41.7 ,Other urinary organs
+D41.9 ,"Urinary organ, unspecified"
+D42.0 ,Cerebral meninges
+D42.1 ,Spinal meninges
+D42.9 ,"Meninges, unspecified"
+D43.0 ,"Brain, supratentorial"
+D43.1 ,"Brain, infratentorial"
+D43.2 ,"Brain, unspecified"
+D43.3 ,Cranial nerves
+D43.4 ,Spinal cord
+D43.7 ,Other parts of central nervous system
+D43.9 ,"Central nervous system, unspecified"
+D44.0 ,Thyroid gland
+D44.1 ,Adrenal gland
+D44.2 ,Parathyroid gland
+D44.3 ,Pituitary gland
+D44.4 ,Craniopharyngeal duct
+D44.5 ,Pineal gland
+D44.6 ,Carotid body
+D44.7 ,Aortic body and other paraganglia
+D44.8,Pluriglandular involvement
+D44.9 ,"Endocrine gland, unspecified"
+D45 ,Polycythaemia vera
+D46.0 ,"Refractory anaemia without sideroblasts, so stated"
+D46.1 ,Refractory anaemia with sideroblasts
+D46.2 ,Refractory anaemia with excess of blasts
+D46.3 ,Refractory anaemia with excess of blasts with transformation
+D46.4 ,"Refractory anaemia, unspecified"
+D46.7 ,Other myelodysplastic syndromes
+D46.9 ,"Myelodysplastic syndrome, unspecified"
+D47.0 ,Histiocytic and mast cell tumours of uncertain and unknown behaviour
+D47.1 ,Chronic myeloproliferative disease
+D47.2 ,Monoclonal gammopathy
+D47.3 ,Essential (haemorrhagic) thrombocythaemia
+D47.7 ,"Other specified neoplasms of uncertain or unknown behaviour of lymphoid, haematopoietic and related tissue"
+D47.9 ,"Neoplasm of uncertain or unknown behaviour of lymphoid, haematopoietic and related tissue, unspecified"
+D48.0 ,Bone and articular cartilage
+D48.1 ,Connective and other soft tissue
+D48.2 ,Peripheral nerves and autonomic nervous system
+D48.3 ,Retroperitoneum
+D48.4 ,Peritoneum
+D48.5 ,Skin
+D48.6 ,Breast
+D48.7 ,Other specified sites
+D48.9 ,"Neoplasms of uncertain or unknown behaviour, unspecified"
+D50.0 ,Iron deficiency anaemia secondary to blood loss (chronic)
+D50.1 ,Sideropenic dysphagia
+D50.8 ,Other iron deficiency anaemias
+D50.9 ,"Iron deficiency anaemia, unspecified"
+D51 ,Vitamin B12 deficiency anaemia
+D51.0 ,Vitamin B12 deficiency anaemia due to intrinsic factor deficiency
+D51.1 ,Vitamin B12 deficiency anaemia due to selective vitamin B12 malabsorption with proteinuria
+D51.2 ,Transcobalamin II deficiency
+D51.3 ,Other dietary vitamin B12 deficiency anaemia
+D51.8 ,Other vitamin B12 deficiency anaemias
+D51.9 ,"Vitamin B12 deficiency anaemia, unspecified"
+D52.0 ,Dietary folate deficiency anaemia
+D52.1 ,Drug-induced folate deficiency anaemia
+D52.8 ,Other folate deficiency anaemias
+D52.9 ,"Folate deficiency anaemia, unspecified"
+D53.0 ,Protein deficiency anaemia
+D53.1 ,"Other megaloblastic anaemias, not elsewhere classified"
+D53.2 ,Scorbutic anaemia
+D53.8 ,Other specified nutritional anaemias
+D53.9 ,"Nutritional anaemia, unspecified"
+D55.0 ,Anaemia due to glucose-6-phosphate dehydrogenase [G6PD] deficiency
+D55.1 ,Anaemia due to other disorders of glutathione metabolism
+D55.2 ,Anaemia due to disorders of glycolytic enzymes
+D55.3 ,Anaemia due to disorders of nucleotide metabolism
+D55.8 ,Other anaemias due to enzyme disorders
+D55.9 ,"Anaemia due to enzyme disorder, unspecified"
+D56.0 ,Alpha thalassaemia
+D56.1 ,Beta thalassaemia
+D56.2 ,Delta-beta thalassaemia
+D56.3 ,Thalassaemia trait
+D56.4 ,Hereditary persistence of foetal haemoglobin [HPFH]
+D56.8 ,Other thalassaemias
+D56.9 ,"Thalassaemia, unspecified"
+D57.0 ,Sickle-cell anaemia with crisis
+D57.1 ,Sickle-cell anaemia without crisis
+D57.2 ,Double heterozygous sickling disorders
+D57.3 ,Sickle-cell trait
+D57.8 ,Other sickle-cell disorders
+D58.0,Hereditary spherocytosis
+D58.1 ,Hereditary elliptocytosis
+D58.2 ,Other haemoglobinopathies
+D58.8 ,Other specified hereditary haemolytic anaemias
+D58.9 ,"Hereditary haemolytic anaemia, unspecified"
+D59.0 ,Drug-induced autoimmune haemolytic anaemia
+D59.1 ,Other autoimmune haemolytic anaemias
+D59.2 ,Drug-induced nonautoimmune haemolytic anaemia
+D59.3 ,Haemolytic-uraemic syndrome
+D59.4 ,Other nonautoimmune haemolytic anaemias
+D59.5 ,Paroxysmal nocturnal haemoglobinuria [Marchiafava-Micheli]
+D59.6 ,Haemoglobinuria due to haemolysis from other external causes
+D59.8 ,Other acquired haemolytic anaemias
+D59.9,"Acquired haemolytic anaemia, unspecified"
+D60.0 ,Chronic acquired pure red cell aplasia
+D60.1 ,Transient acquired pure red cell aplasia
+D60.8 ,Other acquired pure red cell aplasias
+D60.9 ,"Acquired pure red cell aplasia, unspecified"
+D61.0 ,Constitutional aplastic anaemia
+D61.1 ,Drug-induced aplastic anaemia
+D61.2 ,Aplastic anaemia due to other external agents
+D61.3 ,Idiopathic aplastic anaemia
+D61.8 ,Other specified aplastic anaemias
+D61.9 ,"Aplastic anaemia, unspecified"
+D62 ,Acute posthaemorrhagic anaemia
+D63.0 ,Anaemia in neoplastic disease
+D63.1 ,Anaemia in other chronic diseases classified elsewhere
+D64.0 ,Hereditary sideroblastic anaemia
+D64.1 ,Secondary sideroblastic anaemia due to disease
+D64.2 ,Secondary sideroblastic anaemia due to drugs and toxins
+D64.3 ,Other sideroblastic anaemias
+D64.4 ,Congenital dyserythropoietic anaemia
+D64.8 ,Other specified anaemias
+D64.9 ,"Anaemia, unspecified"
+D65 ,Disseminated intravascular coagulation [defibrination syndrome]
+D66 ,Hereditary factor VIII deficiency
+D67 ,Hereditary factor IX deficiency
+D68.0 ,Von Willebrand's disease
+D68.1 ,Hereditary factor XI deficiency
+D68.2 ,Hereditary deficiency of other clotting factors
+D68.3 ,Haemorrhagic disorder due to circulating anticoagulants
+D68.4 ,Acquired coagulation factor deficiency
+D68.8 ,Other specified coagulation defects
+D68.9 ,"Coagulation defect, unspecified"
+D69.0 ,Allergic purpura
+D69.1 ,Qualitative platelet defects
+D69.2 ,Other nonthrombocytopenic purpura
+D69.3 ,Idiopathic thrombocytopenic purpura
+D69.4 ,Other primary thrombocytopenia
+D69.5 ,Secondary thrombocytopenia
+D69.6 ,"Thrombocytopenia, unspecified"
+D69.8 ,Other specified haemorrhagic conditions
+D69.9 ,"Haemorrhagic condition, unspecified"
+D70 ,Agranulocytosis
+D71 ,Functional disorders of polymorphonuclear neutrophils
+D72.0 ,Genetic anomalies of leukocytes
+D72.1 ,Eosinophilia
+D72.8 ,Other specified disorders of white blood cells
+D72.9 ,"Disorder of white blood cells, unspecified"
+D73.0 ,Hyposplenism
+D73.1 ,Hypersplenism
+D73.2 ,Chronic congestive splenomegaly
+D73.3 ,Abscess of spleen
+D73.4 ,Cyst of spleen
+D73.5 ,Infarction of spleen
+D73.8 ,Other diseases of spleen
+D73.9 ,"Disease of spleen, unspecified"
+D74.0 ,Congenital methaemoglobinaemia
+D74.8 ,Other methaemoglobinaemias
+D74.9 ,"Methaemoglobinaemia, unspecified"
+D75.0 ,Familial erythrocytosis
+D75.1 ,Secondary polycythaemia
+D75.2 ,Essential thrombocytosis
+D75.8 ,Other specified diseases of blood and blood-forming organs
+D75.9 ,"Disease of blood and blood-forming organs, unspecified"
+D76.0 ,"Langerhans' cell histiocytosis, not elsewhere classified"
+D76.1 ,Haemophagocytic lymphohistiocytosis
+D76.2 ,"Haemophagocytic syndrome, infection-associated"
+D76.3 ,Other histiocytosis syndromes
+D77 ,Other disorders of blood and blood-forming organs in diseases classified elsewhere
+D80.0 ,Hereditary hypogammaglobulinaemia
+D80.1 ,Nonfamilial hypogammaglobulinaemia
+D80.2 ,Selective deficiency of immunoglobulin A [IgA]
+D80.3 ,Selective deficiency of immunoglobulin G [IgG] subclasses
+D80.4 ,Selective deficiency of immunoglobulin M [IgM]
+D80.5 ,Immunodeficiency with increased immunoglobulin M [IgM]
+D80.6 ,Antibody deficiency with near-normal immunoglobulins or with hyperimmunoglobulinaemia
+D80.7 ,Transient hypogammaglobulinaemia of infancy
+D80.8 ,Other immunodeficiencies with predominantly antibody defects
+D80.9 ,"Immunodeficiency with predominantly antibody defects, unspecified"
+D81.0 ,Severe combined immunodeficiency [SCID] with reticular dysgenesis
+D81.1 ,Severe combined immunodeficiency [SCID] with low T- and B-cell numbers
+D81.2 ,Severe combined immunodeficiency [SCID] with low or normal B-cell numbers
+D81.3 ,Adenosine deaminase [ADA] deficiency
+D81.4 ,Nezelof's syndrome
+D81.5,Purine nucleoside phosphorylase [PNP] deficiency
+D81.6 ,Major histocompatibility complex class I deficiency
+D81.7 ,Major histocompatibility complex class II deficiency
+D81.8 ,Other combined immunodeficiencies
+D81.9 ,"Combined immunodeficiency, unspecified"
+D82.0 ,Wiskott-Aldrich syndrome
+D82.1 ,Di George's syndrome
+D82.2 ,Immunodeficiency with short-limbed stature
+D82.3 ,Immunodeficiency following hereditary defective response to Epstein-Barr virus
+D82.4 ,Hyperimmunoglobulin E [IgE] syndrome
+D82.8 ,Immunodeficiency associated with other specified major defects
+D82.9 ,"Immunodeficiency associated with major defect, unspecified"
+D83.0 ,Common variable immunodeficiency with predominant abnormalities of B-cell numbers and function
+D83.1 ,Common variable immunodeficiency with predominant immunoregulatory T-cell disorders
+D83.2 ,Common variable immunodeficiency with autoantibodies to B- or T-cells
+D83.8 ,Other common variable immunodeficiencies
+D83.9 ,"Common variable immunodeficiency, unspecified"
+D84.0 ,Lymphocyte function antigen-1 [LFA-1] defect
+D84.1 ,Defects in the complement system
+D84.8 ,Other specified immunodeficiencies
+D84.9 ,"Immunodeficiency, unspecified"
+D86.0 ,Sarcoidosis of lung
+D86.1 ,Sarcoidosis of lymph nodes
+D86.2 ,Sarcoidosis of lung with sarcoidosis of lymph nodes
+D86.3 ,Sarcoidosis of skin
+D86.8 ,Sarcoidosis of other and combined sites
+D86.9,"Sarcoidosis, unspecified"
+D89.0 ,Polyclonal hypergammaglobulinaemia
+D89.1 ,Cryoglobulinaemia
+D89.2 ,"Hypergammaglobulinaemia, unspecified"
+D89.8,"Other specified disorders involving the immune mechanism, not elsewhere classified"
+D89.9,"Disorder involving the immune mechanism, unspecified"

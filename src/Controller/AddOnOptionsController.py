@@ -25,7 +25,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
         # read configuration file for line and fill options
-        with open(resource_path("src/data/line&fill_configuration"), "r") as stream:
+        with open(resource_path("data/line&fill_configuration"), "r") as stream:
             elements = stream.readlines()
             # if file is not empty, each line represents the last saved configuration in the given order
             if len(elements) > 0:
@@ -296,7 +296,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     def accepting(self):
         # starting save
         # Saving the Windowing options
-        with open(resource_path("src/data/csv/imageWindowing.csv"), "w", newline="") as stream:
+        with open(resource_path("data/csv/imageWindowing.csv"), "w", newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Organ", "Scan", "Window", "Level"])
             for row in range(self.table_view.rowCount()):
@@ -309,7 +309,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # saving the Standard Organ names
-        with open(resource_path("src/data/csv/organName.csv"), "w", newline="") as stream:
+        with open(resource_path("data/csv/organName.csv"), "w", newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
             for row in range(self.table_organ.rowCount()):
@@ -322,7 +322,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # Saving the Standard Volume Names
-        with open(resource_path("src/data/csv/volumeName.csv"), "w", newline="") as stream:
+        with open(resource_path("data/csv/volumeName.csv"), "w", newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_volume.rowCount()):
                 rowdata = []
@@ -348,7 +348,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         #         writer.writerow(rowdata)
 
         # save configuration file
-        with open(resource_path("src/data/line&fill_configuration"), "w") as stream:
+        with open(resource_path("data/line&fill_configuration"), "w") as stream:
             stream.write(str(self.line_style_ROI.currentIndex()))
             stream.write("\n")
             stream.write(str(self.opacity_ROI.value()))
@@ -376,7 +376,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     def fillTables(self):
         # Fill the Windowing table
-        with open(resource_path("src/data/csv/imageWindowing.csv"), "r") as fileInput:
+        with open(resource_path("data/csv/imageWindowing.csv"), "r") as fileInput:
             next(fileInput)
             i = 0
             for row in fileInput:
@@ -392,7 +392,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # organ names table
-        with open(resource_path("src/data/csv/organName.csv"), "r") as fileInput:
+        with open(resource_path("data/csv/organName.csv"), "r") as fileInput:
             next(fileInput)
             i = 0
             for row in fileInput:
@@ -409,7 +409,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("src/data/csv/volumeName.csv"), "r") as fileInput:
+        with open(resource_path("data/csv/volumeName.csv"), "r") as fileInput:
             i = 0
             for row in fileInput:
                 items = [
@@ -438,7 +438,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         #         i += 1
 
         # patient hash ID table, which is just for displaying all the patients anonymized byt the software since intallation
-        with open(resource_path("src/data/csv/patientHash.csv"), "r") as fileInput:
+        with open(resource_path("data/csv/patientHash.csv"), "r") as fileInput:
             next(fileInput)
             i = 0
             for row in fileInput:

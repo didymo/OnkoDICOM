@@ -20,15 +20,15 @@ for i, v in enumerate(countries):
     data.append(countries[v])
 
 # reading the csv files containing the available diseases
-with open(resource_path('src/data/ICD10_Topography.csv'), 'r') as f:
+with open(resource_path('data/ICD10_Topography.csv'), 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
     icd.pop(0)
-with open(resource_path('src/data/ICD10_Topography_C.csv'), 'r') as f:
+with open(resource_path('data/ICD10_Topography_C.csv'), 'r') as f:
     reader = csv.reader(f)
     icdc = list(reader)
     icdc.pop(0)
-with open(resource_path('src/data/ICD10_Morphology.csv'), 'r') as f:
+with open(resource_path('data/ICD10_Morphology.csv'), 'r') as f:
     reader = csv.reader(f)
     hist = list(reader)
     hist.pop(0)
@@ -757,7 +757,7 @@ class Ui_Form(object):
         self.Save_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon_save = QtGui.QIcon()
         icon_save.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/save_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/save_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )

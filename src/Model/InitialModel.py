@@ -45,10 +45,10 @@ def create_initial_model():
     patient_dict_container.set("level", level)
 
     # Check to see if the imageWindowing.csv file exists
-    if os.path.exists(resource_path('src/data/csv/imageWindowing.csv')):
+    if os.path.exists(resource_path('data/csv/imageWindowing.csv')):
         # If it exists, read data from file into the self.dict_windowing variable
         dict_windowing = {}
-        with open(resource_path('src/data/csv/imageWindowing.csv'), "r") as fileInput:
+        with open(resource_path('data/csv/imageWindowing.csv'), "r") as fileInput:
             next(fileInput)
             dict_windowing["Normal"] = [window, level]
             for row in fileInput:

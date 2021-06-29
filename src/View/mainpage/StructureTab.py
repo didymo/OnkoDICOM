@@ -97,7 +97,7 @@ class StructureTab(QtWidgets.QWidget):
         """
         Create two lists containing standard organ and standard volume names as set by the Add-On options.
         """
-        with open(resource_path('src/data/csv/organName.csv'), 'r') as f:
+        with open(resource_path('data/csv/organName.csv'), 'r') as f:
             self.standard_organ_names = []
 
             csv_input = csv.reader(f)
@@ -105,7 +105,7 @@ class StructureTab(QtWidgets.QWidget):
             for row in csv_input:
                 self.standard_organ_names.append(row[0])
 
-        with open(resource_path('src/data/csv/volumeName.csv'), 'r') as f:
+        with open(resource_path('data/csv/volumeName.csv'), 'r') as f:
             self.standard_volume_names = []
 
             csv_input = csv.reader(f)
@@ -116,14 +116,14 @@ class StructureTab(QtWidgets.QWidget):
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
         icon_roi_delete.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/delete_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/delete_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
 
         icon_roi_draw = QtGui.QIcon()
         icon_roi_draw.addPixmap(
-            QtGui.QPixmap(resource_path('src/res/images/btn-icons/draw_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/draw_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -251,7 +251,7 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/alert_icon.png")))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/alert_icon.png")))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
         modified_indicator_text = QtWidgets.QLabel("Structures have been modified")

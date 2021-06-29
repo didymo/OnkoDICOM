@@ -204,7 +204,7 @@ class DicomView(QtWidgets.QWidget):
                 polygons = self.patient_dict_container.get("dict_polygons")[roi_name][curr_slice]
 
             color = self.patient_dict_container.get("roi_color_dict")[roi]
-            with open(resource_path('src/data/line&fill_configuration'), 'r') as stream:
+            with open(resource_path('data/line&fill_configuration'), 'r') as stream:
                 elements = stream.readlines()
                 if len(elements) > 0:
                     roi_line = int(elements[0].replace('\n', ''))
@@ -243,7 +243,7 @@ class DicomView(QtWidgets.QWidget):
                     self.patient_dict_container.get("dose_pixluts")[curr_slice_uid], contours)
 
                 brush_color = self.iso_color[sd]
-                with open(resource_path('src/data/line&fill_configuration'), 'r') as stream:
+                with open(resource_path('data/line&fill_configuration'), 'r') as stream:
                     elements = stream.readlines()
                     if len(elements) > 0:
                         iso_line = int(elements[2].replace('\n', ''))
