@@ -1,11 +1,11 @@
 import os
 import platform
 import threading
+import numpy as np
 
 import matplotlib.pylab as plt
-import numpy as np
-from PyQt5 import QtWidgets, QtCore, QtGui
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PySide6 import QtWidgets, QtCore, QtGui
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
@@ -49,13 +49,13 @@ class DVHTab(QtWidgets.QWidget):
 
         self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
-        self.dvh_tab_layout.addWidget(button_export, alignment=QtCore.Qt.AlignRight)
+        self.dvh_tab_layout.addWidget(button_export, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
     def init_layout_no_dvh(self):
         button_calc_dvh = QtWidgets.QPushButton("Calculate DVH")
         button_calc_dvh.clicked.connect(self.prompt_calc_dvh)
 
-        self.dvh_tab_layout.setAlignment(QtCore.Qt.AlignCenter)
+        self.dvh_tab_layout.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
         self.dvh_tab_layout.addWidget(button_calc_dvh)
 
     def clear_layout(self):
@@ -82,12 +82,11 @@ class DVHTab(QtWidgets.QWidget):
                 # Bincenters, obtained from the dvh object, give the x axis values
                 # (Doses originally in Gy unit)
                 bincenters = self.dvh_x_y[roi]['bincenters']
-                #print(self.dvh_x_y[roi])
+                # print(self.dvh_x_y[roi])
 
                 # Counts, obtained from the dvh object, give the y axis values
                 # (values between 0 and dvh.volume)
                 counts = self.dvh_x_y[roi]['counts']
-
 
                 # Color of the line is the same as the color shown in the left column of the window
                 color = self.patient_dict_container.get("roi_color_dict")[roi]
@@ -181,9 +180,9 @@ class DVHTab(QtWidgets.QWidget):
     def display_outdated_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
         self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
-        #self.modified_indicator_widget.setFixedHeight(35)
+        # self.modified_indicator_widget.setFixedHeight(35)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
-        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
+        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
         modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/alert_icon.png")))
@@ -196,12 +195,12 @@ class DVHTab(QtWidgets.QWidget):
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
 
-        self.dvh_tab_layout.addWidget(self.modified_indicator_widget, QtCore.Qt.AlignTop)
+        self.dvh_tab_layout.addWidget(self.modified_indicator_widget, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
 
 class CalculateDVHProgressWindow(QtWidgets.QDialog):
 
-    signal_dvh_calculated = QtCore.pyqtSignal()
+    signal_dvh_calculated = QtCore.Signal()
 
     def __init__(self, *args, **kwargs):
         super(CalculateDVHProgressWindow, self).__init__(*args, **kwargs)

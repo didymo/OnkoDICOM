@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6.QtCore import Qt
 from fuzzywuzzy import process
 
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -8,7 +8,7 @@ from src.View.mainpage.RenameROIWindow import RenameROIWindow
 
 class StructureWidget(QtWidgets.QWidget):
 
-    structure_renamed = QtCore.pyqtSignal(tuple)  # (new_dataset, change_description)
+    structure_renamed = QtCore.Signal(tuple)  # (new_dataset, change_description)
 
     def __init__(self, roi_id, color, text, structure_tab):
         super(StructureWidget, self).__init__()
@@ -32,7 +32,7 @@ class StructureWidget(QtWidgets.QWidget):
         # Create checkbox
         checkbox = QtWidgets.QCheckBox()
         checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
-        checkbox.clicked.connect(lambda state, text_=roi_id: structure_tab.structure_checked(state, text_))
+        checkbox.clicked.connect(self.checkbox_clicked)
         if text in structure_tab.standard_organ_names or text in structure_tab.standard_volume_names:
             self.standard_name = True
             checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
@@ -49,6 +49,9 @@ class StructureWidget(QtWidgets.QWidget):
         self.layout.setAlignment(Qt.AlignLeft)
 
         self.setLayout(self.layout)
+
+    def checkbox_clicked(self, checked):
+        self.structure_tab.structure_checked(checked, self.roi_id)
 
     def roi_suggestions(self):
         """

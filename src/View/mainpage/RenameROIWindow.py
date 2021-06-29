@@ -1,6 +1,6 @@
 import pydicom
-from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
+from PySide6 import QtGui, QtWidgets, QtCore
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
 
 from src.Model import ROI
 from src.Controller.PathHandler import resource_path
@@ -129,7 +129,7 @@ class RenameROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_renamed = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_renamed = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
 
     def __init__(self, *args, **kwargs):
         super(RenameROIProgressWindow, self).__init__(*args, **kwargs)

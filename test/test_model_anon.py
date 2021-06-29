@@ -4,13 +4,10 @@ Created on Fri Aug  21 12:33:04 2020
 @author: sjswerdloff
 """
 
-import logging
 import os
 import pathlib
 import tempfile
-
 import pytest
-from pydicom import dataset
 
 from src.Model.Anon import (
     _check_identity_mapping_file_exists,
@@ -40,8 +37,6 @@ def test_check_specific_csv_file_exists():
         with tempfile.TemporaryDirectory() as tmpdir:
             test_path = pathlib.Path()
             test_path = test_path.joinpath(tmpdir)
-            # csv_path = pathlib.Path.joinpath(test_path, "csv")
-            # pathlib.os.mkdir(csv_path)
             os.chdir(test_path)
             csv_filename = "patientHash.csv"
             was_file_present, full_path_to_file = _check_identity_mapping_file_exists(
@@ -60,7 +55,7 @@ def test_check_specific_csv_file_exists():
             )
             assert was_file_present
             assert os.path.exists(full_path_to_file)
-
+            os.chdir(orig_cwd_path)
     finally:
         os.chdir(orig_cwd_path)
 
@@ -116,7 +111,9 @@ def test_create_hash_csv():
             )
             f = open(expected_path, mode="r")
             lines = f.readlines()
+            f.close()
             # attempt to add a duplicate row does not result in an additional row
             assert 3 == len(lines)
+            os.chdir(orig_cwd_path)
     finally:
         os.chdir(orig_cwd_path)

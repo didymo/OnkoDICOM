@@ -1,8 +1,8 @@
 import pydicom
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidget, \
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QTreeWidget, \
     QTreeWidgetItem, QMessageBox, QAbstractItemView, QSizePolicy
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
@@ -324,7 +324,7 @@ class DeleteROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_deleted = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_deleted = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
 
     def __init__(self, *args, **kwargs):
         super(DeleteROIProgressWindow, self).__init__(*args, **kwargs)

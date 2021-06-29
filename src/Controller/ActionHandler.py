@@ -1,4 +1,4 @@
-from PyQt5 import QtGui, QtWidgets, QtCore
+from PySide6 import QtGui, QtWidgets, QtCore
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -27,7 +27,7 @@ class ActionHandler:
             QtGui.QPixmap(resource_path("res/images/btn-icons/open_patient_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On)
-        self.action_open = QtWidgets.QAction()
+        self.action_open = QtGui.QAction()
         self.action_open.setIcon(self.icon_open)
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
@@ -39,7 +39,7 @@ class ActionHandler:
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_save_structure = QtWidgets.QAction()
+        self.action_save_structure = QtGui.QAction()
         self.action_save_structure.setIcon(self.icon_save_structure)
         self.action_save_structure.setText("Save RTSTRUCT changes")
         self.action_save_structure.setIconVisibleInMenu(True)
@@ -52,13 +52,13 @@ class ActionHandler:
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_save_as_anonymous = QtWidgets.QAction()
+        self.action_save_as_anonymous = QtGui.QAction()
         self.action_save_as_anonymous.setIcon(self.icon_save_as_anonymous)
         self.action_save_as_anonymous.setText("Save as Anonymous")
         self.action_save_as_anonymous.triggered.connect(self.anonymization_handler)
 
         # Exit action
-        self.action_exit = QtWidgets.QAction()
+        self.action_exit = QtGui.QAction()
         self.action_exit.setText("Exit")
         self.action_exit.triggered.connect(self.action_exit_handler)
 
@@ -69,7 +69,7 @@ class ActionHandler:
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_zoom_out = QtWidgets.QAction()
+        self.action_zoom_out = QtGui.QAction()
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
@@ -82,7 +82,7 @@ class ActionHandler:
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_zoom_in = QtWidgets.QAction()
+        self.action_zoom_in = QtGui.QAction()
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
@@ -95,7 +95,7 @@ class ActionHandler:
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_transect = QtWidgets.QAction()
+        self.action_transect = QtGui.QAction()
         self.action_transect.setIcon(self.icon_transect)
         self.action_transect.setIconVisibleInMenu(True)
         self.action_transect.setText("Transect")
@@ -108,24 +108,24 @@ class ActionHandler:
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_add_ons = QtWidgets.QAction()
+        self.action_add_ons = QtGui.QAction()
         self.action_add_ons.setIcon(self.icon_add_ons)
         self.action_add_ons.setIconVisibleInMenu(True)
         self.action_add_ons.setText("Add-On Options")
         self.action_add_ons.triggered.connect(self.add_on_options_handler)
 
         # Export Clinical Data Action
-        self.action_clinical_data_export = QtWidgets.QAction()
+        self.action_clinical_data_export = QtGui.QAction()
         self.action_clinical_data_export.setText("Export Clinical Data")
         # TODO self.action_clinical_data_export.triggered.connect(clinical data check)
 
         # Export Pyradiomics Action
-        self.action_pyradiomics_export = QtWidgets.QAction()
+        self.action_pyradiomics_export = QtGui.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
         self.action_pyradiomics_export.triggered.connect(self.pyradiomics_export_handler)
 
         # Export DVH Action
-        self.action_dvh_export = QtWidgets.QAction()
+        self.action_dvh_export = QtGui.QAction()
         self.action_dvh_export.setText("Export DVH")
         self.action_dvh_export.triggered.connect(self.export_dvh_handler)
 
@@ -165,13 +165,15 @@ class ActionHandler:
             names_ordered.insert(0, names_ordered.pop(old_index))
 
         # Create actions for each windowing item
+        def generate_triggered_handler(text_):
+            def handler(state):
+                self.windowing_handler(state, text_)
+            return handler
         windowing_actions = []
         for name in names_ordered:
             text = str(name)
-            action_windowing_item = QtWidgets.QAction(self.menu_windowing)
-            action_windowing_item.triggered.connect(
-                lambda state, text=name: self.windowing_handler(state, text)
-            )
+            action_windowing_item = QtGui.QAction(self.menu_windowing)
+            action_windowing_item.triggered.connect(generate_triggered_handler(text))
             action_windowing_item.setText(text)
             windowing_actions.append(action_windowing_item)
 

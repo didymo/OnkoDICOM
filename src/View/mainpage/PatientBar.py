@@ -1,8 +1,9 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QHBoxLayout, QWidget, QLabel, QSizePolicy
+from PySide6 import QtWidgets, QtGui
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.PathHandler import resource_path
+
 
 class PatientBar(QtWidgets.QWidget):
     def __init__(self):

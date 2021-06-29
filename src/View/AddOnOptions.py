@@ -1,6 +1,7 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
 import platform
+
 
 class UIAddOnOptions(object):
     """
@@ -71,8 +72,8 @@ class UIAddOnOptions(object):
         self.option_layout = QtWidgets.QGridLayout(self.option_widget)
         self.option_layout.setContentsMargins(5, 5, 5, 5)
         self.option_layout.setHorizontalSpacing(10)
-        fixed_spacer = QtWidgets.QSpacerItem(70, 70, hPolicy=QtWidgets.QSizePolicy.Expanding,
-                                             vPolicy=QtWidgets.QSizePolicy.Fixed)
+        fixed_spacer = QtWidgets.QSpacerItem(70, 70, hData=QtWidgets.QSizePolicy.Expanding,
+                                             vData=QtWidgets.QSizePolicy.Fixed)
         self.option_layout.addItem(fixed_spacer, 0, 0, 1, 3)
 
         # Add Table Widgets
@@ -312,7 +313,7 @@ class WindowingOptions(object):
         self.window.table_view.setVisible(False)
 
         #removing the ability to edit tables with immediate click
-        self.window.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
 
 class StandardOrganOptions(object):
@@ -370,7 +371,7 @@ class StandardOrganOptions(object):
         self.window.table_organ.verticalHeader().hide()
 
         # Removing the ability to edit tables with immediate click
-        self.window.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_organ.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
 
 class StandardVolumeOptions(object):
@@ -412,7 +413,7 @@ class StandardVolumeOptions(object):
         self.window.table_volume.setVisible(False)
 
         # Removing the ability to edit tables with immediate click
-        self.window.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
 
 class RoiFromIsodoseOptions(object):
@@ -456,7 +457,7 @@ class RoiFromIsodoseOptions(object):
         self.window.table_roi.setVisible(False)
 
         # Removing the ability to edit tables with immediate click
-        self.window.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
 
 class PatientHashId(object):
@@ -487,7 +488,7 @@ class PatientHashId(object):
         patient_hash_id_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.window.table_Ids.setVisible(False)
         #removing the ability to edit tables with immediate click
-        self.window.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
     def create_note(self):
         """

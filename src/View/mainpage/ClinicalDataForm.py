@@ -6,9 +6,9 @@
 
 import csv
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QCompleter
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import QCompleter
 from country_list import countries_for_language
 from src.Controller.PathHandler import resource_path
 

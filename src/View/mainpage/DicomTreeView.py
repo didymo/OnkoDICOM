@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -22,7 +22,7 @@ class DicomTreeView(QtWidgets.QWidget):
         self.tree_view.setModel(self.model_tree)
         self.init_parameters_tree()
 
-        self.dicom_tree_layout.addWidget(self.selector, QtCore.Qt.AlignLeft)
+        self.dicom_tree_layout.addWidget(self.selector, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         self.dicom_tree_layout.addWidget(self.tree_view)
         self.setLayout(self.dicom_tree_layout)
 
@@ -40,7 +40,7 @@ class DicomTreeView(QtWidgets.QWidget):
         self.tree_view.header().resizeSection(3, 50)
         self.tree_view.header().resizeSection(4, 50)
         self.tree_view.header().setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
-        self.tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers | QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tree_view.setAlternatingRowColors(True)
         self.tree_view.expandAll()
 

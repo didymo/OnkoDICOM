@@ -6,14 +6,14 @@
 import os
 
 import pandas as pd
-from PyQt5 import QtCore
+from PySide6 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
 
 
 class PyradiExtended(QtCore.QThread):
 
-    copied_percent_signal = QtCore.pyqtSignal(int, str)
+    copied_percent_signal = QtCore.Signal(int, str)
 
     def __init__(self, path, filepaths, target_path):
         super().__init__()

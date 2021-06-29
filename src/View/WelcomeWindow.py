@@ -2,6 +2,7 @@ from src.View.OpenPatientWindow import *
 from src.Controller.PathHandler import resource_path
 import platform
 
+
 class UIWelcomeWindow(object):
 
     # the ui constructor function
@@ -21,7 +22,6 @@ class UIWelcomeWindow(object):
         self.window_vertical_layout_box = QtWidgets.QVBoxLayout()
         self.window_vertical_layout_box.setObjectName("WindowVerticalLayoutBox")
 
-
         # Set up the Logo Holder for the Welcome Window
         self.logo_holder = QtWidgets.QHBoxLayout()
         self.welcome_window_logo = QtWidgets.QLabel()
@@ -32,7 +32,6 @@ class UIWelcomeWindow(object):
         self.logo_holder.addWidget(self.welcome_window_logo)
         self.window_vertical_layout_box.addStretch(1)
         self.window_vertical_layout_box.addLayout(self.logo_holder)
-        
 
         # Set up the Label for the Welcome Window
         self.welcome_window_label = QtWidgets.QLabel()
@@ -43,7 +42,6 @@ class UIWelcomeWindow(object):
         self.welcome_window_label.setAlignment(Qt.AlignCenter)
         self.window_vertical_layout_box.addWidget(self.welcome_window_label)
 
-
         # Set up the Slogan for the Welcome Window
         self.welcome_window_slogan = QtWidgets.QLabel()
         self.welcome_window_slogan.setObjectName("WelcomeWindowSlogan")
@@ -51,7 +49,6 @@ class UIWelcomeWindow(object):
         # self.welcome_window_slogan.setFont(welcome_window_slogan_font)
         self.welcome_window_slogan.setAlignment(Qt.AlignCenter)
         self.window_vertical_layout_box.addWidget(self.welcome_window_slogan)
-
 
         # button to open a patient
         self.buttons_holder = QtWidgets.QHBoxLayout()
@@ -66,7 +63,6 @@ class UIWelcomeWindow(object):
         self.window_vertical_layout_box.addStretch(1)
         self.window_vertical_layout_box.addLayout(self.buttons_holder)
         self.window_vertical_layout_box.addStretch(1)
-
 
         self.welcome_window_instance_central_widget = QtWidgets.QWidget()
         self.welcome_window_instance_central_widget.setLayout(self.window_vertical_layout_box)

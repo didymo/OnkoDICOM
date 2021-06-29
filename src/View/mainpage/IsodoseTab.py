@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -7,7 +7,7 @@ isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 
 class IsodoseTab(QtWidgets.QWidget):
 
-    request_update_isodoses = QtCore.pyqtSignal()
+    request_update_isodoses = QtCore.Signal()
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
@@ -18,7 +18,7 @@ class IsodoseTab(QtWidgets.QWidget):
         self.checkboxes = self.init_checkboxes()
 
         self.isodose_tab_layout = QtWidgets.QVBoxLayout()
-        self.isodose_tab_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.isodose_tab_layout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.isodose_tab_layout.setSpacing(0)
         self.init_layout()
 
@@ -28,7 +28,7 @@ class IsodoseTab(QtWidgets.QWidget):
         for i in range(0, len(self.checkboxes)):
             widget_isodose = QtWidgets.QWidget()
             layout_isodose = QtWidgets.QHBoxLayout(widget_isodose)
-            layout_isodose.setAlignment(QtCore.Qt.AlignLeft)
+            layout_isodose.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
             layout_isodose.addWidget(self.color_squares[i])
             layout_isodose.addWidget(self.checkboxes[i])
             self.isodose_tab_layout.addWidget(widget_isodose)
@@ -76,6 +76,10 @@ class IsodoseTab(QtWidgets.QWidget):
             list_of_doses.append(dose)
 
         # Checkboxes
+        def generate_clicked_handler(text):
+            def handler(state):
+                self.checked_dose(state, text)
+            return handler
         first_iteration = True
         for i in range(10):
             if first_iteration:
@@ -84,7 +88,7 @@ class IsodoseTab(QtWidgets.QWidget):
                 first_iteration = False
             else:
                 checkbox = QtWidgets.QCheckBox("%s %% / %s cGy" % (str(isodose_percentages[i]), str(list_of_doses[i])))
-            checkbox.clicked.connect(lambda state, text=isodose_percentages[i]: self.checked_dose(state, text))
+            checkbox.clicked.connect(generate_clicked_handler(isodose_percentages[i]))
             checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
             list_of_checkboxes.append(checkbox)
 
