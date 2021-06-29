@@ -35,6 +35,7 @@ def find_DICOM_files(file_path):
 
 
 class TestStructureTab:
+    __test__ = False
     def __init__(self):
         # Load test DICOM files
         if platform.system() == "Windows":
