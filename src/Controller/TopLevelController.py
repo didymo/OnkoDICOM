@@ -29,11 +29,16 @@ class Controller:
         # Close all other open windows first
         if self.welcome_window.isVisible():
             self.welcome_window.close()
+
+        # open_patient_window has already been initialized if main_window is visible
         if self.main_window.isVisible():
             self.main_window.close()
+            self.open_patient_window.open_patient_directory_input_box.setText(self.default_directory)
+            self.open_patient_window.scan_directory_for_patient()
+        else:
+            self.open_patient_window = OpenPatientWindow(self.default_directory)
+            self.open_patient_window.go_next_window.connect(self.show_main_window)
 
-        self.open_patient_window = OpenPatientWindow(self.default_directory)
-        self.open_patient_window.go_next_window.connect(self.show_main_window)
         self.open_patient_window.show()
 
     def show_main_window(self, progress_window):
