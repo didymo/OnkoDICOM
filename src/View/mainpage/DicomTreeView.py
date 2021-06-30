@@ -64,7 +64,7 @@ class DicomTreeView(QtWidgets.QWidget):
             combobox.addItem("RT Plan")
             self.special_files.append("rtplan")
 
-        for i in range(len(self.pixmaps) - 1):
+        for i in range(len(self.pixmaps)):
             combobox.addItem("Image Slice " + str(i + 1))
 
         combobox.activated.connect(self.item_selected)
