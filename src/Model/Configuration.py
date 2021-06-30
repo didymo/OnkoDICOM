@@ -115,3 +115,7 @@ class Configuration(metaclass=Singleton):
                             WHERE id = 1;""" % new_dir)
         connection.commit()
         connection.close()
+
+    def set_db_file_path(self, new_path):
+        self.db_file_path = new_path
+        self.set_up_config_db()
