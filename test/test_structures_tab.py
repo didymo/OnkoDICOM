@@ -5,11 +5,10 @@ import pytest
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import get_contour_pixel
+from src.Model import ImageLoading
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
-
-from src.Model import ImageLoading
 
 
 def find_DICOM_files(file_path):
@@ -36,6 +35,7 @@ def find_DICOM_files(file_path):
 
 class TestStructureTab:
     __test__ = False
+
     def __init__(self):
         # Load test DICOM files
         if platform.system() == "Windows":
@@ -70,8 +70,6 @@ class TestStructureTab:
         self.main_window = MainWindow()
         self.main_window.show()
 
-        # Turn ROIs on, check change occurs in image view
-        # This does not click the checkbox but instead simulates a change in the checkbox's state
         self.dicom_view = self.main_window.dicom_view
         self.new_polygons = {}
         slider_id = self.dicom_view.slider.value()
