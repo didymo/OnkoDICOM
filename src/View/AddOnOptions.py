@@ -1,6 +1,8 @@
+import platform
+
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
-import platform
+from src.Model.Configuration import Configuration, SqlError
 
 
 class UIAddOnOptions(object):
@@ -19,6 +21,7 @@ class UIAddOnOptions(object):
         self.add_standard_volume_name = None
         self.note = None
         self.fill_options = None
+        self.change_default_directory_frame = None
 
         # The following can be used for future implementation of creating ROIs from ISO dose.
         # self.table_roi = None
@@ -29,7 +32,7 @@ class UIAddOnOptions(object):
         Create the window and the components for each option view.
         """
         self.stylesheet_path = ""
-        
+
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
@@ -42,7 +45,7 @@ class UIAddOnOptions(object):
 
         _translate = QtCore.QCoreApplication.translate
         add_on_options.setWindowTitle(_translate("Add_On_Options", "Add-On Options"))
-        
+
         self.widget = QtWidgets.QWidget(add_on_options)
 
         self.init_user_options_header()
@@ -52,6 +55,7 @@ class UIAddOnOptions(object):
         self.standard_volume_options = StandardVolumeOptions(self)
         self.patient_hash_options = PatientHashId(self)
         self.line_fill_options = LineFillOptions(self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
+        self.change_default_directory = ChangeDefaultDirectory(self)
 
         self.create_cancel_button()
         self.create_apply_button()
@@ -84,6 +88,7 @@ class UIAddOnOptions(object):
         # self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_Ids, 1, 0, 1, 3)
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.change_default_directory_frame, 1, 0, 1, 3)
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
@@ -123,7 +128,7 @@ class UIAddOnOptions(object):
         """
         Create title that holds the chosen option from the tree and its description.
         """
-        #label that holds the chosen option from the tree
+        # label that holds the chosen option from the tree
         self.optionTitle = QtWidgets.QLabel(self.widget)
         self.optionTitle.setGeometry(QtCore.QRect(290, 50, 281, 31))
         _translate = QtCore.QCoreApplication.translate
@@ -135,7 +140,7 @@ class UIAddOnOptions(object):
         self.table_modules.setText(
             " Here are listed all the user options used in Onko. By using \n "
             "Add-On Options you will be able to Add/Modify/Delete the \n"
-            " settings for the displayed options on the left. ")
+            "settings for the displayed options on the left. ")
 
     def init_tree_list(self):
         """
@@ -144,7 +149,7 @@ class UIAddOnOptions(object):
         self.treeList = QtWidgets.QTreeView(self.widget)
         self.treeList.setHeaderHidden(True)
 
-        #Triggering the view change according to the row selected in the tree
+        # Triggering the view change according to the row selected in the tree
         self.treeList.clicked.connect(self.display)
         self.treeList.setMaximumWidth(250)
 
@@ -180,6 +185,7 @@ class UIAddOnOptions(object):
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
         elif type == "Standard Organ Names":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -194,6 +200,7 @@ class UIAddOnOptions(object):
             self.import_organ_csv.setVisible(True)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
         elif type == "Standard Volume Names":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
@@ -208,6 +215,7 @@ class UIAddOnOptions(object):
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
 
         # elif type == "Create ROI from Isodose":
         #     self.table_modules.setVisible(False)
@@ -223,6 +231,7 @@ class UIAddOnOptions(object):
         #     self.import_organ_csv.setVisible(False)
         #     self.note.setVisible(False)
         #     self.fill_options.setVisible(False)
+        # self.change_default_directory_frame.setVisible(False)
 
         elif type == "Patient ID - Hash ID":
             self.table_modules.setVisible(False)
@@ -238,7 +247,8 @@ class UIAddOnOptions(object):
             self.import_organ_csv.setVisible(False)
             self.note.setVisible(True)
             self.fill_options.setVisible(False)
-        elif type == "User Options":
+            self.change_default_directory_frame.setVisible(False)
+        elif type == "User Options" or type == "Configuration":
             self.add_new_window.setVisible(False)
             # self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
@@ -252,7 +262,8 @@ class UIAddOnOptions(object):
             self.table_Ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
-        elif type == 'Line & Fill configuration':
+            self.change_default_directory_frame.setVisible(False)
+        elif type == "Line & Fill configuration":
             self.add_new_window.setVisible(False)
             # self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
@@ -266,12 +277,29 @@ class UIAddOnOptions(object):
             self.table_Ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(True)
+            self.change_default_directory_frame.setVisible(False)
+        elif type == "Default directory":
+            self.add_new_window.setVisible(False)
+            # self.add_new_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            # self.table_roi.setVisible(False)
+            self.table_Ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(True)
 
 
 class WindowingOptions(object):
     """
     Manage the UI of Windowing option.
     """
+
     def __init__(self, window_options):
         """
         Create the components for the UI of Windowing view.
@@ -312,7 +340,7 @@ class WindowingOptions(object):
         image_windowing_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.window.table_view.setVisible(False)
 
-        #removing the ability to edit tables with immediate click
+        # removing the ability to edit tables with immediate click
         self.window.table_view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
 
@@ -320,6 +348,7 @@ class StandardOrganOptions(object):
     """
     Manage the UI of Standard Organ option.
     """
+
     def __init__(self, window_options):
         """
         Create the components for the UI of Standard Organ view.
@@ -378,6 +407,7 @@ class StandardVolumeOptions(object):
     """
     Manage the UI of Standard Volume option.
     """
+
     def __init__(self, window_options):
         """
         Create the components for the UI of Standard Volume view.
@@ -413,13 +443,15 @@ class StandardVolumeOptions(object):
         self.window.table_volume.setVisible(False)
 
         # Removing the ability to edit tables with immediate click
-        self.window.table_volume.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_volume.setEditTriggers(
+            QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
 
 class RoiFromIsodoseOptions(object):
     """
     Manage the UI of ROI from isodose option.
     """
+
     def __init__(self, window_options):
         """
         Create the components for the UI of ROI from Isodose view.
@@ -464,6 +496,7 @@ class PatientHashId(object):
     """
     Manage the UI of Patient ID - Hash ID option.
     """
+
     def __init__(self, window_options):
         """
         Create the components for the UI of Patient ID - Hash ID view.
@@ -487,7 +520,7 @@ class PatientHashId(object):
         patient_hash_id_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         patient_hash_id_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.window.table_Ids.setVisible(False)
-        #removing the ability to edit tables with immediate click
+        # removing the ability to edit tables with immediate click
         self.window.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
     def create_note(self):
@@ -498,14 +531,15 @@ class PatientHashId(object):
         self.window.note.setVisible(False)
         _translate = QtCore.QCoreApplication.translate
         self.window.note.setText(_translate("Add_On_Options",
-                                     "Note: This is a list of all the patients anonymized using Onko.\n "
-                                     "It is your responsability to ensure their privacy."))
+                                            "Note: This is a list of all the patients anonymized using Onko.\n "
+                                            "It is your responsability to ensure their privacy."))
 
 
 class LineFillOptions(object):
     """
     Manage the UI of Line and Fill Configuration options for ROIs and Isodoses display.
     """
+
     def __init__(self, window_options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         """
         Create the components for the UI of Line and Fill options and set the layout.
@@ -627,3 +661,101 @@ class LineFillOptions(object):
         Update the percentage on slider change for isodoses.
         """
         self.window.opacityLabel_ISO.setText("ISO Fill Opacity: \t {}%".format(int(self.window.opacity_ISO.value())))
+
+
+class ChangeDefaultDirectory(object):
+    """
+    Manage the UI of Change Default Directory option.
+    """
+
+    def __init__(self, window_options):
+        """
+        Create the components for the UI of Change Default Directory view.
+        """
+        self.window = window_options
+        self.create_change_default_directory_frame()
+
+    def create_change_default_directory_frame(self):
+        config = Configuration()
+        default_directory = None
+        try:
+            default_directory = config.get_default_directory()
+        except SqlError:
+            config.set_up_config_db()
+            QtWidgets.QMessageBox.critical(self.window, "Config file error",
+                                           """Failed to access configuration file.
+                              \nConfiguration file recreated with no default directory.
+                              \nPlease update your default directory.""")
+
+        self.window.change_default_directory_frame = QtWidgets.QFrame()
+        self.window.change_default_directory_frame.setVisible(False)
+        self.change_default_directory_vertical_layout = QtWidgets.QVBoxLayout()
+        self.change_default_directory_prompt = QtWidgets.QLabel()
+        self.change_default_directory_prompt.setAlignment(QtCore.Qt.AlignLeft)
+        self.change_default_directory_prompt.setVisible(True)
+        self.change_default_directory_prompt.setText("Default directory's path:")
+        self.change_default_directory_vertical_layout.addWidget(self.change_default_directory_prompt)
+        # Create a horizontal box to hold the input box for the directory and the choose button
+        self.change_default_directory_input_horizontal_box = QtWidgets.QHBoxLayout()
+
+        # Create a textbox to contain the path to the directory that contains the DICOM files
+        self.change_default_directory_input_box = UIChangeDefaultDirDragAndDropEvent(self)
+        self.change_default_directory_input_box.setCursorPosition(0)
+        self.change_default_directory_input_box.setText(default_directory)
+        self.change_default_directory_input_horizontal_box.addWidget(self.change_default_directory_input_box)
+
+        # Create a choose button to open the file dialog
+        self.change_default_directory_button = QtWidgets.QPushButton()
+        self.change_default_directory_button.setText("Change")
+        self.change_default_directory_button.resize(self.change_default_directory_button.sizeHint().width(),
+                                                    self.change_default_directory_input_box.height())
+        self.change_default_directory_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.change_default_directory_input_horizontal_box.addWidget(self.change_default_directory_button)
+        self.change_default_directory_button.clicked.connect(self.change_button_clicked)
+
+        # Create a widget to hold the input fields
+        self.change_default_directory_input_widget = QtWidgets.QWidget()
+        self.change_default_directory_input_horizontal_box.setStretch(0, 4)
+        self.change_default_directory_input_widget.setLayout(self.change_default_directory_input_horizontal_box)
+        self.change_default_directory_vertical_layout.addWidget(self.change_default_directory_input_widget, 1,
+                                                                QtCore.Qt.AlignTop)
+
+        self.window.change_default_directory_frame.setLayout(self.change_default_directory_vertical_layout)
+
+    def change_button_clicked(self):
+        """
+            Executes when the choose button is clicked.
+            Gets filepath from the user and loads all files and subdirectories.
+        """
+        # Get folder path from pop up dialog box
+
+        self.default_directory = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
+        if len(self.default_directory) > 0:
+            self.change_default_directory_input_box.setText(self.default_directory)
+
+
+class UIChangeDefaultDirDragAndDropEvent(QtWidgets.QLineEdit):
+    parent_window = None
+
+    def __init__(self, UIOpenPatientWindowInstance):
+        super(UIChangeDefaultDirDragAndDropEvent, self).__init__()
+        self.parent_window = UIOpenPatientWindowInstance
+        self.setDragEnabled(True)
+
+    def dragEnterEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            # Removes the doubled intro slash
+            directory_path = str(urls[0].path())[1:]
+            # add / for not Windows machines
+            if platform.system() != 'Windows':
+                directory_path = "/" + directory_path
+            # Pastes the directory into the text field
+            self.setText(directory_path)

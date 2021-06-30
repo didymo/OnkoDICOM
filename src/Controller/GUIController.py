@@ -14,6 +14,7 @@ from src.Controller.PathHandler import resource_path
 
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
+
     update_directory = QtCore.Signal(str)
     go_next_window = QtCore.Signal()
 

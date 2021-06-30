@@ -60,6 +60,7 @@ class Controller:
         """
         self.main_window = MainWindow()
         self.main_window.open_patient_window.connect(self.show_open_patient)
+        self.main_window.directory_updated.connect(self.update_default_directory)
         self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
 
         # Once the MainWindow has finished loading (which takes some time) close all the other open windows.

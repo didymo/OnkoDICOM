@@ -176,7 +176,7 @@ class UIFirstTimeWelcomeWindow(object):
         else:
             config = Configuration()
             try:
-                config.update_default_dir(self.filepath)
+                config.update_default_directory(self.filepath)
             except SqlError:
                 config.set_up_config_db()
                 QMessageBox.critical(self, "Config file error",

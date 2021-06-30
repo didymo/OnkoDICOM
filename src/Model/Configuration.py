@@ -82,7 +82,7 @@ class Configuration(metaclass=Singleton):
         connection.close()
 
     @error_handling
-    def get_default_dir(self):
+    def get_default_directory(self):
         """
         Get the default directory's path from the database
         """
@@ -97,7 +97,7 @@ class Configuration(metaclass=Singleton):
         return record[0]
 
     @error_handling
-    def update_default_dir(self, new_dir):
+    def update_default_directory(self, new_dir):
         """
         Change the default directory's path in the database
         """
