@@ -49,16 +49,22 @@ class DicomTreeView(QtWidgets.QWidget):
         combobox.setFocusPolicy(QtCore.Qt.NoFocus)
         combobox.addItem("Select a DICOM dataset...")
 
+        # determines which files are included
+        self.special_files = []
+
         if self.patient_dict_container.has_modality("rtss"):
             combobox.addItem("RT Structure Set")
+            self.special_files.append("rtss")
 
         if self.patient_dict_container.has_modality("rtdose"):
             combobox.addItem("RT Dose")
+            self.special_files.append("rtdose")
 
         if self.patient_dict_container.has_modality("rtplan"):
             combobox.addItem("RT Plan")
+            self.special_files.append("rtplan")
 
-        for i in range(len(self.pixmaps) - 1):
+        for i in range(len(self.pixmaps)):
             combobox.addItem("Image Slice " + str(i + 1))
 
         combobox.activated.connect(self.item_selected)
@@ -67,14 +73,10 @@ class DicomTreeView(QtWidgets.QWidget):
         return combobox
 
     def item_selected(self, index):
-        if index == 1:  # RTSS
-            self.update_tree(False, 0, "rtss")
-        elif index == 2:  # RT Dose
-            self.update_tree(False, 0, "rtdose")
-        elif index == 3:  # RT Plan
-            self.update_tree(False, 0, "rtplan")
-        elif index > 3:
-            self.update_tree(True, index - 4, "")
+        if index <= len(self.special_files) and index != 0:
+            self.update_tree(False, 0, self.special_files[index-1])
+        elif index > len(self.special_files):
+            self.update_tree(True, index - len(self.special_files) - 1, "")
 
     def update_tree(self, image_slice, id, name):
         """
