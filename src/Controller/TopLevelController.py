@@ -29,15 +29,16 @@ class Controller:
         # Close all other open windows first
         if self.welcome_window.isVisible():
             self.welcome_window.close()
-
-        # open_patient_window has already been initialized if main_window is visible
         if self.main_window.isVisible():
             self.main_window.close()
-            self.open_patient_window.open_patient_directory_input_box.setText(self.default_directory)
-            self.open_patient_window.scan_directory_for_patient()
-        else:
+
+        # only initialize open_patient_window once
+        if not isinstance(self.main_window, MainWindow):
             self.open_patient_window = OpenPatientWindow(self.default_directory)
             self.open_patient_window.go_next_window.connect(self.show_main_window)
+        else:
+            self.open_patient_window.open_patient_directory_input_box.setText(self.default_directory)
+            self.open_patient_window.scan_directory_for_patient()
 
         self.open_patient_window.show()
 
@@ -47,9 +48,11 @@ class Controller:
         :param patient_attributes: A tuple of (PatientDictContainer, ProgressWindow)
         :return:
         """
-        self.main_window = MainWindow()
-        self.main_window.open_patient_window.connect(self.show_open_patient)
-        self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
+        # Only initialize main window once
+        if not isinstance(self.main_window, MainWindow):
+            self.main_window = MainWindow()
+            self.main_window.open_patient_window.connect(self.show_open_patient)
+            self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
 
         # Once the MainWindow has finished loading (which takes some time) close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
