@@ -12,8 +12,7 @@ from pydicom.errors import InvalidDicomError
 
 
 def find_DICOM_files(file_path):
-    """
-    Function to find DICOM files in a given folder.
+    """Function to find DICOM files in a given folder.
     :param file_path: File path of folder to search.
     :return: List of file paths of DICOM files in given folder.
     """
@@ -34,6 +33,7 @@ def find_DICOM_files(file_path):
 
 
 class TestStructureTab:
+    """Class to set up the OnkoDICOM main window for testing the structures tab."""
     __test__ = False
 
     def __init__(self):
@@ -78,11 +78,17 @@ class TestStructureTab:
 
 @pytest.fixture(scope="module")
 def test_object():
+    """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
     return test
 
 
 def test_structure_tab_check_checkboxes(test_object):
+    """Test checking checkboxes in the structure tab. This function calculates what polygons should be drawn
+    and asserts that these are the same as the polygons that are drawn.
+
+    :param test_object: test_object function, for accessing the shared TestStructureTab object.
+    """
     for roi in test_object.rois:
         # Simulate checkbox set to True
         test_object.main_window.structures_tab.structure_checked(True, roi)
@@ -124,6 +130,11 @@ def test_structure_tab_check_checkboxes(test_object):
 
 
 def test_structure_tab_uncheck_checkboxes(test_object):
+    """Test unchecking checkboxes in the structure tab. This function asserts that the unchecked ROI is not
+    flagged to be drawn into the DICOM view.
+
+    :param test_object:
+    """
     # Turn ROIs off, check change occurs in image view
     for roi in test_object.rois:
         # Simulate checkbox set to False
