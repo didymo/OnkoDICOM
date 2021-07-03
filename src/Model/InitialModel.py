@@ -64,8 +64,8 @@ def create_initial_model():
     patient_dict_container.set("dict_windowing", dict_windowing)
 
     pixel_values = convert_raw_data(dataset)
-    pixmaps = get_pixmaps(pixel_values, window, level)
-    patient_dict_container.set("pixmaps", pixmaps)
+    pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level)
+    patient_dict_container.set("pixmaps", pixmaps_coronal)
     patient_dict_container.set("pixel_values", pixel_values)
 
     basic_info = get_basic_info(dataset[0])

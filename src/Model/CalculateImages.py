@@ -67,7 +67,7 @@ def scaled_pixmap(np_pixels, window, level):
     qimage = QtGui.QImage(
         np_pixels, np_pixels.shape[1], np_pixels.shape[0], QtGui.QImage.Format_Indexed8)
     pixmap = QtGui.QPixmap(qimage)
-    pixmap = pixmap.scaled(512, 512, QtCore.Qt.KeepAspectRatio)
+    pixmap = pixmap.scaled(512, 512, QtCore.Qt.IgnoreAspectRatio)
     return pixmap
 
 
@@ -81,9 +81,22 @@ def get_pixmaps(pixel_array, window, level):
     :return: dict_pixmaps, a dictionary of all pixmaps within the patient.
     """
     # Create a dictionary of storing pixmaps
-    dict_pixmaps = {}
-    # List of non-image keys
+    dict_pixmaps_axial = {}
+    dict_pixmaps_coronal = {}
+    dict_pixmaps_sagittal = {}
+
+    # TODO: optimize this process using numpy 3d array
+    for column in range(0, pixel_array[0].shape[0]):
+        np_pixels_coronal = []
+        np_pixels_sagittal = []
+        for arr in pixel_array:
+            np_pixels_coronal.append(arr[column])
+            np_pixels_sagittal.append([row[column] for row in arr])
+        dict_pixmaps_coronal[column] = scaled_pixmap(np.array(np_pixels_coronal), window, level)
+        dict_pixmaps_sagittal[column] = scaled_pixmap(np.array(np_pixels_sagittal), window, level)
+
+
     for i, np_pixels in enumerate(pixel_array):
         pixmap = scaled_pixmap(np_pixels, window, level)
-        dict_pixmaps[i] = pixmap
-    return dict_pixmaps
+        dict_pixmaps_axial[i] = pixmap
+    return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
