@@ -21,7 +21,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
 
     files_searched = 0
 
-    no_patient_id = 1
+    files_with_no_patient_id = 1
 
     for root, dirs, files in os.walk(path, topdown=True):
         files = [f for f in files if not f[0] == '.']
@@ -50,8 +50,8 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                 if 'PatientID' in dicom_file:
                     patient_id = dicom_file.PatientID
                 else:
-                    patient_id = "no_id_" + str(no_patient_id)
-                    no_patient_id += 1
+                    patient_id = "no_id_" + str(files_with_no_patient_id)
+                    files_with_no_patient_id += 1
 
                 if "SOPInstanceUID" in dicom_file and "SOPClassUID" in dicom_file and "Modality" in dicom_file:
                     new_image = Image(file_path, dicom_file.SOPInstanceUID, dicom_file.SOPClassUID, dicom_file.Modality)
