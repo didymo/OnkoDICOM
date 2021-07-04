@@ -53,11 +53,7 @@ class DICOMStructure:
         """
         :return: A list of QTreeWidgetItems based on the DICOMStructure object.
         """
-        new_items_list = []
-        for patient_id, patient in self.patients.items():
-            new_items_list.append(patient.get_widget_item())
-
-        return new_items_list
+        return [patient.get_widget_item() for patient_id, patient in self.patients.items()]
 
 
 class Patient:
