@@ -319,7 +319,7 @@ def calculate_matrix(img_ds):
                 [orientation[2] * dist_row, orientation[5] * dist_col, 0, position[2]],
                 [0, 0, 0, 1],
             ],
-            dtype=np.float,
+            dtype=float,
         ),
     )
 
@@ -329,7 +329,7 @@ def calculate_matrix(img_ds):
         i_mat = np.matmul(
             matrix_M,
             np.ndarray(
-                shape=(4, 1), buffer=np.array([[i], [0], [0], [1]], dtype=np.float)
+                shape=(4, 1), buffer=np.array([[i], [0], [0], [1]], dtype=float)
             ),
         )
         x.append(float(i_mat[0]))
@@ -338,7 +338,7 @@ def calculate_matrix(img_ds):
         j_mat = np.matmul(
             matrix_M,
             np.ndarray(
-                shape=(4, 1), buffer=np.array([[0], [j], [0], [1]], dtype=np.float)
+                shape=(4, 1), buffer=np.array([[0], [j], [0], [1]], dtype=float)
             ),
         )
         y.append(float(j_mat[1]))
