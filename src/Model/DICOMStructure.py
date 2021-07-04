@@ -12,13 +12,13 @@ class DICOMStructure:
 
     def __init__(self):
         """
-        patients: A list of Patient objects.
+        patients: A dictionary of Patient objects.
         """
         self.patients = {}
 
     def add_patient(self, patient):
         """
-        Add a Patient object to the list of patients.
+        Add a Patient object to the dictionary of patients.
         :param patient: A Patient object.
         """
         self.patients[patient.patient_id] = patient
@@ -64,7 +64,7 @@ class Patient:
 
     def __init__(self, patient_id, patient_name):
         """
-        studies: A list of Study objects.
+        studies: A dictionary of Study objects.
         :param patient_id: PatientID in DICOM standard.
         """
         self.patient_id = patient_id
@@ -73,7 +73,7 @@ class Patient:
 
     def add_study(self, study):
         """
-        Adds a Study object to the patient's list of studies.
+        Adds a Study object to the patient's dictionary of studies.
         :param study: A Study object.
         """
         self.studies[study.study_uid] = study
@@ -128,7 +128,7 @@ class Study:
 
     def __init__(self, study_uid):
         """
-        series: A list of Series objects.
+        series: A dictionary of Series objects.
         :param study_uid: StudyInstanceUID in DICOM standard.
         """
         self.study_uid = study_uid
@@ -137,7 +137,7 @@ class Study:
 
     def add_series(self, series):
         """
-        Adds a Series object to the patient's list of series.
+        Adds a Series object to the patient's dictionary of series.
         :param series: A Series object.
         """
         self.series[series.series_uid] = series
@@ -209,7 +209,7 @@ class Series:
 
     def __init__(self, series_uid):
         """
-        images: A list of Image objects.
+        images: A dictionary of Image objects.
         :param series_uid: SeriesInstanceUID in DICOM standard.
         """
         self.series_uid = series_uid
@@ -218,7 +218,7 @@ class Series:
 
     def add_image(self, image):
         """
-        Adds an Image object to the patient's list of images.
+        Adds an Image object to the patient's dictionary of images.
         :param image:  An Image object.
         """
         self.images[image.image_uid] = image
