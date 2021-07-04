@@ -1,3 +1,4 @@
+
 ######################################################################################################
 #                                                                                                    #
 #   This file handles all the processes done within the Add-On Options button                        #
@@ -8,7 +9,7 @@ import webbrowser
 from collections import deque
 
 from PySide6.QtWidgets import QFileDialog, QTableWidgetItem
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
@@ -23,6 +24,8 @@ from src.Controller.PathHandler import resource_path
 
 
 class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
+    directory_updated = Signal(str)
+
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
         # read configuration file for line and fill options
@@ -46,7 +49,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.window = window
         self.setup_ui(self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
         # this data is used to create the tree view of functionalities on the left of the window
-        # each entrie will be used as a button to change the view on the right accordingly
+        # each entry will be used as a button to change the view on the right accordingly
         data = [
             {"level": 0, "dbID": 442, "parent_ID": 6, "short_name": "User Options"},
             {
@@ -80,6 +83,13 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "parent_ID": 442,
                 "short_name": "Line & Fill configuration",
             },
+            {"level": 0, "dbID": 446, "parent_ID": 6, "short_name": "Configuration"},
+            {
+                "level": 1,
+                "dbID": 521,
+                "parent_ID": 446,
+                "short_name": "Default directory",
+            }
         ]
         # create a model for the tree view of options and attach the data
         self.model = QtGui.QStandardItemModel()
@@ -361,6 +371,19 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             stream.write(str(self.line_width.currentText()))
             stream.write("\n")
             stream.close()
+
+        # Save the default directory
+        configuration = Configuration()
+        try:
+            new_dir = self.change_default_directory.change_default_directory_input_box.text()
+            configuration.update_default_directory(new_dir)
+            self.directory_updated.emit(new_dir)
+            QMessageBox.about(self, "Success", "Default directory was successfully updated")
+        except SqlError:
+            configuration.set_up_config_db()
+            QMessageBox.critical(self, "Config file error",
+                                 "Failed to update default directory.\nPlease try again.")
+
         # Close the Add-On Options Window after saving
 
         if hasattr(self.window, 'structures_tab'):
@@ -546,7 +569,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
 class AddOptions:
     def __init__(self, window):
+        self.window = window
         self.options_window = AddOnOptions(window)
+        self.options_window.directory_updated.connect(lambda new_dir: self.window.directory_updated.emit(new_dir))
 
     def show_add_on_options(self):
         self.options_window.show()
