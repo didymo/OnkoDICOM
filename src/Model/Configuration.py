@@ -14,13 +14,13 @@ def set_up_hidden_dir():
     """
     directory_name = '.OnkoDICOM'
 
-    # Set USER_HIDDEN and USER_HOME env variable
-    os.environ['USER_HOME'] = os.path.expanduser("~")
+    # Set USER_ONKODICOM_HIDDEN and USER_ONKODICOM_HOME env variable
+    os.environ['USER_ONKODICOM_HOME'] = os.path.expanduser("~")
     if platform.system() == 'Windows':
-        path = os.environ.get('USER_HOME') + "\\" + directory_name + "\\"
+        path = os.environ.get('USER_ONKODICOM_HOME') + "\\" + directory_name + "\\"
     else:
-        path = os.environ.get('USER_HOME') + "/" + directory_name + "/"
-    os.environ['USER_HIDDEN'] = path
+        path = os.environ.get('USER_ONKODICOM_HOME') + "/" + directory_name + "/"
+    os.environ['USER_ONKODICOM_HIDDEN'] = path
 
     # Create and hide the hidden directory
     if not os.path.exists(path):
@@ -42,8 +42,8 @@ def error_handling(function):
             return result
         except (sqlite3.Error, sqlite3.OperationalError):
             try:
-                if os.path.exists(os.environ['USER_HIDDEN']):
-                    os.remove(os.environ['USER_HIDDEN'])
+                if os.path.exists(os.environ['USER_ONKODICOM_HIDDEN']):
+                    os.remove(os.environ['USER_ONKODICOM_HIDDEN'])
                 set_up_hidden_dir()
                 raise SqlError()
             except OSError:
@@ -64,7 +64,7 @@ class Configuration(metaclass=Singleton):
 
     def __init__(self, db_file='OnkoDICOM.db'):
         set_up_hidden_dir()
-        self.db_file_path = os.environ['USER_HIDDEN'] + db_file
+        self.db_file_path = os.environ['USER_ONKODICOM_HIDDEN'] + db_file
         self.set_up_config_db()
 
     def set_up_config_db(self):
