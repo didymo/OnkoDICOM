@@ -80,23 +80,22 @@ def get_pixmaps(pixel_array, window, level):
     :param level: Level value of windowing function
     :return: dict_pixmaps, a dictionary of all pixmaps within the patient.
     """
+    # Convert pixel array to numpy 3d array
+    pixel_array_3d = np.array(pixel_array)
+
     # Create a dictionary of storing pixmaps
     dict_pixmaps_axial = {}
     dict_pixmaps_coronal = {}
     dict_pixmaps_sagittal = {}
 
-    # TODO: optimize this process using numpy 3d array
-    for column in range(0, pixel_array[0].shape[0]):
-        np_pixels_coronal = []
-        np_pixels_sagittal = []
-        for arr in pixel_array:
-            np_pixels_coronal.append(arr[column])
-            np_pixels_sagittal.append([row[column] for row in arr])
-        dict_pixmaps_coronal[column] = scaled_pixmap(np.array(np_pixels_coronal), window, level)
-        dict_pixmaps_sagittal[column] = scaled_pixmap(np.array(np_pixels_sagittal), window, level)
+    for i in range(pixel_array_3d.shape[0]):
+        axial_pixmap = scaled_pixmap(pixel_array_3d[i, :, :], window, level)
+        dict_pixmaps_axial[i] = axial_pixmap
 
+    for i in range(pixel_array_3d.shape[1]):
+        coronal_pixmap = scaled_pixmap(pixel_array_3d[:, i, :], window, level)
+        sagital_pixmap = scaled_pixmap(pixel_array_3d[:, :, i], window, level)
+        dict_pixmaps_coronal[i] = coronal_pixmap
+        dict_pixmaps_sagittal[i] = sagital_pixmap
 
-    for i, np_pixels in enumerate(pixel_array):
-        pixmap = scaled_pixmap(np_pixels, window, level)
-        dict_pixmaps_axial[i] = pixmap
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
