@@ -1,18 +1,32 @@
 from PySide6 import QtWidgets
 
-from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, MainWindow, PyradiProgressBar
+from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, MainWindow, PyradiProgressBar, \
+    FirstTimeWelcomeWindow
 
 
 class Controller:
 
     # Initialisation function that creates an instance of each window
     def __init__(self, default_directory=None):
+        self.first_time_welcome_window = QtWidgets.QMainWindow()
         self.welcome_window = QtWidgets.QMainWindow()
         self.open_patient_window = QtWidgets.QMainWindow()
         self.main_window = QtWidgets.QMainWindow()
         self.pyradi_progressbar = QtWidgets.QWidget()
         self.default_directory = default_directory  # This will contain a filepath of a folder that is dragged onto
         # the executable icon
+
+    def show_first_time_welcome(self):
+        """
+        Display first time welcome page
+        """
+        self.first_time_welcome_window = FirstTimeWelcomeWindow()
+        self.first_time_welcome_window.update_directory.connect(self.update_default_directory)
+        self.first_time_welcome_window.go_next_window.connect(self.show_open_patient)
+        self.first_time_welcome_window.show()
+
+    def update_default_directory(self, new_directory):
+        self.default_directory = new_directory
 
     def show_welcome(self):
         """
@@ -31,6 +45,8 @@ class Controller:
             self.welcome_window.close()
         if self.main_window.isVisible():
             self.main_window.close()
+        if self.first_time_welcome_window.isVisible():
+            self.first_time_welcome_window.close()
 
         # only initialize open_patient_window once
         if not isinstance(self.main_window, MainWindow):
@@ -45,7 +61,7 @@ class Controller:
     def show_main_window(self, progress_window):
         """
         Displays the main patient window after completing the loading.
-        :param patient_attributes: A tuple of (PatientDictContainer, ProgressWindow)
+        :param progress_window: An instance of ProgressWindow
         :return:
         """
         # Only initialize main window once
