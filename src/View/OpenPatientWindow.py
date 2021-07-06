@@ -70,7 +70,8 @@ class UIOpenPatientWindow(object):
 
         # Create a horizontal box to hold the stop button and direction to the user on where to select the patient
         self.open_patient_appear_prompt_and_stop_horizontal_box = QHBoxLayout()
-        self.open_patient_appear_prompt_and_stop_horizontal_box.setObjectName("OpenPatientAppearPromptAndStopHorizontalBox")
+        self.open_patient_appear_prompt_and_stop_horizontal_box.setObjectName(
+            "OpenPatientAppearPromptAndStopHorizontalBox")
         # Create a label to show direction on where the files will appear
         self.open_patient_directory_appear_prompt = QLabel()
         self.open_patient_directory_appear_prompt.setObjectName("OpenPatientDirectoryAppearPrompt")
@@ -91,9 +92,9 @@ class UIOpenPatientWindow(object):
         self.open_patient_appear_prompt_and_stop_horizontal_box.addWidget(self.open_patient_window_stop_button)
         # Create a widget to hold the layout
         self.open_patient_appear_prompt_and_stop_widget = QWidget()
-        self.open_patient_appear_prompt_and_stop_widget.setLayout(self.open_patient_appear_prompt_and_stop_horizontal_box)
+        self.open_patient_appear_prompt_and_stop_widget.setLayout(
+            self.open_patient_appear_prompt_and_stop_horizontal_box)
         self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_appear_prompt_and_stop_widget)
-
 
         # Create a tree view list to list out all patients in the directory selected above
         self.open_patient_window_patients_tree = QTreeWidget()
@@ -102,9 +103,12 @@ class UIOpenPatientWindow(object):
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.open_patient_window_patients_tree.resize(self.open_patient_window_patients_tree.sizeHint().width(),
                                                       self.open_patient_window_patients_tree.sizeHint().height())
-        self.open_patient_window_patients_tree.setHeaderHidden(True)
+        self.open_patient_window_patients_tree.setHeaderHidden(False)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
+        self.open_patient_window_patients_tree.itemChanged.connect(self.tree_item_changed)
         self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_window_patients_tree)
+        self.last_patient = None
+
 
         # Create a label to show what would happen if they select the patient
         self.open_patient_directory_result_label = QtWidgets.QLabel()
@@ -112,10 +116,10 @@ class UIOpenPatientWindow(object):
         self.open_patient_directory_result_label.setAlignment(Qt.AlignLeft)
         self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_directory_result_label)
 
-
         # Create a horizontal box to hold the Cancel and Open button
         self.open_patient_window_patient_open_actions_horizontal_box = QHBoxLayout()
-        self.open_patient_window_patient_open_actions_horizontal_box.setObjectName("OpenPatientWindowPatientOpenActionsHorizontalBox")
+        self.open_patient_window_patient_open_actions_horizontal_box.setObjectName(
+            "OpenPatientWindowPatientOpenActionsHorizontalBox")
         self.open_patient_window_patient_open_actions_horizontal_box.addStretch(1)
         # Add a button to go back/exit from the application
         self.open_patient_window_exit_button = QPushButton()
@@ -137,13 +141,15 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_confirm_button.resize(self.open_patient_window_confirm_button.sizeHint().width(),
                                                     self.open_patient_window_confirm_button.sizeHint().height())
         self.open_patient_window_confirm_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.open_patient_window_confirm_button.setDisabled(True)
         self.open_patient_window_confirm_button.clicked.connect(self.confirm_button_clicked)
         self.open_patient_window_confirm_button.setProperty("QPushButtonClass", "success-button")
         self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_confirm_button)
 
         # Create a widget to house all of the actions button for open patient window
         self.open_patient_window_patient_open_actions_widget = QWidget()
-        self.open_patient_window_patient_open_actions_widget.setLayout(self.open_patient_window_patient_open_actions_horizontal_box)
+        self.open_patient_window_patient_open_actions_widget.setLayout(
+            self.open_patient_window_patient_open_actions_horizontal_box)
         self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_window_patient_open_actions_widget)
 
         # Set the vertical box fourth element, the tree view, to stretch out as far as possible
@@ -170,7 +176,7 @@ class UIOpenPatientWindow(object):
         QtCore.QMetaObject.connectSlotsByName(open_patient_window_instance)
 
     def retranslate_ui(self, open_patient_window_instance):
-        _translate = QtCore.QCoreApplication.translate;
+        _translate = QtCore.QCoreApplication.translate
         open_patient_window_instance.setWindowTitle(
             _translate("OpenPatientWindowInstance", "OnkoDICOM - Select Patient"))
         self.open_patient_directory_prompt.setText(_translate("OpenPatientWindowInstance",
@@ -189,6 +195,9 @@ class UIOpenPatientWindow(object):
         QCoreApplication.exit(0)
 
     def scan_directory_for_patient(self):
+        # Reset tree view header and last patient
+        self.open_patient_window_patients_tree.setHeaderLabels([""])
+        self.last_patient = None
         self.filepath = self.open_patient_directory_input_box.text()
         # Proceed if a folder was selected
         if self.filepath != "":
@@ -256,6 +265,49 @@ class UIOpenPatientWindow(object):
         if len(dicom_structure.patients) == 0:
             QMessageBox.about(self, "No files found", "Selected directory contains no DICOM files.")
 
+    def tree_item_changed(self, item, _):
+        """
+            Executes when a tree item is checked or unchecked.
+            If a different patient is checked, uncheck the previous patient.
+            Inform user about missing DICOM files.
+        """
+        selected_patient = item
+        # If the item is not top-level, bubble up to see which top-level item this item belongs to
+        if self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(item) == -1:
+            while self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(selected_patient) == -1:
+                selected_patient = selected_patient.parent()
+
+        # Uncheck previous patient if a different patient is selected
+        if item.checkState(0) == Qt.CheckState.Checked and self.last_patient != selected_patient:
+            if self.last_patient is not None:
+                self.last_patient.setCheckState(0, Qt.CheckState.Unchecked)
+                self.last_patient.setSelected(False)
+            self.last_patient = selected_patient
+
+        # Get the types of all selected leaves
+        self.selected_series_types = set()
+        for checked_item in self.get_checked_leaves():
+            series_type = checked_item.dicom_object.get_series_type()
+            if type(series_type) == str:
+                self.selected_series_types.add(series_type)
+            else:
+                self.selected_series_types.update(series_type)
+
+        # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
+        if len(list({'CT', 'MRI', 'PET'} & self.selected_series_types)) == 0:
+            header = "Cannot proceed without an image file."
+            self.open_patient_window_confirm_button.setDisabled(True)
+        elif 'RTSTRUCT' not in self.selected_series_types:
+            header = "DVH and Radiomics calculations are not available without a RTSTRUCT file."
+        elif 'RTDOSE' not in self.selected_series_types:
+            header = "DVH calculations are not available without a RTDOSE file."
+        else:
+            header = ""
+        self.open_patient_window_patients_tree.setHeaderLabel(header)
+
+        if len(list({'CT', 'MRI', 'PET'} & self.selected_series_types)) != 0:
+            self.open_patient_window_confirm_button.setDisabled(False)
+
     def confirm_button_clicked(self):
         """
         Begins loading of the selected files.
@@ -264,15 +316,12 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        if len(selected_files) > 0:
-            self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-            self.progress_window.signal_loaded.connect(self.on_loaded)
-            self.progress_window.signal_error.connect(self.on_loading_error)
+        self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window.signal_loaded.connect(self.on_loaded)
+        self.progress_window.signal_error.connect(self.on_loading_error)
 
-            self.progress_window.start_loading(selected_files)
-            self.progress_window.exec_()
-        else:
-            QMessageBox.about(self, "Unable to open selection", "No files selected.")
+        self.progress_window.start_loading(selected_files)
+        self.progress_window.exec_()
 
     def on_loaded(self, results):
         """
