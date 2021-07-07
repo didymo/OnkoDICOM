@@ -94,7 +94,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         # create a model for the tree view of options and attach the data
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
-        self.importData(data)
+        self.import_data(data)
         self.treeList.expandAll()
         # fill the corresponding tables with the corresponding data from the csv files
         self.fillTables()
@@ -116,15 +116,15 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         # adding the right click menus for each table
         self.table_view.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(
-            self.on_customContextMenuRequested_Window
+            self.on_customContextMenuRequestedWindow
         )
         self.table_organ.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_organ.customContextMenuRequested.connect(
-            self.on_customContextMenuRequested_Organ
+            self.on_customContextMenuRequestedOrgan
         )
         self.table_volume.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_volume.customContextMenuRequested.connect(
-            self.on_customContextMenuRequested_Volume
+            self.on_customContextMenuRequestedVolume
         )
         # self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
@@ -147,7 +147,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     ######################################################################################################
     # windowing
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequested_Window(self, pos):
+    def on_customContextMenuRequestedWindow(self, pos):
         # gets the position of the right click for the windowing table
         it = self.table_view.itemAt(pos)
         if it is None:
@@ -185,7 +185,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # standard organ name table
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequested_Organ(self, pos):
+    def on_customContextMenuRequestedOrgan(self, pos):
         it = self.table_organ.itemAt(pos)
         if it is None:
             return
@@ -218,7 +218,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # standard volume table
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequested_Volume(self, pos):
+    def on_customContextMenuRequestedVolume(self, pos):
         it = self.table_volume.itemAt(pos)
         if it is None:
             return
@@ -278,7 +278,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     #                                                                                                    #
     ######################################################################################################
 
-    def importData(self, data, root=None):
+    def import_data(self, data, root=None):
         self.model.setRowCount(0)
         if root is None:
             root = self.model.invisibleRootItem()
