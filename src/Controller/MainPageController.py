@@ -12,7 +12,7 @@ from pathlib import Path
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt1
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 from dateutil.relativedelta import relativedelta
 from networkx.tests.test_convert_pandas import pd
 
@@ -496,7 +496,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             # the form did not pass the validation so display the corresponding errors to be fixed, no csv created
             buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
                                               "The following issues need to be addressed: \n" + message,
-                                                        QtWidgets.QMessageBox.Ok)
+                                                        button0=QtWidgets.QMessageBox.Ok)
             if buttonReply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
@@ -822,7 +822,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                                                   "If you wish, you can create a new clinical data file by \n"
                                                   "deleting the current one from the directory and reloading \n"
                                                   "the patient files."
-                                                  , QtWidgets.QMessageBox.Ok)
+                                                  , button0=QtWidgets.QMessageBox.Ok)
                 if buttonReply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
@@ -838,7 +838,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                                               "If you wish, you can create a new clinical data file by \n"
                                               "deleting the current one from the directory and reloading \n"
                                               "the patient files."
-                                              , QtWidgets.QMessageBox.Ok)
+                                              , button0=QtWidgets.QMessageBox.Ok)
             if buttonReply == QtWidgets.QMessageBox.Ok:
                 pass
 
@@ -891,7 +891,8 @@ class Transect(QtWidgets.QGraphicsScene):
         if self.drawing == True:
             self.pos1 = event.scenePos()
             self._current_rect_item = QtWidgets.QGraphicsLineItem()
-            self._current_rect_item.setPen(QtCore.Qt.red)
+            pen = QtGui.QPen(QtGui.QColor("red"))
+            self._current_rect_item.setPen(pen)
             self._current_rect_item.setFlag(
                 QtWidgets.QGraphicsItem.ItemIsMovable, False)
             self.addItem(self._current_rect_item)
