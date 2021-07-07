@@ -1,5 +1,6 @@
 import os
 import platform
+import sqlite3
 
 import PySide6
 import matplotlib
@@ -11,6 +12,7 @@ from pydicom.errors import InvalidDicomError
 
 from src.Controller.GUIController import MainWindow
 from src.Model import ImageLoading
+from src.Model.Configuration import Configuration
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -89,7 +91,7 @@ def test_object():
     return test
 
 
-def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object):
+def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object, init_config):
     if test_object.main_window.dvh_tab.patient_dict_container.has_attribute("raw_dvh"):
         test_object.main_window.dvh_tab.patient_dict_container.additional_data.pop("raw_dvh")
     assert test_object.main_window.dvh_tab.patient_dict_container.has_attribute("raw_dvh") is False
@@ -100,7 +102,7 @@ def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object):
     assert isinstance(button_calc_dvh, PySide6.QtWidgets.QPushButton) is True
 
 
-def test_dvh_tab_with_dvh_calculated(qtbot, test_object):
+def test_dvh_tab_with_dvh_calculated(qtbot, test_object, init_config):
     test_object.main_window.dvh_tab.patient_dict_container.set("raw_dvh", test_object.raw_dvh)
     test_object.main_window.dvh_tab.patient_dict_container.set("dvh_x_y", test_object.dvh_x_y)
     test_object.main_window.dvh_tab.patient_dict_container.set("dvh_outdated", False)
