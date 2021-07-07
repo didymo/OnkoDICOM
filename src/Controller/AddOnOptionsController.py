@@ -97,7 +97,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.import_data(data)
         self.treeList.expandAll()
         # fill the corresponding tables with the corresponding data from the csv files
-        self.fillTables()
+        self.fill_tables()
         self.treeList.setEditTriggers(
             QtWidgets.QTreeView.NoEditTriggers
         )  # make the tree entries not editable
@@ -398,12 +398,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     #                                                                                                                 #
     ###################################################################################################################
 
-    def fillTables(self):
+    def fill_tables(self):
         # Fill the Windowing table
-        with open(resource_path("data/csv/imageWindowing.csv"), "r") as fileInput:
-            next(fileInput)
+        with open(resource_path("data/csv/imageWindowing.csv"), "r") as file_Input:
+            next(file_Input)
             i = 0
-            for row in fileInput:
+            for row in file_Input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
@@ -416,10 +416,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # organ names table
-        with open(resource_path("data/csv/organName.csv"), "r") as fileInput:
-            next(fileInput)
+        with open(resource_path("data/csv/organName.csv"), "r") as file_Input:
+            next(file_Input)
             i = 0
-            for row in fileInput:
+            for row in file_Input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
@@ -433,9 +433,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"), "r") as fileInput:
+        with open(resource_path("data/csv/volumeName.csv"), "r") as file_Input:
             i = 0
-            for row in fileInput:
+            for row in file_Input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
@@ -462,10 +462,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         #         i += 1
 
         # patient hash ID table, which is just for displaying all the patients anonymized byt the software since intallation
-        with open(resource_path("data/csv/patientHash.csv"), "r") as fileInput:
-            next(fileInput)
+        with open(resource_path("data/csv/patientHash.csv"), "r") as file_Input:
+            next(file_Input)
             i = 0
-            for row in fileInput:
+            for row in file_Input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
