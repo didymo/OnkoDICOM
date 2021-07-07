@@ -6,15 +6,14 @@ import platform
 
 
 class CheckAttributes:
+    """This class is for checking that particular attributes exist within a DICOM-RT image set."""
     def __init__(self, file_path):
         self.file_path = file_path
         self.files = []
         self.DICOM_files = {}
 
     def find_DICOM_files(self):
-        """
-        Find all DICOM files in the default directory.
-        """
+        """Find all DICOM files in the default directory."""
         total_files = sum([len(files) for root, dirs, files in os.walk(self.file_path)])
         if total_files:
             for root, dirs, files in os.walk(self.file_path, topdown=True):
@@ -39,7 +38,7 @@ class CheckAttributes:
     def get_type(self, DICOM_file):
         """
         Returns the type of data contained within a DICOM file
-        :return: string type of data in DICOM file
+        :return: string type of data in DICOM file (RT Struct, Ct Image, RT Dose, or RT Plan)
         """
         elements = {
             '1.2.840.10008.5.1.4.1.1.481.3': "RT Struct",
