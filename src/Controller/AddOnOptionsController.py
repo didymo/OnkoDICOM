@@ -9,7 +9,7 @@ import webbrowser
 from collections import deque
 
 from PySide6.QtWidgets import QFileDialog, QTableWidgetItem
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Slot, Signal
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
@@ -146,7 +146,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     #                                                                                                    #
     ######################################################################################################
     # windowing
-    @QtCore.Slot(QtCore.QPoint)
+    @Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Window(self, pos):
         # gets the position of the right click for the windowing table
         it = self.table_view.itemAt(pos)
@@ -163,7 +163,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         modify_row_action = menu.addAction("Modify")
         menu.addSeparator()
         delete_row_action = menu.addAction("Delete")
-        action = menu.exec_(self.table_view.viewport().mapToGlobal(pos))
+        action = menu.exec(self.table_view.viewport().mapToGlobal(pos))
         if action == delete_row_action:
             self.table_view.removeRow(c)
         if action == modify_row_action:
@@ -184,7 +184,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_view.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     # standard organ name table
-    @QtCore.Slot(QtCore.QPoint)
+    @Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Organ(self, pos):
         it = self.table_organ.itemAt(pos)
         if it is None:
@@ -199,7 +199,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         modify_row_action = menu.addAction("Modify")
         menu.addSeparator()
         delete_row_action = menu.addAction("Delete")
-        action = menu.exec_(self.table_organ.viewport().mapToGlobal(pos))
+        action = menu.exec(self.table_organ.viewport().mapToGlobal(pos))
         if action == delete_row_action:
             self.table_organ.removeRow(c)
         if action == modify_row_action:
@@ -217,7 +217,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_organ.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     # standard volume table
-    @QtCore.Slot(QtCore.QPoint)
+    @Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Volume(self, pos):
         it = self.table_volume.itemAt(pos)
         if it is None:
@@ -232,7 +232,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         modify_row_action = menu.addAction("Modify")
         menu.addSeparator()
         delete_row_action = menu.addAction("Delete")
-        action = menu.exec_(self.table_volume.viewport().mapToGlobal(pos))
+        action = menu.exec(self.table_volume.viewport().mapToGlobal(pos))
         if action == delete_row_action:
             self.table_volume.removeRow(c)
         if action == modify_row_action:
@@ -570,8 +570,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 class AddOptions:
     def __init__(self, window):
         self.window = window
+        self.options_window = AddOnOptions(window)
+        self.options_window.directory_updated.connect(lambda new_dir: self.window.directory_updated.emit(new_dir))
 
     def show_add_on_options(self):
-        self.options_window = AddOnOptions(self.window)
-        self.options_window.directory_updated.connect(lambda new_dir: self.window.directory_updated.emit(new_dir))
         self.options_window.show()

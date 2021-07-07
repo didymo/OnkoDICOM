@@ -12,35 +12,31 @@ class DICOMStructure:
 
     def __init__(self):
         """
-        patients: A list of Patient objects.
+        patients: A dictionary of Patient objects.
         """
-        self.patients = []
+        self.patients = {}
 
     def add_patient(self, patient):
         """
-        Add a Patient object to the list of patients.
+        Add a Patient object to the dictionary of patients.
         :param patient: A Patient object.
         """
-        self.patients.append(patient)
+        self.patients[patient.patient_id] = patient
 
     def has_patient(self, patient_id):
         """
         :param patient_id: PatientID to check.
         :return: True if patients contains patient_id.
         """
-        for patient in self.patients:
-            if patient_id == patient.patient_id:
-                return True
-        return False
+        return patient_id in self.patients
 
     def get_patient(self, patient_id):
         """
         :param patient_id: PatientID to check.
         :return: Patient object if patient found.
         """
-        for patient in self.patients:
-            if patient_id == patient.patient_id:
-                return patient
+        if self.has_patient(patient_id):
+            return self.patients[patient_id]
         return None
 
     def get_files(self):
@@ -48,7 +44,7 @@ class DICOMStructure:
         :return: List of all filepaths in all images below this item in the hierarchy.
         """
         filepaths = []
-        for patient in self.patients:
+        for patient_id, patient in self.patients.items():
             filepaths += (patient.get_files())
 
         return filepaths
@@ -57,49 +53,41 @@ class DICOMStructure:
         """
         :return: A list of QTreeWidgetItems based on the DICOMStructure object.
         """
-        new_items_list = []
-        for patient in self.patients:
-            new_items_list.append(patient.get_widget_item())
-
-        return new_items_list
+        return [patient.get_widget_item() for patient_id, patient in self.patients.items()]
 
 
 class Patient:
 
     def __init__(self, patient_id, patient_name):
         """
-        studies: A list of Study objects.
+        studies: A dictionary of Study objects.
         :param patient_id: PatientID in DICOM standard.
         """
         self.patient_id = patient_id
         self.patient_name = patient_name
-        self.studies = []
+        self.studies = {}
 
     def add_study(self, study):
         """
-        Adds a Study object to the patient's list of studies.
+        Adds a Study object to the patient's dictionary of studies.
         :param study: A Study object.
         """
-        self.studies.append(study)
+        self.studies[study.study_uid] = study
 
-    def has_study(self, study_id):
+    def has_study(self, study_uid):
         """
-        :param study_id: StudyInstanceUID to check.
-        :return: True if studies contains study_id
+        :param study_uid: StudyInstanceUID to check.
+        :return: True if studies contains study_uid
         """
-        for study in self.studies:
-            if study_id == study.study_id:
-                return True
-        return False
+        return study_uid in self.studies
 
-    def get_study(self, study_id):
+    def get_study(self, study_uid):
         """
-        :param study_id: StudyID to check.
+        :param study_uid: StudyID to check.
         :return: Study object if study found.
         """
-        for study in self.studies:
-            if study_id == study.study_id:
-                return study
+        if self.has_study(study_uid):
+            return self.studies[study_uid]
         return None
 
     def get_files(self):
@@ -107,7 +95,7 @@ class Patient:
         :return: List of all filepaths in all images below this item in the hierarchy.
         """
         filepaths = []
-        for study in self.studies:
+        for study_uid, study in self.studies.items():
             filepaths += (study.get_files())
 
         return filepaths
@@ -126,7 +114,7 @@ class Patient:
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
-        for study in self.studies:
+        for study_uid, study in self.studies.items():
             widget_item.addChild(study.get_widget_item())
 
         return widget_item
@@ -134,40 +122,36 @@ class Patient:
 
 class Study:
 
-    def __init__(self, study_id):
+    def __init__(self, study_uid):
         """
-        series: A list of Series objects.
-        :param study_id: StudyInstanceUID in DICOM standard.
+        series: A dictionary of Series objects.
+        :param study_uid: StudyInstanceUID in DICOM standard.
         """
-        self.study_id = study_id
+        self.study_uid = study_uid
         self.study_description = None
-        self.series = []
+        self.series = {}
 
     def add_series(self, series):
         """
-        Adds a Series object to the patient's list of series.
+        Adds a Series object to the patient's dictionary of series.
         :param series: A Series object.
         """
-        self.series.append(series)
+        self.series[series.series_uid] = series
 
-    def has_series(self, series_id):
+    def has_series(self, series_uid):
         """
-        :param series_id: A SeriesInstanceUID to check.
-        :return: True if series contains series_id.
+        :param series_uid: A SeriesInstanceUID to check.
+        :return: True if series contains series_uid.
         """
-        for series in self.series:
-            if series_id == series.series_id:
-                return True
-        return False
+        return series_uid in self.series
 
-    def get_series(self, series_id):
+    def get_series(self, series_uid):
         """
-        :param series_id: SeriesID to check.
+        :param series_uid: SeriesID to check.
         :return: Series object if series found.
         """
-        for series in self.series:
-            if series_id == series.series_id:
-                return series
+        if self.has_series(series_uid):
+            return self.series[series_uid]
         return None
 
     def get_files(self):
@@ -175,7 +159,7 @@ class Study:
         :return: List of all filepaths in all images below this item in the hierarchy.
         """
         filepaths = []
-        for series in self.series:
+        for series_uid, series in self.series.items():
             filepaths += (series.get_files())
 
         return filepaths
@@ -196,8 +180,8 @@ class Study:
                       "1.2.840.10008.5.1.4.1.1.481.5"]      # RT Plan
 
         contained_classes = []
-        for series in self.series:
-            for image in series.images:
+        for series_uid, series in self.series.items():
+            for image_uid, image in series.images.items():
                 if image.class_id not in contained_classes:
                     contained_classes.append(image.class_id)
 
@@ -211,7 +195,7 @@ class Study:
         widget_item.setFlags(widget_item.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
-        for series in self.series:
+        for series_uid, series in self.series.items():
             widget_item.addChild(series.get_widget_item())
 
         return widget_item
@@ -219,40 +203,36 @@ class Study:
 
 class Series:
 
-    def __init__(self, series_id):
+    def __init__(self, series_uid):
         """
-        images: A list of Image objects.
-        :param series_id: SeriesInstanceUID in DICOM standard.
+        images: A dictionary of Image objects.
+        :param series_uid: SeriesInstanceUID in DICOM standard.
         """
-        self.series_id = series_id
+        self.series_uid = series_uid
         self.series_description = None
-        self.images = []
+        self.images = {}
 
     def add_image(self, image):
         """
-        Adds an Image object to the patient's list of images.
+        Adds an Image object to the patient's dictionary of images.
         :param image:  An Image object.
         """
-        self.images.append(image)
+        self.images[image.image_uid] = image
 
-    def has_image(self, image_id):
+    def has_image(self, image_uid):
         """
-        :param image_id: A SOPInstanceUID to check.
-        :return: True if images contains image_id.
+        :param image_uid: A SOPInstanceUID to check.
+        :return: True if images contains image_uid.
         """
-        for image in self.images:
-            if image_id == image.image_id:
-                return True
-        return False
+        return image_uid in self.images
 
-    def get_image(self, image_id):
+    def get_image(self, image_uid):
         """
-        :param image_id: ImageID to check
+        :param image_uid: ImageID to check
         :return: Image object if Image found.
         """
-        for image in self.images:
-            if image_id == image.series_id:
-                return image
+        if self.get_image(image_uid):
+            return self.images[image_uid]
         return None
 
     def get_files(self):
@@ -260,7 +240,7 @@ class Series:
         :return: List of all filepaths in all images below this item in the hierarchy.
         """
         filepaths = []
-        for image in self.images:
+        for image_uid, image in self.images.items():
             filepaths += [image.path]
 
         return filepaths
@@ -276,7 +256,7 @@ class Series:
         :return: List of string or single string containing modalities of all images in the series.
         """
         series_types = []
-        for image in self.images:
+        for image_uid, image in self.images.items():
             if image.modality not in series_types:
                 series_types.append(image.modality)
         return series_types if len(series_types) > 1 else series_types[0]
@@ -293,14 +273,14 @@ class Series:
 
 class Image:
 
-    def __init__(self, path, image_id, class_id, modality):
+    def __init__(self, path, image_uid, class_id, modality):
         """
-        image_id: SOPInstanceUID in DICOM standard.
+        image_uid: SOPInstanceUID in DICOM standard.
         :param dicom_file: A PyDicom dataset.
         :param path: Path of the DICOM file.
         """
         self.path = path
-        self.image_id = image_id
+        self.image_uid = image_uid
         self.class_id = class_id
         self.modality = modality
 
@@ -308,4 +288,4 @@ class Image:
         """
         :return: Information about the object as a string
         """
-        return "Image: %s | Path: %s" % (self.image_id, self.path)
+        return "Image: %s | Path: %s" % (self.image_uid, self.path)
