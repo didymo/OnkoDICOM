@@ -400,10 +400,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     def fill_tables(self):
         # Fill the Windowing table
-        with open(resource_path("data/csv/imageWindowing.csv"), "r") as file_Input:
-            next(file_Input)
+        with open(resource_path("data/csv/imageWindowing.csv"), "r") as file_input:
+            next(file_input)
             i = 0
-            for row in file_Input:
+            for row in file_input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
@@ -416,10 +416,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # organ names table
-        with open(resource_path("data/csv/organName.csv"), "r") as file_Input:
-            next(file_Input)
+        with open(resource_path("data/csv/organName.csv"), "r") as file_input:
+            next(file_input)
             i = 0
-            for row in file_Input:
+            for row in file_input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
@@ -433,9 +433,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"), "r") as file_Input:
+        with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
             i = 0
-            for row in file_Input:
+            for row in file_input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
@@ -462,10 +462,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         #         i += 1
 
         # patient hash ID table, which is just for displaying all the patients anonymized byt the software since intallation
-        with open(resource_path("data/csv/patientHash.csv"), "r") as file_Input:
-            next(file_Input)
+        with open(resource_path("data/csv/patientHash.csv"), "r") as file_input:
+            next(file_input)
             i = 0
-            for row in file_Input:
+            for row in file_input:
                 items = [
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
