@@ -80,14 +80,14 @@ def test_tree(qtbot):
     i = 0
     if "rtss" in file_names_dict:
         dataset_rtss = dcmread(file_names_dict['rtss'])
-            self.rois = ImageLoading.get_roi_info(dataset_rtss)
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
-            dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
+        rois = ImageLoading.get_roi_info(dataset_rtss)
+        dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
+        dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
-            patient_dict_container.set("rois", self.rois)
-            patient_dict_container.set("raw_contour", dict_raw_contour_data)
-            patient_dict_container.set("num_points", dict_numpoints)
-            patient_dict_container.set("pixluts", dict_pixluts)
+        patient_dict_container.set("rois", rois)
+        patient_dict_container.set("raw_contour", dict_raw_contour_data)
+        patient_dict_container.set("num_points", dict_numpoints)
+        patient_dict_container.set("pixluts", dict_pixluts)
 
     if patient_dict_container.has_modality(
             "rtss") and patient_dict_container.has_modality("rtdose"):
