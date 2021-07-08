@@ -114,6 +114,32 @@ class ActionHandler:
         self.action_add_ons.setText("Add-On Options")
         self.action_add_ons.triggered.connect(self.add_on_options_handler)
 
+        # Switch to Axial View Action
+        self.icon_axial_view = QtGui.QIcon()
+        self.icon_axial_view.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_axial_view = QtGui.QAction()
+        self.action_axial_view.setIcon(self.icon_axial_view)
+        self.action_axial_view.setIconVisibleInMenu(True)
+        self.action_axial_view.setText("Axial View")
+        self.action_axial_view.triggered.connect(lambda: print('Axial View'))
+
+        # Switch to 4 Views Action
+        self.icon_four_views = QtGui.QIcon()
+        self.icon_four_views.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_four_views = QtGui.QAction()
+        self.action_four_views.setIcon(self.icon_four_views)
+        self.action_four_views.setIconVisibleInMenu(True)
+        self.action_four_views.setText("Four Views")
+        self.action_four_views.triggered.connect(lambda: print('Four Views'))
+
         # Export Clinical Data Action
         self.action_clinical_data_export = QtGui.QAction()
         self.action_clinical_data_export.setText("Export Clinical Data")
