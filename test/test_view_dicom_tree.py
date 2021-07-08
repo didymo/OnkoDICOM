@@ -32,6 +32,7 @@ def get_dicom_files(directory):
                 dicom_files.append(os.path.join(root, name))
     return dicom_files
 
+
 def recursive_search(dict_tree, parent):
     """
     Recursive Function to test all rows match the data from the dictionary
@@ -61,7 +62,6 @@ def test_tree(qtbot):
     :qtbot: The bot used for testing
     :return:
     """
-
     path_text = "/test/testdata/DICOM-RT-TEST"
     if platform.system() == "Windows":
         path_text = "\\testdata\\DICOM-RT-TEST"
@@ -76,6 +76,7 @@ def test_tree(qtbot):
     patient_dict_container.clear()
     patient_dict_container.set_initial_values(parent_dict, read_data_dict,
                                               file_names_dict)
+    
     i = 0
     if "rtss" in file_names_dict:
         dataset_rtss = dcmread(file_names_dict['rtss'])
