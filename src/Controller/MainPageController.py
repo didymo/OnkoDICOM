@@ -970,7 +970,7 @@ class Transect(QtWidgets.QGraphicsScene):
             self.mainWindow.lower_limit = self.lower_limit
             self.mainWindow.on_transect_close()
         else:
-            self.mainWindow.dicom_view.update_view()
+            self.mainWindow.dicom_view_axial.update_view()
 
         event.canvas.figure.axes[0].has_been_closed = True
 

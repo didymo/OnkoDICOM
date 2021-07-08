@@ -73,7 +73,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view.zoom_out)
+        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view_axial.zoom_out)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
@@ -86,7 +86,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view.zoom_in)
+        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view_axial.zoom_in)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
@@ -125,7 +125,7 @@ class ActionHandler:
         self.action_axial_view.setIcon(self.icon_axial_view)
         self.action_axial_view.setIconVisibleInMenu(True)
         self.action_axial_view.setText("Axial View")
-        self.action_axial_view.triggered.connect(lambda: print('Axial View'))
+        self.action_axial_view.triggered.connect(self.axial_view_handler)
 
         # Switch to 4 Views Action
         self.icon_four_views = QtGui.QIcon()
@@ -138,7 +138,7 @@ class ActionHandler:
         self.action_four_views.setIcon(self.icon_four_views)
         self.action_four_views.setIconVisibleInMenu(True)
         self.action_four_views.setText("Four Views")
-        self.action_four_views.triggered.connect(lambda: print('Four Views'))
+        self.action_four_views.triggered.connect(self.four_views_handler)
 
         # Export Clinical Data Action
         self.action_clinical_data_export = QtGui.QAction()
@@ -278,7 +278,7 @@ class ActionHandler:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-        id = self.__main_page.dicom_view.slider.value()
+        id = self.__main_page.dicom_view_axial.slider.value()
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -286,7 +286,7 @@ class ActionHandler:
         pixmap = self.patient_dict_container.get("pixmaps")[id]
         self.__main_page.call_class.runTransect(
             self.__main_page,
-            self.__main_page.dicom_view.view,
+            self.__main_page.dicom_view_axial.view,
             pixmap,
             dt._pixel_array.transpose(),
             rowS,
@@ -295,6 +295,12 @@ class ActionHandler:
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()
+
+    def axial_view_handler(self):
+        print('Axial View')
+
+    def four_views_handler(self):
+        print('Four Views')
 
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
