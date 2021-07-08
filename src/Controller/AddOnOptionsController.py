@@ -9,7 +9,7 @@ import webbrowser
 from collections import deque
 
 from PySide6.QtWidgets import QFileDialog, QTableWidgetItem
-from PySide6.QtCore import Slot, Signal
+from PySide6.QtCore import Slot
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
@@ -24,7 +24,6 @@ from src.Controller.PathHandler import resource_path
 
 
 class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
-    directory_updated = Signal(str)
 
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
@@ -377,7 +376,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         try:
             new_dir = self.change_default_directory.change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
-            self.directory_updated.emit(new_dir)
             QMessageBox.about(self, "Success", "Default directory was successfully updated")
         except SqlError:
             configuration.set_up_config_db()
@@ -571,7 +569,6 @@ class AddOptions:
     def __init__(self, window):
         self.window = window
         self.options_window = AddOnOptions(window)
-        self.options_window.directory_updated.connect(lambda new_dir: self.window.directory_updated.emit(new_dir))
 
     def show_add_on_options(self):
         self.options_window.show()
