@@ -35,7 +35,6 @@ class UIMainWindow:
     itself can safely be passed into the class.
     """
     pyradi_trigger = QtCore.Signal(str, dict, str)
-    directory_updated = QtCore.Signal(str)
 
     def setup_ui(self, main_window_instance):
         self.main_window_instance = main_window_instance

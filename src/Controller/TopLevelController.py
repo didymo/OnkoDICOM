@@ -52,9 +52,6 @@ class Controller:
         if not isinstance(self.main_window, MainWindow):
             self.open_patient_window = OpenPatientWindow(self.default_directory)
             self.open_patient_window.go_next_window.connect(self.show_main_window)
-        else:
-            self.open_patient_window.open_patient_directory_input_box.setText(self.default_directory)
-            self.open_patient_window.scan_directory_for_patient()
 
         self.open_patient_window.show()
 
@@ -69,7 +66,6 @@ class Controller:
             self.main_window = MainWindow()
             self.main_window.open_patient_window.connect(self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
-            self.main_window.directory_updated.connect(self.update_default_directory)
 
         # Once the MainWindow has finished loading (which takes some time) close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
