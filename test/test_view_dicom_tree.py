@@ -161,7 +161,3 @@ def test_file_with_all_components(test_tree, qtbot):
         # Loop Through Each Row
         parent = test_tree.dicom_tree.model_tree.invisibleRootItem()
         recursive_search(dict_tree, parent)
-
-
-
-
