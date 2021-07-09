@@ -10,13 +10,14 @@ from src.Controller.PathHandler import resource_path
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None, display_metadata=True):
+    def __init__(self, roi_color=None, iso_color=None, display_metadata=True, axial_view=False):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.zoom = 1
         self.current_slice_number = None
         self.display_metadata = display_metadata
+        self.axial_view = axial_view
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -64,7 +65,7 @@ class DicomView(QtWidgets.QWidget):
         self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.view.setBackgroundBrush(background_brush)
-        self.view.setGeometry(QtCore.QRect(0, 0, 877, 517))
+        # self.view.setGeometry(QtCore.QRect(0, 0, 877, 517))
 
     def init_metadata(self):
         """
@@ -106,8 +107,15 @@ class DicomView(QtWidgets.QWidget):
 
         # Create a widget to contain the two top widgets
         top_widget = QtWidgets.QWidget()
-        top_widget.setFixedHeight(100)
         top = QtWidgets.QHBoxLayout(top_widget)
+        # Set margin for axial view
+        if self.axial_view:
+            top_widget.setFixedHeight(50)
+            top_widget.setContentsMargins(0, 0, 0, 0)
+            top.setContentsMargins(0, 0, 0, 0)
+            top.setSpacing(0)
+        else:
+            top_widget.setFixedHeight(100)
         top.addWidget(top_left_widget, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         top.addWidget(top_right_widget, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
@@ -124,8 +132,15 @@ class DicomView(QtWidgets.QWidget):
 
         # Create a widget to contain the two bottom widgets
         bottom_widget = QtWidgets.QWidget()
-        bottom_widget.setFixedHeight(100)
         bottom = QtWidgets.QHBoxLayout(bottom_widget)
+        # Set margin for axial view
+        if self.axial_view:
+            bottom_widget.setFixedHeight(50)
+            bottom_widget.setContentsMargins(0, 0, 0, 0)
+            bottom.setContentsMargins(0, 0, 0, 0)
+            bottom.setSpacing(0)
+        else:
+            bottom_widget.setFixedHeight(100)
         bottom.addWidget(bottom_left_widget, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         bottom.addWidget(bottom_right_widget, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
@@ -271,6 +286,20 @@ class DicomView(QtWidgets.QWidget):
         # Retrieve dictionary from the dataset of the slice
         id = self.slider.value()
         dataset = self.patient_dict_container.dataset[id]
+
+        # Set margin for axial view
+        if self.axial_view:
+            if self.view.size().height() < self.scene.height()*self.zoom and \
+                    self.view.size().width() >= self.scene.width()*self.zoom:
+                self.metadata_layout.setSpacing(6)
+                self.metadata_layout.setContentsMargins(0, 0, 11, 0)
+            elif self.view.size().height() < self.scene.height()*self.zoom and \
+                    self.view.size().width() < self.scene.width()*self.zoom:
+                self.metadata_layout.setSpacing(6)
+                self.metadata_layout.setContentsMargins(0, 0, 11, 11)
+            else:
+                self.metadata_layout.setSpacing(0)
+                self.metadata_layout.setContentsMargins(0, 0, 0, 0)
 
         # Information to display
         self.current_slice_number = dataset['InstanceNumber'].value

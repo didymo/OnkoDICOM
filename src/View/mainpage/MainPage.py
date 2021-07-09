@@ -94,7 +94,7 @@ class UIMainWindow:
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_view_single = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, axial_view=True)
         self.dicom_view_sagital = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, display_metadata=False)
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, display_metadata=False)
 

@@ -298,9 +298,11 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_view_single)
+        self.__main_page.dicom_view_single.update_view()
 
     def four_views_handler(self):
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
+        self.__main_page.dicom_view_axial.update_view()
 
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
