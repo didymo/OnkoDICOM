@@ -130,7 +130,7 @@ class ActionHandler:
         # Switch to 4 Views Action
         self.icon_four_views = QtGui.QIcon()
         self.icon_four_views.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
+            QtGui.QPixmap(resource_path("res/images/btn-icons/four_views_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
