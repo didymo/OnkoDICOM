@@ -2,7 +2,7 @@ import glob
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -59,7 +59,7 @@ class UIMainWindow:
 
 
         self.central_widget = QtWidgets.QWidget()
-        self.central_widget_layout = QtWidgets.QVBoxLayout()
+        self.central_widget_layout = QVBoxLayout()
 
         self.patient_bar = PatientBar()
 
@@ -88,25 +88,30 @@ class UIMainWindow:
         # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
 
-        # Add 3 DICOM views to right panel as a tab
-        self.dicom_3_views = QWidget()
-        self.dicom_3_views_grid_layout = QGridLayout()
-        for i in range(2):
-            self.dicom_3_views_grid_layout.setColumnStretch(i, 1)
-            self.dicom_3_views_grid_layout.setRowStretch(i, 1)
+        # Add DICOM View to right panel as a tab
+        self.dicom_view = QStackedWidget()
 
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
+        self.dicom_view_single = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_sagital = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_view_sagital = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, display_metadata=False)
+        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, display_metadata=False)
 
-        self.dicom_3_views_grid_layout.addWidget(self.dicom_view_axial, 0, 0)
-        self.dicom_3_views_grid_layout.addWidget(self.dicom_view_sagital, 0, 1)
-        self.dicom_3_views_grid_layout.addWidget(self.dicom_view_coronal, 1, 0)
+        self.dicom_4_views_widget = QWidget()
+        self.dicom_4_views_layout = QGridLayout()
+        for i in range(2):
+            self.dicom_4_views_layout.setColumnStretch(i, 1)
+            self.dicom_4_views_layout.setRowStretch(i, 1)
+        self.dicom_4_views_layout.addWidget(self.dicom_view_axial, 0, 0)
+        self.dicom_4_views_layout.addWidget(self.dicom_view_sagital, 0, 1)
+        self.dicom_4_views_layout.addWidget(self.dicom_view_coronal, 1, 0)
+        self.dicom_4_views_widget.setLayout(self.dicom_4_views_layout)
 
-        self.dicom_3_views.setLayout(self.dicom_3_views_grid_layout)
-        self.right_panel.addTab(self.dicom_3_views, "DICOM View")
+        self.dicom_view.addWidget(self.dicom_4_views_widget)
+        self.dicom_view.addWidget(self.dicom_view_single)
+        self.dicom_view.setCurrentWidget(self.dicom_view_single)
+        self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
@@ -173,6 +178,7 @@ class UIMainWindow:
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
         """
+        self.dicom_view_single.update_view()
         self.dicom_view_axial.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()

@@ -10,12 +10,13 @@ from src.Controller.PathHandler import resource_path
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None):
+    def __init__(self, roi_color=None, iso_color=None, display_metadata=True):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.zoom = 1
         self.current_slice_number = None
+        self.display_metadata = display_metadata
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -32,14 +33,15 @@ class DicomView(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Init metadata widgets
-        self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
-        self.label_image_id = QtWidgets.QLabel()
-        self.label_image_pos = QtWidgets.QLabel()
-        self.label_wl = QtWidgets.QLabel()
-        self.label_image_size = QtWidgets.QLabel()
-        self.label_zoom = QtWidgets.QLabel()
-        self.label_patient_pos = QtWidgets.QLabel()
-        self.init_metadata()
+        if display_metadata:
+            self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
+            self.label_image_id = QtWidgets.QLabel()
+            self.label_image_pos = QtWidgets.QLabel()
+            self.label_wl = QtWidgets.QLabel()
+            self.label_image_size = QtWidgets.QLabel()
+            self.label_zoom = QtWidgets.QLabel()
+            self.label_patient_pos = QtWidgets.QLabel()
+            self.init_metadata()
 
         self.update_view()
 
@@ -151,7 +153,8 @@ class DicomView(QtWidgets.QWidget):
         if self.patient_dict_container.get("selected_doses"):
             self.isodose_display()
 
-        self.update_metadata()
+        if self.display_metadata:
+            self.update_metadata()
         self.view.setScene(self.scene)
 
     def image_display(self):

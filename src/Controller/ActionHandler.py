@@ -73,7 +73,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view_axial.zoom_out)
+        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view_single.zoom_out)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
@@ -86,7 +86,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view_axial.zoom_in)
+        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view_single.zoom_in)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
@@ -115,17 +115,17 @@ class ActionHandler:
         self.action_add_ons.triggered.connect(self.add_on_options_handler)
 
         # Switch to Axial View Action
-        self.icon_axial_view = QtGui.QIcon()
-        self.icon_axial_view.addPixmap(
+        self.icon_one_view = QtGui.QIcon()
+        self.icon_one_view.addPixmap(
             QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
-        self.action_axial_view = QtGui.QAction()
-        self.action_axial_view.setIcon(self.icon_axial_view)
-        self.action_axial_view.setIconVisibleInMenu(True)
-        self.action_axial_view.setText("Axial View")
-        self.action_axial_view.triggered.connect(self.axial_view_handler)
+        self.action_one_view = QtGui.QAction()
+        self.action_one_view.setIcon(self.icon_one_view)
+        self.action_one_view.setIconVisibleInMenu(True)
+        self.action_one_view.setText("One View")
+        self.action_one_view.triggered.connect(self.one_view_handler)
 
         # Switch to 4 Views Action
         self.icon_four_views = QtGui.QIcon()
@@ -278,7 +278,7 @@ class ActionHandler:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-        id = self.__main_page.dicom_view_axial.slider.value()
+        id = self.__main_page.dicom_view_single.slider.value()
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -286,7 +286,7 @@ class ActionHandler:
         pixmap = self.patient_dict_container.get("pixmaps")[id]
         self.__main_page.call_class.runTransect(
             self.__main_page,
-            self.__main_page.dicom_view_axial.view,
+            self.__main_page.dicom_view_single.view,
             pixmap,
             dt._pixel_array.transpose(),
             rowS,
@@ -296,11 +296,11 @@ class ActionHandler:
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()
 
-    def axial_view_handler(self):
-        print('Axial View')
+    def one_view_handler(self):
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_view_single)
 
     def four_views_handler(self):
-        print('Four Views')
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
 
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
