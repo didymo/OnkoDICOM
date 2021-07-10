@@ -17,10 +17,23 @@ class IsodoseTab(QtWidgets.QWidget):
         self.color_squares = self.init_color_squares()
         self.checkboxes = self.init_checkboxes()
 
+        # Create and initialise ISO2ROI button and layout
+        self.iso2roi_button = QtWidgets.QPushButton()
+        self.iso2roi_button.setText("Convert Isodose to ROI")
+        self.iso2roi_button.clicked.connect(self.iso2roi_button_clicked)
+
+        self.iso2roi_layout = QtWidgets.QHBoxLayout()
+        self.iso2roi_layout.setContentsMargins(0, 0, 0, 0)
+        self.iso2roi_layout.addWidget(self.iso2roi_button)
+
         self.isodose_tab_layout = QtWidgets.QVBoxLayout()
         self.isodose_tab_layout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.isodose_tab_layout.setSpacing(0)
         self.init_layout()
+
+        # Add button to tab
+        self.isodose_tab_layout.addStretch()
+        self.isodose_tab_layout.addLayout(self.iso2roi_layout)
 
         self.setLayout(self.isodose_tab_layout)
 
@@ -132,3 +145,7 @@ class IsodoseTab(QtWidgets.QWidget):
         color_square_label.setPixmap(color_square_pix)
 
         return color_square_label
+
+    def iso2roi_button_clicked(self):
+        """Clicked action handler for the ISO2ROI button. Initiates the ISO2ROI conversion process."""
+        print("Button clicked")
