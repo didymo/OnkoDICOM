@@ -1,5 +1,6 @@
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
+from skimage import measure
 
 from src.Model import ImageLoading
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
@@ -247,6 +248,34 @@ class PrescriptionDose:
         return patient_dict_container.dataset['rtdose']
 
 
+class CalculateISOBoundaries:
+    def __init__(self, prescription_dose):
+        self.patient_dict_container = PatientDictContainer()
+        self.prescription_dose = prescription_dose
+
+    def calculate_boundaries(self):
+        """
+        Calculates isodose boundaries for each isodose level.
+        :return: countours, a list containing the countours for each isodose level
+        """
+        # Initialise variables needed to find isodose levels
+        slider_id = 0 # hardcoded now, temporary
+        z = self.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+        dataset_rtdose = self.prescription_dose.get_rt_plan_dose()
+        grid = get_dose_grid(dataset_rtdose, float(z))
+
+        # hardcoded now, temporary
+        isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
+        contours = []
+
+        if not (grid == []):
+            for sd in sorted(isodose_percentages):
+                dose_level = sd * self.prescription_dose.get_rt_dose_dose() / (dataset_rtdose.DoseGridScaling * 10000)
+                contours.append(measure.find_contours(grid, dose_level))
+
+        return contours
+
+
 if __name__ == "__main__":
     # Load test DICOM files
     if platform.system() == "Windows":
@@ -276,3 +305,6 @@ if __name__ == "__main__":
 
     # Get prescription dose from an RT Plan file
     prescription_dose = PrescriptionDose(check_attributes)
+    iso_boundaries = CalculateISOBoundaries(prescription_dose)
+    iso_boundaries.isodose_display()
+    print("")
