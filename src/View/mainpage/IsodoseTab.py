@@ -1,6 +1,12 @@
+import sys
+
 from PySide6 import QtWidgets, QtGui, QtCore
 
+from src.Model.ISO2ROI import ISO2ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+
+import platform
+import os
 
 isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 
@@ -149,3 +155,32 @@ class IsodoseTab(QtWidgets.QWidget):
     def iso2roi_button_clicked(self):
         """Clicked action handler for the ISO2ROI button. Initiates the ISO2ROI conversion process."""
         print("Button clicked")
+
+        # TODO: replace with existing list of DICOM files so don't need to search again
+        if platform.system() == "Windows":
+            file_path = "\\test\\testdata\\DICOM-RT-TEST"
+        elif platform.system() == "Linux" or platform.system() == "Darwin":
+            file_path = "/test/testdata/DICOM-RT-TEST"
+
+        # Get the absolute file path
+        file_path = os.getcwd() + file_path
+
+        # Create ISO2ROI object and find DICOM files
+        iso2roi = ISO2ROI(file_path)
+        iso2roi.find_DICOM_files()
+
+        # Check to make sure that CT and RTDOSE data is present
+        present_elements = iso2roi.check_elements()
+        if present_elements["CT Image"] and present_elements["RT Dose"]:
+            print("CT and RTDOSE data present in DICOM-RT image set located in %s" % file_path)
+        elif present_elements["CT Image"] and not present_elements["RT Dose"]:
+            print("CT data present in DICOM-RT image set located in %s" % file_path)
+        elif not present_elements["CT Image"] and present_elements["RT Dose"]:
+            print("RTDOSE data present in DICOM-RT image set located in %s" % file_path)
+        else:
+            print("CT and RTDOSE data not present in DICOM-RT image set located in %s" % file_path)
+
+        # Calculate dose boundaries
+        print("Calculating boundaries")
+        iso2roi.calculate_boundaries()
+        print("Done")
