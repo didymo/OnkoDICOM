@@ -306,5 +306,5 @@ if __name__ == "__main__":
     # Get prescription dose from an RT Plan file
     prescription_dose = PrescriptionDose(check_attributes)
     iso_boundaries = CalculateISOBoundaries(prescription_dose)
-    iso_boundaries.isodose_display()
+    iso_boundaries.calculate_boundaries()
     print("")
