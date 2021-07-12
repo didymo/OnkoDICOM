@@ -7,7 +7,6 @@ from src.View.mainpage.RenameROIWindow import RenameROIWindow
 
 
 class StructureWidget(QtWidgets.QWidget):
-
     structure_renamed = QtCore.Signal(tuple)  # (new_dataset, change_description)
 
     def __init__(self, roi_id, color, text, structure_tab):
@@ -55,7 +54,8 @@ class StructureWidget(QtWidgets.QWidget):
 
     def roi_suggestions(self):
         """
-        Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
+        Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv
+        format.
 
         :return: two dimensional list with ROI name and string match percent
         i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
