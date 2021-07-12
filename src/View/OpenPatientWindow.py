@@ -294,7 +294,7 @@ class UIOpenPatientWindow(object):
                 self.selected_series_types.update(series_type)
 
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
-        if len(list({'CT', 'MR', 'PET'} & self.selected_series_types)) == 0:
+        if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
         elif 'RTSTRUCT' not in self.selected_series_types:
@@ -305,7 +305,7 @@ class UIOpenPatientWindow(object):
             header = ""
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
-        if len(list({'CT', 'MR', 'PET'} & self.selected_series_types)) != 0:
+        if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
 
     def confirm_button_clicked(self):
