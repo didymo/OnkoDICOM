@@ -234,11 +234,15 @@ class ActionHandler:
 
         # Update the dictionary of pixmaps with the update window and level values
         pixel_values = self.patient_dict_container.get("pixel_values")
-        pixmaps = get_pixmaps(pixel_values, window, level)
+        aspect = self.patient_dict_container.get("aspect")
+        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, aspect)
 
+        self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
+        self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
+        self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
+        self.patient_dict_container.set("pixmaps", pixmaps_coronal)
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
-        self.patient_dict_container.set("pixmaps", pixmaps)
 
         self.__main_page.update_views()
 

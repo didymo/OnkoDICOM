@@ -10,14 +10,18 @@ from src.Controller.PathHandler import resource_path
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None, display_metadata=True, axial_view=False):
+    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", format_metadata=False):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.zoom = 1
         self.current_slice_number = None
-        self.display_metadata = display_metadata
-        self.axial_view = axial_view
+        self.slice_view = slice_view
+        if self.slice_view != "axial":
+            self.display_metadata = False
+        else:
+            self.display_metadata = True
+        self.format_metadata = format_metadata
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -34,7 +38,7 @@ class DicomView(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Init metadata widgets
-        if display_metadata:
+        if self.display_metadata:
             self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
             self.label_image_id = QtWidgets.QLabel()
             self.label_image_pos = QtWidgets.QLabel()
@@ -50,7 +54,7 @@ class DicomView(QtWidgets.QWidget):
         """
         Create a slider for the DICOM Image View.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -65,7 +69,6 @@ class DicomView(QtWidgets.QWidget):
         self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.view.setBackgroundBrush(background_brush)
-        # self.view.setGeometry(QtCore.QRect(0, 0, 877, 517))
 
     def init_metadata(self):
         """
@@ -109,7 +112,7 @@ class DicomView(QtWidgets.QWidget):
         top_widget = QtWidgets.QWidget()
         top = QtWidgets.QHBoxLayout(top_widget)
         # Set margin for axial view
-        if self.axial_view:
+        if not self.format_metadata:
             top_widget.setFixedHeight(50)
             top_widget.setContentsMargins(0, 0, 0, 0)
             top.setContentsMargins(0, 0, 0, 0)
@@ -134,7 +137,7 @@ class DicomView(QtWidgets.QWidget):
         bottom_widget = QtWidgets.QWidget()
         bottom = QtWidgets.QHBoxLayout(bottom_widget)
         # Set margin for axial view
-        if self.axial_view:
+        if not self.format_metadata:
             bottom_widget.setFixedHeight(50)
             bottom_widget.setContentsMargins(0, 0, 0, 0)
             bottom.setContentsMargins(0, 0, 0, 0)
@@ -162,21 +165,20 @@ class DicomView(QtWidgets.QWidget):
         if zoom_change:
             self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
 
-        if self.patient_dict_container.get("selected_rois"):
-            self.roi_display()
-
-        if self.patient_dict_container.get("selected_doses"):
-            self.isodose_display()
-
         if self.display_metadata:
+            if self.patient_dict_container.get("selected_rois"):
+                self.roi_display()
+            if self.patient_dict_container.get("selected_doses"):
+                self.isodose_display()
             self.update_metadata()
+
         self.view.setScene(self.scene)
 
     def image_display(self):
         """
         Update the image to be displayed on the DICOM View.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
@@ -288,7 +290,7 @@ class DicomView(QtWidgets.QWidget):
         dataset = self.patient_dict_container.dataset[id]
 
         # Set margin for axial view
-        if self.axial_view:
+        if not self.format_metadata:
             if self.view.size().height() < self.scene.height()*self.zoom and \
                     self.view.size().width() >= self.scene.width()*self.zoom:
                 self.metadata_layout.setSpacing(6)
@@ -303,7 +305,7 @@ class DicomView(QtWidgets.QWidget):
 
         # Information to display
         self.current_slice_number = dataset['InstanceNumber'].value
-        total_slices = len(self.patient_dict_container.get("pixmaps"))
+        total_slices = len(self.patient_dict_container.get("pixmaps_"+self.slice_view))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
         patient_pos = dataset['PatientPosition'].value
