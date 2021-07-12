@@ -14,7 +14,8 @@ QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 
 if __name__ == "__main__":
 
-    # On some configurations error traceback is not being displayed when the program crashes. This is a workaround.
+    # On some configurations error traceback is not being displayed
+    #     when the program crashes. This is a workaround.
     sys._excepthook = sys.excepthook
 
     def exception_hook(exctype, value, traceback):
