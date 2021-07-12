@@ -1,6 +1,6 @@
 import glob
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
@@ -88,15 +88,23 @@ class UIMainWindow:
         # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
 
-        # Add DICOM View to right panel as a tab
+        # Create a Dicom View containing single-slice and 3-slice views
         self.dicom_view = QStackedWidget()
 
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_view_single = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata = False)
+        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
         self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
+
+        # Rescale the size of the scenes inside the 3-slice views
+        self.dicom_view_axial.zoom = 0.5
+        self.dicom_view_sagittal.zoom = 0.5
+        self.dicom_view_coronal.zoom = 0.5
+        self.dicom_view_axial.update_view(zoom_change=True)
+        self.dicom_view_sagittal.update_view(zoom_change=True)
+        self.dicom_view_coronal.update_view(zoom_change=True)
 
         self.dicom_4_views_widget = QWidget()
         self.dicom_4_views_layout = QGridLayout()
@@ -111,6 +119,8 @@ class UIMainWindow:
         self.dicom_view.addWidget(self.dicom_4_views_widget)
         self.dicom_view.addWidget(self.dicom_view_single)
         self.dicom_view.setCurrentWidget(self.dicom_view_single)
+
+        # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         # Add DVH tab to right panel as a tab

@@ -10,17 +10,17 @@ from src.Controller.PathHandler import resource_path
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", format_metadata=False):
+    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", format_metadata=True):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.zoom = 1
         self.current_slice_number = None
         self.slice_view = slice_view
-        if self.slice_view != "axial":
-            self.display_metadata = False
-        else:
+        if self.slice_view == "axial":
             self.display_metadata = True
+        else:
+            self.display_metadata = False
         self.format_metadata = format_metadata
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
