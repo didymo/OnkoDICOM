@@ -162,12 +162,8 @@ class DicomView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
-        h_line = CrossHair(0,256,512,256, QtGui.QColor(255,0,0))
-        v_line = CrossHair(256,0,256,512, QtGui.QColor(0,255,0))
         self.scene = QtWidgets.QGraphicsScene()
         self.scene.addItem(label)
-        self.scene.addItem(h_line)
-        self.scene.addItem(v_line)
 
     def roi_display(self):
         """
@@ -372,35 +368,3 @@ class DicomView(QtWidgets.QWidget):
     def zoom_out(self):
         self.zoom /= 1.05
         self.update_view(zoom_change=True)
-
-
-class CrossHair(QtWidgets.QGraphicsLineItem):
-    def __init__(self, x1, y1, x2, y2, color):
-        QtWidgets.QGraphicsLineItem.__init__(self, x1, y1, x2, y2)
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-        # Set color of the line
-        self.setPen(QtGui.QPen(color))
-        # Change the configuration of a line so that it can accept hover and mouse event
-        self.setAcceptHoverEvents(True)
-        self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
-
-    def hoverEnterEvent(self, event:QtWidgets.QGraphicsSceneHoverEvent) -> None:
-        self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-
-    def hoverLeaveEvent(self, event:QtWidgets.QGraphicsSceneHoverEvent) -> None:
-        self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
-
-    def mouseMoveEvent(self, event:QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        current_position = event.pos()
-        # horizontal line
-        if (self.x1 == 0 and self.x2 == 512):
-            self.y1 = current_position.y()
-            self.y2 = current_position.y()
-        # vertical line
-        if (self.y1 == 0 and self.y2 == 512):
-            self.x1 = current_position.x()
-            self.x2 = current_position.x()
-        self.setLine(self.x1, self.y1, self.x2, self.y2)
