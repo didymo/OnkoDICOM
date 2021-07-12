@@ -1,8 +1,6 @@
 import os
 import pytest
 import platform
-import pytestqt
-from PySide6 import QtGui
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -12,10 +10,11 @@ from src.Model.GetPatientInfo import DicomTree
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
+
 def get_dicom_files(directory):
     """
     Function to find DICOM files in a given folder.
-    :param file_path: File path of folder to search.
+    :param directory: File path of folder to search.
     :return: List of file paths of DICOM files in given folder.
     """
     dicom_files = []
@@ -42,7 +41,7 @@ def recursive_search(dict_tree, parent):
     count = 0  # Keep track of rows
     for key in dict_tree:
         value = dict_tree[key]  # get value from dict tree
-        if isinstance(value, type(dict_tree)):  # if there's an object in the row
+        if isinstance(value, type(dict_tree)):  # if dict_tree object in row
             child = parent.child(count)
             recursive_search(value, child)
         else:
@@ -53,118 +52,107 @@ def recursive_search(dict_tree, parent):
             assert parent.child(count, 3).text() == str(value[2])
             assert parent.child(count, 4).text() == str(value[3])
         count += 1
+    return count
+
+
+class TestDICOMTreeTab:
+    """Class to set up the OnkoDICOM main window for testing the structures tab."""
+    __test__ = False
+
+    def __init__(self):
+        # Load test DICOM files and set path variable
+        path = "/testdata/DICOM-RT-TEST"
+        if platform.system() == "Windows":
+            path = "\\testdata\\DICOM-RT-TEST"
+        path = os.path.dirname(os.path.realpath(__file__)) + path
+
+        files = get_dicom_files(path)  # list of DICOM test files
+        file_path = os.path.dirname(os.path.commonprefix(files))  # file path of DICOM files
+        read_data_dict, file_names_dict = ImageLoading.get_datasets(files)
+
+        # Create patient dict container object
+        patient_dict_container = PatientDictContainer()
+        patient_dict_container.clear()
+        patient_dict_container.set_initial_values(
+            file_path, read_data_dict, file_names_dict)
+
+        # Set additional attributes in patient dict container (otherwise program will crash and test will fail)
+        if "rtss" in file_names_dict:
+            dataset_rtss = dcmread(file_names_dict['rtss'])
+            self.rois = ImageLoading.get_roi_info(dataset_rtss)
+            patient_dict_container.set("rois", self.rois)
+
+        # Open the main window
+        self.main_window = MainWindow()
+        self.main_window.right_panel.setCurrentIndex(2)
+        self.dicom_tree = self.main_window.dicom_tree
 
 
 @pytest.fixture
-def test_tree(qtbot):
+def test_obj(qtbot):
     """
     Testing Object
-    :qtbot: The bot used for testing
     :return:
     """
-    path_text = "/test/testdata/DICOM-RT-TEST"
-    if platform.system() == "Windows":
-        path_text = "\\testdata\\DICOM-RT-TEST"
-
-    path = os.path.dirname(
-        os.path.realpath(__file__)) + path_text
-    files = get_dicom_files(path)
-    parent_dict = os.path.dirname(os.path.commonprefix(files))
-    read_data_dict, file_names_dict = ImageLoading.get_datasets(files)
-
-    patient_dict_container = PatientDictContainer()
-    patient_dict_container.clear()
-    patient_dict_container.set_initial_values(parent_dict, read_data_dict,
-                                              file_names_dict)
-    
-    i = 0
-    if "rtss" in file_names_dict:
-        dataset_rtss = dcmread(file_names_dict['rtss'])
-        rois = ImageLoading.get_roi_info(dataset_rtss)
-        dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
-        dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
-
-        patient_dict_container.set("rois", rois)
-        patient_dict_container.set("raw_contour", dict_raw_contour_data)
-        patient_dict_container.set("num_points", dict_numpoints)
-        patient_dict_container.set("pixluts", dict_pixluts)
-
-    if patient_dict_container.has_modality(
-            "rtss") and patient_dict_container.has_modality("rtdose"):
-        i = 1
-
-    main_window = MainWindow()
-    main_window.right_panel.setCurrentIndex(1+i) # Open to DICOM Tree Tab
-    main_window.show()
-    qtbot.addWidget(main_window)
-    return main_window
+    test_tree = TestDICOMTreeTab()
+    return test_tree
 
 
-def test_file_with_all_components(test_tree, qtbot):
+def test_file_components(test_obj):
     """
     Unit Test for DICOM Tree
     :test_tree: Window to be tested - DICOM Tree window
-    :qtbot: The bot used for testing
     :return:
     """
 
-    # Test headers exist and are initialised with correct names
-    assert test_tree.dicom_tree.model_tree.horizontalHeaderItem(0).text() == "Name"
-    assert test_tree.dicom_tree.model_tree.horizontalHeaderItem(1).text() == "Value"
-    assert test_tree.dicom_tree.model_tree.horizontalHeaderItem(2).text() == "Tag"
-    assert test_tree.dicom_tree.model_tree.horizontalHeaderItem(3).text() == "VM"
-    assert test_tree.dicom_tree.model_tree.horizontalHeaderItem(4).text() == "VR"
-
     # Test initial values are correct and initial tree is clear
-    file_count = len(test_tree.dicom_tree.special_files) + len(test_tree.dicom_tree.patient_dict_container.get("pixmaps"))
-    assert test_tree.dicom_tree.model_tree.rowCount() == 0
-    assert test_tree.dicom_tree.selector.currentIndex() == 0
-    assert test_tree.dicom_tree.selector.currentText() == "Select a DICOM dataset..."
+    file_count = len(test_obj.dicom_tree.special_files) + len(
+        test_obj.main_window.dicom_tree.patient_dict_container.get("pixmaps"))
+    assert test_obj.dicom_tree.model_tree.rowCount() == 0
+    assert test_obj.dicom_tree.selector.currentIndex() == 0
+    current_text = test_obj.dicom_tree.selector.currentText()
+    assert current_text == "Select a DICOM dataset..."
 
     # Check tree loaded all files from patient_dict_container
-    assert test_tree.dicom_tree.selector.count() - 1 == file_count
+    assert test_obj.dicom_tree.selector.count() - 1 == file_count
 
     # Loop through each file
     for i in range(1, file_count):
 
-        # Set program to next file -- NOTE: remake using qtbot
-        test_tree.dicom_tree.selector.setCurrentIndex(i)
-        test_tree.dicom_tree.item_selected(i)
+        # Set program to next file
+        test_obj.dicom_tree.selector.setCurrentIndex(i)
+        test_obj.dicom_tree.item_selected(i)
+        current_text = test_obj.dicom_tree.selector.currentText()
 
         # Make New Tree to compare
-        if i > len(test_tree.dicom_tree.special_files):
-            index = i - len(test_tree.dicom_tree.special_files) - 1
-            name = test_tree.dicom_tree.patient_dict_container.filepaths[index]
+        if i > len(test_obj.dicom_tree.special_files):
+            index = i - len(test_obj.dicom_tree.special_files) - 1
+            name = test_obj.dicom_tree.patient_dict_container.filepaths[index]
             dicom_tree_slice = DicomTree(name)
             dict_tree = dicom_tree_slice.dict
             text = "Image Slice " + str(index + 1)
-            assert test_tree.dicom_tree.selector.currentText() == text
+            assert current_text == text
 
-        elif test_tree.dicom_tree.special_files[i - 1] == "rtss":
-            dict_tree = test_tree.dicom_tree.patient_dict_container.get(
+        elif test_obj.dicom_tree.special_files[i - 1] == "rtss":
+            dict_tree = test_obj.dicom_tree.patient_dict_container.get(
                 "dict_dicom_tree_rtss")
-            assert test_tree.dicom_tree.selector.currentText() == "RT Structure Set"
+            assert current_text == "RT Structure Set"
 
-        elif test_tree.dicom_tree.special_files[i - 1] == "rtdose":
-            dict_tree = test_tree.dicom_tree.patient_dict_container.get(
+        elif test_obj.dicom_tree.special_files[i - 1] == "rtdose":
+            dict_tree = test_obj.dicom_tree.patient_dict_container.get(
                 "dict_dicom_tree_rtdose")
-            assert test_tree.dicom_tree.selector.currentText() == "RT Dose"
+            assert current_text == "RT Dose"
 
-        elif test_tree.dicom_tree.special_files[i - 1] == "rtplan":
-            dict_tree = test_tree.dicom_tree.patient_dict_container.get(
+        elif test_obj.dicom_tree.special_files[i - 1] == "rtplan":
+            dict_tree = test_obj.dicom_tree.patient_dict_container.get(
                 "dict_dicom_tree_rtplan")
-            assert test_tree.dicom_tree.selector.currentText() == "RT Plan"
+            assert current_text == "RT Plan"
 
         else:
             dict_tree = None
             print("Error filename in update_tree function")
 
-        total_rows = test_tree.dicom_tree.recurse_build_model(
-            dict_tree, test_tree.dicom_tree.model_tree.invisibleRootItem()).rowCount()
-
-        # Check row counts of both trees are equal
-        assert test_tree.dicom_tree.model_tree.rowCount() == total_rows
-
         # Loop Through Each Row
-        parent = test_tree.dicom_tree.model_tree.invisibleRootItem()
-        recursive_search(dict_tree, parent)
+        parent = test_obj.dicom_tree.model_tree.invisibleRootItem()
+        total_count = test_obj.dicom_tree.model_tree.rowCount()
+        assert recursive_search(dict_tree, parent) == total_count
