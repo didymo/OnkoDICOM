@@ -94,9 +94,9 @@ class UIMainWindow:
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_view_single = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, axial_view=True)
-        self.dicom_view_sagital = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, display_metadata=False)
-        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, display_metadata=False)
+        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata = False)
+        self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
+        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
 
         self.dicom_4_views_widget = QWidget()
         self.dicom_4_views_layout = QGridLayout()
@@ -104,7 +104,7 @@ class UIMainWindow:
             self.dicom_4_views_layout.setColumnStretch(i, 1)
             self.dicom_4_views_layout.setRowStretch(i, 1)
         self.dicom_4_views_layout.addWidget(self.dicom_view_axial, 0, 0)
-        self.dicom_4_views_layout.addWidget(self.dicom_view_sagital, 0, 1)
+        self.dicom_4_views_layout.addWidget(self.dicom_view_sagittal, 0, 1)
         self.dicom_4_views_layout.addWidget(self.dicom_view_coronal, 1, 0)
         self.dicom_4_views_widget.setLayout(self.dicom_4_views_layout)
 
@@ -180,5 +180,7 @@ class UIMainWindow:
         """
         self.dicom_view_single.update_view()
         self.dicom_view_axial.update_view()
+        self.dicom_view_coronal.update_view()
+        self.dicom_view_sagittal.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()

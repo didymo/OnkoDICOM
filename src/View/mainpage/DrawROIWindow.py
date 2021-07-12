@@ -449,7 +449,7 @@ class UIDrawROIWindow:
             self.dicom_view.update_view()
 
     def on_forward_clicked(self):
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
         total_slices = len(pixmaps)
 
         self.backward_pressed = False
@@ -483,7 +483,7 @@ class UIDrawROIWindow:
         Function triggered when the Transect button is pressed from the menu.
         """
 
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
         id = self.dicom_view.slider.value()
 
         # Getting most updated selected slice
@@ -519,7 +519,7 @@ class UIDrawROIWindow:
         """
         Function triggered when the Draw button is pressed from the menu.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         if self.min_pixel_density_line_edit.text() == "" or self.max_pixel_density_line_edit.text() == "":
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
@@ -572,7 +572,7 @@ class UIDrawROIWindow:
         id = self.dicom_view.slider.value()
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)

@@ -240,7 +240,6 @@ class ActionHandler:
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
         self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
-        self.patient_dict_container.set("pixmaps", pixmaps_coronal)
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
 
@@ -287,7 +286,7 @@ class ActionHandler:
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        pixmap = self.patient_dict_container.get("pixmaps")[id]
+        pixmap = self.patient_dict_container.get("pixmaps_axial")[id]
         self.__main_page.call_class.runTransect(
             self.__main_page,
             self.__main_page.dicom_view_single.view,
