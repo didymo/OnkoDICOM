@@ -54,8 +54,8 @@ class StructureWidget(QtWidgets.QWidget):
 
     def roi_suggestions(self):
         """
-        Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv
-        format.
+        Get the top 3 suggestions for the selected ROI based on
+        string matching with standard ROIs provided in .csv format.
 
         :return: two dimensional list with ROI name and string match percent
         i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
