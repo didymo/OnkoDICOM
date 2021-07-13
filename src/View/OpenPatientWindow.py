@@ -311,7 +311,7 @@ class UIOpenPatientWindow(object):
 
         # Check if multiple studies are selected
         if len(selected_studies_names) > 1:
-            header = "Please select one study only."
+            header = "Only one study can be opened."
             self.open_patient_window_confirm_button.setDisabled(True)
 
         # Set the tree header
