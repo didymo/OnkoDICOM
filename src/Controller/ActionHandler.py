@@ -73,7 +73,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view.zoom_out)
+        self.action_zoom_out.triggered.connect(self.__main_page.zoom_out)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
@@ -86,7 +86,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view.zoom_in)
+        self.action_zoom_in.triggered.connect(self.__main_page.zoom_in)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
