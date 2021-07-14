@@ -1,6 +1,5 @@
 import os
 import pytest
-import platform
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -9,6 +8,7 @@ from src.Model.GetPatientInfo import DicomTree
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
+from pathlib import Path
 
 
 def get_dicom_files(directory):
@@ -56,18 +56,16 @@ def recursive_search(dict_tree, parent):
 
 
 class TestDICOMTreeTab:
-    """Class to set up the OnkoDICOM main window for testing the structures tab."""
+    """
+    Class to set up the OnkoDICOM main window for testing the structures tab.
+    """
     __test__ = False
 
     def __init__(self):
         # Load test DICOM files and set path variable
-        path = "/testdata/DICOM-RT-TEST"
-        if platform.system() == "Windows":
-            path = "\\testdata\\DICOM-RT-TEST"
-        path = os.path.dirname(os.path.realpath(__file__)) + path
-
+        path = str(Path.cwd() / 'test' / 'testdata' / 'DICOM-RT-TEST')
         files = get_dicom_files(path)  # list of DICOM test files
-        file_path = os.path.dirname(os.path.commonprefix(files))  # file path of DICOM files
+        file_path = os.path.dirname(os.path.commonprefix(files))
         read_data_dict, file_names_dict = ImageLoading.get_datasets(files)
 
         # Create patient dict container object
@@ -76,7 +74,8 @@ class TestDICOMTreeTab:
         patient_dict_container.set_initial_values(
             file_path, read_data_dict, file_names_dict)
 
-        # Set additional attributes in patient dict container (otherwise program will crash and test will fail)
+        # Set additional attributes in patient dict container
+        # This prevents crashes
         if "rtss" in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])
             self.rois = ImageLoading.get_roi_info(dataset_rtss)
