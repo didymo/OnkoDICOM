@@ -1,11 +1,7 @@
-from pydicom import dcmread
-from pydicom.errors import InvalidDicomError
 from skimage import measure
 
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
-
-import os.path
 
 
 class ISO2ROI:

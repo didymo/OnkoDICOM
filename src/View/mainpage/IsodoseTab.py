@@ -1,13 +1,8 @@
-import sys
-
 from PySide6 import QtWidgets, QtGui, QtCore
 
 from src.Model import ImageLoading
 from src.Model.ISO2ROI import ISO2ROI
 from src.Model.PatientDictContainer import PatientDictContainer
-
-import platform
-import os
 
 isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 
