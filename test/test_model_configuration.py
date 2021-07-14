@@ -9,7 +9,7 @@ from src.Model.Configuration import Configuration, SqlError
 @pytest.fixture(scope="function", autouse=True)
 def init_sqlite_config(request):
     configuration = Configuration('TestSqliteConfig.db')
-    db_file_path = str(Path(os.environ['USER_ONKODICOM_HIDDEN']) / 'TestSqliteConfig.db')
+    db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath('TestSqliteConfig.db')
     configuration.set_db_file_path(db_file_path)
     connection = sqlite3.connect(db_file_path)
 

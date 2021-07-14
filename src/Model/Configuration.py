@@ -13,8 +13,8 @@ def set_up_hidden_dir():
     """
     Set up the hidden directory
     """
-    path = str(Path.home() / '.OnkoDICOM')
-    os.environ['USER_ONKODICOM_HIDDEN'] = path
+    path = Path.home().joinpath('.OnkoDICOM')
+    os.environ['USER_ONKODICOM_HIDDEN'] = str(path)
 
     # Create and hide the hidden directory
     if not os.path.exists(path):
@@ -58,7 +58,7 @@ class Configuration(metaclass=Singleton):
 
     def __init__(self, db_file='OnkoDICOM.db'):
         set_up_hidden_dir()
-        self.db_file_path = str(Path(os.environ['USER_ONKODICOM_HIDDEN']) / db_file)
+        self.db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath(db_file)
         self.set_up_config_db()
 
     def set_up_config_db(self):
