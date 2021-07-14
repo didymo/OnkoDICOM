@@ -16,3 +16,4 @@ pytest-qt>=4.0.2
 pytest
 pyside6
 git+https://github.com/anntzer/matplotlib.git@qt6
+vtk
