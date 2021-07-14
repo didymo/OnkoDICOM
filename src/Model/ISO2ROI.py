@@ -7,18 +7,6 @@ from src.Model.PatientDictContainer import PatientDictContainer
 class ISO2ROI:
     """This class is for converting isodose levels to ROIs."""
 
-    def get_rt_dose_dose(self):
-        patient_dict_container = PatientDictContainer()
-        return patient_dict_container.get("rx_dose_in_cgray")
-
-    def get_rt_plan_dose(self):
-        """
-        Selects the prescription dose from an RT Plan DICOM file.
-        :return: dataset_rtdose, prescription dose from an RT Plan file
-        """
-        patient_dict_container = PatientDictContainer()
-        return patient_dict_container.dataset['rtdose']
-
     def calculate_boundaries(self):
         """
         Calculates isodose boundaries for each isodose level.
@@ -27,26 +15,26 @@ class ISO2ROI:
         """
         # Initialise variables needed to find isodose levels
         patient_dict_container = PatientDictContainer()
+        pixmaps = patient_dict_container.get("pixmaps")
+        slider_min = 0
+        slider_max = len(pixmaps)
 
-        #pixmaps = patient_dict_container.get("pixmaps")
-        #slider_min = 0
-        #slider_max = len(pixmaps) - 1
-        # for slider_id in range slider_min, slider_max to get iso
-        # contours for every slice
+        rt_plan_dose = patient_dict_container.dataset['rtdose']
+        rt_dose_dose = patient_dict_container.get("rx_dose_in_cgray")
 
-        slider_id = 0 # hardcoded now, temporary
-        z = patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
-        dataset_rtdose = self.get_rt_plan_dose()
-        grid = get_dose_grid(dataset_rtdose, float(z))
+        contours = {}
 
-        # hardcoded now, temporary
-        isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
-        contours = []
+        # Calculate boundaries for each isodose level for each slice
+        for slider_id in range(slider_min, slider_max):
+            contours[slider_id] = []
+            z = patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+            grid = get_dose_grid(rt_plan_dose, float(z))
 
-        if not (grid == []):
-            for sd in sorted(isodose_percentages):
-                dose_level = sd * self.get_rt_dose_dose() / \
-                             (dataset_rtdose.DoseGridScaling * 10000)
-                contours.append(measure.find_contours(grid, dose_level))
+            isodose_percentages = [10, 25, 50, 75, 80, 85, 90, 95, 100, 105]
+
+            if not (grid == []):
+                for sd in isodose_percentages:
+                    dose_level = sd * rt_dose_dose / (rt_plan_dose.DoseGridScaling * 10000)
+                    contours[slider_id].append(measure.find_contours(grid, dose_level))
 
         return contours
