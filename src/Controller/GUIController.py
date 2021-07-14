@@ -90,6 +90,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_open.triggered.connect(self.open_new_patient)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
 
+    def update_ui(self):
+        create_initial_model()
+        self.setup_central_widget()
+
     def open_new_patient(self):
         """
         Function to handle the Open patient button being clicked

@@ -6,23 +6,24 @@ from src.Model.Configuration import Configuration, SqlError
 
 
 @pytest.fixture(scope="function", autouse=True)
-def init_config(request):
-    configuration = Configuration('TestConfig.db')
-    db_file_path = os.environ['USER_ONKODICOM_HIDDEN'] + 'TestConfig.db'
+def init_sqlite_config(request):
+    configuration = Configuration('TestSqliteConfig.db')
+    db_file_path = os.environ['USER_ONKODICOM_HIDDEN'] + 'TestSqliteConfig.db'
     configuration.set_db_file_path(db_file_path)
     connection = sqlite3.connect(db_file_path)
 
     def tear_down():
         connection.close()
-        os.remove(db_file_path)
+        if os.path.isfile(db_file_path):
+            os.remove(db_file_path)
 
     request.addfinalizer(tear_down)
     return connection
 
 
-def test_if_config_table_exists(init_config):
+def test_if_config_table_exists(init_sqlite_config):
     # Select from sqlite_master the info of Configuration table
-    cursor = init_config.cursor()
+    cursor = init_sqlite_config.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name='CONFIGURATION'")
     record = cursor.fetchone()
 
@@ -30,14 +31,14 @@ def test_if_config_table_exists(init_config):
     assert record is not None
 
 
-def test_update_default_directory(init_config):
+def test_update_default_directory(init_sqlite_config):
     configuration = Configuration()
     new_default_dir = "/home/test/dir"
     # Update default_dir with configuration object
     configuration.update_default_directory(new_default_dir)
 
     # Select default dir from the database
-    cursor = init_config.cursor()
+    cursor = init_sqlite_config.cursor()
     cursor.execute("SELECT default_dir FROM CONFIGURATION WHERE id = 1")
     record = cursor.fetchone()
 
@@ -45,13 +46,13 @@ def test_update_default_directory(init_config):
     assert record[0] == new_default_dir
 
 
-def test_get_default_directory(init_config):
+def test_get_default_directory(init_sqlite_config):
     configuration = Configuration()
     new_default_dir = "/home/test/dir"
     # Insert new default dir
-    init_config.execute("""INSERT INTO configuration (id, default_dir) 
+    init_sqlite_config.execute("""INSERT INTO configuration (id, default_dir) 
                                     VALUES (1, "%s");""" % new_default_dir)
-    init_config.commit()
+    init_sqlite_config.commit()
 
     # Get default dir from configuration object
     result = configuration.get_default_directory()
@@ -60,10 +61,10 @@ def test_get_default_directory(init_config):
     assert result == new_default_dir
 
 
-def test_error_handling(init_config):
+def test_error_handling(init_sqlite_config):
     # Drop database file to reproduce SQL error
     configuration = Configuration()
-    cursor = init_config.cursor()
+    cursor = init_sqlite_config.cursor()
 
     # Lock the database to trigger SqlError
     cursor.execute("""PRAGMA locking_mode = EXCLUSIVE;""")

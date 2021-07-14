@@ -7,19 +7,19 @@ from src.Model.Configuration import Configuration
 
 
 @pytest.fixture(scope="session", autouse=True)
-def init_config(request):
+def init_first_time_window_config(request):
     configuration = Configuration('TestFirstTimeWelcomeWindow.db')
     db_file_path = os.environ['USER_ONKODICOM_HIDDEN'] + 'TestFirstTimeWelcomeWindow.db'
     configuration.set_db_file_path(db_file_path)
 
     def tear_down():
-        if (os.path.isfile(db_file_path)):
+        if os.path.isfile(db_file_path):
             os.remove(db_file_path)
 
     request.addfinalizer(tear_down)
 
 
-def test_first_time_welcome_window(qtbot, tmpdir, init_config):
+def test_first_time_welcome_window(qtbot, tmpdir, init_first_time_window_config):
     first_time_welcome_window = FirstTimeWelcomeWindow()
     first_time_welcome_window.show()
     qtbot.addWidget(first_time_welcome_window)
