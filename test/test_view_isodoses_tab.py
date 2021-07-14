@@ -15,7 +15,6 @@ from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
 
-
 def find_DICOM_files(file_path):
     """Function to find DICOM files in a given folder.
     :param file_path: File path of folder to search.
@@ -43,7 +42,7 @@ class TestIsodosesTab:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = path = str(Path.cwd() / 'test' / 'testdata' / 'DICOM-RT-TEST')
+        desired_path = str(Path.cwd().joinpath('test', 'testdata', 'DICOM-RT-TEST'))
 
         selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
