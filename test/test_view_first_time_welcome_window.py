@@ -1,6 +1,7 @@
 import pytest
 import os
 from PySide6 import QtCore, QtWidgets
+from pathlib import Path
 
 from src.Controller.GUIController import FirstTimeWelcomeWindow
 from src.Model.Configuration import Configuration
@@ -9,7 +10,7 @@ from src.Model.Configuration import Configuration
 @pytest.fixture(scope="session", autouse=True)
 def init_first_time_window_config(request):
     configuration = Configuration('TestFirstTimeWelcomeWindow.db')
-    db_file_path = os.environ['USER_ONKODICOM_HIDDEN'] + 'TestFirstTimeWelcomeWindow.db'
+    db_file_path = str(Path(os.environ['USER_ONKODICOM_HIDDEN']) / 'TestFirstTimeWelcomeWindow.db')
     configuration.set_db_file_path(db_file_path)
 
     def tear_down():
@@ -23,7 +24,7 @@ def test_first_time_welcome_window(qtbot, tmpdir, init_first_time_window_config)
     first_time_welcome_window = FirstTimeWelcomeWindow()
     first_time_welcome_window.show()
     qtbot.addWidget(first_time_welcome_window)
-    db_file_path = os.environ['USER_ONKODICOM_HIDDEN'] + 'TestFirstTimeWelcomeWindow.db'
+    db_file_path = str(Path(os.environ['USER_ONKODICOM_HIDDEN']) / 'TestFirstTimeWelcomeWindow.db')
 
     assert first_time_welcome_window.first_time_welcome_message_label.text() == "Welcome to OnkoDICOM!"
     assert first_time_welcome_window.first_time_welcome_message_slogan.text() == "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."
