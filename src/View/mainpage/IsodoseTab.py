@@ -168,5 +168,7 @@ class IsodoseTab(QtWidgets.QWidget):
 
         # Calculate dose boundaries
         print("Calculating boundaries")
-        iso2roi.calculate_boundaries()
+        boundaries = iso2roi.calculate_boundaries()
+        print("Generating ROIs")
+        iso2roi.generate_roi(boundaries)
         print("Done")
