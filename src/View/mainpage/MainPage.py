@@ -13,6 +13,7 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
+from src.View.mainpage.ThreeDimensionDicomView import ThreeDimensionDicomView
 from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
@@ -57,7 +58,6 @@ class UIMainWindow:
         self.main_window_instance.setWindowIcon(window_icon)
         self.main_window_instance.setStyleSheet(stylesheet)
 
-
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QVBoxLayout()
 
@@ -97,6 +97,7 @@ class UIMainWindow:
         self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
         self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
+        self.three_dimension_view = ThreeDimensionDicomView()
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = 0.5
@@ -114,6 +115,7 @@ class UIMainWindow:
         self.dicom_4_views_layout.addWidget(self.dicom_view_axial, 0, 0)
         self.dicom_4_views_layout.addWidget(self.dicom_view_sagittal, 0, 1)
         self.dicom_4_views_layout.addWidget(self.dicom_view_coronal, 1, 0)
+        self.dicom_4_views_layout.addWidget(self.three_dimension_view, 1, 1)
         self.dicom_4_views_widget.setLayout(self.dicom_4_views_layout)
 
         self.dicom_view.addWidget(self.dicom_4_views_widget)
