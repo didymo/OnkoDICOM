@@ -63,7 +63,7 @@ class TestDICOMTreeTab:
 
     def __init__(self):
         # Load test DICOM files and set path variable
-        path = str(Path.cwd() / 'test' / 'testdata' / 'DICOM-RT-TEST')
+        path = Path.cwd().joinpath('test' , 'testdata' , 'DICOM-RT-TEST')
         files = get_dicom_files(path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(files))
         read_data_dict, file_names_dict = ImageLoading.get_datasets(files)
