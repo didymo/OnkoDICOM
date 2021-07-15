@@ -68,6 +68,7 @@ class Controller:
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
 
         # Once the MainWindow has finished loading (which takes some time) close all the other open windows.
+        self.main_window.update_ui()
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.main_window.show()
