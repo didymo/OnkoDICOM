@@ -7,7 +7,6 @@ from src.View.mainpage.RenameROIWindow import RenameROIWindow
 
 
 class StructureWidget(QtWidgets.QWidget):
-
     structure_renamed = QtCore.Signal(tuple)  # (new_dataset, change_description)
 
     def __init__(self, roi_id, color, text, structure_tab):
@@ -55,7 +54,8 @@ class StructureWidget(QtWidgets.QWidget):
 
     def roi_suggestions(self):
         """
-        Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
+        Get the top 3 suggestions for the selected ROI based on
+        string matching with standard ROIs provided in .csv format.
 
         :return: two dimensional list with ROI name and string match percent
         i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
@@ -71,7 +71,6 @@ class StructureWidget(QtWidgets.QWidget):
         This function is called whenever the QWidget is right clicked.
         This creates a right click menu for the widget.
         """
-
         # Part 1: Construct context menu
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
@@ -86,7 +85,7 @@ class StructureWidget(QtWidgets.QWidget):
             suggested_action3 = menu.addAction(suggestions[2][0])
 
         # Part 2: Determine action taken
-        action = menu.exec_(self.mapToGlobal(event.pos()))
+        action = menu.exec(self.mapToGlobal(event.pos()))
         if action == rename_action:
             rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                             self.structure_tab.standard_organ_names,

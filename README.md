@@ -15,7 +15,7 @@ The enhanced capabilities of OnkoDICOM.2020:
 - delete ROI (for all those 'Rings of Bob' and other ROIs used in plan creation)
 - add ROI (at present this requires a RTSTRUCT file be present, uses a pixel value definition and manual cleaning on a single slice)
 
-OnkoDICOM is built on open source technologies, such as pydicom, dicompyler-core, PySide6, PIL, and matplotlib. Although built in Python, its forms are cross platform, and  we welcome contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
+OnkoDICOM is built on open source technologies, such as pydicom, dicompyler-core, PySide6, PIL, and matplotlib. Although built in Python, its forms are cross-platform, and we welcome contributions from the wider community via GitHub https://github.com/didymo/OnkoDICOM.
 
 OnkoDICOM was inspired by the [dicompyler project](https://github.com/bastula/dicompyler).
 
