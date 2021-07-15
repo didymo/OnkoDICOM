@@ -469,9 +469,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if len(items) >= 2:
-                    self.table_Ids.insertRow(i)
-                    self.table_Ids.setItem(i, 0, items[0])
-                    self.table_Ids.setItem(i, 1, items[1])
+                    self.table_ids.insertRow(i)
+                    self.table_ids.setItem(i, 0, items[0])
+                    self.table_ids.setItem(i, 1, items[1])
                 i += 1
 
     ###################################################################################################################
