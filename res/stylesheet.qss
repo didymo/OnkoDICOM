@@ -148,6 +148,9 @@ QLineEdit:focus {
 QTreeView#OpenPatientWindowPatientsTree {
     margin: 0 12px 4px 12px;
 }
+QHeaderView {
+    color: red;
+}
 QTreeView::item {
     color: #000000;
     min-height: 36px;

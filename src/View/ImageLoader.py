@@ -32,11 +32,9 @@ class ImageLoader(QtCore.QObject):
         progress_callback.emit(("Creating datasets...", 0))
         try:
             path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
+            read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
         except ImageLoading.NotAllowedClassError:
             raise ImageLoading.NotAllowedClassError
-        read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
-        # if not ImageLoading.is_dataset_dicom_rt(read_data_dict):
-        #    raise ImageLoading.NotRTSetError
 
         # Populate the initial values in the PatientDictContainer singleton.
         patient_dict_container = PatientDictContainer()
