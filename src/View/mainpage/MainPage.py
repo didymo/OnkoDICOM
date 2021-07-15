@@ -58,6 +58,11 @@ class UIMainWindow:
         self.main_window_instance.setWindowIcon(window_icon)
         self.main_window_instance.setStyleSheet(stylesheet)
 
+
+
+
+
+
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QVBoxLayout()
 
@@ -196,3 +201,9 @@ class UIMainWindow:
         self.dicom_view_sagittal.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+    def zoom_in(self):
+        self.dicom_view_single.zoom_in()
+
+    def zoom_out(self):
+        self.dicom_view_single.zoom_out()

@@ -1,9 +1,7 @@
 import numpy as np
 import vtk
-import atexit
 
 from PySide6 import QtWidgets
-
 from vtkmodules.util import numpy_support
 from vtkmodules.util.vtkConstants import VTK_FLOAT
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
@@ -43,7 +41,6 @@ class ThreeDimensionDicomView(QtWidgets.QWidget):
 
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
         self.volume_mapper.SetInputData(self.imdata)
-
         # The colorTransferFunction maps voxel intensities to colors.
         # In this example, it maps one color for flesh and another color for bone
         # Flesh (Red): Intensity between 500 and 1000
@@ -115,10 +112,13 @@ class ThreeDimensionDicomView(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Start the interaction
+        self.iren.Initialize()
         self.iren.Start()
-        atexit.register(self.cleanup_vtk_window)
 
-    def cleanup_vtk_window(self):
-        self.iren.SetRenderWindow(None)
+    def closeEvent(self, QCloseEvent):
+        super().closeEvent(QCloseEvent)
+        render_window = self.iren.GetRenderWindow()
+        render_window.Finalize()
+        self.iren.TerminateApp()
         self.vtk_widget.close()
-
+        del self.vtk_widget, self.iren

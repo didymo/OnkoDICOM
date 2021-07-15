@@ -92,7 +92,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     def update_ui(self):
         create_initial_model()
-        self.setup_central_widget()
 
     def open_new_patient(self):
         """
@@ -134,7 +133,13 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
 
+        # Close 3d vtk widget
+        self.three_dimension_view.close()
+
+
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        # Close vtk window
+
         patient_dict_container = PatientDictContainer()
         if patient_dict_container.get("rtss_modified") and hasattr(self, "structures_tab"):
             confirmation_dialog = QMessageBox.information(self, 'Close without saving?',
