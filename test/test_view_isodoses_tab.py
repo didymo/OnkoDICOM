@@ -98,11 +98,10 @@ def test_isodoses_tab_check_checkboxes(test_object):
 
 
 def test_isodoses_tab_uncheck_checkboxes(test_object):
-    # For each available isolevel, simulate corresponding
-    # checkbox set to false
+    # For each available isolevel, simulate corresponding checkbox
+    # set to false
     for isolevel in isodose_percentages:
         test_object.main_window.isodoses_tab.checked_dose(False, isolevel)
         # Assert the isodose is not being drawn
         doses = test_object.patient_dict_container.get('selected_doses')
         assert isolevel not in doses
-
