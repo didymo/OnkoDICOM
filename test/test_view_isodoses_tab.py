@@ -42,8 +42,8 @@ class TestIsodosesTab:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = str(Path.cwd().joinpath('test', 'testdata', \
-                                               'DICOM-RT-TEST'))
+        desired_path = Path.cwd().joinpath('test', 'testdata', \
+                                               'DICOM-RT-TEST')
 
         # List of DICOM test files
         selected_files = find_DICOM_files(desired_path)
@@ -105,5 +105,4 @@ def test_isodoses_tab_uncheck_checkboxes(test_object):
         # Assert the isodose is not being drawn
         doses = test_object.patient_dict_container.get('selected_doses')
         assert isolevel not in doses
-
 
