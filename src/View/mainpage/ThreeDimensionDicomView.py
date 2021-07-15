@@ -1,12 +1,15 @@
-import vtkmodules
-from PySide6 import QtWidgets, QtCore, QtGui
-from vtk import (
-    vtkDICOMImageReader,
-    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
-    vtkFixedPointVolumeRayCastMapper,
-    vtkColorTransferFunction, vtkPiecewiseFunction,
-    vtkVolume, vtkVolumeProperty
-)
+import numpy as np
+import vtk
+import atexit
+
+from PySide6 import QtWidgets
+
+from vtkmodules.util import numpy_support
+from vtkmodules.util.vtkConstants import VTK_FLOAT
+from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
+from vtkmodules.vtkRenderingCore import vtkVolume, vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty
+from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper
+
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
@@ -28,14 +31,18 @@ class ThreeDimensionDicomView(QtWidgets.QWidget):
         self.iren = self.vtk_widget.GetRenderWindow().GetInteractor()
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
 
-        # vtkDICOMImageReader reads all DICOM file within a directory
-        self.reader = vtkDICOMImageReader()
-        self.reader.SetDirectoryName(self.patient_dict_container.path)
-        self.reader.Update()
+        # Convert pixel_values in patient_dict_container into a 3D numpy array
+        three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
+        depthArray = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
+                                                , array_type=VTK_FLOAT)
 
-        # Use a raycast mapper to create volume
+        # Convert 3d pixel array into vtkImageData to display as vtkVolume
+        self.imdata = vtkImageData()
+        self.imdata.SetDimensions(three_dimension_np_array.shape)
+        self.imdata.GetPointData().SetScalars(depthArray)
+
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
-        self.volume_mapper.SetInputConnection(self.reader.GetOutputPort())
+        self.volume_mapper.SetInputData(self.imdata)
 
         # The colorTransferFunction maps voxel intensities to colors.
         # In this example, it maps one color for flesh and another color for bone
@@ -108,6 +115,10 @@ class ThreeDimensionDicomView(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Start the interaction
-        self.iren.Initialize()
         self.iren.Start()
+        atexit.register(self.cleanup_vtk_window)
+
+    def cleanup_vtk_window(self):
+        self.iren.SetRenderWindow(None)
+        self.vtk_widget.close()
 
