@@ -40,7 +40,6 @@ class UIMainWindow:
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
-        patient_dict_container = PatientDictContainer()
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -57,7 +56,18 @@ class UIMainWindow:
         self.main_window_instance.setWindowIcon(window_icon)
         self.main_window_instance.setStyleSheet(stylesheet)
 
+        self.setup_central_widget()
 
+        # Create actions and set menu and tool bars
+        self.action_handler = ActionHandler(self)
+        self.menubar = MenuBar(self.action_handler)
+        self.main_window_instance.setMenuBar(self.menubar)
+        self.toolbar = Toolbar(self.action_handler)
+        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.setWindowTitle("OnkoDICOM")
+
+    def setup_central_widget(self):
+        patient_dict_container = PatientDictContainer()
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QVBoxLayout()
 
@@ -153,14 +163,6 @@ class UIMainWindow:
         self.central_widget.setLayout(self.central_widget_layout)
         self.main_window_instance.setCentralWidget(self.central_widget)
 
-        # Create actions and set menu and tool bars
-        self.action_handler = ActionHandler(self)
-        self.menubar = MenuBar(self.action_handler)
-        self.main_window_instance.setMenuBar(self.menubar)
-        self.toolbar = Toolbar(self.action_handler)
-        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
-        self.main_window_instance.setWindowTitle("OnkoDICOM")
-
     def create_footer(self):
         self.footer.setFixedHeight(15)
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
@@ -182,3 +184,9 @@ class UIMainWindow:
         self.dicom_view_axial.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+    def zoom_in(self):
+        self.dicom_view.zoom_in()
+
+    def zoom_out(self):
+        self.dicom_view.zoom_out()

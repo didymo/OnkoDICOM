@@ -73,7 +73,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.dicom_view_single.zoom_out)
+        self.action_zoom_out.triggered.connect(self.__main_page.zoom_out)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
@@ -86,7 +86,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.dicom_view_single.zoom_in)
+        self.action_zoom_in.triggered.connect(self.__main_page.zoom_in)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
@@ -114,7 +114,7 @@ class ActionHandler:
         self.action_add_ons.setText("Add-On Options")
         self.action_add_ons.triggered.connect(self.add_on_options_handler)
 
-        # Switch to Axial View Action
+        # Switch to Single View Action
         self.icon_one_view = QtGui.QIcon()
         self.icon_one_view.addPixmap(
             QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
