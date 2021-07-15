@@ -13,6 +13,7 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
+from src.View.mainpage.ThreeDimensionDicomView import ThreeDimensionDicomView
 from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
@@ -40,6 +41,7 @@ class UIMainWindow:
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
+        patient_dict_container = PatientDictContainer()
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -56,18 +58,11 @@ class UIMainWindow:
         self.main_window_instance.setWindowIcon(window_icon)
         self.main_window_instance.setStyleSheet(stylesheet)
 
-        self.setup_central_widget()
 
-        # Create actions and set menu and tool bars
-        self.action_handler = ActionHandler(self)
-        self.menubar = MenuBar(self.action_handler)
-        self.main_window_instance.setMenuBar(self.menubar)
-        self.toolbar = Toolbar(self.action_handler)
-        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
-        self.main_window_instance.setWindowTitle("OnkoDICOM")
 
-    def setup_central_widget(self):
-        patient_dict_container = PatientDictContainer()
+
+
+
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QVBoxLayout()
 
@@ -107,6 +102,7 @@ class UIMainWindow:
         self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
         self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
+        self.three_dimension_view = ThreeDimensionDicomView()
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = 0.5
@@ -124,6 +120,7 @@ class UIMainWindow:
         self.dicom_4_views_layout.addWidget(self.dicom_view_axial, 0, 0)
         self.dicom_4_views_layout.addWidget(self.dicom_view_sagittal, 0, 1)
         self.dicom_4_views_layout.addWidget(self.dicom_view_coronal, 1, 0)
+        self.dicom_4_views_layout.addWidget(self.three_dimension_view, 1, 1)
         self.dicom_4_views_widget.setLayout(self.dicom_4_views_layout)
 
         self.dicom_view.addWidget(self.dicom_4_views_widget)
@@ -173,6 +170,14 @@ class UIMainWindow:
         self.central_widget.setLayout(self.central_widget_layout)
         self.main_window_instance.setCentralWidget(self.central_widget)
 
+        # Create actions and set menu and tool bars
+        self.action_handler = ActionHandler(self)
+        self.menubar = MenuBar(self.action_handler)
+        self.main_window_instance.setMenuBar(self.menubar)
+        self.toolbar = Toolbar(self.action_handler)
+        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.setWindowTitle("OnkoDICOM")
+
     def create_footer(self):
         self.footer.setFixedHeight(15)
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
@@ -196,3 +201,9 @@ class UIMainWindow:
         self.dicom_view_sagittal.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+    def zoom_in(self):
+        self.dicom_view_single.zoom_in()
+
+    def zoom_out(self):
+        self.dicom_view_single.zoom_out()

@@ -14,7 +14,7 @@ class UIAddOnOptions(object):
         self.table_view = None
         self.table_organ = None
         self.table_volume = None
-        self.table_Ids = None
+        self.table_ids = None
         self.add_new_window = None
         self.add_standard_organ_name = None
         self.import_organ_csv = None
@@ -86,7 +86,7 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.table_organ, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_volume, 1, 0, 1, 3)
         # self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
-        self.option_layout.addWidget(self.table_Ids, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_ids, 1, 0, 1, 3)
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
         self.option_layout.addWidget(self.change_default_directory_frame, 1, 0, 1, 3)
 
@@ -177,7 +177,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
+            self.table_ids.setVisible(False)
             self.add_new_window.setVisible(True)
             # self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
@@ -192,7 +192,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(True)
             self.table_volume.setVisible(False)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
+            self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
             # self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
@@ -207,7 +207,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(True)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
+            self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
             # self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(True)
@@ -239,7 +239,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(True)
+            self.table_ids.setVisible(True)
             self.add_new_window.setVisible(False)
             # self.add_new_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
@@ -259,7 +259,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
+            self.table_ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
             self.change_default_directory_frame.setVisible(False)
@@ -274,7 +274,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
+            self.table_ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(True)
             self.change_default_directory_frame.setVisible(False)
@@ -289,7 +289,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
             # self.table_roi.setVisible(False)
-            self.table_Ids.setVisible(False)
+            self.table_ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
             self.change_default_directory_frame.setVisible(True)
@@ -509,19 +509,19 @@ class PatientHashId(object):
         """
         Create a table to hold all the patients and their hash that the software has anonymised.
         """
-        self.window.table_Ids = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_Ids.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.window.table_Ids.setColumnCount(2)
-        self.window.table_Ids.setHorizontalHeaderLabels([" Patient ID ", " Hash ID "])
-        self.window.table_Ids.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.window.table_Ids.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        patient_hash_id_header = self.window.table_Ids.horizontalHeader()
-        self.window.table_Ids.verticalHeader().hide()
+        self.window.table_ids = QtWidgets.QTableWidget(self.window.widget)
+        self.window.table_ids.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.window.table_ids.setColumnCount(2)
+        self.window.table_ids.setHorizontalHeaderLabels([" Patient ID ", " Hash ID "])
+        self.window.table_ids.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.window.table_ids.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
+        patient_hash_id_header = self.window.table_ids.horizontalHeader()
+        self.window.table_ids.verticalHeader().hide()
         patient_hash_id_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         patient_hash_id_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        self.window.table_Ids.setVisible(False)
+        self.window.table_ids.setVisible(False)
         # removing the ability to edit tables with immediate click
-        self.window.table_Ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_ids.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
 
     def create_note(self):
         """
