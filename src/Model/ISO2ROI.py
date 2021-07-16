@@ -106,7 +106,7 @@ class ISO2ROI:
                 patient_dict_container.set("dataset_rtss", rtss)
                 patient_dict_container.set("rois", ImageLoading.get_roi_info(rtss))
 
-        rtss_directory = str(Path(patient_dict_container.get("file_rtss")))
+        rtss_directory = Path(patient_dict_container.get("file_rtss"))
 
         confirm_save = QtWidgets.QMessageBox.information(None, "Confirmation",
                                                          "Are you sure you want to save the modified RTSTRUCT file? This will "
