@@ -1,15 +1,22 @@
 from skimage import measure
 
 from pathlib import Path
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
+class WorkerSignals(QtCore.QObject):
+    signal_roi_drawn = QtCore.Signal(tuple)
+
+
 class ISO2ROI:
     """This class is for converting isodose levels to ROIs."""
+    def __init__(self):
+        self.worker_signals = WorkerSignals()
+        self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
 
     def calculate_boundaries(self):
         """
@@ -58,6 +65,8 @@ class ISO2ROI:
 
         # Calculate isodose ROI for each slice, skip if slice has no
         # contour data
+        name = ""
+        rtss = None
         for i in range(slider_min, slider_max):
             if len(contours[i][0]):
                 dataset = patient_dict_container.dataset[i]
@@ -106,5 +115,6 @@ class ISO2ROI:
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+            self.signal_roi_drawn.emit((rtss, {"draw": name}))
             QtWidgets.QMessageBox.about(None, "File saved", "The RTSTRUCT file has been saved.")
             patient_dict_container.set("rtss_modified", False)

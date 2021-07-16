@@ -23,6 +23,7 @@ class IsodoseTab(QtWidgets.QWidget):
         self.iso2roi_button = QtWidgets.QPushButton()
         self.iso2roi_button.setText("Convert Isodose to ROI")
         self.iso2roi_button.clicked.connect(self.iso2roi_button_clicked)
+        self.iso2roi = ISO2ROI()
 
         self.iso2roi_layout = QtWidgets.QHBoxLayout()
         self.iso2roi_layout.setContentsMargins(0, 0, 0, 0)
@@ -163,12 +164,9 @@ class IsodoseTab(QtWidgets.QWidget):
             print("Not complete")
             return
 
-        # Create ISO2ROI object
-        iso2roi = ISO2ROI()
-
         # Calculate dose boundaries
         print("Calculating boundaries")
-        boundaries = iso2roi.calculate_boundaries()
+        boundaries = self.iso2roi.calculate_boundaries()
         print("Generating ROIs")
-        iso2roi.generate_roi(boundaries)
+        self.iso2roi.generate_roi(boundaries)
         print("Done")
