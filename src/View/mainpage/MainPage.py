@@ -10,7 +10,9 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
-from src.View.mainpage.DicomView import DicomView
+from src.View.mainpage.DicomViewAxial import DicomViewAxial
+from src.View.mainpage.DicomViewCoronal import DicomViewCoronal
+from src.View.mainpage.DicomViewSagittal import DicomViewSagittal
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
 from src.View.mainpage.Toolbar import Toolbar
@@ -103,10 +105,11 @@ class UIMainWindow:
 
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
-        self.dicom_view_single = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
-        self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
-        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
+        self.dicom_view_single = DicomViewAxial(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_view_axial = DicomViewAxial(roi_color=roi_color_dict,
+                                               iso_color=iso_color_dict, format_metadata=False)
+        self.dicom_view_sagittal = DicomViewSagittal(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_view_coronal = DicomViewCoronal(roi_color=roi_color_dict, iso_color=iso_color_dict)
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = 0.5
