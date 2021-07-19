@@ -212,10 +212,7 @@ class Dialog_Dose(QDialog):
 
     def getInputs(self):
         if self.iso_unit.currentText() == "%":
-            if int(self.iso_dose.text()) < 100:
-                iso_name = str('ISO-' + self.iso_dose.text())
-            else:
-                iso_name = str('ISO' + self.iso_dose.text())
+            iso_name = str('ISOp_' + self.iso_dose.text())
         else:
             iso_name = str('ISO' + self.iso_dose.text())
 
