@@ -479,16 +479,18 @@ class RoiFromIsodoseOptions(object):
         """
         self.window.table_roi = QtWidgets.QTableWidget(self.window.widget)
         self.window.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.window.table_roi.setColumnCount(3)
+        self.window.table_roi.setColumnCount(4)
         self.window.table_roi.verticalHeader().hide()
-        self.window.table_roi.setHorizontalHeaderLabels([" Isodose Level (cGy) ", " ROI Name ", " Notes "])
+        self.window.table_roi.setHorizontalHeaderLabels([" Isodose Level ", " Unit ", " ROI Name ", " Notes "])
         self.window.table_roi.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_roi.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
         self.window.table_roi.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(3).setTextAlignment(QtCore.Qt.AlignLeft)
         roi_from_isodose_header = self.window.table_roi.horizontalHeader()
         roi_from_isodose_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         roi_from_isodose_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         roi_from_isodose_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.window.table_roi.setVisible(False)
 
         # Removing the ability to edit tables with immediate click

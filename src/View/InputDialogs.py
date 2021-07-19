@@ -3,7 +3,7 @@ import re
 
 from PySide6 import QtGui
 from PySide6.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, \
-    QDialog, \
+    QDialog, QComboBox, \
     QMessageBox
 from src.Controller.PathHandler import resource_path
 
@@ -196,11 +196,14 @@ class Dialog_Dose(QDialog):
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.iso_dose = QLineEdit()
         self.iso_dose.setText(self.dose)
+        self.iso_unit = QComboBox()
+        self.iso_unit.addItems(["cGy", "%"])
         self.iso_notes = QLineEdit()
         self.iso_notes.setText(self.notes)
 
         layout = QFormLayout(self)
-        layout.addRow(QLabel("Isodose Level (cCy):"), self.iso_dose)
+        layout.addRow(QLabel("Isodose Level:"), self.iso_dose)
+        layout.addRow(QLabel("Unit: "), self.iso_unit)
         layout.addRow(QLabel("Notes:"), self.iso_notes)
         layout.addWidget(buttonBox)
         buttonBox.accepted.connect(self.accepting)
@@ -208,7 +211,15 @@ class Dialog_Dose(QDialog):
         self.setWindowTitle("Standard Volume Names")
 
     def getInputs(self):
-        return (self.iso_dose.text(), str('ISO' + self.iso_dose.text()), self.iso_notes.text())
+        if self.iso_unit.currentText() == "%":
+            if int(self.iso_dose.text()) < 100:
+                iso_name = str('ISO-' + self.iso_dose.text())
+            else:
+                iso_name = str('ISO' + self.iso_dose.text())
+        else:
+            iso_name = str('ISO' + self.iso_dose.text())
+
+        return (self.iso_dose.text(), self.iso_unit.currentText(), iso_name, self.iso_notes.text())
 
     def accepting(self):
         if (self.iso_dose.text() != ''):
