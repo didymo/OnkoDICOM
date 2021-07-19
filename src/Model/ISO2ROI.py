@@ -1,11 +1,11 @@
-from skimage import measure
-
-from pathlib import Path
 from PySide6 import QtCore, QtWidgets
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
+
+from pathlib import Path
+from skimage import measure
 
 
 class WorkerSignals(QtCore.QObject):
@@ -33,6 +33,10 @@ class ISO2ROI:
         rt_plan_dose = patient_dict_container.dataset['rtdose']
         rt_dose_dose = patient_dict_container.get("rx_dose_in_cgray")
 
+        # If rt_dose_dose does not exist, return None
+        if not rt_dose_dose:
+            return None
+
         contours = {}
 
         # Calculate boundaries for each isodose level for each slice
@@ -41,12 +45,20 @@ class ISO2ROI:
             z = patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
             grid = get_dose_grid(rt_plan_dose, float(z))
 
-            isodose_percentages = [10, 25, 50, 75, 80, 85, 90, 95, 100, 105]
+            isodose_percentages = \
+                [10, 25, 50, 75, 80, 85, 90, 95, 100, 105]
+
+            # when csv done, instead of sd * .... * 10000
+            # it will be dose * .... * 100 (for cGy level)
+            # and dose * .... * 10000 (for percentage)
+            # formula depends on whether entry is cGy or %
 
             if not (grid == []):
                 for sd in isodose_percentages:
-                    dose_level = sd * rt_dose_dose / (rt_plan_dose.DoseGridScaling * 10000)
-                    contours[slider_id].append(measure.find_contours(grid, dose_level))
+                    dose_level = sd * rt_dose_dose / \
+                                 (rt_plan_dose.DoseGridScaling * 10000)
+                    contours[slider_id].append\
+                        (measure.find_contours(grid, dose_level))
 
         # Return list of contours for each isodose level for each slice
         return contours
@@ -79,12 +91,17 @@ class ISO2ROI:
                 list_points = []
                 if len(contours[i][0][0]):      # TODO: replace 2nd 0 with iso level index
                     for item in contours[i][0][0]:
-                        list_points.append([dose_pixluts[0][int(item[1])], dose_pixluts[1][int(item[0])]])
+                        list_points.append\
+                            ([dose_pixluts[0][int(item[1])],
+                              dose_pixluts[1][int(item[0])]])
 
                 # Convert the pixel points to RCS points
                 points = []
                 for i, item in enumerate(list_points):
-                    points.append(ROI.pixel_to_rcs(pixlut, round(item[0]), round(item[1])))
+                    points.append\
+                        (ROI.pixel_to_rcs(pixlut,
+                                          round(item[0]),
+                                          round(item[1])))
 
                 contour_data = []
                 for p in points:
@@ -100,11 +117,13 @@ class ISO2ROI:
 
                 # Create the ROI
                 name = "ISO-10"
-                rtss = ROI.create_roi(dataset_rtss, name, single_array, dataset, "DOSE_REGION")
+                rtss = ROI.create_roi(dataset_rtss, name,
+                                      single_array, dataset, "DOSE_REGION")
 
                 # Save the updated rtss
                 patient_dict_container.set("dataset_rtss", rtss)
-                patient_dict_container.set("rois", ImageLoading.get_roi_info(rtss))
+                patient_dict_container.set("rois",
+                                           ImageLoading.get_roi_info(rtss))
 
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
 
