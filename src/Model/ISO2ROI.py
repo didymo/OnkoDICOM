@@ -80,45 +80,56 @@ class ISO2ROI:
         name = ""
         rtss = None
         for i in range(slider_min, slider_max):
-            if len(contours[i][0]):
-                dataset = patient_dict_container.dataset[i]
-                pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
-                z_coord = dataset.SliceLocation
+            if not len(contours[i][0]):
+                continue
 
-                # Calculate points from contours
-                curr_slice_uid = patient_dict_container.get("dict_uid")[i]
-                dose_pixluts = patient_dict_container.get("dose_pixluts")[curr_slice_uid]
-                list_points = []
-                if len(contours[i][0][0]):      # TODO: replace 2nd 0 with iso level index
-                    for item in contours[i][0][0]:
-                        list_points.append\
+            # Get required data for calculating ROI
+            dataset = patient_dict_container.dataset[i]
+            pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+            z_coord = dataset.SliceLocation
+            curr_slice_uid = patient_dict_container.get("dict_uid")[i]
+            dose_pixluts = patient_dict_container.get("dose_pixluts")[curr_slice_uid]
+
+            # Loop through each contour for each slice
+            list_points = []
+            for j in range(len(contours[i][0])):
+                list_points.append([])
+                if len(contours[i][0][j]):
+                    for item in contours[i][0][j]:
+                        list_points[j].append\
                             ([dose_pixluts[0][int(item[1])],
                               dose_pixluts[1][int(item[0])]])
 
-                # Convert the pixel points to RCS points
-                points = []
-                for i, item in enumerate(list_points):
-                    points.append\
+            # Convert the pixel points to RCS points
+            points = []
+            for i in range(len(list_points)):
+                points.append([])
+                for item in list_points[i]:
+                    points[i].append\
                         (ROI.pixel_to_rcs(pixlut,
                                           round(item[0]),
                                           round(item[1])))
 
-                contour_data = []
-                for p in points:
+            contour_data = []
+            for i in range(len(points)):
+                contour_data.append([])
+                for p in points[i]:
                     coords = (p[0], p[1], z_coord)
-                    contour_data.append(coords)
+                    contour_data[i].append(coords)
 
-                # Transform RCS points into 1D array, append z value
-                single_array = []
-
-                for sublist in contour_data:
+            # Transform RCS points into 1D array, append z value
+            single_array = []
+            for i in range(len(contour_data)):
+                single_array.append([])
+                for sublist in contour_data[i]:
                     for item in sublist:
-                        single_array.append(item)
+                        single_array[i].append(item)
 
-                # Create the ROI
-                name = "ISO-10"
+            # Create the ROI(s)
+            name = "ISO-10"
+            for array in single_array:
                 rtss = ROI.create_roi(dataset_rtss, name,
-                                      single_array, dataset, "DOSE_REGION")
+                                      array, dataset, "DOSE_REGION")
 
                 # Save the updated rtss
                 patient_dict_container.set("dataset_rtss", rtss)

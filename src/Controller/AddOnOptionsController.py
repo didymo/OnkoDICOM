@@ -350,7 +350,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 writer.writerow(rowdata)
 
         # saves the new ROI from Isodoses
-        with open('data/csv/isodoseRoi.csv', 'w') as stream:
+        with open('data/csv/isodoseRoi.csv', 'w', newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_roi.rowCount()):
                 rowdata = []
