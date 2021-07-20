@@ -29,21 +29,21 @@ class StructureWidget(QtWidgets.QWidget):
         self.layout.addWidget(color_square_label)
 
         # Create checkbox
-        checkbox = QtWidgets.QCheckBox()
-        checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
-        checkbox.clicked.connect(self.checkbox_clicked)
+        self.checkbox = QtWidgets.QCheckBox()
+        self.checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.checkbox.clicked.connect(self.checkbox_clicked)
         if text in structure_tab.standard_organ_names or text in structure_tab.standard_volume_names:
             self.standard_name = True
-            checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+            self.checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
         else:
             self.standard_name = False
-            checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
+            self.checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
         for item in structure_tab.standard_volume_names:  # Any suffix number will still be considered standard.
             if text.startswith(item):
                 self.standard_name = True
-                checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox.setText(text)
-        self.layout.addWidget(checkbox)
+                self.checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.checkbox.setText(text)
+        self.layout.addWidget(self.checkbox)
 
         self.layout.setAlignment(Qt.AlignLeft)
 
