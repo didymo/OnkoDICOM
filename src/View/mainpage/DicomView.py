@@ -22,6 +22,8 @@ class DicomView(QtWidgets.QWidget):
         else:
             self.display_metadata = False
         self.format_metadata = format_metadata
+        self.horizontal_view = None
+        self.vertical_view = None
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -154,6 +156,9 @@ class DicomView(QtWidgets.QWidget):
 
     def value_changed(self):
         self.update_view()
+        if self.horizontal_view is not None and self.vertical_view is not None:
+            self.horizontal_view.update_view()
+            self.vertical_view.update_view()
 
     def update_view(self, zoom_change=False):
         """
@@ -182,8 +187,7 @@ class DicomView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addItem(label)
+        self.scene = GraphicsScene(label, self.zoom, self.horizontal_view, self.vertical_view)
 
     def roi_display(self):
         """
@@ -402,3 +406,84 @@ class DicomView(QtWidgets.QWidget):
     def zoom_out(self):
         self.zoom /= 1.05
         self.update_view(zoom_change=True)
+
+    def set_views(self, horizontal_view, vertical_view):
+        """ Set the views reflected by the horizontal and vertical cut lines respectively """
+        self.horizontal_view = horizontal_view
+        self.vertical_view = vertical_view
+        self.update_view()
+
+    def set_slider_value(self, value):
+        self.slider.setValue(value*self.slider.maximum())
+        self.update_view()
+
+
+class GraphicsScene(QtWidgets.QGraphicsScene):
+
+    def __init__(self, label, zoom, horizontal_view: DicomView, vertical_view: DicomView):
+        super(GraphicsScene, self).__init__()
+        self.addItem(label)
+        self.zoom = zoom
+        self.horizontal_view = horizontal_view
+        self.vertical_view = vertical_view
+        self.horizontal_line = None
+        self.vertical_line = None
+        self.init_cut_lines()
+
+    def init_cut_lines(self):
+        if self.horizontal_view is not None and self.vertical_view is not None:
+            horizontal_line_y = self.horizontal_view.slider.value()/self.horizontal_view.slider.maximum()*self.height()
+            vertical_line_x = self.vertical_view.slider.value()/self.vertical_view.slider.maximum()*self.width()
+            self.add_cut_lines(vertical_line_x, horizontal_line_y)
+
+    def add_cut_lines(self, vertical_line_x, horizontal_line_y):
+        pen = QtGui.QPen(QtCore.Qt.DashLine)
+        pen.setWidthF(2)
+
+        if vertical_line_x < 0:
+            vertical_line_x = 0
+        elif vertical_line_x > self.width():
+            vertical_line_x = self.width()
+
+        if horizontal_line_y < 0:
+            horizontal_line_y = 0
+        elif horizontal_line_y > self.height():
+            horizontal_line_y = self.height()
+
+        pen.setColor(QtGui.QColor(255, 0, 0))
+        self.horizontal_line = QtWidgets.QGraphicsLineItem(0, horizontal_line_y, self.width(), horizontal_line_y)
+        self.horizontal_line.setPen(pen)
+        self.addItem(self.horizontal_line)
+
+        pen.setColor(QtGui.QColor(0, 255, 0))
+        self.vertical_line = QtWidgets.QGraphicsLineItem(vertical_line_x, 0, vertical_line_x, self.height())
+        self.vertical_line.setPen(pen)
+        self.addItem(self.vertical_line)
+
+    def remove_cut_lines(self):
+        self.removeItem(self.horizontal_line)
+        self.removeItem(self.vertical_line)
+
+    def update_slider(self, vertical_line_x, horizontal_line_y):
+        self.horizontal_view.set_slider_value(horizontal_line_y / self.height())
+        self.vertical_view.set_slider_value(vertical_line_x / self.width())
+
+    def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        if self.horizontal_view is not None and self.vertical_view is not None:
+            self.remove_cut_lines()
+            current_position = event.scenePos()
+            vertical_line_x = current_position.x()
+            horizontal_line_y = current_position.y()
+
+            self.add_cut_lines(vertical_line_x, horizontal_line_y)
+            self.update_slider(vertical_line_x, horizontal_line_y)
+
+    def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        if self.horizontal_view is not None and self.vertical_view is not None:
+            self.remove_cut_lines()
+            current_position = event.scenePos()
+            vertical_line_x = current_position.x()
+            horizontal_line_y = current_position.y()
+
+            self.add_cut_lines(vertical_line_x, horizontal_line_y)
+            self.update_slider(vertical_line_x, horizontal_line_y)

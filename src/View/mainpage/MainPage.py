@@ -107,7 +107,7 @@ class UIMainWindow:
         self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
         self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
-
+        self.toggle_cut_lines()
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = 0.5
         self.dicom_view_sagittal.zoom = 0.5
@@ -196,6 +196,18 @@ class UIMainWindow:
         self.dicom_view_sagittal.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+    def toggle_cut_lines(self):
+        if self.dicom_view_axial.horizontal_view is None or self.dicom_view_axial.vertical_view is None or\
+                self.dicom_view_coronal.horizontal_view is None or self.dicom_view_coronal.vertical_view is None or \
+                self.dicom_view_sagittal.horizontal_view is None or self.dicom_view_sagittal.vertical_view is None:
+            self.dicom_view_axial.set_views(self.dicom_view_coronal, self.dicom_view_sagittal)
+            self.dicom_view_coronal.set_views(self.dicom_view_axial, self.dicom_view_sagittal)
+            self.dicom_view_sagittal.set_views(self.dicom_view_axial, self.dicom_view_coronal)
+        else:
+            self.dicom_view_axial.set_views(None, None)
+            self.dicom_view_coronal.set_views(None, None)
+            self.dicom_view_sagittal.set_views(None, None)
 
     def zoom_in(self):
         self.dicom_view_single.zoom_in()

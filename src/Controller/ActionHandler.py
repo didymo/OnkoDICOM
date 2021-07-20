@@ -307,6 +307,9 @@ class ActionHandler:
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
         self.__main_page.dicom_view_axial.update_view()
 
+    def cut_lines_handler(self):
+        self.__main_page.toggle_cut_lines()
+
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
             self.__main_page.dvh_tab.export_csv()
