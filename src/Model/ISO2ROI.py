@@ -17,6 +17,25 @@ class ISO2ROI:
     def __init__(self):
         self.worker_signals = WorkerSignals()
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
+        self.isodose_levels = {}
+
+    def get_iso_levels(self):
+        """
+        Opens /data/csv/isodoseRoi.csv to find the isodose levels that
+        the user wants turned into ROIs. Creates a dictionary where the
+        key is the isoname, and the value is a list containing a boolean
+        (cGy: 0, %: 1) and an integer (cGy/% value).
+        """
+
+        # Clear self.isodose_levels (in case ISO2ROI has already been run this session)
+        self.isodose_levels = {}
+
+        # Open isodoseRoi.csv
+        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+            for row in fileInput:
+                items = row.split(',')
+                self.isodose_levels[items[2]] = [items[1] == 'cGy', int(items[0])]
+
 
     def calculate_boundaries(self):
         """
@@ -39,26 +58,25 @@ class ISO2ROI:
 
         contours = {}
 
-        # Calculate boundaries for each isodose level for each slice
-        for slider_id in range(slider_min, slider_max):
-            contours[slider_id] = []
-            z = patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
-            grid = get_dose_grid(rt_plan_dose, float(z))
+        for item in self.isodose_levels:
+            # Calculate boundaries for each isodose level for each slice
+            contours[item] = []
+            for slider_id in range(slider_min, slider_max):
+                contours[item].append([])
+                z = patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+                grid = get_dose_grid(rt_plan_dose, float(z))
 
-            isodose_percentages = \
-                [10, 25, 50, 75, 80, 85, 90, 95, 100, 105]
-
-            # when csv done, instead of sd * .... * 10000
-            # it will be dose * .... * 100 (for cGy level)
-            # and dose * .... * 10000 (for percentage)
-            # formula depends on whether entry is cGy or %
-
-            if not (grid == []):
-                for sd in isodose_percentages:
-                    dose_level = sd * rt_dose_dose / \
-                                 (rt_plan_dose.DoseGridScaling * 10000)
-                    contours[slider_id].append\
-                        (measure.find_contours(grid, dose_level))
+                if not (grid == []):
+                    if self.isodose_levels[item][0]:
+                        dose_level = self.isodose_levels[item][1] / \
+                                     (rt_plan_dose.DoseGridScaling * 100)
+                        contours[item][slider_id] =\
+                            (measure.find_contours(grid, dose_level))
+                    else:
+                        dose_level = self.isodose_levels[item][1] * rt_dose_dose / \
+                                     (rt_plan_dose.DoseGridScaling * 10000)
+                        contours[item][slider_id] = \
+                            (measure.find_contours(grid, dose_level))
 
         # Return list of contours for each isodose level for each slice
         return contours
@@ -77,65 +95,70 @@ class ISO2ROI:
 
         # Calculate isodose ROI for each slice, skip if slice has no
         # contour data
-        name = ""
         rtss = None
-        for i in range(slider_min, slider_max):
-            if not len(contours[i][0]):
-                continue
 
-            # Get required data for calculating ROI
-            dataset = patient_dict_container.dataset[i]
-            pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
-            z_coord = dataset.SliceLocation
-            curr_slice_uid = patient_dict_container.get("dict_uid")[i]
-            dose_pixluts = patient_dict_container.get("dose_pixluts")[curr_slice_uid]
+        for item in contours:
+            for i in range(slider_min, slider_max):
+                if not len(contours[item][i]):
+                    continue
 
-            # Loop through each contour for each slice
-            list_points = []
-            for j in range(len(contours[i][0])):
-                list_points.append([])
-                if len(contours[i][0][j]):
-                    for item in contours[i][0][j]:
+                # Get required data for calculating ROI
+                dataset = patient_dict_container.dataset[i]
+                pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+                z_coord = dataset.SliceLocation
+                curr_slice_uid = patient_dict_container.get("dict_uid")[i]
+                dose_pixluts = patient_dict_container.get("dose_pixluts")[curr_slice_uid]
+
+                # Loop through each contour for each slice
+                list_points = []
+                for j in range(len(contours[item][i])):
+                    list_points.append([])
+                    for point in contours[item][i][j]:
                         list_points[j].append\
-                            ([dose_pixluts[0][int(item[1])],
-                              dose_pixluts[1][int(item[0])]])
+                            ([dose_pixluts[0][int(point[1])],
+                              dose_pixluts[1][int(point[0])]])
 
-            # Convert the pixel points to RCS points
-            points = []
-            for i in range(len(list_points)):
-                points.append([])
-                for item in list_points[i]:
-                    points[i].append\
-                        (ROI.pixel_to_rcs(pixlut,
-                                          round(item[0]),
-                                          round(item[1])))
+                # Convert the pixel points to RCS points
+                points = []
+                for i in range(len(list_points)):
+                    points.append([])
+                    for point in list_points[i]:
+                        points[i].append\
+                            (ROI.pixel_to_rcs(pixlut,
+                                              round(point[0]),
+                                              round(point[1])))
 
-            contour_data = []
-            for i in range(len(points)):
-                contour_data.append([])
-                for p in points[i]:
-                    coords = (p[0], p[1], z_coord)
-                    contour_data[i].append(coords)
+                contour_data = []
+                for i in range(len(points)):
+                    contour_data.append([])
+                    for p in points[i]:
+                        coords = (p[0], p[1], z_coord)
+                        contour_data[i].append(coords)
 
-            # Transform RCS points into 1D array, append z value
-            single_array = []
-            for i in range(len(contour_data)):
-                single_array.append([])
-                for sublist in contour_data[i]:
-                    for item in sublist:
-                        single_array[i].append(item)
+                # Transform RCS points into 1D array, append z value
+                single_array = []
+                for i in range(len(contour_data)):
+                    single_array.append([])
+                    for sublist in contour_data[i]:
+                        for point in sublist:
+                            single_array[i].append(point)
 
-            # Create the ROI(s)
-            name = "ISO-10"
-            for array in single_array:
-                rtss = ROI.create_roi(dataset_rtss, name,
-                                      array, dataset, "DOSE_REGION")
+                # Create the ROI(s)
+                for array in single_array:
+                    rtss = ROI.create_roi(dataset_rtss, item,
+                                          array, dataset, "DOSE_REGION")
 
-                # Save the updated rtss
-                patient_dict_container.set("dataset_rtss", rtss)
-                patient_dict_container.set("rois",
-                                           ImageLoading.get_roi_info(rtss))
+                    # Save the updated rtss
+                    patient_dict_container.set("dataset_rtss", rtss)
+                    patient_dict_container.set("rois",
+                                               ImageLoading.get_roi_info(rtss))
 
+            # Emit that a new ROI has been created to update the
+            # structures tab
+            if rtss:
+                self.signal_roi_drawn.emit((rtss, {"draw": item}))
+
+        # Save the new ROIs to the RT Struct file
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
 
         confirm_save = QtWidgets.QMessageBox.information(None, "Confirmation",
@@ -145,6 +168,5 @@ class ISO2ROI:
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            self.signal_roi_drawn.emit((rtss, {"draw": name}))
             QtWidgets.QMessageBox.about(None, "File saved", "The RTSTRUCT file has been saved.")
             patient_dict_container.set("rtss_modified", False)

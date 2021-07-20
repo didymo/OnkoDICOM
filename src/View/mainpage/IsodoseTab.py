@@ -164,6 +164,9 @@ class IsodoseTab(QtWidgets.QWidget):
             print("Not complete")
             return
 
+        # Get isodose levels to turn into ROIs
+        self.iso2roi.get_iso_levels()
+
         # Calculate dose boundaries
         print("Calculating boundaries")
         boundaries = self.iso2roi.calculate_boundaries()

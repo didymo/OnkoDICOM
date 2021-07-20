@@ -248,7 +248,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_volume.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_volume.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    # This option is extra and not fully supported yet, TO DO in the future
     # ROI from IsoDoses
     @Slot(QtCore.QPoint)
     def on_customContextMenuRequested_Roi(self, pos):
@@ -275,6 +274,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
                 self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
+                self.table_roi.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     ######################################################################################################
     #                                                                                                    #
