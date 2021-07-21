@@ -187,7 +187,7 @@ class DicomView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(label, self.zoom, self.horizontal_view, self.vertical_view)
+        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
 
     def roi_display(self):
         """
@@ -420,10 +420,11 @@ class DicomView(QtWidgets.QWidget):
 
 class GraphicsScene(QtWidgets.QGraphicsScene):
 
-    def __init__(self, label, zoom, horizontal_view: DicomView, vertical_view: DicomView):
+    def __init__(self, label, horizontal_view: DicomView, vertical_view: DicomView):
         super(GraphicsScene, self).__init__()
         self.addItem(label)
-        self.zoom = zoom
+        self.init_width = self.width()
+        self.init_height = self.height()
         self.horizontal_view = horizontal_view
         self.vertical_view = vertical_view
         self.horizontal_line = None
@@ -442,21 +443,21 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
         if vertical_line_x < 0:
             vertical_line_x = 0
-        elif vertical_line_x > self.width():
-            vertical_line_x = self.width()
+        elif vertical_line_x > self.init_width:
+            vertical_line_x = self.init_width
 
         if horizontal_line_y < 0:
             horizontal_line_y = 0
-        elif horizontal_line_y > self.height():
-            horizontal_line_y = self.height()
+        elif horizontal_line_y > self.init_height:
+            horizontal_line_y = self.init_height
 
         pen.setColor(QtGui.QColor(255, 0, 0))
-        self.horizontal_line = QtWidgets.QGraphicsLineItem(0, horizontal_line_y, self.width(), horizontal_line_y)
+        self.horizontal_line = QtWidgets.QGraphicsLineItem(0, horizontal_line_y, self.init_width, horizontal_line_y)
         self.horizontal_line.setPen(pen)
         self.addItem(self.horizontal_line)
 
         pen.setColor(QtGui.QColor(0, 255, 0))
-        self.vertical_line = QtWidgets.QGraphicsLineItem(vertical_line_x, 0, vertical_line_x, self.height())
+        self.vertical_line = QtWidgets.QGraphicsLineItem(vertical_line_x, 0, vertical_line_x, self.init_height)
         self.vertical_line.setPen(pen)
         self.addItem(self.vertical_line)
 
