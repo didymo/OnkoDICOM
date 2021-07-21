@@ -84,12 +84,16 @@ class UIMainWindow:
             self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
             self.left_panel.addTab(self.structures_tab, "Structures")
+        elif hasattr(self, 'structures_tab'):
+            del self.structures_tab
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.isodoses_tab.iso2roi.signal_roi_drawn.connect(self.structures_tab.structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
+        elif hasattr(self, 'isodoses_tab'):
+            del self.isodoses_tab
 
         # Hide left panel if no rtss or rtdose
         if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
@@ -108,6 +112,8 @@ class UIMainWindow:
         if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = DVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
+        elif hasattr(self, 'dvh_tab'):
+            del self.dvh_tab
 
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")

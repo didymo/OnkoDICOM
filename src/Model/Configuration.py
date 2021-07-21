@@ -4,6 +4,7 @@ import ctypes
 import sqlite3
 import os
 import functools
+from pathlib import Path
 
 from src.Model.Singleton import Singleton
 
@@ -12,15 +13,8 @@ def set_up_hidden_dir():
     """
     Set up the hidden directory
     """
-    directory_name = '.OnkoDICOM'
-
-    # Set USER_HIDDEN and USER_HOME env variable
-    os.environ['USER_HOME'] = os.path.expanduser("~")
-    if platform.system() == 'Windows':
-        path = os.environ.get('USER_HOME') + "\\" + directory_name + "\\"
-    else:
-        path = os.environ.get('USER_HOME') + "/" + directory_name + "/"
-    os.environ['USER_HIDDEN'] = path
+    path = Path.home().joinpath('.OnkoDICOM')
+    os.environ['USER_ONKODICOM_HIDDEN'] = str(path)
 
     # Create and hide the hidden directory
     if not os.path.exists(path):
@@ -42,8 +36,8 @@ def error_handling(function):
             return result
         except (sqlite3.Error, sqlite3.OperationalError):
             try:
-                if os.path.exists(os.environ['USER_HIDDEN']):
-                    os.remove(os.environ['USER_HIDDEN'])
+                if os.path.exists(os.environ['USER_ONKODICOM_HIDDEN']):
+                    os.remove(os.environ['USER_ONKODICOM_HIDDEN'])
                 set_up_hidden_dir()
                 raise SqlError()
             except OSError:
@@ -64,7 +58,7 @@ class Configuration(metaclass=Singleton):
 
     def __init__(self, db_file='OnkoDICOM.db'):
         set_up_hidden_dir()
-        self.db_file_path = os.environ['USER_HIDDEN'] + db_file
+        self.db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath(db_file)
         self.set_up_config_db()
 
     def set_up_config_db(self):
