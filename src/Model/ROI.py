@@ -374,7 +374,6 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     :return: contour pixels
     """
     pixels = []
-
     ## Optimization 1: Reduce unnecessary IF STATEMENTS
     ## Time used: 488.194700717926
     # if (not prone and not feetfirst):
@@ -440,6 +439,63 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     #     pixels.append([x, y])
     return pixels
 
+def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
+    """
+    Calculate (Convert) contour points.
+
+    :param pixlut: transformation matrixx
+    :param contour: raw contour data (3D)
+    :param prone: label of prone
+    :param feetfirst: label of feetfirst or head first
+    :return: contour pixels
+
+    Parameters
+    ----------
+    contour : object
+    """
+    pixels = []
+    print("sag")
+    np_x = np.array(pixlut[0])
+    np_y = np.array(pixlut[1])
+    #print(np_x, np_y)
+    if not feetfirst and not prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmax(np_x > con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if feetfirst and not prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmin(np_y < con_y)
+            pixels.append([x, y])
+
+    ### Original Slowwwwwwww One
+    ### Time used: 895.787469625473
+    # for i in range(0, len(contour), 3):
+    #     for x, x_val in enumerate(pixlut[0]):
+    #         if (x_val > contour[i] and not prone and not feetfirst):
+    #             break
+    #         elif (x_val < contour[i]):
+    #             if feetfirst or prone:
+    #                 break
+    #     for y, y_val in enumerate(pixlut[1]):
+    #         if (y_val > contour[i + 1] and not prone):
+    #             break
+    #         elif (y_val < contour[i + 1] and prone):
+    #             break
+    #     pixels.append([x, y])
+    return pixels
 
 def pixel_to_rcs(pixlut, x, y):
     """
@@ -490,6 +546,44 @@ def get_contour_pixel(
                 pixlut, raw_contours[curr_slice][i], prone, feetfirst
             )
             dict_pixels_of_roi[curr_slice].append(contour_pixels)
+        dict_pixels[roi] = dict_pixels_of_roi
+    return dict_pixels
+
+def get_contour_pixel_sagittal(
+        dict_raw_ContourData,
+        roi_selected,
+        dict_pixluts,
+        prone=False,
+        feetfirst=False,
+):
+    """
+    Get pixels of contours of all rois selected within current slice.
+    {slice: list of pixels of all contours in this slice}
+
+    :param dict_raw_ContourData: a dictionary of all raw contour data
+    :param roi_selected: a list of currently selected ROIs
+    :param dict_pixluts: a dictionary of transformation matrices
+    :param curr_slice: Current slice identifier
+    :param prone: label of prone
+    :param feetfirst: label of feetfirst or head first
+    :return: a dictionary of contour pixels
+    """
+    dict_pixels = {}
+    pixlut = dict_pixluts
+    for roi in roi_selected:
+        # Using this type of dict to handle multiple contours within one slice
+        dict_pixels_of_roi = collections.defaultdict(list)
+        raw_contours = dict_raw_ContourData[roi]
+        number_of_contours = len(raw_contours)
+        print(number_of_contours)
+        for i in raw_contours.keys():
+            for j in range(0, len(raw_contours[i])):
+                contour_pixels = calculate_pixels_sagittal(
+                    pixlut[i], raw_contours[i][j], prone, feetfirst
+                )
+                print(i,j)
+                print(contour_pixels)
+                dict_pixels_of_roi[i].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
 
     return dict_pixels

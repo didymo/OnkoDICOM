@@ -95,7 +95,9 @@ def create_initial_model():
         patient_dict_container.set("list_roi_numbers", ordered_list_rois(patient_dict_container.get("rois")))
         patient_dict_container.set("selected_rois", [])
 
-        patient_dict_container.set("dict_polygons", {})
+        patient_dict_container.set("dict_polygons_axial", {})
+        patient_dict_container.set("dict_polygons_sagittal", {})
+        patient_dict_container.set("dict_polygons_coronal", {})
 
     # Set RTDOSE attributes
     if patient_dict_container.has_modality("rtdose"):
