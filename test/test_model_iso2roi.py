@@ -194,3 +194,16 @@ def test_generate_roi_from_iso(test_object):
     # Assert ROI points exist
     assert len(single_array) == 15
     assert len(single_array) == 3 * len(contour_data)
+
+
+def test_find_rtss(test_object):
+    """
+    Test for finding existing RT Struct files. Assumes the test data
+    contains an RT Struct file.
+
+    :param test_object: test_object function, for accessing the shared
+                        TestStructureTab object.
+    """
+    rtss_directory = Path(test_object.patient_dict_container.get("file_rtss"))
+
+    assert rtss_directory
