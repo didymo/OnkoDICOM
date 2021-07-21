@@ -196,6 +196,7 @@ class UIOpenPatientWindow(object):
 
     def scan_directory_for_patient(self):
         # Reset tree view header and last patient
+        self.open_patient_window_confirm_button.setDisabled(True)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
         self.last_patient = None
         self.filepath = self.open_patient_directory_input_box.text()
