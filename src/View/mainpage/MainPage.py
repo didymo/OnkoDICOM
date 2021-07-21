@@ -104,9 +104,12 @@ class UIMainWindow:
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_view_single = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
-        self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
-        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
+        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False,
+                                          cut_line_color=QtGui.QColor(255,0,0))
+        self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal",
+                                             cut_line_color=QtGui.QColor(0,255,0))
+        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal",
+                                            cut_line_color=QtGui.QColor(0,0,255))
         self.toggle_cut_lines()
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = 0.5

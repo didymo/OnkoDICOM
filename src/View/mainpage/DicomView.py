@@ -10,7 +10,7 @@ from src.Controller.PathHandler import resource_path
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", format_metadata=True):
+    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", format_metadata=True, cut_line_color=None):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
@@ -22,8 +22,10 @@ class DicomView(QtWidgets.QWidget):
         else:
             self.display_metadata = False
         self.format_metadata = format_metadata
+
         self.horizontal_view = None
         self.vertical_view = None
+        self.cut_lines_color = cut_line_color
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -451,12 +453,12 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         elif horizontal_line_y > self.init_height:
             horizontal_line_y = self.init_height
 
-        pen.setColor(QtGui.QColor(255, 0, 0))
+        pen.setColor(self.horizontal_view.cut_lines_color)
         self.horizontal_line = QtWidgets.QGraphicsLineItem(0, horizontal_line_y, self.init_width, horizontal_line_y)
         self.horizontal_line.setPen(pen)
         self.addItem(self.horizontal_line)
 
-        pen.setColor(QtGui.QColor(0, 255, 0))
+        pen.setColor(self.vertical_view.cut_lines_color)
         self.vertical_line = QtWidgets.QGraphicsLineItem(vertical_line_x, 0, vertical_line_x, self.init_height)
         self.vertical_line.setPen(pen)
         self.addItem(self.vertical_line)
