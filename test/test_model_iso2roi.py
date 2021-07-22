@@ -71,6 +71,10 @@ class TestIso2Roi:
             self.patient_dict_container.set("num_points", dict_numpoints)
             self.patient_dict_container.set("pixluts", dict_pixluts)
 
+            # Set location of rtss file
+            file_paths = self.patient_dict_container.filepaths
+            self.patient_dict_container.set("file_rtss", file_paths['rtss'])
+
         # Create ISO2ROI object
         self.iso2roi = ISO2ROI()
 
