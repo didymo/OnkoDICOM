@@ -90,7 +90,8 @@ class UIMainWindow:
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
-            self.isodoses_tab.iso2roi.signal_roi_drawn.connect(self.structures_tab.structure_modified)
+            if patient_dict_container.has_modality("rtss"):
+                self.isodoses_tab.iso2roi.signal_roi_drawn.connect(self.structures_tab.structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
