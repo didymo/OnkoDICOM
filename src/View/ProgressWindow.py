@@ -60,15 +60,16 @@ class ProgressWindow(QDialog):
         self.progress_bar.setValue(progress_update[1])
 
     def prompt_calc_dvh(self):
-        """ Windows displays buttons in a different order from Linux. A check for
-                    platform is performed to ensure consistency of button positioning across
-                    platforms.
-                """
+        """
+            Windows displays buttons in a different order from Linux. A check for
+            platform is performed to ensure consistency of button positioning across
+            platforms.
+        """
         if platform.system() == "Linux":
             choice = QMessageBox.question(self, "Calculate DVHs?", "RTSTRUCT and RTDOSE datasets identified. Would you "
-                                                                   "like to calculate DVHs? (This may take up to several "
-                                                                   "minutes on some systems.)",
-                                          QMessageBox.Yes | QMessageBox.No)
+                                                                   "like to calculate DVHs? (This may take up to "
+                                                                   "several minutes on some systems.)",
+                                                QMessageBox.Yes | QMessageBox.No)
 
             if choice == QMessageBox.Yes:
                 self.signal_advise_calc_dvh.emit(True)
