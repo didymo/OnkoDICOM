@@ -1,5 +1,6 @@
 import threading, platform
 
+from pathlib import Path
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QMessageBox
@@ -104,7 +105,8 @@ class ProgressWindow(QDialog):
 
             # Apply stylesheet to the message box and add icon to the window
             mb.setStyleSheet(open(stylesheet_path).read())
-            mb.setWindowIcon(QtGui.QIcon(resource_path("res/images/btn-icons/onkodicom_icon.png")))
+            mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons',
+                                                                           'onkodicom_icon.png'))))
 
             mb.exec_()
 

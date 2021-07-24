@@ -2,6 +2,7 @@ import os
 import platform
 import threading
 import numpy as np
+from pathlib import Path
 
 import matplotlib.pylab as plt
 from PySide6 import QtWidgets, QtCore, QtGui
@@ -146,17 +147,18 @@ class DVHTab(QtWidgets.QWidget):
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 
             if choice == QtWidgets.QMessageBox.Yes:
-                self.signal_advise_calc_dvh.emit(True)
-            else:
-                self.signal_advise_calc_dvh.emit(False)
+                progress_window = CalculateDVHProgressWindow(self,
+                                                             QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+                progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
+                progress_window.exec_()
         else:
             stylesheet_path = ""
 
             # Select appropriate style sheet
             if platform.system() == 'Darwin':
-                stylesheet_path = "res/stylesheet.qss"
+                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
             else:
-                stylesheet_path = "res/stylesheet-win-linux.qss"
+                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
 
             # Create a message box and add attributes
             mb = QtWidgets.QMessageBox()
@@ -178,7 +180,7 @@ class DVHTab(QtWidgets.QWidget):
 
             # Apply stylesheet to the message box and add icon to the window
             mb.setStyleSheet(open(stylesheet_path).read())
-            mb.setWindowIcon(QtGui.QIcon(resource_path("res/images/btn-icons/onkodicom_icon.png")))
+            mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
 
             mb.exec_()
 
