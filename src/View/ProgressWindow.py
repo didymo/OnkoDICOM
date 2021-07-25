@@ -81,9 +81,9 @@ class ProgressWindow(QDialog):
 
             # Select appropriate style sheet
             if platform.system() == 'Darwin':
-                stylesheet_path = "res/stylesheet.qss"
+                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
             else:
-                stylesheet_path = "res/stylesheet-win-linux.qss"
+                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
 
             # Create a message box and add attributes
             mb = QMessageBox()
