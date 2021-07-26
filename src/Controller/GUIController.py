@@ -14,7 +14,6 @@ from src.Controller.PathHandler import resource_path
 
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
-
     update_directory = QtCore.Signal(str)
     go_next_window = QtCore.Signal()
 
@@ -40,7 +39,6 @@ class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
 
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
-
     go_next_window = QtCore.Signal()
 
     # Initialisation function to display the UI
@@ -57,7 +55,6 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
-
     go_next_window = QtCore.Signal(object)
 
     # Initialisation function to display the UI
@@ -76,7 +73,6 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 
 
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
-
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.Signal()
     # When the pyradiomics button is pressed
@@ -87,7 +83,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         QtWidgets.QMainWindow.__init__(self)
         create_initial_model()
         self.setup_ui(self)
-        self.action_handler.action_open.triggered.connect(self.open_new_patient)
+        self.action_handler.action_open.triggered.connect(
+            self.open_new_patient)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def update_ui(self):
@@ -98,37 +95,59 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         """
         Function to handle the Open patient button being clicked
         """
-        confirmation_dialog = QMessageBox.information(self, 'Open new patient?',
-                                                      'Opening a new patient will close the currently opened patient. '
-                                                      'Would you like to continue?',
-                                                      QMessageBox.Yes | QMessageBox.No)
+        confirm_msg = QMessageBox.information(self,
+                                              'Open new patient?',
+                                              'Opening a new patient '
+                                              'will close the '
+                                              'currently opened '
+                                              'patient. '
+                                              'Would you like to '
+                                              'continue?',
+                                              QMessageBox.Yes | QMessageBox.No)
 
-        if confirmation_dialog == QMessageBox.Yes:
+        if confirm_msg == QMessageBox.Yes:
             self.open_patient_window.emit()
 
-    def pyradiomics_handler(self, path, filepaths, hashed_path):
+    def pyradiomics_handler(self, path, file_paths, hashed_path):
         """
         Sends signal to initiate pyradiomics analysis
         """
         if which('plastimatch') is not None:
             if hashed_path == '':
-                confirm_pyradi = QMessageBox.information(self, "Confirmation",
-                                                    "Are you sure you want to perform pyradiomics? "
-                                                    "Once started the process cannot be terminated until it finishes.",
-                                                    QMessageBox.Yes, QMessageBox.No)
+                confirm_pyradi = QMessageBox.information(self,
+                                                         "Confirmation",
+                                                         "Are you sure you "
+                                                         "want to perform "
+                                                         "pyradiomics? "
+                                                         "Once started the "
+                                                         "process cannot be "
+                                                         "terminated until "
+                                                         "it finishes.",
+                                                         QMessageBox.Yes,
+                                                         QMessageBox.No)
                 if confirm_pyradi == QMessageBox.Yes:
-                    self.run_pyradiomics.emit(path, filepaths, hashed_path)
+                    self.run_pyradiomics.emit(path, file_paths, hashed_path)
                 if confirm_pyradi == QMessageBox.No:
                     pass
             else:
-                self.run_pyradiomics.emit(path, filepaths, hashed_path)
+                self.run_pyradiomics.emit(path, file_paths, hashed_path)
         else:
-            exe_not_found = QMessageBox.information(self, "Error",
-                                                 "Plastimatch not installed. Please install Plastimatch "
-                                                 "(https://sourceforge.net/projects/plastimatch/) to carry out "
-                                                 "pyradiomics analysis. If using Windows, please ensure that your "
-                                                 "system's PATH variable inlcudes the directory where Plastimatch's "
-                                                 "executable is installed.")
+            exe_not_found = QMessageBox.information(self,
+                                                    "Error",
+                                                    "Plastimatch not "
+                                                    "installed. Please "
+                                                    "install Plastimatch "
+                                                    "(https://sourceforge"
+                                                    ".net/projects"
+                                                    "/plastimatch/) to carry "
+                                                    "out "
+                                                    "pyradiomics analysis. "
+                                                    "If using Windows, "
+                                                    "please ensure that your "
+                                                    "system's PATH variable "
+                                                    "inlcudes the directory "
+                                                    "where Plastimatch's "
+                                                    "executable is installed.")
 
     def cleanup(self):
         patient_dict_container = PatientDictContainer()
@@ -136,17 +155,25 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()
-        if patient_dict_container.get("rtss_modified") and hasattr(self, "structures_tab"):
-            confirmation_dialog = QMessageBox.information(self, 'Close without saving?',
-                                                          'The RTSTRUCT file has been modified. Would you like to save '
-                                                          'before exiting the program?',
-                                                          QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        if patient_dict_container.get(
+                "rtss_modified") and hasattr(self, "structures_tab"):
+            dialog = QMessageBox.information(self,
+                                             'Close without '
+                                             'saving?',
+                                             'The RTSTRUCT file '
+                                             'has been '
+                                             'modified. Would '
+                                             'you like to save '
+                                             'before exiting the program?',
+                                             QMessageBox.Save
+                                             | QMessageBox.Discard
+                                             | QMessageBox.Cancel)
 
-            if confirmation_dialog == QMessageBox.Save:
+            if dialog == QMessageBox.Save:
                 self.structures_tab.save_new_rtss()
                 event.accept()
                 self.cleanup()
-            elif confirmation_dialog == QMessageBox.Discard:
+            elif dialog == QMessageBox.Discard:
                 event.accept()
                 self.cleanup()
             else:
@@ -158,7 +185,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 class PyradiProgressBar(QtWidgets.QWidget):
     progress_complete = QtCore.Signal()
 
-    def __init__(self, path, filepaths, target_path):
+    def __init__(self, path, file_paths, target_path):
         super().__init__()
 
         self.w = QtWidgets.QWidget()
@@ -170,10 +197,12 @@ class PyradiProgressBar(QtWidgets.QWidget):
             | QtCore.Qt.WindowMinimizeButtonHint
         )
         qt_rectangle = self.w.frameGeometry()
-        center_point = QtGui.QScreen.availableGeometry(QtWidgets.QApplication.primaryScreen()).center()
+        center_point = QtGui.QScreen.availableGeometry(
+            QtWidgets.QApplication.primaryScreen()).center()
         qt_rectangle.moveCenter(center_point)
         self.w.move(qt_rectangle.topLeft())
-        self.setWindowIcon(QtGui.QIcon(resource_path("res/images/btn-icons/onkodicom_icon.png")))
+        self.setWindowIcon(QtGui.QIcon(
+            resource_path("res/images/btn-icons/onkodicom_icon.png")))
 
         self.setGeometry(300, 300, 460, 100)
         self.label = QtWidgets.QLabel(self)
@@ -181,7 +210,7 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.progress_bar = QtWidgets.QProgressBar(self)
         self.progress_bar.setGeometry(30, 40, 400, 25)
         self.progress_bar.setMaximum(100)
-        self.ext = PyradiExtended(path, filepaths, target_path)
+        self.ext = PyradiExtended(path, file_paths, target_path)
         self.ext.copied_percent_signal.connect(self.on_update)
         self.ext.start()
 
@@ -199,7 +228,8 @@ class PyradiProgressBar(QtWidgets.QWidget):
         # The segmentation masks are generated between the range 25 and 50
         elif value == 25:
             self.label.setText("Generating segmentation masks")
-        # Above 50, pyradiomics analysis is carried out over each segmentation mask
+        # Above 50, pyradiomics analysis is carried out over each
+        # segmentation mask
         elif value in range(50, 100):
             self.label.setText("Calculating features for " + text)
         # Set the percentage value
