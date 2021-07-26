@@ -51,8 +51,8 @@ def get_basic_info(ds):
     """
     Get patient name, ID, gender and DOB
 
-    :param ds: a dataset
-    :return: dict_basic_info, a dictionary of PatientName, PatientID, PatientSex, PatientBirthDate.
+    :param ds: a dataset :return: dict_basic_info, a dictionary of
+    PatientName, PatientID, PatientSex, PatientBirthDate.
     """
     dict_basic_info = {}
     dict_basic_info['name'] = str(ds.get("PatientName"))
@@ -62,9 +62,10 @@ def get_basic_info(ds):
     return dict_basic_info
 
 
-def dict_instanceUID(dict_ds):
+def dict_instance_uid(dict_ds):
     """
-    Get a dictionary where key = index of the slice and value is the Instance UID
+    Get a dictionary where key = index of the slice and value is the
+    Instance UID
 
     :param dict_ds:
     :return:
@@ -125,9 +126,8 @@ class DicomTree(object):
             tmp = 0
             # For every items in the sequence element
             for dataset_item in data_element:
-                # Convert the item to dictionary
-                # And store it as key: 'item: index num', value: dictionary of the item
-                # in the dictionary
+                # Convert the item to dictionary And store it as key: 'item:
+                # index num', value: dictionary of the item in the dictionary
                 items['item ' + str(tmp)] = self.dataset_to_dict(dataset_item)
                 tmp += 1
         # If current data element is not pixel data element

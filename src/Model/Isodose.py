@@ -18,22 +18,23 @@ def get_dose_pixels(pixlut, doselut, img_ds):
     else:
         prone = 1  # Supine
 
-    # Check if patient feetfirst
+    # Check if patient feet_first
     if 'ff' in img_ds.PatientPosition.lower():
-        feetfirst = -1  # Feet first
+        feet_first = -1  # Feet first
     else:
-        feetfirst = 1  # Head first
+        feet_first = 1  # Head first
 
     # Physical distance (in mm) between the center of each image pixel
     spacing = img_ds.PixelSpacing
 
     # Formula based on GetDoseGridPixelData function in dicompyler
-    # (https://github.com/bastula/dicompyler/blob/master/dicompyler/baseplugins/2dview.py)
+    # (https://github.com/bastula/dicompyler/blob/master/dicompyler/baseplugins
+    # /2dview.py)
     x = (np.array(doselut[0]) - pixlut[0][0]) * \
-        prone * feetfirst / spacing[0]
+        prone * feet_first / spacing[0]
     y = (np.array(doselut[1]) - pixlut[1][0]) * prone / spacing[1]
 
-    return (x, y)
+    return x, y
 
 
 def get_dose_pixluts(dict_ds):
@@ -44,7 +45,6 @@ def get_dose_pixluts(dict_ds):
                         SOPInstanceUID as key
     """
 
-    dict_dose_pixluts = {}
     dict_dose_pixluts = {}
     non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
     dose_data = calculate_matrix(dict_ds['rtdose'])
@@ -61,7 +61,8 @@ def get_dose_grid(rtd, z=0):
     """
     Return the 2d dose grid for the given slice position (mm). 
     Based on the function GetDoseGrid in dicompyler-core
-    (https://github.com/dicompyler/dicompyler-core/blob/master/dicompylercore/dicomparser.py)
+    (https://github.com/dicompyler/dicompyler-core/blob/master/dicompylercore
+    /dicomparser.py)
 
     :param rtd:     Data from RTDose file
     :param z:       Position of slice in mm
@@ -71,21 +72,21 @@ def get_dose_grid(rtd, z=0):
     if 'GridFrameOffsetVector' in rtd:
         z = float(z)
 
-        planes = rtd.ImageOrientationPatient[0] * np.array(rtd.GridFrameOffsetVector) + \
-            rtd.ImagePositionPatient[2]
+        planes = rtd.ImageOrientationPatient[0] * np.array(
+            rtd.GridFrameOffsetVector) + rtd.ImagePositionPatient[2]
         frame = -1
 
-        if (np.amin(np.fabs(planes - z)) < 0.5):
+        if np.amin(np.fabs(planes - z)) < 0.5:
             frame = np.argmin(np.fabs(planes - z))
             return rtd.pixel_array[frame]
 
-        if ((z > np.amin(planes)) or (z < np.amax(planes))):
-            umin = np.fabs(planes - z)
-            lmin = umin.copy()
-            ub = np.argmin(umin)
+        if (z > np.amin(planes)) or (z < np.amax(planes)):
+            u_min = np.fabs(planes - z)
+            l_min = u_min.copy()
+            ub = np.argmin(u_min)
 
-            lmin[ub] = np.amax(umin)
-            lb = np.argmin(lmin)
+            l_min[ub] = np.amax(u_min)
+            lb = np.argmin(l_min)
 
             # Fractional distance from bottom to top
             # Plane is at upper plane if 1, lower plane if 0
@@ -106,7 +107,9 @@ def calculate_rx_dose_in_cgray(rtplan):
     if ('DoseReferenceSequence' in rtplan and
             rtplan.DoseReferenceSequence[0].DoseReferenceStructureType and
             rtplan.DoseReferenceSequence[0].TargetPrescriptionDose):
-        rx_dose_in_cgray = rtplan.DoseReferenceSequence[0].TargetPrescriptionDose * GRAY_TO_CGRAY_SCALE_FACTOR
+        rx_dose_in_cgray = \
+            rtplan.DoseReferenceSequence[0].TargetPrescriptionDose \
+            * GRAY_TO_CGRAY_SCALE_FACTOR
     # beam doses are to a point, not necessarily to the same point
     # and don't necessarily add up to the prescribed dose to the target
     # which is frequently to a SITE rather than to a POINT
@@ -118,6 +121,7 @@ def calculate_rx_dose_in_cgray(rtplan):
             number_of_fractions = fraction_group.NumberOfFractionsPlanned
             for beam in beams:
                 if "BeamDose" in beam:
-                    rx_dose_in_cgray += beam.BeamDose * number_of_fractions * GRAY_TO_CGRAY_SCALE_FACTOR
+                    rx_dose_in_cgray += beam.BeamDose * number_of_fractions \
+                                        * GRAY_TO_CGRAY_SCALE_FACTOR
 
     return rx_dose_in_cgray

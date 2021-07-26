@@ -5,9 +5,10 @@ from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
 class DICOMStructure:
     """
-    A class representing the structure of the given DICOM files.
-    Used by the open patient window to generate the tree structure of the DICOM set.
-    Creates a hierarchy of Patient -> can have many Studies -> which can have many Series -> which can have many Images.
+    A class representing the structure of the given DICOM files. Used by the
+    open patient window to generate the tree structure of the DICOM set.
+    Creates a hierarchy of Patient -> can have many Studies -> which can
+    have many Series -> which can have many Images.
     """
 
     def __init__(self):
@@ -41,7 +42,8 @@ class DICOMStructure:
 
     def get_files(self):
         """
-        :return: List of all filepaths in all images below this item in the hierarchy.
+        :return: List of all filepaths in all images below this item in the
+        hierarchy.
         """
         filepaths = []
         for patient_id, patient in self.patients.items():
@@ -53,7 +55,8 @@ class DICOMStructure:
         """
         :return: A list of QTreeWidgetItems based on the DICOMStructure object.
         """
-        return [patient.get_widget_item() for patient_id, patient in self.patients.items()]
+        return [patient.get_widget_item()
+                for patient_id, patient in self.patients.items()]
 
 
 class Patient:
@@ -92,7 +95,8 @@ class Patient:
 
     def get_files(self):
         """
-        :return: List of all filepaths in all images below this item in the hierarchy.
+        :return: List of all filepaths in all images below this item in the
+        hierarchy.
         """
         filepaths = []
         for study_uid, study in self.studies.items():
@@ -111,7 +115,10 @@ class Patient:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(
+            widget_item.flags()
+            | Qt.ItemIsAutoTristate
+            | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
         for study_uid, study in self.studies.items():
@@ -156,7 +163,8 @@ class Study:
 
     def get_files(self):
         """
-        :return: List of all filepaths in all images below this item in the hierarchy.
+        :return: List of all filepaths in all images below this item in the
+        hierarchy.
         """
         filepaths = []
         for series_uid, series in self.series.items():
@@ -168,16 +176,17 @@ class Study:
         """
         :return: Information about the object as a string
         """
-        return "Study: %s (DICOM-RT: %s)" % (self.study_description, "Y" if self.is_dicom_rt() else "N")
+        return "Study: %s (DICOM-RT: %s)" % (
+            self.study_description, "Y" if self.is_dicom_rt() else "N")
 
     def is_dicom_rt(self):
         """
         :return: True if study can be considered DICOM-RT
         """
-        rt_classes = ["1.2.840.10008.5.1.4.1.1.2",          # CT Image
-                      "1.2.840.10008.5.1.4.1.1.481.3",      # RT Structure Set
-                      "1.2.840.10008.5.1.4.1.1.481.2",      # RT Dose
-                      "1.2.840.10008.5.1.4.1.1.481.5"]      # RT Plan
+        rt_classes = ["1.2.840.10008.5.1.4.1.1.2",  # CT Image
+                      "1.2.840.10008.5.1.4.1.1.481.3",  # RT Structure Set
+                      "1.2.840.10008.5.1.4.1.1.481.2",  # RT Dose
+                      "1.2.840.10008.5.1.4.1.1.481.5"]  # RT Plan
 
         contained_classes = []
         for series_uid, series in self.series.items():
@@ -192,7 +201,10 @@ class Study:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(
+            widget_item.flags()
+            | Qt.ItemIsAutoTristate
+            | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
         for series_uid, series in self.series.items():
@@ -237,7 +249,8 @@ class Series:
 
     def get_files(self):
         """
-        :return: List of all filepaths in all images below this item in the hierarchy.
+        :return: List of all filepaths in all images below this item in the
+        hierarchy.
         """
         filepaths = []
         for image_uid, image in self.images.items():
@@ -249,11 +262,13 @@ class Series:
         """
         :return: Information about the object as a string
         """
-        return "Series: %s (%s, %s images)" % (self.series_description, self.get_series_type(), len(self.images))
+        return "Series: %s (%s, %s images)" % (
+            self.series_description, self.get_series_type(), len(self.images))
 
     def get_series_type(self):
         """
-        :return: List of string or single string containing modalities of all images in the series.
+        :return: List of string or single string containing modalities of all
+        images in the series.
         """
         series_types = []
         for image_uid, image in self.images.items():

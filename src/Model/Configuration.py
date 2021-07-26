@@ -47,18 +47,19 @@ def error_handling(function):
 
 class Configuration(metaclass=Singleton):
     """
-        This Singleton class represents the user configuration. It contains the default directory for the DICOM files.
-        The object will contain the connection to a sqlite database set below, and the user can update the default
-        directory during runtime.
-        When a class needs to access the instance of this class, it can simply call the class's constructor and it will
-        return the only instance of this class.
-        Example usage:
-        config = Configuration()
+    This Singleton class represents the user configuration. It contains the
+    default directory for the DICOM files. The object will contain the
+    connection to a sqlite database set below, and the user can update the
+    default directory during runtime. When a class needs to access the
+    instance of this class, it can simply call the class's constructor and
+    it will return the only instance of this class.
+    Example usage: config = Configuration()
     """
 
     def __init__(self, db_file='OnkoDICOM.db'):
         set_up_hidden_dir()
-        self.db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath(db_file)
+        self.db_file_path = Path(
+            os.environ['USER_ONKODICOM_HIDDEN']).joinpath(db_file)
         self.set_up_config_db()
 
     def set_up_config_db(self):
