@@ -148,7 +148,8 @@ class DicomView(QtWidgets.QWidget):
         if self.patient_dict_container.get("selected_rois"):
             self.roi_display()
 
-        if self.patient_dict_container.get("selected_doses"):
+        # If there are colours set and doses are selected then update the display
+        if self.iso_color and self.patient_dict_container.get("selected_doses"):
             self.isodose_display()
 
         self.update_metadata()

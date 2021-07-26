@@ -17,6 +17,7 @@ from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
+from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.DicomView import DicomView
 
 from src.Controller.PathHandler import resource_path
@@ -51,7 +52,10 @@ class UIDrawROIWindow:
 
         self.upper_limit = None
         self.lower_limit = None
-        self.dicom_view = DicomView()
+
+        self.iso_colour_dict = IsodoseTab().color_dict
+
+        self.dicom_view = DicomView(None, self.iso_colour_dict)
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
 
