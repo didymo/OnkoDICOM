@@ -3,7 +3,7 @@ from skimage import measure
 
 from src.Model.Isodose import get_dose_grid
 from src.View.mainpage.DicomView import DicomView
-from src.Model.ROI import get_contour_pixel
+from src.Model.ROI import get_contour_pixel, calc_roi_polygon
 from src.Controller.PathHandler import resource_path
 
 
@@ -177,7 +177,7 @@ class DicomViewAxial(DicomView):
                 dict_rois_contours = get_contour_pixel(self.patient_dict_container.get("raw_contour"),
                                                        selected_rois_name, self.patient_dict_container.get("pixluts"),
                                                        curr_slice)
-                polygons = self.calc_roi_polygon(roi_name, curr_slice, dict_rois_contours)
+                polygons = calc_roi_polygon(roi_name, curr_slice, dict_rois_contours)
                 new_dict_polygons[roi_name][curr_slice] = polygons
                 self.patient_dict_container.set("dict_polygons_axial", new_dict_polygons)
 
@@ -186,10 +186,9 @@ class DicomViewAxial(DicomView):
                 dict_rois_contours = get_contour_pixel(self.patient_dict_container.get("raw_contour"),
                                                        selected_rois_name, self.patient_dict_container.get("pixluts"),
                                                        curr_slice)
-                polygons = self.calc_roi_polygon(roi_name, curr_slice, dict_rois_contours)
+                polygons = calc_roi_polygon(roi_name, curr_slice, dict_rois_contours)
                 new_dict_polygons[roi_name][curr_slice] = polygons
                 self.patient_dict_container.set("dict_polygons_axial", new_dict_polygons)
-
             else:
                 polygons = self.patient_dict_container.get("dict_polygons_axial")[roi_name][curr_slice]
 
@@ -250,43 +249,6 @@ class DicomViewAxial(DicomView):
                 pen = self.get_qpen(pen_color, iso_line, line_width)
                 for i in range(len(polygons)):
                     self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(brush_color))
-
-    def calc_roi_polygon(self, curr_roi, curr_slice, dict_rois_contours):
-        """
-        Calculate a list of polygons to display for a given ROI and a given slice.
-        :param curr_roi:
-         the ROI structure
-        :param curr_slice:
-         the current slice
-        :return: List of polygons of type QPolygonF.
-        """
-        # TODO Implement support for showing "holes" in contours.
-        # Possible process for this is:
-        # 1. Calculate the areas of each contour on the slice
-        # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-        # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
-        # largest contour.
-        # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
-        # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
-        # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
-        # This process should provide fast and reliable results, however it should be noted that this method may fall
-        # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
-        # solution to that may be to compare every contour against one another and determine which ones have holes
-        # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
-        # holes. This second solution would definitely lead to more accurate representation of contours, but could
-        # possibly be too slow to be viable.
-
-        list_polygons = []
-        pixel_list = dict_rois_contours[curr_roi][curr_slice]
-        for i in range(len(pixel_list)):
-            list_qpoints = []
-            contour = pixel_list[i]
-            for point in contour:
-                curr_qpoint = QtCore.QPoint(point[0], point[1])
-                list_qpoints.append(curr_qpoint)
-            curr_polygon = QtGui.QPolygonF(list_qpoints)
-            list_polygons.append(curr_polygon)
-        return list_polygons
 
     def calc_dose_polygon(self, dose_pixluts, contours):
         """

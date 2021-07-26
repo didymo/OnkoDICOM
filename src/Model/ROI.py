@@ -549,45 +549,6 @@ def get_contour_pixel(
         dict_pixels[roi] = dict_pixels_of_roi
     return dict_pixels
 
-def get_contour_pixel_sagittal(
-        dict_raw_ContourData,
-        roi_selected,
-        dict_pixluts,
-        prone=False,
-        feetfirst=False,
-):
-    """
-    Get pixels of contours of all rois selected within current slice.
-    {slice: list of pixels of all contours in this slice}
-
-    :param dict_raw_ContourData: a dictionary of all raw contour data
-    :param roi_selected: a list of currently selected ROIs
-    :param dict_pixluts: a dictionary of transformation matrices
-    :param curr_slice: Current slice identifier
-    :param prone: label of prone
-    :param feetfirst: label of feetfirst or head first
-    :return: a dictionary of contour pixels
-    """
-    dict_pixels = {}
-    pixlut = dict_pixluts
-    for roi in roi_selected:
-        # Using this type of dict to handle multiple contours within one slice
-        dict_pixels_of_roi = collections.defaultdict(list)
-        raw_contours = dict_raw_ContourData[roi]
-        number_of_contours = len(raw_contours)
-        print(number_of_contours)
-        for i in raw_contours.keys():
-            for j in range(0, len(raw_contours[i])):
-                contour_pixels = calculate_pixels_sagittal(
-                    pixlut[i], raw_contours[i][j], prone, feetfirst
-                )
-                print(i,j)
-                print(contour_pixels)
-                dict_pixels_of_roi[i].append(contour_pixels)
-        dict_pixels[roi] = dict_pixels_of_roi
-
-    return dict_pixels
-
 
 def get_roi_contour_pixel(dict_raw_ContourData, roi_list, dict_pixluts):
     """
@@ -610,6 +571,49 @@ def get_roi_contour_pixel(dict_raw_ContourData, roi_list, dict_pixluts):
                 dict_pixels_of_roi[slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
     return dict_pixels
+
+
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, aspect=1):
+    """
+    Calculate a list of polygons to display for a given ROI and a given slice.
+    :param curr_roi:
+     the ROI structure
+    :param curr_slice:
+     the current slice
+    :param aspect:
+     the scaling ratio
+    :return: List of polygons of type QPolygonF.
+    """
+    # TODO Implement support for showing "holes" in contours.
+    # Possible process for this is:
+    # 1. Calculate the areas of each contour on the slice
+    # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+    # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
+    # largest contour.
+    # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
+    # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
+    # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
+    # This process should provide fast and reliable results, however it should be noted that this method may fall
+    # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
+    # solution to that may be to compare every contour against one another and determine which ones have holes
+    # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
+    # holes. This second solution would definitely lead to more accurate representation of contours, but could
+    # possibly be too slow to be viable.
+
+    if curr_slice not in dict_rois_contours[curr_roi]:
+        return []
+
+    list_polygons = []
+    pixel_list = dict_rois_contours[curr_roi][curr_slice]
+    for i in range(len(pixel_list)):
+        list_qpoints = []
+        contour = pixel_list[i]
+        for point in contour:
+            curr_qpoint = QtCore.QPoint(point[0], point[1] * aspect)
+            list_qpoints.append(curr_qpoint)
+        curr_polygon = QtGui.QPolygonF(list_qpoints)
+        list_polygons.append(curr_polygon)
+    return list_polygons
 
 
 def ordered_list_rois(rois):

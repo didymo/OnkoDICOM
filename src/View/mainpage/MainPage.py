@@ -193,6 +193,7 @@ class UIMainWindow:
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
         """
+
         self.dicom_view_single.update_view()
         self.dicom_view_axial.update_view()
         self.dicom_view_coronal.update_view()
