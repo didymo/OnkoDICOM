@@ -1,18 +1,17 @@
 import os
 import platform
-import sqlite3
 
 import PySide6
 import matplotlib
 import pytest
-from PySide6 import QtWidgets, QtCore
+from pathlib import Path
+from PySide6 import QtWidgets
 from matplotlib.backends.backend_template import FigureCanvas
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
 from src.Controller.GUIController import MainWindow
 from src.Model import ImageLoading
-from src.Model.Configuration import Configuration
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -43,13 +42,7 @@ class TestDVHTab:
 
     def __init__(self):
         # Load test DICOM files
-        if platform.system() == "Windows":
-            desired_path = "\\testdata\\DICOM-RT-TEST"
-        elif platform.system() == "Linux" or platform.system() == "Darwin":
-            desired_path = "/testdata/DICOM-RT-TEST"
-
-        desired_path = os.path.dirname(os.path.realpath(__file__)) + desired_path
-
+        desired_path = Path.home().joinpath('testdata')
         selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
         read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)
