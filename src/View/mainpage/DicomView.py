@@ -235,7 +235,8 @@ class DicomView(QtWidgets.QWidget):
                 stream.close()
             roi_opacity = int((roi_opacity / 100) * 255)
             color.setAlpha(roi_opacity)
-            pen = self.get_qpen(color, roi_line, line_width)
+            pen_color = QtGui.QColor(color.red(), color.green(), color.blue())
+            pen = self.get_qpen(pen_color, roi_line, line_width)
             for i in range(len(polygons)):
                 self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(color))
 
