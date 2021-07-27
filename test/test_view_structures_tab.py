@@ -38,7 +38,7 @@ class TestStructureTab:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.home().joinpath('testdata')
+        desired_path = Path.cwd().joinpath('test', 'testdata')
         selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
         read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)

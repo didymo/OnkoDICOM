@@ -12,7 +12,7 @@ def init_config(request):
     db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath('TestConfig.db')
     configuration.set_db_file_path(db_file_path)
     connection = sqlite3.connect(db_file_path)
-    configuration.update_default_directory(Path.home().joinpath('testdata'))
+    configuration.update_default_directory(Path.cwd().joinpath('test', 'testdata'))
 
     def tear_down():
         connection.close()
