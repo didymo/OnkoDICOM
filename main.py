@@ -3,12 +3,14 @@
 # in the folder /test/testdata/DICOM-PT-TEST. This data is currently not
 # provided due to privacy concerns.
 import numpy
+import os
+import platform
+
 from PIL import Image
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
-
-import os
-import platform
+from skimage import measure
+from skimage.transform import resize
 
 
 def find_DICOM_files(file_path):
@@ -19,10 +21,7 @@ def find_DICOM_files(file_path):
     :return: Dictionary where key is PET Image type (NAC or CTAC) and
              value is directory where PET Image files of that type are.
     """
-
-    dicom_files = {}
-    dicom_files["PT CTAC"] = []
-    dicom_files["PT NAC"] = []
+    dicom_files = {"PT CTAC": [], "PT NAC": []}
 
     # Walk through directory
     for root, dirs, files in os.walk(file_path, topdown=True):
@@ -38,6 +37,7 @@ def find_DICOM_files(file_path):
                             dicom_files["PT NAC"].append(os.path.join(root, name))
             except (InvalidDicomError, FileNotFoundError):
                 pass
+
     return dicom_files
 
 
@@ -48,25 +48,41 @@ def get_SUV_data(selected_files):
                            from.
     :return: Dictionary of file names and SUV pixel data.
     """
-    suv_data = {}
+    suv_data = []
 
     # Loop through each file
-    for key in selected_files:
-        suv_data[key] = []
-        for i in range(0, len(selected_files[key])):
-            file_path = selected_files[key][i]
-            # Read the file
-            ds = dcmread(file_path)
-            suv = pet2suv(ds)
-            suv_data[key].append(suv)
-            #img2d = suv.astype(float)
-            #img2d_scaled = (numpy.maximum(img2d, 0) / img2d.max()) * 255.0
-            #img2d_scaled = 255 - img2d_scaled
-            #img2d_scaled = numpy.uint8(img2d_scaled)
-            #img = Image.fromarray(img2d_scaled)
-            #img.show()
+    for dicom_file in selected_files:
+        file_path = dicom_file
+
+        # Read the file
+        ds = dcmread(file_path)
+        suv = pet2suv(ds)
+        # NOTE - SliceLocation is relative to an unspecified reference
+        # point. A better Z for these slices would be in Image
+        # Position (Patient), however the Z value here most likely does
+        # not correspond to the Z value for the same (or closest) slice
+        # in CT scans. Aligning these requires image fusion and is out
+        # of the scope of this work.
+        slice_location = float(ds['SliceLocation'].value)
+
+        # Resize the SUV data to be 512x512 using nearest neighbour
+        # scaling as it preserves SUV values at the expense of
+        # accurate image scaling
+        suv_data.append((slice_location, resize(suv, (512, 512), order=0)))
+
+        # Temporary, for displaying SUV data
+        #img2d = resize(suv, (512, 512)).astype(float)
+        #img2d_scaled = (numpy.maximum(img2d, 0) / img2d.max()) * 255.0
+        #img2d_scaled = 255 - img2d_scaled
+        #img2d_scaled = numpy.uint8(img2d_scaled)
+        #img = Image.fromarray(img2d_scaled)
+        #img.show()
+
+    # Sort the SUV data by Z value (-ve to +ve)
+    suv_data.sort(key=lambda x: x[0])
 
     return suv_data
+
 
 def pet2suv(dataset):
     """
@@ -107,13 +123,35 @@ def pet2suv(dataset):
 
     # Calculate SUV
     pixel_array = dataset.pixel_array
-    decay = numpy.exp(numpy.log(2) *
-                      (series_time_s - radiopharmaceutical_start_time_s)
-                      / radionuclide_half_life)
+    # do not need to take decay into account if DECY in CorrectedImage
+    # decay = numpy.exp(numpy.log(2) *
+    #                  (series_time_s - radiopharmaceutical_start_time_s)
+    #                  / radionuclide_half_life)
+    decay = 1
+    # Need to scale PET units to get them into Bq/ml according to
+    # http://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.8.9.html
     suv = (pixel_array * rescale_slope + rescale_intercept) * decay
-    #suv = pixel_array * decay
+    # suv = pixel_array * decay
     suv = suv * (1000 * patient_weight) / radionuclide_total_dose
     return suv
+
+
+def calculate_contours(suv_data):
+    """
+    Calculate SUV boundaries for each slice from an SUV value of 3
+    all the way to the maximum SUV value in that slice.
+    :return: Dictionary where key is Z value of slice and value is
+             list of lists of contours.
+    """
+    contour_data = {}
+
+    for i, slice in enumerate(suv_data):
+        contour_data[slice[0]] = []
+        for j in range(0, int(slice[1].max()) - 2):
+            contour_data[slice[0]].append(measure.find_contours(slice[1], j + 3))
+
+    return contour_data
+
 
 if __name__ == '__main__':
     # Load test DICOM files
@@ -125,6 +163,7 @@ if __name__ == '__main__':
     desired_path = os.path.dirname(os.path.realpath(__file__)) + desired_path
 
     # list of DICOM test files
+    print("Getting PET images")
     selected_files = find_DICOM_files(desired_path)
     if "PT CTAC" in selected_files:
         if "PT NAC" in selected_files:
@@ -136,4 +175,22 @@ if __name__ == '__main__':
     else:
         print("No PET data in DICOM Image Set")
 
-    get_SUV_data(selected_files)
+    # Use CTAC data if it exists and there is the same or more of it
+    # than NAC data for further work, otherwise use NAC data
+    if len(selected_files["PT CTAC"]) >= len(selected_files["PT NAC"]):
+        data = selected_files["PT CTAC"]
+    else:
+        data = selected_files["PT NAC"]
+
+    print("Calculating SUV data")
+    suv_data = get_SUV_data(data)
+    print("Calculating contours")
+    contour_data = calculate_contours(suv_data)
+    print("Done")
+
+    # TODO: create ROI based on contour data
+    #       - convert pixel data to RCS data (see ISO2ROI)
+    #       - turn data into single array (see ISO2ROI)
+    #       - create ROI from single array (will NOT currently match up
+    #         with CT data, requires image fusion and transforms that
+    #         another team is working on)
