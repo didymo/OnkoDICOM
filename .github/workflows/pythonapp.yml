@@ -31,6 +31,11 @@ jobs:
       run: |
         pip install pytest
         sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
+        # install test data
+        sudo apt-get install wget unzip
+        wget -P ~ https://onkodicom.com.au/sites/default/files/2020-01/DICOM-RT-02.zip
+        mkdir ~/testdata
+        sudo unzip ~/DICOM-RT-02.zip -d ~/testdata
         # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
         /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
         sleep 3
