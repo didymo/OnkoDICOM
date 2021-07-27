@@ -100,6 +100,8 @@ class ThreeDimensionDicomView(QtWidgets.QWidget):
         # Add the volume to the renderer
         self.renderer.AddViewProp(self.volume)
 
+        # Set aspect ratio of the renderer
+        self.renderer.SetAspect(1, 1)
         # Set up an initial view of the volume. The focal point will be the
         # center of the volume, and the zoom is 0.5
         self.camera = self.renderer.GetActiveCamera()
@@ -112,6 +114,7 @@ class ThreeDimensionDicomView(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Start the interaction
+        self.iren.GetRenderWindow().SetSize(300, 300)
         self.iren.Initialize()
         self.iren.Start()
 
