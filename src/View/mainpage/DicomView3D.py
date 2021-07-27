@@ -12,7 +12,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
-class ThreeDimensionDicomView(QtWidgets.QWidget):
+class DicomView3D(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)

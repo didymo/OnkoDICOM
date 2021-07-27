@@ -13,7 +13,7 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomView import DicomView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
-from src.View.mainpage.ThreeDimensionDicomView import ThreeDimensionDicomView
+from src.View.mainpage.DicomView3D import DicomView3D
 from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
@@ -41,7 +41,6 @@ class UIMainWindow:
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
-        patient_dict_container = PatientDictContainer()
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -58,11 +57,21 @@ class UIMainWindow:
         self.main_window_instance.setWindowIcon(window_icon)
         self.main_window_instance.setStyleSheet(stylesheet)
 
+        self.setup_central_widget()
+        self.setup_actions()
 
+    def setup_actions(self):
+        if hasattr(self, 'toolbar'):
+            self.main_window_instance.removeToolBar(self.toolbar)
+        self.action_handler = ActionHandler(self)
+        self.menubar = MenuBar(self.action_handler)
+        self.main_window_instance.setMenuBar(self.menubar)
+        self.toolbar = Toolbar(self.action_handler)
+        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.setWindowTitle("OnkoDICOM")
 
-
-
-
+    def setup_central_widget(self):
+        patient_dict_container = PatientDictContainer()
         self.central_widget = QtWidgets.QWidget()
         self.central_widget_layout = QVBoxLayout()
 
@@ -80,11 +89,15 @@ class UIMainWindow:
             self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
             self.left_panel.addTab(self.structures_tab, "Structures")
+        elif hasattr(self, 'structures_tab'):
+            del self.structures_tab
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
+        elif hasattr(self, 'isodoses_tab'):
+            del self.isodoses_tab
 
         # Hide left panel if no rtss or rtdose
         if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
@@ -102,7 +115,7 @@ class UIMainWindow:
         self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, format_metadata=False)
         self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
-        self.three_dimension_view = ThreeDimensionDicomView()
+        self.three_dimension_view = DicomView3D()
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = 0.5
@@ -134,6 +147,8 @@ class UIMainWindow:
         if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = DVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
+        elif hasattr(self, 'dvh_tab'):
+            del self.dvh_tab
 
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
@@ -169,14 +184,6 @@ class UIMainWindow:
 
         self.central_widget.setLayout(self.central_widget_layout)
         self.main_window_instance.setCentralWidget(self.central_widget)
-
-        # Create actions and set menu and tool bars
-        self.action_handler = ActionHandler(self)
-        self.menubar = MenuBar(self.action_handler)
-        self.main_window_instance.setMenuBar(self.menubar)
-        self.toolbar = Toolbar(self.action_handler)
-        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
-        self.main_window_instance.setWindowTitle("OnkoDICOM")
 
     def create_footer(self):
         self.footer.setFixedHeight(15)
