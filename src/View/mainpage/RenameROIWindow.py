@@ -1,6 +1,7 @@
 import pydicom
 from PySide6 import QtGui, QtWidgets, QtCore
-from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, \
+    QWidget, QHBoxLayout, QPushButton, QListWidget
 
 from src.Model import ROI
 from src.Controller.PathHandler import resource_path
@@ -11,7 +12,8 @@ from src.Model.Worker import Worker
 
 class RenameROIWindow(QDialog):
 
-    def __init__(self, standard_volume_names, standard_organ_names, rtss, roi_id, roi_name, rename_signal,
+    def __init__(self, standard_volume_names, standard_organ_names, rtss,
+                 roi_id, roi_name, rename_signal,
                  suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
@@ -34,7 +36,9 @@ class RenameROIWindow(QDialog):
         self.setMinimumSize(300, 90)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
+        self.icon.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/icon.ico")),
+            QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Enter a new name:")
@@ -61,15 +65,17 @@ class RenameROIWindow(QDialog):
 
         # Populating the table of ROIs
         self.list_of_ROIs = QListWidget()
-        self.list_of_ROIs.addItem("------------Standard Organ Names------------")
+        self.list_of_ROIs.addItem(
+            "------------Standard Organ Names------------")
         for organ in self.standard_organ_names:
             self.list_of_ROIs.addItem(organ)
 
-        self.list_of_ROIs.addItem("------------Standard Volume Names------------")
+        self.list_of_ROIs.addItem(
+            "------------Standard Volume Names------------")
         for volume in self.standard_volume_names:
             self.list_of_ROIs.addItem(volume)
 
-        self.list_of_ROIs.clicked.connect(self.on_ROI_clicked)
+        self.list_of_ROIs.clicked.connect(self.on_roi_clicked)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.explanation_text)
@@ -80,14 +86,16 @@ class RenameROIWindow(QDialog):
         self.layout.addWidget(self.list_of_ROIs)
         self.setLayout(self.layout)
 
-
     def on_text_edited(self, text):
-        if text in self.standard_volume_names or text in self.standard_organ_names:
+        if text in self.standard_volume_names \
+                or text in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: green")
             self.feedback_text.setText("Entered text is in standard names")
-        elif text.upper() in self.standard_volume_names or text.upper() in self.standard_organ_names:
+        elif text.upper() in self.standard_volume_names \
+                or text.upper() in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: orange")
-            self.feedback_text.setText("Entered text exists but should be in capitals")
+            self.feedback_text.setText(
+                "Entered text exists but should be in capitals")
         elif text == "":
             self.feedback_text.setText("")
         else:
@@ -102,34 +110,39 @@ class RenameROIWindow(QDialog):
                 upper_text = text.upper()
                 if upper_text.startswith(item):
                     self.feedback_text.setStyleSheet("color: orange")
-                    self.feedback_text.setText("Entered text exists but should be in capitals")
+                    self.feedback_text.setText(
+                        "Entered text exists but should be in capitals")
 
     def on_rename_clicked(self):
         self.new_name = self.input_field.text()
-        progress_window = RenameROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+        progress_window = RenameROIProgressWindow(
+            self, QtCore.Qt.WindowTitleHint)
         progress_window.signal_roi_renamed.connect(self.on_roi_renamed)
         progress_window.start_renaming(self.rtss, self.roi_id, self.new_name)
         progress_window.show()
 
     def on_roi_renamed(self, new_rtss):
-        self.rename_signal.emit((new_rtss, {"rename": [self.roi_name, self.new_name]}))
-        QtWidgets.QMessageBox.about(self, "Saved", "Region of interest successfully renamed!")
+        self.rename_signal.emit(
+            (new_rtss, {"rename": [self.roi_name, self.new_name]}))
+        QtWidgets.QMessageBox.about(
+            self, "Saved", "Region of interest successfully renamed!")
         self.close()
 
-    def on_ROI_clicked(self):
-        clicked_ROI = self.list_of_ROIs.currentItem()
+    def on_roi_clicked(self):
+        clicked_roi = self.list_of_ROIs.currentItem()
         # Excluding headers from being clicked.
-        if not str(clicked_ROI.text()).startswith("------------Standard"):
-            self.input_field.setText(str(clicked_ROI.text()))
+        if not str(clicked_roi.text()).startswith("------------Standard"):
+            self.input_field.setText(str(clicked_roi.text()))
 
 
 class RenameROIProgressWindow(QtWidgets.QDialog):
     """
-    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
+    This class displays a window that advises the user that the RTSTRUCT is
+    being modified, and then creates a new
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_renamed = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_renamed = QtCore.Signal(pydicom.Dataset)  # Emits new dataset
 
     def __init__(self, *args, **kwargs):
         super(RenameROIProgressWindow, self).__init__(*args, **kwargs)
@@ -155,7 +168,8 @@ class RenameROIProgressWindow(QtWidgets.QDialog):
 
     def roi_renamed(self, result):
         """
-        This method is called when the second thread completes generation of the new dataset object.
+        This method is called when the second thread completes generation of
+        the new dataset object.
         :param result: The resulting dataset from the ROI.rename_roi function.
         """
         self.signal_roi_renamed.emit(result)

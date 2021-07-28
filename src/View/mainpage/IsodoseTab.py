@@ -6,19 +6,20 @@ isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 
 
 class IsodoseTab(QtWidgets.QWidget):
-
     request_update_isodoses = QtCore.Signal()
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-        self.rx_dose_in_cgray = self.patient_dict_container.get("rx_dose_in_cgray")
+        self.rx_dose_in_cgray = self.patient_dict_container.get(
+            "rx_dose_in_cgray")
         self.color_dict = self.init_color_isod()
         self.color_squares = self.init_color_squares()
         self.checkboxes = self.init_checkboxes()
 
         self.isodose_tab_layout = QtWidgets.QVBoxLayout()
-        self.isodose_tab_layout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.isodose_tab_layout.setAlignment(
+            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.isodose_tab_layout.setSpacing(0)
         self.init_layout()
 
@@ -28,7 +29,8 @@ class IsodoseTab(QtWidgets.QWidget):
         for i in range(0, len(self.checkboxes)):
             widget_isodose = QtWidgets.QWidget()
             layout_isodose = QtWidgets.QHBoxLayout(widget_isodose)
-            layout_isodose.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+            layout_isodose.setAlignment(
+                QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
             layout_isodose.addWidget(self.color_squares[i])
             layout_isodose.addWidget(self.checkboxes[i])
             self.isodose_tab_layout.addWidget(widget_isodose)
@@ -37,7 +39,8 @@ class IsodoseTab(QtWidgets.QWidget):
         """
         Create a list containing the colors for each isodose.
 
-        :return: Dictionary where the key is the percentage of isodose and the value a QColor object.
+        :return: Dictionary where the key is the percentage of isodose and
+        the value a QColor object.
         """
         roi_color = {
             107: QtGui.QColor(131, 0, 0),
@@ -79,16 +82,22 @@ class IsodoseTab(QtWidgets.QWidget):
         def generate_clicked_handler(text):
             def handler(state):
                 self.checked_dose(state, text)
+
             return handler
+
         first_iteration = True
         for i in range(10):
             if first_iteration:
-                checkbox = QtWidgets.QCheckBox("%s %% / %s cGy [Max]" % (str(isodose_percentages[i]),
-                                                                         str(list_of_doses[i])))
+                checkbox = QtWidgets.QCheckBox(
+                    "%s %% / %s cGy [Max]" % (str(isodose_percentages[i]),
+                                              str(list_of_doses[i])))
                 first_iteration = False
             else:
-                checkbox = QtWidgets.QCheckBox("%s %% / %s cGy" % (str(isodose_percentages[i]), str(list_of_doses[i])))
-            checkbox.clicked.connect(generate_clicked_handler(isodose_percentages[i]))
+                checkbox = QtWidgets.QCheckBox(
+                    "%s %% / %s cGy" % (str(isodose_percentages[i]),
+                                        str(list_of_doses[i])))
+            checkbox.clicked.connect(
+                generate_clicked_handler(isodose_percentages[i]))
             checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
             list_of_checkboxes.append(checkbox)
 
@@ -98,7 +107,8 @@ class IsodoseTab(QtWidgets.QWidget):
     # Updates the list of selected isodoses and dicom view
     def checked_dose(self, state, isod_value):
         """
-        Function triggered when the checkbox of a structure is checked / unchecked.
+        Function triggered when the checkbox of a structure is
+        checked / unchecked.
         Update the list of selected structures.
         Update the DICOM view.
 

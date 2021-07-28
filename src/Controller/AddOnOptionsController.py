@@ -1,9 +1,4 @@
-
-######################################################################################################
-#                                                                                                    #
-#   This file handles all the processes done within the Add-On Options button                        #
-#                                                                                                    #
-######################################################################################################
+# This file handles all the processes done within the Add-On Options button
 import csv
 import webbrowser
 from collections import deque
@@ -15,12 +10,8 @@ from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
 from src.Controller.PathHandler import resource_path
 
-
-######################################################################################################
-#                                                                                                    #
-#   Create the Add-On Options class based on the UI from the file in View/Add-On Options             #
-#                                                                                                    #
-######################################################################################################
+# Create the Add-On Options class based on the UI from the file in
+# View/Add-On Options
 
 
 class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
@@ -28,16 +19,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
         # read configuration file for line and fill options
-        with open(resource_path("data/line&fill_configuration"), "r") as stream:
+        with open(resource_path(
+                "data/line&fill_configuration"), "r") as stream:
             elements = stream.readlines()
-            # if file is not empty, each line represents the last saved configuration in the given order
+            # if file is not empty, each line represents the last saved
+            # configuration in the given order
             if len(elements) > 0:
                 roi_line = int(elements[0].replace("\n", ""))
                 roi_opacity = int(elements[1].replace("\n", ""))
                 iso_line = int(elements[2].replace("\n", ""))
                 iso_opacity = int(elements[3].replace("\n", ""))
                 line_width = float(elements[4].replace("\n", ""))
-            else:  # if file is empty for some reason, use the default measures below
+            else:  # Use the default measures below
                 roi_line = 1
                 roi_opacity = 10
                 iso_line = 2
@@ -46,11 +39,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             stream.close()
         # initialise the UI
         self.window = window
-        self.setup_ui(self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
-        # this data is used to create the tree view of functionalities on the left of the window
-        # each entry will be used as a button to change the view on the right accordingly
+        self.setup_ui(self, roi_line, roi_opacity, iso_line, iso_opacity,
+                      line_width)
+        # this data is used to create the tree view of functionalities on
+        # the left of the window each entry will be used as a button to
+        # change the view on the right accordingly
         data = [
-            {"level": 0, "dbID": 442, "parent_ID": 6, "short_name": "User Options"},
+            {
+                "level": 0,
+                "dbID": 442,
+                "parent_ID": 6,
+                "short_name": "User Options"
+            },
             {
                 "level": 1,
                 "dbID": 522,
@@ -69,7 +69,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "parent_ID": 442,
                 "short_name": "Standard Volume Names",
             },
-            # {'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name': 'Create ROI from Isodose'}, # extra option not fully supported
+            # {'level': 1, 'dbID': 528, 'parent_ID': 442, 'short_name':
+            # 'Create ROI from Isodose'}, # extra option not fully supported
             {
                 "level": 1,
                 "dbID": 520,
@@ -82,7 +83,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "parent_ID": 442,
                 "short_name": "Line & Fill configuration",
             },
-            {"level": 0, "dbID": 446, "parent_ID": 6, "short_name": "Configuration"},
+            {
+                "level": 0,
+                "dbID": 446,
+                "parent_ID": 6,
+                "short_name": "Configuration"
+            },
             {
                 "level": 1,
                 "dbID": 521,
@@ -92,12 +98,13 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         ]
         # create a model for the tree view of options and attach the data
         self.model = QtGui.QStandardItemModel()
-        self.treeList.setModel(self.model)
+        self.tree_list.setModel(self.model)
         self.import_data(data)
-        self.treeList.expandAll()
-        # fill the corresponding tables with the corresponding data from the csv files
+        self.tree_list.expandAll()
+        # fill the corresponding tables with the corresponding data from the
+        # csv files
         self.fill_tables()
-        self.treeList.setEditTriggers(
+        self.tree_list.setEditTriggers(
             QtWidgets.QTreeView.NoEditTriggers
         )  # make the tree entries not editable
         # Functionalities of the Apply and Cancel button
@@ -109,24 +116,29 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.add_new_window.clicked.connect(self.new_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
-        # self.add_new_roi.clicked.connect(self.new_isodose) # extra functionality
+        # self.add_new_roi.clicked.connect(self.new_isodose) # extra
+        # functionality
         self.import_organ_csv.clicked.connect(self.import_organs)
 
         # adding the right click menus for each table
-        self.table_view.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_view.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(
-            self.on_customContextMenuRequestedWindow
+            self.on_custom_context_menu_requested_window
         )
-        self.table_organ.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_organ.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_organ.customContextMenuRequested.connect(
-            self.on_customContextMenuRequestedOrgan
+            self.on_custom_context_menu_requested_organ
         )
-        self.table_volume.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_volume.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_volume.customContextMenuRequested.connect(
-            self.on_customContextMenuRequestedVolume
+            self.on_custom_context_menu_requested_volume
         )
         # self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
+        # self.table_roi.customContextMenuRequested.connect(
+        # self.on_customContextMenuRequested_Roi)
         # making the URL column a double clicked link
         self.table_organ.itemDoubleClicked.connect(self.open_link)
 
@@ -139,14 +151,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             else:
                 webbrowser.open_new("http://" + item.text())
 
-    ######################################################################################################
-    #                                                                                                    #
-    #   The right click menus for each table (First one is explained and the same logic applies for all  #
-    #                                                                                                    #
-    ######################################################################################################
+    # The right click menus for each table (First one is explained and the
+    # same logic applies for all
+
     # windowing
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequestedWindow(self, pos):
+    def on_custom_context_menu_requested_window(self, pos):
         # gets the position of the right click for the windowing table
         it = self.table_view.itemAt(pos)
         if it is None:
@@ -166,7 +176,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         if action == delete_row_action:
             self.table_view.removeRow(c)
         if action == modify_row_action:
-            # open an input dialog as a pop up with the current values to be modified
+            # open an input dialog as a pop up with the current values to be
+            # modified
             dialog = Dialog_Windowing(
                 self.table_view.item(c, 0).text(),
                 self.table_view.item(c, 1).text(),
@@ -174,7 +185,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_view.item(c, 3).text(),
             )
             # If Okay is pressed then display the new entries in the table
-            # They will only be saved if Apply is pressed before exiting Add-On Options
+            # They will only be saved if Apply is pressed before exiting
+            # Add-On Options
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_view.setItem(c, 0, QTableWidgetItem(new_data[0]))
@@ -184,7 +196,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # standard organ name table
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequestedOrgan(self, pos):
+    def on_custom_context_menu_requested_organ(self, pos):
         it = self.table_organ.itemAt(pos)
         if it is None:
             return
@@ -217,7 +229,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # standard volume table
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequestedVolume(self, pos):
+    def on_custom_context_menu_requested_volume(self, pos):
         it = self.table_volume.itemAt(pos)
         if it is None:
             return
@@ -236,7 +248,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self.table_volume.removeRow(c)
         if action == modify_row_action:
             dialog = Dialog_Volume(
-                self.table_volume.item(c, 0).text(), self.table_volume.item(c, 1).text()
+                self.table_volume.item(c, 0).text(),
+                self.table_volume.item(c, 1).text()
             )
             if dialog.exec():
                 new_data = dialog.getInputs()
@@ -271,11 +284,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     #             self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
     #             self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
 
-    ######################################################################################################
-    #                                                                                                    #
-    #  This function creates the tree view on the left according to the given data                       #
-    #                                                                                                    #
-    ######################################################################################################
+    # This function creates the tree view on the left according to the given
+    # data
 
     def import_data(self, data, root=None):
         self.model.setRowCount(0)
@@ -297,16 +307,16 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             parent.appendRow([QtGui.QStandardItem(value["short_name"])])
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
-    ######################################################################################################
-    #                                                                                                    #
-    # If APPLY is clicked, save the contents of each option and table into their corresponding files     #
-    #                                                                                                    #
-    ######################################################################################################
+    # If APPLY is clicked, save the contents of each option and table into
+    # their corresponding files
 
     def accepting(self):
         # starting save
         # Saving the Windowing options
-        with open(resource_path("data/csv/imageWindowing.csv"), "w", newline="") as stream:
+        with open(
+                resource_path("data/csv/imageWindowing.csv"),
+                "w",
+                newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Organ", "Scan", "Window", "Level"])
             for row in range(self.table_view.rowCount()):
@@ -319,7 +329,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # saving the Standard Organ names
-        with open(resource_path("data/csv/organName.csv"), "w", newline="") as stream:
+        with open(resource_path("data/csv/organName.csv"),
+                  "w",
+                  newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
             for row in range(self.table_organ.rowCount()):
@@ -332,7 +344,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # Saving the Standard Volume Names
-        with open(resource_path("data/csv/volumeName.csv"), "w", newline="") as stream:
+        with open(resource_path("data/csv/volumeName.csv"),
+                  "w",
+                  newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_volume.rowCount()):
                 rowdata = []
@@ -358,7 +372,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         #         writer.writerow(rowdata)
 
         # save configuration file
-        with open(resource_path("data/line&fill_configuration"), "w") as stream:
+        with open(resource_path("data/line&fill_configuration"),
+                  "w") as stream:
             stream.write(str(self.line_style_ROI.currentIndex()))
             stream.write("\n")
             stream.write(str(self.opacity_ROI.value()))
@@ -374,13 +389,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         # Save the default directory
         configuration = Configuration()
         try:
-            new_dir = self.change_default_directory.change_default_directory_input_box.text()
+            temp_dir = self.change_default_directory
+            new_dir = temp_dir.change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
-            QMessageBox.about(self, "Success", "Default directory was successfully updated")
+            QMessageBox.about(self,
+                              "Success",
+                              "Default directory was successfully updated")
         except SqlError:
             configuration.set_up_config_db()
-            QMessageBox.critical(self, "Config file error",
-                                 "Failed to update default directory.\nPlease try again.")
+            QMessageBox.critical(self,
+                                 "Config file error",
+                                 "Failed to update default "
+                                 "directory.\nPlease try again.")
 
         # Close the Add-On Options Window after saving
 
@@ -390,15 +410,13 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         self.close()
 
-    ###################################################################################################################
-    #                                                                                                                 #
-    # This function populates the tables with the last known entries based on the corresponding files                 #
-    #                                                                                                                 #
-    ###################################################################################################################
+    # This function populates the tables with the last known entries based
+    # on the corresponding files
 
     def fill_tables(self):
         # Fill the Windowing table
-        with open(resource_path("data/csv/imageWindowing.csv"), "r") as file_input:
+        with open(resource_path("data/csv/imageWindowing.csv"),
+                  "r") as file_input:
             next(file_input)
             i = 0
             for row in file_input:
@@ -414,7 +432,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # organ names table
-        with open(resource_path("data/csv/organName.csv"), "r") as file_input:
+        with open(resource_path("data/csv/organName.csv"),
+                  "r") as file_input:
             next(file_input)
             i = 0
             for row in file_input:
@@ -431,7 +450,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
+        with open(resource_path("data/csv/volumeName.csv"),
+                  "r") as file_input:
             i = 0
             for row in file_input:
                 items = [
@@ -459,8 +479,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         #             self.table_roi.setItem(i, 2, items[2])
         #         i += 1
 
-        # patient hash ID table, which is just for displaying all the patients anonymized byt the software since intallation
-        with open(resource_path("data/csv/patientHash.csv"), "r") as file_input:
+        # patient hash ID table, which is just for displaying all the
+        # patients anonymized byt the software since intallation
+        with open(resource_path("data/csv/patientHash.csv"),
+                  "r") as file_input:
             next(file_input)
             i = 0
             for row in file_input:
@@ -474,12 +496,11 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
 
-    ###################################################################################################################
-    #                                                                                                                 #
-    # The following function show a pop up window to add a new entry in the corresponding table                       #
-    #                                                                                                                 #
-    ###################################################################################################################
-    # This function shows an Input dialog pop up to insert a new windowing entry
+    # The following function show a pop up window to add a new entry in the
+    # corresponding table
+
+    # This function shows an Input dialog pop up to insert a new windowing
+    # entry
     def new_windowing(self):
         dialog = Dialog_Windowing("", "", "", "")
         c = self.table_view.rowCount()
@@ -522,11 +543,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     #         self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
     #         self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    ###################################################################################################################
-    #                                                                                                                 #
-    # the following function lets you import a csv of organ names into the table if the csv is in the given format    #
-    #                                                                                                                 #
-    ###################################################################################################################
+    # the following function lets you import a csv of organ names into the
+    # table if the csv is in the given format
 
     def import_organs(self):
         self.check_change = False
@@ -542,7 +560,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         buttonReply = QMessageBox.warning(
                             self,
                             "Error Message",
-                            "Import a csv with 3 or 4 columns and the data with the displayed order!",
+                            "Import a csv with 3 or 4 columns and the data "
+                            "with the displayed order!",
                             QMessageBox.Ok,
                         )
                         if buttonReply == QMessageBox.Ok:
@@ -558,12 +577,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.check_change = True
 
 
-###################################################################################################################
-#                                                                                                                 #
-# The class that will be called by the main page to access the Add-On Options controller                          #
-#                                                                                                                 #
-###################################################################################################################
-
+# The class that will be called by the main page to access the Add-On
+# Options controller
 
 class AddOptions:
     def __init__(self, window):

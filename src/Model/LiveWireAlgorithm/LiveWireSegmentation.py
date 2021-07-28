@@ -1,8 +1,10 @@
 import math
-from src.Model.LiveWireAlgorithm.Dijkstra import shortestPath
+from src.Model.LiveWireAlgorithm.Dijkstra import shortest_path
+
 
 class LiveWireSegmentation(object):
-    def __init__(self, image=None, smooth_image=False, threshold_gradient_image=False):
+    def __init__(self, image=None, smooth_image=False,
+                 threshold_gradient_image=False):
         super(LiveWireSegmentation, self).__init__()
 
         # init internal containers
@@ -21,7 +23,8 @@ class LiveWireSegmentation(object):
         # should smooth the original image using bilateral smoothing filter
         self.smooth_image = smooth_image
 
-        # should use the thresholded gradient image for shortest path computation
+        # should use the thresholded gradient image for shortest path
+        # computation
         self.threshold_gradient_image = threshold_gradient_image
 
         # init image
@@ -74,21 +77,22 @@ class LiveWireSegmentation(object):
 
                 neighbors = []
                 if row > 0:
-                    neighbors.append((row-1, col))
+                    neighbors.append((row - 1, col))
 
-                if row < rows-1:
-                    neighbors.append((row+1, col))
+                if row < rows - 1:
+                    neighbors.append((row + 1, col))
 
                 if col > 0:
-                    neighbors.append((row, col-1))
+                    neighbors.append((row, col - 1))
 
-                if col < cols-1:
-                    neighbors.append((row, col+1))
+                if col < cols - 1:
+                    neighbors.append((row, col + 1))
 
                 dist = {}
                 for n in neighbors:
                     # distance function can be replaced with a different norm
-                    dist[n] = norm_function(self.edges[row][col] - self.edges[n[0], n[1]])
+                    dist[n] = norm_function(
+                        self.edges[row][col] - self.edges[n[0], n[1]])
 
                 self.G[(row, col)] = dist
 
@@ -96,6 +100,6 @@ class LiveWireSegmentation(object):
         if self.image is None:
             raise AttributeError("Load an image first!")
 
-        path = shortestPath(self.G, from_, to_, length_penalty=length_penalty)
+        path = shortest_path(self.G, from_, to_, length_penalty=length_penalty)
 
         return path

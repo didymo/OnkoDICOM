@@ -40,7 +40,8 @@ class StructureTab(QtWidgets.QWidget):
         self.layout_content = QtWidgets.QVBoxLayout(self.scroll_area_content)
         self.layout_content.setContentsMargins(0, 0, 0, 0)
         self.layout_content.setSpacing(0)
-        self.layout_content.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.layout_content.setAlignment(
+            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
         # Create list of standard organ and volume names
         self.standard_organ_names = []
@@ -64,23 +65,31 @@ class StructureTab(QtWidgets.QWidget):
     def init_color_roi(self):
         """
         Create a dictionary containing the colors for each structure.
-        :return: Dictionary where the key is the ROI number and the value a QColor object.
+        :return: Dictionary where the key is the ROI number and the value
+        a QColor object.
         """
         roi_color = dict()
-        roi_contour_info = self.patient_dict_container.get("dict_dicom_tree_rtss")['ROI Contour Sequence']
+
+
+        roi_contour_info = self.patient_dict_container.get(
+            "dict_dicom_tree_rtss")['ROI Contour Sequence']
 
         if len(roi_contour_info) > 0:
             for item, roi_dict in roi_contour_info.items():
-                # Note: the keys of roiContourInfo are "item 0", "item 1", etc.
-                # As all the ROI structures are identified by the ROI numbers in the whole code,
-                # we get the ROI number 'roi_id' by using the member 'list_roi_numbers'
+                # Note: the keys of roiContourInfo are "item 0", "item 1",
+                # etc. As all the ROI structures are identified by the ROI
+                # numbers in the whole code, we get the ROI number 'roi_id'
+                # by using the member 'list_roi_numbers'
                 id = item.split()[1]
-                roi_id = self.patient_dict_container.get("list_roi_numbers")[int(id)]
+
+                roi_id = self.patient_dict_container.get(
+                    "list_roi_numbers")[int(id)]
+
                 if 'ROI Display Color' in roi_contour_info[item]:
-                    RGB_list = roi_contour_info[item]['ROI Display Color'][0]
-                    red = RGB_list[0]
-                    green = RGB_list[1]
-                    blue = RGB_list[2]
+                    rgb_list = roi_contour_info[item]['ROI Display Color'][0]
+                    red = rgb_list[0]
+                    green = rgb_list[1]
+                    blue = rgb_list[2]
                 else:
                     seed(1)
                     red = randint(0, 255)
@@ -93,7 +102,8 @@ class StructureTab(QtWidgets.QWidget):
 
     def init_standard_names(self):
         """
-        Create two lists containing standard organ and standard volume names as set by the Add-On options.
+        Create two lists containing standard organ and standard volume names
+        as set by the Add-On options.
         """
         with open(resource_path('data/csv/organName.csv'), 'r') as f:
             self.standard_organ_names = []
@@ -114,7 +124,8 @@ class StructureTab(QtWidgets.QWidget):
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
         icon_roi_delete.addPixmap(
-            QtGui.QPixmap(resource_path('res/images/btn-icons/delete_icon.png')),
+            QtGui.QPixmap(resource_path(
+                'res/images/btn-icons/delete_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -129,12 +140,14 @@ class StructureTab(QtWidgets.QWidget):
         # self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
-        self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
+        self.button_roi_delete.clicked.connect(
+            self.roi_delete_clicked)
 
         # self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_draw.setIcon(icon_roi_draw)
         self.button_roi_draw.setText("Draw ROI")
-        self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
+        self.button_roi_draw.clicked.connect(
+            self.roi_draw_clicked)
 
         layout_roi_buttons = QtWidgets.QHBoxLayout(self.roi_buttons)
         layout_roi_buttons.setContentsMargins(0, 0, 0, 0)
@@ -143,7 +156,8 @@ class StructureTab(QtWidgets.QWidget):
 
     def update_content(self):
         """
-        Add the contents (color square and checkbox) in the scrolling area widget.
+        Add the contents (color square and checkbox) in the scrolling
+        area widget.
         """
         # Clear the children
         for i in reversed(range(self.layout_content.count())):
@@ -152,17 +166,21 @@ class StructureTab(QtWidgets.QWidget):
         row = 0
         for roi_id, roi_dict in self.rois.items():
             # Creates a widget representing each ROI
+
             color = self.color_dict[roi_id]
             color.setAlpha(255)
-            structure = StructureWidget(roi_id, color, roi_dict['name'], self)
+            structure = StructureWidget(
+                roi_id, color, roi_dict['name'], self)
             if roi_id in self.patient_dict_container.get("selected_rois"):
                 structure.checkbox.setChecked(Qt.Checked)
             structure.structure_renamed.connect(self.structure_modified)
             self.layout_content.addWidget(structure)
             row += 1
 
-        self.scroll_area.setStyleSheet("QScrollArea {background-color: #ffffff; border-style: none;}")
-        self.scroll_area_content.setStyleSheet("QWidget {background-color: #ffffff; border-style: none;}")
+        self.scroll_area.setStyleSheet(
+            "QScrollArea {background-color: #ffffff; border-style: none;}")
+        self.scroll_area_content.setStyleSheet(
+            "QWidget {background-color: #ffffff; border-style: none;}")
 
         self.scroll_area.setWidget(self.scroll_area_content)
 
@@ -174,48 +192,59 @@ class StructureTab(QtWidgets.QWidget):
 
     def structure_modified(self, changes):
         """
-        Executes when a structure is renamed/deleted. Displays indicator that structure has changed.
+        Executes when a structure is renamed/deleted. Displays indicator
+        that structure has changed.
         changes is a tuple of (new_dataset, description_of_changes)
-        description_of_changes follows the format {"type_of_change": value_of_change}.
-        Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
-        {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
+        description_of_changes follows the format
+        {"type_of_change": value_of_change}.
+        Examples: {"rename": ["TOOTH", "TEETH"]} represents that the
+        TOOTH structure has been renamed to TEETH.
+        {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH
+        and MAXILLA structures have been deleted.
         {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
         """
 
         new_dataset = changes[0]
         change_description = changes[1]
 
-        # If this is the first time the RTSS has been modified, create a modified indicator giving the user the option
-        # to save their new file.
+        # If this is the first time the RTSS has been modified, create a
+        # modified indicator giving the user the option to save their new
+        # file.
         if self.patient_dict_container.get("rtss_modified") is False:
             self.show_modified_indicator()
 
-        # If this is the first change made to the RTSS file, update the dataset with the new one so that OnkoDICOM
-        # starts working off this dataset rather than the original RTSS file.
+        # If this is the first change made to the RTSS file, update the
+        # dataset with the new one so that OnkoDICOM starts working off this
+        # dataset rather than the original RTSS file.
         self.patient_dict_container.set("rtss_modified", True)
         self.patient_dict_container.set("dataset_rtss", new_dataset)
 
         # Refresh ROIs in main page
-        self.patient_dict_container.set("rois", ImageLoading.get_roi_info(new_dataset))
+        self.patient_dict_container.set(
+            "rois", ImageLoading.get_roi_info(new_dataset))
         self.rois = self.patient_dict_container.get("rois")
         contour_data = ImageLoading.get_raw_contour_data(new_dataset)
         self.patient_dict_container.set("raw_contour", contour_data[0])
         self.patient_dict_container.set("num_points", contour_data[1])
         pixluts = ImageLoading.get_pixluts(self.patient_dict_container.dataset)
         self.patient_dict_container.set("pixluts", pixluts)
-        self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(self.patient_dict_container.get("rois")))
+        self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(
+            self.patient_dict_container.get("rois")))
         self.patient_dict_container.set("selected_rois", [])
         self.patient_dict_container.set("dict_polygons", {})
 
         if "draw" in change_description:
             dicom_tree_rtss = DicomTree(None)
             dicom_tree_rtss.dataset = new_dataset
-            dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(dicom_tree_rtss.dataset)
-            self.patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+            dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
+                dicom_tree_rtss.dataset)
+            self.patient_dict_container.set(
+                "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
             self.color_dict = self.init_color_roi()
             self.patient_dict_container.set("roi_color_dict", self.color_dict)
             if self.patient_dict_container.has_attribute("raw_dvh"):
-                # DVH will be outdated once changes to it are made, and recalculation will be required.
+                # DVH will be outdated once changes to it are made,
+                # and recalculation will be required.
                 self.patient_dict_container.set("dvh_outdated", True)
 
         if self.patient_dict_container.has_modality("raw_dvh"):
@@ -229,7 +258,8 @@ class StructureTab(QtWidgets.QWidget):
 
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
 
-            # Remove structures from DVH list - the only visible effect of this section is the exported DVH csv
+            # Remove structures from DVH list - the only visible effect of
+            # this section is the exported DVH csv
             if "delete" in changes[1]:
                 list_of_deleted = []
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
@@ -250,20 +280,25 @@ class StructureTab(QtWidgets.QWidget):
         self.modified_indicator_widget = QtWidgets.QWidget()
         self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
-        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+        modified_indicator_layout.setAlignment(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/alert_icon.png")))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(
+            resource_path("res/images/btn-icons/alert_icon.png")))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
-        modified_indicator_text = QtWidgets.QLabel("Structures have been modified")
+        modified_indicator_text = QtWidgets.QLabel(
+            "Structures have been modified")
         modified_indicator_text.setStyleSheet("color: red")
         modified_indicator_layout.addWidget(modified_indicator_text)
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
-        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
+        # When the widget is clicked, save the rtss
+        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss
 
-        # Temporarily remove the ROI modify buttons, add this indicator, then add them back again.
+        # Temporarily remove the ROI modify buttons, add this indicator,
+        # then add them back again.
         # This ensure that the modifier appears above the ROI modify buttons.
         self.structure_tab_layout.removeWidget(self.roi_buttons)
         self.structure_tab_layout.addWidget(self.modified_indicator_widget)
@@ -271,7 +306,8 @@ class StructureTab(QtWidgets.QWidget):
 
     def structure_checked(self, state, roi_id):
         """
-        Function triggered when the checkbox of a structure is checked / unchecked.
+        Function triggered when the checkbox of a structure is
+        checked / unchecked.
         Update the list of selected structures.
         Update the plot of the DVH and the DICOM view.
 
@@ -290,15 +326,20 @@ class StructureTab(QtWidgets.QWidget):
         self.request_update_structures.emit()
 
     def save_new_rtss(self, event=None):
-        rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
+        rtss_directory = \
+            str(Path(self.patient_dict_container.get("file_rtss")))
 
-        confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                 "Are you sure you want to save the modified RTSTRUCT file? This will "
-                                                 "overwrite the existing file. This is not reversible.",
-                                                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        confirm_save = QtWidgets.QMessageBox.information(
+            self, "Confirmation",
+            "Are you sure you want to save the modified RTSTRUCT file? "
+            "This will overwrite the existing file. This is not reversible.",
+            QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
-            self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
+            self.patient_dict_container.get(
+                "dataset_rtss").save_as(rtss_directory)
+            QtWidgets.QMessageBox.about(
+                self.parentWidget(), "File saved",
+                "The RTSTRUCT file has been saved.")
             self.patient_dict_container.set("rtss_modified", False)
             self.modified_indicator_widget.setParent(None)

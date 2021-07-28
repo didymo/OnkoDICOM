@@ -25,21 +25,21 @@ class DicomTree(object):
 
     def array_to_model(self, array):
         model = QtGui.QStandardItemModel()
-        parentItem = model.invisibleRootItem()
-        for ntuple in array:
-            tag = ntuple[0]
-            value = ntuple[1]
+        parent_item = model.invisibleRootItem()
+        for n_tuple in array:
+            tag = n_tuple[0]
+            value = n_tuple[1]
             if isinstance(value, dict):
-                self.recurse_dic_to_item(value, parentItem)
+                self.recurse_dic_to_item(value, parent_item)
             else:
                 item = QtGui.QStandardItem(tag + str(value))
-                parentItem.appendRow(item)
-        return parentItem
+                parent_item.appendRow(item)
+        return parent_item
 
     def dic_to_model(self, dic):
         model = QtGui.QStandardItemModel()
-        parentItem = model.invisibleRootItem()
-        self.recurse_dic_to_item(dic, parentItem)
+        parent_item = model.invisibleRootItem()
+        self.recurse_dic_to_item(dic, parent_item)
         return model
 
     def dataset_to_array(self, dataset):
@@ -97,8 +97,8 @@ class DicomTree(object):
 
 def main():
     filename = '../dicom_sample/ct.0.dcm'
-    dicomTree = DicomTree(filename)
-    dicomTree.show_tree()
+    dicom_tree = DicomTree(filename)
+    dicom_tree.show_tree()
 
 
 if __name__ == "__main__":
