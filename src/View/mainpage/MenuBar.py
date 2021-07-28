@@ -30,7 +30,8 @@ class MenuBar(QtWidgets.QMenuBar):
         # Help button opens OnkoDICOM website
         self.action_help = QtGui.QAction()
         self.action_help.setText("Help")
-        self.action_help.triggered.connect(lambda: webbrowser.open("https://onkodicom.com.au/"))
+        self.action_help.triggered.connect(lambda: webbrowser.open(
+            "https://onkodicom.com.au/"))
 
         self.addAction(self.action_help)
 

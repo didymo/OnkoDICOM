@@ -98,13 +98,13 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         ]
         # create a model for the tree view of options and attach the data
         self.model = QtGui.QStandardItemModel()
-        self.treeList.setModel(self.model)
+        self.tree_list.setModel(self.model)
         self.import_data(data)
-        self.treeList.expandAll()
+        self.tree_list.expandAll()
         # fill the corresponding tables with the corresponding data from the
         # csv files
         self.fill_tables()
-        self.treeList.setEditTriggers(
+        self.tree_list.setEditTriggers(
             QtWidgets.QTreeView.NoEditTriggers
         )  # make the tree entries not editable
         # Functionalities of the Apply and Cancel button

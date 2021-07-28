@@ -110,7 +110,8 @@ class PyradiExtended(QtCore.QThread):
         # Set completed percentage to 25% and blank for ROI name
         callback(25, '')
 
-    def convert_rois_to_nrrd(self, path, rtss_path, mask_folder_path, callback):
+    def convert_rois_to_nrrd(self, path, rtss_path,
+                             mask_folder_path, callback):
         """
         Generate an nrrd file for each region of interest using Plastimatch.
 
@@ -152,11 +153,12 @@ class PyradiExtended(QtCore.QThread):
         # Default features:
         #   first order, glcm, gldm, glrlm, glszm, ngtdm, shape
         # Default settings:
-        #   'minimumROIDimensions': 2, 'minimumROISize': None, 'normalize': False,
-        #   'normalizeScale': 1, 'removeOutliers': None, 'resampledPixelSpacing': None,
-        #   'interpolator': 'sitkBSpline', 'preCrop': False, 'padDistance': 5, 'distances': [1],
-        #   'force2D': False, 'force2Ddimension': 0, 'resegmentRange': None, 'label': 1,
-        #   'additionalInfo': True
+        #   'minimumROIDimensions': 2, 'minimumROISize': None,
+        #   'normalize': False, 'normalizeScale': 1, 'removeOutliers': None,
+        #   'resampledPixelSpacing': None, 'interpolator': 'sitkBSpline',
+        #   'preCrop': False, 'padDistance': 5, 'distances': [1],
+        #   'force2D': False, 'force2Ddimension': 0,
+        #   'resegmentRange': None, 'label': 1, 'additionalInfo': True
         extractor = featureextractor.RadiomicsFeatureExtractor()
 
         num_masks = len([file for file in os.listdir(mask_folder_path)])

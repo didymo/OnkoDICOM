@@ -3,19 +3,20 @@ from PySide6 import QtWidgets, QtCore, QtGui
 
 class StructureInformation(object):
 	"""
-	Manage all functionalities related to the Structure Information section (bottom left of the main page).
+	Manage all functionalities related to the Structure Information section 
+	(bottom left of the main page).
 	- Retrieve information of the ROI structures.
 	- Set up the UI.
 	"""
 
-	def __init__(self, mainWindow):
+	def __init__(self, main_window):
 		"""
 		Retrieve information for all ROI structures and set up the UI.
 
-		:param mainWindow:
-		 the window of the main page
+		:param main_window:
+		the window of the main page
 		"""
-		self.window = mainWindow
+		self.window = main_window
 		self.widget = QtWidgets.QWidget(self.window.left_widget)
 		self.combobox = self.selector_combobox()
 		self.list_info = self.get_struct_info()
@@ -32,12 +33,12 @@ class StructureInformation(object):
 		# Structure Information: Information Icon
 		icon = QtWidgets.QLabel(self.widget)
 		icon.setText("")
-		icon.setPixmap(QtGui.QPixmap(":/images//res/images/btn-icons/info.png"))
+		icon.setPixmap(QtGui.QPixmap(
+			":/images//res/images/btn-icons/info.png"))
 
 		# Structure Information: Header
 		label = QtWidgets.QLabel(self.widget)
 		label.setFont(QtGui.QFont("Laksaman", pointSize=10, weight=700))
-
 
 		# Structure Information: "Volume"
 		volume_label = QtWidgets.QLabel(self.widget)
@@ -133,7 +134,8 @@ class StructureInformation(object):
 
 	def get_struct_info(self):
 		"""
-		Dictionary for all the ROI structures containing information about the volume, the min, max and mean doses.
+		Dictionary for all the ROI structures containing information about
+		the volume, the min, max and mean doses.
 
 		:return:
 		Dictionary where:
@@ -159,19 +161,20 @@ class StructureInformation(object):
 			# The volume of the ROI is greater than 0
 			else:
 				"""
-				The min dose is the last dose (in cGy) where the percentage of volume
-				receiving this dose is equal to 100%.
-				The mean dose is the last dose (in cGy) where the percentage of volume
-				receiving this dose is greater than 50%.
-				The max dose is the last dose (in cGy) where the percentage of volume
-				receiving this dose is greater than 0%.
+				The min dose is the last dose (in cGy) where the percentage of 
+				volume receiving this dose is equal to 100%.
+				The mean dose is the last dose (in cGy) where the percentage of
+				volume receiving this dose is greater than 50%.
+				The max dose is the last dose (in cGy) where the percentage of 
+				volume receiving this dose is greater than 0%.
 				"""
 				volume_percent = 100 * counts / dvh.volume
 				# index is used as a cursor to get the min, mean and max doses.
 				index = 0
 
 				# Get the min dose of the ROI
-				while index < len(volume_percent) and int(volume_percent.item(index)) == 100:
+				while index < len(volume_percent) \
+						and int(volume_percent.item(index)) == 100:
 					index += 1
 				if index == 0:
 					struct_info['min'] = 0
@@ -179,7 +182,8 @@ class StructureInformation(object):
 					struct_info['min'] = index - 1
 
 				# Get the mean dose of the ROI
-				while index < len(volume_percent) and volume_percent.item(index) > 50:
+				while index < len(volume_percent) \
+						and volume_percent.item(index) > 50:
 					index += 1
 				if index == 0:
 					struct_info['mean'] = 0
@@ -187,7 +191,8 @@ class StructureInformation(object):
 					struct_info['mean'] = index - 1
 
 				# Get the max dose of the ROI
-				while index < len(volume_percent) and volume_percent.item(index) != 0:
+				while index < len(volume_percent) \
+						and volume_percent.item(index) != 0:
 					index += 1
 				if index == 0:
 					struct_info['max'] = 0
@@ -203,18 +208,18 @@ class StructureInformation(object):
 		:return: Combobox to select the ROI structure.
 		"""
 		combobox = QtWidgets.QComboBox(self.widget)
-		combobox.setStyleSheet("QComboBox {font: 75 10pt \"Laksaman\";"
-									"combobox-popup: 0;"
-									"background-color: #efefef; }")
+		combobox.setStyleSheet(
+			"QComboBox {font: 75 10pt \"Laksaman\";"
+			"combobox-popup: 0;"
+			"background-color: #efefef; }")
 		combobox.addItem("Select...")
 		for key, value in self.window.rois.items():
 			combobox.addItem(value['name'])
 		combobox.activated.connect(self.item_selected)
 		combobox.setGeometry(QtCore.QRect(5, 35, 188, 31))
 		combobox.setFocusPolicy(QtCore.Qt.NoFocus)
-		
-		return combobox
 
+		return combobox
 
 	def item_selected(self, index):
 		"""
@@ -234,7 +239,11 @@ class StructureInformation(object):
 
 		else:
 			struct_id = self.window.list_roi_numbers[index - 1]
-			self.volume_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['volume'])))
-			self.min_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['min'])))
-			self.max_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['max'])))
-			self.mean_dose_value.setText(_translate("MainWindow", str(self.list_info[struct_id]['mean'])))
+			self.volume_value.setText(_translate(
+				"MainWindow", str(self.list_info[struct_id]['volume'])))
+			self.min_dose_value.setText(_translate(
+				"MainWindow", str(self.list_info[struct_id]['min'])))
+			self.max_dose_value.setText(_translate(
+				"MainWindow", str(self.list_info[struct_id]['max'])))
+			self.mean_dose_value.setText(_translate(
+				"MainWindow", str(self.list_info[struct_id]['mean'])))
