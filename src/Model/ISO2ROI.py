@@ -1,11 +1,14 @@
+import datetime
+import pydicom
+
+from pathlib import Path
 from PySide6 import QtCore, QtWidgets
+from pydicom.dataset import FileDataset, FileMetaDataset
+from skimage import measure
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
-
-from pathlib import Path
-from skimage import measure
 
 
 class WorkerSignals(QtCore.QObject):
@@ -41,7 +44,7 @@ class ISO2ROI:
         """
         Calculates isodose boundaries for each isodose level.
         :return: coutours, a list containing the countours for each
-                 isodose level
+                 isodose level.
         """
         # Initialise variables needed to find isodose levels
         patient_dict_container = PatientDictContainer()
@@ -84,7 +87,7 @@ class ISO2ROI:
     def generate_roi(self, contours):
         """
         Generates new ROIs based on contour data.
-        :param contours: dictionary of contours to turn into ROIs
+        :param contours: dictionary of contours to turn into ROIs.
         """
         # Initialise variables needed for function
         patient_dict_container = PatientDictContainer()
@@ -176,3 +179,73 @@ class ISO2ROI:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
             QtWidgets.QMessageBox.about(None, "File saved", "The RTSTRUCT file has been saved.")
             patient_dict_container.set("rtss_modified", False)
+
+    def generate_rtss(self, file_path):
+        """
+        Creates an RT Struct file in the DICOM dataset directory if one
+        currently does not exist. All required tags will be present
+        making the file valid, however these tags will be blank.
+        :param file_path: directory where DICOM dataset is stored.
+        :return: ds, the newly created dataset.
+        """
+        # Define file name of rtss
+        file_name = file_path.joinpath("rtss.dcm")
+
+        # Define time and date
+        time_now = datetime.datetime.now()
+
+        # Create file meta dataset
+        file_meta = FileMetaDataset()
+        file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+        file_meta.MediaStorageSOPInstanceUID = '1.2.3'
+        file_meta.ImplementationClassUID = '1.2.3.4'
+
+        # Create RTSS
+        rtss = FileDataset(file_name, {}, b"\0" * 128, file_meta)
+
+        # Add required data elements
+        # Patient information
+        rtss.PatientName = ''
+        rtss.PatientID = ''
+        rtss.PatientBirthDate = ''
+        rtss.PatientSex = ''
+
+        # General study information
+        rtss.StudyDate = time_now.strftime('%Y%m%d')
+        rtss.StudyTime = time_now.strftime('%H%M%S.%f')
+        rtss.AccessionNumber = ''
+        rtss.ReferringPhysicianName = ''
+        rtss.StudyInstanceUID = '1.2.3.4'  # MUST be unique, currently not
+        rtss.StudyID = ''
+
+        # RT series information
+        rtss.Modality = 'RTSTRUCT'
+        rtss.OperatorsName = ''
+        rtss.SeriesInstanceUID = '1.2.3.4'  # MUST be unique, currently not
+        rtss.SeriesNumber = ''
+
+        # General equipment information
+        rtss.Manufacturer = ''
+
+        # Structure set information
+        rtss.StructureSetLabel = ''
+        rtss.StructureSetDate = ''
+        rtss.StructureSetTime = ''
+        rtss.StructureSetROISequence = ''
+
+        # ROI contour information
+        rtss.ROIContourSequence = ''
+
+        # RT ROI observations information
+        rtss.RTROIObservationsSequence = ''
+
+        # SOP common information
+        rtss.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+        rtss.SOPInstanceUID = '1.2.3.4'  # MUST be unique, currently not
+
+        # Write file
+        rtss.save_as(file_name)
+
+        # Return new dataset
+        ds = pydicom.dcmread(file_name)
+        return ds
