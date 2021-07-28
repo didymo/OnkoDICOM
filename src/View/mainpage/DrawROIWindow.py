@@ -51,6 +51,7 @@ class UIDrawROIWindow:
 
         self.upper_limit = None
         self.lower_limit = None
+
         self.dicom_view = DicomView()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
