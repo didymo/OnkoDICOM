@@ -506,9 +506,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
     # After saving the clinical data is displayed
     def display_cd_dat(self):
         self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path, self.dataset, self.filenames)
-        self.tabWindow.removeTab(3)
+        currentIndex = self.tabWindow.currentIndex()
+        self.tabWindow.removeTab(currentIndex)
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
-        self.tabWindow.setCurrentIndex(3)
+        self.tabWindow.setCurrentIndex(currentIndex)
+
 
     #####################################################################################################################
     #                                                                                                                   #
@@ -831,9 +833,10 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
             else:
                 self.tab_cd = ClinicalDataForm(self.tabWindow, self.path, self.dataset, self.filenames)
                 self.tab_cd.editing_mode()
-                self.tabWindow.removeTab(3)
+                currentIndex = self.tabWindow.currentIndex()
+                self.tabWindow.removeTab(currentIndex)
                 self.tabWindow.addTab(self.tab_cd, "Clinical Data")
-                self.tabWindow.setCurrentIndex(3)
+                self.tabWindow.setCurrentIndex(currentIndex)
         else:
             # the sensitive data file is missing so no editing can be performed
             buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
