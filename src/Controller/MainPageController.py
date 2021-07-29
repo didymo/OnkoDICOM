@@ -74,15 +74,19 @@ for items in hist:
     new_hist.append(strg)
     strg = ''
 
+
 # This function return the difference of two dates in decimal years
 def calculate_years(year1, year2):
-    difference_years = relativedelta(year2.toPyDate(), year1.toPyDate()).years
+    difference_years = relativedelta(year2.toPython(), year1.toPython()).years
+
+
     difference_months = relativedelta(
-        year2.toPyDate(), year1.toPyDate()).months
-    difference_in_days = relativedelta(year2.toPyDate(), year1.toPyDate()).days
+        year2.toPython(), year1.toPython()).months
+    difference_in_days = relativedelta(year2.toPython(), year1.toPython()).days
     value = difference_years + \
             (difference_months / 12) + (difference_in_days / 365)
     return ("%.2f" % value)
+
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -144,11 +148,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         # Save button to activate csv creation
         self.ui.Save_button.clicked.connect(self.on_click)
 
-#####################################################################################################################
-#                                                                                                                   #
-#   The following functions retrieve the corresponding codes of the selected options                                #
-#                                                                                                                   #
-#####################################################################################################################
+    #####################################################################################################################
+    #                                                                                                                   #
+    #   The following functions retrieve the corresponding codes of the selected options                                #
+    #                                                                                                                   #
+    #####################################################################################################################
 
     # get code for Surgery/Rad/Chemo/Immuno/Btrachy/Hormone
     def getCode(self, theChoice):
@@ -196,11 +200,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
     def getDeseaseCode(self, string):
         return string[:string.index(" ")]
 
-#####################################################################################################################
-#                                                                                                                   #
-#   The following functions handle changes on the form based on selected otions of some elements                    #
-#                                                                                                                   #
-#####################################################################################################################
+    #####################################################################################################################
+    #                                                                                                                   #
+    #   The following functions handle changes on the form based on selected otions of some elements                    #
+    #                                                                                                                   #
+    #####################################################################################################################
 
     # This function shows the survival of a patient without cancer since last diagnosed
     def show_survival(self):
@@ -280,11 +284,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         elif (distant_failure == "Select..."):
             self.ui.Dt_Distant_Failure.setDisabled(True)
 
-#####################################################################################################################
-#                                                                                                                   #
-# The following function function performs some form validations before saving and records them for display if any  #
-#                                                                                                                   #
-#####################################################################################################################
+    #####################################################################################################################
+    #                                                                                                                   #
+    # The following function function performs some form validations before saving and records them for display if any  #
+    #                                                                                                                   #
+    #####################################################################################################################
 
     # validating the data in the form
     def form_Validation(self):
@@ -348,11 +352,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         if (self.ui.Dt_Distant_Failure.date() > QtCore.QDate.currentDate()):
             message = message + "Patient's date of distant failure cannot be in the future. \n"
 
-#####################################################################################################################
-#                                                                                                                   #
-#   The following function performs the saving of the clinical data csv in the directory                            #
-#                                                                                                                   #
-#####################################################################################################################
+    #####################################################################################################################
+    #                                                                                                                   #
+    #   The following function performs the saving of the clinical data csv in the directory                            #
+    #                                                                                                                   #
+    #####################################################################################################################
     # here handles the event of the button save being pressed
     def save_ClinicalData(self):
         global message
@@ -459,9 +463,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                   self.ui.date_diagnosis.date().toString("dd/MM/yyyy"),
                   self.ui.Dt_Last_Existence.date().toString("dd/MM/yyyy")]
             df.loc[0] = dt
-            #check if the file is already created
+            # check if the file is already created
             if fileName.exists():
-
                 # Check to see if this patient has had a record saved in this file before
                 new_df = pd.read_pickle(resource_path('data/records.pkl'))
                 check = False
@@ -477,17 +480,17 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                         check = True
 
                 if check:
-                    #save under the same PID
+                    # save under the same PID
                     new_df.append(df, ignore_index=True)
                     new_df.to_pickle(resource_path('data/records.pkl'))
             else:
-                #save new row of credentials
-                open(resource_path('data/records.pkl', 'w+'))
+                # save new row of credentials
+                open(resource_path('data/records.pkl'),'w+')
                 df.to_pickle(resource_path('data/records.pkl'))
             # display the successful saving message pop up
             SaveReply = QtWidgets.QMessageBox.information(self, "Message",
-                                                "The Clinical Data was saved successfully in your directory!",
-                                                QtWidgets.QMessageBox.Ok)
+                                                          "The Clinical Data was saved successfully in your directory!",
+                                                          QtWidgets.QMessageBox.Ok)
             if SaveReply == QtWidgets.QMessageBox.Ok:
                 # when they press okay on the pop up, display the clinical data entries
                 self.display_cd_dat()
@@ -495,8 +498,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         else:
             # the form did not pass the validation so display the corresponding errors to be fixed, no csv created
             buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
-                                              "The following issues need to be addressed: \n" + message,
-                                                        button0=QtWidgets.QMessageBox.Ok)
+                                                        "The following issues need to be addressed: \n" + message,
+                                                        QtWidgets.QMessageBox.Ok)
             if buttonReply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
@@ -508,13 +511,13 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
         self.tabWindow.setCurrentIndex(3)
 
-#####################################################################################################################
-#                                                                                                                   #
-#   The following functions are used when the form is in editing mode of the clinical data                          #
-#                                                                                                                   #
-#####################################################################################################################
+    #####################################################################################################################
+    #                                                                                                                   #
+    #   The following functions are used when the form is in editing mode of the clinical data                          #
+    #                                                                                                                   #
+    #####################################################################################################################
 
-    #reads the information from the csv
+    # reads the information from the csv
     def load_Data(self, filename):
         with open(filename, 'rt')as f:
             data = csv.reader(f)
@@ -544,7 +547,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         else:
             return theChoice
 
-    #get the desease name based on the code in the csv
+    # get the desease name based on the code in the csv
     def completerFill(self, type, code):
         if type == 0:  # hist
             result = [i for i in new_hist if i.startswith(code)]
@@ -553,7 +556,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             result = [i for i in new_icd if i.startswith(code)]
             return result[0]
 
-    #This function alters the form UI and enters the corresponding data in the specific fields
+    # This function alters the form UI and enters the corresponding data in the specific fields
     def editing_mode(self):
         # add the sensitive data of dates from the binary file
         # date of birth
@@ -569,7 +572,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                     QtCore.QDate.fromString(df.at[i, 'DOD'], "dd/MM/yyyy"))
                 self.ui.Dt_Last_Existence.setDate(
                     QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
-       # read the clinical data
+        # read the clinical data
         reg = '/CSV/ClinicalData*[.csv]'
         pathcd = glob.glob(self.path + reg)
         clinical_data = self.load_Data(pathcd[0])
@@ -639,13 +642,14 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             self.ui.Dt_Distant_Failure.setDate(
                 QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
 
-    #the following function anable the Enter keyboard button to act as an activator of the button save
+    # the following function anable the Enter keyboard button to act as an activator of the button save
     def on_click(self):
         self.save_ClinicalData()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return:
             self.on_click()
+
 
 #####################################################################################################################
 #                                                                                                                   #
@@ -677,11 +681,11 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         if event.key() == QtCore.Qt.Key_Return:
             self.on_click()
 
-#####################################################################################################################
-#                                                                                                                   #
-# This function will load the data from the csv into the software and make it uneditable as it is only for display  #
-#                                                                                                                   #
-#####################################################################################################################
+    #####################################################################################################################
+    #                                                                                                                   #
+    # This function will load the data from the csv into the software and make it uneditable as it is only for display  #
+    #                                                                                                                   #
+    #####################################################################################################################
 
     def load_cd(self):
         reg = '/CSV/ClinicalData*[.csv]'
@@ -806,9 +810,9 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         else:
             return theChoice
 
-    #call edit mode when the edit button is pressed
+    # call edit mode when the edit button is pressed
     def edit_mode(self):
-        #check if the sensitive data is saved to enable editing
+        # check if the sensitive data is saved to enable editing
         if os.path.exists(resource_path('data/records.pkl')):
             df = pd.read_pickle(resource_path('data/records.pkl'))
             check = False
@@ -818,11 +822,11 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
             if not check:
                 # the sensitive data for this patient is missing so no editing can be performed
                 buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
-                                                  "The software has no previous records of this patient.\n"
-                                                  "If you wish, you can create a new clinical data file by \n"
-                                                  "deleting the current one from the directory and reloading \n"
-                                                  "the patient files."
-                                                  , button0=QtWidgets.QMessageBox.Ok)
+                                                            "The software has no previous records of this patient.\n"
+                                                            "If you wish, you can create a new clinical data file by \n"
+                                                            "deleting the current one from the directory and reloading \n"
+                                                            "the patient files."
+                                                            , QtWidgets.QMessageBox.Ok)
                 if buttonReply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
@@ -834,14 +838,14 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
         else:
             # the sensitive data file is missing so no editing can be performed
             buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
-                                              "The software has no previous records of this patient.\n"
-                                              "If you wish, you can create a new clinical data file by \n"
-                                              "deleting the current one from the directory and reloading \n"
-                                              "the patient files."
-                                              , button0=QtWidgets.QMessageBox.Ok)
+                                                        "The software has no previous records of this patient.\n"
+                                                        "If you wish, you can create a new clinical data file by \n"
+                                                        "deleting the current one from the directory and reloading \n"
+                                                        "the patient files."
+                                                        , QtWidgets.QMessageBox.Ok)
+
             if buttonReply == QtWidgets.QMessageBox.Ok:
                 pass
-
 
 
 #####################################################################################################################
@@ -850,13 +854,15 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
 #                                                                                                                   #
 #####################################################################################################################
 from matplotlib.backend_bases import MouseEvent
+
+
 class Transect(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
     def __init__(self, mainWindow, image_to_paint, dataset, rowS, colS, tabWindow, is_ROI_draw=False):
         super(Transect, self).__init__()
 
-        #create the canvas to draw the line on and all its necessary components
+        # create the canvas to draw the line on and all its necessary components
         self.addItem(QtWidgets.QGraphicsPixmapItem(image_to_paint))
         self.img = image_to_paint
         self.values = []
@@ -935,7 +941,6 @@ class Transect(QtWidgets.QGraphicsScene):
             y += dy
             self.points.append((round(x), round(y)))
 
-
         # get the values of these points from the dataset
         self.getValues()
         # get their distances for the plot
@@ -964,7 +969,7 @@ class Transect(QtWidgets.QGraphicsScene):
     def on_close(self, event):
         plt1.close()
 
-        #returns the main page back to a non-drawing environment
+        # returns the main page back to a non-drawing environment
         if self.is_ROI_draw:
             self.mainWindow.upper_limit = self.upper_limit
             self.mainWindow.lower_limit = self.lower_limit
@@ -975,10 +980,10 @@ class Transect(QtWidgets.QGraphicsScene):
         event.canvas.figure.axes[0].has_been_closed = True
 
     def find_limits(self, roi_values):
-        self.upper_limit = roi_values[len(roi_values)-1]
+        self.upper_limit = roi_values[len(roi_values) - 1]
         self.lower_limit = roi_values[0]
         temp = 0
-        if(self.lower_limit > self.upper_limit):
+        if (self.lower_limit > self.upper_limit):
             temp = self.upper_limit
             self.upper_limit = self.lower_limit
             self.lower_limit = temp
@@ -986,13 +991,12 @@ class Transect(QtWidgets.QGraphicsScene):
     def return_limits(self):
         return [self.lower_limit, self.upper_limit]
 
-
     # This function plots the Transect graph into a pop up window
     def plotResult(self):
         plt1.close('all')
         newList = [(x * self.pix_spacing) for x in self.distances]
         self.thresholds[0] = newList[1]
-        self.thresholds[1] = newList[len(newList)-1]
+        self.thresholds[1] = newList[len(newList) - 1]
         self._points[self.thresholds[0]] = 0
         self._points[self.thresholds[1]] = 0
         self._figure = plt1.figure(num='Transect Graph')
@@ -1003,7 +1007,7 @@ class Transect(QtWidgets.QGraphicsScene):
         self._axes.has_been_closed = False
         # new list is axis x, self.values is axis y
         self._axes.step(newList, self.values, where='mid')
-        if(self.is_ROI_draw):
+        if (self.is_ROI_draw):
             for x in range(len(newList)):
                 self._valueTuples[newList[x]] = self.values[x]
             self.leftLine = self._axes.axvline(self.thresholds[0], color='r')
@@ -1012,11 +1016,9 @@ class Transect(QtWidgets.QGraphicsScene):
             self.roi_list.clear()
             self.roi_values.clear()
             for x in range(len(newList)):
-                if(newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
+                if (newList[x] >= self.thresholds[0] and newList[x] <= self.thresholds[1]):
                     self.roi_list.append(newList[x])
                     self.roi_values.append(self._valueTuples[newList[x]])
-
-
 
         plt1.xlabel('Distance mm')
         plt1.ylabel('CT #')
@@ -1129,7 +1131,6 @@ class Transect(QtWidgets.QGraphicsScene):
             self._update_plot()
 
 
-
 #####################################################################################################################
 #                                                                                                                   #
 #  This is the main page Controller class that handles all the activity in the main page                            #
@@ -1145,7 +1146,7 @@ class MainPageCallClass:
         self.dataset = self.patient_dict_container.dataset
         self.filepaths = self.patient_dict_container.filepaths
 
-    #This function runs Anonymization on button click
+    # This function runs Anonymization on button click
     def runAnonymization(self, raw_dvh):
         target_path = anonymize(self.path, self.dataset, self.filepaths, raw_dvh)
         return target_path
