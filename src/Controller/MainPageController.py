@@ -521,13 +521,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 self.display_cd_dat()
 
         else:
-            # the form did not pass the validation so display the
-            # corresponding errors to be fixed, no csv created
-            button_reply = QtWidgets.QMessageBox.warning(
-                self, "Error Message",
-                "The following issues need to be addressed: \n" + message,
-                button0=QtWidgets.QMessageBox.Ok)
-            if button_reply == QtWidgets.QMessageBox.Ok:
+            # the form did not pass the validation so display the corresponding errors to be fixed, no csv created
+            buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
+                                                        "The following issues need to be addressed: \n" + message,
+                                                        QtWidgets.QMessageBox.Ok)
+            if buttonReply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
 
@@ -846,17 +844,14 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 if df.at[i, 'PID'] == self.dataset[0].PatientID:
                     check = True
             if not check:
-                # the sensitive data for this patient is missing so no
-                # editing can be performed
-                button_reply = QtWidgets.QMessageBox.warning(
-                    self,
-                    "Error Message",
-                    "The software has no previous records of this patient.\n"
-                    "If you wish, you can create a new clinical data file by "
-                    "\ndeleting the current one from the directory and "
-                    "reloading \nthe patient files.",
-                    button0=QtWidgets.QMessageBox.Ok)
-                if button_reply == QtWidgets.QMessageBox.Ok:
+                # the sensitive data for this patient is missing so no editing can be performed
+                buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
+                                                            "The software has no previous records of this patient.\n"
+                                                            "If you wish, you can create a new clinical data file by \n"
+                                                            "deleting the current one from the directory and reloading \n"
+                                                            "the patient files."
+                                                            , QtWidgets.QMessageBox.Ok)
+                if buttonReply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
                 self.tab_cd = ClinicalDataForm(self.tabWindow, self.path,
@@ -868,14 +863,14 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 self.tabWindow.setCurrentIndex(currentIndex)
         else:
             # the sensitive data file is missing so no editing can be performed
-            button_reply = QtWidgets.QMessageBox.warning(
-                self, "Error Message",
-                "The software has no previous records of this patient.\n"
-                "If you wish, you can create a new clinical data file by \n"
-                "deleting the current one from the directory and reloading \n"
-                "the patient files.",
-                button0=QtWidgets.QMessageBox.Ok)
-            if button_reply == QtWidgets.QMessageBox.Ok:
+            buttonReply = QtWidgets.QMessageBox.warning(self, "Error Message",
+                                                        "The software has no previous records of this patient.\n"
+                                                        "If you wish, you can create a new clinical data file by \n"
+                                                        "deleting the current one from the directory and reloading \n"
+                                                        "the patient files."
+                                                        , QtWidgets.QMessageBox.Ok)
+
+            if buttonReply == QtWidgets.QMessageBox.Ok:
                 pass
 
 
