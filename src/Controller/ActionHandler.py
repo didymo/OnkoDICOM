@@ -16,6 +16,7 @@ class ActionHandler:
     def __init__(self, main_page):
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
+        self.is_four_view = False
 
         ##############################
         # Init all actions and icons #
@@ -73,7 +74,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.zoom_out)
+        self.action_zoom_out.triggered.connect(self.zoom_out_handler)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
@@ -86,7 +87,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.zoom_in)
+        self.action_zoom_in.triggered.connect(self.zoom_in_handler)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
@@ -219,6 +220,12 @@ class ActionHandler:
             QtWidgets.QMessageBox.information(self.__main_page, "File not saved",
                                               "No changes to the RTSTRUCT file detected.")
 
+    def zoom_out_handler(self):
+        self.__main_page.zoom_out(self.is_four_view)
+
+    def zoom_in_handler(self):
+        self.__main_page.zoom_in(self.is_four_view)
+
     def windowing_handler(self, state, text):
         """
         Function triggered when a window is selected from the menu.
@@ -281,7 +288,12 @@ class ActionHandler:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-        id = self.__main_page.dicom_view_single.slider.value()
+        if self.is_four_view:
+            view = self.__main_page.dicom_view_axial.view
+            id = self.__main_page.dicom_view_axial.slider.value()
+        else:
+            view = self.__main_page.dicom_view_single.view
+            id = self.__main_page.dicom_view_single.slider.value()
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -289,7 +301,7 @@ class ActionHandler:
         pixmap = self.patient_dict_container.get("pixmaps_axial")[id]
         self.__main_page.call_class.runTransect(
             self.__main_page,
-            self.__main_page.dicom_view_single.view,
+            view,
             pixmap,
             dt._pixel_array.transpose(),
             rowS,
@@ -300,10 +312,12 @@ class ActionHandler:
         self.__main_page.add_on_options_controller.show_add_on_options()
 
     def one_view_handler(self):
+        self.is_four_view = False
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_view_single)
         self.__main_page.dicom_view_single.update_view()
 
     def four_views_handler(self):
+        self.is_four_view = True
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
         self.__main_page.dicom_view_axial.update_view()
 

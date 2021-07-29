@@ -206,8 +206,18 @@ class UIMainWindow:
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
 
-    def zoom_in(self):
-        self.dicom_view_single.zoom_in()
+    def zoom_in(self, is_four_view):
+        if is_four_view:
+            self.dicom_view_axial.zoom_in()
+            self.dicom_view_coronal.zoom_in()
+            self.dicom_view_sagittal.zoom_in()
+        else:
+            self.dicom_view_single.zoom_in()
 
-    def zoom_out(self):
-        self.dicom_view_single.zoom_out()
+    def zoom_out(self, is_four_view):
+        if is_four_view:
+            self.dicom_view_axial.zoom_out()
+            self.dicom_view_coronal.zoom_out()
+            self.dicom_view_sagittal.zoom_out()
+        else:
+            self.dicom_view_single.zoom_out()
