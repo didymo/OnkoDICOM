@@ -543,7 +543,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                             self,
                             "Error Message",
                             "Import a csv with 3 or 4 columns and the data with the displayed order!",
-                            QMessageBox.Ok,
+                            QMessageBox.Ok
                         )
                         if buttonReply == QMessageBox.Ok:
                             pass
