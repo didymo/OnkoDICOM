@@ -14,6 +14,7 @@ class DicomView(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
+        self.roi_color = roi_color
         self.zoom = 1
         self.current_slice_number = None
         self.slice_view = slice_view
@@ -58,7 +59,7 @@ class DicomView(QtWidgets.QWidget):
         """
         Create a slider for the DICOM Image View.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
+        pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -173,9 +174,11 @@ class DicomView(QtWidgets.QWidget):
             self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
 
         if self.display_metadata:
-            if self.patient_dict_container.get("selected_rois"):
+            # If roi colours are set and rois are selected then update the display
+            if self.roi_color and self.patient_dict_container.get("selected_rois"):
                 self.roi_display()
-            if self.patient_dict_container.get("selected_doses"):
+            # If isodose colours are set and doses are selected then update the display
+            if self.iso_color and self.patient_dict_container.get("selected_doses"):
                 self.isodose_display()
             self.update_metadata()
 
@@ -185,7 +188,7 @@ class DicomView(QtWidgets.QWidget):
         """
         Update the image to be displayed on the DICOM View.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
+        pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
@@ -243,7 +246,8 @@ class DicomView(QtWidgets.QWidget):
                 stream.close()
             roi_opacity = int((roi_opacity / 100) * 255)
             color.setAlpha(roi_opacity)
-            pen = self.get_qpen(color, roi_line, line_width)
+            pen_color = QtGui.QColor(color.red(), color.green(), color.blue())
+            pen = self.get_qpen(pen_color, roi_line, line_width)
             for i in range(len(polygons)):
                 self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(color))
 
@@ -311,7 +315,7 @@ class DicomView(QtWidgets.QWidget):
 
         # Information to display
         self.current_slice_number = dataset['InstanceNumber'].value
-        total_slices = len(self.patient_dict_container.get("pixmaps_"+self.slice_view))
+        total_slices = len(self.patient_dict_container.get("pixmaps_" + self.slice_view))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
         patient_pos = dataset['PatientPosition'].value

@@ -93,6 +93,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     def update_ui(self):
         create_initial_model()
         self.setup_central_widget()
+        self.setup_actions()
+        self.action_handler.action_open.triggered.connect(self.open_new_patient)
+        self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def open_new_patient(self):
         """

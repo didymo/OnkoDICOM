@@ -192,21 +192,21 @@ QTreeView::item {
     min-height: 36px;
     font-size: 14px;
 }
-QTreeView::item:hover:!focus {
+QTreeView::item:selected:focus {
+    background-color: #ffffff;
+    color: black;
+    border: 2px solid #9370DB;
+}
+QTreeView::item:selected:!focus {
+    background-color: #5c2eb8;
+    color: white;
+    border: 2px solid #9370DB;
+}
+QTreeView::item:hover:!focus:!selected, QTreeView::item:hover:selected {
     background-color: #b299e6;
 }
-QTreeView::item:focus:!hover {
-    border: 2px solid #9370DB;
-}
-QTreeView::item:selected:hover:!focus, QTreeView::item:selected:hover {
-    background-color: #5c2eb8;
-    color: white;
-    border: 2px solid rgb(200, 200, 200);
-}
-QTreeView::item:selected:!hover:focus {
-    background-color: #5c2eb8;
-    color: white;
-    border: 2px solid #9370DB;
+QTreeView {
+	selection-background-color: transparent;
 }
 QTreeView::indicator {
     width: 30px;
