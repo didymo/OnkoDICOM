@@ -180,7 +180,7 @@ class UIDeleteROIWindow():
         self.delete_roi_window_cancel_button.resize(self.delete_roi_window_cancel_button.sizeHint().width(),
                                      self.delete_roi_window_cancel_button.sizeHint().height())
         self.delete_roi_window_cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.delete_roi_window_cancel_button.clicked.connect(self.on_cancel_button_clicked)
+        self.delete_roi_window_cancel_button.clicked.connect(self.onCancelButtonClicked)
         self.delete_roi_window_cancel_button.setProperty("QPushButtonClass", "fail-button")
         self.delete_roi_window_action_buttons_box.addStretch(1)
         self.delete_roi_window_action_buttons_box.addWidget(self.delete_roi_window_cancel_button)
@@ -233,7 +233,7 @@ class UIDeleteROIWindow():
         self.delete_roi_window_cancel_button.setText(_translate("DeleteRoiWindowCancelButton", "Cancel"))
         self.delete_roi_window_confirm_button.setText(_translate("DeleteRoiWindowConfirmButton", "Confirm"))
 
-    def on_cancel_button_clicked(self):
+    def onCancelButtonClicked(self):
         self.close()
 
     def display_rois_in_listViewKeep(self):
