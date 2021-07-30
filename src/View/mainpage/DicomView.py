@@ -55,7 +55,7 @@ class DicomView(QtWidgets.QWidget):
         """
         Create a slider for the DICOM Image View.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
+        pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -181,7 +181,7 @@ class DicomView(QtWidgets.QWidget):
         """
         Update the image to be displayed on the DICOM View.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
+        pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
@@ -309,7 +309,7 @@ class DicomView(QtWidgets.QWidget):
 
         # Information to display
         self.current_slice_number = dataset['InstanceNumber'].value
-        total_slices = len(self.patient_dict_container.get("pixmaps_"+self.slice_view))
+        total_slices = len(self.patient_dict_container.get("pixmaps_" + self.slice_view))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
         patient_pos = dataset['PatientPosition'].value
