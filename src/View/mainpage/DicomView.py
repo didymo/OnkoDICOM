@@ -439,8 +439,12 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
     def init_cut_lines(self):
         if self.horizontal_view is not None and self.vertical_view is not None:
-            horizontal_line_y = self.horizontal_view.slider.value()/self.horizontal_view.slider.maximum()*self.height()
-            vertical_line_x = self.vertical_view.slider.value()/self.vertical_view.slider.maximum()*self.width()
+            try:
+                horizontal_line_y = self.horizontal_view.slider.value()/self.horizontal_view.slider.maximum()*self.height()
+                vertical_line_x = self.vertical_view.slider.value()/self.vertical_view.slider.maximum()*self.width()
+            except ZeroDivisionError:
+                horizontal_line_y = 0
+                vertical_line_x = 0
             self.add_cut_lines(vertical_line_x, horizontal_line_y)
 
     def add_cut_lines(self, vertical_line_x, horizontal_line_y):
