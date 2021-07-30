@@ -292,8 +292,8 @@ class ActionHandler:
             view = self.__main_page.dicom_view_axial.view
             id = self.__main_page.dicom_view_axial.slider.value()
         else:
-            view = self.__main_page.dicom_view_single.view
-            id = self.__main_page.dicom_view_single.slider.value()
+            view = self.__main_page.dicom_single_view.view
+            id = self.__main_page.dicom_single_view.slider.value()
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -313,12 +313,12 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.is_four_view = False
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_view_single)
-        self.__main_page.dicom_view_single.update_view()
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_single_view)
+        self.__main_page.dicom_single_view.update_view()
 
     def four_views_handler(self):
         self.is_four_view = True
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
         self.__main_page.dicom_view_axial.update_view()
 
     def export_dvh_handler(self):
