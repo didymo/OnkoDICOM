@@ -93,6 +93,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     def update_ui(self):
         create_initial_model()
         self.setup_central_widget()
+        self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
     def open_new_patient(self):
         """

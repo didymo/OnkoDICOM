@@ -14,6 +14,7 @@ isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 class IsodoseTab(QtWidgets.QWidget):
 
     request_update_isodoses = QtCore.Signal()
+    request_update_ui = QtCore.Signal()
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
@@ -214,3 +215,6 @@ class IsodoseTab(QtWidgets.QWidget):
         print("Generating ROIs")
         self.iso2roi.generate_roi(boundaries)
         print("Done")
+
+        # Refresh the main window 
+        self.request_update_ui.emit()
