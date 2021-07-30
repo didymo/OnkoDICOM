@@ -77,7 +77,7 @@ def create_initial_model():
     patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
     patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
     patient_dict_container.set("pixel_values", pixel_values)
-    patient_dict_container.set("aspect", aspect)
+    patient_dict_container.set("pixmap_aspect", aspect)
 
     basic_info = get_basic_info(dataset[0])
     patient_dict_container.set("basic_info", basic_info)
