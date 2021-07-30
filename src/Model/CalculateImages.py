@@ -1,6 +1,8 @@
 import numpy as np
 from PySide6 import QtGui, QtCore
 
+import src.constant as constant
+
 
 def convert_raw_data(ds):
     """
@@ -105,9 +107,9 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
 
 def scaled_size(width, height):
     if width > height:
-        height = 512/width*height
-        width = 512
+        height = constant.DEFAULT_WINDOW_SIZE/width*height
+        width = constant.DEFAULT_WINDOW_SIZE
     else:
-        width = 512/height*width
-        height = 512
+        width = constant.DEFAULT_WINDOW_SIZE/height*width
+        height = constant.DEFAULT_WINDOW_SIZE
     return width, height

@@ -1,6 +1,5 @@
 import csv
 import math
-import threading
 
 import numpy
 import pydicom
@@ -12,9 +11,9 @@ from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, 
 import alphashape
 from shapely.geometry import MultiPolygon
 
+import src.constant as constant
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
-from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.mainpage.DicomView import DicomView
@@ -949,8 +948,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         This function gets the corresponding values of all the points in the drawn line from the dataset.
         """
-        for i in range(512):
-            for j in range(512):
+        for i in range(constant.DEFAULT_WINDOW_SIZE):
+            for j in range(constant.DEFAULT_WINDOW_SIZE):
                 self.values.append(self.data[i][j])
 
     def refresh_image(self):
