@@ -94,6 +94,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         create_initial_model()
         self.setup_central_widget()
         self.isodoses_tab.request_update_ui.connect(self.update_ui)
+        self.setup_actions()
+        self.action_handler.action_open.triggered.connect(self.open_new_patient)
+        self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def open_new_patient(self):
         """

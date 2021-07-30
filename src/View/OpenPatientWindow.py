@@ -105,7 +105,7 @@ class UIOpenPatientWindow(object):
                                                       self.open_patient_window_patients_tree.sizeHint().height())
         self.open_patient_window_patients_tree.setHeaderHidden(False)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
-        self.open_patient_window_patients_tree.itemChanged.connect(self.tree_item_changed)
+        self.open_patient_window_patients_tree.itemClicked.connect(self.tree_item_clicked)
         self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_window_patients_tree)
         self.last_patient = None
 
@@ -265,13 +265,21 @@ class UIOpenPatientWindow(object):
         if len(dicom_structure.patients) == 0:
             QMessageBox.about(self, "No files found", "Selected directory contains no DICOM files.")
 
-    def tree_item_changed(self, item, _):
+    def tree_item_clicked(self, item, _):
         """
             Executes when a tree item is checked or unchecked.
             If a different patient is checked, uncheck the previous patient.
             Inform user about missing DICOM files.
         """
         selected_patient = item
+
+        # If patient is only selected, but not checked, set it to "focus" to coincide with stylesheet
+        if selected_patient.checkState(0) == Qt.CheckState.Unchecked:
+            self.open_patient_window_patients_tree.setCurrentItem(selected_patient)
+        else: # Otherwise don't "focus", then set patient as selected
+            self.open_patient_window_patients_tree.setCurrentItem(None)
+            selected_patient.setSelected(True)
+
         # If the item is not top-level, bubble up to see which top-level item this item belongs to
         if self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(item) == -1:
             while self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(selected_patient) == -1:
