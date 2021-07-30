@@ -44,6 +44,8 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.action_handler.action_transect)
         self.addSeparator()
+        self.addAction(self.action_handler.action_suv2roi)
+        self.addSeparator()
         self.addAction(self.action_handler.action_add_ons)
         self.addWidget(spacer)
         self.addWidget(self.button_export)

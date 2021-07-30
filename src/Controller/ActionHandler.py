@@ -32,6 +32,19 @@ class ActionHandler:
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
 
+        # SUV2ROI action
+        self.icon_suv2roi = QtGui.QIcon()
+        self.icon_suv2roi.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_suv2roi = QtGui.QAction()
+        self.action_suv2roi.setIcon(self.icon_suv2roi)
+        self.action_suv2roi.setText("Convert SUV to ROI")
+        self.action_suv2roi.setIconVisibleInMenu(True)
+        # self.action_suv2roi.triggered.connect(self.suv2roi_handler) # TODO
+
         # Save RTSTRUCT changes action
         self.icon_save_structure = QtGui.QIcon()
         self.icon_save_structure.addPixmap(
