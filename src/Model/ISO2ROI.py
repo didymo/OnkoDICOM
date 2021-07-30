@@ -203,19 +203,22 @@ class ISO2ROI:
         # Create RTSS
         rtss = FileDataset(file_name, {}, b"\0" * 128, file_meta)
 
+        # Get Study Instance UID from another file in the dataset
+        patient_dict_container = PatientDictContainer()
+
         # Add required data elements
         # Patient information
-        rtss.PatientName = ''
-        rtss.PatientID = ''
-        rtss.PatientBirthDate = ''
-        rtss.PatientSex = ''
+        rtss.PatientName = patient_dict_container.dataset[0].PatientName
+        rtss.PatientID = patient_dict_container.dataset[0].PatientID
+        rtss.PatientBirthDate = patient_dict_container.dataset[0].PatientBirthDate
+        rtss.PatientSex = patient_dict_container.dataset[0].PatientSex
 
         # General study information
         rtss.StudyDate = time_now.strftime('%Y%m%d')
         rtss.StudyTime = time_now.strftime('%H%M%S.%f')
         rtss.AccessionNumber = ''
         rtss.ReferringPhysicianName = ''
-        rtss.StudyInstanceUID = '1.2.3.4'  # MUST be unique, currently not
+        rtss.StudyInstanceUID = patient_dict_container.dataset[0].StudyInstanceUID
         rtss.StudyID = ''
 
         # RT series information
@@ -246,6 +249,17 @@ class ISO2ROI:
         # Write file
         rtss.save_as(file_name)
 
-        # Return new dataset
+        # Read back in dataset
         ds = pydicom.dcmread(file_name)
+
+        # Set patient dict container values
+        # Set pixluts
+        dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
+        patient_dict_container.set("pixluts", dict_pixluts)
+
+        # Set ROIs
+        rois = ImageLoading.get_roi_info(ds)
+        patient_dict_container.set("rois", rois)
+
+        # Return new dataset
         return ds
