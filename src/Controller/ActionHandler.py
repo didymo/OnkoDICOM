@@ -241,8 +241,8 @@ class ActionHandler:
 
         # Update the dictionary of pixmaps with the update window and level values
         pixel_values = self.patient_dict_container.get("pixel_values")
-        aspect = self.patient_dict_container.get("pixmap_aspect")
-        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, aspect)
+        pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
+        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
