@@ -255,16 +255,18 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
             displacement = position_after - position_before
 
         except KeyError:
-            # If the image slice is either at the top of bottom of the set, use the length of the displacement to the
+            # If the image slice is either at the top or bottom of the set, use the length of the displacement to the
             # adjacent slice as the thickness.
             if slice_key == 1:  # If the image slice is at the bottom of the set.
                 position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
                 position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
                 displacement = position_after - position_current
-            else:
+            elif slice_key > 0:
                 position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
                 position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
                 displacement = position_current - position_before
+            else:
+                continue
 
         # Finally, calculate thickness.
         thickness = math.sqrt(displacement[0] * displacement[0]

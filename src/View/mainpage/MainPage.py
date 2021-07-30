@@ -56,8 +56,11 @@ class UIMainWindow:
         self.main_window_instance.setStyleSheet(stylesheet)
 
         self.setup_central_widget()
+        self.setup_actions()
 
-        # Create actions and set menu and tool bars
+    def setup_actions(self):
+        if hasattr(self, 'toolbar'):
+            self.main_window_instance.removeToolBar(self.toolbar)
         self.action_handler = ActionHandler(self)
         self.menubar = MenuBar(self.action_handler)
         self.main_window_instance.setMenuBar(self.menubar)
