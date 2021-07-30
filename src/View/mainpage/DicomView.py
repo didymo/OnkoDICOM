@@ -14,6 +14,7 @@ class DicomView(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
+        self.roi_color = roi_color
         self.zoom = 1
         self.current_slice_number = None
 
@@ -145,10 +146,12 @@ class DicomView(QtWidgets.QWidget):
         if zoom_change:
             self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
 
-        if self.patient_dict_container.get("selected_rois"):
+        # If roi colours are set and rois are selected then update the display
+        if self.roi_color and self.patient_dict_container.get("selected_rois"):
             self.roi_display()
 
-        if self.patient_dict_container.get("selected_doses"):
+        # If isodose colours are set and doses are selected then update the display
+        if self.iso_color and self.patient_dict_container.get("selected_doses"):
             self.isodose_display()
 
         self.update_metadata()
@@ -217,7 +220,8 @@ class DicomView(QtWidgets.QWidget):
                 stream.close()
             roi_opacity = int((roi_opacity / 100) * 255)
             color.setAlpha(roi_opacity)
-            pen = self.get_qpen(color, roi_line, line_width)
+            pen_color = QtGui.QColor(color.red(), color.green(), color.blue())
+            pen = self.get_qpen(pen_color, roi_line, line_width)
             for i in range(len(polygons)):
                 self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(color))
 
