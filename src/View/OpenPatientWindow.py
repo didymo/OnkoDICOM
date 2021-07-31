@@ -196,6 +196,7 @@ class UIOpenPatientWindow(object):
 
     def scan_directory_for_patient(self):
         # Reset tree view header and last patient
+        self.open_patient_window_confirm_button.setDisabled(True)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
         self.last_patient = None
         self.filepath = self.open_patient_directory_input_box.text()
@@ -292,29 +293,38 @@ class UIOpenPatientWindow(object):
                 self.last_patient.setSelected(False)
             self.last_patient = selected_patient
 
-        # Get the types of all selected leaves
-        self.selected_series_types = set()
+        # Get the types of all selected leaves & Get the names of all selected studies
+        selected_series_types = set()
+        selected_studies_names = set()
         for checked_item in self.get_checked_leaves():
+            selected_studies_names.add(checked_item.parent().text(0))
             series_type = checked_item.dicom_object.get_series_type()
             if type(series_type) == str:
-                self.selected_series_types.add(series_type)
+                selected_series_types.add(series_type)
             else:
-                self.selected_series_types.update(series_type)
+                selected_series_types.update(series_type)
 
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
-        if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
+        if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTSTRUCT' not in self.selected_series_types:
+        elif 'RTSTRUCT' not in selected_series_types:
             header = "DVH and Radiomics calculations are not available without a RTSTRUCT file."
-        elif 'RTDOSE' not in self.selected_series_types:
+        elif 'RTDOSE' not in selected_series_types:
             header = "DVH calculations are not available without a RTDOSE file."
         else:
             header = ""
-        self.open_patient_window_patients_tree.setHeaderLabel(header)
 
-        if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) != 0:
+        if len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
+
+        # Check if multiple studies are selected
+        if len(selected_studies_names) > 1:
+            header = "Only one study can be opened."
+            self.open_patient_window_confirm_button.setDisabled(True)
+
+        # Set the tree header
+        self.open_patient_window_patients_tree.setHeaderLabel(header)
 
     def confirm_button_clicked(self):
         """
