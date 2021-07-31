@@ -35,7 +35,7 @@ jobs:
         sudo apt-get install wget unzip
         wget -P ~ https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
         mkdir test/testdata
-        sudo unzip ~/DICOM-RT-02.zip -d test/testdata
+        unzip ~/DICOM-RT-02.zip -d test/testdata
         sudo chmod -R 777 test/testdata
         # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
         /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
