@@ -74,10 +74,11 @@ for items in hist:
 
 # This function return the difference of two dates in decimal years
 def calculate_years(year1, year2):
-    difference_years = relativedelta(year2.toPyDate(), year1.toPyDate()).years
+    difference_years = relativedelta(year2.toPython(), year1.toPython()).years
+
     difference_months = relativedelta(
-        year2.toPyDate(), year1.toPyDate()).months
-    difference_in_days = relativedelta(year2.toPyDate(), year1.toPyDate()).days
+        year2.toPython(), year1.toPython()).months
+    difference_in_days = relativedelta(year2.toPython(), year1.toPython()).days
     value = difference_years \
             + (difference_months / 12) \
             + (difference_in_days / 365)
@@ -483,7 +484,6 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             df.loc[0] = dt
             # check if the file is already created
             if file_name.exists():
-
                 # Check to see if this patient has had a record saved in
                 # this file before
                 new_df = pd.read_pickle(resource_path('data/records.pkl'))
@@ -533,11 +533,11 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
     # After saving the clinical data is displayed
     def display_cd_dat(self):
-        self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path,
-                                          self.dataset, self.filenames)
-        self.tabWindow.removeTab(3)
+        self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path, self.dataset, self.filenames)
+        current_index = self.tabWindow.currentIndex()
+        self.tabWindow.removeTab(current_index)
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
-        self.tabWindow.setCurrentIndex(3)
+        self.tabWindow.setCurrentIndex(currentIndex)
 
     # The following functions are used when the form is in editing mode of
     # the clinical data
@@ -643,7 +643,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             self.ui.Cancer_death.setDisabled(True)
         else:
             self.ui.Cancer_death.setCurrentText(
-                int(int(clinical_data[19]) + 1))
+                str(int(clinical_data[19]) + 1))
         self.ui.Survival_dt.setText("Survival Length: " + clinical_data[20])
         self.ui.Survival_dt.setVisible(True)
         self.ui.Local_control.setCurrentIndex(int(1 + int(clinical_data[21])))
@@ -861,9 +861,10 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 self.tab_cd = ClinicalDataForm(self.tabWindow, self.path,
                                                self.dataset, self.filenames)
                 self.tab_cd.editing_mode()
-                self.tabWindow.removeTab(3)
+                currentIndex = self.tabWindow.currentIndex()
+                self.tabWindow.removeTab(currentIndex)
                 self.tabWindow.addTab(self.tab_cd, "Clinical Data")
-                self.tabWindow.setCurrentIndex(3)
+                self.tabWindow.setCurrentIndex(currentIndex)
         else:
             # the sensitive data file is missing so no editing can be performed
             button_reply = QtWidgets.QMessageBox.warning(
