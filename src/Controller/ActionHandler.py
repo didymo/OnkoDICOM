@@ -223,8 +223,8 @@ class ActionHandler:
         :param text: The name of the window selected.
         """
         # Get the values for window and level from the dict
-        windowing_limits = self.patient_dict_container.get("dict_windowing")[
-            text]
+        windowing_limits = self.patient_dict_container. \
+            get("dict_windowing")[text]
 
         # Set window and level to the new values
         window = windowing_limits[0]
@@ -257,7 +257,8 @@ class ActionHandler:
 
         if save_reply == QtWidgets.QMessageBox.Yes:
             raw_dvh = self.patient_dict_container.get("raw_dvh")
-            hashed_path = self.__main_page.call_class.run_anonymization(raw_dvh)
+            hashed_path = self.__main_page.call_class.run_anonymization(
+                raw_dvh)
             self.patient_dict_container.set("hashed_path", hashed_path)
             # now that the radiomics data can just get copied across...
             # maybe skip this?
