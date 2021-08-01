@@ -533,11 +533,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
     # After saving the clinical data is displayed
     def display_cd_dat(self):
-        self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path, self.dataset, self.filenames)
+        self.tab_cd = ClinicalDataDisplay(self.tabWindow, self.path,
+                                          self.dataset, self.filenames)
         current_index = self.tabWindow.currentIndex()
         self.tabWindow.removeTab(current_index)
         self.tabWindow.addTab(self.tab_cd, "Clinical Data")
-        self.tabWindow.setCurrentIndex(currentIndex)
+        self.tabWindow.setCurrentIndex(current_index)
 
     # The following functions are used when the form is in editing mode of
     # the clinical data
