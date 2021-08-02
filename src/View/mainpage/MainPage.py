@@ -1,8 +1,8 @@
 import glob
 
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -18,9 +18,12 @@ from src.View.mainpage.MenuBar import MenuBar
 from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
+from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 
 from src.Controller.PathHandler import resource_path
 import platform
+
+from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 
 class UIMainWindow:
@@ -108,20 +111,20 @@ class UIMainWindow:
         self.right_panel = QtWidgets.QTabWidget()
 
         # Create a Dicom View containing single-slice and 3-slice views
-        self.dicom_view = QStackedWidget()
+        self.dicom_view = DicomStackedWidget(self.format_data)
 
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_single_view = DicomViewAxial(roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.dicom_view_axial = DicomViewAxial(roi_color=roi_color_dict,
-                                               iso_color=iso_color_dict, format_metadata=False)
+                                               iso_color=iso_color_dict, metadata_formatted=True)
         self.dicom_view_sagittal = DicomViewSagittal(roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.dicom_view_coronal = DicomViewCoronal(roi_color=roi_color_dict, iso_color=iso_color_dict)
 
         # Rescale the size of the scenes inside the 3-slice views
-        self.dicom_view_axial.zoom = 0.5
-        self.dicom_view_sagittal.zoom = 0.5
-        self.dicom_view_coronal.zoom = 0.5
+        self.dicom_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.dicom_view_axial.update_view(zoom_change=True)
         self.dicom_view_sagittal.update_view(zoom_change=True)
         self.dicom_view_coronal.update_view(zoom_change=True)
@@ -210,6 +213,11 @@ class UIMainWindow:
             self.dvh_tab.update_plot()
 
     def zoom_in(self, is_four_view):
+        """
+        This function calls the zooming in function on the four view's views or the single view depending on what view
+        is showing on screen.
+        is_four_view: Whether the four view is showing
+        """
         if is_four_view:
             self.dicom_view_axial.zoom_in()
             self.dicom_view_coronal.zoom_in()
@@ -218,9 +226,22 @@ class UIMainWindow:
             self.dicom_single_view.zoom_in()
 
     def zoom_out(self, is_four_view):
+        """
+        This function calls the zooming out function on the four view's views or the single view depending on what view
+        is showing on screen.
+        is_four_view: Whether the four view is showing
+        """
         if is_four_view:
             self.dicom_view_axial.zoom_out()
             self.dicom_view_coronal.zoom_out()
             self.dicom_view_sagittal.zoom_out()
         else:
             self.dicom_single_view.zoom_out()
+
+    def format_data(self, size):
+        """
+        This function is used to update the meta data's font size and margin based on the height and width of the
+        viewports.
+        size: The size of the DicomStackedWidget
+        """
+        self.dicom_view_axial.format_metadata(size)

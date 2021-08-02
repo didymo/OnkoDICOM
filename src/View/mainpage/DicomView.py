@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.constants import INITIAL_ONE_VIEW_ZOOM
 
 
 class DicomView(QtWidgets.QWidget):
@@ -10,7 +11,7 @@ class DicomView(QtWidgets.QWidget):
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.roi_color = roi_color
-        self.zoom = 1
+        self.zoom = INITIAL_ONE_VIEW_ZOOM
         self.current_slice_number = None
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 

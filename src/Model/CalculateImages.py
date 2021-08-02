@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6 import QtGui, QtCore
 
-import src.constant as constant
+import src.constants as constant
 
 
 def convert_raw_data(ds):
