@@ -1,6 +1,8 @@
 import numpy as np
 from PySide6 import QtGui, QtCore
 
+import src.constant as constant
+
 
 def convert_raw_data(ds):
     """
@@ -49,6 +51,8 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     :param np_pixels: A list of converted pixel arrays
     :param window: Window width of windowing function
     :param level: Level value of windowing function
+    :param width: Pixel width of the window
+    :param height: Pixel height of the window
     :return: pixmap, a QPixmap of the slice
     """
 
@@ -65,7 +69,7 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     np_pixels[np_pixels > 255] = 255
     np_pixels = np_pixels.astype(np.int8)
 
-    # Convert numpy array data to qimage for pyqt5
+    # Convert numpy array data to QImage for PySide6
     qimage = QtGui.QImage(
         np_pixels, np_pixels.shape[1], np_pixels.shape[0],
         QtGui.QImage.Format_Indexed8)
@@ -74,12 +78,14 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     return pixmap
 
 
-def get_pixmaps(pixel_array, window, level, aspect):
+def get_pixmaps(pixel_array, window, level, pixmap_aspect):
     """
     Get a dictionary of pixmaps.
+
     :param pixel_array: A list of converted pixel arrays
     :param window: Window width of windowing function
     :param level: Level value of windowing function
+    :param pixmap_aspect: Scaling ratio for axial, coronal, and sagittal pixmaps
     :return: dict_pixmaps, a dictionary of all pixmaps within the patient.
     """
     # Convert pixel array to numpy 3d array
@@ -90,9 +96,9 @@ def get_pixmaps(pixel_array, window, level, aspect):
     dict_pixmaps_coronal = {}
     dict_pixmaps_sagittal = {}
 
-    axial_width, axial_height = scaled_size(pixel_array_3d.shape[1]*aspect["axial"], pixel_array_3d.shape[2])
-    coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1], pixel_array_3d.shape[0] * aspect["coronal"])
-    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * aspect["sagittal"], pixel_array_3d.shape[0])
+    axial_width, axial_height = scaled_size(pixel_array_3d.shape[1]*pixmap_aspect["axial"], pixel_array_3d.shape[2])
+    coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1], pixel_array_3d.shape[0] * pixmap_aspect["coronal"])
+    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * pixmap_aspect["sagittal"], pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
         dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height)
@@ -106,9 +112,9 @@ def get_pixmaps(pixel_array, window, level, aspect):
 
 def scaled_size(width, height):
     if width > height:
-        height = 512/width*height
-        width = 512
+        height = constant.DEFAULT_WINDOW_SIZE/width*height
+        width = constant.DEFAULT_WINDOW_SIZE
     else:
-        width = 512/height*width
-        height = 512
+        width = constant.DEFAULT_WINDOW_SIZE/height*width
+        height = constant.DEFAULT_WINDOW_SIZE
     return width, height

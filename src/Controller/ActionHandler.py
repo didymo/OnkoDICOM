@@ -19,6 +19,7 @@ class ActionHandler:
     def __init__(self, main_page):
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
+        self.is_four_view = False
 
         ##############################
         # Init all actions and icons #
@@ -81,7 +82,7 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.zoom_out)
+        self.action_zoom_out.triggered.connect(self.zoom_out_handler)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
@@ -95,7 +96,7 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.zoom_in)
+        self.action_zoom_in.triggered.connect(self.zoom_in_handler)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
@@ -241,6 +242,12 @@ class ActionHandler:
                 self.__main_page, "File not saved",
                 "No changes to the RTSTRUCT file detected.")
 
+    def zoom_out_handler(self):
+        self.__main_page.zoom_out(self.is_four_view)
+
+    def zoom_in_handler(self):
+        self.__main_page.zoom_in(self.is_four_view)
+
     def windowing_handler(self, state, text):
         """
         Function triggered when a window is selected from the menu.
@@ -259,8 +266,8 @@ class ActionHandler:
         # Update the dictionary of pixmaps with the update window and level
         # values
         pixel_values = self.patient_dict_container.get("pixel_values")
-        aspect = self.patient_dict_container.get("aspect")
-        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, aspect)
+        pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
+        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -309,7 +316,12 @@ class ActionHandler:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-        slider_id = self.__main_page.dicom_view.slider.value()
+        if self.is_four_view:
+            view = self.__main_page.dicom_view_axial.view
+            slider_id = self.__main_page.dicom_view_axial.slider.value()
+        else:
+            view = self.__main_page.dicom_single_view.view
+            slider_id = self.__main_page.dicom_single_view.slider.value()
         dt = self.patient_dict_container.dataset[slider_id]
         row_s = dt.PixelSpacing[0]
         col_s = dt.PixelSpacing[1]
@@ -317,7 +329,7 @@ class ActionHandler:
         pixmap = self.patient_dict_container.get("pixmaps_axial")[slider_id]
         self.__main_page.call_class.run_transect(
             self.__main_page,
-            self.__main_page.dicom_view_single.view,
+            view,
             pixmap,
             dt._pixel_array.transpose(),
             row_s,
@@ -328,11 +340,13 @@ class ActionHandler:
         self.__main_page.add_on_options_controller.show_add_on_options()
 
     def one_view_handler(self):
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_view_single)
-        self.__main_page.dicom_view_single.update_view()
+        self.is_four_view = False
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_single_view)
+        self.__main_page.dicom_single_view.update_view()
 
     def four_views_handler(self):
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
+        self.is_four_view = True
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
         self.__main_page.dicom_view_axial.update_view()
 
     def export_dvh_handler(self):
