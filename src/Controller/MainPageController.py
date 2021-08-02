@@ -526,7 +526,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             button_reply = QtWidgets.QMessageBox.warning(
                 self, "Error Message",
                 "The following issues need to be addressed: \n" + message,
-                button0=QtWidgets.QMessageBox.Ok)
+                QtWidgets.QMessageBox.Ok)
             if button_reply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
@@ -855,7 +855,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                     "If you wish, you can create a new clinical data file by "
                     "\ndeleting the current one from the directory and "
                     "reloading \nthe patient files.",
-                    button0=QtWidgets.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.Ok)
                 if button_reply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
@@ -874,7 +874,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 "If you wish, you can create a new clinical data file by \n"
                 "deleting the current one from the directory and reloading \n"
                 "the patient files.",
-                button0=QtWidgets.QMessageBox.Ok)
+                QtWidgets.QMessageBox.Ok)
             if button_reply == QtWidgets.QMessageBox.Ok:
                 pass
 
