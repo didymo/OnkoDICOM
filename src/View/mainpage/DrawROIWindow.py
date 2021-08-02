@@ -500,14 +500,14 @@ class UIDrawROIWindow:
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        MainPageCallClass().runTransect(
+        MainPageCallClass().run_transect(
             self.draw_roi_window_instance,
             self.dicom_view.view,
             pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,
-            isROIDraw=True,
+            is_roi_draw=True,
         )
 
     def on_transect_close(self):
