@@ -7,13 +7,16 @@ from dicompylercore import dvhcalc
 
 def get_roi_info(ds_rtss):
     """
-    Get a dictionary of basic information of all ROIs within the dataset of RTSS.
+    Get a dictionary of basic information of all ROIs within the dataset of
+    RTSS.
 
     :param ds_rtss: RTSS Dataset
-    :return: dict_roi {ROINumber: {ReferencedFrameOfReferenceUID, ROIName, ROIGenerationAlgorithm}}
+    :return: dict_roi {ROINumber: {ReferencedFrameOfReferenceUID, ROIName,
+    ROIGenerationAlgorithm}}
     """
     # Return dict_roi
-    # {"1": {'uid': '1.3.12.2.1107.5.1.4.100020.30000018082923183405900000003', 'name': 'MQ', 'algorithm': 'SEMIAUTOMATIC'}
+    # {"1": {'uid': '1.3.12.2.1107.5.1.4.100020.30000018082923183405900000003',
+    # 'name': 'MQ', 'algorithm': 'SEMIAUTOMATIC'}
     # "1" is the ROINumber of the roi (ID)
     # 'uid' is ReferencedFrameOfReferenceUID
     # 'name' is ROIName (Name of the ROI)
@@ -51,7 +54,8 @@ def calc_dvhs(rtss, rtdose, dict_roi, dose_limit=None):
 
     :param rtss: Dataset of RTSS
     :param rtdose: Dataset of RTDOSE
-    :param dict_roi: Dictionary of basic information of all ROIs within the patient
+    :param dict_roi: Dictionary of basic information of all ROIs within the
+    patient
     :param dose_limit: Limit of dose
     :return: A dictionary of DVH {ROINumber: DVH}
     """
@@ -88,14 +92,15 @@ def calc_dvhs(rtss, rtdose, dict_roi, dose_limit=None):
     return dict_dvh
 
 
-def converge_to_O_dvh(dict_dvh):
+def converge_to_zero_dvh(dict_dvh):
     """
     Deal with the case where the last value of the DVH is not 0.
 
     :param dict_dvh:
     :return: A dictionary of DVH {ROINumber: DVH}
     """
-    # Return a dictionary of bincenters (x axis of DVH) and counts (y value of DVH)
+    # Return a dictionary of bincenters (x axis of DVH) and counts
+    # (y value of DVH)
     # {"1": {"bincenters": bincenters ; "counts": counts}}
     # "1" is the ID of the ROI
     res = {}
@@ -128,14 +133,14 @@ def converge_to_O_dvh(dict_dvh):
     return res
 
 
-def dvh2csv(dict_dvh, path, csv_name, patientID):
+def dvh2csv(dict_dvh, path, csv_name, patient_id):
     """
     Export dvh data to csv file.
 
     :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
     :param path: Target path of CSV export
     :param csv_name: CSV file name
-    :param patientID: Patient Identifier
+    :param patient_id: Patient Identifier
     """
     # full path of the target csv file
     tar_path = path + csv_name + '.csv'
@@ -153,14 +158,15 @@ def dvh2csv(dict_dvh, path, csv_name, patientID):
         dvh = dict_dvh[i]
         name = dvh.name
         volume = dvh.volume
-        dvh_roi_list.append(patientID)
+        dvh_roi_list.append(patient_id)
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
         dose = dvh.relative_volume.counts
 
         for i in range(0, len(dose), 10):
             dvh_roi_list.append(dose[i])
-            # Update the maximum dose value, if current dose exceeds the current maximum dose
+            # Update the maximum dose value, if current dose
+            # exceeds the current maximum dose
             if i > max_roi_dose:
                 max_roi_dose = i
 
