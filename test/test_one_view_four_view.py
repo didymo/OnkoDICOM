@@ -65,10 +65,6 @@ class TestOneViewAndFourViewsHandling:
             patient_dict_container.set("raw_contour", dict_raw_contour_data)
             patient_dict_container.set("num_points", dict_numpoints)
             patient_dict_container.set("pixluts", dict_pixluts)
-            dict_thickness = ImageLoading.get_thickness_dict(dataset_rtss, read_data_dict)
-
-        if 'rtdose' in file_names_dict:
-            dataset_rtdose = dcmread(file_names_dict['rtdose'])
 
         # Open the main window
         self.main_window = MainWindow()
@@ -118,24 +114,26 @@ def test_four_view_zoom(qtbot, test_object, init_config):
     test_object.main_window.show()
     test_object.main_window.action_handler.action_four_views.trigger()
 
-    initial_zoom = test_object.main_window.dicom_view_axial.zoom
-    assert (test_object.main_window.dicom_view_coronal.zoom == initial_zoom)
-    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_zoom)
+    initial_axial_zoom = test_object.main_window.dicom_view_axial.zoom
+    initial_coronal_zoom = test_object.main_window.dicom_view_coronal.zoom
+    initial_sagittal_zoom = test_object.main_window.dicom_view_sagittal.zoom
 
     test_object.main_window.action_handler.action_zoom_in.trigger()
-    assert (test_object.main_window.dicom_view_axial.zoom == initial_zoom * 1.05)
-    assert (test_object.main_window.dicom_view_coronal.zoom == initial_zoom * 1.05)
-    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_zoom * 1.05)
+    assert (test_object.main_window.dicom_view_axial.zoom == initial_axial_zoom * 1.05)
+    assert (test_object.main_window.dicom_view_coronal.zoom == initial_coronal_zoom * 1.05)
+    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_sagittal_zoom * 1.05)
 
     test_object.main_window.action_handler.action_zoom_out.trigger()
-    assert (test_object.main_window.dicom_view_axial.zoom == initial_zoom)
-    assert (test_object.main_window.dicom_view_coronal.zoom == initial_zoom)
-    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_zoom)
+    assert (test_object.main_window.dicom_view_axial.zoom == initial_axial_zoom)
+    assert (test_object.main_window.dicom_view_coronal.zoom == initial_coronal_zoom)
+    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_sagittal_zoom)
 
 
 def test_one_view_roi(qtbot, test_object, init_config):
     test_object.main_window.show()
     test_object.main_window.action_handler.action_one_view.trigger()
+
+    # The first four ROI can not be displayed on the single DICOM test image. Use the fifth roi to test
     fifth_roi_id = list(test_object.main_window.structures_tab.rois.items())[4][0]
     test_object.main_window.structures_tab.structure_checked(True, fifth_roi_id)
 
@@ -143,4 +141,5 @@ def test_one_view_roi(qtbot, test_object, init_config):
     assert isinstance(test_object.main_window.dicom_single_view.scene.items()[0], QGraphicsPolygonItem)
 
     # Check if ROI color is correct
-    assert test_object.main_window.dicom_single_view.scene.items()[0].brush().color() == test_object.main_window.structures_tab.color_dict[fifth_roi_id]
+    assert test_object.main_window.dicom_single_view.scene.items()[0].brush().color() == \
+           test_object.main_window.structures_tab.color_dict[fifth_roi_id]
