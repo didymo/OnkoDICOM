@@ -29,17 +29,18 @@ def get_img(pixel_array):
     Get a dictionary of image numpy array with only simple rescaling
 
     :param pixel_array: A list of converted pixel arrays
-    :return: dict_img, a dictionary of scaled pixel arrays with the basic rescaling parameter
+    :return: dict_img, a dictionary of scaled pixel arrays with the basic
+    rescaling parameter
     """
     dict_img = {}
     for i, np_pixels in enumerate(pixel_array):
-            max_val = np.amax(np_pixels)
-            min_val = np.amin(np_pixels)
-            np_pixels = (np_pixels - min_val) / (max_val - min_val) * 256
-            np_pixels[np_pixels < 0] = 0
-            np_pixels[np_pixels > 255] = 255
-            np_pixels = np_pixels.astype("int8")
-            dict_img[i] = np_pixels
+        max_val = np.amax(np_pixels)
+        min_val = np.amin(np_pixels)
+        np_pixels = (np_pixels - min_val) / (max_val - min_val) * 256
+        np_pixels[np_pixels < 0] = 0
+        np_pixels[np_pixels > 255] = 255
+        np_pixels = np_pixels.astype("int8")
+        dict_img[i] = np_pixels
     return dict_img
 
 
@@ -50,6 +51,8 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     :param np_pixels: A list of converted pixel arrays
     :param window: Window width of windowing function
     :param level: Level value of windowing function
+    :param width: Pixel width of the window
+    :param height: Pixel height of the window
     :return: pixmap, a QPixmap of the slice
     """
 
@@ -68,7 +71,8 @@ def scaled_pixmap(np_pixels, window, level, width, height):
 
     # Convert numpy array data to QImage for PySide6
     qimage = QtGui.QImage(
-        np_pixels, np_pixels.shape[1], np_pixels.shape[0], QtGui.QImage.Format_Indexed8)
+        np_pixels, np_pixels.shape[1], np_pixels.shape[0],
+        QtGui.QImage.Format_Indexed8)
     pixmap = QtGui.QPixmap(qimage)
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
     return pixmap
@@ -77,6 +81,7 @@ def scaled_pixmap(np_pixels, window, level, width, height):
 def get_pixmaps(pixel_array, window, level, pixmap_aspect):
     """
     Get a dictionary of pixmaps.
+
     :param pixel_array: A list of converted pixel arrays
     :param window: Window width of windowing function
     :param level: Level value of windowing function
