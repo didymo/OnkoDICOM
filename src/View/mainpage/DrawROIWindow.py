@@ -8,7 +8,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QPixmap, QColor, QPen
 from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
-import alphashape
+from alphashape import alphashape
 from shapely.geometry import MultiPolygon
 
 import src.constant as constant
@@ -499,14 +499,14 @@ class UIDrawROIWindow:
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        MainPageCallClass().runTransect(
+        MainPageCallClass().run_transect(
             self.draw_roi_window_instance,
             self.dicom_view.view,
             pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,
-            isROIDraw=True,
+            is_roi_draw=True,
         )
 
     def on_transect_close(self):
@@ -623,7 +623,7 @@ class UIDrawROIWindow:
         # Calculate the concave hull of the points.
         #alpha = 0.95 * alphashape.optimizealpha(points)
         alpha = float(self.input_alpha_value.text())
-        hull = alphashape.alphashape(target_pixel_coords, alpha)
+        hull = alphashape(target_pixel_coords, alpha)
         if isinstance(hull, MultiPolygon):
             return None
 

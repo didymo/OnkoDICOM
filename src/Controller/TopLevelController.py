@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 
-from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, MainWindow, PyradiProgressBar, \
-    FirstTimeWelcomeWindow
+from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
+    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow
 
 
 class Controller:
@@ -13,7 +13,8 @@ class Controller:
         self.open_patient_window = QtWidgets.QMainWindow()
         self.main_window = QtWidgets.QMainWindow()
         self.pyradi_progressbar = QtWidgets.QWidget()
-        self.default_directory = default_directory  # This will contain a filepath of a folder that is dragged onto
+        # This will contain a filepath of a folder that is dragged onto
+        self.default_directory = default_directory
         # the executable icon
 
     def show_first_time_welcome(self):
@@ -21,8 +22,10 @@ class Controller:
         Display first time welcome page
         """
         self.first_time_welcome_window = FirstTimeWelcomeWindow()
-        self.first_time_welcome_window.update_directory.connect(self.update_default_directory)
-        self.first_time_welcome_window.go_next_window.connect(self.show_open_patient)
+        self.first_time_welcome_window.update_directory.connect(
+            self.update_default_directory)
+        self.first_time_welcome_window.go_next_window.connect(
+            self.show_open_patient)
         self.first_time_welcome_window.show()
 
     def update_default_directory(self, new_directory):
@@ -50,8 +53,10 @@ class Controller:
 
         # only initialize open_patient_window once
         if not isinstance(self.main_window, MainWindow):
-            self.open_patient_window = OpenPatientWindow(self.default_directory)
-            self.open_patient_window.go_next_window.connect(self.show_main_window)
+            self.open_patient_window = OpenPatientWindow(
+                self.default_directory)
+            self.open_patient_window.go_next_window.connect(
+                self.show_main_window)
 
         self.open_patient_window.show()
 
@@ -64,12 +69,14 @@ class Controller:
         # Only initialize main window once
         if not isinstance(self.main_window, MainWindow):
             self.main_window = MainWindow()
-            self.main_window.open_patient_window.connect(self.show_open_patient)
+            self.main_window.open_patient_window.connect(
+                self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
         else:
             self.main_window.update_ui()
 
-        # Once the MainWindow has finished loading (which takes some time) close all the other open windows.
+        # Once the MainWindow has finished loading (which takes some time)
+        # close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.main_window.show()
@@ -79,8 +86,10 @@ class Controller:
         """
         Display pyradiomics progress bar
         """
-        self.pyradi_progressbar = PyradiProgressBar(path, filepaths, target_path)
-        self.pyradi_progressbar.progress_complete.connect(self.close_pyradi_progress)
+        self.pyradi_progressbar = PyradiProgressBar(
+            path, filepaths, target_path)
+        self.pyradi_progressbar.progress_complete.connect(
+            self.close_pyradi_progress)
         self.pyradi_progressbar.show()
 
     def close_pyradi_progress(self):
