@@ -7,7 +7,7 @@ class DicomViewSagittal(DicomView):
         super(DicomViewSagittal, self).__init__(roi_color, iso_color)
         self.update_view()
 
-    def roi_dispplay(self):
+    def roi_display(self):
         print(self.slice_view)
 
     def isodose_display(self):

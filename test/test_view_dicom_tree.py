@@ -106,7 +106,7 @@ def test_file_components(test_obj):
 
     # Test initial values are correct and initial tree is clear
     file_count = len(test_obj.dicom_tree.special_files) + len(
-        test_obj.main_window.dicom_tree.patient_dict_container.get("pixmaps"))
+        test_obj.main_window.dicom_tree.patient_dict_container.get("pixmaps_axial"))
     assert test_obj.dicom_tree.model_tree.rowCount() == 0
     assert test_obj.dicom_tree.selector.currentIndex() == 0
     current_text = test_obj.dicom_tree.selector.currentText()
