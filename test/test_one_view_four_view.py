@@ -2,7 +2,7 @@ import os
 import platform
 
 import pytest
-from PySide6.QtWidgets import QGridLayout, QWidgetItem, QWidget, QGraphicsPolygonItem, QGraphicsPixmapItem
+from PySide6.QtWidgets import QGridLayout, QGraphicsPolygonItem
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
