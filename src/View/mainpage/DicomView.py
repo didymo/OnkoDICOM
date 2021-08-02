@@ -6,6 +6,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import get_contour_pixel
 
 from src.Controller.PathHandler import resource_path
+from src.constants import INITIAL_ONE_VIEW_ZOOM
 
 
 class DicomView(QtWidgets.QWidget):
@@ -19,7 +20,7 @@ class DicomView(QtWidgets.QWidget):
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.roi_color = roi_color
-        self.zoom = 1
+        self.zoom = INITIAL_ONE_VIEW_ZOOM
         self.current_slice_number = None
         self.slice_view = slice_view
         if self.slice_view == "axial":

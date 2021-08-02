@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 from networkx.tests.test_convert_pandas import pd
 from matplotlib.backend_bases import MouseEvent
 
-import src.constant as constant
+import src.constants as constant
 from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
 from src.Model.Anon import anonymize
