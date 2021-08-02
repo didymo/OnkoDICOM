@@ -8,5 +8,6 @@ setup(
     license='',
     author='Ashley Maher',
     author_email='ashley.maher@didymodesigns.com.au',
-    description='OnkoDICOM is an extensible open source radiation therapy research platform based on the DICOM standard.'
+    description='OnkoDICOM is an extensible open source radiation therapy '
+                'research platform based on the DICOM standard.'
 )
