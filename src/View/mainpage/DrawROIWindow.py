@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, 
 from alphashape import alphashape
 from shapely.geometry import MultiPolygon
 
-import src.constant as constant
+import src.constants as constant
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer

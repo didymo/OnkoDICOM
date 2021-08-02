@@ -6,7 +6,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import get_contour_pixel
 
 from src.Controller.PathHandler import resource_path
-from src.constant import INITIAL_ONE_VIEW_ZOOM
+from src.constants import INITIAL_ONE_VIEW_ZOOM
 
 
 class DicomView(QtWidgets.QWidget):

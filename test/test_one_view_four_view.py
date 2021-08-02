@@ -10,7 +10,7 @@ from src.Controller.GUIController import MainWindow
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DicomView import DicomView
-from src.constant import INITIAL_FOUR_VIEW_ZOOM, INITIAL_ONE_VIEW_ZOOM
+from src.constants import INITIAL_FOUR_VIEW_ZOOM, INITIAL_ONE_VIEW_ZOOM
 
 
 def find_DICOM_files(file_path):

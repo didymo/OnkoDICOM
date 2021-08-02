@@ -20,7 +20,7 @@ from src.View.mainpage.StructureTab import StructureTab
 from src.Controller.PathHandler import resource_path
 import platform
 
-from src.constant import INITIAL_FOUR_VIEW_ZOOM
+from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 
 class UIMainWindow:
