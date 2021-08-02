@@ -1,6 +1,12 @@
+import os.path
+from pathlib import Path
 from PySide6 import QtWidgets, QtGui, QtCore
-
+from src.Model import ImageLoading
+from src.Model import ROI
+from src.Model.GetPatientInfo import DicomTree
+from src.Model.ISO2ROI import ISO2ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+
 
 isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 
@@ -8,6 +14,7 @@ isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 class IsodoseTab(QtWidgets.QWidget):
 
     request_update_isodoses = QtCore.Signal()
+    request_update_ui = QtCore.Signal()
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
@@ -17,10 +24,24 @@ class IsodoseTab(QtWidgets.QWidget):
         self.color_squares = self.init_color_squares()
         self.checkboxes = self.init_checkboxes()
 
+        # Create and initialise ISO2ROI button and layout
+        self.iso2roi_button = QtWidgets.QPushButton()
+        self.iso2roi_button.setText("Convert Isodose to ROI")
+        self.iso2roi_button.clicked.connect(self.iso2roi_button_clicked)
+        self.iso2roi = ISO2ROI()
+
+        self.iso2roi_layout = QtWidgets.QHBoxLayout()
+        self.iso2roi_layout.setContentsMargins(0, 0, 0, 0)
+        self.iso2roi_layout.addWidget(self.iso2roi_button)
+
         self.isodose_tab_layout = QtWidgets.QVBoxLayout()
         self.isodose_tab_layout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.isodose_tab_layout.setSpacing(0)
         self.init_layout()
+
+        # Add button to tab
+        self.isodose_tab_layout.addStretch()
+        self.isodose_tab_layout.addLayout(self.iso2roi_layout)
 
         self.setLayout(self.isodose_tab_layout)
 
@@ -132,3 +153,68 @@ class IsodoseTab(QtWidgets.QWidget):
         color_square_label.setPixmap(color_square_pix)
 
         return color_square_label
+
+    def iso2roi_button_clicked(self):
+        """
+        Clicked action handler for the ISO2ROI button. Initiates the
+        ISO2ROI conversion process.
+        """
+        # Ensure dataset is a complete DICOM-RT object
+        patient_dict_container = PatientDictContainer()
+        val = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+
+        if val:
+            print("Dataset is complete")
+        else:
+            print("Not complete")
+            # Check if RT struct file is missing. If yes, create one and
+            # add its data to the patient dict container
+            # TODO: update main page once RT Struct added
+            #       ensure rtss is seen as in the same DICOM dataset as the rest
+            if not patient_dict_container.get("file_rtss"):
+                # Get common directory
+                file_path = patient_dict_container.filepaths.values()
+                file_path = Path(os.path.commonpath(file_path))
+
+                # Create RT Struct file
+                ds = self.iso2roi.generate_rtss(file_path)
+
+                # Get new RT Struct file path
+                file_path = str(file_path.joinpath("rtss.dcm"))
+
+                # Add RT Struct file path to patient dict container
+                patient_dict_container.filepaths['rtss'] = file_path
+                filepaths = patient_dict_container.filepaths
+
+                # Add RT Struct dataset to patient dict container
+                patient_dict_container.dataset['rtss'] = ds
+                dataset = patient_dict_container.dataset
+
+                # Set some patient dict container attributes
+                patient_dict_container.set("file_rtss", filepaths['rtss'])
+                patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+                dicom_tree_rtss = DicomTree(filepaths['rtss'])
+                patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+
+                patient_dict_container.set("selected_rois", [])
+                patient_dict_container.set("dict_polygons", {})
+
+        # Get isodose levels to turn into ROIs
+        self.iso2roi.get_iso_levels()
+
+        # Calculate dose boundaries
+        print("Calculating boundaries")
+        boundaries = self.iso2roi.calculate_boundaries()
+
+        # Return if boundaries could not be calculated
+        if not boundaries:
+            print("Boundaries could not be calculated.")
+            return
+
+        print("Generating ROIs")
+        self.iso2roi.generate_roi(boundaries)
+        print("Done")
+
+        # Refresh the main window 
+        self.request_update_ui.emit()
