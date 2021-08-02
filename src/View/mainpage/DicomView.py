@@ -9,6 +9,7 @@ class DicomView(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
+        self.roi_color = roi_color
         self.zoom = 1
         self.current_slice_number = None
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
@@ -55,9 +56,15 @@ class DicomView(QtWidgets.QWidget):
         """
         self.image_display()
 
-        if self.patient_dict_container.get("selected_rois"):
+        if zoom_change:
+            self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
+
+        # If roi colours are set and rois are selected then update the display
+        if self.roi_color and self.patient_dict_container.get("selected_rois"):
             self.roi_display()
-        if self.patient_dict_container.get("selected_doses"):
+
+        # If isodose colours are set and doses are selected then update the display
+        if self.iso_color and self.patient_dict_container.get("selected_doses"):
             self.isodose_display()
 
         if zoom_change:

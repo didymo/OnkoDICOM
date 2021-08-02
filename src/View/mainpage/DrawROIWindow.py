@@ -9,7 +9,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QPixmap, QColor, QPen
 from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
     QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
-import alphashape
+from alphashape import alphashape
 from shapely.geometry import MultiPolygon
 
 from src.Controller.MainPageController import MainPageCallClass
@@ -51,6 +51,7 @@ class UIDrawROIWindow:
 
         self.upper_limit = None
         self.lower_limit = None
+
         self.dicom_view = DicomView()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
@@ -162,7 +163,7 @@ class UIDrawROIWindow:
         icon_zoom_in = QtGui.QIcon()
         icon_zoom_in.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/zoom_in_icon.png')))
         self.draw_roi_window_viewport_zoom_in_button.setIcon(icon_zoom_in)
-        self.draw_roi_window_viewport_zoom_in_button.clicked.connect(self.on_zoom_in_clicked)
+        self.draw_roi_window_viewport_zoom_in_button.clicked.connect(self.onZoomInClicked)
         # Zoom Out Button
         self.draw_roi_window_viewport_zoom_out_button = QPushButton()
         self.draw_roi_window_viewport_zoom_out_button.setObjectName("DrawRoiWindowViewportZoomOutButton")
@@ -173,7 +174,7 @@ class UIDrawROIWindow:
         icon_zoom_out = QtGui.QIcon()
         icon_zoom_out.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/zoom_out_icon.png')))
         self.draw_roi_window_viewport_zoom_out_button.setIcon(icon_zoom_out)
-        self.draw_roi_window_viewport_zoom_out_button.clicked.connect(self.on_zoom_out_clicked)
+        self.draw_roi_window_viewport_zoom_out_button.clicked.connect(self.onZoomOutClicked)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_label)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_input)
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_out_button)
@@ -192,7 +193,7 @@ class UIDrawROIWindow:
         self.image_slice_number_move_backward_button.resize(
             self.image_slice_number_move_backward_button.sizeHint().width(),
             self.image_slice_number_move_backward_button.sizeHint().height())
-        self.image_slice_number_move_backward_button.clicked.connect(self.on_backward_clicked)
+        self.image_slice_number_move_backward_button.clicked.connect(self.onBackwardClicked)
         icon_move_backward = QtGui.QIcon()
         icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/backward_slide_icon.png')))
         self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
@@ -205,7 +206,7 @@ class UIDrawROIWindow:
         self.image_slice_number_move_forward_button.resize(
             self.image_slice_number_move_forward_button.sizeHint().width(),
             self.image_slice_number_move_forward_button.sizeHint().height())
-        self.image_slice_number_move_forward_button.clicked.connect(self.on_forward_clicked)
+        self.image_slice_number_move_forward_button.clicked.connect(self.onForwardClicked)
         icon_move_forward = QtGui.QIcon()
         icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/forward_slide_icon.png')))
         self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
@@ -239,7 +240,7 @@ class UIDrawROIWindow:
             self.image_slice_number_box_draw_button.sizeHint().width(),
             self.image_slice_number_box_draw_button.sizeHint().height()
         )
-        self.image_slice_number_box_draw_button.clicked.connect(self.on_box_draw_clicked)
+        self.image_slice_number_box_draw_button.clicked.connect(self.onBoxDrawClicked)
         icon_box_draw = QtGui.QIcon()
         icon_box_draw.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/draw_bound_icon.png')))
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
@@ -252,7 +253,7 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.resize(
             self.image_slice_number_draw_button.sizeHint().width(),
             self.image_slice_number_draw_button.sizeHint().height())
-        self.image_slice_number_draw_button.clicked.connect(self.on_draw_clicked)
+        self.image_slice_number_draw_button.clicked.connect(self.onDrawClicked)
         icon_draw = QtGui.QIcon()
         icon_draw.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/draw_icon.png')))
         self.image_slice_number_draw_button.setIcon(icon_draw)
@@ -262,7 +263,7 @@ class UIDrawROIWindow:
         # Create a contour preview button and alpha selection input
         self.row_preview_layout = QtWidgets.QHBoxLayout()
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
-        self.button_contour_preview.clicked.connect(self.on_preview_clicked)
+        self.button_contour_preview.clicked.connect(self.onPreviewClicked)
         self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
         self.input_alpha_value = QtWidgets.QLineEdit("0.2")
         self.row_preview_layout.addWidget(self.button_contour_preview)
@@ -329,7 +330,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_action_reset_button.resize(
             self.draw_roi_window_instance_action_reset_button.sizeHint().width(),
             self.draw_roi_window_instance_action_reset_button.sizeHint().height())
-        self.draw_roi_window_instance_action_reset_button.clicked.connect(self.on_reset_clicked)
+        self.draw_roi_window_instance_action_reset_button.clicked.connect(self.onResetClicked)
         self.draw_roi_window_instance_action_reset_button.setProperty("QPushButtonClass", "fail-button")
         icon_clear_roi_draw = QtGui.QIcon()
         icon_clear_roi_draw.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/reset_roi_draw_icon.png')))
@@ -349,7 +350,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_cancel_button.resize(self.draw_roi_window_instance_cancel_button.sizeHint().width(),
                                                     self.draw_roi_window_instance_cancel_button.sizeHint().height())
         self.draw_roi_window_instance_cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.draw_roi_window_instance_cancel_button.clicked.connect(self.on_cancel_button_clicked)
+        self.draw_roi_window_instance_cancel_button.clicked.connect(self.onCancelButtonClicked)
         self.draw_roi_window_instance_cancel_button.setProperty("QPushButtonClass", "fail-button")
         icon_cancel = QtGui.QIcon()
         icon_cancel.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/cancel_icon.png')))
@@ -367,8 +368,9 @@ class UIDrawROIWindow:
         icon_save = QtGui.QIcon()
         icon_save.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/save_icon.png')))
         self.draw_roi_window_instance_save_button.setIcon(icon_save)
-        self.draw_roi_window_instance_save_button.clicked.connect(self.on_save_clicked)
+        self.draw_roi_window_instance_save_button.clicked.connect(self.onSaveClicked)
         self.draw_roi_window_cancel_save_box.addWidget(self.draw_roi_window_instance_save_button)
+
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cancel_save_box)
 
 
@@ -405,7 +407,7 @@ class UIDrawROIWindow:
     def slider_value_changed(self):
         self.image_slice_number_line_edit.setText(str(self.dicom_view.current_slice_number))
 
-    def on_zoom_in_clicked(self):
+    def onZoomInClicked(self):
         """
         This function is used for zooming in button
         """
@@ -414,7 +416,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
-    def on_zoom_out_clicked(self):
+    def onZoomOutClicked(self):
         """
         This function is used for zooming out button
         """
@@ -423,13 +425,13 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
-    def on_cancel_button_clicked(self):
+    def onCancelButtonClicked(self):
         """
         This function is used for canceling the drawing
         """
         self.close()
 
-    def on_backward_clicked(self):
+    def onBackwardClicked(self):
         self.backward_pressed = True
         self.forward_pressed = False
         self.slider_changed = False
@@ -448,7 +450,7 @@ class UIDrawROIWindow:
             self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
             self.dicom_view.update_view()
 
-    def on_forward_clicked(self):
+    def onForwardClicked(self):
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
         total_slices = len(pixmaps)
 
@@ -468,7 +470,7 @@ class UIDrawROIWindow:
             self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
             self.dicom_view.update_view()
 
-    def on_reset_clicked(self):
+    def onResetClicked(self):
         self.dicom_view.image_display()
         self.dicom_view.update_view()
         self.isthmus_width_max_line_edit.setText("5")
@@ -498,14 +500,14 @@ class UIDrawROIWindow:
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        MainPageCallClass().runTransect(
+        MainPageCallClass().run_transect(
             self.draw_roi_window_instance,
             self.dicom_view.view,
             pixmaps[id],
             dt._pixel_array.transpose(),
             rowS,
             colS,
-            isROIDraw=True,
+            is_roi_draw=True,
         )
 
     def on_transect_close(self):
@@ -515,7 +517,7 @@ class UIDrawROIWindow:
 
         self.dicom_view.update_view()
 
-    def on_draw_clicked(self):
+    def onDrawClicked(self):
         """
         Function triggered when the Draw button is pressed from the menu.
         """
@@ -568,7 +570,7 @@ class UIDrawROIWindow:
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
 
-    def on_box_draw_clicked(self):
+    def onBoxDrawClicked(self):
         id = self.dicom_view.slider.value()
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
@@ -577,7 +579,7 @@ class UIDrawROIWindow:
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
 
-    def on_save_clicked(self):
+    def onSaveClicked(self):
         # Make sure the user has clicked Draw first
         if self.ds is not None:
             # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
@@ -622,7 +624,7 @@ class UIDrawROIWindow:
         # Calculate the concave hull of the points.
         #alpha = 0.95 * alphashape.optimizealpha(points)
         alpha = float(self.input_alpha_value.text())
-        hull = alphashape.alphashape(target_pixel_coords, alpha)
+        hull = alphashape(target_pixel_coords, alpha)
         if isinstance(hull, MultiPolygon):
             return None
 
@@ -657,7 +659,7 @@ class UIDrawROIWindow:
 
         return contour_data
 
-    def on_preview_clicked(self):
+    def onPreviewClicked(self):
         if hasattr(self, 'drawingROI') and len(self.drawingROI.target_pixel_coords) > 0:
             list_of_points = self.calculate_concave_hull_of_points()
             if list_of_points is not None:
