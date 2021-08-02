@@ -6,23 +6,25 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import get_contour_pixel
 
 from src.Controller.PathHandler import resource_path
+from src.constants import INITIAL_ONE_VIEW_ZOOM
 
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", format_metadata=True, cut_line_color=None):
+    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", metadata_formatted=False,
+                 cut_line_color=None):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
         self.roi_color = roi_color
-        self.zoom = 1
+        self.zoom = INITIAL_ONE_VIEW_ZOOM
         self.current_slice_number = None
         self.slice_view = slice_view
         if self.slice_view == "axial":
             self.display_metadata = True
         else:
             self.display_metadata = False
-        self.format_metadata = format_metadata
+        self.metadata_formatted = metadata_formatted
 
         self.horizontal_view = None
         self.vertical_view = None
@@ -89,12 +91,7 @@ class DicomView(QtWidgets.QWidget):
 
         # Set all labels to white
         stylesheet = "QLabel { color : white; }"
-        self.label_image_id.setStyleSheet(stylesheet)
-        self.label_image_pos.setStyleSheet(stylesheet)
-        self.label_wl.setStyleSheet(stylesheet)
-        self.label_image_size.setStyleSheet(stylesheet)
-        self.label_zoom.setStyleSheet(stylesheet)
-        self.label_patient_pos.setStyleSheet(stylesheet)
+        self.format_metadata_labels(stylesheet)
 
         # The following layout was originally accomplished using a QGridLayout with QSpaceItems to anchor the labels
         # to the corners of the DICOM view. This caused a reintroduction of the tedious memory issues that were fixed
@@ -117,7 +114,7 @@ class DicomView(QtWidgets.QWidget):
         top_widget = QtWidgets.QWidget()
         top = QtWidgets.QHBoxLayout(top_widget)
         # Set margin for axial view
-        if not self.format_metadata:
+        if self.metadata_formatted:
             top_widget.setFixedHeight(50)
             top_widget.setContentsMargins(0, 0, 0, 0)
             top.setContentsMargins(0, 0, 0, 0)
@@ -142,7 +139,7 @@ class DicomView(QtWidgets.QWidget):
         bottom_widget = QtWidgets.QWidget()
         bottom = QtWidgets.QHBoxLayout(bottom_widget)
         # Set margin for axial view
-        if not self.format_metadata:
+        if self.metadata_formatted:
             bottom_widget.setFixedHeight(50)
             bottom_widget.setContentsMargins(0, 0, 0, 0)
             bottom.setContentsMargins(0, 0, 0, 0)
@@ -156,6 +153,54 @@ class DicomView(QtWidgets.QWidget):
         self.metadata_layout.addWidget(top_widget, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.metadata_layout.addStretch()
         self.metadata_layout.addWidget(bottom_widget, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+
+    def format_metadata_labels(self, stylesheet):
+        """
+        Format the meta data's labels
+        """
+        self.label_image_id.setStyleSheet(stylesheet)
+        self.label_image_pos.setStyleSheet(stylesheet)
+        self.label_wl.setStyleSheet(stylesheet)
+        self.label_image_size.setStyleSheet(stylesheet)
+        self.label_zoom.setStyleSheet(stylesheet)
+        self.label_patient_pos.setStyleSheet(stylesheet)
+
+    def format_metadata_margin(self):
+        """
+        Update the margin of the metadata depending on the size of the view and the scene.
+        """
+        if self.metadata_formatted:
+            view_height = self.view.size().height()
+            view_width = self.view.size().width()
+            scene_height = self.scene.height() * self.zoom
+            scene_width = self.scene.width() * self.zoom
+
+            if view_height >= scene_height and view_width >= scene_width:
+                # Remove all margin because there is no slider
+                self.metadata_layout.setSpacing(0)
+                self.metadata_layout.setContentsMargins(0, 0, 0, 0)
+            else:
+                # Add margin if the vertical and/or horizontal sliders appear
+                self.metadata_layout.setSpacing(6)
+                if view_height >= scene_height:
+                    self.metadata_layout.setContentsMargins(0, 0, 0, 11)
+                elif view_width >= scene_width:
+                    self.metadata_layout.setContentsMargins(0, 0, 11, 0)
+                else:
+                    self.metadata_layout.setContentsMargins(0, 0, 11, 11)
+
+    def format_metadata(self, size: QtCore.QSize):
+        """
+        Update the font size of the meta data's labels depending on the StackedWidget's size.
+        :param size: size of the StackedWidget used in the MainPage.
+        """
+        if self.metadata_formatted:
+            # TODO: generalise 1200 and 600
+            if size.width() < 1200 and size.height() < 600:
+                stylesheet = "QLabel { color : white; font-size: 10px }"
+            else:
+                stylesheet = "QLabel { color : white; }"
+            self.format_metadata_labels(stylesheet)
 
     def value_changed(self):
         self.update_view()
@@ -300,18 +345,7 @@ class DicomView(QtWidgets.QWidget):
         dataset = self.patient_dict_container.dataset[id]
 
         # Set margin for axial view
-        if not self.format_metadata:
-            if self.view.size().height() < self.scene.height()*self.zoom and \
-                    self.view.size().width() >= self.scene.width()*self.zoom:
-                self.metadata_layout.setSpacing(6)
-                self.metadata_layout.setContentsMargins(0, 0, 11, 0)
-            elif self.view.size().height() < self.scene.height()*self.zoom and \
-                    self.view.size().width() < self.scene.width()*self.zoom:
-                self.metadata_layout.setSpacing(6)
-                self.metadata_layout.setContentsMargins(0, 0, 11, 11)
-            else:
-                self.metadata_layout.setSpacing(0)
-                self.metadata_layout.setContentsMargins(0, 0, 0, 0)
+        self.format_metadata_margin()
 
         # Information to display
         self.current_slice_number = dataset['InstanceNumber'].value

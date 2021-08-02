@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 from networkx.tests.test_convert_pandas import pd
 from matplotlib.backend_bases import MouseEvent
 
-import src.constant as constant
+import src.constants as constant
 from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
 from src.Model.Anon import anonymize
@@ -1009,6 +1009,7 @@ class Transect(QtWidgets.QGraphicsScene):
             self.mainWindow.lower_limit = self.lower_limit
             self.mainWindow.on_transect_close()
         else:
+            self.mainWindow.dicom_single_view.update_view()
             self.mainWindow.dicom_view_axial.update_view()
 
         event.canvas.figure.axes[0].has_been_closed = True
