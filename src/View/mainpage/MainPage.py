@@ -20,6 +20,8 @@ from src.View.mainpage.StructureTab import StructureTab
 from src.Controller.PathHandler import resource_path
 import platform
 
+from src.constant import INITIAL_FOUR_VIEW_ZOOM
+
 
 class UIMainWindow:
     """
@@ -116,9 +118,9 @@ class UIMainWindow:
         self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
 
         # Rescale the size of the scenes inside the 3-slice views
-        self.dicom_view_axial.zoom = 0.5
-        self.dicom_view_sagittal.zoom = 0.5
-        self.dicom_view_coronal.zoom = 0.5
+        self.dicom_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.dicom_view_axial.update_view(zoom_change=True)
         self.dicom_view_sagittal.update_view(zoom_change=True)
         self.dicom_view_coronal.update_view(zoom_change=True)

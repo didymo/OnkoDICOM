@@ -10,6 +10,7 @@ from src.Controller.GUIController import MainWindow
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DicomView import DicomView
+from src.constant import INITIAL_FOUR_VIEW_ZOOM, INITIAL_ONE_VIEW_ZOOM
 
 
 def find_DICOM_files(file_path):
@@ -88,6 +89,7 @@ def test_one_view_zoom(qtbot, test_object, init_config):
     test_object.main_window.show()
     test_object.main_window.action_handler.action_one_view.trigger()
     initial_zoom = test_object.main_window.dicom_single_view.zoom
+    assert (initial_zoom == INITIAL_ONE_VIEW_ZOOM)
     test_object.main_window.action_handler.action_zoom_in.trigger()
     assert (test_object.main_window.dicom_single_view.zoom == 1.05 * initial_zoom)
     test_object.main_window.action_handler.action_zoom_out.trigger()
@@ -117,6 +119,10 @@ def test_four_view_zoom(qtbot, test_object, init_config):
     initial_axial_zoom = test_object.main_window.dicom_view_axial.zoom
     initial_coronal_zoom = test_object.main_window.dicom_view_coronal.zoom
     initial_sagittal_zoom = test_object.main_window.dicom_view_sagittal.zoom
+
+    assert (initial_coronal_zoom == INITIAL_FOUR_VIEW_ZOOM)
+    assert (initial_sagittal_zoom == INITIAL_FOUR_VIEW_ZOOM)
+    assert (initial_axial_zoom == INITIAL_FOUR_VIEW_ZOOM)
 
     test_object.main_window.action_handler.action_zoom_in.trigger()
     assert (test_object.main_window.dicom_view_axial.zoom == initial_axial_zoom * 1.05)
