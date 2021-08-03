@@ -16,7 +16,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
-from src.View.mainpage.DicomView import DicomView
+from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -51,7 +51,7 @@ class UIDrawROIWindow:
         self.upper_limit = None
         self.lower_limit = None
 
-        self.dicom_view = DicomView()
+        self.dicom_view = DicomAxialView()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
 
