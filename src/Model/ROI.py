@@ -475,6 +475,7 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     #     pixels.append([x, y])
     return pixels
 
+
 def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
     """
     Calculate (Convert) contour points.
@@ -493,7 +494,7 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
     print("sag")
     np_x = np.array(pixlut[0])
     np_y = np.array(pixlut[1])
-    #print(np_x, np_y)
+    # print(np_x, np_y)
     if not feetfirst and not prone:
         for i in range(0, len(contour), 3):
             con_x = contour[i]
@@ -516,8 +517,8 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
             y = np.argmin(np_y < con_y)
             pixels.append([x, y])
 
-    ### Original Slowwwwwwww One
-    ### Time used: 895.787469625473
+    # Original Slow One
+    # Time used: 895.787469625473
     # for i in range(0, len(contour), 3):
     #     for x, x_val in enumerate(pixlut[0]):
     #         if (x_val > contour[i] and not prone and not feetfirst):
@@ -532,6 +533,7 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
     #             break
     #     pixels.append([x, y])
     return pixels
+
 
 def pixel_to_rcs(pixlut, x, y):
     """
@@ -613,6 +615,31 @@ def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
                 dict_pixels_of_roi[roi_slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
     return dict_pixels
+
+
+def transform_rois_contours(axial_rois_contours):
+    coronal_rois_contours = {}
+    sagittal_rois_contours = {}
+    slice_ids = dict((v, k) for k, v in PatientDictContainer().get("dict_uid").items())
+    for name in axial_rois_contours.keys():
+        coronal_rois_contours[name] = {}
+        sagittal_rois_contours[name] = {}
+        for slice_id in slice_ids:
+            contours = axial_rois_contours[name][slice_id]
+            for contour in contours:
+                for i in range(len(contour)):
+                    if contour[i][1] in coronal_rois_contours[name]:
+                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+                    else:
+                        coronal_rois_contours[name][contour[i][1]] = [[]]
+                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+
+                    if contour[i][0] in sagittal_rois_contours[name]:
+                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+                    else:
+                        sagittal_rois_contours[name][contour[i][0]] = [[]]
+                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+    return coronal_rois_contours, sagittal_rois_contours
 
 
 def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, aspect=1):

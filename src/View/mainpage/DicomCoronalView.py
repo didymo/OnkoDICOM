@@ -1,7 +1,6 @@
 from PySide6 import QtGui
 
 from src.Controller.PathHandler import resource_path
-from src.Model.ROI import get_roi_contour_pixel, calc_roi_polygon
 from src.View.mainpage.DicomView import DicomView
 
 
@@ -13,8 +12,6 @@ class DicomCoronalView(DicomView):
 
     def roi_display(self):
         slider_id = self.slider.value()
-
-        aspect = self.patient_dict_container.get("pixmap_aspect")["coronal"]
         selected_rois = self.patient_dict_container.get("selected_rois")
         rois = self.patient_dict_container.get("rois")
         selected_rois_name = []
@@ -23,32 +20,7 @@ class DicomCoronalView(DicomView):
 
         for roi in selected_rois:
             roi_name = rois[roi]['name']
-
-            if roi_name not in self.patient_dict_container.get("dict_polygons_coronal").keys():
-                new_dict_polygons = self.patient_dict_container.get("dict_polygons_coronal")
-                new_dict_polygons[roi_name] = {}
-                all_roi_contour = get_roi_contour_pixel(self.patient_dict_container.get("raw_contour"),
-                                                        selected_rois_name, self.patient_dict_container.get("pixluts"))
-                slice_ids = dict((v, k) for k, v in self.patient_dict_container.get("dict_uid").items())
-
-                dict_roi_contours = self.get_dict_roi_contours(all_roi_contour, slice_ids)
-                polygons = calc_roi_polygon(roi_name, slider_id, dict_roi_contours, aspect)
-                new_dict_polygons[roi_name][slider_id] = polygons
-                self.patient_dict_container.set("dict_polygons_coronal", new_dict_polygons)
-            elif self.patient_dict_container.get("dict_polygons_coronal")[roi_name] is None:
-                continue
-            elif slider_id not in self.patient_dict_container.get("dict_polygons_coronal")[roi_name].keys():
-                new_dict_polygons = self.patient_dict_container.get("dict_polygons_coronal")
-                all_roi_contour = get_roi_contour_pixel(self.patient_dict_container.get("raw_contour"),
-                                                        selected_rois_name, self.patient_dict_container.get("pixluts"))
-                slice_ids = dict((v, k) for k, v in self.patient_dict_container.get("dict_uid").items())
-
-                dict_roi_contours = self.get_dict_roi_contours(all_roi_contour, slice_ids)
-                polygons = calc_roi_polygon(roi_name, slider_id, dict_roi_contours, aspect)
-                new_dict_polygons[roi_name][slider_id] = polygons
-                self.patient_dict_container.set("dict_polygons_coronal", new_dict_polygons)
-            else:
-                polygons = self.patient_dict_container.get("dict_polygons_coronal")[roi_name][slider_id]
+            polygons = self.patient_dict_container.get("dict_polygons_coronal")[roi_name][slider_id]
 
             color = self.patient_dict_container.get("roi_color_dict")[roi]
             with open(resource_path('data/line&fill_configuration'), 'r') as stream:
@@ -71,18 +43,3 @@ class DicomCoronalView(DicomView):
 
     def isodose_display(self):
         print(self.slice_view)
-
-    def get_dict_roi_contours(self, all_roi_contour, slice_ids):
-        new_list = {}
-        for name in all_roi_contour.keys():
-            new_list[name] = {}
-            for slice in slice_ids.keys():
-                contours = all_roi_contour[name][slice]
-                for contour in contours:
-                    for i in range(len(contour)):
-                        if contour[i][1] in new_list[name]:
-                            new_list[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice]])
-                        else:
-                            new_list[name][contour[i][1]] = [[]]
-                            new_list[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice]])
-        return new_list

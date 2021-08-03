@@ -2,7 +2,6 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from skimage import measure
 
 from src.View.mainpage.DicomView import DicomView
-from src.Model.ROI import get_contour_pixel, calc_roi_polygon
 from src.Model.Isodose import get_dose_grid
 from src.Controller.PathHandler import resource_path
 
@@ -206,27 +205,7 @@ class DicomAxialView(DicomView):
 
         for roi in selected_rois:
             roi_name = rois[roi]['name']
-
-            if roi_name not in self.patient_dict_container.get("dict_polygons_axial").keys():
-                new_dict_polygons = self.patient_dict_container.get("dict_polygons_axial")
-                new_dict_polygons[roi_name] = {}
-                dict_rois_contours = get_contour_pixel(self.patient_dict_container.get("raw_contour"),
-                                                       selected_rois_name, self.patient_dict_container.get("pixluts"),
-                                                       curr_slice)
-                polygons = calc_roi_polygon(roi_name, curr_slice, dict_rois_contours)
-                new_dict_polygons[roi_name][curr_slice] = polygons
-                self.patient_dict_container.set("dict_polygons_axial", new_dict_polygons)
-
-            elif curr_slice not in self.patient_dict_container.get("dict_polygons_axial")[roi_name].keys():
-                new_dict_polygons = self.patient_dict_container.get("dict_polygons_axial")
-                dict_rois_contours = get_contour_pixel(self.patient_dict_container.get("raw_contour"),
-                                                       selected_rois_name, self.patient_dict_container.get("pixluts"),
-                                                       curr_slice)
-                polygons = calc_roi_polygon(roi_name, curr_slice, dict_rois_contours)
-                new_dict_polygons[roi_name][curr_slice] = polygons
-                self.patient_dict_container.set("dict_polygons_axial", new_dict_polygons)
-            else:
-                polygons = self.patient_dict_container.get("dict_polygons_axial")[roi_name][curr_slice]
+            polygons = self.patient_dict_container.get("dict_polygons_axial")[roi_name][curr_slice]
 
             color = self.patient_dict_container.get("roi_color_dict")[roi]
             with open(resource_path('data/line&fill_configuration'), 'r') as stream:

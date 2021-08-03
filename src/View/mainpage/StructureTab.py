@@ -9,7 +9,7 @@ from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import ordered_list_rois
+from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, calc_roi_polygon, transform_rois_contours
 from src.View.mainpage.StructureWidget import StructureWidget
 from src.Controller.PathHandler import resource_path
 
@@ -288,16 +288,53 @@ class StructureTab(QtWidgets.QWidget):
             selected_rois.remove(roi_id)
 
         self.patient_dict_container.set("selected_rois", selected_rois)
+        self.update_dict_polygons(state, roi_id)
 
         self.request_update_structures.emit()
+
+    def update_dict_polygons(self, state, roi_id):
+        rois = self.patient_dict_container.get("rois")
+        new_dict_polygons_axial = self.patient_dict_container.get("dict_polygons_axial")
+        new_dict_polygons_coronal = self.patient_dict_container.get("dict_polygons_coronal")
+        new_dict_polygons_sagittal = self.patient_dict_container.get("dict_polygons_sagittal")
+        aspect = self.patient_dict_container.get("pixmap_aspect")
+        roi_name = rois[roi_id]['name']
+
+        if state:
+            new_dict_polygons_axial[roi_name] = {}
+            new_dict_polygons_coronal[roi_name] = {}
+            new_dict_polygons_sagittal[roi_name] = {}
+            dict_rois_contours_axial = get_roi_contour_pixel(self.patient_dict_container.get("raw_contour"),
+                                                             [roi_name], self.patient_dict_container.get("pixluts"))
+            dict_rois_contours_coronal, dict_rois_contours_sagittal = transform_rois_contours(dict_rois_contours_axial)
+
+            for slice_id in self.patient_dict_container.get("dict_uid").values():
+                polygons = calc_roi_polygon(roi_name, slice_id, dict_rois_contours_axial)
+                new_dict_polygons_axial[roi_name][slice_id] = polygons
+
+            for slice_id in range(0, len(self.patient_dict_container.get("pixmaps_coronal"))):
+                polygons_coronal = calc_roi_polygon(roi_name, slice_id, dict_rois_contours_coronal, aspect["coronal"])
+                polygons_sagittal = calc_roi_polygon(roi_name, slice_id,
+                                                     dict_rois_contours_sagittal, 1 / aspect["sagittal"])
+                new_dict_polygons_coronal[roi_name][slice_id] = polygons_coronal
+                new_dict_polygons_sagittal[roi_name][slice_id] = polygons_sagittal
+
+            self.patient_dict_container.set("dict_polygons_axial", new_dict_polygons_axial)
+            self.patient_dict_container.set("dict_polygons_coronal", new_dict_polygons_coronal)
+            self.patient_dict_container.set("dict_polygons_sagittal", new_dict_polygons_sagittal)
+        else:
+            new_dict_polygons_axial.pop(roi_name, None)
+            new_dict_polygons_coronal.pop(roi_name, None)
+            new_dict_polygons_sagittal.pop(roi_name, None)
 
     def save_new_rtss(self, event=None):
         rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
 
         confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                 "Are you sure you want to save the modified RTSTRUCT file? This will "
-                                                 "overwrite the existing file. This is not reversible.",
-                                                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+                                                         "Are you sure you want to save the modified RTSTRUCT file? "
+                                                         "This will overwrite the existing file. "
+                                                         "This is not reversible.",
+                                                         QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
