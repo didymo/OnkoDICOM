@@ -293,6 +293,12 @@ class StructureTab(QtWidgets.QWidget):
         self.request_update_structures.emit()
 
     def update_dict_polygons(self, state, roi_id):
+        """
+        Update the polygon dictionaries (axial, coronal, sagittal) used to display the ROIs.
+
+        :param state: True if the ROI is selected, False otherwise
+        :param roi_id: ROI number
+        """
         rois = self.patient_dict_container.get("rois")
         new_dict_polygons_axial = self.patient_dict_container.get("dict_polygons_axial")
         new_dict_polygons_coronal = self.patient_dict_container.get("dict_polygons_coronal")

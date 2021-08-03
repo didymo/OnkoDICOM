@@ -4,7 +4,6 @@ import random
 from copy import copy as shallowcopy
 from copy import deepcopy
 
-import numpy as np
 import pydicom
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
@@ -618,6 +617,11 @@ def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
 
 
 def transform_rois_contours(axial_rois_contours):
+    """
+       Transform the axial ROI contours into coronal and sagittal contours
+       :param axial_rois_contours: the dictionary of axial ROI contours
+       :return: Tuple of coronal and sagittal ROI contours
+    """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
     slice_ids = dict((v, k) for k, v in PatientDictContainer().get("dict_uid").items())
@@ -642,15 +646,14 @@ def transform_rois_contours(axial_rois_contours):
     return coronal_rois_contours, sagittal_rois_contours
 
 
-def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, aspect=1):
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     """
     Calculate a list of polygons to display for a given ROI and a given slice.
-    :param curr_roi:
-     the ROI structure
-    :param curr_slice:
-     the current slice
-    :param aspect:
-     the scaling ratio
+
+    :param curr_roi: the ROI structure
+    :param curr_slice: the current slice
+    :param dict_rois_contours: the dictionary of ROI contours
+    :param pixmap_aspect: the scaling ratio
     :return: List of polygons of type QPolygonF.
     """
     # TODO Implement support for showing "holes" in contours.
@@ -678,7 +681,7 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, aspect=1):
         list_qpoints = []
         contour = pixel_list[i]
         for point in contour:
-            curr_qpoint = QtCore.QPoint(point[0], point[1] * aspect)
+            curr_qpoint = QtCore.QPoint(point[0], point[1] * pixmap_aspect)
             list_qpoints.append(curr_qpoint)
         curr_polygon = QtGui.QPolygonF(list_qpoints)
         list_polygons.append(curr_polygon)

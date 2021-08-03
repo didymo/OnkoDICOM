@@ -2,6 +2,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.constants import INITIAL_ONE_VIEW_ZOOM
+from src.Controller.PathHandler import resource_path
 
 
 class DicomView(QtWidgets.QWidget):
@@ -83,6 +84,30 @@ class DicomView(QtWidgets.QWidget):
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
         self.scene.addItem(label)
+
+    def draw_roi_polygons(self, roi_id, polygons):
+        """
+        Draw ROI polygons on the image slice
+        :param roi_id: ROI number
+        :param polygons: List of ROI polygons
+        """
+        color = self.patient_dict_container.get("roi_color_dict")[roi_id]
+        with open(resource_path('data/line&fill_configuration'), 'r') as stream:
+            elements = stream.readlines()
+            if len(elements) > 0:
+                roi_line = int(elements[0].replace('\n', ''))
+                roi_opacity = int(elements[1].replace('\n', ''))
+                line_width = float(elements[4].replace('\n', ''))
+            else:
+                roi_line = 1
+                roi_opacity = 10
+                line_width = 2.0
+            stream.close()
+        roi_opacity = int((roi_opacity / 100) * 255)
+        color.setAlpha(roi_opacity)
+        pen = self.get_qpen(color, roi_line, line_width)
+        for i in range(len(polygons)):
+            self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(color))
 
     def get_qpen(self, color, style=1, widthF=1):
         """
