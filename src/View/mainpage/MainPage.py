@@ -1,8 +1,8 @@
 import glob
 
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -10,17 +10,20 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
-from src.View.mainpage.DicomViewAxial import DicomViewAxial
-from src.View.mainpage.DicomViewCoronal import DicomViewCoronal
-from src.View.mainpage.DicomViewSagittal import DicomViewSagittal
+from src.View.mainpage.DicomAxialView import DicomAxialView
+from src.View.mainpage.DicomCoronalView import DicomCoronalView
+from src.View.mainpage.DicomSagittalView import DicomSagittalView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
 from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
+from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 
 from src.Controller.PathHandler import resource_path
 import platform
+
+from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 
 class UIMainWindow:
@@ -59,8 +62,11 @@ class UIMainWindow:
         self.main_window_instance.setStyleSheet(stylesheet)
 
         self.setup_central_widget()
+        self.setup_actions()
 
-        # Create actions and set menu and tool bars
+    def setup_actions(self):
+        if hasattr(self, 'toolbar'):
+            self.main_window_instance.removeToolBar(self.toolbar)
         self.action_handler = ActionHandler(self)
         self.menubar = MenuBar(self.action_handler)
         self.main_window_instance.setMenuBar(self.menubar)
@@ -87,11 +93,15 @@ class UIMainWindow:
             self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
             self.left_panel.addTab(self.structures_tab, "Structures")
+        elif hasattr(self, 'structures_tab'):
+            del self.structures_tab
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
+        elif hasattr(self, 'isodoses_tab'):
+            del self.isodoses_tab
 
         # Hide left panel if no rtss or rtdose
         if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
@@ -101,37 +111,37 @@ class UIMainWindow:
         self.right_panel = QtWidgets.QTabWidget()
 
         # Create a Dicom View containing single-slice and 3-slice views
-        self.dicom_view = QStackedWidget()
+        self.dicom_view = DicomStackedWidget(self.format_data)
 
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
-        self.dicom_view_single = DicomViewAxial(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomViewAxial(roi_color=roi_color_dict,
-                                               iso_color=iso_color_dict, format_metadata=False)
-        self.dicom_view_sagittal = DicomViewSagittal(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_coronal = DicomViewCoronal(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_single_view = DicomAxialView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_axial_view = DicomAxialView(roi_color=roi_color_dict,
+                                               iso_color=iso_color_dict, metadata_formatted=True)
+        self.dicom_sagittal_view = DicomSagittalView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_coronal_view = DicomCoronalView(roi_color=roi_color_dict, iso_color=iso_color_dict)
 
         # Rescale the size of the scenes inside the 3-slice views
-        self.dicom_view_axial.zoom = 0.5
-        self.dicom_view_sagittal.zoom = 0.5
-        self.dicom_view_coronal.zoom = 0.5
-        self.dicom_view_axial.update_view(zoom_change=True)
-        self.dicom_view_sagittal.update_view(zoom_change=True)
-        self.dicom_view_coronal.update_view(zoom_change=True)
+        self.dicom_axial_view.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_sagittal_view.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_coronal_view.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.dicom_axial_view.update_view(zoom_change=True)
+        self.dicom_sagittal_view.update_view(zoom_change=True)
+        self.dicom_coronal_view.update_view(zoom_change=True)
 
-        self.dicom_4_views_widget = QWidget()
-        self.dicom_4_views_layout = QGridLayout()
+        self.dicom_four_views = QWidget()
+        self.dicom_four_views_layout = QGridLayout()
         for i in range(2):
-            self.dicom_4_views_layout.setColumnStretch(i, 1)
-            self.dicom_4_views_layout.setRowStretch(i, 1)
-        self.dicom_4_views_layout.addWidget(self.dicom_view_axial, 0, 0)
-        self.dicom_4_views_layout.addWidget(self.dicom_view_sagittal, 0, 1)
-        self.dicom_4_views_layout.addWidget(self.dicom_view_coronal, 1, 0)
-        self.dicom_4_views_widget.setLayout(self.dicom_4_views_layout)
+            self.dicom_four_views_layout.setColumnStretch(i, 1)
+            self.dicom_four_views_layout.setRowStretch(i, 1)
+        self.dicom_four_views_layout.addWidget(self.dicom_axial_view, 0, 0)
+        self.dicom_four_views_layout.addWidget(self.dicom_sagittal_view, 0, 1)
+        self.dicom_four_views_layout.addWidget(self.dicom_coronal_view, 1, 0)
+        self.dicom_four_views.setLayout(self.dicom_four_views_layout)
 
-        self.dicom_view.addWidget(self.dicom_4_views_widget)
-        self.dicom_view.addWidget(self.dicom_view_single)
-        self.dicom_view.setCurrentWidget(self.dicom_view_single)
+        self.dicom_view.addWidget(self.dicom_four_views)
+        self.dicom_view.addWidget(self.dicom_single_view)
+        self.dicom_view.setCurrentWidget(self.dicom_single_view)
 
         # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
@@ -140,6 +150,8 @@ class UIMainWindow:
         if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = DVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
+        elif hasattr(self, 'dvh_tab'):
+            del self.dvh_tab
 
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
@@ -193,16 +205,43 @@ class UIMainWindow:
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
         """
-
-        self.dicom_view_single.update_view()
-        self.dicom_view_axial.update_view()
-        self.dicom_view_coronal.update_view()
-        self.dicom_view_sagittal.update_view()
+        self.dicom_single_view.update_view()
+        self.dicom_axial_view.update_view()
+        self.dicom_coronal_view.update_view()
+        self.dicom_sagittal_view.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
 
-    def zoom_in(self):
-        self.dicom_view_single.zoom_in()
+    def zoom_in(self, is_four_view):
+        """
+        This function calls the zooming in function on the four view's views or the single view depending on what view
+        is showing on screen.
+        is_four_view: Whether the four view is showing
+        """
+        if is_four_view:
+            self.dicom_axial_view.zoom_in()
+            self.dicom_coronal_view.zoom_in()
+            self.dicom_sagittal_view.zoom_in()
+        else:
+            self.dicom_single_view.zoom_in()
 
-    def zoom_out(self):
-        self.dicom_view_single.zoom_out()
+    def zoom_out(self, is_four_view):
+        """
+        This function calls the zooming out function on the four view's views or the single view depending on what view
+        is showing on screen.
+        is_four_view: Whether the four view is showing
+        """
+        if is_four_view:
+            self.dicom_axial_view.zoom_out()
+            self.dicom_coronal_view.zoom_out()
+            self.dicom_sagittal_view.zoom_out()
+        else:
+            self.dicom_single_view.zoom_out()
+
+    def format_data(self, size):
+        """
+        This function is used to update the meta data's font size and margin based on the height and width of the
+        viewports.
+        size: The size of the DicomStackedWidget
+        """
+        self.dicom_axial_view.format_metadata(size)

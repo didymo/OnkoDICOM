@@ -5,15 +5,15 @@ from src.Model.ROI import get_roi_contour_pixel, calc_roi_polygon
 from src.View.mainpage.DicomView import DicomView
 
 
-class DicomViewSagittal(DicomView):
+class DicomSagittalView(DicomView):
     def __init__(self, roi_color=None, iso_color=None):
         self.slice_view = 'sagittal'
-        super(DicomViewSagittal, self).__init__(roi_color, iso_color)
+        super(DicomSagittalView, self).__init__(roi_color, iso_color)
         self.update_view()
 
     def roi_display(self):
         slider_id = self.slider.value()
-        aspect = self.patient_dict_container.get("aspect")["sagittal"]
+        aspect = self.patient_dict_container.get("pixmap_aspect")["sagittal"]
         selected_rois = self.patient_dict_container.get("selected_rois")
         rois = self.patient_dict_container.get("rois")
         selected_rois_name = []

@@ -3,6 +3,7 @@ from pathlib import Path
 from random import randint, seed
 
 from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6.QtCore import Qt
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
@@ -23,7 +24,6 @@ class StructureTab(QtWidgets.QWidget):
         self.rois = self.patient_dict_container.get("rois")
         self.color_dict = self.init_color_roi()
         self.patient_dict_container.set("roi_color_dict", self.color_dict)
-
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
         self.roi_delete_handler = ROIDelOption(self.structure_modified)
@@ -67,7 +67,6 @@ class StructureTab(QtWidgets.QWidget):
         :return: Dictionary where the key is the ROI number and the value a QColor object.
         """
         roi_color = dict()
-
         roi_contour_info = self.patient_dict_container.get("dict_dicom_tree_rtss")['ROI Contour Sequence']
 
         if len(roi_contour_info) > 0:
@@ -77,7 +76,6 @@ class StructureTab(QtWidgets.QWidget):
                 # we get the ROI number 'roi_id' by using the member 'list_roi_numbers'
                 id = item.split()[1]
                 roi_id = self.patient_dict_container.get("list_roi_numbers")[int(id)]
-
                 if 'ROI Display Color' in roi_contour_info[item]:
                     RGB_list = roi_contour_info[item]['ROI Display Color'][0]
                     red = RGB_list[0]
@@ -154,7 +152,11 @@ class StructureTab(QtWidgets.QWidget):
         row = 0
         for roi_id, roi_dict in self.rois.items():
             # Creates a widget representing each ROI
-            structure = StructureWidget(roi_id, self.color_dict[roi_id], roi_dict['name'], self)
+            color = self.color_dict[roi_id]
+            color.setAlpha(255)
+            structure = StructureWidget(roi_id, color, roi_dict['name'], self)
+            if roi_id in self.patient_dict_container.get("selected_rois"):
+                structure.checkbox.setChecked(Qt.Checked)
             structure.structure_renamed.connect(self.structure_modified)
             self.layout_content.addWidget(structure)
             row += 1
