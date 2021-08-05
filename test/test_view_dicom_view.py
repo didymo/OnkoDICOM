@@ -1,7 +1,7 @@
 import os
-import platform
 
 import pytest
+from pathlib import Path
 from PySide6.QtWidgets import QGridLayout, QGraphicsPolygonItem
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -39,13 +39,7 @@ class TestOneViewAndFourViewsHandling:
 
     def __init__(self):
         # Load test DICOM files
-        if platform.system() == "Windows":
-            desired_path = "\\testdata\\DICOM-RT-TEST"
-        elif platform.system() == "Linux" or platform.system() == "Darwin":
-            desired_path = "/testdata/DICOM-RT-TEST"
-
-        desired_path = os.path.dirname(os.path.realpath(__file__)) + desired_path
-
+        desired_path = Path.cwd().joinpath('test', 'testdata')
         selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
         read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)
@@ -106,10 +100,10 @@ def test_four_view_handling(qtbot, test_object, init_config):
     assert test_object.main_window.dicom_view.currentWidget() == test_object.main_window.dicom_four_views
     assert test_object.main_window.dicom_view_axial.pos().x(), test_object.main_window.dicom_view_axial.pos().y() == (
         0, 0)
-    assert test_object.main_window.dicom_view_sagittal.pos().x(), test_object.main_window.dicom_view_sagittal.pos().y() == (
-        0, 1)
-    assert test_object.main_window.dicom_view_coronal.pos().x(), test_object.main_window.dicom_view_coronal.pos().y() == (
-        1, 0)
+    assert test_object.main_window.dicom_view_sagittal.pos().x(), \
+        test_object.main_window.dicom_view_sagittal.pos().y() == (0, 1)
+    assert test_object.main_window.dicom_view_coronal.pos().x(), \
+        test_object.main_window.dicom_view_coronal.pos().y() == (1, 0)
 
 
 def test_four_view_zoom(qtbot, test_object, init_config):
