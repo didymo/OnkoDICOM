@@ -8,7 +8,7 @@ class DicomCoronalView(DicomView):
         self.update_view()
 
     def roi_display(self):
-        print(self.slice_view)
+        pass
 
     def isodose_display(self):
-        print(self.slice_view)
+        pass
