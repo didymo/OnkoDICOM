@@ -82,6 +82,8 @@ class RenameROIWindow(QDialog):
 
 
     def on_text_edited(self, text):
+        self.rename_button.setDefault(True)
+
         if text in self.standard_volume_names or text in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: green")
             self.feedback_text.setText("Entered text is in standard names")
