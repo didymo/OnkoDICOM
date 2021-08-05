@@ -21,4 +21,4 @@ class DicomSagittalView(DicomView):
             super().draw_roi_polygons(roi, polygons)
 
     def isodose_display(self):
-        print(self.slice_view)
+        pass
