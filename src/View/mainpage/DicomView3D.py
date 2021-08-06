@@ -31,7 +31,7 @@ class DicomView3D(QtWidgets.QWidget):
 
         # Convert pixel_values in patient_dict_container into a 3D numpy array
         three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
-        depthArray = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
+        depthArray = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=False
                                                 , array_type=VTK_FLOAT)
 
         # Convert 3d pixel array into vtkImageData to display as vtkVolume
@@ -79,9 +79,6 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume_property.SetGradientOpacity(self.volume_gradient_opacity)
         self.volume_property.SetInterpolationTypeToLinear()
 
-        # The ShadeOn option turns on directional lighting, which will usually
-        # enhance the appearance of the volume and make it look more "3D".
-        # volumeProperty.ShadeOn()
 
         # To decrease the impact of shading, increase the Ambient and
         # decrease the Diffuse and Specular.
@@ -101,7 +98,8 @@ class DicomView3D(QtWidgets.QWidget):
         self.renderer.AddViewProp(self.volume)
 
         # Set aspect ratio of the renderer
-        self.renderer.SetAspect(1, 1)
+        aspect = self.patient_dict_container.get("aspect")["sagittal"]
+        self.renderer.SetAspect(1, aspect)
         # Set up an initial view of the volume. The focal point will be the
         # center of the volume, and the zoom is 0.5
         self.camera = self.renderer.GetActiveCamera()
@@ -114,7 +112,6 @@ class DicomView3D(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Start the interaction
-        self.iren.GetRenderWindow().SetSize(300, 300)
         self.iren.Initialize()
         self.iren.Start()
 
@@ -124,4 +121,4 @@ class DicomView3D(QtWidgets.QWidget):
         render_window.Finalize()
         self.iren.TerminateApp()
         self.vtk_widget.close()
-        del self.vtk_widget, self.iren
+
