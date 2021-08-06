@@ -64,7 +64,7 @@ class TestStructureTab:
         self.main_window = MainWindow()
         self.main_window.show()
 
-        self.dicom_view = self.main_window.dicom_view
+        self.dicom_view = self.main_window.dicom_single_view
         self.new_polygons = {}
         slider_id = self.dicom_view.slider.value()
         self.curr_slice = self.dicom_view.patient_dict_container.get("dict_uid")[slider_id]
@@ -98,10 +98,10 @@ def test_structure_tab_check_checkboxes(test_object):
         test_object.new_polygons[name][test_object.curr_slice] = polygons
 
         # Get the actual dict_polygons dictionary
-        view_polygons = test_object.main_window.dicom_view.patient_dict_container.get("dict_polygons")
+        view_polygons = test_object.main_window.dicom_single_view.patient_dict_container.get("dict_polygons")
 
         # Get the currently selected ROIs
-        selected_rois = test_object.main_window.dicom_view.patient_dict_container.get("selected_rois")
+        selected_rois = test_object.main_window.dicom_single_view.patient_dict_container.get("selected_rois")
         selected_roi_names = []
         for selected_roi in selected_rois:
             selected_roi_names.append(test_object.rois[selected_roi]["name"])
@@ -139,7 +139,7 @@ def test_structure_tab_uncheck_checkboxes(test_object):
         del test_object.new_polygons[name]
 
         # Get the actual selected ROIs
-        selected_rois = test_object.main_window.dicom_view.patient_dict_container.get("selected_rois")
+        selected_rois = test_object.main_window.dicom_single_view.patient_dict_container.get("selected_rois")
         selected_roi_names = []
         for selected_roi in selected_rois:
             selected_roi_names.append(test_object.rois[selected_roi]["name"])
