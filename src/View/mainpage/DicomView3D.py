@@ -5,6 +5,7 @@ from PySide6 import QtWidgets
 from vtkmodules.util import numpy_support
 from vtkmodules.util.vtkConstants import VTK_FLOAT
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
+from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkRenderingCore import vtkVolume, vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty
 from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper
 
@@ -79,7 +80,6 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume_property.SetGradientOpacity(self.volume_gradient_opacity)
         self.volume_property.SetInterpolationTypeToLinear()
 
-
         # To decrease the impact of shading, increase the Ambient and
         # decrease the Diffuse and Specular.
         # To increase the impact of shading, decrease the Ambient and
@@ -93,13 +93,14 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume = vtkVolume()
         self.volume.SetMapper(self.volume_mapper)
         self.volume.SetProperty(self.volume_property)
-
+        self.volume.SetScale(
+            self.patient_dict_container.get("pixmap_aspect")["coronal"],
+            self.patient_dict_container.get("pixmap_aspect")["axial"],
+            self.patient_dict_container.get("pixmap_aspect")["sagittal"]
+        )
         # Add the volume to the renderer
         self.renderer.AddViewProp(self.volume)
 
-        # Set aspect ratio of the renderer
-        aspect = self.patient_dict_container.get("aspect")["sagittal"]
-        self.renderer.SetAspect(1, aspect)
         # Set up an initial view of the volume. The focal point will be the
         # center of the volume, and the zoom is 0.5
         self.camera = self.renderer.GetActiveCamera()
@@ -121,4 +122,3 @@ class DicomView3D(QtWidgets.QWidget):
         render_window.Finalize()
         self.iren.TerminateApp()
         self.vtk_widget.close()
-
