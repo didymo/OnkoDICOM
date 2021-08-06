@@ -9,7 +9,7 @@ class DicomTreeView(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-        self.pixmaps = self.patient_dict_container.get("pixmaps")
+        self.pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         self.dicom_tree_layout = QtWidgets.QVBoxLayout()
         self.dicom_tree_layout.setContentsMargins(0, 0, 0, 0)
