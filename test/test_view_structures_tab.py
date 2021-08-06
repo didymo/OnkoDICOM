@@ -1,6 +1,6 @@
 import os
-import platform
 import pytest
+from pathlib import Path
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -38,13 +38,7 @@ class TestStructureTab:
 
     def __init__(self):
         # Load test DICOM files
-        if platform.system() == "Windows":
-            desired_path = "\\testdata\\DICOM-RT-TEST"
-        elif platform.system() == "Linux" or platform.system() == "Darwin":
-            desired_path = "/testdata/DICOM-RT-TEST"
-
-        desired_path = os.path.dirname(os.path.realpath(__file__)) + desired_path
-
+        desired_path = Path.cwd().joinpath('test', 'testdata')
         selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
         read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)
@@ -70,7 +64,7 @@ class TestStructureTab:
         self.main_window = MainWindow()
         self.main_window.show()
 
-        self.dicom_view = self.main_window.dicom_view_single
+        self.dicom_view = self.main_window.dicom_single_view
         self.new_polygons = {}
         slider_id = self.dicom_view.slider.value()
         self.curr_slice = self.dicom_view.patient_dict_container.get("dict_uid")[slider_id]
@@ -104,10 +98,10 @@ def test_structure_tab_check_checkboxes(test_object):
         test_object.new_polygons[name][test_object.curr_slice] = polygons
 
         # Get the actual dict_polygons dictionary
-        view_polygons = test_object.main_window.dicom_view_single.patient_dict_container.get("dict_polygons")
+        view_polygons = test_object.main_window.dicom_single_view.patient_dict_container.get("dict_polygons")
 
         # Get the currently selected ROIs
-        selected_rois = test_object.main_window.dicom_view_single.patient_dict_container.get("selected_rois")
+        selected_rois = test_object.main_window.dicom_single_view.patient_dict_container.get("selected_rois")
         selected_roi_names = []
         for selected_roi in selected_rois:
             selected_roi_names.append(test_object.rois[selected_roi]["name"])
@@ -145,7 +139,7 @@ def test_structure_tab_uncheck_checkboxes(test_object):
         del test_object.new_polygons[name]
 
         # Get the actual selected ROIs
-        selected_rois = test_object.main_window.dicom_view_single.patient_dict_container.get("selected_rois")
+        selected_rois = test_object.main_window.dicom_single_view.patient_dict_container.get("selected_rois")
         selected_roi_names = []
         for selected_roi in selected_rois:
             selected_roi_names.append(test_object.rois[selected_roi]["name"])

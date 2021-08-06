@@ -7,15 +7,19 @@ from src.Controller.PathHandler import resource_path
 
 class ActionHandler:
     """
-    This class is responsible for initializing all of the actions that will be used by the MainPage and its components.
-    There exists a 1-to-1 relationship between this class and the MainPage. This class has access to the main page's
-    attributes and components, however this access should only be used to provide functionality to the actions defined
-    below. The instance of this class can be given to the main page's components in order to trigger actions.
+    This class is responsible for initializing all of the actions that will
+    be used by the MainPage and its components. There exists a 1-to-1
+    relationship between this class and the MainPage. This class has access
+    to the main page's attributes and components, however this access should
+    only be used to provide functionality to the actions defined below. The
+    instance of this class can be given to the main page's components in
+    order to trigger actions.
     """
 
     def __init__(self, main_page):
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
+        self.is_four_view = False
 
         ##############################
         # Init all actions and icons #
@@ -24,7 +28,8 @@ class ActionHandler:
         # Open patient
         self.icon_open = QtGui.QIcon()
         self.icon_open.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/open_patient_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/open_patient_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On)
         self.action_open = QtGui.QAction()
@@ -35,7 +40,8 @@ class ActionHandler:
         # Save RTSTRUCT changes action
         self.icon_save_structure = QtGui.QIcon()
         self.icon_save_structure.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/save_all_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -48,14 +54,16 @@ class ActionHandler:
         # Save as Anonymous Action
         self.icon_save_as_anonymous = QtGui.QIcon()
         self.icon_save_as_anonymous.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/anonlock_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/anonlock_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
         self.action_save_as_anonymous = QtGui.QAction()
         self.action_save_as_anonymous.setIcon(self.icon_save_as_anonymous)
         self.action_save_as_anonymous.setText("Save as Anonymous")
-        self.action_save_as_anonymous.triggered.connect(self.anonymization_handler)
+        self.action_save_as_anonymous.triggered.connect(
+            self.anonymization_handler)
 
         # Exit action
         self.action_exit = QtGui.QAction()
@@ -65,7 +73,8 @@ class ActionHandler:
         # Zoom Out Action
         self.icon_zoom_out = QtGui.QIcon()
         self.icon_zoom_out.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/zoom_out_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/zoom_out_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -73,12 +82,13 @@ class ActionHandler:
         self.action_zoom_out.setIcon(self.icon_zoom_out)
         self.action_zoom_out.setIconVisibleInMenu(True)
         self.action_zoom_out.setText("Zoom Out")
-        self.action_zoom_out.triggered.connect(self.__main_page.zoom_out)
+        self.action_zoom_out.triggered.connect(self.zoom_out_handler)
 
         # Zoom In Action
         self.icon_zoom_in = QtGui.QIcon()
         self.icon_zoom_in.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/zoom_in_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/zoom_in_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -86,12 +96,13 @@ class ActionHandler:
         self.action_zoom_in.setIcon(self.icon_zoom_in)
         self.action_zoom_in.setIconVisibleInMenu(True)
         self.action_zoom_in.setText("Zoom In")
-        self.action_zoom_in.triggered.connect(self.__main_page.zoom_in)
+        self.action_zoom_in.triggered.connect(self.zoom_in_handler)
 
         # Transect Action
         self.icon_transect = QtGui.QIcon()
         self.icon_transect.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/transect_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/transect_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -104,7 +115,8 @@ class ActionHandler:
         # Add-On Options Action
         self.icon_add_ons = QtGui.QIcon()
         self.icon_add_ons.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/management_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/management_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -143,12 +155,14 @@ class ActionHandler:
         # Export Clinical Data Action
         self.action_clinical_data_export = QtGui.QAction()
         self.action_clinical_data_export.setText("Export Clinical Data")
-        # TODO self.action_clinical_data_export.triggered.connect(clinical data check)
+        # TODO self.action_clinical_data_export.triggered.connect(
+        #  clinical data check)
 
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtGui.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
-        self.action_pyradiomics_export.triggered.connect(self.pyradiomics_export_handler)
+        self.action_pyradiomics_export.triggered.connect(
+            self.pyradiomics_export_handler)
 
         # Export DVH Action
         self.action_dvh_export = QtGui.QAction()
@@ -158,7 +172,8 @@ class ActionHandler:
         # Create Windowing menu
         self.icon_windowing = QtGui.QIcon()
         self.icon_windowing.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/windowing_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/windowing_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -168,7 +183,8 @@ class ActionHandler:
         # Create Export menu
         self.icon_export = QtGui.QIcon()
         self.icon_export.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/export_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/export_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On,
         )
@@ -194,48 +210,64 @@ class ActionHandler:
         def generate_triggered_handler(text_):
             def handler(state):
                 self.windowing_handler(state, text_)
+
             return handler
+
         windowing_actions = []
         for name in names_ordered:
             text = str(name)
             action_windowing_item = QtGui.QAction(self.menu_windowing)
-            action_windowing_item.triggered.connect(generate_triggered_handler(text))
+            action_windowing_item.triggered.connect(
+                generate_triggered_handler(text))
             action_windowing_item.setText(text)
             windowing_actions.append(action_windowing_item)
 
-        # For reasons beyond me, the actions have to be set as a child of the windowing menu *and* later be added to
-        # the menu as well. You can't do one or the other, otherwise the menu won't populate.
-        # Feel free to try fix (or at least explain why the action has to be set as the windowing menu's child twice)
+        # For reasons beyond me, the actions have to be set as a child of
+        # the windowing menu *and* later be added to the menu as well. You
+        # can't do one or the other, otherwise the menu won't populate. Feel
+        # free to try fix (or at least explain why the action has to be set
+        # as the windowing menu's child twice)
         for item in windowing_actions:
             self.menu_windowing.addAction(item)
 
     def save_struct_handler(self):
         """
-        If there are changes to the RTSTRUCT detected, save the changes to disk.
+        If there are changes to the RTSTRUCT detected,
+        save the changes to disk.
         """
         if self.patient_dict_container.get("rtss_modified"):
             self.__main_page.structures_tab.save_new_rtss()
         else:
-            QtWidgets.QMessageBox.information(self.__main_page, "File not saved",
-                                              "No changes to the RTSTRUCT file detected.")
+            QtWidgets.QMessageBox.information(
+                self.__main_page, "File not saved",
+                "No changes to the RTSTRUCT file detected.")
+
+    def zoom_out_handler(self):
+        self.__main_page.zoom_out(self.is_four_view)
+
+    def zoom_in_handler(self):
+        self.__main_page.zoom_in(self.is_four_view)
 
     def windowing_handler(self, state, text):
         """
         Function triggered when a window is selected from the menu.
-        :param state: Variable not used. Present to be able to use a lambda function.
+        :param state: Variable not used. Present to be able to use a lambda
+        function.
         :param text: The name of the window selected.
         """
         # Get the values for window and level from the dict
-        windowing_limits = self.patient_dict_container.get("dict_windowing")[text]
+        windowing_limits = self.patient_dict_container. \
+            get("dict_windowing")[text]
 
         # Set window and level to the new values
         window = windowing_limits[0]
         level = windowing_limits[1]
 
-        # Update the dictionary of pixmaps with the update window and level values
+        # Update the dictionary of pixmaps with the update window and level
+        # values
         pixel_values = self.patient_dict_container.get("pixel_values")
-        aspect = self.patient_dict_container.get("aspect")
-        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, aspect)
+        pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
+        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -247,7 +279,8 @@ class ActionHandler:
 
     def anonymization_handler(self):
         """
-        Function triggered when the Anonymization button is pressed from the menu.
+        Function triggered when the Anonymization button is pressed from the
+        menu.
         """
 
         save_reply = QtWidgets.QMessageBox.information(
@@ -260,9 +293,11 @@ class ActionHandler:
 
         if save_reply == QtWidgets.QMessageBox.Yes:
             raw_dvh = self.patient_dict_container.get("raw_dvh")
-            hashed_path = self.__main_page.call_class.runAnonymization(raw_dvh)
+            hashed_path = self.__main_page.call_class.run_anonymization(
+                raw_dvh)
             self.patient_dict_container.set("hashed_path", hashed_path)
-            # now that the radiomics data can just get copied across... maybe skip this?
+            # now that the radiomics data can just get copied across...
+            # maybe skip this?
             radiomics_reply = QtWidgets.QMessageBox.information(
                 self.__main_page.main_window_instance,
                 "Confirmation",
@@ -281,44 +316,54 @@ class ActionHandler:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-        id = self.__main_page.dicom_view_single.slider.value()
-        dt = self.patient_dict_container.dataset[id]
-        rowS = dt.PixelSpacing[0]
-        colS = dt.PixelSpacing[1]
+        if self.is_four_view:
+            view = self.__main_page.dicom_view_axial.view
+            slider_id = self.__main_page.dicom_view_axial.slider.value()
+        else:
+            view = self.__main_page.dicom_single_view.view
+            slider_id = self.__main_page.dicom_single_view.slider.value()
+        dt = self.patient_dict_container.dataset[slider_id]
+        row_s = dt.PixelSpacing[0]
+        col_s = dt.PixelSpacing[1]
         dt.convert_pixel_data()
-        pixmap = self.patient_dict_container.get("pixmaps_axial")[id]
-        self.__main_page.call_class.runTransect(
+        pixmap = self.patient_dict_container.get("pixmaps_axial")[slider_id]
+        self.__main_page.call_class.run_transect(
             self.__main_page,
-            self.__main_page.dicom_view_single.view,
+            view,
             pixmap,
             dt._pixel_array.transpose(),
-            rowS,
-            colS
+            row_s,
+            col_s
         )
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()
 
     def one_view_handler(self):
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_view_single)
-        self.__main_page.dicom_view_single.update_view()
+        self.is_four_view = False
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_single_view)
+        self.__main_page.dicom_single_view.update_view()
 
     def four_views_handler(self):
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_4_views_widget)
+        self.is_four_view = True
+        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
         self.__main_page.dicom_view_axial.update_view()
 
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
             self.__main_page.dvh_tab.export_csv()
         else:
-            QtWidgets.QMessageBox.information(self.__main_page,
-                                              "Unable to export DVH",
-                                              "DVH cannot be exported as there is no DVH present.",
-                                              QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(
+                self.__main_page,
+                "Unable to export DVH",
+                "DVH cannot be exported as there is no DVH present.",
+                QtWidgets.QMessageBox.Ok)
 
     def pyradiomics_export_handler(self):
-        self.__main_page.pyradi_trigger.emit(self.patient_dict_container.path,
-                                             self.patient_dict_container.filepaths, '')
+        self.__main_page.pyradi_trigger.emit(
+            self.patient_dict_container.path,
+            self.patient_dict_container.filepaths,
+            '')
 
     def action_exit_handler(self):
         QtCore.QCoreApplication.exit(0)

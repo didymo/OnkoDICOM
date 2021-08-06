@@ -4,6 +4,9 @@ venv/
 # Ignore .idea
 .idea/
 
+# Ignore testdata
+test/testdata
+
 # Ignore .pyc
 *.pyc
 *.pkl
