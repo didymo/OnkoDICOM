@@ -130,17 +130,17 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.table_view.setContextMenuPolicy(
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(
-            self.on_custom_context_menu_requested_window
+            self.onCustomContextMenuRequestedWindow
         )
         self.table_organ.setContextMenuPolicy(
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_organ.customContextMenuRequested.connect(
-            self.on_custom_context_menu_requested_organ
+            self.onCustomContextMenuRequestedOrgan
         )
         self.table_volume.setContextMenuPolicy(
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_volume.customContextMenuRequested.connect(
-            self.on_custom_context_menu_requested_volume
+            self.onCustomContextMenuRequestedVolume
         )
         self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
@@ -159,7 +159,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     # The right click menus for each table (First one is explained and the
     # same logic applies for all windowing
     @Slot(QtCore.QPoint)
-    def on_custom_context_menu_requested_window(self, pos):
+    def onCustomContextMenuRequestedWindow(self, pos):
         # gets the position of the right click for the windowing table
         it = self.table_view.itemAt(pos)
         if it is None:
@@ -199,7 +199,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # standard organ name table
     @Slot(QtCore.QPoint)
-    def on_custom_context_menu_requested_organ(self, pos):
+    def onCustomContextMenuRequestedOrgan(self, pos):
         it = self.table_organ.itemAt(pos)
         if it is None:
             return
@@ -232,7 +232,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # standard volume table
     @Slot(QtCore.QPoint)
-    def on_custom_context_menu_requested_volume(self, pos):
+    def onCustomContextMenuRequestedVolume(self, pos):
         it = self.table_volume.itemAt(pos)
         if it is None:
             return

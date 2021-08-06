@@ -70,9 +70,20 @@ def create_initial_model():
     patient_dict_container.set("dict_windowing", dict_windowing)
 
     pixel_values = convert_raw_data(dataset)
-    pixmaps = get_pixmaps(pixel_values, window, level)
-    patient_dict_container.set("pixmaps", pixmaps)
+    # Calculate the ratio between x axis and y axis of 3 views
+    pixmap_aspect = {}
+    pixel_spacing = dataset[0].PixelSpacing
+    slice_thickness = dataset[0].SliceThickness
+    pixmap_aspect["axial"] = pixel_spacing[1] / pixel_spacing[0]
+    pixmap_aspect["sagittal"] = pixel_spacing[1] / slice_thickness
+    pixmap_aspect["coronal"] = slice_thickness / pixel_spacing[0]
+    pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
+
+    patient_dict_container.set("pixmaps_axial", pixmaps_axial)
+    patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
+    patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
     patient_dict_container.set("pixel_values", pixel_values)
+    patient_dict_container.set("pixmap_aspect", pixmap_aspect)
 
     basic_info = get_basic_info(dataset[0])
     patient_dict_container.set("basic_info", basic_info)

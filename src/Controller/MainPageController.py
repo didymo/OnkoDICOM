@@ -14,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 from networkx.tests.test_convert_pandas import pd
 from matplotlib.backend_bases import MouseEvent
 
+import src.constants as constant
 from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
 from src.Model.Anon import anonymize
@@ -526,7 +527,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             button_reply = QtWidgets.QMessageBox.warning(
                 self, "Error Message",
                 "The following issues need to be addressed: \n" + message,
-                button0=QtWidgets.QMessageBox.Ok)
+                QtWidgets.QMessageBox.Ok)
             if button_reply == QtWidgets.QMessageBox.Ok:
                 message = ""
                 pass
@@ -855,7 +856,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                     "If you wish, you can create a new clinical data file by "
                     "\ndeleting the current one from the directory and "
                     "reloading \nthe patient files.",
-                    button0=QtWidgets.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.Ok)
                 if button_reply == QtWidgets.QMessageBox.Ok:
                     pass
             else:
@@ -874,7 +875,7 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
                 "If you wish, you can create a new clinical data file by \n"
                 "deleting the current one from the directory and reloading \n"
                 "the patient files.",
-                button0=QtWidgets.QMessageBox.Ok)
+                QtWidgets.QMessageBox.Ok)
             if button_reply == QtWidgets.QMessageBox.Ok:
                 pass
 
@@ -987,13 +988,13 @@ class Transect(QtWidgets.QGraphicsScene):
     # drawn line from the dataset
     def get_values(self):
         for i, j in self.points:
-            if i in range(512) and j in range(512):
+            if i in range(constant.DEFAULT_WINDOW_SIZE) and j in range(constant.DEFAULT_WINDOW_SIZE):
                 self.values.append(self.data[i][j])
 
     # Get the distance of each point from the end of the line
     def get_distances(self):
         for i, j in self.points:
-            if i in range(512) and j in range(512):
+            if i in range(constant.DEFAULT_WINDOW_SIZE) and j in range(constant.DEFAULT_WINDOW_SIZE):
                 self.distances.append(self.calculate_distance(
                     i, j, round(self.pos2.x()), round(self.pos2.y())))
         self.distances.reverse()
@@ -1008,7 +1009,8 @@ class Transect(QtWidgets.QGraphicsScene):
             self.mainWindow.lower_limit = self.lower_limit
             self.mainWindow.on_transect_close()
         else:
-            self.mainWindow.dicom_view.update_view()
+            self.mainWindow.dicom_single_view.update_view()
+            self.mainWindow.dicom_view_axial.update_view()
 
         event.canvas.figure.axes[0].has_been_closed = True
 

@@ -63,7 +63,7 @@ class TestDICOMTreeTab:
 
     def __init__(self):
         # Load test DICOM files and set path variable
-        path = Path.cwd().joinpath('test' , 'testdata' , 'DICOM-RT-TEST')
+        path = Path.cwd().joinpath('test', 'testdata')
         files = get_dicom_files(path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(files))
         read_data_dict, file_names_dict = ImageLoading.get_datasets(files)
@@ -106,7 +106,7 @@ def test_file_components(test_obj):
 
     # Test initial values are correct and initial tree is clear
     file_count = len(test_obj.dicom_tree.special_files) + len(
-        test_obj.main_window.dicom_tree.patient_dict_container.get("pixmaps"))
+        test_obj.main_window.dicom_tree.patient_dict_container.get("pixmaps_axial"))
     assert test_obj.dicom_tree.model_tree.rowCount() == 0
     assert test_obj.dicom_tree.selector.currentIndex() == 0
     current_text = test_obj.dicom_tree.selector.currentText()

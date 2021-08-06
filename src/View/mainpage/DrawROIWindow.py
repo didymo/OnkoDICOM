@@ -1,6 +1,5 @@
 import csv
 import math
-import threading
 
 import numpy
 import pydicom
@@ -12,9 +11,9 @@ from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, 
 from alphashape import alphashape
 from shapely.geometry import MultiPolygon
 
+import src.constants as constant
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model import ROI
-from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.mainpage.DicomView import DicomView
@@ -451,7 +450,7 @@ class UIDrawROIWindow:
             self.dicom_view.update_view()
 
     def onForwardClicked(self):
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
         total_slices = len(pixmaps)
 
         self.backward_pressed = False
@@ -485,7 +484,7 @@ class UIDrawROIWindow:
         Function triggered when the Transect button is pressed from the menu.
         """
 
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
         id = self.dicom_view.slider.value()
 
         # Getting most updated selected slice
@@ -521,7 +520,7 @@ class UIDrawROIWindow:
         """
         Function triggered when the Draw button is pressed from the menu.
         """
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         if self.min_pixel_density_line_edit.text() == "" or self.max_pixel_density_line_edit.text() == "":
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
@@ -574,7 +573,7 @@ class UIDrawROIWindow:
         id = self.dicom_view.slider.value()
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
-        pixmaps = self.patient_dict_container.get("pixmaps")
+        pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
@@ -950,8 +949,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         This function gets the corresponding values of all the points in the drawn line from the dataset.
         """
-        for i in range(512):
-            for j in range(512):
+        for i in range(constant.DEFAULT_WINDOW_SIZE):
+            for j in range(constant.DEFAULT_WINDOW_SIZE):
                 self.values.append(self.data[i][j])
 
     def refresh_image(self):
