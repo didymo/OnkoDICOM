@@ -15,4 +15,4 @@ git+https://github.com/Radiomics/pyradiomics.git
 pytest-qt>=4.0.2
 pytest
 pyside6
-git+https://github.com/anntzer/matplotlib.git@qt6
+git+https://github.com/matplotlib/matplotlib.git
