@@ -48,7 +48,7 @@ class ISO2ROI:
         """
         # Initialise variables needed to find isodose levels
         patient_dict_container = PatientDictContainer()
-        pixmaps = patient_dict_container.get("pixmaps")
+        pixmaps = patient_dict_container.get("pixmaps_axial")
         slider_min = 0
         slider_max = len(pixmaps)
 
@@ -92,7 +92,7 @@ class ISO2ROI:
         # Initialise variables needed for function
         patient_dict_container = PatientDictContainer()
         dataset_rtss = patient_dict_container.get("dataset_rtss")
-        pixmaps = patient_dict_container.get("pixmaps")
+        pixmaps = patient_dict_container.get("pixmaps_axial")
         slider_min = 0
         slider_max = len(pixmaps) - 1
 
