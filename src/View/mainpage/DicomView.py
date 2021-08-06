@@ -450,12 +450,17 @@ class DicomView(QtWidgets.QWidget):
         self.update_view(zoom_change=True)
 
     def set_views(self, horizontal_view, vertical_view):
-        """ Set the views reflected by the horizontal and vertical cut lines respectively """
+        """
+        Set the views represented by the horizontal and vertical cut lines respectively
+        """
         self.horizontal_view = horizontal_view
         self.vertical_view = vertical_view
         self.update_view()
 
     def set_slider_value(self, value):
+        """
+        Set the value of the slider of this view
+        """
         self.slider.setValue(value*self.slider.maximum())
         self.update_view()
 

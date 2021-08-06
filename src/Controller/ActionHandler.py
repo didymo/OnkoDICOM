@@ -155,7 +155,7 @@ class ActionHandler:
         # Show cut lines
         self.icon_cut_lines = QtGui.QIcon()
         self.icon_cut_lines.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/four_views_purple_icon.png")),
+            QtGui.QPixmap(resource_path("res/images/btn-icons/cut_line_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
