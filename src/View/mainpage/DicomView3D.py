@@ -1,17 +1,12 @@
-import time
-
 import numpy as np
 import vtk
-
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets
 from vtkmodules.util import numpy_support
-from vtkmodules.util.vtkConstants import VTK_FLOAT, VTK_DOUBLE
+from vtkmodules.util.vtkConstants import VTK_DOUBLE
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
-from vtkmodules.vtkCommonTransforms import vtkTransform
-from vtkmodules.vtkRenderingCore import vtkVolume, vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty, \
+from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty, \
     vtkLODProp3D
 from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper
-from vtkmodules.vtkRenderingVolumeOpenGL2 import vtkSmartVolumeMapper, vtkOpenGLGPUVolumeRayCastMapper
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -21,9 +16,7 @@ class DicomView3D(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
-
         self.patient_dict_container = PatientDictContainer()
-
         # Create the layout
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -31,18 +24,18 @@ class DicomView3D(QtWidgets.QWidget):
         # The renderer draws into the render window,
         # The interactor enables mouse and keyboard-based interaction with the scene.
         self.vtk_widget = QVTKRenderWindowInteractor(self)
-        self.vtk_widget.setStyleSheet("background-color:black;")
         self.renderer = vtkRenderer()
         self.iren = self.vtk_widget.GetRenderWindow().GetInteractor()
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
         # Convert pixel_values in patient_dict_container into a 3D numpy array
         three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
-        depthArray = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
-                                                , array_type=VTK_DOUBLE)
+        depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
+                                                 , array_type=VTK_DOUBLE)
+
         # Convert 3d pixel array into vtkImageData to display as vtkVolume
         self.imdata = vtkImageData()
         self.imdata.SetDimensions(three_dimension_np_array.shape)
-        self.imdata.GetPointData().SetScalars(depthArray)
+        self.imdata.GetPointData().SetScalars(depth_array)
 
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
         self.volume_mapper.SetBlendModeToMaximumIntensity()
@@ -98,8 +91,8 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume = vtkLODProp3D()
         self.volume.AddLOD(self.volume_mapper, self.volume_property, 0.0)
         self.volume.SetScale(
-            1,
-            1 / self.patient_dict_container.get("pixmap_aspect")["coronal"],
+            self.patient_dict_container.get("pixmap_aspect")["axial"],
+            self.patient_dict_container.get("pixmap_aspect")["sagittal"],
             self.patient_dict_container.get("pixmap_aspect")["sagittal"]
         )
 
@@ -109,17 +102,16 @@ class DicomView3D(QtWidgets.QWidget):
         # Set up an initial view of the volume. The focal point will be the
         # center of the volume, and the zoom is 0.5
         self.camera = self.renderer.GetActiveCamera()
-        c = self.volume.GetCenter()
-        self.camera.SetFocalPoint(c[0], c[1], c[2])
+        self.camera.SetFocalPoint(self.volume.GetCenter())
         self.camera.Zoom(0.5)
 
         # Set layout
         self.dicom_view_layout.addWidget(self.vtk_widget)
         self.setLayout(self.dicom_view_layout)
 
-        # Create new thread for 3D rendering and interacting
-        self.three_dimension_thread = QtCore.QThread(self)
-        self.three_dimension_thread.started.connect(self.startInteraction)
+        # Start interaction
+        self.iren.Initialize()
+        self.iren.Start()
 
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
@@ -131,12 +123,3 @@ class DicomView3D(QtWidgets.QWidget):
 
         # Close the 3d widget
         self.vtk_widget.close()
-
-        # Stop the thread that runs 3D rendering
-        self.three_dimension_thread.quit()
-        self.three_dimension_thread.wait()
-
-    def startInteraction(self):
-        # Start the interaction
-        self.iren.Initialize()
-        self.iren.Start()

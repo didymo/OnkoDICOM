@@ -347,8 +347,6 @@ class ActionHandler:
     def four_views_handler(self):
         self.is_four_view = True
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
-        if not self.__main_page.three_dimension_view.three_dimension_thread.isRunning():
-            self.__main_page.three_dimension_view.three_dimension_thread.start()
         self.__main_page.dicom_view_axial.update_view()
 
     def export_dvh_handler(self):
