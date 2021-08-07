@@ -1,13 +1,17 @@
+import time
+
 import numpy as np
 import vtk
 
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 from vtkmodules.util import numpy_support
-from vtkmodules.util.vtkConstants import VTK_FLOAT
+from vtkmodules.util.vtkConstants import VTK_FLOAT, VTK_DOUBLE
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
 from vtkmodules.vtkCommonTransforms import vtkTransform
-from vtkmodules.vtkRenderingCore import vtkVolume, vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty
+from vtkmodules.vtkRenderingCore import vtkVolume, vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty, \
+    vtkLODProp3D
 from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper
+from vtkmodules.vtkRenderingVolumeOpenGL2 import vtkSmartVolumeMapper, vtkOpenGLGPUVolumeRayCastMapper
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -29,19 +33,20 @@ class DicomView3D(QtWidgets.QWidget):
         self.renderer = vtkRenderer()
         self.iren = self.vtk_widget.GetRenderWindow().GetInteractor()
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
-
         # Convert pixel_values in patient_dict_container into a 3D numpy array
         three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
-        depthArray = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=False
-                                                , array_type=VTK_FLOAT)
-
+        depthArray = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
+                                                , array_type=VTK_DOUBLE)
         # Convert 3d pixel array into vtkImageData to display as vtkVolume
         self.imdata = vtkImageData()
         self.imdata.SetDimensions(three_dimension_np_array.shape)
         self.imdata.GetPointData().SetScalars(depthArray)
 
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
+        self.volume_mapper.SetBlendModeToMaximumIntensity()
+        self.volume_mapper.SetMaximumImageSampleDistance(10)
         self.volume_mapper.SetInputData(self.imdata)
+
         # The colorTransferFunction maps voxel intensities to colors.
         # In this example, it maps one color for flesh and another color for bone
         # Flesh (Red): Intensity between 500 and 1000
@@ -72,13 +77,12 @@ class DicomView3D(QtWidgets.QWidget):
 
         # The VolumeProperty attaches the color and opacity functions to the
         # volume, and sets other volume properties.
-
         # The interpolation should be set to linear to do a high-quality rendering.
         self.volume_property = vtkVolumeProperty()
         self.volume_property.SetColor(self.volume_color)
         self.volume_property.SetScalarOpacity(self.volume_scalar_opacity)
         self.volume_property.SetGradientOpacity(self.volume_gradient_opacity)
-        self.volume_property.SetInterpolationTypeToLinear()
+        self.volume_property.SetInterpolationTypeToNearest()
 
         # To decrease the impact of shading, increase the Ambient and
         # decrease the Diffuse and Specular.
@@ -88,16 +92,16 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume_property.SetDiffuse(0.6)
         self.volume_property.SetSpecular(0.2)
 
-        # The vtkVolume is a vtkProp3D (like a vtkActor) and controls the position
-        # and orientation of the volume in world coordinates.
-        self.volume = vtkVolume()
-        self.volume.SetMapper(self.volume_mapper)
-        self.volume.SetProperty(self.volume_property)
+        # The vtkLODProp3D controls the position and orientation
+        # of the volume in world coordinates.
+        self.volume = vtkLODProp3D()
+        self.volume.AddLOD(self.volume_mapper, self.volume_property, 0.0)
         self.volume.SetScale(
-            self.patient_dict_container.get("pixmap_aspect")["coronal"],
-            self.patient_dict_container.get("pixmap_aspect")["axial"],
+            1,
+            1/self.patient_dict_container.get("pixmap_aspect")["coronal"],
             self.patient_dict_container.get("pixmap_aspect")["sagittal"]
         )
+
         # Add the volume to the renderer
         self.renderer.AddViewProp(self.volume)
 
@@ -113,6 +117,7 @@ class DicomView3D(QtWidgets.QWidget):
         self.setLayout(self.dicom_view_layout)
 
         # Start the interaction
+        self.iren.GetRenderWindow().SetSize(300, 300)
         self.iren.Initialize()
         self.iren.Start()
 
