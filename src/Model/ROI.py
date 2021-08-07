@@ -409,30 +409,6 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     """
     pixels = []
 
-    # Optimization 1: Reduce unnecessary IF STATEMENTS
-    # Time used: 488.194700717926
-    # if (not prone and not feetfirst):
-    #     for i in range(0, len(contour), 3):
-    #         for x, x_val in enumerate(pixlut[0]):
-    #             if x_val > contour[i]:
-    #                 break
-    #         for y, y_val in enumerate(pixlut[1]):
-    #             if y_val > contour[i+1]:
-    #                 break
-    #         pixels.append([x, y])
-
-    # Optimization 2: Using Numpy Matrix
-    # Time used: 5.099231481552124
-    # np_x = np.array(pixlut[0])
-    # np_y = np.array(pixlut[1])
-    # for i in range(0, len(contour), 3):
-    #     con_x = contour[i]
-    #     con_y = contour[i+1]
-    #     x = np.argmax(np_x > con_x)
-    #     y = np.argmax(np_y > con_y)
-    #     pixels.append([x, y])
-
-    # Opitimazation 1 & 2
     np_x = np.array(pixlut[0])
     np_y = np.array(pixlut[1])
     if not feetfirst and not prone:
@@ -457,21 +433,6 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
             y = np.argmin(np_y < con_y)
             pixels.append([x, y])
 
-    # Original Slow One
-    # Time used: 895.787469625473
-    # for i in range(0, len(contour), 3):
-    #     for x, x_val in enumerate(pixlut[0]):
-    #         if (x_val > contour[i] and not prone and not feetfirst):
-    #             break
-    #         elif (x_val < contour[i]):
-    #             if feetfirst or prone:
-    #                 break
-    #     for y, y_val in enumerate(pixlut[1]):
-    #         if (y_val > contour[i + 1] and not prone):
-    #             break
-    #         elif (y_val < contour[i + 1] and prone):
-    #             break
-    #     pixels.append([x, y])
     return pixels
 
 
@@ -490,10 +451,8 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
     contour : object
     """
     pixels = []
-    print("sag")
     np_x = np.array(pixlut[0])
     np_y = np.array(pixlut[1])
-    # print(np_x, np_y)
     if not feetfirst and not prone:
         for i in range(0, len(contour), 3):
             con_x = contour[i]
@@ -515,22 +474,6 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
             x = np.argmin(np_x < con_x)
             y = np.argmin(np_y < con_y)
             pixels.append([x, y])
-
-    # Original Slow One
-    # Time used: 895.787469625473
-    # for i in range(0, len(contour), 3):
-    #     for x, x_val in enumerate(pixlut[0]):
-    #         if (x_val > contour[i] and not prone and not feetfirst):
-    #             break
-    #         elif (x_val < contour[i]):
-    #             if feetfirst or prone:
-    #                 break
-    #     for y, y_val in enumerate(pixlut[1]):
-    #         if (y_val > contour[i + 1] and not prone):
-    #             break
-    #         elif (y_val < contour[i + 1] and prone):
-    #             break
-    #     pixels.append([x, y])
     return pixels
 
 
@@ -760,21 +703,13 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
             print("value of tag in image: ", img_ds[tag])
             rt_ss[tag] = deepcopy(img_ds[tag])
 
-    # Best to modify the Structure Set Lable with something more interesting
+    # Best to modify the Structure Set Label with something more interesting
     # in the application. and populate the Name and Description from the
     # application also.
     print("Study ID is ", rt_ss.StudyID)
     rt_ss.StructureSetLabel = "OnkoDICOM rtss of " + rt_ss.StudyID
     rt_ss.StructureSetName = rt_ss.StructureSetLabel
     rt_ss.StructureSetDescription = rt_ss.StructureSetLabel
-
-    # referenced_study_sequence_item = pydicom.dataset.Dataset()
-    # referenced_study_sequence_item["ReferencedSOPInstanceUID"]
-    # = img_ds.StudyInstanceUID
-    # referenced_study_sequence_item["ReferencedSOPClassUID"]
-    # = img_ds.SOPClassUID
-
-    # rt_ss.ReferencedStudySequence = [referenced_study_sequence_item]
 
     # General Equipment Module
     rt_ss.Manufacturer = "OnkoDICOM"
