@@ -21,6 +21,7 @@ class DicomView3D(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
+
         self.patient_dict_container = PatientDictContainer()
 
         # Create the layout
@@ -30,6 +31,7 @@ class DicomView3D(QtWidgets.QWidget):
         # The renderer draws into the render window,
         # The interactor enables mouse and keyboard-based interaction with the scene.
         self.vtk_widget = QVTKRenderWindowInteractor(self)
+        self.vtk_widget.setStyleSheet("background-color:black;")
         self.renderer = vtkRenderer()
         self.iren = self.vtk_widget.GetRenderWindow().GetInteractor()
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
@@ -44,7 +46,6 @@ class DicomView3D(QtWidgets.QWidget):
 
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
         self.volume_mapper.SetBlendModeToMaximumIntensity()
-        self.volume_mapper.SetMaximumImageSampleDistance(10)
         self.volume_mapper.SetInputData(self.imdata)
 
         # The colorTransferFunction maps voxel intensities to colors.
@@ -98,7 +99,7 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume.AddLOD(self.volume_mapper, self.volume_property, 0.0)
         self.volume.SetScale(
             1,
-            1/self.patient_dict_container.get("pixmap_aspect")["coronal"],
+            1 / self.patient_dict_container.get("pixmap_aspect")["coronal"],
             self.patient_dict_container.get("pixmap_aspect")["sagittal"]
         )
 
@@ -116,14 +117,26 @@ class DicomView3D(QtWidgets.QWidget):
         self.dicom_view_layout.addWidget(self.vtk_widget)
         self.setLayout(self.dicom_view_layout)
 
-        # Start the interaction
-        self.iren.GetRenderWindow().SetSize(300, 300)
-        self.iren.Initialize()
-        self.iren.Start()
+        # Create new thread for 3D rendering and interacting
+        self.three_dimension_thread = QtCore.QThread(self)
+        self.three_dimension_thread.started.connect(self.startInteraction)
 
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
         render_window = self.iren.GetRenderWindow()
+
+        # Stop interaction
         render_window.Finalize()
         self.iren.TerminateApp()
+
+        # Close the 3d widget
         self.vtk_widget.close()
+
+        # Stop the thread that runs 3D rendering
+        self.three_dimension_thread.quit()
+        self.three_dimension_thread.wait()
+
+    def startInteraction(self):
+        # Start the interaction
+        self.iren.Initialize()
+        self.iren.Start()
