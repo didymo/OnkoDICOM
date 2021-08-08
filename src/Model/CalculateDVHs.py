@@ -182,3 +182,15 @@ def dvh2csv(dict_dvh, path, csv_name, patient_id):
     pddf_csv.set_index('Patient ID', inplace=True)
     # Convert and export pandas dataframe to CSV file
     pddf_csv.to_csv(tar_path)
+
+
+def dvh2dicomsr(dict_dvh, path, csv_name, patient_id):
+    """
+    Export dvh data to DICOM-SR file.
+
+    :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
+    :param path: Target path of CSV export
+    :param csv_name: CSV file name
+    :param patient_id: Patient Identifier
+    """
+    print("export")

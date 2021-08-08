@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
-from src.Model.CalculateDVHs import dvh2csv
+from src.Model.CalculateDVHs import dvh2csv, dvh2dicomsr
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 
@@ -45,12 +45,19 @@ class DVHTab(QtWidgets.QWidget):
         self.plot = self.plot_dvh()
         widget_plot = FigureCanvas(self.plot)
 
-        button_export = QtWidgets.QPushButton("Export DVH")
+        button_layout = QtWidgets.QHBoxLayout()
+
+        button_export = QtWidgets.QPushButton("Export DVH to CSV")
         button_export.clicked.connect(self.export_csv)
+        button_layout.addWidget(button_export)
+
+        button_dvh2dicom = QtWidgets.QPushButton("Export DVH to DICOM-SR")
+        button_dvh2dicom.clicked.connect(self.export_dicomsr)
+        button_layout.addWidget(button_dvh2dicom)
 
         self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
-        self.dvh_tab_layout.addWidget(button_export, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+        self.dvh_tab_layout.addLayout(button_layout)
 
     def init_layout_no_dvh(self):
         button_calc_dvh = QtWidgets.QPushButton("Calculate DVH")
@@ -224,6 +231,21 @@ class DVHTab(QtWidgets.QWidget):
         save_reply = QtWidgets.QMessageBox.information(self, "Message",
                                                       "The DVH Data was saved successfully in your directory!",
                                                       QtWidgets.QMessageBox.Ok)
+
+    def export_dicomsr(self):
+        """
+        Exports DVH data into a DICOM-SR file in the dataset directory.
+        """
+        path = "s"
+        basic_info = self.patient_dict_container.get("basic_info")
+        #dvh2dicomsr(self.raw_dvh,
+        #            path,
+        #            'DVH_' + basic_info['id'],
+        #            basic_info['id'])
+        save_reply = QtWidgets.QMessageBox.information(self, "Message",
+                                                       "The DVH Data was saved successfully in your directory!",
+                                                       QtWidgets.QMessageBox.Ok)
+
 
     def display_outdated_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
