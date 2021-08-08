@@ -228,24 +228,21 @@ class DVHTab(QtWidgets.QWidget):
                 path + "/CSV/",
                 'DVH_' + basic_info['id'],
                 basic_info['id'])
-        save_reply = QtWidgets.QMessageBox.information(self, "Message",
-                                                      "The DVH Data was saved successfully in your directory!",
-                                                      QtWidgets.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(self, "Message",
+                                          "The DVH Data was saved successfully in your directory!",
+                                          QtWidgets.QMessageBox.Ok)
 
     def export_dicomsr(self):
         """
         Exports DVH data into a DICOM-SR file in the dataset directory.
         """
-        path = "s"
+        path = self.patient_dict_container.path
         basic_info = self.patient_dict_container.get("basic_info")
-        #dvh2dicomsr(self.raw_dvh,
-        #            path,
-        #            'DVH_' + basic_info['id'],
-        #            basic_info['id'])
-        save_reply = QtWidgets.QMessageBox.information(self, "Message",
-                                                       "The DVH Data was saved successfully in your directory!",
-                                                       QtWidgets.QMessageBox.Ok)
-
+        dvh2dicomsr(self.raw_dvh,
+                    basic_info['id'])
+        QtWidgets.QMessageBox.information(self, "Message",
+                                          "The DVH Data was saved successfully in your directory!",
+                                          QtWidgets.QMessageBox.Ok)
 
     def display_outdated_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
