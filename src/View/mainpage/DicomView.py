@@ -1,6 +1,8 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 from skimage import measure
 
+from src.View.mainpage.DicomGraphicsScene import GraphicsScene
+
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import get_contour_pixel
@@ -11,11 +13,8 @@ from src.constants import INITIAL_ONE_VIEW_ZOOM
 
 class DicomView(QtWidgets.QWidget):
 
-    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", metadata_formatted=False):
-        """
-        metadata_formatted: whether the metadata needs to be formatted (only metadata
-        in the four view need to be formatted)
-        """
+    def __init__(self, roi_color=None, iso_color=None, slice_view="axial", metadata_formatted=False,
+                 cut_line_color=None):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.iso_color = iso_color
@@ -28,6 +27,10 @@ class DicomView(QtWidgets.QWidget):
         else:
             self.display_metadata = False
         self.metadata_formatted = metadata_formatted
+
+        self.horizontal_view = None
+        self.vertical_view = None
+        self.cut_lines_color = cut_line_color
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
 
@@ -203,6 +206,9 @@ class DicomView(QtWidgets.QWidget):
 
     def value_changed(self):
         self.update_view()
+        if self.horizontal_view is not None and self.vertical_view is not None:
+            self.horizontal_view.update_view()
+            self.vertical_view.update_view()
 
     def update_view(self, zoom_change=False):
         """
@@ -233,8 +239,7 @@ class DicomView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addItem(label)
+        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
 
     def roi_display(self):
         """
@@ -443,3 +448,19 @@ class DicomView(QtWidgets.QWidget):
     def zoom_out(self):
         self.zoom /= 1.05
         self.update_view(zoom_change=True)
+
+    def set_views(self, horizontal_view, vertical_view):
+        """
+        Set the views represented by the horizontal and vertical cut lines respectively
+        """
+        self.horizontal_view = horizontal_view
+        self.vertical_view = vertical_view
+        self.update_view()
+
+    def set_slider_value(self, value):
+        """
+        Set the value of the slider of this view
+        """
+        self.slider.setValue(value*self.slider.maximum())
+        self.update_view()
+

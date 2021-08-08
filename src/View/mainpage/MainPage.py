@@ -1,6 +1,6 @@
 import glob
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout
 
@@ -114,9 +114,12 @@ class UIMainWindow:
         roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
         iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
         self.dicom_single_view = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, metadata_formatted=True)
-        self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal")
-        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal")
+        self.dicom_view_axial = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, metadata_formatted=True,
+                                          cut_line_color=QtGui.QColor(255, 0, 0))
+        self.dicom_view_sagittal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="sagittal",
+                                             cut_line_color=QtGui.QColor(0, 255, 0))
+        self.dicom_view_coronal = DicomView(roi_color=roi_color_dict, iso_color=iso_color_dict, slice_view="coronal",
+                                            cut_line_color=QtGui.QColor(0, 0, 255))
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -208,6 +211,18 @@ class UIMainWindow:
         self.dicom_view_sagittal.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+    def toggle_cut_lines(self):
+        if self.dicom_view_axial.horizontal_view is None or self.dicom_view_axial.vertical_view is None or\
+                self.dicom_view_coronal.horizontal_view is None or self.dicom_view_coronal.vertical_view is None or \
+                self.dicom_view_sagittal.horizontal_view is None or self.dicom_view_sagittal.vertical_view is None:
+            self.dicom_view_axial.set_views(self.dicom_view_coronal, self.dicom_view_sagittal)
+            self.dicom_view_coronal.set_views(self.dicom_view_axial, self.dicom_view_sagittal)
+            self.dicom_view_sagittal.set_views(self.dicom_view_axial, self.dicom_view_coronal)
+        else:
+            self.dicom_view_axial.set_views(None, None)
+            self.dicom_view_coronal.set_views(None, None)
+            self.dicom_view_sagittal.set_views(None, None)
 
     def zoom_in(self, is_four_view):
         """
