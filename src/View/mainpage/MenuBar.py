@@ -51,4 +51,6 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menu_tools.addSeparator()
         self.menu_tools.addAction(self.action_handler.action_transect)
         self.menu_tools.addSeparator()
+        self.menu_tools.addAction(self.action_handler.action_suv2roi)
+        self.menu_tools.addSeparator()
         self.menu_tools.addAction(self.action_handler.action_add_ons)

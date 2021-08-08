@@ -1,5 +1,7 @@
 from PySide6 import QtWidgets, QtGui, QtCore
 
+from src.Model import ImageLoading
+from src.Model.ISO2ROI import ISO2ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 
 isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
@@ -17,10 +19,24 @@ class IsodoseTab(QtWidgets.QWidget):
         self.color_squares = self.init_color_squares()
         self.checkboxes = self.init_checkboxes()
 
+        # Create and initialise ISO2ROI button and layout
+        self.iso2roi_button = QtWidgets.QPushButton()
+        self.iso2roi_button.setText("Convert Isodose to ROI")
+        self.iso2roi_button.clicked.connect(self.iso2roi_button_clicked)
+        self.iso2roi = ISO2ROI()
+
+        self.iso2roi_layout = QtWidgets.QHBoxLayout()
+        self.iso2roi_layout.setContentsMargins(0, 0, 0, 0)
+        self.iso2roi_layout.addWidget(self.iso2roi_button)
+
         self.isodose_tab_layout = QtWidgets.QVBoxLayout()
         self.isodose_tab_layout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.isodose_tab_layout.setSpacing(0)
         self.init_layout()
+
+        # Add button to tab
+        self.isodose_tab_layout.addStretch()
+        self.isodose_tab_layout.addLayout(self.iso2roi_layout)
 
         self.setLayout(self.isodose_tab_layout)
 
@@ -132,3 +148,34 @@ class IsodoseTab(QtWidgets.QWidget):
         color_square_label.setPixmap(color_square_pix)
 
         return color_square_label
+
+    def iso2roi_button_clicked(self):
+        """
+        Clicked action handler for the ISO2ROI button. Initiates the
+        ISO2ROI conversion process.
+        """
+        # Ensure dataset is a complete DICOM-RT object
+        patient_dict_container = PatientDictContainer()
+        val = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+
+        if val:
+            print("Dataset is complete")
+        else:
+            print("Not complete")
+            return
+
+        # Get isodose levels to turn into ROIs
+        self.iso2roi.get_iso_levels()
+
+        # Calculate dose boundaries
+        print("Calculating boundaries")
+        boundaries = self.iso2roi.calculate_boundaries()
+
+        # Return if boundaries could not be calculated
+        if not boundaries:
+            print("Boundaries could not be calculated.")
+            return
+
+        print("Generating ROIs")
+        self.iso2roi.generate_roi(boundaries)
+        print("Done")

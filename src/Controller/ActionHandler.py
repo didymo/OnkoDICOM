@@ -1,9 +1,13 @@
+from pathlib import Path
 from PySide6 import QtGui, QtWidgets, QtCore
-
+from src.Model import ImageLoading
 from src.Model.CalculateImages import get_pixmaps
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.SUV2ROI import SUV2ROI
 from src.Controller.PathHandler import resource_path
 
+import os.path
 
 class ActionHandler:
     """
@@ -36,6 +40,19 @@ class ActionHandler:
         self.action_open.setIcon(self.icon_open)
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
+
+        # SUV2ROI action
+        self.icon_suv2roi = QtGui.QIcon()
+        self.icon_suv2roi.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_suv2roi = QtGui.QAction()
+        self.action_suv2roi.setIcon(self.icon_suv2roi)
+        self.action_suv2roi.setText("Convert SUV to ROI")
+        self.action_suv2roi.setIconVisibleInMenu(True)
+        self.action_suv2roi.triggered.connect(self.suv2roi_handler)
 
         # Save RTSTRUCT changes action
         self.icon_save_structure = QtGui.QIcon()
@@ -348,6 +365,85 @@ class ActionHandler:
             row_s,
             col_s
         )
+
+    def suv2roi_handler(self):
+        """
+        Function triggered when the SUV2ROI button is pressed from the
+        toolbar. Initiates the SUV2ROI process.
+        """
+        suv2roi = SUV2ROI()
+
+        # Ensure dataset is a complete DICOM-RT object
+        patient_dict_container = PatientDictContainer()
+        val = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+
+        if val:
+            print("Dataset is complete")
+        else:
+            print("Not complete")
+            # Check if RT struct file is missing. If yes, create one and
+            # add its data to the patient dict container
+            # TODO: update main page once RT Struct added
+            #       ensure rtss is seen as in the same DICOM dataset as the rest
+            if not patient_dict_container.get("file_rtss"):
+                # Get common directory
+                file_path = patient_dict_container.filepaths.values()
+                file_path = Path(os.path.commonpath(file_path))
+
+                # Create RT Struct file
+                ds = suv2roi.generate_rtss(file_path)
+
+                # Get new RT Struct file path
+                file_path = str(file_path.joinpath("rtss.dcm"))
+
+                # Add RT Struct file path to patient dict container
+                patient_dict_container.filepaths['rtss'] = file_path
+                filepaths = patient_dict_container.filepaths
+
+                # Add RT Struct dataset to patient dict container
+                patient_dict_container.dataset['rtss'] = ds
+                dataset = patient_dict_container.dataset
+
+                # Set some patient dict container attributes
+                patient_dict_container.set("file_rtss", filepaths['rtss'])
+                patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+                dicom_tree_rtss = DicomTree(filepaths['rtss'])
+                patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+
+                patient_dict_container.set("selected_rois", [])
+                patient_dict_container.set("dict_polygons", {})
+
+        # Get PET datasets
+        print("Getting PET data")
+        selected_files = suv2roi.find_PET_datasets()
+        if "PT CTAC" in selected_files:
+            if "PT NAC" in selected_files:
+                print("CTAC and NAC data in DICOM Image Set")
+            else:
+                print("CTAC data in DICOM Image Set")
+        elif "PT NAC" in selected_files:
+            print("NAC data in DICOM Image Set")
+        else:
+            print("No PET data in DICOM Image Set")
+
+        # Use CTAC data if it exists and there is the same or more of it
+        # than NAC data for further work, otherwise use NAC data
+        if len(selected_files["PT CTAC"]) >= len(selected_files["PT NAC"]):
+            data = selected_files["PT CTAC"]
+        else:
+            data = selected_files["PT NAC"]
+
+        # Convert to SUV
+        print("Calculating SUV data")
+        suv_data = suv2roi.get_SUV_data(data)
+        # Calculate contours
+        print("Calculating contours")
+        contour_data = suv2roi.calculate_contours(suv_data)
+        # Generate ROIs
+        print("Generating ROIs")
+        suv2roi.generate_ROI(contour_data)
+        print("Done")
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()
