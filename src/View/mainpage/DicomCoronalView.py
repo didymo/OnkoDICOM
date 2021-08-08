@@ -2,9 +2,9 @@ from src.View.mainpage.DicomView import DicomView
 
 
 class DicomCoronalView(DicomView):
-    def __init__(self, roi_color=None, iso_color=None):
+    def __init__(self, roi_color=None, iso_color=None, cut_line_color=None):
         self.slice_view = 'coronal'
-        super(DicomCoronalView, self).__init__(roi_color, iso_color)
+        super(DicomCoronalView, self).__init__(roi_color, iso_color, cut_line_color)
         self.update_view()
 
     def roi_display(self):
@@ -21,4 +21,5 @@ class DicomCoronalView(DicomView):
             super().draw_roi_polygons(roi, polygons)
 
     def isodose_display(self):
+        # TODO: Display ISODose on Coronal View
         pass

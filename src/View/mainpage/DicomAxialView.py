@@ -7,14 +7,14 @@ from src.Controller.PathHandler import resource_path
 
 
 class DicomAxialView(DicomView):
-    def __init__(self, roi_color=None, iso_color=None, metadata_formatted=False):
+    def __init__(self, roi_color=None, iso_color=None, metadata_formatted=False, cut_line_color=None):
         """
         metadata_formatted: whether the metadata needs to be formatted (only metadata
         in the four view need to be formatted)
         """
         self.metadata_formatted = metadata_formatted
         self.slice_view = 'axial'
-        super(DicomAxialView, self).__init__(roi_color, iso_color)
+        super(DicomAxialView, self).__init__(roi_color, iso_color, cut_line_color)
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
