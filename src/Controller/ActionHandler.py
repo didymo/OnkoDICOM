@@ -169,6 +169,19 @@ class ActionHandler:
         self.action_four_views.setText("Four Views")
         self.action_four_views.triggered.connect(self.four_views_handler)
 
+        # Show cut lines
+        self.icon_cut_lines = QtGui.QIcon()
+        self.icon_cut_lines.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/btn-icons/cut_line_purple_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_show_cut_lines = QtGui.QAction()
+        self.action_show_cut_lines.setIcon(self.icon_cut_lines)
+        self.action_show_cut_lines.setIconVisibleInMenu(True)
+        self.action_show_cut_lines.setText("Show Cut Lines")
+        self.action_show_cut_lines.triggered.connect(self.cut_lines_handler)
+
         # Export Clinical Data Action
         self.action_clinical_data_export = QtGui.QAction()
         self.action_clinical_data_export.setText("Export Clinical Data")
@@ -444,6 +457,9 @@ class ActionHandler:
         self.is_four_view = True
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
         self.__main_page.dicom_view_axial.update_view()
+
+    def cut_lines_handler(self):
+        self.__main_page.toggle_cut_lines()
 
     def export_dvh_handler(self):
         if self.patient_dict_container.has_attribute("raw_dvh"):
