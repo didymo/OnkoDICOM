@@ -19,7 +19,6 @@ class DicomView3D(QtWidgets.QWidget):
         self.patient_dict_container = PatientDictContainer()
         # Create the layout
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
-
         # Create the renderer, the render window, and the interactor.
         # The renderer draws into the render window,
         # The interactor enables mouse and keyboard-based interaction with the scene.
@@ -27,6 +26,7 @@ class DicomView3D(QtWidgets.QWidget):
         self.renderer = vtkRenderer()
         self.iren = self.vtk_widget.GetRenderWindow().GetInteractor()
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
+        self.vtk_widget.GetRenderWindow().FullScreenOff()
         # Convert pixel_values in patient_dict_container into a 3D numpy array
         three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
         depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
@@ -124,5 +124,3 @@ class DicomView3D(QtWidgets.QWidget):
 
         # Close the 3d widget
         self.vtk_widget.close()
-
-
