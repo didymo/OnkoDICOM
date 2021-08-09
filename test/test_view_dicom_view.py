@@ -69,7 +69,8 @@ class TestOneViewAndFourViewsHandling:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestOneViewAndFourViewsHandling()
-    return test
+    yield test
+    test.main_window.three_dimension_view.close()
 
 
 def test_one_view_handling(qtbot, test_object, init_config):

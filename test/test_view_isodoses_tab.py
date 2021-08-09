@@ -83,7 +83,8 @@ def test_object():
     Function to pass a shared TestStructureTab object to each test.
     """
     test = TestIsodosesTab()
-    return test
+    yield test
+    test.main_window.three_dimension_view.close()
 
 
 def test_isodoses_tab_check_checkboxes(test_object):

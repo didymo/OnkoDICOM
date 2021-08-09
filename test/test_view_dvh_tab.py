@@ -81,7 +81,8 @@ class TestDVHTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestDVHTab()
-    return test
+    yield test
+    test.main_window.three_dimension_view.close()
 
 
 def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object, init_config):

@@ -94,7 +94,8 @@ def test_obj(qtbot):
     :return:
     """
     test_tree = TestDICOMTreeTab()
-    return test_tree
+    yield test_tree
+    test_tree.main_window.three_dimension_view.close()
 
 
 def test_file_components(test_obj):
