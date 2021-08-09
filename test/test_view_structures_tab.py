@@ -62,6 +62,7 @@ class TestStructureTab:
 
         # Open the main window
         self.main_window = MainWindow()
+        self.main_window.three_dimension_view.close()
         self.main_window.show()
 
         self.dicom_view = self.main_window.dicom_single_view
@@ -74,8 +75,8 @@ class TestStructureTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
-    yield test
     test.main_window.three_dimension_view.close()
+    return test
 
 
 def test_structure_tab_check_checkboxes(test_object):
@@ -131,7 +132,6 @@ def test_structure_tab_uncheck_checkboxes(test_object):
     :param test_object:
     """
     # Turn ROIs off, check change occurs in image view
-
     for roi in test_object.rois:
         # Simulate checkbox set to False
         test_object.main_window.structures_tab.structure_checked(False, roi)

@@ -63,14 +63,14 @@ class TestOneViewAndFourViewsHandling:
 
         # Open the main window
         self.main_window = MainWindow()
+        self.main_window.three_dimension_view.close()
 
 
 @pytest.fixture(scope="module")
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestOneViewAndFourViewsHandling()
-    yield test
-    test.main_window.three_dimension_view.close()
+    return test
 
 
 def test_one_view_handling(qtbot, test_object, init_config):

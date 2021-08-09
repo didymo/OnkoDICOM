@@ -70,7 +70,7 @@ class TestDVHTab:
 
         # Open the main window
         self.main_window = MainWindow()
-
+        self.main_window.three_dimension_view.close()
         self.dvh_tab = self.main_window.dvh_tab
         self.new_polygons = {}
         self.raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, self.rois, dict_thickness)
@@ -81,8 +81,7 @@ class TestDVHTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestDVHTab()
-    yield test
-    test.main_window.three_dimension_view.close()
+    return test
 
 
 def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object, init_config):

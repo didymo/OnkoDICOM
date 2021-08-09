@@ -75,6 +75,7 @@ class TestIsodosesTab:
 
         # Open the main window
         self.main_window = MainWindow()
+        self.main_window.three_dimension_view.close()
 
 
 @pytest.fixture(scope="module")
@@ -83,8 +84,8 @@ def test_object():
     Function to pass a shared TestStructureTab object to each test.
     """
     test = TestIsodosesTab()
-    yield test
-    test.main_window.three_dimension_view.close()
+
+    return test
 
 
 def test_isodoses_tab_check_checkboxes(test_object):
