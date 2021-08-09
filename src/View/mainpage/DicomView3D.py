@@ -124,3 +124,6 @@ class DicomView3D(QtWidgets.QWidget):
 
         # Close the 3d widget
         self.vtk_widget.close()
+
+        # Delete render window and iren
+        del render_window, self.iren
