@@ -347,8 +347,8 @@ class ActionHandler:
         Function triggered when the Transect button is pressed from the menu.
         """
         if self.is_four_view:
-            view = self.__main_page.dicom_view_axial.view
-            slider_id = self.__main_page.dicom_view_axial.slider.value()
+            view = self.__main_page.dicom_axial_view.view
+            slider_id = self.__main_page.dicom_axial_view.slider.value()
         else:
             view = self.__main_page.dicom_single_view.view
             slider_id = self.__main_page.dicom_single_view.slider.value()
@@ -456,7 +456,7 @@ class ActionHandler:
     def four_views_handler(self):
         self.is_four_view = True
         self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
-        self.__main_page.dicom_view_axial.update_view()
+        self.__main_page.dicom_axial_view.update_view()
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()

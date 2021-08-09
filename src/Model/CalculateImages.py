@@ -97,8 +97,10 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
     dict_pixmaps_sagittal = {}
 
     axial_width, axial_height = scaled_size(pixel_array_3d.shape[1]*pixmap_aspect["axial"], pixel_array_3d.shape[2])
-    coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1], pixel_array_3d.shape[0] * pixmap_aspect["coronal"])
-    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * pixmap_aspect["sagittal"], pixel_array_3d.shape[0])
+    coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1],
+                                                pixel_array_3d.shape[0] * pixmap_aspect["coronal"])
+    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
+                                                  pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
         dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height)
