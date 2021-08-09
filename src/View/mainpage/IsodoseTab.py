@@ -169,8 +169,6 @@ class IsodoseTab(QtWidgets.QWidget):
             print("Not complete")
             # Check if RT struct file is missing. If yes, create one and
             # add its data to the patient dict container
-            # TODO: update main page once RT Struct added
-            #       ensure rtss is seen as in the same DICOM dataset as the rest
             if not patient_dict_container.get("file_rtss"):
                 # Get common directory
                 file_path = patient_dict_container.filepaths.values()
@@ -198,7 +196,7 @@ class IsodoseTab(QtWidgets.QWidget):
                 patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
 
                 patient_dict_container.set("selected_rois", [])
-                patient_dict_container.set("dict_polygons", {})
+                patient_dict_container.set("dict_polygons_axial", {})
 
         # Get isodose levels to turn into ROIs
         self.iso2roi.get_iso_levels()
