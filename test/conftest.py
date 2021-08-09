@@ -2,6 +2,7 @@ import os
 import sqlite3
 from pathlib import Path
 import pytest
+from PySide6.QtWidgets import QApplication
 
 from src.Model.Configuration import Configuration
 
@@ -15,6 +16,7 @@ def init_config(request):
     configuration.update_default_directory(Path.cwd().joinpath('test', 'testdata'))
 
     def tear_down():
+        QApplication.quit()
         connection.close()
         if os.path.isfile(db_file_path):
             os.remove(db_file_path)
