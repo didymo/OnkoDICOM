@@ -30,15 +30,16 @@ class ISO2ROI:
         (cGy: 0, %: 1) and an integer (cGy/% value).
         """
 
-        # Clear self.isodose_levels (in case ISO2ROI has already been run this session)
+        # Clear self.isodose_levels (in case ISO2ROI has already been
+        # run this session)
         self.isodose_levels = {}
 
         # Open isodoseRoi.csv
         with open('data/csv/isodoseRoi.csv', "r") as fileInput:
             for row in fileInput:
                 items = row.split(',')
-                self.isodose_levels[items[2]] = [items[1] == 'cGy', int(items[0])]
-
+                self.isodose_levels[items[2]] = [items[1] == 'cGy',
+                                                 int(items[0])]
 
     def calculate_boundaries(self):
         """
@@ -76,7 +77,8 @@ class ISO2ROI:
                         contours[item][slider_id] =\
                             (measure.find_contours(grid, dose_level))
                     else:
-                        dose_level = self.isodose_levels[item][1] * rt_dose_dose / \
+                        dose_level = self.isodose_levels[item][1] * \
+                                     rt_dose_dose / \
                                      (rt_plan_dose.DoseGridScaling * 10000)
                         contours[item][slider_id] = \
                             (measure.find_contours(grid, dose_level))
@@ -118,39 +120,25 @@ class ISO2ROI:
                 curr_slice_uid = patient_dict_container.get("dict_uid")[i]
                 dose_pixluts = patient_dict_container.get("dose_pixluts")[curr_slice_uid]
 
-                # Loop through each contour for each slice
-                list_points = []
-                for j in range(len(contours[item][i])):
-                    list_points.append([])
-                    for point in contours[item][i][j]:
-                        list_points[j].append\
-                            ([dose_pixluts[0][int(point[1])],
-                              dose_pixluts[1][int(point[0])]])
-
-                # Convert the pixel points to RCS points
-                points = []
-                for i in range(len(list_points)):
-                    points.append([])
-                    for point in list_points[i]:
-                        points[i].append\
-                            (ROI.pixel_to_rcs(pixlut,
-                                              round(point[0]),
-                                              round(point[1])))
-
-                contour_data = []
-                for i in range(len(points)):
-                    contour_data.append([])
-                    for p in points[i]:
-                        coords = (p[0], p[1], z_coord)
-                        contour_data[i].append(coords)
-
-                # Transform RCS points into 1D array, append z value
+                # Loop through each contour for each slice.
+                # Convert the pixel points to RCS points, append z value
                 single_array = []
-                for i in range(len(contour_data)):
+                # Loop through each contour
+                for j in range(len(contours[item][i])):
                     single_array.append([])
-                    for sublist in contour_data[i]:
-                        for point in sublist:
-                            single_array[i].append(point)
+                    # Loop through each point in the contour
+                    for point in contours[item][i][j]:
+                        # Transform into dose pixel
+                        dose_pixels = [dose_pixluts[0][int(point[1])],
+                                       dose_pixluts[1][int(point[0])]]
+                        # Transform into RCS pixel
+                        rcs_pixels = ROI.pixel_to_rcs(pixlut,
+                                                      round(dose_pixels[0]),
+                                                      round(dose_pixels[1]))
+                        # Append point coordinates to the single array
+                        single_array[j].append(rcs_pixels[0])
+                        single_array[j].append(rcs_pixels[1])
+                        single_array[j].append(z_coord)
 
                 # Create the ROI(s)
                 for array in single_array:
@@ -170,14 +158,19 @@ class ISO2ROI:
         # Save the new ROIs to the RT Struct file
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
 
+        message = "Are you sure you want to save the modified RTSTRUCT file? "
+        message += "This will overwrite the existing file. "
+        message += "This is not reversible."
+
         confirm_save = QtWidgets.QMessageBox.information(None, "Confirmation",
-                                                         "Are you sure you want to save the modified RTSTRUCT file? This will "
-                                                         "overwrite the existing file. This is not reversible.",
-                                                         QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+                                                         message,
+                                                         QtWidgets.QMessageBox.Yes,
+                                                         QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            QtWidgets.QMessageBox.about(None, "File saved", "The RTSTRUCT file has been saved.")
+            QtWidgets.QMessageBox.about(None, "File saved",
+                                        "The RTSTRUCT file has been saved.")
             patient_dict_container.set("rtss_modified", False)
 
     def generate_rtss(self, file_path):
