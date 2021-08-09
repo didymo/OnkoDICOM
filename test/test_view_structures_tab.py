@@ -4,7 +4,7 @@ from pathlib import Path
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import get_contour_pixel
+from src.Model.ROI import get_contour_pixel, calc_roi_polygon
 from src.Model import ImageLoading
 
 from pydicom import dcmread
@@ -87,18 +87,18 @@ def test_structure_tab_check_checkboxes(test_object):
         # Simulate checkbox set to True
         test_object.main_window.structures_tab.structure_checked(True, roi)
 
-        # Calculate what the dict_polygons dictionary should be
+        # Calculate what the dict_polygons_axial dictionary should be
         name = test_object.rois[roi]["name"]
         test_object.new_polygons[name] = {}
         dict_rois_contours = get_contour_pixel(test_object.dicom_view.patient_dict_container.get("raw_contour"),
                                                [name],
                                                test_object.dicom_view.patient_dict_container.get("pixluts"),
                                                test_object.curr_slice)
-        polygons = test_object.dicom_view.calc_roi_polygon(name, test_object.curr_slice, dict_rois_contours)
+        polygons = calc_roi_polygon(name, test_object.curr_slice, dict_rois_contours)
         test_object.new_polygons[name][test_object.curr_slice] = polygons
 
-        # Get the actual dict_polygons dictionary
-        view_polygons = test_object.main_window.dicom_single_view.patient_dict_container.get("dict_polygons")
+        # Get the actual dict_polygons_axial dictionary
+        view_polygons = test_object.main_window.dicom_single_view.patient_dict_container.get("dict_polygons_axial")
 
         # Get the currently selected ROIs
         selected_rois = test_object.main_window.dicom_single_view.patient_dict_container.get("selected_rois")
@@ -106,7 +106,7 @@ def test_structure_tab_check_checkboxes(test_object):
         for selected_roi in selected_rois:
             selected_roi_names.append(test_object.rois[selected_roi]["name"])
 
-        # Assert that the actual and expected dict_polygons dictionaries are equal in length
+        # Assert that the actual and expected dict_polygons_axial dictionaries are equal in length
         assert len(test_object.new_polygons) == len(view_polygons)
 
         # Assert that the length of the selected ROIs and the length of the calculated dictionary are the same
