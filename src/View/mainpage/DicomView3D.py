@@ -115,11 +115,14 @@ class DicomView3D(QtWidgets.QWidget):
 
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
+        # Clean up renderer
+        self.renderer.RemoveAllViewProps()
         render_window = self.iren.GetRenderWindow()
-
         # Stop interaction
         render_window.Finalize()
         self.iren.TerminateApp()
 
         # Close the 3d widget
         self.vtk_widget.close()
+
+
