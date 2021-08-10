@@ -1,6 +1,8 @@
+
 import numpy as np
 import vtk
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QPushButton
 from vtkmodules.util import numpy_support
 from vtkmodules.util.vtkConstants import VTK_DOUBLE
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
@@ -19,6 +21,17 @@ class DicomView3D(QtWidgets.QWidget):
         self.patient_dict_container = PatientDictContainer()
         # Create the layout
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
+
+        # Create start interaction button
+        self.start_interaction_button = QPushButton()
+        self.start_interaction_button.setText("Start 3D Interaction")
+        self.start_interaction_button.clicked.connect(self.start_interaction)
+
+        # Set layout
+        self.dicom_view_layout.addWidget(self.start_interaction_button)
+        self.setLayout(self.dicom_view_layout)
+
+    def populate_volume_data(self):
         # Create the renderer, the render window, and the interactor.
         # The renderer draws into the render window,
         # The interactor enables mouse and keyboard-based interaction with the scene.
@@ -28,14 +41,13 @@ class DicomView3D(QtWidgets.QWidget):
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
         self.vtk_widget.GetRenderWindow().FullScreenOff()
         # Convert pixel_values in patient_dict_container into a 3D numpy array
-        three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
-        depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
+        self.three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
+        self.depth_array = numpy_support.numpy_to_vtk(self.three_dimension_np_array.ravel(order="F"), deep=True
                                                  , array_type=VTK_DOUBLE)
-
         # Convert 3d pixel array into vtkImageData to display as vtkVolume
         self.imdata = vtkImageData()
-        self.imdata.SetDimensions(three_dimension_np_array.shape)
-        self.imdata.GetPointData().SetScalars(depth_array)
+        self.imdata.SetDimensions(self.three_dimension_np_array.shape)
+        self.imdata.GetPointData().SetScalars(self.depth_array)
 
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
         self.volume_mapper.SetBlendModeToMaximumIntensity()
@@ -105,13 +117,19 @@ class DicomView3D(QtWidgets.QWidget):
         self.camera.SetFocalPoint(self.volume.GetCenter())
         self.camera.Zoom(0.5)
 
-        # Set layout
+    def start_interaction(self):
+        # Populate image data to vtkVolume for 3D rendering
+        self.populate_volume_data()
+
+        # Render vtk widget
+        self.start_interaction_button.setVisible(False)
+        self.dicom_view_layout.removeWidget(self.start_interaction_button)
         self.dicom_view_layout.addWidget(self.vtk_widget)
-        self.setLayout(self.dicom_view_layout)
 
         # Start interaction
         self.iren.Initialize()
         self.iren.Start()
+        self.vtk_widget.focusWidget()
 
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
@@ -123,7 +141,8 @@ class DicomView3D(QtWidgets.QWidget):
         self.iren.TerminateApp()
 
         # Close the 3d widget
+        self.vtk_widget.Finalize()
         self.vtk_widget.close()
 
-        # Delete render window and iren
-        del render_window, self.iren
+
+
