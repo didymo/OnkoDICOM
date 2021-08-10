@@ -189,3 +189,47 @@ def test_calculate_suv_boundaries(test_object):
     for key in manual_contour_data:
         assert key in contour_data
         assert len(manual_contour_data[key]) == len(contour_data[key])
+
+
+def test_generate_roi_from_suv(test_object):
+    """
+    Test for generating ROIs from SUV data.
+    :param test_object: test_object function, for accessing the shared
+                        TestStructureTab object.
+    """
+    # Create fake contour data
+    contours = {
+        "101": [[[[0, 1]]]], "102": [[[[1, 2]]]], "103": [[[[2, 3]]]],
+        "104": [[[[3, 4]]]], "105": [[[[4, 5]]]]
+    }
+
+    # Calculate SUV ROI for each slice and SUV level from 3 to the
+    # max, skip if slice has no contour data
+    points = []
+    for i, item in enumerate(contours):
+        if not len(contours[item]):
+            continue
+        for j in range(len(contours[item])):
+            # Convert the pixel points to RCS points
+            for k in range(len(contours[item][j])):
+                points.append([])
+                for point in contours[item][j][k]:
+                    points[i].append((round(point[1]), round(point[0])))
+
+    contour_data = []
+    for i in range(len(points)):
+        contour_data.append([])
+        for p in points[i]:
+            coords = (p[0], p[1], float(item))
+            contour_data[i].append(coords)
+
+    # Transform RCS points into 1D array, append z value
+    single_array = []
+    for i in range(len(contour_data)):
+        for sublist in contour_data[i]:
+            for point in sublist:
+                single_array.append(point)
+
+    # Assert ROI points exist
+    assert len(single_array) == 15
+    assert len(single_array) == 3 * len(contour_data)
