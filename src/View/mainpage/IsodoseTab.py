@@ -164,8 +164,10 @@ class IsodoseTab(QtWidgets.QWidget):
         """
         Called when progress bar has finished.
         Closes the progress window and refreshes
-        the main screen.
+        the main screen if a new rtss was created.
         """
-        self.request_update_ui.emit()
+        if self.iso2roi.requires_ui_update:
+            self.iso2roi.requires_ui_update = False
+            self.request_update_ui.emit()
         self.progress_window.close()
 

@@ -24,6 +24,7 @@ class ISO2ROI:
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
         self.worker_signals.signal_save_confirmation.connect(self.save_confirmation)
         self.advised_save_rtss = False
+        self.requires_ui_update = False
         self.isodose_levels = {}
 
     def start_conversion(self, interrupt_flag, progress_callback):
@@ -62,6 +63,8 @@ class ISO2ROI:
                 progress_callback.emit(("Generating RTStruct", 30))
                 # Create RT Struct file
                 ds = self.generate_rtss(file_path)
+
+                self.requires_ui_update = True
 
                 # Get new RT Struct file path
                 file_path = str(file_path.joinpath("rtss.dcm"))
