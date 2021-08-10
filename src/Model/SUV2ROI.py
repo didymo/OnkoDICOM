@@ -85,7 +85,7 @@ class SUV2ROI:
         """
         # Get series and acquisition time
         series_time = dataset.SeriesTime
-        acquisition_time = dataset.AcquisitionTime
+        #acquisition_time = dataset.AcquisitionTime
 
         # Get patient info
         patient_weight = dataset.PatientWeight
@@ -97,33 +97,37 @@ class SUV2ROI:
             radiopharmaceutical_info['RadiopharmaceuticalStartTime'].value
         radionuclide_total_dose = \
             radiopharmaceutical_info['RadionuclideTotalDose'].value
-        radionuclide_half_life = \
-            radiopharmaceutical_info['RadionuclideHalfLife'].value
+        #radionuclide_half_life = \
+        #    radiopharmaceutical_info['RadionuclideHalfLife'].value
 
         # Get rescale slope and intercept
         rescale_slope = dataset.RescaleSlope
         rescale_intercept = dataset.RescaleIntercept
 
         # Convert series and acquisition time to seconds
-        series_time_s = (float(series_time[0:2]) * 3600) +\
-                        (float(series_time[2:4]) * 60) +\
-                        float(series_time[4:6])
-        radiopharmaceutical_start_time_s =\
-            (float(radiopharmaceutical_start_time[0:2]) * 3600) +\
-            (float(radiopharmaceutical_start_time[2:4]) * 60) +\
-            float(radiopharmaceutical_start_time[4:6])
+        #series_time_s = (float(series_time[0:2]) * 3600) +\
+        #                (float(series_time[2:4]) * 60) +\
+        #                float(series_time[4:6])
+        #radiopharmaceutical_start_time_s =\
+        #    (float(radiopharmaceutical_start_time[0:2]) * 3600) +\
+        #    (float(radiopharmaceutical_start_time[2:4]) * 60) +\
+        #    float(radiopharmaceutical_start_time[4:6])
 
-        # Calculate SUV
+        # Get pixel data
         pixel_array = dataset.pixel_array
+
+        # Calculate decay
         # do not need to take decay into account if DECY in CorrectedImage
         # decay = numpy.exp(numpy.log(2) *
         #                  (series_time_s - radiopharmaceutical_start_time_s)
         #                  / radionuclide_half_life)
         decay = 1
+
         # Convert Bq/ml to SUV
         suv = (pixel_array * rescale_slope + rescale_intercept) * decay
-        # suv = pixel_array * decay
         suv = suv * (1000 * patient_weight) / radionuclide_total_dose
+
+        # Return SUV data
         return suv
 
     def calculate_contours(self, suv_data):
@@ -138,7 +142,8 @@ class SUV2ROI:
         for i, slice in enumerate(suv_data):
             contour_data[slice[0]] = []
             for j in range(0, int(slice[1].max()) - 2):
-                contour_data[slice[0]].append(measure.find_contours(slice[1], j + 3))
+                contour_data[slice[0]].append(
+                    measure.find_contours(slice[1], j + 3))
 
         return contour_data
 
@@ -157,7 +162,8 @@ class SUV2ROI:
         for ds in patient_dict_container.dataset:
             dataset = patient_dict_container.dataset[ds]
             if dataset.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
-                pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+                pixlut = patient_dict_container.get(
+                    "pixluts")[dataset.SOPInstanceUID]
                 break
 
         # Calculate SUV ROI for each slice and SUV level from 3 to the
@@ -211,22 +217,20 @@ class SUV2ROI:
         # Save the new ROIs to the RT Struct file
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
 
+
+        message = "Are you sure you want to save the modified RTSTRUCT file? "
+        message += "This will overwrite the existing file. "
+        message += "This is not reversible."
         confirm_save = QtWidgets.QMessageBox.information(None, "Confirmation",
-                                                       "Are you sure you want to save the modified RTSTRUCT file? This will "
-                                                       "overwrite the existing file. This is not reversible.",
-                                                       QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+                                                         message,
+                                                         QtWidgets.QMessageBox.Yes,
+                                                         QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            QtWidgets.QMessageBox.about(None, "File saved", "The RTSTRUCT file has been saved.")
+            QtWidgets.QMessageBox.about(None, "File saved",
+                                        "The RTSTRUCT file has been saved.")
             patient_dict_container.set("rtss_modified", False)
-
-    # TODO: create ROI based on contour data
-    #       - convert pixel data to RCS data (see ISO2ROI)
-    #       - turn data into single array (see ISO2ROI)
-    #       - create ROI from single array (will NOT currently match up
-    #         with CT data, requires image fusion and transforms that
-    #         another team is working on)
 
     def generate_rtss(self, file_path):
         """
