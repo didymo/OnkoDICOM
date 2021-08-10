@@ -1,4 +1,5 @@
 import os
+import numpy
 import pytest
 
 from src.Model.SUV2ROI import SUV2ROI
@@ -10,7 +11,7 @@ from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
 
-def find_DICOM_files(file_path):
+def find_dicom_files(file_path):
     """
     Function to find DICOM files in a given folder.
     :param file_path: File path of folder to search.
@@ -46,7 +47,7 @@ class TestSuv2Roi:
         desired_path = Path.cwd().joinpath('test', 'testdata', 'DICOM-PT-TEST')
 
         # list of DICOM test files
-        selected_files = find_DICOM_files(desired_path)
+        selected_files = find_dicom_files(desired_path)
         # file path of DICOM files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))
         read_data_dict, file_names_dict = \
@@ -73,7 +74,7 @@ def test_object():
     return test
 
 
-def test_select_PET_files(test_object):
+def test_select_pet_files(test_object):
     """
     Test for selecting PET files from a DICOM dataset.
     :param test_object: test_object function, for accessing the shared
@@ -87,6 +88,51 @@ def test_select_PET_files(test_object):
     assert test_object.dicom_files
     assert len(test_object.dicom_files["PT CTAC"]) > 0
     assert len(test_object.dicom_files["PT NAC"]) > 0
+
+
+def test_calculate_suv_values(test_object):
+    """
+    Test for calculating SUV values from PET pixel data.
+    :param test_object: test_object function, for accessing the shared
+                        TestStructureTab object.
+    """
+    datasets = []
+
+    # Loop through each dataset in PT CTAC, append them to datasets
+    for ds in test_object.dicom_files["PT CTAC"]:
+        datasets.append(ds)
+
+    # Loop through each dataset in PT NAC, append them to datasets
+    for ds in test_object.dicom_files["PT NAC"]:
+        datasets.append(ds)
+
+    # Loop through each dataset, perform tests
+    for ds in datasets:
+        # Calculate SUV values
+        suv_values = test_object.suv2roi.pet2suv(ds)
+
+        # Assert that there are SUV values, and that there are the same
+        # amount of SUV values as there are pixels in the dataset
+        assert len(suv_values) == len(ds.pixel_array)
+
+        # Manually SUV values
+        # Get data necessary for Bq/ml to SUV calculation
+        rescale_slope = ds.RescaleSlope
+        rescale_intercept = ds.RescaleIntercept
+        pixel_array = ds.pixel_array
+        radiopharmaceutical_info = \
+            ds.RadiopharmaceuticalInformationSequence[0]
+        radionuclide_total_dose = \
+            radiopharmaceutical_info['RadionuclideTotalDose'].value
+        patient_weight = ds.PatientWeight
+
+        # Convert Bq/ml to SUV
+        suv = (pixel_array * rescale_slope + rescale_intercept)
+        suv = suv * (1000 * patient_weight) / radionuclide_total_dose
+
+        # Assert that manually-generated SUV values are the same as
+        # code-generated SUV values
+        assert numpy.array_equal(suv_values, suv)
 
 
 def test_select_pixel_data(test_object):
