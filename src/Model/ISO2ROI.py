@@ -1,18 +1,20 @@
-import datetime
-import pydicom
-
+import pydicom, platform, os.path, datetime
 from pathlib import Path
-from PySide6 import QtCore, QtWidgets
 from pydicom.dataset import FileDataset, FileMetaDataset
 from skimage import measure
+from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtWidgets import QMessageBox
+from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.GetPatientInfo import DicomTree
 
 
 class WorkerSignals(QtCore.QObject):
     signal_roi_drawn = QtCore.Signal(tuple)
+    signal_save_confirmation = QtCore.Signal()
 
 
 class ISO2ROI:
@@ -20,7 +22,97 @@ class ISO2ROI:
     def __init__(self):
         self.worker_signals = WorkerSignals()
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
+        self.worker_signals.signal_save_confirmation.connect(self.save_confirmation)
+        self.advised_save_rtss = False
         self.isodose_levels = {}
+
+    def start_conversion(self, interrupt_flag, progress_callback):
+        """
+        Goes the the steps of the iso2roi conversion.
+        :param interrupt_flag: interrupt flag to stop process
+        :param progress_callback: signal that receives the current progress of the loading.
+        """
+        patient_dict_container = PatientDictContainer()
+
+        progress_callback.emit(("Validating datasets...", 0))
+        val = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+
+        # Stop loading
+        if interrupt_flag.is_set():
+            print("stopped")
+            return False
+
+        if val:
+            progress_callback.emit(("Dataset is complete", 10))
+        else:
+            progress_callback.emit(("Dataset is not complete", 10))
+            # Check if RT struct file is missing. If yes, create one and
+            # add its data to the patient dict container
+            if not patient_dict_container.get("file_rtss"):
+
+                # Stop loading
+                if interrupt_flag.is_set():
+                    print("stopped")
+                    return False
+
+                # Get common directory
+                file_path = patient_dict_container.filepaths.values()
+                file_path = Path(os.path.commonpath(file_path))
+
+                progress_callback.emit(("Generating RTStruct", 30))
+                # Create RT Struct file
+                ds = self.generate_rtss(file_path)
+
+                # Get new RT Struct file path
+                file_path = str(file_path.joinpath("rtss.dcm"))
+
+                # Add RT Struct file path to patient dict container
+                patient_dict_container.filepaths['rtss'] = file_path
+                filepaths = patient_dict_container.filepaths
+
+                # Add RT Struct dataset to patient dict container
+                patient_dict_container.dataset['rtss'] = ds
+                dataset = patient_dict_container.dataset
+
+                # Set some patient dict container attributes
+                patient_dict_container.set("file_rtss", filepaths['rtss'])
+                patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+                dicom_tree_rtss = DicomTree(filepaths['rtss'])
+                patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+
+                patient_dict_container.set("selected_rois", [])
+                patient_dict_container.set("dict_polygons_axial", {})
+
+        # Get isodose levels to turn into ROIs
+        self.get_iso_levels()
+
+        # Stop loading
+        if interrupt_flag.is_set():
+            print("stopped")
+            return False
+
+        progress_callback.emit(("Calculating boundaries", 50))
+        # Calculate dose boundaries
+        print("Calculating boundaries")
+        boundaries = self.calculate_boundaries()
+
+        # Return if boundaries could not be calculated
+        if not boundaries:
+            print("Boundaries could not be calculated.")
+            return
+
+        print("Generating ROIs")
+
+        # Stop loading
+        if interrupt_flag.is_set():
+            print("stopped")
+            return False
+
+        progress_callback.emit(("Generating ROIs. Writing to RTStruct..", 80))
+        self.generate_roi(boundaries)
+
+        progress_callback.emit(("Reloading window. Please wait ..", 90))
 
     def get_iso_levels(self):
         """
@@ -150,28 +242,61 @@ class ISO2ROI:
                     patient_dict_container.set("rois",
                                                ImageLoading.get_roi_info(rtss))
 
-            # Emit that a new ROI has been created to update the
-            # structures tab
-            if rtss:
-                self.signal_roi_drawn.emit((rtss, {"draw": item}))
+        # Get confirmation from user, save rtss if user selects so
+        self.worker_signals.signal_save_confirmation.emit()
 
-        # Save the new ROIs to the RT Struct file
-        rtss_directory = Path(patient_dict_container.get("file_rtss"))
+        # Do not continue until selection is made by user
+        while not self.advised_save_rtss:
+            continue
 
+        # Emit that a new ROI has been created to update the
+        # structures tab
+        if rtss:
+            self.signal_roi_drawn.emit((rtss, {"draw": item}))
+
+    def save_confirmation(self):
+        """
+        Saves the new ROIs to rtss if user chooses
+        to do so.
+        """
         message = "Are you sure you want to save the modified RTSTRUCT file? "
         message += "This will overwrite the existing file. "
         message += "This is not reversible."
+        # Select appropriate style sheet
+        if platform.system() == 'Darwin':
+            stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
+        else:
+            stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
+        # Create a message box and add attributes
+        mb = QMessageBox()
+        mb.setIcon(QMessageBox.Question)
+        mb.setWindowTitle("Confirmation")
+        mb.setText(message)
+        button_no = QtWidgets.QPushButton("No")
+        button_yes = QtWidgets.QPushButton("Yes")
 
-        confirm_save = QtWidgets.QMessageBox.information(None, "Confirmation",
-                                                         message,
-                                                         QtWidgets.QMessageBox.Yes,
-                                                         QtWidgets.QMessageBox.No)
+        mb.addButton(button_no, QMessageBox.RejectRole)
+        mb.addButton(button_yes, QMessageBox.AcceptRole)
 
-        if confirm_save == QtWidgets.QMessageBox.Yes:
+        # Apply stylesheet to the message box and add icon to the window
+        mb.setStyleSheet(open(stylesheet_path).read())
+        mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons',
+                                                                       'onkodicom_icon.png'))))
+        mb.exec_()
+
+        if mb.clickedButton() == button_yes:
+            patient_dict_container = PatientDictContainer()
+
+            # Save the new ROIs to the RT Struct file
+            rtss_directory = Path(patient_dict_container.get("file_rtss"))
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            QtWidgets.QMessageBox.about(None, "File saved",
-                                        "The RTSTRUCT file has been saved.")
+
             patient_dict_container.set("rtss_modified", False)
+
+            QtWidgets.QMessageBox.information(mb, "File saved",
+                                              "The RTStruct file has been saved.")
+
+        self.advised_save_rtss = True
 
     def generate_rtss(self, file_path):
         """
