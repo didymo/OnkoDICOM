@@ -6,14 +6,13 @@ from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from src.View.ProgressWindow import ProgressWindow
-from src.Model import ImageLoading
 from src.View.ImageLoader import ImageLoader
 from src.Controller.PathHandler import resource_path
 
 
 class OpenPatientProgWindow(ProgressWindow):
     signal_loaded = QtCore.Signal(tuple)
-    signal_error = QtCore.Signal(int)
+    signal_error = QtCore.Signal(Exception)
     signal_advise_calc_dvh = QtCore.Signal(bool)
 
     def __init__(self, *args, kwargs=QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint):
@@ -82,12 +81,3 @@ class OpenPatientProgWindow(ProgressWindow):
                 self.signal_advise_calc_dvh.emit(True)
             else:
                 self.signal_advise_calc_dvh.emit(False)
-
-    def on_error(self, err):
-        if type(err[1]) is ImageLoading.NotRTSetError:
-            self.signal_error.emit(0)
-        elif type(err[1]) is ImageLoading.NotAllowedClassError:
-            self.signal_error.emit(1)
-
-    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        self.interrupt_flag.set()

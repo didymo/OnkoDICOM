@@ -352,12 +352,11 @@ class UIOpenPatientWindow(object):
         """
         Error handling for progress window.
         """
-
-        if type(exception) == ImageLoading.NotRTSetError:
+        if type(exception[1]) == ImageLoading.NotRTSetError:
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they are not a DICOM-RT set.")
             self.progress_window.close()
-        elif type(exception) == ImageLoading.NotAllowedClassError:
+        elif type(exception[1]) == ImageLoading.NotAllowedClassError:
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they contain unsupported DICOM classes.")
             self.progress_window.close()
