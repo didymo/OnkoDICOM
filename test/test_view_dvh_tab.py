@@ -70,7 +70,7 @@ class TestDVHTab:
 
         # Open the main window
         self.main_window = MainWindow()
-
+        self.main_window.three_dimension_view.close()
         self.dvh_tab = self.main_window.dvh_tab
         self.new_polygons = {}
         self.raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, self.rois, dict_thickness)

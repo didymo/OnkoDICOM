@@ -63,6 +63,7 @@ class TestOneViewAndFourViewsHandling:
 
         # Open the main window
         self.main_window = MainWindow()
+        self.main_window.three_dimension_view.close()
 
 
 @pytest.fixture(scope="module")

@@ -62,6 +62,7 @@ class TestStructureTab:
 
         # Open the main window
         self.main_window = MainWindow()
+        self.main_window.three_dimension_view.close()
         self.main_window.show()
 
         self.dicom_view = self.main_window.dicom_single_view
@@ -74,6 +75,7 @@ class TestStructureTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
+    test.main_window.three_dimension_view.close()
     return test
 
 
