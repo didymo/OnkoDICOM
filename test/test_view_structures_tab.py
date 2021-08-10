@@ -74,7 +74,6 @@ class TestStructureTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
-    test.main_window.three_dimension_view.close()
     return test
 
 
