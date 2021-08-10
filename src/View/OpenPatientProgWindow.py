@@ -1,10 +1,7 @@
 import platform
-
 from pathlib import Path
-
 from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
-
 from src.View.ProgressWindow import ProgressWindow
 from src.View.ImageLoader import ImageLoader
 from src.Controller.PathHandler import resource_path
@@ -32,7 +29,6 @@ class OpenPatientProgWindow(ProgressWindow):
             platform is performed to ensure consistency of button positioning across
             platforms.
         """
-
         if platform.system() == "Linux":
             choice = QMessageBox.question(self, "Calculate DVHs?", "RTSTRUCT and RTDOSE datasets identified. Would you "
                                                                    "like to calculate DVHs? (This may take up to "

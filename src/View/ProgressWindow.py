@@ -6,8 +6,11 @@ from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout
 
 from src.Model.Worker import Worker
 
+
 class ProgressWindow(QDialog):
+    # Signal that emits when loading has completed
     signal_loaded = QtCore.Signal(tuple)
+    # Signal that emits when exceptions are raised
     signal_error = QtCore.Signal(Exception)
 
     def __init__(self, *args, **kwargs):
@@ -46,6 +49,9 @@ class ProgressWindow(QDialog):
         self.exec_()
 
     def on_finish(self, result):
+        """
+        Executes when the progress bar has finished
+        """
         self.signal_loaded.emit((result, self))
 
     def update_progress(self, progress_update):
@@ -57,7 +63,13 @@ class ProgressWindow(QDialog):
         self.progress_bar.setValue(progress_update[1])
 
     def on_error(self, err):
+        """
+        Executes if an error occurred
+        """
         self.signal_error.emit(err)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """
+        Override base closeEvent method
+        """
         self.interrupt_flag.set()
