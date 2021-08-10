@@ -58,19 +58,9 @@ class TestSuv2Roi:
         self.patient_dict_container.set_initial_values\
             (file_path, read_data_dict, file_names_dict)
 
-        # Set additional attributes in patient dict container
-        # (otherwise program will crash and test will fail)
-        if "rtss" in file_names_dict:
-            dataset_rtss = dcmread(file_names_dict['rtss'])
-            self.rois = ImageLoading.get_roi_info(dataset_rtss)
-            dict_raw_contour_data, dict_numpoints = \
-                ImageLoading.get_raw_contour_data(dataset_rtss)
-            dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
-
-            self.patient_dict_container.set("rois", self.rois)
-            self.patient_dict_container.set("raw_contour", dict_raw_contour_data)
-            self.patient_dict_container.set("num_points", dict_numpoints)
-            self.patient_dict_container.set("pixluts", dict_pixluts)
+        # Create variables to be initialised later
+        self.dicom_files = None
+        self.suv_data = None
 
         # Create ISO2ROI object
         self.suv2roi = SUV2ROI()
@@ -90,10 +80,35 @@ def test_select_PET_files(test_object):
                         TestStructureTab object.
     """
     # Get DICOM files in directory
-    dicom_files = test_object.suv2roi.find_PET_datasets()
+    test_object.dicom_files = test_object.suv2roi.find_PET_datasets()
 
     # Assert that there are both PT CTAC and PT NAC files in the DICOM
     # dataset
-    assert dicom_files
-    assert len(dicom_files["PT CTAC"]) > 0
-    assert len(dicom_files["PT NAC"]) > 0
+    assert test_object.dicom_files
+    assert len(test_object.dicom_files["PT CTAC"]) > 0
+    assert len(test_object.dicom_files["PT NAC"]) > 0
+
+
+def test_select_pixel_data(test_object):
+    """
+    Test for selecting pixel data from PET files.
+    :param test_object: test_object function, for accessing the shared
+                        TestStructureTab object.
+    """
+    # Get PT NAC data
+    files = test_object.dicom_files["PT NAC"]
+    test_object.suv_data = test_object.suv2roi.get_SUV_data(files)
+
+    # Assert that there is SUV data and that it is the same length as
+    # the PT CTAC and PT NAC lists inside dicom_files
+    assert test_object.suv_data
+    assert len(test_object.suv_data) == len(test_object.dicom_files["PT NAC"])
+
+    # Get PT CTAC SUV data
+    files = test_object.dicom_files["PT CTAC"]
+    test_object.suv_data = test_object.suv2roi.get_SUV_data(files)
+
+    # Assert that there is SUV data and that it is the same length as
+    # the PT CTAC and PT NAC lists inside dicom_files
+    assert test_object.suv_data
+    assert len(test_object.suv_data) == len(test_object.dicom_files["PT CTAC"])

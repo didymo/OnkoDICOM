@@ -1,7 +1,3 @@
-# NOTE:
-# This script assumes the presence of DICOM PET Image Storage files
-# in the folder /test/testdata/DICOM-PT-TEST. This data is currently not
-# provided due to privacy concerns.
 from pathlib import Path
 from pydicom.dataset import FileDataset, FileMetaDataset
 from PySide6 import QtCore, QtWidgets
@@ -74,14 +70,6 @@ class SUV2ROI:
             # scaling as it preserves SUV values at the expense of
             # accurate image scaling
             suv_data.append((slice_location, resize(suv, (512, 512), order=0)))
-
-            # Temporary, for displaying SUV data
-            #img2d = resize(suv, (512, 512)).astype(float)
-            #img2d_scaled = (numpy.maximum(img2d, 0) / img2d.max()) * 255.0
-            #img2d_scaled = 255 - img2d_scaled
-            #img2d_scaled = numpy.uint8(img2d_scaled)
-            #img = Image.fromarray(img2d_scaled)
-            #img.show()
 
         # Sort the SUV data by Z value (-ve to +ve)
         suv_data.sort(key=lambda x: x[0])
