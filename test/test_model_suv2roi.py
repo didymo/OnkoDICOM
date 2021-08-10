@@ -9,6 +9,7 @@ from src.Model import ImageLoading
 from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
+from skimage import measure
 
 
 def find_dicom_files(file_path):
@@ -158,3 +159,33 @@ def test_select_pixel_data(test_object):
     # the PT CTAC and PT NAC lists inside dicom_files
     assert test_object.suv_data
     assert len(test_object.suv_data) == len(test_object.dicom_files["PT CTAC"])
+
+
+def test_calculate_suv_boundaries(test_object):
+    """
+    Test for calculating SUV boundaries.
+    :param test_object: test_object function, for accessing the shared
+                        TestStructureTab object.
+    """
+
+    # Get code-generated contours
+    contour_data = test_object.suv2roi.calculate_contours(test_object.suv_data)
+
+    # Assert that there is contour data
+    assert len(contour_data) > 0
+
+    # Manually calculate contour data
+    manual_contour_data = {}
+
+    for i, slice in enumerate(test_object.suv_data):
+        manual_contour_data[slice[0]] = []
+        for j in range(0, int(slice[1].max()) - 2):
+            manual_contour_data[slice[0]].append(
+                measure.find_contours(slice[1], j + 3))
+
+    # Assert the manually-generated and code-generated contour data is
+    # the same.
+    assert len(manual_contour_data) == len(contour_data)
+    for key in manual_contour_data:
+        assert key in contour_data
+        assert len(manual_contour_data[key]) == len(contour_data[key])
