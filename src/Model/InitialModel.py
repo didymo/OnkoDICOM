@@ -95,9 +95,12 @@ def create_initial_model():
         patient_dict_container.set("file_rtss", filepaths['rtss'])
         patient_dict_container.set("dataset_rtss", dataset['rtss'])
 
-        dicom_tree_rtss = DicomTree(filepaths['rtss'])
-        patient_dict_container.set("dict_dicom_tree_rtss",
-                                   dicom_tree_rtss.dict)
+        # dict_dicom_tree_rtss will be set in advance if the program generates a new rtss
+        # through the execution of ROI.generate_rtss(file_dir)
+        if patient_dict_container.get("dict_dicom_tree_rtss") is None:
+            dicom_tree_rtss = DicomTree(filepaths['rtss'])
+            patient_dict_container.set("dict_dicom_tree_rtss",
+                                       dicom_tree_rtss.dict)
 
         patient_dict_container.set(
             "list_roi_numbers",

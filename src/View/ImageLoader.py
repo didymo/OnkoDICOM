@@ -1,11 +1,13 @@
 import os
 import platform
+from pathlib import Path
 
 from PySide6 import QtCore
 from pydicom import dcmread
 
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.ROI import generate_rtss
 
 
 class ImageLoader(QtCore.QObject):
@@ -123,8 +125,10 @@ class ImageLoader(QtCore.QObject):
                 return True
             else:
                 return True
-
-        return True
+        else:
+            progress_callback.emit(("Generating temporary rtss...", 10))
+            generate_rtss(Path(path))
+            return True
 
     def update_calc_dvh(self, advice):
         self.advised_calc_dvh = True
