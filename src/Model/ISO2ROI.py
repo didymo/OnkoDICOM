@@ -15,7 +15,6 @@ from src.Model.GetPatientInfo import DicomTree
 class WorkerSignals(QtCore.QObject):
     signal_roi_drawn = QtCore.Signal(tuple)
     signal_save_confirmation = QtCore.Signal()
-    signal_save = QtCore.Signal()
 
 
 class ISO2ROI:
@@ -110,8 +109,9 @@ class ISO2ROI:
             print("stopped")
             return False
 
-        progress_callback.emit(("Generating ROIs", 80))
+        progress_callback.emit(("Generating ROIs. Writing to RTStruct..", 80))
         self.generate_roi(boundaries)
+
         progress_callback.emit(("Reloading window. Please wait ..", 90))
 
     def get_iso_levels(self):
@@ -292,6 +292,9 @@ class ISO2ROI:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
 
             patient_dict_container.set("rtss_modified", False)
+
+            QtWidgets.QMessageBox.information(mb, "File saved",
+                                              "The RTStruct file has been saved.")
 
         self.advised_save_rtss = True
 
