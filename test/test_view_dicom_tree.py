@@ -83,8 +83,6 @@ class TestDICOMTreeTab:
 
         # Open the main window
         self.main_window = MainWindow()
-        self.main_window.three_dimension_view.close()
-
         self.main_window.right_panel.setCurrentIndex(2)
         self.dicom_tree = self.main_window.dicom_tree
 
