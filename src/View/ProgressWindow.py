@@ -40,6 +40,7 @@ class ProgressWindow(QDialog):
         :param funct: function to execute.
         :param progress_callback: signal that receives the current progress of the loading.
         """
+        self.interrupt_flag.clear()
         worker = Worker(funct, self.interrupt_flag, progress_callback=True)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)

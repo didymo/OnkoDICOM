@@ -1,13 +1,11 @@
-import os
-
-import pydicom
-
+import os, pydicom
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
     dict_instance_uid
 from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
+from src.Model import ImageLoading
 from src.Controller.PathHandler import resource_path
 
 

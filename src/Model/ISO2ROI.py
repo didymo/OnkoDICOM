@@ -16,14 +16,15 @@ class WorkerSignals(QtCore.QObject):
     signal_roi_drawn = QtCore.Signal(tuple)
     signal_save_confirmation = QtCore.Signal()
 
-
 class ISO2ROI:
     """This class is for converting isodose levels to ROIs."""
     def __init__(self):
         self.worker_signals = WorkerSignals()
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
-        self.worker_signals.signal_save_confirmation.connect(self.save_confirmation)
+        self.signal_save_confirmation = self.worker_signals.signal_save_confirmation
+        self.signal_save_confirmation.connect(self.save_confirmation)
         self.advised_save_rtss = False
+        self.requires_ui_update = False
         self.isodose_levels = {}
 
     def start_conversion(self, interrupt_flag, progress_callback):
@@ -44,6 +45,10 @@ class ISO2ROI:
 
         if val:
             progress_callback.emit(("Dataset is complete", 10))
+
+            # If currently no rois, then a structure tab will need to be created
+            if len(patient_dict_container.get("rois")) == 0:
+                self.requires_ui_update = True
         else:
             progress_callback.emit(("Dataset is not complete", 10))
             # Check if RT struct file is missing. If yes, create one and
@@ -62,6 +67,8 @@ class ISO2ROI:
                 progress_callback.emit(("Generating RTStruct", 30))
                 # Create RT Struct file
                 ds = self.generate_rtss(file_path)
+
+                self.requires_ui_update = True
 
                 # Get new RT Struct file path
                 file_path = str(file_path.joinpath("rtss.dcm"))
@@ -109,10 +116,11 @@ class ISO2ROI:
             print("stopped")
             return False
 
-        progress_callback.emit(("Generating ROIs. Writing to RTStruct..", 80))
-        self.generate_roi(boundaries)
+        progress_callback.emit(("Generating ROIs ..", 75))
+        self.generate_roi(boundaries, progress_callback)
+        progress_callback.emit(("Reloading window. Please wait ..", 95))
 
-        progress_callback.emit(("Reloading window. Please wait ..", 90))
+        print("Done")
 
     def get_iso_levels(self):
         """
@@ -178,7 +186,7 @@ class ISO2ROI:
         # Return list of contours for each isodose level for each slice
         return contours
 
-    def generate_roi(self, contours):
+    def generate_roi(self, contours, progress_callback):
         """
         Generates new ROIs based on contour data.
         :param contours: dictionary of contours to turn into ROIs.
@@ -242,6 +250,10 @@ class ISO2ROI:
                     patient_dict_container.set("rois",
                                                ImageLoading.get_roi_info(rtss))
 
+        self.advised_save_rtss = False
+
+        progress_callback.emit(("Writing to RTStruct ..", 85))
+
         # Get confirmation from user, save rtss if user selects so
         self.worker_signals.signal_save_confirmation.emit()
 
@@ -253,6 +265,26 @@ class ISO2ROI:
         # structures tab
         if rtss:
             self.signal_roi_drawn.emit((rtss, {"draw": item}))
+
+        dataset = patient_dict_container.get("dataset_rtss")
+        filepath = patient_dict_container.get("file_rtss")
+        dict_raw_contour_data, dict_numpoints = \
+            ImageLoading.get_raw_contour_data(dataset)
+        patient_dict_container.set("raw_contour", dict_raw_contour_data)
+
+        patient_dict_container.set(
+            "list_roi_numbers",
+            ROI.ordered_list_rois(patient_dict_container.get("rois")))
+
+        dicom_tree_rtss = DicomTree(filepath)
+        dicom_tree_rtss.dataset = dataset
+        dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(dicom_tree_rtss.dataset)
+        patient_dict_container.set("dict_dicom_tree_rtss",
+                                   dicom_tree_rtss.dict)
+        patient_dict_container.set("selected_rois", [])
+        patient_dict_container.set("dict_polygons_axial", {})
+        patient_dict_container.set("dict_polygons_sagittal", {})
+        patient_dict_container.set("dict_polygons_coronal", {})
 
     def save_confirmation(self):
         """
@@ -296,6 +328,7 @@ class ISO2ROI:
             QtWidgets.QMessageBox.information(mb, "File saved",
                                               "The RTStruct file has been saved.")
 
+        # Allow the program to continue running
         self.advised_save_rtss = True
 
     def generate_rtss(self, file_path):
