@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
-from src.Model.CalculateDVHs import dvh2csv, dvh2dicomsr
+from src.Model.CalculateDVHs import dvh2csv, dvh2rtdose
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 
@@ -51,9 +51,9 @@ class DVHTab(QtWidgets.QWidget):
         button_export.clicked.connect(self.export_csv)
         button_layout.addWidget(button_export)
 
-        button_dvh2dicom = QtWidgets.QPushButton("Export DVH to DICOM-SR")
-        button_dvh2dicom.clicked.connect(self.export_dicomsr)
-        button_layout.addWidget(button_dvh2dicom)
+        button_dvh2rtdose = QtWidgets.QPushButton("Export DVH to RT DOSE")
+        button_dvh2rtdose.clicked.connect(self.export_rtdose)
+        button_layout.addWidget(button_dvh2rtdose)
 
         self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
@@ -232,13 +232,13 @@ class DVHTab(QtWidgets.QWidget):
                                           "The DVH Data was saved successfully in your directory!",
                                           QtWidgets.QMessageBox.Ok)
 
-    def export_dicomsr(self):
+    def export_rtdose(self):
         """
         Exports DVH data into a DICOM-SR file in the dataset directory.
         """
         path = self.patient_dict_container.path
         basic_info = self.patient_dict_container.get("basic_info")
-        dvh2dicomsr(self.raw_dvh,
+        dvh2rtdose(self.raw_dvh,
                     basic_info['id'])
         QtWidgets.QMessageBox.information(self, "Message",
                                           "The DVH Data was saved successfully in your directory!",
