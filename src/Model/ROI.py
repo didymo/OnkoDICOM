@@ -163,11 +163,11 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set,
         number_of_contour_points = len(roi_coordinates) / 3
         referenced_sop_class_uid = data_set.SOPClassUID
         referenced_sop_instance_uid = data_set.SOPInstanceUID
-        referenced_frame_of_reference_uid = \
-            rtss.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
         if len(rtss.StructureSetROISequence) > 0:
+            referenced_frame_of_reference_uid = rtss.StructureSetROISequence[-1].ReferencedFrameOfReferenceUID
             roi_number = rtss.StructureSetROISequence[-1].ROINumber + 1
         else:
+            referenced_frame_of_reference_uid = rtss.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
             roi_number = 1
 
         # Colour TBC
