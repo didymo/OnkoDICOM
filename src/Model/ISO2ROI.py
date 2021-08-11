@@ -24,7 +24,6 @@ class ISO2ROI:
         self.signal_save_confirmation = self.worker_signals.signal_save_confirmation
         self.signal_save_confirmation.connect(self.save_confirmation)
         self.advised_save_rtss = False
-        self.requires_ui_update = False
         self.isodose_levels = {}
 
     def start_conversion(self, interrupt_flag, progress_callback):
@@ -40,24 +39,19 @@ class ISO2ROI:
 
         # Stop loading
         if interrupt_flag.is_set():
-            print("stopped")
+            print("Stopped ISO2ROI")
             return False
 
         if val:
             progress_callback.emit(("Dataset is complete", 10))
-
-            # If currently no rois, then a structure tab will need to be created
-            if len(patient_dict_container.get("rois")) == 0:
-                self.requires_ui_update = True
         else:
             progress_callback.emit(("Dataset is not complete", 10))
             # Check if RT struct file is missing. If yes, create one and
             # add its data to the patient dict container
             if not patient_dict_container.get("file_rtss"):
-
                 # Stop loading
                 if interrupt_flag.is_set():
-                    print("stopped")
+                    print("Stopped ISO2ROI")
                     return False
 
                 # Get common directory
@@ -67,8 +61,6 @@ class ISO2ROI:
                 progress_callback.emit(("Generating RTStruct", 30))
                 # Create RT Struct file
                 ds = self.generate_rtss(file_path)
-
-                self.requires_ui_update = True
 
                 # Get new RT Struct file path
                 file_path = str(file_path.joinpath("rtss.dcm"))
@@ -96,12 +88,11 @@ class ISO2ROI:
 
         # Stop loading
         if interrupt_flag.is_set():
-            print("stopped")
+            print("Stopped ISO2ROI")
             return False
 
-        progress_callback.emit(("Calculating boundaries", 50))
         # Calculate dose boundaries
-        print("Calculating boundaries")
+        progress_callback.emit(("Calculating boundaries", 50))
         boundaries = self.calculate_boundaries()
 
         # Return if boundaries could not be calculated
@@ -109,18 +100,14 @@ class ISO2ROI:
             print("Boundaries could not be calculated.")
             return
 
-        print("Generating ROIs")
-
         # Stop loading
         if interrupt_flag.is_set():
-            print("stopped")
+            print("Stopped ISO2ROI")
             return False
 
         progress_callback.emit(("Generating ROIs ..", 75))
         self.generate_roi(boundaries, progress_callback)
         progress_callback.emit(("Reloading window. Please wait ..", 95))
-
-        print("Done")
 
     def get_iso_levels(self):
         """
@@ -206,8 +193,6 @@ class ISO2ROI:
 
         # Calculate isodose ROI for each slice, skip if slice has no
         # contour data
-        rtss = None
-
         for item in contours:
             for i in range(slider_min, slider_max):
                 if not len(contours[item][i]):
@@ -223,6 +208,7 @@ class ISO2ROI:
                 # Loop through each contour for each slice.
                 # Convert the pixel points to RCS points, append z value
                 single_array = []
+
                 # Loop through each contour
                 for j in range(len(contours[item][i])):
                     single_array.append([])
@@ -252,7 +238,7 @@ class ISO2ROI:
 
         self.advised_save_rtss = False
 
-        progress_callback.emit(("Writing to RTStruct ..", 85))
+        progress_callback.emit(("Writing to RTSTRUCT ..", 85))
 
         # Get confirmation from user, save rtss if user selects so
         self.worker_signals.signal_save_confirmation.emit()
@@ -260,31 +246,6 @@ class ISO2ROI:
         # Do not continue until selection is made by user
         while not self.advised_save_rtss:
             continue
-
-        # Emit that a new ROI has been created to update the
-        # structures tab
-        if rtss:
-            self.signal_roi_drawn.emit((rtss, {"draw": item}))
-
-        dataset = patient_dict_container.get("dataset_rtss")
-        filepath = patient_dict_container.get("file_rtss")
-        dict_raw_contour_data, dict_numpoints = \
-            ImageLoading.get_raw_contour_data(dataset)
-        patient_dict_container.set("raw_contour", dict_raw_contour_data)
-
-        patient_dict_container.set(
-            "list_roi_numbers",
-            ROI.ordered_list_rois(patient_dict_container.get("rois")))
-
-        dicom_tree_rtss = DicomTree(filepath)
-        dicom_tree_rtss.dataset = dataset
-        dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(dicom_tree_rtss.dataset)
-        patient_dict_container.set("dict_dicom_tree_rtss",
-                                   dicom_tree_rtss.dict)
-        patient_dict_container.set("selected_rois", [])
-        patient_dict_container.set("dict_polygons_axial", {})
-        patient_dict_container.set("dict_polygons_sagittal", {})
-        patient_dict_container.set("dict_polygons_coronal", {})
 
     def save_confirmation(self):
         """
@@ -294,11 +255,13 @@ class ISO2ROI:
         message = "Are you sure you want to save the modified RTSTRUCT file? "
         message += "This will overwrite the existing file. "
         message += "This is not reversible."
+
         # Select appropriate style sheet
         if platform.system() == 'Darwin':
             stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
         else:
             stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
+
         # Create a message box and add attributes
         mb = QMessageBox()
         mb.setIcon(QMessageBox.Question)
@@ -322,11 +285,10 @@ class ISO2ROI:
             # Save the new ROIs to the RT Struct file
             rtss_directory = Path(patient_dict_container.get("file_rtss"))
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-
             patient_dict_container.set("rtss_modified", False)
 
             QtWidgets.QMessageBox.information(mb, "File saved",
-                                              "The RTStruct file has been saved.")
+                                              "The RTSTRUCT has been saved.")
 
         # Allow the program to continue running
         self.advised_save_rtss = True

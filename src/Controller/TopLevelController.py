@@ -73,7 +73,7 @@ class Controller:
                 self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
         else:
-            self.main_window.update_patient_ui()
+            self.main_window.update_ui()
 
         # Once the MainWindow has finished loading (which takes some time)
         # close all the other open windows.
