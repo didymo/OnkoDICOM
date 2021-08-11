@@ -39,8 +39,8 @@ class IsodoseTab(QtWidgets.QWidget):
         self.isodose_tab_layout.addLayout(self.iso2roi_layout)
 
         self.setLayout(self.isodose_tab_layout)
-
         self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window.signal_loaded.connect(self.on_loaded_iso2roi)
 
     def init_layout(self):
         for i in range(0, len(self.checkboxes)):
@@ -157,17 +157,15 @@ class IsodoseTab(QtWidgets.QWidget):
         Opens a progress window and Initiates the
         ISO2ROI conversion process.
         """
-        self.progress_window.signal_loaded.connect(self.on_loaded_iso2roi)
         self.progress_window.start(self.iso2roi.start_conversion)
 
     def on_loaded_iso2roi(self):
         """
         Called when progress bar has finished.
         Closes the progress window and refreshes
-        the main screen if a new rtss was created.
+        the main screen if needed.
         """
+        self.progress_window.close()
         if self.iso2roi.requires_ui_update:
             self.iso2roi.requires_ui_update = False
             self.request_update_ui.emit()
-        self.progress_window.close()
-

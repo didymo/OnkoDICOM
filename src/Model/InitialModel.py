@@ -92,9 +92,6 @@ def create_initial_model():
     if patient_dict_container.has_modality("rtss"):
         patient_dict_container.set("file_rtss", filepaths['rtss'])
         patient_dict_container.set("dataset_rtss", dataset['rtss'])
-        dict_raw_contour_data, dict_numpoints = \
-            ImageLoading.get_raw_contour_data(dataset['rtss'])
-        patient_dict_container.set("raw_contour", dict_raw_contour_data)
 
         dicom_tree_rtss = DicomTree(filepaths['rtss'])
         patient_dict_container.set("dict_dicom_tree_rtss",

@@ -87,13 +87,21 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_open.triggered.connect(self.open_new_patient)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
 
-    def update_ui(self):
+    def update_patient_ui(self):
         create_initial_model()
         self.setup_central_widget()
         self.setup_actions()
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
-        self.isodoses_tab.request_update_ui.connect(self.update_ui)
+
+    def update_ui(self):
+        """
+        Update the UI without touching the patient_dict_container
+        """
+        self.setup_central_widget()
+        self.setup_actions()
+        self.action_handler.action_open.triggered.connect(
+            self.open_new_patient)
 
     def open_new_patient(self):
         """
