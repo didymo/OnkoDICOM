@@ -220,8 +220,7 @@ def dvh2rtdose(dict_dvh, patient_id):
     patient_dict_container = PatientDictContainer()
     rt_dose = patient_dict_container.dataset['rtdose']
     dvh_sequence = rt_dose['DVHSequence']
-
-    num_sequences = dvh_sequence.VM
+    dvh_sequence.value = []
 
     for ds in dict_dvh:
         # Create new DVH dataset
@@ -250,7 +249,6 @@ def dvh2rtdose(dict_dvh, patient_id):
 
         # Add new DVH dataset to DVH sequences
         dvh_sequence.value.append(new_ds)
-        num_sequences += 1
 
     # Save new RT DOSE
     rt_dose['DVHSequence'] = dvh_sequence
