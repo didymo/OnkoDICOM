@@ -68,7 +68,13 @@ class DVHTab(QtWidgets.QWidget):
 
     def clear_layout(self):
         for i in reversed(range(self.dvh_tab_layout.count())):
-            self.dvh_tab_layout.itemAt(i).widget().setParent(None)
+            item = self.dvh_tab_layout.itemAt(i)
+            if item.widget():
+                item.widget().setParent(None)
+            else:
+                for j in reversed(range(item.count())):
+                    item.itemAt(j).widget().setParent(None)
+            #self.dvh_tab_layout.itemAt(i).widget().setParent(None)
 
     def plot_dvh(self):
         """
