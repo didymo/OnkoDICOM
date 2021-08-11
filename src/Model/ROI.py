@@ -164,9 +164,11 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set,
         referenced_sop_class_uid = data_set.SOPClassUID
         referenced_sop_instance_uid = data_set.SOPInstanceUID
         referenced_frame_of_reference_uid = \
-            rtss["StructureSetROISequence"].value[
-                0].ReferencedFrameOfReferenceUID
-        roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
+            rtss.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
+        if len(rtss.StructureSetROISequence) > 0:
+            roi_number = rtss.StructureSetROISequence[-1].ROINumber + 1
+        else:
+            roi_number = 1
 
         # Colour TBC
         red = random.randint(0, 255)
@@ -838,7 +840,15 @@ def generate_rtss(file_dir):
     rtss.StructureSetLabel = 'RTSTRUCT'
     rtss.StructureSetDate = time_now.strftime('%Y%m%d')
     rtss.StructureSetTime = time_now.strftime('%H%M%S.%f')
+
+    # Structure Set ROI Sequence information
     rtss.StructureSetROISequence = Sequence()
+
+    # Referenced Frame of Reference Sequence information
+    refd_frame_of_ref_sequence_item = pydicom.dataset.Dataset()
+    refd_frame_of_ref_sequence_item.FrameOfReferenceUID = dataset.FrameOfReferenceUID
+    rtss.ReferencedFrameOfReferenceSequence = Sequence()
+    rtss.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref_sequence_item)
 
     # ROI contour information
     rtss.ROIContourSequence = Sequence()
