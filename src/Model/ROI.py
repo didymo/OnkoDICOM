@@ -1,16 +1,16 @@
 import collections
 import datetime
 import random
+from pathlib import Path
 from copy import copy as shallowcopy
 from copy import deepcopy
 
 import pydicom
 from pydicom.uid import generate_uid, PYDICOM_IMPLEMENTATION_UID
-from pydicom.dataset import FileDataset, FileMetaDataset
+from pydicom.dataset import FileMetaDataset
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
 from src.Model import ImageLoading
-from src.Model.GetPatientInfo import DicomTree
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -643,7 +643,7 @@ def ordered_list_rois(rois):
     return sorted(res)
 
 
-def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
+def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
                                 ct_uid_list=[]) -> pydicom.dataset.Dataset:
     """Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
@@ -658,6 +658,8 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     ct_uid_list : list, optional
         list of UIDs (as strings) of the entire image volume that the RT SS
         references, by default []
+    filepath: str
+        A path where the RTStruct will be saved
 
     Returns
     -------
@@ -700,7 +702,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
                                     Tag("InstitutionAddress")
                                     ]
 
-    rt_ss = pydicom.dataset.Dataset()
+    rt_ss = pydicom.dataset.FileDataset(filepath, {}, b"\0" * 128)
 
     for tag in top_level_tags_to_copy:
         print("Tag ", tag)
@@ -720,7 +722,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_ss.Manufacturer = "OnkoDICOM"
     rt_ss.ManufacturersModelName = "OnkoDICOM"
     # TODO: Pull this off build information in some way
-    rt_ss.SoftwareVersions = "2020"
+    rt_ss.SoftwareVersions = "2021"
 
     # RT Series Module
     rt_ss.SeriesInstanceUID = pydicom.uid.generate_uid()
@@ -790,95 +792,3 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_ss.is_little_endian = True
     rt_ss.is_implicit_VR = True
     return rt_ss
-
-
-def generate_rtss(file_dir):
-    # Define file name of rtss
-    file_path = file_dir.joinpath("rtss.dcm")
-
-    # Define time and date
-    time_now = datetime.datetime.now()
-
-    # Create file meta dataset
-    file_meta = FileMetaDataset()
-    file_meta.MediaStorageSOPClassUID = list(ImageLoading.allowed_classes.keys())[1]
-    file_meta.MediaStorageSOPInstanceUID = generate_uid()
-    file_meta.ImplementationClassUID = PYDICOM_IMPLEMENTATION_UID
-
-    # Create RTSS
-    rtss = FileDataset(file_path, {}, b"\0" * 128, file_meta)
-
-    # Get Study Instance UID from another file in the dataset
-    patient_dict_container = PatientDictContainer()
-    dataset = patient_dict_container.dataset[0]
-
-    # Add required data elements
-    # Patient information
-    rtss.PatientName = dataset.PatientName
-    rtss.PatientID = dataset.PatientID
-    rtss.PatientBirthDate = dataset.PatientBirthDate
-    rtss.PatientSex = dataset.PatientSex
-
-    # General study information
-    rtss.StudyDate = dataset.StudyDate
-    rtss.StudyTime = dataset.StudyDate
-    rtss.AccessionNumber = dataset.AccessionNumber
-    rtss.ReferringPhysicianName = dataset.ReferringPhysicianName
-    rtss.StudyInstanceUID = dataset.StudyInstanceUID
-    rtss.StudyID = dataset.StudyID
-
-    # RT series information
-    rtss.Modality = 'RTSTRUCT'
-    rtss.OperatorsName = ''
-    rtss.SeriesInstanceUID = generate_uid()
-    rtss.SeriesNumber = '1'
-
-    # General equipment information
-    rtss.Manufacturer = "OnkoDICOM"
-
-    # Structure set information
-    rtss.StructureSetLabel = 'RTSTRUCT'
-    rtss.StructureSetDate = time_now.strftime('%Y%m%d')
-    rtss.StructureSetTime = time_now.strftime('%H%M%S.%f')
-
-    # Structure Set ROI Sequence information
-    rtss.StructureSetROISequence = Sequence()
-
-    # Referenced Frame of Reference Sequence information
-    refd_frame_of_ref_sequence_item = pydicom.dataset.Dataset()
-    refd_frame_of_ref_sequence_item.FrameOfReferenceUID = dataset.FrameOfReferenceUID
-    rtss.ReferencedFrameOfReferenceSequence = Sequence()
-    rtss.ReferencedFrameOfReferenceSequence.append(refd_frame_of_ref_sequence_item)
-
-    # ROI contour information
-    rtss.ROIContourSequence = Sequence()
-
-    # RT ROI observations information
-    rtss.RTROIObservationsSequence = Sequence()
-
-    # SOP common information
-    rtss.SOPClassUID = rtss.file_meta.MediaStorageSOPClassUID
-    rtss.SOPInstanceUID = rtss.file_meta.MediaStorageSOPInstanceUID
-
-    # Set ROIs
-    rois = ImageLoading.get_roi_info(rtss)
-    patient_dict_container.set("rois", rois)
-
-    # Set pixluts
-    dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
-    patient_dict_container.set("pixluts", dict_pixluts)
-
-    # Add RT Struct file path to patient dict container
-    patient_dict_container.filepaths['rtss'] = file_path
-    file_paths = patient_dict_container.filepaths
-
-    # Add RT Struct dataset to patient dict container
-    patient_dict_container.dataset['rtss'] = rtss
-    dataset = patient_dict_container.dataset
-
-    # Set some patient dict container attributes
-    patient_dict_container.set("file_rtss", file_paths['rtss'])
-    patient_dict_container.set("dataset_rtss", dataset['rtss'])
-    ordered_dict = DicomTree(None).dataset_to_dict(rtss)
-    patient_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
-    patient_dict_container.set("selected_rois", [])

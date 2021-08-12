@@ -7,7 +7,8 @@ from pydicom import dcmread
 
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import generate_rtss
+from src.Model.ROI import create_initial_rtss_from_ct
+from src.Model.GetPatientInfo import DicomTree
 
 
 class ImageLoader(QtCore.QObject):
@@ -127,7 +128,28 @@ class ImageLoader(QtCore.QObject):
                 return True
         else:
             progress_callback.emit(("Generating temporary rtss...", 10))
-            generate_rtss(Path(path))
+            rtss_path = Path(path).joinpath('rtss.dcm')
+            rtss = create_initial_rtss_from_ct(patient_dict_container.dataset[0], rtss_path)
+
+            # Set ROIs
+            rois = ImageLoading.get_roi_info(rtss)
+            patient_dict_container.set("rois", rois)
+
+            # Set pixluts
+            dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
+            patient_dict_container.set("pixluts", dict_pixluts)
+
+            # Add RT Struct file path and dataset to patient dict container
+            patient_dict_container.filepaths['rtss'] = rtss_path
+            patient_dict_container.dataset['rtss'] = rtss
+
+            # Set some patient dict container attributes
+            patient_dict_container.set("file_rtss", rtss_path)
+            patient_dict_container.set("dataset_rtss", rtss)
+            ordered_dict = DicomTree(None).dataset_to_dict(rtss)
+            patient_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
+            patient_dict_container.set("selected_rois", [])
+
             return True
 
     def update_calc_dvh(self, advice):
