@@ -1184,6 +1184,13 @@ class MainPageCallClass:
         self.dataset = self.patient_dict_container.dataset
         self.filepaths = self.patient_dict_container.filepaths
 
+    def reset(self):
+        """Resets class variables."""
+        self.patient_dict_container = PatientDictContainer()
+        self.path = self.patient_dict_container.path
+        self.dataset = self.patient_dict_container.dataset
+        self.filepaths = self.patient_dict_container.filepaths
+
     # This function runs Anonymization on button click
     def run_anonymization(self, raw_dvh):
         target_path = anonymize(self.path, self.dataset, self.filepaths,
