@@ -92,40 +92,40 @@ def test_one_view_zoom(qtbot, test_object, init_config):
 def test_four_view_handling(qtbot, test_object, init_config):
     test_object.main_window.show()
     test_object.main_window.action_handler.action_four_views.trigger()
-    assert isinstance(test_object.main_window.dicom_view_axial, DicomView) is True
-    assert isinstance(test_object.main_window.dicom_view_sagittal, DicomView) is True
-    assert isinstance(test_object.main_window.dicom_view_coronal, DicomView) is True
+    assert isinstance(test_object.main_window.dicom_axial_view, DicomView) is True
+    assert isinstance(test_object.main_window.dicom_sagittal_view, DicomView) is True
+    assert isinstance(test_object.main_window.dicom_coronal_view, DicomView) is True
     assert isinstance(test_object.main_window.dicom_four_views_layout, QGridLayout) is True
     assert test_object.main_window.dicom_view.currentWidget() == test_object.main_window.dicom_four_views
-    assert test_object.main_window.dicom_view_axial.pos().x(), test_object.main_window.dicom_view_axial.pos().y() == (
+    assert test_object.main_window.dicom_axial_view.pos().x(), test_object.main_window.dicom_axial_view.pos().y() == (
         0, 0)
-    assert test_object.main_window.dicom_view_sagittal.pos().x(), \
-        test_object.main_window.dicom_view_sagittal.pos().y() == (0, 1)
-    assert test_object.main_window.dicom_view_coronal.pos().x(), \
-        test_object.main_window.dicom_view_coronal.pos().y() == (1, 0)
+    assert test_object.main_window.dicom_sagittal_view.pos().x(), \
+        test_object.main_window.dicom_sagittal_view.pos().y() == (0, 1)
+    assert test_object.main_window.dicom_coronal_view.pos().x(), \
+        test_object.main_window.dicom_coronal_view.pos().y() == (1, 0)
 
 
 def test_four_view_zoom(qtbot, test_object, init_config):
     test_object.main_window.show()
     test_object.main_window.action_handler.action_four_views.trigger()
 
-    initial_axial_zoom = test_object.main_window.dicom_view_axial.zoom
-    initial_coronal_zoom = test_object.main_window.dicom_view_coronal.zoom
-    initial_sagittal_zoom = test_object.main_window.dicom_view_sagittal.zoom
+    initial_axial_zoom = test_object.main_window.dicom_axial_view.zoom
+    initial_coronal_zoom = test_object.main_window.dicom_coronal_view.zoom
+    initial_sagittal_zoom = test_object.main_window.dicom_sagittal_view.zoom
 
     assert (initial_coronal_zoom == INITIAL_FOUR_VIEW_ZOOM)
     assert (initial_sagittal_zoom == INITIAL_FOUR_VIEW_ZOOM)
     assert (initial_axial_zoom == INITIAL_FOUR_VIEW_ZOOM)
 
     test_object.main_window.action_handler.action_zoom_in.trigger()
-    assert (test_object.main_window.dicom_view_axial.zoom == initial_axial_zoom * 1.05)
-    assert (test_object.main_window.dicom_view_coronal.zoom == initial_coronal_zoom * 1.05)
-    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_sagittal_zoom * 1.05)
+    assert (test_object.main_window.dicom_axial_view.zoom == initial_axial_zoom * 1.05)
+    assert (test_object.main_window.dicom_coronal_view.zoom == initial_coronal_zoom * 1.05)
+    assert (test_object.main_window.dicom_sagittal_view.zoom == initial_sagittal_zoom * 1.05)
 
     test_object.main_window.action_handler.action_zoom_out.trigger()
-    assert (test_object.main_window.dicom_view_axial.zoom == initial_axial_zoom)
-    assert (test_object.main_window.dicom_view_coronal.zoom == initial_coronal_zoom)
-    assert (test_object.main_window.dicom_view_sagittal.zoom == initial_sagittal_zoom)
+    assert (test_object.main_window.dicom_axial_view.zoom == initial_axial_zoom)
+    assert (test_object.main_window.dicom_coronal_view.zoom == initial_coronal_zoom)
+    assert (test_object.main_window.dicom_sagittal_view.zoom == initial_sagittal_zoom)
 
 
 def test_one_view_roi(qtbot, test_object, init_config):

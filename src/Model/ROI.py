@@ -4,7 +4,6 @@ import random
 from copy import copy as shallowcopy
 from copy import deepcopy
 
-import numpy as np
 import pydicom
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
@@ -410,30 +409,6 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
     """
     pixels = []
 
-    # Optimization 1: Reduce unnecessary IF STATEMENTS
-    # Time used: 488.194700717926
-    # if (not prone and not feetfirst):
-    #     for i in range(0, len(contour), 3):
-    #         for x, x_val in enumerate(pixlut[0]):
-    #             if x_val > contour[i]:
-    #                 break
-    #         for y, y_val in enumerate(pixlut[1]):
-    #             if y_val > contour[i+1]:
-    #                 break
-    #         pixels.append([x, y])
-
-    # Optimization 2: Using Numpy Matrix
-    # Time used: 5.099231481552124
-    # np_x = np.array(pixlut[0])
-    # np_y = np.array(pixlut[1])
-    # for i in range(0, len(contour), 3):
-    #     con_x = contour[i]
-    #     con_y = contour[i+1]
-    #     x = np.argmax(np_x > con_x)
-    #     y = np.argmax(np_y > con_y)
-    #     pixels.append([x, y])
-
-    # Opitimazation 1 & 2
     np_x = np.array(pixlut[0])
     np_y = np.array(pixlut[1])
     if not feetfirst and not prone:
@@ -458,21 +433,47 @@ def calculate_pixels(pixlut, contour, prone=False, feetfirst=False):
             y = np.argmin(np_y < con_y)
             pixels.append([x, y])
 
-    # Original Slow One
-    # Time used: 895.787469625473
-    # for i in range(0, len(contour), 3):
-    #     for x, x_val in enumerate(pixlut[0]):
-    #         if (x_val > contour[i] and not prone and not feetfirst):
-    #             break
-    #         elif (x_val < contour[i]):
-    #             if feetfirst or prone:
-    #                 break
-    #     for y, y_val in enumerate(pixlut[1]):
-    #         if (y_val > contour[i + 1] and not prone):
-    #             break
-    #         elif (y_val < contour[i + 1] and prone):
-    #             break
-    #     pixels.append([x, y])
+    return pixels
+
+
+def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
+    """
+    Calculate (Convert) contour points.
+
+    :param pixlut: transformation matrixx
+    :param contour: raw contour data (3D)
+    :param prone: label of prone
+    :param feetfirst: label of feetfirst or head first
+    :return: contour pixels
+
+    Parameters
+    ----------
+    contour : object
+    """
+    pixels = []
+    np_x = np.array(pixlut[0])
+    np_y = np.array(pixlut[1])
+    if not feetfirst and not prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmax(np_x > con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if feetfirst and not prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmax(np_y > con_y)
+            pixels.append([x, y])
+    if prone:
+        for i in range(0, len(contour), 3):
+            con_x = contour[i]
+            con_y = contour[i + 1]
+            x = np.argmin(np_x < con_x)
+            y = np.argmin(np_y < con_y)
+            pixels.append([x, y])
     return pixels
 
 
@@ -558,6 +559,78 @@ def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
     return dict_pixels
 
 
+def transform_rois_contours(axial_rois_contours):
+    """
+       Transform the axial ROI contours into coronal and sagittal contours
+       :param axial_rois_contours: the dictionary of axial ROI contours
+       :return: Tuple of coronal and sagittal ROI contours
+    """
+    coronal_rois_contours = {}
+    sagittal_rois_contours = {}
+    slice_ids = dict((v, k) for k, v in PatientDictContainer().get("dict_uid").items())
+    for name in axial_rois_contours.keys():
+        coronal_rois_contours[name] = {}
+        sagittal_rois_contours[name] = {}
+        for slice_id in slice_ids:
+            contours = axial_rois_contours[name][slice_id]
+            for contour in contours:
+                for i in range(len(contour)):
+                    if contour[i][1] in coronal_rois_contours[name]:
+                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+                    else:
+                        coronal_rois_contours[name][contour[i][1]] = [[]]
+                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+
+                    if contour[i][0] in sagittal_rois_contours[name]:
+                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+                    else:
+                        sagittal_rois_contours[name][contour[i][0]] = [[]]
+                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+    return coronal_rois_contours, sagittal_rois_contours
+
+
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
+    """
+    Calculate a list of polygons to display for a given ROI and a given slice.
+
+    :param curr_roi: the ROI structure
+    :param curr_slice: the current slice
+    :param dict_rois_contours: the dictionary of ROI contours
+    :param pixmap_aspect: the scaling ratio
+    :return: List of polygons of type QPolygonF.
+    """
+    # TODO Implement support for showing "holes" in contours.
+    # Possible process for this is:
+    # 1. Calculate the areas of each contour on the slice
+    # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+    # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
+    # largest contour.
+    # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
+    # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
+    # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
+    # This process should provide fast and reliable results, however it should be noted that this method may fall
+    # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
+    # solution to that may be to compare every contour against one another and determine which ones have holes
+    # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
+    # holes. This second solution would definitely lead to more accurate representation of contours, but could
+    # possibly be too slow to be viable.
+
+    if curr_slice not in dict_rois_contours[curr_roi]:
+        return []
+
+    list_polygons = []
+    pixel_list = dict_rois_contours[curr_roi][curr_slice]
+    for i in range(len(pixel_list)):
+        list_qpoints = []
+        contour = pixel_list[i]
+        for point in contour:
+            curr_qpoint = QtCore.QPoint(point[0], point[1] * pixmap_aspect)
+            list_qpoints.append(curr_qpoint)
+        curr_polygon = QtGui.QPolygonF(list_qpoints)
+        list_polygons.append(curr_polygon)
+    return list_polygons
+
+
 def ordered_list_rois(rois):
     res = []
     for roi_id, value in rois.items():
@@ -630,21 +703,13 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
             print("value of tag in image: ", img_ds[tag])
             rt_ss[tag] = deepcopy(img_ds[tag])
 
-    # Best to modify the Structure Set Lable with something more interesting
+    # Best to modify the Structure Set Label with something more interesting
     # in the application. and populate the Name and Description from the
     # application also.
     print("Study ID is ", rt_ss.StudyID)
     rt_ss.StructureSetLabel = "OnkoDICOM rtss of " + rt_ss.StudyID
     rt_ss.StructureSetName = rt_ss.StructureSetLabel
     rt_ss.StructureSetDescription = rt_ss.StructureSetLabel
-
-    # referenced_study_sequence_item = pydicom.dataset.Dataset()
-    # referenced_study_sequence_item["ReferencedSOPInstanceUID"]
-    # = img_ds.StudyInstanceUID
-    # referenced_study_sequence_item["ReferencedSOPClassUID"]
-    # = img_ds.SOPClassUID
-
-    # rt_ss.ReferencedStudySequence = [referenced_study_sequence_item]
 
     # General Equipment Module
     rt_ss.Manufacturer = "OnkoDICOM"
