@@ -19,10 +19,11 @@ class ImageLoader(QtCore.QObject):
 
     signal_request_calc_dvh = QtCore.Signal()
 
-    def __init__(self, selected_files, parent_window, *args, **kwargs):
+    def __init__(self, selected_files, existing_rtss_path, parent_window, *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
         self.parent_window = parent_window
+        self.existing_rtss_path = existing_rtss_path
         self.calc_dvh = False
         self.advised_calc_dvh = False
 
@@ -42,7 +43,8 @@ class ImageLoader(QtCore.QObject):
         # Populate the initial values in the PatientDictContainer singleton.
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
-        patient_dict_container.set_initial_values(path, read_data_dict, file_names_dict)
+        patient_dict_container.set_initial_values(path, read_data_dict, file_names_dict,
+                                                  existing_rtss_path=self.existing_rtss_path)
 
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
         # interrupt flag has been set, in which case it will interrupt this method after the currently processing

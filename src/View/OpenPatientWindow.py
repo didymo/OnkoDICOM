@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox
     QLabel, QLineEdit, QSizePolicy, QPushButton
 
 from src.Model import DICOMDirectorySearch
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.ProgressWindow import ProgressWindow
 from src.View.resources_open_patient_rc import *
@@ -277,7 +278,7 @@ class UIOpenPatientWindow(object):
         # If patient is only selected, but not checked, set it to "focus" to coincide with stylesheet
         if selected_patient.checkState(0) == Qt.CheckState.Unchecked:
             self.open_patient_window_patients_tree.setCurrentItem(selected_patient)
-        else: # Otherwise don't "focus", then set patient as selected
+        else:  # Otherwise don't "focus", then set patient as selected
             self.open_patient_window_patients_tree.setCurrentItem(None)
             selected_patient.setSelected(True)
 
@@ -323,6 +324,15 @@ class UIOpenPatientWindow(object):
             header = "Only one study can be opened."
             self.open_patient_window_confirm_button.setDisabled(True)
 
+        # If RTSTRUCT exists but not selected, save existing RTSTRUCT file path
+        if 'RTSTRUCT' not in selected_series_types and len(selected_series_types) > 0:
+            selected_study = self.get_checked_leaves()[0].parent()
+            for i in range(0, selected_study.childCount()):
+                if selected_study.child(i).dicom_object.get_series_type() == 'RTSTRUCT':
+                    self.existing_rtss_path = selected_study.child(i).dicom_object.get_files()[0]
+        else:
+            self.existing_rtss_path = None
+
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
@@ -338,7 +348,7 @@ class UIOpenPatientWindow(object):
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
 
-        self.progress_window.start_loading(selected_files)
+        self.progress_window.start_loading(selected_files, self.existing_rtss_path)
         self.progress_window.exec_()
 
     def on_loaded(self, results):

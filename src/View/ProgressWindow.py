@@ -37,8 +37,8 @@ class ProgressWindow(QDialog):
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
 
-    def start_loading(self, selected_files):
-        image_loader = ImageLoader(selected_files, self)
+    def start_loading(self, selected_files, existing_rtss_path=None):
+        image_loader = ImageLoader(selected_files, existing_rtss_path, self)
         image_loader.signal_request_calc_dvh.connect(self.prompt_calc_dvh)
 
         worker = Worker(image_loader.load, self.interrupt_flag, progress_callback=True)
