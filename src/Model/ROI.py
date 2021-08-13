@@ -6,11 +6,10 @@ from copy import copy as shallowcopy
 from copy import deepcopy
 
 import pydicom
-from pydicom.uid import generate_uid, PYDICOM_IMPLEMENTATION_UID
+from pydicom.uid import generate_uid
 from pydicom.dataset import FileMetaDataset
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
-from src.Model import ImageLoading
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 

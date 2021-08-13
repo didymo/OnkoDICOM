@@ -1,4 +1,5 @@
 import csv
+import pydicom
 from pathlib import Path
 from random import randint, seed
 
@@ -334,6 +335,7 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_sagittal.pop(roi_name, None)
 
     def save_new_rtss(self, event=None):
+        existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
         rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
 
         confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
@@ -343,7 +345,43 @@ class StructureTab(QtWidgets.QWidget):
                                                          QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
-            self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+            if existing_rtss_directory is None:
+                self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+            else:
+                new_rtss = self.patient_dict_container.get("dataset_rtss")
+                old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
+                merged_rtss = self.merge_rtss(new_rtss, old_rtss)
+                if merged_rtss is None:
+                    return
+                merged_rtss.save_as(existing_rtss_directory)
+
             QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
             self.patient_dict_container.set("rtss_modified", False)
             self.modified_indicator_widget.setParent(None)
+
+    def merge_rtss(self, new_rtss, old_rtss):
+        old_roi_names = set(value["name"] for value in ImageLoading.get_roi_info(old_rtss).values())
+        new_roi_names = set(value["name"] for value in self.patient_dict_container.get("rois").values())
+        duplicated_names = old_roi_names.intersection(new_roi_names)
+
+        if duplicated_names:
+            confirm_merge = QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                              "Conflicting ROI names found between new ROIs and "
+                                                              "existing ROIs:\n" + str(duplicated_names) +
+                                                              "\nAre you sure you want to merge the RTSTRUCT files? "
+                                                              "The new ROIs will replace the existing ROIs. ",
+                                                              QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+            if confirm_merge == QtWidgets.QMessageBox.Yes:
+                double_confirm_merge = QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                                         "Are you really sure? "
+                                                                         "This action is not reversible.",
+                                                                         QtWidgets.QMessageBox.Yes,
+                                                                         QtWidgets.QMessageBox.No)
+                if double_confirm_merge != QtWidgets.QMessageBox.Yes:
+                    return None
+            else:
+                return None
+
+        print('MERGE RTSS!!')
+
+        return old_rtss

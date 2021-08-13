@@ -44,7 +44,7 @@ class ImageLoader(QtCore.QObject):
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
         patient_dict_container.set_initial_values(path, read_data_dict, file_names_dict,
-                                                  existing_rtss_path=self.existing_rtss_path)
+                                                  existing_file_rtss=self.existing_rtss_path)
 
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
         # interrupt flag has been set, in which case it will interrupt this method after the currently processing
