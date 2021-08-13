@@ -1180,33 +1180,29 @@ class MainPageCallClass:
     # Initialisation function of the controller
     def __init__(self):
         self.patient_dict_container = PatientDictContainer()
-        self.path = self.patient_dict_container.path
-        self.dataset = self.patient_dict_container.dataset
-        self.filepaths = self.patient_dict_container.filepaths
-
-    def reset(self):
-        """Resets class variables."""
-        self.patient_dict_container = PatientDictContainer()
-        self.path = self.patient_dict_container.path
-        self.dataset = self.patient_dict_container.dataset
-        self.filepaths = self.patient_dict_container.filepaths
 
     # This function runs Anonymization on button click
     def run_anonymization(self, raw_dvh):
-        target_path = anonymize(self.path, self.dataset, self.filepaths,
-                                raw_dvh)
+        path = self.patient_dict_container.path
+        dataset = self.patient_dict_container.dataset
+        filepaths = self.patient_dict_container.filepaths
+        target_path = anonymize(path, dataset, filepaths, raw_dvh)
         return target_path
 
     # This function displays the clinical data form
     def display_cd_form(self, tab_window, file_path):
-        self.tab_cd = ClinicalDataForm(
-            tab_window, file_path, self.dataset, self.filepaths)
+        dataset = self.patient_dict_container.dataset
+        filepaths = self.patient_dict_container.filepaths
+        self.tab_cd = ClinicalDataForm(tab_window, file_path, dataset,
+                                       filepaths)
         tab_window.addTab(self.tab_cd, "Clinical Data")
 
     # This function displays the clinical data entries in view mode
     def display_cd_dat(self, tab_window, file_path):
-        self.tab_cd = ClinicalDataDisplay(tab_window, file_path, self.dataset,
-                                          self.filepaths)
+        dataset = self.patient_dict_container.dataset
+        filepaths = self.patient_dict_container.filepaths
+        self.tab_cd = ClinicalDataDisplay(tab_window, file_path, dataset,
+                                          filepaths)
         tab_window.addTab(self.tab_cd, "Clinical Data")
 
     # This function runs Transect on button click

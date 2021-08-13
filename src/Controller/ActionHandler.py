@@ -306,7 +306,6 @@ class ActionHandler:
 
         if save_reply == QtWidgets.QMessageBox.Yes:
             raw_dvh = self.patient_dict_container.get("raw_dvh")
-            self.__main_page.call_class.reset()
             hashed_path = self.__main_page.call_class.run_anonymization(
                 raw_dvh)
             self.patient_dict_container.set("hashed_path", hashed_path)
