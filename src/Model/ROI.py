@@ -702,7 +702,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
                                     ]
 
     file_meta = FileMetaDataset()
-    file_meta.FileMetaInformationGroupLength = 202
+    file_meta.FileMetaInformationGroupLength = 238
     file_meta.FileMetaInformationVersion = b'\x00\x01'
     file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
     file_meta.MediaStorageSOPInstanceUID = '1.2.3.4'
@@ -741,16 +741,12 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
 
     # RT Referenced Frame Of Reference Sequence, Structure Set Module
     rt_ref_frame_of_ref_sequence_item = pydicom.dataset.Dataset()
-    rt_ref_frame_of_ref_sequence_item.FrameOfReferenceUID = \
-        img_ds.FrameOfReferenceUID
-    rt_ss.ReferencedFrameOfReferenceSequence = [
-        rt_ref_frame_of_ref_sequence_item]
+    rt_ref_frame_of_ref_sequence_item.FrameOfReferenceUID = img_ds.FrameOfReferenceUID
+    rt_ss.ReferencedFrameOfReferenceSequence = [rt_ref_frame_of_ref_sequence_item]
 
     rt_ref_study_sequence_item = pydicom.dataset.Dataset()
-    rt_ref_study_sequence_item.ReferencedSOPInstanceUID = \
-        img_ds.StudyInstanceUID
-    rt_ref_study_sequence_item.ReferencedSOPClassUID = \
-        img_ds.SOPClassUID
+    rt_ref_study_sequence_item.ReferencedSOPInstanceUID = img_ds.StudyInstanceUID
+    rt_ref_study_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
 
     rt_ref_series_sequence_item = pydicom.dataset.Dataset()
     rt_ref_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
@@ -760,33 +756,26 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     for uid in ct_uid_list:
         contour_image_sequence_item = pydicom.dataset.Dataset()
         referenced_image_sequence_item = pydicom.dataset.Dataset()
-        referenced_image_sequence_item.ReferencedSOPClassUID = \
-            img_ds.SOPClassUID
-        contour_image_sequence_item.ReferencedSOPClassUID = \
-            img_ds.SOPClassUID
+        referenced_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+        contour_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
         referenced_image_sequence_item.ReferencedSOPInstanceUID = uid
         contour_image_sequence_item.ReferencedSOPInstanceUID = uid
         contour_image_sequence.append(contour_image_sequence_item)
         referenced_image_sequence.append(referenced_image_sequence_item)
 
-    rt_ref_frame_of_ref_sequence_item.ContourImageSequence = \
-        contour_image_sequence
+    rt_ref_frame_of_ref_sequence_item.ContourImageSequence = contour_image_sequence
     rt_ss.ReferencedImageSequence = referenced_image_sequence
 
     referenced_series_sequence_item = pydicom.dataset.Dataset()
-    referenced_series_sequence_item.SeriesInstanceUID = \
-        img_ds.SeriesInstanceUID
+    referenced_series_sequence_item.SeriesInstanceUID = img_ds.SeriesInstanceUID
     # acceptable to copy because the contents of each reference sequence
     # item only include SOP Class and SOP Instance, and not additional
     # elements that are in referenced image seq but not referenced instance
     # seq
-    referenced_series_sequence_item.ReferencedInstanceSequence = shallowcopy(
-        referenced_image_sequence)
+    referenced_series_sequence_item.ReferencedInstanceSequence = shallowcopy(referenced_image_sequence)
     rt_ss.ReferencedSeriesSequence = [referenced_series_sequence_item]
-    rt_ref_study_sequence_item.RTReferencedSeriesSequence = [
-        rt_ref_series_sequence_item]
-    rt_ref_frame_of_ref_sequence_item.RTReferencedStudySequence = [
-        rt_ref_study_sequence_item]
+    rt_ref_study_sequence_item.RTReferencedSeriesSequence = [rt_ref_series_sequence_item]
+    rt_ref_frame_of_ref_sequence_item.RTReferencedStudySequence = [rt_ref_study_sequence_item]
 
     rt_ss.StructureSetROISequence = []
     rt_ss.ROIContourSequence = []
