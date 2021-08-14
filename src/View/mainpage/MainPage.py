@@ -89,12 +89,12 @@ class UIMainWindow:
         self.left_panel.setMaximumWidth(500)
 
         # Add structures tab to left panel
-        if patient_dict_container.has_modality("rtss"):
+        if not hasattr(self, 'structures_tab'):
             self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(self.update_views)
-            self.left_panel.addTab(self.structures_tab, "Structures")
-        elif hasattr(self, 'structures_tab'):
-            del self.structures_tab
+        else:
+            self.structures_tab.update_ui()
+        self.left_panel.addTab(self.structures_tab, "Structures")
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()

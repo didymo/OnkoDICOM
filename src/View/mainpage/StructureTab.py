@@ -144,6 +144,12 @@ class StructureTab(QtWidgets.QWidget):
         layout_roi_buttons.addWidget(self.button_roi_draw)
         layout_roi_buttons.addWidget(self.button_roi_delete)
 
+    def update_ui(self):
+        self.rois = self.patient_dict_container.get("rois")
+        self.color_dict = self.init_color_roi()
+        self.patient_dict_container.set("roi_color_dict", self.color_dict)
+        self.update_content()
+
     def update_content(self):
         """
         Add the contents (color square and checkbox) in the scrolling area widget.
@@ -420,9 +426,9 @@ class StructureTab(QtWidgets.QWidget):
         original_roi_observation_sequence.extend(new_roi_observation_sequence)
 
         # Renumber the ROINumber and ReferencedROINumber tags
-        original_structure_set = self.renumber_roi_number(original_structure_set)
-        original_roi_contour = self.renumber_roi_number(original_roi_contour)
-        original_roi_observation_sequence = self.renumber_roi_number(original_roi_observation_sequence)
+        original_structure_set = StructureTab.renumber_roi_number(original_structure_set)
+        original_roi_contour = StructureTab.renumber_roi_number(original_roi_contour)
+        original_roi_observation_sequence = StructureTab.renumber_roi_number(original_roi_observation_sequence)
 
         # Set the new value
         old_rtss.add_new(Tag("StructureSetROISequence"), "SQ",original_structure_set)
@@ -431,6 +437,7 @@ class StructureTab(QtWidgets.QWidget):
 
         return old_rtss
 
+    @staticmethod
     def renumber_roi_number(self, sequence):
         roi_number = 1
         for item in sequence:
