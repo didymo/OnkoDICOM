@@ -6,6 +6,8 @@ from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
 
+from pydicom.tag import Tag
+
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
@@ -335,7 +337,10 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_sagittal.pop(roi_name, None)
 
     def save_new_rtss(self, event=None):
-        existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
+        if self.patient_dict_container.get("existing_file_rtss") is not None:
+            existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
+        else:
+            existing_rtss_directory = None
         rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
 
         confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
@@ -382,6 +387,56 @@ class StructureTab(QtWidgets.QWidget):
             else:
                 return None
 
-        print('MERGE RTSS!!')
+        # Original sequences
+        original_structure_set = old_rtss.StructureSetROISequence
+        original_roi_contour = old_rtss.ROIContourSequence
+        original_roi_observation_sequence = old_rtss.RTROIObservationsSequence
+
+        # New sequences
+        new_structure_set = new_rtss.StructureSetROISequence
+        new_roi_contour = new_rtss.ROIContourSequence
+        new_roi_observation_sequence = new_rtss.RTROIObservationsSequence
+
+        # Get the indexes of duplicated ROIs
+        old_duplicated_roi_indexes = {}
+        index = 0
+        for structure_set in original_structure_set:
+            if structure_set.ROIName in duplicated_names:
+                old_duplicated_roi_indexes[structure_set.ROIName] = index
+            index += 1
+
+        # Remove old values out of the original sequences
+        for name in duplicated_names:
+            # Remove the old value out of the original structure set sequence
+            original_structure_set.pop(old_duplicated_roi_indexes[name])
+            # Remove the old value out of the original contour sequence
+            original_roi_contour.pop(old_duplicated_roi_indexes[name])
+            # Remove the old value out of the original observation sequence
+            original_roi_observation_sequence.pop(old_duplicated_roi_indexes[name])
+
+        # Merge the original sequences with the new sequences
+        original_structure_set.extend(new_structure_set)
+        original_roi_contour.extend(new_roi_contour)
+        original_roi_observation_sequence.extend(new_roi_observation_sequence)
+
+        # Renumber the ROINumber and ReferencedROINumber tags
+        original_structure_set = self.renumber_roi_number(original_structure_set)
+        original_roi_contour = self.renumber_roi_number(original_roi_contour)
+        original_roi_observation_sequence = self.renumber_roi_number(original_roi_observation_sequence)
+
+        # Set the new value
+        old_rtss.add_new(Tag("StructureSetROISequence"), "SQ",original_structure_set)
+        old_rtss.add_new(Tag("ROIContourSequence"), "SQ", original_roi_contour)
+        old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_roi_observation_sequence)
 
         return old_rtss
+
+    def renumber_roi_number(self, sequence):
+        roi_number = 1
+        for item in sequence:
+            if item.get("ROINumber") is not None:
+                item.add_new(Tag("ROINumber"), 'IS', str(roi_number))
+            elif item.get("ReferencedROINumber") is not None:
+                item.add_new(Tag("ReferencedROINumber"), "IS", str(roi_number))
+            roi_number += 1
+        return sequence
