@@ -6,8 +6,8 @@ from copy import copy as shallowcopy
 from copy import deepcopy
 
 import pydicom
-from pydicom.uid import generate_uid
-from pydicom.dataset import FileMetaDataset
+from pydicom.uid import generate_uid, ImplicitVRLittleEndian
+from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
 from src.Model.CalculateImages import *
@@ -702,8 +702,12 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
                                     ]
 
     file_meta = FileMetaDataset()
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
-    file_meta.MediaStorageSOPInstanceUID = '1.2.3'
+    file_meta.FileMetaInformationGroupLength = 202
+    file_meta.FileMetaInformationVersion = b'\x00\x01'
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+    file_meta.MediaStorageSOPInstanceUID = '1.2.3.4'
+    file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
+    validate_file_meta(file_meta)
 
     rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128, file_meta=file_meta)
     rt_ss.fix_meta_info()
