@@ -643,7 +643,7 @@ def ordered_list_rois(rois):
 
 
 def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
-                                ct_uid_list=[]) -> pydicom.dataset.Dataset:
+                                ct_uid_list=[]) -> pydicom.dataset.FileDataset:
     """Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
     Name, and Description, which are set to "OnkoDICOM" plus the StudyID
@@ -662,7 +662,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
 
     Returns
     -------
-    pydicom.dataset.Dataset
+    pydicom.dataset.FileDataset
         the half-baked RT SS, ready for Structure Set ROI Sequence,
         ROI Contour Sequence, and RT ROI Observations Sequence
 

@@ -438,7 +438,7 @@ class StructureTab(QtWidgets.QWidget):
         return old_rtss
 
     @staticmethod
-    def renumber_roi_number(self, sequence):
+    def renumber_roi_number(sequence):
         roi_number = 1
         for item in sequence:
             if item.get("ROINumber") is not None:
