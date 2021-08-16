@@ -75,12 +75,12 @@ class Drawing(QtWidgets.QGraphicsScene):
             """
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
-            for x_coord in range(self.min_y, self.max_y):
-                for y_coord in range(self.min_x, self.max_x):
+            for y_coord in range(self.min_y, self.max_y):
+                for x_coord in range(self.min_x, self.max_x):
 
-                    if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
-                            self.pixel_array[x_coord][y_coord] <= self.max_pixel):
-                        self.target_pixel_coords.add((y_coord, x_coord))
+                    if (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
+                            self.pixel_array[y_coord][x_coord] <= self.max_pixel):
+                        self.target_pixel_coords.add((x_coord, y_coord))
 
             """
             For the meantime, a new image is created and the pixels specified are coloured. 
@@ -170,19 +170,19 @@ class Drawing(QtWidgets.QGraphicsScene):
         min_x_bound_square = math.floor(clicked_x) - self.draw_tool_radius
         max_y_bound_square = math.floor(clicked_y) + self.draw_tool_radius
         max_x_bound_square = math.floor(clicked_x) + self.draw_tool_radius
-        for x_coord in range(max(self.min_y, min_y_bound_square), min(self.max_y, max_y_bound_square)):
-            for y_coord in range(max(self.min_x, min_x_bound_square), min(self.max_x, max_x_bound_square)):
-                clicked_point = numpy.array((clicked_y, clicked_x))
+        for y_coord in range(max(self.min_y, min_y_bound_square), min(self.max_y, max_y_bound_square)):
+            for x_coord in range(max(self.min_x, min_x_bound_square), min(self.max_x, max_x_bound_square)):
+                clicked_point = numpy.array((clicked_x, clicked_y))
                 point_to_check = numpy.array((x_coord, y_coord))
                 distance = numpy.linalg.norm(clicked_point - point_to_check)
-                if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
-                        self.pixel_array[x_coord][y_coord] <= self.max_pixel) and (distance <= self.draw_tool_radius):
-                    c = self.q_image.pixel(y_coord, x_coord)
+                if (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
+                        self.pixel_array[y_coord][x_coord] <= self.max_pixel) and (distance <= self.draw_tool_radius):
+                    c = self.q_image.pixel(x_coord, y_coord)
                     colors = QColor(c)
-                    if (y_coord, x_coord) not in self.according_color_dict:
-                        self.according_color_dict[(y_coord, x_coord)] = colors.getRgbF()
-                        points_to_color.add((y_coord, x_coord))
-                        self.target_pixel_coords.add((y_coord, x_coord))
+                    if (x_coord, y_coord) not in self.according_color_dict:
+                        self.according_color_dict[(x_coord, y_coord)] = colors.getRgbF()
+                        points_to_color.add((x_coord, y_coord))
+                        self.target_pixel_coords.add((x_coord, y_coord))
 
         # Color to draw
         color_to_draw = QtGui.QColor()
