@@ -468,19 +468,23 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         # roi isodose table
         with open('data/csv/isodoseRoi.csv', "r") as fileInput:
-            i = 0;
-            for row in fileInput:
+            # Clear table to prevent displaying data multiple times
+            self.table_roi.setRowCount(0)
+
+            # Loop through each row
+            for i, row in enumerate(fileInput):
                 items = [
                     QTableWidgetItem(str(item.replace('\n', '')))
                     for item in row.split(',')
                 ]
+                
+                # Add row to table
                 self.table_roi.insertRow(i)
                 self.table_roi.setItem(i, 0, items[0])
                 self.table_roi.setItem(i, 1, items[1])
                 self.table_roi.setItem(i, 2, items[2])
                 if len(items) > 3:
                     self.table_roi.setItem(i, 3, items[3])
-                i += 1
 
         # patient hash ID table, which is just for displaying all the
         # patients anonymized byt the software since intallation
@@ -552,11 +556,19 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # This function enables deletion of an isodose level
     def remove_isodose(self):
+        # Get selected rows
         rows = sorted(set(index.row() for index in
                           self.table_roi.selectedIndexes()))
         if rows:
+            # Remove selected rows. Variable i is needed as, for example
+            # if row 0 and 1 are to be removed, row 0 will be removed
+            # first, making row 1 now row 0. Therefore, to remove row
+            # '1', we need to remove row 1 minus the amount of rows that
+            # have already been removed.
+            i = 0
             for row in rows:
-                self.table_roi.removeRow(row)
+                self.table_roi.removeRow(row - i)
+                i += 1
         else:
             QMessageBox.warning(self, "No Isodose Selected",
                                       "No isodose levels have been selected.")
