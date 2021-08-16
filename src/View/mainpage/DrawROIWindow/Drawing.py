@@ -19,11 +19,13 @@ import src.constants as constant
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, target_pixel_coords=set()):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slices_changed_set, current_slice, target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary components
         self.draw_roi_window_instance = draw_roi_window_instance
+        self.slices_changed_set = slices_changed_set
+        self.current_slice = current_slice
         self.min_pixel = min_pixel
         self.max_pixel = max_pixel
         self.addItem(QGraphicsPixmapItem(imagetoPaint))
@@ -140,6 +142,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
         # than the radius, remove it from the highlighted pixels.
 
+
         according_color_dict_key_list = list(self.according_color_dict.keys())
 
         color_to_draw = QtGui.QColor()
@@ -154,6 +157,8 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
                 self.target_pixel_coords.remove((x, y))
                 self.according_color_dict.pop((x, y))
+                # The roi drawn on current slice is changed after several pixels are modified
+                self.slices_changed_set.add(self.current_slice)
 
         self.refresh_image()
 
@@ -163,6 +168,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
         # than the radius, add it to the highlighted pixels.
+
 
         # Set of points to color
         points_to_color = set()
@@ -184,6 +190,8 @@ class Drawing(QtWidgets.QGraphicsScene):
                         self.according_color_dict[(x_coord, y_coord)] = colors.getRgbF()
                         points_to_color.add((x_coord, y_coord))
                         self.target_pixel_coords.add((x_coord, y_coord))
+                        # The roi drawn on current slice is changed after several pixels are modified
+                        self.slices_changed_set.add(self.current_slice)
 
         # Color to draw
         color_to_draw = QtGui.QColor()

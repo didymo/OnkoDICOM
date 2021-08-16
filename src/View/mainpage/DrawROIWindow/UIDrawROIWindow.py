@@ -34,6 +34,7 @@ class UIDrawROIWindow:
         self.ROI_name = None  # Selected ROI name
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specified by the min and max
         self.drawingROI = None
+        self.slices_changed_set = set()
         # pixel density
         self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
@@ -495,18 +496,23 @@ class UIDrawROIWindow:
         )
 
     def save_drawing_progress(self, image_slice_number):
-        if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None:
-            pixel_hull = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
-            if pixel_hull is not None:
-                self.drawn_roi_list[image_slice_number] = {
-                    'coords': pixel_hull,
-                    'ds': self.ds,
-                    'drawingROI': self.drawingROI
-                }
-                return True
-            else:
-                self.display_multipolygon_warning(image_slice_number)
-                return False
+        #  Save drawing progress only when roi on current slice has changed
+        if image_slice_number in self.slices_changed_set:
+            if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None:
+                pixel_hull = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
+                if pixel_hull is not None:
+                    self.drawn_roi_list[image_slice_number] = {
+                        'coords': pixel_hull,
+                        'ds': self.ds,
+                        'drawingROI': self.drawingROI
+                    }
+                    self.slices_changed_set.remove(image_slice_number)
+                    return True
+                else:
+                    self.display_multipolygon_warning(image_slice_number)
+                    return False
+        else:
+            return True
         return True
 
     def on_transect_close(self):
@@ -556,8 +562,12 @@ class UIDrawROIWindow:
                     max_pixel,
                     self.patient_dict_container.dataset[id],
                     self.draw_roi_window_instance,
+                    self.slices_changed_set,
+                    self.current_slice,
                     set()
+
                 )
+                self.slices_changed_set.add(self.current_slice)
                 self.dicom_view.view.setScene(self.drawingROI)
                 self.enable_cursor_radius_change_box()
             else:
