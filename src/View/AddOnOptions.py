@@ -22,10 +22,9 @@ class UIAddOnOptions(object):
         self.note = None
         self.fill_options = None
         self.change_default_directory_frame = None
-
-        # The following can be used for future implementation of creating ROIs from ISO dose.
         self.table_roi = None
         self.add_new_roi = None
+        self.delete_roi = None
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         """
@@ -93,6 +92,7 @@ class UIAddOnOptions(object):
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
+        self.option_layout.addWidget(self.delete_roi, 2, 0)
         self.option_layout.addWidget(self.add_new_roi, 2, 2)
         self.option_layout.addWidget(self.import_organ_csv, 2, 1)
         self.option_layout.addWidget(self.add_standard_organ_name, 2, 2)
@@ -181,6 +181,7 @@ class UIAddOnOptions(object):
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(True)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -196,6 +197,7 @@ class UIAddOnOptions(object):
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
@@ -211,6 +213,7 @@ class UIAddOnOptions(object):
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(True)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -227,6 +230,7 @@ class UIAddOnOptions(object):
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(True)
+            self.delete_roi.setVisible(True)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -243,6 +247,7 @@ class UIAddOnOptions(object):
             self.table_ids.setVisible(True)
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -252,6 +257,7 @@ class UIAddOnOptions(object):
         elif type == "User Options" or type == "Configuration":
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -267,6 +273,7 @@ class UIAddOnOptions(object):
         elif type == "Line & Fill configuration":
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -282,6 +289,7 @@ class UIAddOnOptions(object):
         elif type == "Default directory":
             self.add_new_window.setVisible(False)
             self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -458,20 +466,31 @@ class RoiFromIsodoseOptions(object):
         Create the components for the UI of ROI from Isodose view.
         """
         self.window = window_options
-        self.create_add_button()
+        self.create_buttons()
         self.create_table_view()
 
-    def create_add_button(self):
+    def create_buttons(self):
         """
         Create a button to create a new ROI from isodose.
         """
         self.window.add_new_roi = QtWidgets.QPushButton(self.window.widget)
+        self.window.delete_roi = QtWidgets.QPushButton(self.window.widget)
+
         self.window.add_new_roi.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.window.delete_roi.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
         self.window.add_new_roi.setVisible(False)
+        self.window.delete_roi.setVisible(False)
+
+        self.window.add_new_roi.setProperty("QPushButtonClass",
+                                            "success-button")
+        self.window.delete_roi.setProperty("QPushButtonClass", "fail-button")
 
         _translate = QtCore.QCoreApplication.translate
         self.window.add_new_roi.setText(_translate("Add_On_Options", "Add new Isodose"))
+        self.window.delete_roi.setText(_translate("Add_On_Options", "Remove Isodose"))
 
     def create_table_view(self):
         """

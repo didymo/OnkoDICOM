@@ -124,6 +124,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
         self.add_new_roi.clicked.connect(self.new_isodose)
+        self.delete_roi.clicked.connect(self.remove_isodose)
         self.import_organ_csv.clicked.connect(self.import_organs)
 
         # adding the right click menus for each table
@@ -549,9 +550,19 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
             self.table_roi.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
+    # This function enables deletion of an isodose level
+    def remove_isodose(self):
+        rows = sorted(set(index.row() for index in
+                          self.table_roi.selectedIndexes()))
+        if rows:
+            for row in rows:
+                self.table_roi.removeRow(row)
+        else:
+            QMessageBox.warning(self, "No Isodose Selected",
+                                      "No isodose levels have been selected.")
+
     # the following function lets you import a csv of organ names into the
     # table if the csv is in the given format
-
     def import_organs(self):
         self.check_change = False
         path = QFileDialog.getOpenFileName(
