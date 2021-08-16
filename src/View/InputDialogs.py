@@ -207,12 +207,12 @@ class Dialog_Dose(QDialog):
         # Input dialog layout
         layout = QFormLayout(self)
         layout.addRow(QLabel("Isodose Level:"), self.iso_dose)
-        layout.addRow(QLabel("Unit: "), self.iso_unit)
+        layout.addRow(QLabel("Unit:"), self.iso_unit)
         layout.addRow(QLabel("Notes:"), self.iso_notes)
         layout.addWidget(buttonBox)
         buttonBox.accepted.connect(self.accepting)
         buttonBox.rejected.connect(self.reject)
-        self.setWindowTitle("Standard Volume Names")
+        self.setWindowTitle("Isodose Levels")
 
     def getInputs(self):
         """

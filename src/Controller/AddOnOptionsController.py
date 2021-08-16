@@ -145,7 +145,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         )
         self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table_roi.customContextMenuRequested.connect(
-            self.on_customContextMenuRequested_Roi)
+            self.onCustomContextMenuRequested_Roi)
         # making the URL column a double clicked link
         self.table_organ.itemDoubleClicked.connect(self.open_link)
 
@@ -263,7 +263,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # ROI from IsoDoses
     @Slot(QtCore.QPoint)
-    def on_customContextMenuRequested_Roi(self, pos):
+    def onCustomContextMenuRequested_Roi(self, pos):
         it = self.table_roi.itemAt(pos)
         if it is None:
             return
@@ -277,7 +277,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         modify_row_action = menu.addAction("Modify")
         menu.addSeparator()
         delete_row_action = menu.addAction("Delete")
-        action = menu.exec_(self.table_roi.viewport().mapToGlobal(pos))
+        action = menu.exec(self.table_roi.viewport().mapToGlobal(pos))
 
         # Delete row
         if action == delete_row_action:
@@ -286,7 +286,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         # Insert row
         if action == modify_row_action:
             dialog = Dialog_Dose(self.table_roi.item(
-                c, 0).text(), self.table_roi.item(c, 2).text())
+                c, 0).text(), self.table_roi.item(c, 3).text())
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
