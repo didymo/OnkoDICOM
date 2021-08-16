@@ -21,7 +21,8 @@ class ISO2ROI:
     def __init__(self):
         self.worker_signals = WorkerSignals()
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
-        self.signal_save_confirmation = self.worker_signals.signal_save_confirmation
+        self.signal_save_confirmation = \
+            self.worker_signals.signal_save_confirmation
         self.signal_save_confirmation.connect(self.save_confirmation)
         self.advised_save_rtss = False
         self.isodose_levels = {}
@@ -30,7 +31,8 @@ class ISO2ROI:
         """
         Goes the the steps of the iso2roi conversion.
         :param interrupt_flag: interrupt flag to stop process
-        :param progress_callback: signal that receives the current progress of the loading.
+        :param progress_callback: signal that receives the current
+                                  progress of the loading.
         """
         patient_dict_container = PatientDictContainer()
 
@@ -55,12 +57,14 @@ class ISO2ROI:
                 file_path = patient_dict_container.filepaths.values()
                 file_path = Path(os.path.commonpath(file_path))
 
-                progress_callback.emit(("Generating RT Structure Set", 30))
-                # Create RT Struct file
-                ds = self.generate_rtss(file_path)
-
                 # Get new RT Struct file path
                 file_path = str(file_path.joinpath("rtss.dcm"))
+
+                # Create RT Struct file
+                progress_callback.emit(("Generating RT Structure Set", 30))
+                ds = ROI.create_initial_rtss_from_ct(
+                    patient_dict_container.dataset[0], file_path)
+                ds.save_as(file_path)
 
                 # Add RT Struct file path to patient dict container
                 patient_dict_container.filepaths['rtss'] = file_path
@@ -75,7 +79,15 @@ class ISO2ROI:
                 patient_dict_container.set("dataset_rtss", dataset['rtss'])
 
                 dicom_tree_rtss = DicomTree(filepaths['rtss'])
-                patient_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+                patient_dict_container.set("dict_dicom_tree_rtss",
+                                           dicom_tree_rtss.dict)
+
+                dict_pixluts = ImageLoading.get_pixluts(
+                    patient_dict_container.dataset)
+                patient_dict_container.set("pixluts", dict_pixluts)
+
+                rois = ImageLoading.get_roi_info(ds)
+                patient_dict_container.set("rois", rois)
 
                 patient_dict_container.set("selected_rois", [])
                 patient_dict_container.set("dict_polygons_axial", {})
@@ -151,7 +163,8 @@ class ISO2ROI:
             contours[item] = []
             for slider_id in range(slider_min, slider_max):
                 contours[item].append([])
-                z = patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+                temp_ds = patient_dict_container.dataset[slider_id]
+                z = temp_ds.ImagePositionPatient[2]
                 grid = get_dose_grid(rt_plan_dose, float(z))
 
                 if not (grid == []):
@@ -197,10 +210,12 @@ class ISO2ROI:
 
                 # Get required data for calculating ROI
                 dataset = patient_dict_container.dataset[i]
-                pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+                pixlut = patient_dict_container.get("pixluts")
+                pixlut = pixlut[dataset.SOPInstanceUID]
                 z_coord = dataset.SliceLocation
                 curr_slice_uid = patient_dict_container.get("dict_uid")[i]
-                dose_pixluts = patient_dict_container.get("dose_pixluts")[curr_slice_uid]
+                dose_pixluts = patient_dict_container.get("dose_pixluts")
+                dose_pixluts = dose_pixluts[curr_slice_uid]
 
                 # Loop through each contour for each slice.
                 # Convert the pixel points to RCS points, append z value
@@ -253,87 +268,3 @@ class ISO2ROI:
 
         # Allow the program to continue running
         self.advised_save_rtss = True
-
-    def generate_rtss(self, file_path):
-        """
-        Creates an RT Struct file in the DICOM dataset directory if one
-        currently does not exist. All required tags will be present
-        making the file valid, however these tags will be blank.
-        :param file_path: directory where DICOM dataset is stored.
-        :return: ds, the newly created dataset.
-        """
-        # Define file name of rtss
-        file_name = file_path.joinpath("rtss.dcm")
-
-        # Define time and date
-        time_now = datetime.datetime.now()
-
-        # Create file meta dataset
-        file_meta = FileMetaDataset()
-        file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-        file_meta.MediaStorageSOPInstanceUID = '1.2.3'
-        file_meta.ImplementationClassUID = '1.2.3.4'
-
-        # Create RTSS
-        rtss = FileDataset(file_name, {}, b"\0" * 128, file_meta)
-
-        # Get Study Instance UID from another file in the dataset
-        patient_dict_container = PatientDictContainer()
-
-        # Add required data elements
-        # Patient information
-        rtss.PatientName = patient_dict_container.dataset[0].PatientName
-        rtss.PatientID = patient_dict_container.dataset[0].PatientID
-        rtss.PatientBirthDate = patient_dict_container.dataset[0].PatientBirthDate
-        rtss.PatientSex = patient_dict_container.dataset[0].PatientSex
-
-        # General study information
-        rtss.StudyDate = time_now.strftime('%Y%m%d')
-        rtss.StudyTime = time_now.strftime('%H%M%S.%f')
-        rtss.AccessionNumber = ''
-        rtss.ReferringPhysicianName = ''
-        rtss.StudyInstanceUID = patient_dict_container.dataset[0].StudyInstanceUID
-        rtss.StudyID = ''
-
-        # RT series information
-        rtss.Modality = 'RTSTRUCT'
-        rtss.OperatorsName = ''
-        rtss.SeriesInstanceUID = '1.2.3.4'  # MUST be unique, currently not
-        rtss.SeriesNumber = ''
-
-        # General equipment information
-        rtss.Manufacturer = ''
-
-        # Structure set information
-        rtss.StructureSetLabel = ''
-        rtss.StructureSetDate = ''
-        rtss.StructureSetTime = ''
-        rtss.StructureSetROISequence = ''
-
-        # ROI contour information
-        rtss.ROIContourSequence = ''
-
-        # RT ROI observations information
-        rtss.RTROIObservationsSequence = ''
-
-        # SOP common information
-        rtss.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-        rtss.SOPInstanceUID = '1.2.3.4'  # MUST be unique, currently not
-
-        # Write file
-        rtss.save_as(file_name)
-
-        # Read back in dataset
-        ds = pydicom.dcmread(file_name)
-
-        # Set patient dict container values
-        # Set pixluts
-        dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
-        patient_dict_container.set("pixluts", dict_pixluts)
-
-        # Set ROIs
-        rois = ImageLoading.get_roi_info(ds)
-        patient_dict_container.set("rois", rois)
-
-        # Return new dataset
-        return ds

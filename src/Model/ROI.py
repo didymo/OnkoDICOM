@@ -3,10 +3,12 @@ import datetime
 import random
 from copy import copy as shallowcopy
 from copy import deepcopy
-
+from pathlib import Path
 import pydicom
 from pydicom import Dataset, Sequence
+from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
+from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -641,8 +643,8 @@ def ordered_list_rois(rois):
     return sorted(res)
 
 
-def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
-                                ct_uid_list=[]) -> pydicom.dataset.Dataset:
+def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
+                                ct_uid_list=[]) -> pydicom.dataset.FileDataset:
     """Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
     Name, and Description, which are set to "OnkoDICOM" plus the StudyID
@@ -656,10 +658,12 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     ct_uid_list : list, optional
         list of UIDs (as strings) of the entire image volume that the RT SS
         references, by default []
+    filepath : str
+        File path where the RTSS will be saved
 
     Returns
     -------
-    pydicom.dataset.Dataset
+    pydicom.dataset.FileDataset
         the half-baked RT SS, ready for Structure Set ROI Sequence,
         ROI Contour Sequence, and RT ROI Observations Sequence
 
@@ -698,7 +702,16 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
                                     Tag("InstitutionAddress")
                                     ]
 
-    rt_ss = pydicom.dataset.Dataset()
+    file_meta = FileMetaDataset()
+    file_meta.FileMetaInformationGroupLength = 238
+    file_meta.FileMetaInformationVersion = b'\x00\x01'
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+    file_meta.MediaStorageSOPInstanceUID = '1.2.3.4'
+    file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
+    validate_file_meta(file_meta)
+
+    rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128, file_meta=file_meta)
+    rt_ss.fix_meta_info()
 
     for tag in top_level_tags_to_copy:
         print("Tag ", tag)
@@ -718,7 +731,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_ss.Manufacturer = "OnkoDICOM"
     rt_ss.ManufacturersModelName = "OnkoDICOM"
     # TODO: Pull this off build information in some way
-    rt_ss.SoftwareVersions = "2020"
+    rt_ss.SoftwareVersions = "2021"
 
     # RT Series Module
     rt_ss.SeriesInstanceUID = pydicom.uid.generate_uid()
