@@ -39,7 +39,8 @@ class IsodoseTab(QtWidgets.QWidget):
         self.isodose_tab_layout.addLayout(self.iso2roi_layout)
 
         self.setLayout(self.isodose_tab_layout)
-        self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window = ProgressWindow(
+            self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.progress_window.signal_loaded.connect(self.on_loaded_iso2roi)
 
     def init_layout(self):

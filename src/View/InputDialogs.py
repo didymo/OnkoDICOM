@@ -190,10 +190,13 @@ class Dialog_Dose(QDialog):
     def __init__(self, dose, notes):
         super(Dialog_Dose, self).__init__()
 
+        # Class variables
         self.dose = dose
         self.notes = notes
-        self.setWindowIcon(QtGui.QIcon("res/images/btn-icons/onkodicom_icon.png"))
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.setWindowIcon(QtGui.QIcon(
+            "res/images/btn-icons/onkodicom_icon.png"))
+        buttonBox = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.iso_dose = QLineEdit()
         self.iso_dose.setText(self.dose)
         self.iso_unit = QComboBox()
@@ -201,6 +204,7 @@ class Dialog_Dose(QDialog):
         self.iso_notes = QLineEdit()
         self.iso_notes.setText(self.notes)
 
+        # Input dialog layout
         layout = QFormLayout(self)
         layout.addRow(QLabel("Isodose Level:"), self.iso_dose)
         layout.addRow(QLabel("Unit: "), self.iso_unit)
@@ -211,24 +215,39 @@ class Dialog_Dose(QDialog):
         self.setWindowTitle("Standard Volume Names")
 
     def getInputs(self):
+        """
+        Return the inputs from the dialog box.
+        :return: tuple of dialog inputs - (isodose level, isodose unit,
+                 isodose name, isodose notes)
+        """
+        # Get appropriate name for unit selected
         if self.iso_unit.currentText() == "%":
             iso_name = str('ISOp_' + self.iso_dose.text())
         else:
             iso_name = str('ISO' + self.iso_dose.text())
 
-        return (self.iso_dose.text(), self.iso_unit.currentText(), iso_name, self.iso_notes.text())
+        # Return inputs from dialog box
+        return (self.iso_dose.text(), self.iso_unit.currentText(), iso_name,
+                self.iso_notes.text())
 
     def accepting(self):
+        """
+        Process the event when the user clicks "ok" in the dialog box.
+        """
+        # Make sure the isodose level is a number
         if (self.iso_dose.text() != ''):
             if re.match(r'^\d+$', self.iso_dose.text()):
                 self.accept()
             else:
-                buttonReply = QMessageBox.warning(self, "Error Message",
-                                                  "The Isodose level should to be a number!", QMessageBox.Ok)
+                buttonReply = QMessageBox.warning(
+                    self, "Error Message",
+                    "The Isodose level should to be a number!", QMessageBox.Ok)
                 if buttonReply == QMessageBox.Ok:
                     pass
+        # Make sure the isodose level is not blank
         else:
-            buttonReply = QMessageBox.warning(self, "Error Message",
-                                              "The Isodose field should not be empty!", QMessageBox.Ok)
+            buttonReply = QMessageBox.warning(
+                self, "Error Message",
+                "The Isodose field should not be empty!", QMessageBox.Ok)
             if buttonReply == QMessageBox.Ok:
                 pass

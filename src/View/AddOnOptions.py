@@ -471,49 +471,71 @@ class RoiFromIsodoseOptions(object):
 
     def create_buttons(self):
         """
-        Create a button to create a new ROI from isodose.
+        Create buttons to create and delete ROIs from isodose.
         """
+        # Buttons
         self.window.add_new_roi = QtWidgets.QPushButton(self.window.widget)
         self.window.delete_roi = QtWidgets.QPushButton(self.window.widget)
 
+        # Set cursor
         self.window.add_new_roi.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.window.delete_roi.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
+        # Set visibility
         self.window.add_new_roi.setVisible(False)
         self.window.delete_roi.setVisible(False)
 
+        # Set style
         self.window.add_new_roi.setProperty("QPushButtonClass",
                                             "success-button")
         self.window.delete_roi.setProperty("QPushButtonClass", "fail-button")
 
+        # Set text
         _translate = QtCore.QCoreApplication.translate
-        self.window.add_new_roi.setText(_translate("Add_On_Options", "Add new Isodose"))
-        self.window.delete_roi.setText(_translate("Add_On_Options", "Remove Isodose"))
+        self.window.add_new_roi.setText(_translate("Add_On_Options",
+                                                   "Add new Isodose"))
+        self.window.delete_roi.setText(_translate("Add_On_Options",
+                                                  "Remove Isodose"))
 
     def create_table_view(self):
         """
         Create a table to hold all the ROI creation by isodose entries.
         """
         self.window.table_roi = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.window.table_roi.setStyleSheet(
+            "background-color: rgb(255, 255, 255);")
         self.window.table_roi.setColumnCount(4)
         self.window.table_roi.verticalHeader().hide()
-        self.window.table_roi.setHorizontalHeaderLabels([" Isodose Level ", " Unit ", " ROI Name ", " Notes "])
-        self.window.table_roi.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.window.table_roi.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.window.table_roi.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.window.table_roi.horizontalHeaderItem(3).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.window.table_roi.setHorizontalHeaderLabels(
+            [" Isodose Level ", " Unit ", " ROI Name ", " Notes "])
+
+        self.window.table_roi.horizontalHeaderItem(0).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(1).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(2).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(3).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+
         roi_from_isodose_header = self.window.table_roi.horizontalHeader()
-        roi_from_isodose_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(0,
+                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(1,
+                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(2,
+                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(3,
+                                                     QtWidgets.QHeaderView.Stretch)
+
         self.window.table_roi.setVisible(False)
 
         # Removing the ability to edit tables with immediate click
-        self.window.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_roi.setEditTriggers(
+            QtWidgets.QTreeView.NoEditTriggers |
+            QtWidgets.QTreeView.NoEditTriggers)
 
 
 class PatientHashId(object):

@@ -144,7 +144,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self.onCustomContextMenuRequestedVolume
         )
         self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table_roi.customContextMenuRequested.connect(self.on_customContextMenuRequested_Roi)
+        self.table_roi.customContextMenuRequested.connect(
+            self.on_customContextMenuRequested_Roi)
         # making the URL column a double clicked link
         self.table_organ.itemDoubleClicked.connect(self.open_link)
 
@@ -271,13 +272,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             c, 0, c, self.table_roi.columnCount() - 1)
         self.table_roi.setRangeSelected(item_range, True)
 
+        # Add right click menu
         menu = QtWidgets.QMenu()
         modify_row_action = menu.addAction("Modify")
         menu.addSeparator()
         delete_row_action = menu.addAction("Delete")
         action = menu.exec_(self.table_roi.viewport().mapToGlobal(pos))
+
+        # Delete row
         if action == delete_row_action:
             self.table_roi.removeRow(c)
+
+        # Insert row
         if action == modify_row_action:
             dialog = Dialog_Dose(self.table_roi.item(
                 c, 0).text(), self.table_roi.item(c, 2).text())
@@ -477,7 +483,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace('\n', '')))
                     for item in row.split(',')
                 ]
-                
+
                 # Add row to table
                 self.table_roi.insertRow(i)
                 self.table_roi.setItem(i, 0, items[0])

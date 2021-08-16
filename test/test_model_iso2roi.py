@@ -67,7 +67,8 @@ class TestIso2Roi:
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             self.patient_dict_container.set("rois", self.rois)
-            self.patient_dict_container.set("raw_contour", dict_raw_contour_data)
+            self.patient_dict_container.set("raw_contour",
+                                            dict_raw_contour_data)
             self.patient_dict_container.set("num_points", dict_numpoints)
             self.patient_dict_container.set("pixluts", dict_pixluts)
 
@@ -97,7 +98,8 @@ def test_select_prescription_dose_data(test_object):
     rt_plan_dose = test_object.patient_dict_container.dataset['rtdose']
     slider_id = 0
 
-    z = test_object.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+    dataset = test_object.patient_dict_container.dataset[slider_id]
+    z = dataset.ImagePositionPatient[2]
     grids = get_dose_grid(rt_plan_dose, float(z))
 
     # Assert that the dose grid has 121 entries
@@ -126,7 +128,8 @@ def test_calculate_prescription_dose_boundaries(test_object):
     # Get required dose data
     rt_plan_dose = test_object.patient_dict_container.dataset['rtdose']
     slider_id = 0
-    z = test_object.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+    dataset = test_object.patient_dict_container.dataset[slider_id]
+    z = dataset.ImagePositionPatient[2]
     grid = get_dose_grid(rt_plan_dose, float(z))
     rt_dose_dose = 100
 
@@ -153,7 +156,8 @@ def test_generate_roi_from_iso(test_object):
     # Initialise variables needed for function
     slider_id = 0
     dataset = test_object.patient_dict_container.dataset[slider_id]
-    pixlut = test_object.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+    pixlut = test_object.patient_dict_container.get("pixluts")
+    pixlut = pixlut[dataset.SOPInstanceUID]
     z_coord = dataset.SliceLocation
 
     # Create fake contour data

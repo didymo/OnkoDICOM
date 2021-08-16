@@ -10,6 +10,7 @@ from src.Model.Worker import Worker
 class ProgressWindow(QDialog):
     # Signal that emits when loading has completed
     signal_loaded = QtCore.Signal(tuple)
+
     # Signal that emits when exceptions are raised
     signal_error = QtCore.Signal(Exception)
 
@@ -38,7 +39,8 @@ class ProgressWindow(QDialog):
         """
         Function that executes 'funct' on new thread
         :param funct: function to execute.
-        :param progress_callback: signal that receives the current progress of the loading.
+        :param progress_callback: signal that receives the current
+                                  progress of the loading.
         """
         self.interrupt_flag.clear()
         worker = Worker(funct, self.interrupt_flag, progress_callback=True)

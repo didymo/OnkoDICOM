@@ -1,4 +1,5 @@
-import os, pydicom
+import os
+import pydicom
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
     dict_instance_uid

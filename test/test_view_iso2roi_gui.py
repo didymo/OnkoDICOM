@@ -65,14 +65,16 @@ class TestIso2RoiGui:
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             self.patient_dict_container.set("rois", self.rois)
-            self.patient_dict_container.set("raw_contour", dict_raw_contour_data)
+            self.patient_dict_container.set("raw_contour",
+                                            dict_raw_contour_data)
             self.patient_dict_container.set("num_points", dict_numpoints)
             self.patient_dict_container.set("pixluts", dict_pixluts)
 
         # Open the main window
         self.main_window = MainWindow()
 
-        self.initial_structure_count = self.main_window.structures_tab.layout_content.count()
+        self.initial_structure_count = \
+            self.main_window.structures_tab.layout_content.count()
         self.initial_roi_count = len(self.main_window.structures_tab.rois)
 
 
@@ -119,7 +121,8 @@ def test_rois_convert_isodose_to_roi_button_pressed_no_contours(test_object):
     test_object.main_window.isodoses_tab.iso2roi_button_clicked()
 
     # Get the new length of RIO's in Structures Tab
-    current_roi_count = test_object.main_window.structures_tab.layout_content.count()
+    current_roi_count = \
+        test_object.main_window.structures_tab.layout_content.count()
 
     # Assert the length has not changed
     assert current_roi_count == test_object.initial_roi_count

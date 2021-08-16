@@ -167,7 +167,9 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set,
             referenced_frame_of_reference_uid = data_set.FrameOfReferenceUID
             roi_number = 1
         else:
-            referenced_frame_of_reference_uid = rtss["StructureSetROISequence"].value[0].ReferencedFrameOfReferenceUID
+            first_roi_sequence = rtss["StructureSetROISequence"].value[0]
+            referenced_frame_of_reference_uid =\
+                first_roi_sequence.ReferencedFrameOfReferenceUID
             roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
 
         # Colour TBC
@@ -656,8 +658,8 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     img_ds : pydicom.dataset.Dataset
         A CT or MR image that the RT Structure Set will be "drawn" on
     ct_uid_list : list, optional
-        list of UIDs (as strings) of the entire image volume that the RT SS
-        references, by default []
+        list of UIDs (as strings) of the entire image volume that the
+        rtss references, by default []
     filepath : str
         File path where the RTSS will be saved
 
@@ -710,7 +712,8 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     validate_file_meta(file_meta)
 
-    rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128, file_meta=file_meta)
+    rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128,
+                                        file_meta=file_meta)
     rt_ss.fix_meta_info()
 
     for tag in top_level_tags_to_copy:
@@ -719,9 +722,9 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
             print("value of tag in image: ", img_ds[tag])
             rt_ss[tag] = deepcopy(img_ds[tag])
 
-    # Best to modify the Structure Set Label with something more interesting
-    # in the application. and populate the Name and Description from the
-    # application also.
+    # Best to modify the Structure Set Label with something more
+    # interesting in the application. and populate the Name and
+    # Description from the application also.
     print("Study ID is ", rt_ss.StudyID)
     rt_ss.StructureSetLabel = "OnkoDICOM rtss of " + rt_ss.StudyID
     rt_ss.StructureSetName = rt_ss.StructureSetLabel
