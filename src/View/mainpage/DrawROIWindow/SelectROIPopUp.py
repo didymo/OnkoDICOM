@@ -84,7 +84,7 @@ class SelectROIPopUp(QDialog):
             standard_volume_names = []
 
             csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
+            next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 standard_volume_names.append(row[1])
 

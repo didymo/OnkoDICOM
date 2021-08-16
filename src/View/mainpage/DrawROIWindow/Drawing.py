@@ -19,7 +19,7 @@ import src.constants as constant
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary components
@@ -42,7 +42,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.dataset = dataset
         self.pixel_array = None
         # This will contain the new pixel coordinates specifed by the min and max pixel density
-        self.target_pixel_coords = set()
+        self.target_pixel_coords = target_pixel_coords
         self.according_color_dict = {}
         self.q_image = None
         self.q_pixmaps = None
@@ -59,6 +59,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
             if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
+                print(self.draw_roi_window_instance.bounds_box_draw)
                 self.min_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().x())
                 self.min_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().y())
                 self.max_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().width() + self.min_x)

@@ -22,17 +22,12 @@ from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 class UIDrawROIWindow:
 
     def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss, signal_roi_drawn):
-
         self.patient_dict_container = PatientDictContainer()
 
         self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.signal_roi_drawn = signal_roi_drawn
-
-        self.current_slice = 0
-        self.forward_pressed = None
-        self.backward_pressed = None
-        self.slider_changed = None
+        self.drawn_roi_list = {}
         self.standard_organ_names = []
         self.standard_volume_names = []
         self.standard_names = []  # Combination of organ and volume
@@ -49,6 +44,7 @@ class UIDrawROIWindow:
         self.lower_limit = None
 
         self.dicom_view = DicomAxialView()
+        self.current_slice = self.dicom_view.slider.value()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
 
@@ -399,7 +395,20 @@ class UIDrawROIWindow:
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
     def slider_value_changed(self):
-        self.image_slice_number_line_edit.setText(str(self.dicom_view.current_slice_number))
+        self.set_current_slice(self.dicom_view.slider.value())
+
+    def set_current_slice(self, slice_number):
+        self.image_slice_number_line_edit.setText(str(slice_number+1))
+        self.current_slice = slice_number
+        self.dicom_view.update_view()
+
+        # check if this slice has any drawings before
+        if self.drawn_roi_list.get(self.current_slice) is not None:
+            self.drawingROI = self.drawn_roi_list[self.current_slice]['drawingROI']
+            self.ds = self.drawn_roi_list[self.current_slice]['ds']
+            self.dicom_view.view.setScene(self.drawingROI)
+        else:
+            self.ds = None
 
     def onZoomInClicked(self):
         """
@@ -425,46 +434,28 @@ class UIDrawROIWindow:
         """
         This function is used for canceling the drawing
         """
-        self.close()
+        self.closeWindow()
 
     def onBackwardClicked(self):
-        self.backward_pressed = True
-        self.forward_pressed = False
-        self.slider_changed = False
-
-        image_slice_number = self.dicom_view.current_slice_number
-
-        # Backward will only execute if current image slice is above 1.
-        if int(image_slice_number) > 1:
-            self.current_slice = int(image_slice_number)
-
-            # decrements slice by 1
-            self.current_slice = self.current_slice - 2
-
-            # Update slider to move to correct position
-            self.dicom_view.slider.setValue(self.current_slice)
-            self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
-            self.dicom_view.update_view()
+        image_slice_number = self.current_slice
+        # save progress
+        if self.save_drawing_progress(image_slice_number):
+            # Backward will only execute if current image slice is above 0.
+            if int(image_slice_number) > 0:
+                # decrements slice by 1 and update slider to move to correct position
+                self.dicom_view.slider.setValue(image_slice_number-1)
 
     def onForwardClicked(self):
-        pixmaps = self.patient_dict_container.get("pixmaps_axial")
-        total_slices = len(pixmaps)
+        image_slice_number = self.current_slice
+        # save progress
+        if self.save_drawing_progress(image_slice_number):
+            pixmaps = self.patient_dict_container.get("pixmaps_axial")
+            total_slices = len(pixmaps)
 
-        self.backward_pressed = False
-        self.forward_pressed = True
-        self.slider_changed = False
-
-        image_slice_number = self.dicom_view.current_slice_number
-
-        # Forward will only execute if current image slice is below the total number of slices.
-        if int(image_slice_number) < total_slices:
-            # increments slice by 1
-            self.current_slice = int(image_slice_number)
-
-            # Update slider to move to correct position
-            self.dicom_view.slider.setValue(self.current_slice)
-            self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
-            self.dicom_view.update_view()
+            # Forward will only execute if current image slice is below the total number of slices.
+            if int(image_slice_number) < total_slices:
+                # increments slice by 1 and update slider to move to correct position
+                self.dicom_view.slider.setValue(image_slice_number + 1)
 
     def onResetClicked(self):
         self.dicom_view.image_display()
@@ -475,6 +466,9 @@ class UIDrawROIWindow:
         self.max_pixel_density_line_edit.setText("")
         if hasattr(self, 'bounds_box_draw'):
             delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+        self.ds = None
 
     def transect_handler(self):
         """
@@ -482,16 +476,7 @@ class UIDrawROIWindow:
         """
 
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
-        id = self.dicom_view.slider.value()
-
-        # Getting most updated selected slice
-        if self.forward_pressed:
-            id = self.current_slice
-        elif self.backward_pressed:
-            id = self.current_slice
-        elif self.slider_changed:
-            id = self.dicom_view.slider.value()
-
+        id = self.current_slice
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -505,6 +490,21 @@ class UIDrawROIWindow:
             colS,
             is_roi_draw=True,
         )
+
+    def save_drawing_progress(self, image_slice_number):
+        if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None:
+            pixel_hull = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
+            if pixel_hull is not None:
+                self.drawn_roi_list[image_slice_number] = {
+                    'coords': pixel_hull,
+                    'ds': self.ds,
+                    'drawingROI': self.drawingROI
+                }
+                return True
+            else:
+                self.display_multipolygon_warning(image_slice_number)
+                return False
+        return True
 
     def on_transect_close(self):
         if self.upper_limit and self.lower_limit:
@@ -523,15 +523,8 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Not all values are specified or correct.")
         else:
-            id = self.dicom_view.slider.value()
-
             # Getting most updated selected slice
-            if (self.forward_pressed):
-                id = self.current_slice
-            elif (self.backward_pressed):
-                id = self.current_slice
-            elif (self.slider_changed):
-                id = self.dicom_view.slider.value()
+            id = self.current_slice
 
             dt = self.patient_dict_container.dataset[id]
             dt.convert_pixel_data()
@@ -559,7 +552,8 @@ class UIDrawROIWindow:
                     min_pixel,
                     max_pixel,
                     self.patient_dict_container.dataset[id],
-                    self.draw_roi_window_instance
+                    self.draw_roi_window_instance,
+                    set()
                 )
                 self.dicom_view.view.setScene(self.drawingROI)
                 self.display_cursor_radius_change_box()
@@ -568,56 +562,63 @@ class UIDrawROIWindow:
                                   "Not all values are specified or correct.")
 
     def onBoxDrawClicked(self):
-        id = self.dicom_view.slider.value()
+        id = self.current_slice
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
-
+        self.drawingROI = None
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
 
     def onSaveClicked(self):
         # Make sure the user has clicked Draw first
-        if self.ds is not None:
-            # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
-            # to be converted to a concave hull.
-            pixel_hull = self.calculate_concave_hull_of_points()
+        if self.save_drawing_progress(image_slice_number=self.current_slice):
+            self.saveROIList()
+
+    def saveROIList(self):
+        roi_list = []
+        if self.drawn_roi_list == {}:
+            QMessageBox.about(self.draw_roi_window_instance, "No ROI Detected",
+                              "Please ensure you have drawn your ROI first.")
+            return
+        for slice_id, slice_info in self.drawn_roi_list.items():
+            pixel_hull = slice_info['coords']
             if pixel_hull is not None:
-                hull = self.convert_hull_to_rcs(pixel_hull)  # Convert the polygon's pixel points to RCS locations.
-                # The list of points will need to be converted into a single-dimensional array, as RTSTRUCT contour
-                # data is stored in such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...]
+                hull = self.convert_hull_to_rcs(pixel_hull,
+                                                slice_id)  # Convert the polygon's pixel points to RCS locations.
+
                 single_array = []
                 for sublist in hull:
                     for item in sublist:
                         single_array.append(item)
-
-                # Create a popup window that modifies the RTSTRUCT and tells the user that processing is happening.
-                progress_window = SaveROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
-                progress_window.signal_roi_saved.connect(self.roi_saved)
-                progress_window.start_saving(self.dataset_rtss, self.ROI_name, single_array, self.ds)
-                progress_window.show()
+                roi_list.append({
+                    'ds': slice_info['ds'],
+                    'coords': single_array
+                })
             else:
-                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
-                                  "Selected points will generate multiple contours, which is not currently supported. "
-                                  "If the region you are drawing is not meant to generate multiple contours, please "
-                                  "ajust your selected alpha value.")
-        else:
-            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
-                              "Please ensure you have drawn your ROI first.")
+                self.display_multipolygon_warning(slice_id)
+                return
+
+        # The list of points will need to be converted into a single-dimensional array, as RTSTRUCT contour
+        # data is stored in such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...]
+        # Create a popup window that modifies the RTSTRUCT and tells the user that processing is happening.
+        progress_window = SaveROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+        progress_window.signal_roi_saved.connect(self.roi_saved)
+        progress_window.start_saving(self.dataset_rtss, self.ROI_name, roi_list)
+        progress_window.show()
 
     def roi_saved(self, new_rtss):
         self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
         QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
-        self.close()
+        self.closeWindow()
 
-    def calculate_concave_hull_of_points(self):
+    def calculate_concave_hull_of_points(self, pixel_coords):
         """
         Return the alpha shape of the highlighted pixels using the alpha entered by the user.
         :return: List of points ordered to form a polygon.
         """
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in self.drawingROI.target_pixel_coords]
-
+        target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in pixel_coords]
         # Calculate the concave hull of the points.
         # alpha = 0.95 * alphashape.optimizealpha(points)
         alpha = float(self.input_alpha_value.text())
@@ -630,16 +631,18 @@ class UIDrawROIWindow:
         points = []
         for i in range(len(hull_xy[0])):
             points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
-
         return points
 
-    def convert_hull_to_rcs(self, hull_pts):
+    def convert_hull_to_rcs(self, hull_pts, slider_id):
         """
         Converts all the pixel coordinates in the given polygon to RCS coordinates based off the CT image's matrix.
         :param hull_pts: List of pixel coordinates ordered to form a polygon.
         :return: List of RCS coordinates ordered to form a polygon
+
+        Parameters
+        ----------
+        slider_id: id of the slide to convert to rcs (z coordinate)
         """
-        slider_id = self.dicom_view.slider.value()
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
         z_coord = dataset.SliceLocation
@@ -658,14 +661,11 @@ class UIDrawROIWindow:
 
     def onPreviewClicked(self):
         if hasattr(self, 'drawingROI') and len(self.drawingROI.target_pixel_coords) > 0:
-            list_of_points = self.calculate_concave_hull_of_points()
+            list_of_points = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
             if list_of_points is not None:
                 self.drawingROI.draw_contour_preview(list_of_points)
             else:
-                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
-                                  "Selected points will generate multiple contours, which is not currently supported. "
-                                  "If the region you are drawing is not meant to generate multiple contours, please "
-                                  "ajust your selected alpha value.")
+                self.display_multipolygon_warning(self.current_slice)
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
@@ -767,3 +767,18 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_input.setVisible(True)
         self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(True)
         self.draw_roi_window_cursor_radius_change_increase_button.setVisible(True)
+
+    def display_multipolygon_warning(self, slice_id):
+        QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
+                      "Selected points in slice " + str(slice_id + 1) + " will generate multiple contours, "
+                                                                        "which is not currently supported. "
+                                                                        "If the region you are drawing is not meant to generate multiple contours, please "
+                                                                        "adjust your selected alpha value.")
+    def closeWindow(self):
+        self.drawn_roi_list = {}
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+        self.ds = None
+        self.close()

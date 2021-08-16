@@ -24,7 +24,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
 
         self.threadpool = QtCore.QThreadPool()
 
-    def start_saving(self, dataset_rtss, roi_name, single_array, ds):
+    def start_saving(self, dataset_rtss, roi_name, roi_list):
         """
         Creates a thread that generates the new dataset object.
         :param dataset_rtss: dataset of RTSS
@@ -32,7 +32,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
         :param single_array: Coordinates of pixels for new ROI
         :param ds: Data Set of selected DICOM image file
         """
-        worker = Worker(ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
+        worker = Worker(ROI.create_roi, dataset_rtss, roi_name, roi_list)
         worker.signals.result.connect(self.roi_saved)
         self.threadpool.start(worker)
 
