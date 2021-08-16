@@ -33,6 +33,7 @@ class UIDrawROIWindow:
         self.standard_names = []  # Combination of organ and volume
         self.ROI_name = None  # Selected ROI name
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specified by the min and max
+        self.drawingROI = None
         # pixel density
         self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
@@ -416,7 +417,8 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.dicom_view.view.setScene(self.drawingROI)
+        if self.drawingROI:
+            self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
@@ -426,7 +428,8 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.dicom_view.view.setScene(self.drawingROI)
+        if self.drawingROI:
+            self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
@@ -556,7 +559,7 @@ class UIDrawROIWindow:
                     set()
                 )
                 self.dicom_view.view.setScene(self.drawingROI)
-                self.display_cursor_radius_change_box()
+                self.enable_cursor_radius_change_box()
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                                   "Not all values are specified or correct.")
@@ -756,17 +759,13 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_box.addWidget(
             self.draw_roi_window_cursor_radius_change_increase_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cursor_radius_change_box)
-        self.draw_roi_window_cursor_radius_change_label.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_input.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_increase_button.setVisible(False)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
 
-    def display_cursor_radius_change_box(self):
+    def enable_cursor_radius_change_box(self):
         self.draw_roi_window_cursor_radius_change_input.setText(str(19))
-        self.draw_roi_window_cursor_radius_change_label.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_input.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_increase_button.setVisible(True)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
 
     def display_multipolygon_warning(self, slice_id):
         QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
