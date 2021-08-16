@@ -33,6 +33,7 @@ class UIDrawROIWindow:
         self.standard_names = []  # Combination of organ and volume
         self.ROI_name = None  # Selected ROI name
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specified by the min and max
+        self.drawingROI = None
         # pixel density
         self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
@@ -398,7 +399,7 @@ class UIDrawROIWindow:
         self.set_current_slice(self.dicom_view.slider.value())
 
     def set_current_slice(self, slice_number):
-        self.image_slice_number_line_edit.setText(str(slice_number+1))
+        self.image_slice_number_line_edit.setText(str(slice_number + 1))
         self.current_slice = slice_number
         self.dicom_view.update_view()
 
@@ -416,7 +417,8 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.dicom_view.view.setScene(self.drawingROI)
+        if self.drawingROI:
+            self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
@@ -426,7 +428,8 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        self.dicom_view.view.setScene(self.drawingROI)
+        if self.drawingROI:
+            self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
@@ -443,7 +446,7 @@ class UIDrawROIWindow:
             # Backward will only execute if current image slice is above 0.
             if int(image_slice_number) > 0:
                 # decrements slice by 1 and update slider to move to correct position
-                self.dicom_view.slider.setValue(image_slice_number-1)
+                self.dicom_view.slider.setValue(image_slice_number - 1)
 
     def onForwardClicked(self):
         image_slice_number = self.current_slice
@@ -556,7 +559,7 @@ class UIDrawROIWindow:
                     set()
                 )
                 self.dicom_view.view.setScene(self.drawingROI)
-                self.display_cursor_radius_change_box()
+                self.enable_cursor_radius_change_box()
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                                   "Not all values are specified or correct.")
@@ -566,7 +569,7 @@ class UIDrawROIWindow:
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
-        self.drawingROI = None
+
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
 
@@ -756,24 +759,21 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_box.addWidget(
             self.draw_roi_window_cursor_radius_change_increase_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cursor_radius_change_box)
-        self.draw_roi_window_cursor_radius_change_label.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_input.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_increase_button.setVisible(False)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
 
-    def display_cursor_radius_change_box(self):
+    def enable_cursor_radius_change_box(self):
         self.draw_roi_window_cursor_radius_change_input.setText(str(19))
-        self.draw_roi_window_cursor_radius_change_label.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_input.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_increase_button.setVisible(True)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
 
     def display_multipolygon_warning(self, slice_id):
         QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
-                      "Selected points in slice " + str(slice_id + 1) + " will generate multiple contours, "
-                                                                        "which is not currently supported. "
-                                                                        "If the region you are drawing is not meant to generate multiple contours, please "
-                                                                        "adjust your selected alpha value.")
+                          "Selected points in slice " + str(slice_id + 1) + " will generate multiple contours, "
+                                                                            "which is not currently supported. "
+                                                                            "If the region you are drawing is not meant to generate multiple contours, please "
+                                                                            "adjust your selected alpha value.")
+
     def closeWindow(self):
         self.drawn_roi_list = {}
         if hasattr(self, 'bounds_box_draw'):
