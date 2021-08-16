@@ -565,7 +565,7 @@ class UIDrawROIWindow:
                     self.draw_roi_window_instance
                 )
                 self.dicom_view.view.setScene(self.drawingROI)
-                self.display_cursor_radius_change_box()
+                self.enable_cursor_radius_change_box()
             else:
                 QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                                   "Not all values are specified or correct.")
@@ -759,14 +759,10 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_box.addWidget(
             self.draw_roi_window_cursor_radius_change_increase_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cursor_radius_change_box)
-        self.draw_roi_window_cursor_radius_change_label.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_input.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(False)
-        self.draw_roi_window_cursor_radius_change_increase_button.setVisible(False)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
 
-    def display_cursor_radius_change_box(self):
+    def enable_cursor_radius_change_box(self):
         self.draw_roi_window_cursor_radius_change_input.setText(str(19))
-        self.draw_roi_window_cursor_radius_change_label.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_input.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setVisible(True)
-        self.draw_roi_window_cursor_radius_change_increase_button.setVisible(True)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
