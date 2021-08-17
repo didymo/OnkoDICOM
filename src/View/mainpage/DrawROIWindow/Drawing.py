@@ -19,12 +19,12 @@ import src.constants as constant
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slices_changed_set, current_slice, target_pixel_coords=set()):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slice_changed, current_slice, target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary components
         self.draw_roi_window_instance = draw_roi_window_instance
-        self.slices_changed_set = slices_changed_set
+        self.slice_changed = slice_changed
         self.current_slice = current_slice
         self.min_pixel = min_pixel
         self.max_pixel = max_pixel
@@ -158,7 +158,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.target_pixel_coords.remove((x, y))
                 self.according_color_dict.pop((x, y))
                 # The roi drawn on current slice is changed after several pixels are modified
-                self.slices_changed_set.add(self.current_slice)
+                self.slice_changed = True
 
         self.refresh_image()
 
@@ -191,8 +191,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                         points_to_color.add((x_coord, y_coord))
                         self.target_pixel_coords.add((x_coord, y_coord))
                         # The roi drawn on current slice is changed after several pixels are modified
-                        self.slices_changed_set.add(self.current_slice)
-
+                        self.slice_changed = True
         # Color to draw
         color_to_draw = QtGui.QColor()
         color_to_draw.setRgb(90, 250, 175, 200)
