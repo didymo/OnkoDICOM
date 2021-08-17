@@ -87,12 +87,11 @@ def test_object():
     return TestIso2RoiGui()
 
 
-def test_structures_convert_isodose_to_roi_button_pressed_no_contours(test_object):
+def test_structures_convert_isodose_to_roi_button_pressed(test_object):
     """
-    Test will simulate the 'Convert isodose to roi'
-    button being pressed, with no contours present,
-    assert no change in structures
-
+    Test will simulate the 'Convert isodose to roi' button being
+    pressed, assert structure count is greater than or equal to what it
+    originally was.
     :param test_object: test_object function, for accessing the shared
                         TestIso2RoiGui object.
     """
@@ -101,18 +100,18 @@ def test_structures_convert_isodose_to_roi_button_pressed_no_contours(test_objec
     test_object.main_window.isodoses_tab.iso2roi_button_clicked()
 
     # Get the new length of structures in Structures Tab
-    current_structure_count = len(test_object.main_window.structures_tab.rois)
+    current_structure_count = \
+        test_object.main_window.structures_tab.layout_content.count()
 
     # Assert the length has not changed
-    assert current_structure_count == test_object.initial_structure_count
+    assert current_structure_count >= test_object.initial_structure_count
 
 
-def test_rois_convert_isodose_to_roi_button_pressed_no_contours(test_object):
+def test_rois_convert_isodose_to_roi_button_pressed(test_object):
     """
-    Test will simulate the 'Convert isodose to roi'
-    button being pressed, with no contours present,
-    assert no change in ROI's
-
+    Test will simulate the 'Convert isodose to roi' button being
+    pressed, assert ROI count is greater than or equal to what it
+    originally was.
     :param test_object: test_object function, for accessing the shared
                         TestIso2RoiGui object.
     """
@@ -121,11 +120,10 @@ def test_rois_convert_isodose_to_roi_button_pressed_no_contours(test_object):
     test_object.main_window.isodoses_tab.iso2roi_button_clicked()
 
     # Get the new length of RIO's in Structures Tab
-    current_roi_count = \
-        test_object.main_window.structures_tab.layout_content.count()
+    current_roi_count = len(test_object.main_window.structures_tab.rois)
 
     # Assert the length has not changed
-    assert current_roi_count == test_object.initial_roi_count
+    assert current_roi_count >= test_object.initial_roi_count
 
 
 
