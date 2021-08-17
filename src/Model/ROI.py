@@ -701,6 +701,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
                                     Tag("InstitutionAddress")
                                     ]
 
+    # File meta
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 238
     file_meta.FileMetaInformationVersion = b'\x00\x01'
@@ -713,15 +714,12 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     rt_ss.fix_meta_info()
 
     for tag in top_level_tags_to_copy:
-        print("Tag ", tag)
         if tag in img_ds:
-            print("value of tag in image: ", img_ds[tag])
             rt_ss[tag] = deepcopy(img_ds[tag])
 
     # Best to modify the Structure Set Label with something more interesting
     # in the application. and populate the Name and Description from the
     # application also.
-    print("Study ID is ", rt_ss.StudyID)
     rt_ss.StructureSetLabel = "OnkoDICOM rtss of " + rt_ss.StudyID
     rt_ss.StructureSetName = rt_ss.StructureSetLabel
     rt_ss.StructureSetDescription = rt_ss.StructureSetLabel

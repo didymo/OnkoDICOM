@@ -4,8 +4,9 @@ from pathlib import Path
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import get_contour_pixel, calc_roi_polygon
+from src.Model.ROI import get_contour_pixel, calc_roi_polygon, create_initial_rtss_from_ct, create_roi
 from src.Model import ImageLoading
+from src.View.mainpage.StructureTab import StructureTab
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -50,9 +51,9 @@ class TestStructureTab:
 
         # Set additional attributes in patient dict container (otherwise program will crash and test will fail)
         if "rtss" in file_names_dict:
-            dataset_rtss = dcmread(file_names_dict['rtss'])
-            self.rois = ImageLoading.get_roi_info(dataset_rtss)
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
+            self.dataset_rtss = dcmread(file_names_dict['rtss'])
+            self.rois = ImageLoading.get_roi_info(self.dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(self.dataset_rtss)
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             patient_dict_container.set("rois", self.rois)
@@ -149,3 +150,33 @@ def test_structure_tab_uncheck_checkboxes(test_object):
 
         # Assert that the unchecked ROI is not in the selected_roi_names list
         assert name not in selected_roi_names
+
+
+def test_merge_rtss(test_object):
+    """Test merging rtss. This function creates a new rtss, then merges the new rtss with the
+    old rtss and asserts that duplicated ROIs will be overwritten when the other being merged.
+
+    :param test_object: test_object function, for accessing the shared TestStructureTab object.
+    """
+    patient_dict_container = PatientDictContainer()
+    old_rtss = test_object.dataset_rtss
+
+    # Create a new rtss
+    dataset = patient_dict_container.dataset[0]
+    rtss_path = Path(patient_dict_container.path).joinpath('rtss.dcm')
+    new_rtss = create_initial_rtss_from_ct(dataset, rtss_path)
+
+    # Add a new ROI into the new rtss with the name of the first ROI in the old rtss
+    roi_name = test_object.rois[0]["name"]  # copy the name of the first ROI in the old rtss
+    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
+    new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
+
+    # Add a new ROI with a new name
+    roi_name = "NewTestROI"
+    new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
+
+    # Merge the old and new rtss
+    structure_tab = StructureTab()
+    merged_rtss = structure_tab.merge_rtss(new_rtss, old_rtss)
+    merged_rois = ImageLoading.get_roi_info(merged_rtss)
+    assert (len(test_object.rois) + 1 == len(merged_rois))

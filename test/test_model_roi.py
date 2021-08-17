@@ -94,4 +94,3 @@ def test_create_roi():
     )
     assert (first_contour.ContourGeometricType == "CLOSED_PLANAR")
     assert (rt_ss.RTROIObservationsSequence[0].RTROIInterpretedType == "ORGAN")
-    
