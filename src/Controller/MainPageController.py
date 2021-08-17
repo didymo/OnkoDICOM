@@ -380,10 +380,14 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.form_validation()
         if len(message.strip()) == 0:
             # check if the CSV directory exists and if not create it
-            if not os.path.isdir(os.path.join(str(self.path), 'CSV')):
-                os.mkdir(os.path.join(str(self.path), 'CSV'))
-            new_file = os.path.join(str(self.path),
-                                    'CSV/ClinicalData_' + self.pID + '.csv')
+            if self.path[-3:] == "csv":
+                new_file = self.path
+            else:
+                if not os.path.isdir(os.path.join(str(self.path), 'CSV')):
+                    os.mkdir(os.path.join(str(self.path), 'CSV'))
+                new_file = \
+                    os.path.join(str(self.path),
+                                 'CSV/ClinicalData_' + self.pID + '.csv')
             # open the file to save the clinical data in
             csv_file = open(new_file, 'w', newline='')
             # The headers of the file
@@ -620,9 +624,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                 self.ui.Dt_Last_Existence.setDate(
                     QtCore.QDate.fromString(df.at[i, 'DOLE'], "dd/MM/yyyy"))
         # read the clinical data
-        reg = '/CSV/ClinicalData*[.csv]'
-        pathcd = glob.glob(self.path + reg)
-        clinical_data = self.load_data(pathcd[0])
+        if self.path[-3:] == "csv":
+            clinical_data = self.load_data(self.path)
+        else:
+            reg = '/CSV/ClinicalData*[.csv]'
+            pathcd = glob.glob(self.path + reg)
+            clinical_data = self.load_data(pathcd[0])
         self.ui.note.setText(
             "You are editing the last known Clinical Data for this patient.")
         self.ui.line_FN.setVisible(False)
