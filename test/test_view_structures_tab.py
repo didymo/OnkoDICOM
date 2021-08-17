@@ -166,6 +166,10 @@ def test_merge_rtss(test_object):
     rtss_path = Path(patient_dict_container.path).joinpath('rtss.dcm')
     new_rtss = create_initial_rtss_from_ct(dataset, rtss_path)
 
+    # Set ROIs
+    rois = ImageLoading.get_roi_info(new_rtss)
+    patient_dict_container.set("rois", rois)
+
     # Add a new ROI into the new rtss with the name of the first ROI in the old rtss
     roi_name = test_object.rois.get(1)["name"]  # copy the name of the first ROI in the old rtss
     roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
