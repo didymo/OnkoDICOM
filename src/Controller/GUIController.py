@@ -83,10 +83,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         QtWidgets.QMainWindow.__init__(self)
         create_initial_model()
         self.setup_ui(self)
-        self.isodoses_tab.request_update_ui.connect(self.update_ui)
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
+
+        # Add isodose tab UI update signal if RT Dose loaded
+        patient_dict_container = PatientDictContainer()
+        if patient_dict_container.has_modality("rtdose"):
+            self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
     def update_ui(self):
         create_initial_model()
@@ -94,7 +98,11 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.setup_actions()
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
-        self.isodoses_tab.request_update_ui.connect(self.update_ui)
+
+        # Add isodose tab update signal if RT Dose loaded
+        patient_dict_container = PatientDictContainer()
+        if patient_dict_container.has_modality("rtdose"):
+            self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
     def open_new_patient(self):
         """
