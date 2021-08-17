@@ -40,7 +40,7 @@ class TestIso2RoiGui:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.cwd().joinpath('test', 'testdata', 'DICOM-RT-TEST')
+        desired_path = Path.cwd().joinpath('test', 'testdata')
 
         # list of DICOM test files
         selected_files = find_DICOM_files(desired_path)
