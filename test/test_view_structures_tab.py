@@ -1,6 +1,7 @@
 import os
 import pytest
 from pathlib import Path
+from PySide6 import QtWidgets, QtCore
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -152,7 +153,7 @@ def test_structure_tab_uncheck_checkboxes(test_object):
         assert name not in selected_roi_names
 
 
-def test_merge_rtss(test_object):
+def test_merge_rtss(qtbot, test_object):
     """Test merging rtss. This function creates a new rtss, then merges the new rtss with the
     old rtss and asserts that duplicated ROIs will be overwritten when the other being merged.
 
@@ -179,8 +180,24 @@ def test_merge_rtss(test_object):
     roi_name = "NewTestROI"
     new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
 
+    # Set ROIs
+    rois = ImageLoading.get_roi_info(new_rtss)
+    patient_dict_container.set("rois", rois)
+
     # Merge the old and new rtss
     structure_tab = StructureTab()
+    qtbot.addWidget(structure_tab)
+
+
+    def test_message_window():
+        messagebox = structure_tab.findChild(QtWidgets.QMessageBox)
+        assert messagebox is not None
+        ok_button = messagebox.button(QtWidgets.QMessageBox.Yes)
+        qtbot.mouseClick(ok_button, QtCore.Qt.LeftButton, delay=1)
+
+    QtCore.QTimer.singleShot(1000, test_message_window)
+    QtCore.QTimer.singleShot(1000, test_message_window)
     merged_rtss = structure_tab.merge_rtss(new_rtss, old_rtss)
+
     merged_rois = ImageLoading.get_roi_info(merged_rtss)
     assert (len(test_object.rois) + 1 == len(merged_rois))
