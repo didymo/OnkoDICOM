@@ -17,6 +17,7 @@ from matplotlib.backend_bases import MouseEvent
 import src.constants as constant
 from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
+from src.Model.Configuration import Configuration
 from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.PathHandler import resource_path
@@ -131,7 +132,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.setTabOrder(self.ui.Regional_Control, self.ui.Dt_REgional_failure)
         self.setTabOrder(self.ui.Dt_REgional_failure, self.ui.Distant_Control)
         self.setTabOrder(self.ui.Distant_Control, self.ui.Dt_Distant_Failure)
-        self.setTabOrder(self.ui.Dt_Distant_Failure, self.ui.Save_button)
+        self.setTabOrder(self.ui.Dt_Distant_Failure, self.ui.import_button)
+        self.setTabOrder(self.ui.import_button, self.ui.Save_button)
         # Linking different aspects of the form with each other since
         # different options cause other options to change
         self.ui.Local_control.activated.connect(self.local_control_failure)
@@ -141,8 +143,9 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         self.ui.Tx_intent.activated.connect(self.tx_intent_refused)
         self.ui.Death.activated.connect(self.patient_dead)
         self.ui.Death.activated.connect(self.show_survival)
-        # Save button to activate csv creation
-        self.ui.Save_button.clicked.connect(self.on_click)
+        # Save/import button to activate csv creation/importing
+        self.ui.import_button.clicked.connect(self.on_import_click)
+        self.ui.Save_button.clicked.connect(self.on_save_click)
 
     # The following functions retrieve the corresponding codes of the
     # selected options
@@ -352,6 +355,21 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             message = message + "Patient's date of distant failure cannot " \
                                 "be in the future. \n "
 
+    def import_clinical_data(self):
+        """
+        Imports clinical data from a CSV file. Opens a file selecting
+        dialog so users can choose a CSV file to import clinical data
+        from.
+        """
+        config = Configuration()
+        default_dir = config.get_default_directory()
+        self.path = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV",
+                                                          default_dir,
+                                                          "CSV Files (*.csv)")
+        self.path = self.path[0]
+        self.display_cd_dat()
+
+
     # The following function performs the saving of the clinical data csv
     # in the directory
 
@@ -509,7 +527,7 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                     new_df.to_pickle(resource_path('data/records.pkl'))
             else:
                 # save new row of credentials
-                open(resource_path('data/records.pkl', 'w+'))
+                open(resource_path('data/records.pkl'), 'w+')
                 df.to_pickle(resource_path('data/records.pkl'))
             # display the successful saving message pop up
             save_reply = QtWidgets.QMessageBox.information(
@@ -672,9 +690,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
             self.ui.Dt_Distant_Failure.setDate(
                 QtCore.QDate.fromString(clinical_data[28], "dd/MM/yyyy"))
 
-    # the following function anable the Enter keyboard button to act as an
+    # the following function enable the Enter keyboard button to act as an
     # activator of the button save
-    def on_click(self):
+    def on_import_click(self):
+        self.import_clinical_data()
+
+    def on_save_click(self):
         self.save_clinical_data()
 
     def keyPressEvent(self, event):
@@ -714,9 +735,17 @@ class ClinicalDataDisplay(QtWidgets.QWidget, Ui_CD_Display):
     # it uneditable as it is only for display
 
     def load_cd(self):
-        reg = '/CSV/ClinicalData*[.csv]'
-        pathcd = glob.glob(self.path + reg)
-        clinical_data = self.load_data(pathcd[0])
+        # Load clinical data from CSV if one selected
+        if self.path[-3:] == 'csv':
+            clinical_data = self.load_data(self.path)
+        # Otherwise load clinical data from any CSV in dataset directory
+        else:
+            reg = '/CSV/ClinicalData*[.csv]'
+            pathcd = glob.glob(self.path + reg)
+            # Return if no CSV file found
+            if not pathcd:
+                return
+            clinical_data = self.load_data(pathcd[0])
 
         self.ui.gender.setCurrentIndex(self.ui.gender.findText(
             clinical_data[1], QtCore.Qt.MatchFixedString))

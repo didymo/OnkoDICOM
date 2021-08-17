@@ -102,6 +102,7 @@ class Ui_Form(object):
         self.add_date_regional_failure()
         self.add_date_distant_failure()
         self.create_save_button()
+        self.create_import_button()
 
         # Add the component in a layout to be displayed.
         self.set_layout()
@@ -198,6 +199,7 @@ class Ui_Form(object):
         self.label_Distant_Control.setText(_translate("MainWindow", "Distant Control:"))
         self.label_Local_control.setText(_translate("MainWindow", "Local Control:"))
         self.Save_button.setText(_translate("MainWindow", "Save"))
+        self.import_button.setText(_translate("MainWindow", "Import"))
         self.Death.setItemText(0, _translate("MainWindow", "Select..."))
         self.Death.setItemText(1, _translate("MainWindow", "Alive"))
         self.Death.setItemText(2, _translate("MainWindow", "Dead"))
@@ -364,7 +366,8 @@ class Ui_Form(object):
         self.layout_content.addWidget(self.Distant_Control, 15, 1, 1, 4)
         self.layout_content.addWidget(self.label_Dt_Distant_Failure, 15, 6)
         self.layout_content.addWidget(self.Dt_Distant_Failure, 15, 7, 1, 4)
-        self.layout_content.addWidget(self.Save_button, 16, 0)
+        self.layout_content.addWidget(self.import_button, 16, 0)
+        self.layout_content.addWidget(self.Save_button, 16, 1)
 
         self.scrollArea_cd.setWidget(self.scrollAreaWidgetContents)
 
@@ -762,3 +765,12 @@ class Ui_Form(object):
             QtGui.QIcon.On
         )
         self.Save_button.setIcon(icon_save)
+
+    def create_import_button(self):
+        """
+        Create import button.
+        """
+        self.import_button = \
+            QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.import_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
