@@ -221,9 +221,11 @@ def test_create_rtss(test_object):
     # Create file path
     file_path = test_object.patient_dict_container.filepaths.values()
     file_path = Path(os.path.commonpath(file_path))
+    file_path = str(file_path.joinpath("rtss.dcm"))
 
     # Generate RTSS
-    rtss = test_object.iso2roi.generate_rtss(file_path)
+    rtss = ROI.create_initial_rtss_from_ct(
+        test_object.patient_dict_container.dataset[0], file_path)
 
     # Get test dataset
     test_ds = test_object.patient_dict_container.dataset[0]
