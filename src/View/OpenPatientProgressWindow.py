@@ -7,7 +7,7 @@ from src.View.ImageLoader import ImageLoader
 from src.Controller.PathHandler import resource_path
 
 
-class OpenPatientProgWindow(ProgressWindow):
+class OpenPatientProgressWindow(ProgressWindow):
     signal_loaded = QtCore.Signal(tuple)
     signal_error = QtCore.Signal(Exception)
     signal_advise_calc_dvh = QtCore.Signal(bool)
@@ -15,7 +15,7 @@ class OpenPatientProgWindow(ProgressWindow):
     def __init__(self, *args,
                  kwargs=QtCore.Qt.WindowTitleHint |
                         QtCore.Qt.WindowCloseButtonHint):
-        super(OpenPatientProgWindow, self).__init__(*args, kwargs)
+        super(OpenPatientProgressWindow, self).__init__(*args, kwargs)
 
     def start_loading(self, selected_files):
         image_loader = ImageLoader(selected_files, self)
