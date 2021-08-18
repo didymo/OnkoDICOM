@@ -367,6 +367,12 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                                                           default_dir,
                                                           "CSV Files (*.csv)")
         self.path = self.path[0]
+
+        # If user clicked cancel, reset CSV path
+        if self.path == '':
+            patient_dict_container = PatientDictContainer()
+            self.path = patient_dict_container.path
+
         self.display_cd_dat()
 
 
