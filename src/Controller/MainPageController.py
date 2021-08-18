@@ -17,6 +17,7 @@ from matplotlib.backend_bases import MouseEvent
 import src.constants as constant
 from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
+from src.Model import DICOMStructuredReport
 from src.Model.Configuration import Configuration
 from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -146,6 +147,9 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         # Save/import button to activate csv creation/importing
         self.ui.import_button.clicked.connect(self.on_import_click)
         self.ui.Save_button.clicked.connect(self.on_save_click)
+
+        # TODO remove
+        self.ui.dicom_sr_button.clicked.connect(self.on_dicom_click)
 
     # The following functions retrieve the corresponding codes of the
     # selected options
@@ -712,6 +716,18 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
     def on_save_click(self):
         self.save_clinical_data()
+
+    # TODO remove
+    def on_dicom_click(self):
+        patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.path
+        file_path = Path(file_path).joinpath("Clinical-Data-SR.dcm")
+        ds = patient_dict_container.dataset[0]
+
+        print("Generating DICOM SR in " + str(file_path))
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds)
+        dicom_sr.save_as(file_path)
+        print("success")
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return:

@@ -2,7 +2,9 @@ import datetime
 import pydicom
 from copy import deepcopy
 from pydicom import Dataset, Sequence
+from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
+from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 
 
 def generate_dicom_sr(file_path, img_ds):
@@ -14,10 +16,22 @@ def generate_dicom_sr(file_path, img_ds):
                    general information for the DICOM SR.
     :return: dicom_sr, a dataset for the new DICOM SR file.
     """
-    print("Generating DICOM SR in " + file_path)
-
     if img_ds is None:
         raise ValueError("No CT data to initialize RT SS")
+
+    # Create file meta
+    file_meta = FileMetaDataset()
+    file_meta.FileMetaInformationGroupLength = 238
+    file_meta.FileMetaInformationVersion = b'\x00\x01'
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.88.11'
+    file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
+    file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
+    validate_file_meta(file_meta)
+
+    # Create dataset
+    dicom_sr = pydicom.dataset.FileDataset(file_path, {}, preamble=b"\0" * 128,
+                                        file_meta=file_meta)
+    dicom_sr.fix_meta_info()
 
     # Get current date and time
     now = datetime.datetime.now()
@@ -45,9 +59,6 @@ def generate_dicom_sr(file_path, img_ds):
                                     Tag("InstitutionName"),
                                     Tag("InstitutionAddress")
                                     ]
-
-    # Create dataset
-    dicom_sr = pydicom.dataset.Dataset()
 
     # Copy tags from CT/MR image
     for tag in top_level_tags_to_copy:
@@ -122,7 +133,7 @@ def generate_dicom_sr(file_path, img_ds):
     # dicom_sr.IdenticalDocumentsSequence = Sequence()
 
     # == SR Document Content Module
-    referenced_sop_sequence = Sequence()
+    referenced_sop_sequence = Sequence([Dataset()])
     # Ask
     referenced_sop_sequence[0].ReferencedSOPClassUID = ''
     referenced_sop_sequence[0].ReferencedSOPInstanceUID = ''
@@ -145,7 +156,7 @@ def generate_dicom_sr(file_path, img_ds):
     dicom_sr.ReferencedSOPSequence = referenced_sop_sequence
     dicom_sr.ValueType = "TEXT"
 
-    concept_name_code_sequence = Sequence()
+    concept_name_code_sequence = Sequence([Dataset()])
     # Ask
     concept_name_code_sequence[0].CodeValue = ''
     concept_name_code_sequence[0].CodingSchemeDesignator = ''
@@ -161,7 +172,7 @@ def generate_dicom_sr(file_path, img_ds):
     # Content!
     dicom_sr.TextValue = ""
 
-    concept_code_sequence = Sequence()
+    concept_code_sequence = Sequence([Dataset()])
     concept_code_sequence[0].CodeValue = ''  # Ask
     concept_code_sequence[0].CodingScehemDesignator = ''  # Ask
     concept_code_sequence[0].CodingScehemVersion = ''  # Ask
@@ -169,12 +180,12 @@ def generate_dicom_sr(file_path, img_ds):
 
     dicom_sr.ConceptCodeSequence = concept_code_sequence
     dicom_sr.MeasuredValueSequence = Sequence()  # Can be empty. Ask
-    dicom_sr.ReferencedFrameOfReferenceUID = \
-        deepcopy(img_ds[Tag("FrameOfReferenceUID")])  # Ask
+    og_frame_of_reference_UID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
+    dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID  # Ask
 
     # == SOP Common Module
     dicom_sr.SOPClassUID = ''  # Ask
-    dicom_sr.SOPInstanceUID = pydicom.uid.generate_uid()
+    dicom_sr.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
 
     dicom_sr.is_little_endian = True
     dicom_sr.is_implicit_VR = True
