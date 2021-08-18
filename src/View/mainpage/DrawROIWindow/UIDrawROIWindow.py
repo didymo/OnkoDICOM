@@ -17,6 +17,7 @@ from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import SaveROIProgressWindow
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
+from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
 
 class UIDrawROIWindow:
@@ -35,6 +36,7 @@ class UIDrawROIWindow:
         self.target_pixel_coords = []  # This will contain the new pixel coordinates specified by the min and max
         self.drawingROI = None
         self.slice_changed = False
+        self.drawing_tool_radius = INITIAL_DRAWING_TOOL_RADIUS
         # pixel density
         self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
@@ -409,7 +411,11 @@ class UIDrawROIWindow:
             self.drawingROI = self.drawn_roi_list[self.current_slice]['drawingROI']
             self.ds = self.drawn_roi_list[self.current_slice]['ds']
             self.dicom_view.view.setScene(self.drawingROI)
+            self.enable_cursor_radius_change_box()
+            self.drawingROI.clear_cursor(self.drawing_tool_radius)
+
         else:
+            self.disable_cursor_radius_change_box()
             self.ds = None
 
     def onZoomInClicked(self):
@@ -418,7 +424,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        if self.drawingROI:
+        if self.drawingROI and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
@@ -429,7 +435,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        if self.drawingROI:
+        if self.drawingROI and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
@@ -498,7 +504,9 @@ class UIDrawROIWindow:
     def save_drawing_progress(self, image_slice_number):
         #  Save drawing progress only when roi on current slice has changed
         if self.slice_changed:
-            if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None:
+            if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None and len(
+                    self.drawingROI.target_pixel_coords) != 0:
+
                 pixel_hull = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
                 if pixel_hull is not None:
                     self.drawn_roi_list[image_slice_number] = {
@@ -513,7 +521,10 @@ class UIDrawROIWindow:
                     return False
         else:
             return True
+
         return True
+
+
 
     def on_transect_close(self):
         if self.upper_limit and self.lower_limit:
@@ -564,6 +575,7 @@ class UIDrawROIWindow:
                     self.draw_roi_window_instance,
                     self.slice_changed,
                     self.current_slice,
+                    self.drawing_tool_radius,
                     set()
 
                 )
@@ -582,6 +594,7 @@ class UIDrawROIWindow:
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
+        self.disable_cursor_radius_change_box()
 
     def onSaveClicked(self):
         # Make sure the user has clicked Draw first
@@ -704,23 +717,25 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setText(self.ROI_name)
 
     def on_radius_reduce_clicked(self):
-        self.drawingROI.draw_tool_radius = max(self.drawingROI.draw_tool_radius - 1, 4)
-        self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawingROI.draw_tool_radius))
+        self.drawing_tool_radius = max(self.drawing_tool_radius - 1, 4)
+        self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
         self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
         self.draw_cursor_when_radius_changed()
 
     def on_radius_increase_clicked(self):
-        self.drawingROI.draw_tool_radius = min(self.drawingROI.draw_tool_radius + 1, 25)
-        self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawingROI.draw_tool_radius))
+        self.drawing_tool_radius = min(self.drawing_tool_radius + 1, 25)
+        self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
         self.draw_cursor_when_radius_changed()
 
     def draw_cursor_when_radius_changed(self):
         if self.drawingROI.cursor:
-            self.drawingROI.draw_cursor(self.drawingROI.current_cursor_x + self.drawingROI.draw_tool_radius,
-                                        self.drawingROI.current_cursor_y + self.drawingROI.draw_tool_radius)
+            self.drawingROI.draw_cursor(self.drawingROI.current_cursor_x + self.drawing_tool_radius,
+                                        self.drawingROI.current_cursor_y + self.drawing_tool_radius,
+                                        self.drawing_tool_radius)
         else:
             self.drawingROI.draw_cursor((self.drawingROI.min_x + self.drawingROI.max_x) / 2,
-                                        (self.drawingROI.min_y + self.drawingROI.max_y) / 2, True)
+                                        (self.drawingROI.min_y + self.drawingROI.max_y) / 2, self.drawing_tool_radius,
+                                        True)
 
     def init_cursor_radius_change_box(self):
         # Create a horizontal box for containing the cursor radius changing function
@@ -772,8 +787,11 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
 
+    def disable_cursor_radius_change_box(self):
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+
     def enable_cursor_radius_change_box(self):
-        self.draw_roi_window_cursor_radius_change_input.setText(str(19))
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
 
