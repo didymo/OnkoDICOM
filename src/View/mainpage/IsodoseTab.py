@@ -21,7 +21,7 @@ class IsodoseTab(QtWidgets.QWidget):
 
         # Create and initialise ISO2ROI button and layout
         self.iso2roi_button = QtWidgets.QPushButton()
-        self.iso2roi_button.setText("Convert Isodose to ROI")
+        self.iso2roi_button.setText("Convert Isodoses to ROIs")
         self.iso2roi_button.clicked.connect(self.iso2roi_button_clicked)
 
         self.iso2roi_layout = QtWidgets.QHBoxLayout()

@@ -221,7 +221,7 @@ class UIAddOnOptions(object):
             self.fill_options.setVisible(False)
             self.change_default_directory_frame.setVisible(False)
 
-        elif type == "Create ROI from Isodose":
+        elif type == "Create ROIs from Isodoses":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)

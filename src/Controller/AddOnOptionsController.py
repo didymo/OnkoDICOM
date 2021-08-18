@@ -76,7 +76,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 'level': 1,
                 'dbID': 528,
                 'parent_ID': 442,
-                'short_name': 'Create ROI from Isodose'
+                'short_name': 'Create ROIs from Isodoses'
             },
             {
                 "level": 1,
