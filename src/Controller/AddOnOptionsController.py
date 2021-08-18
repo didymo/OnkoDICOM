@@ -145,7 +145,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         )
         self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table_roi.customContextMenuRequested.connect(
-            self.onCustomContextMenuRequested_Roi)
+            self.on_custom_context_menu_requested_roi)
         # making the URL column a double clicked link
         self.table_organ.itemDoubleClicked.connect(self.open_link)
 
@@ -263,7 +263,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     # ROI from IsoDoses
     @Slot(QtCore.QPoint)
-    def onCustomContextMenuRequested_Roi(self, pos):
+    def on_custom_context_menu_requested_roi(self, pos):
         it = self.table_roi.itemAt(pos)
         if it is None:
             return

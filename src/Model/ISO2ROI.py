@@ -25,7 +25,6 @@ class ISO2ROI:
             self.worker_signals.signal_save_confirmation
         self.signal_save_confirmation.connect(self.save_confirmation)
         self.advised_save_rtss = False
-        self.isodose_levels = {}
 
     def start_conversion(self, interrupt_flag, progress_callback):
         """
@@ -37,80 +36,48 @@ class ISO2ROI:
         patient_dict_container = PatientDictContainer()
 
         progress_callback.emit(("Validating Datasets", 0))
-        val = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+        dataset_complete = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
 
         # Stop loading
         if interrupt_flag.is_set():
+            # TODO: convert print to logging
             print("Stopped ISO2ROI")
             return False
 
-        if not val:
+        if not dataset_complete:
             # Check if RT struct file is missing. If yes, create one and
             # add its data to the patient dict container
             if not patient_dict_container.get("file_rtss"):
                 # Stop loading
                 if interrupt_flag.is_set():
+                    # TODO: convert print to logging
                     print("Stopped ISO2ROI")
                     return False
 
-                # Get common directory
-                file_path = patient_dict_container.filepaths.values()
-                file_path = Path(os.path.commonpath(file_path))
-
-                # Get new RT Struct file path
-                file_path = str(file_path.joinpath("rtss.dcm"))
-
-                # Create RT Struct file
-                progress_callback.emit(("Generating RT Structure Set", 30))
-                ds = ROI.create_initial_rtss_from_ct(
-                    patient_dict_container.dataset[0], file_path)
-                ds.save_as(file_path)
-
-                # Add RT Struct file path to patient dict container
-                patient_dict_container.filepaths['rtss'] = file_path
-                filepaths = patient_dict_container.filepaths
-
-                # Add RT Struct dataset to patient dict container
-                patient_dict_container.dataset['rtss'] = ds
-                dataset = patient_dict_container.dataset
-
-                # Set some patient dict container attributes
-                patient_dict_container.set("file_rtss", filepaths['rtss'])
-                patient_dict_container.set("dataset_rtss", dataset['rtss'])
-
-                dicom_tree_rtss = DicomTree(filepaths['rtss'])
-                patient_dict_container.set("dict_dicom_tree_rtss",
-                                           dicom_tree_rtss.dict)
-
-                dict_pixluts = ImageLoading.get_pixluts(
-                    patient_dict_container.dataset)
-                patient_dict_container.set("pixluts", dict_pixluts)
-
-                rois = ImageLoading.get_roi_info(ds)
-                patient_dict_container.set("rois", rois)
-
-                patient_dict_container.set("selected_rois", [])
-                patient_dict_container.set("dict_polygons_axial", {})
+                self.create_new_rtstruct(progress_callback)
 
         # Get isodose levels to turn into ROIs
-        self.get_iso_levels()
+        isodose_levels = self.get_iso_levels()
 
         # Stop loading
         if interrupt_flag.is_set():
+            # TODO: convert print to logging
             print("Stopped ISO2ROI")
             return False
 
         # Calculate dose boundaries
         progress_callback.emit(("Calculating Boundaries", 50))
-        boundaries = self.calculate_boundaries()
+        boundaries = self.calculate_isodose_boundaries(isodose_levels)
 
         # Return if boundaries could not be calculated
         if not boundaries:
+            # TODO: convert print to logging
             print("Boundaries could not be calculated.")
             return
 
         # Stop loading
         if interrupt_flag.is_set():
+            # TODO: convert print to logging
             print("Stopped ISO2ROI")
             return False
 
@@ -121,23 +88,22 @@ class ISO2ROI:
     def get_iso_levels(self):
         """
         Opens /data/csv/isodoseRoi.csv to find the isodose levels that
-        the user wants turned into ROIs. Creates a dictionary where the
-        key is the isoname, and the value is a list containing a boolean
-        (cGy: 0, %: 1) and an integer (cGy/% value).
+        the user wants turned into ROIs. Creates a
+        :return: isodose_levels, a dictionary  where the key is the
+                 isoname, and the value is a list containing a boolean
+                 (cGy: 0, %: 1) and an integer (cGy/% value).
         """
-
-        # Clear self.isodose_levels (in case ISO2ROI has already been
-        # run this session)
-        self.isodose_levels = {}
+        isodose_levels = {}
 
         # Open isodoseRoi.csv
         with open('data/csv/isodoseRoi.csv', "r") as fileInput:
             for row in fileInput:
                 items = row.split(',')
-                self.isodose_levels[items[2]] = [items[1] == 'cGy',
+                isodose_levels[items[2]] = [items[1] == 'cGy',
                                                  int(items[0])]
+        return isodose_levels
 
-    def calculate_boundaries(self):
+    def calculate_isodose_boundaries(self, isodose_levels):
         """
         Calculates isodose boundaries for each isodose level.
         :return: coutours, a list containing the countours for each
@@ -158,7 +124,7 @@ class ISO2ROI:
 
         contours = {}
 
-        for item in self.isodose_levels:
+        for item in isodose_levels:
             # Calculate boundaries for each isodose level for each slice
             contours[item] = []
             for slider_id in range(slider_min, slider_max):
@@ -168,13 +134,13 @@ class ISO2ROI:
                 grid = get_dose_grid(rt_plan_dose, float(z))
 
                 if not (grid == []):
-                    if self.isodose_levels[item][0]:
-                        dose_level = self.isodose_levels[item][1] / \
+                    if isodose_levels[item][0]:
+                        dose_level = isodose_levels[item][1] / \
                                      (rt_plan_dose.DoseGridScaling * 100)
                         contours[item][slider_id] =\
                             (measure.find_contours(grid, dose_level))
                     else:
-                        dose_level = self.isodose_levels[item][1] * \
+                        dose_level = isodose_levels[item][1] * \
                                      rt_dose_dose / \
                                      (rt_plan_dose.DoseGridScaling * 10000)
                         contours[item][slider_id] = \
@@ -290,3 +256,47 @@ class ISO2ROI:
 
         # Allow the program to continue running
         self.advised_save_rtss = True
+
+    def create_new_rtstruct(self, progress_callback):
+        """
+        Generates a new RTSS and edits the patient dict container.
+        """
+        # Get common directory
+        patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.filepaths.values()
+        file_path = Path(os.path.commonpath(file_path))
+
+        # Get new RT Struct file path
+        file_path = str(file_path.joinpath("rtss.dcm"))
+
+        # Create RT Struct file
+        progress_callback.emit(("Generating RT Structure Set", 30))
+        ds = ROI.create_initial_rtss_from_ct(
+            patient_dict_container.dataset[0], file_path)
+        ds.save_as(file_path)
+
+        # Add RT Struct file path to patient dict container
+        patient_dict_container.filepaths['rtss'] = file_path
+        filepaths = patient_dict_container.filepaths
+
+        # Add RT Struct dataset to patient dict container
+        patient_dict_container.dataset['rtss'] = ds
+        dataset = patient_dict_container.dataset
+
+        # Set some patient dict container attributes
+        patient_dict_container.set("file_rtss", filepaths['rtss'])
+        patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+        dicom_tree_rtss = DicomTree(filepaths['rtss'])
+        patient_dict_container.set("dict_dicom_tree_rtss",
+                                   dicom_tree_rtss.dict)
+
+        dict_pixluts = ImageLoading.get_pixluts(
+            patient_dict_container.dataset)
+        patient_dict_container.set("pixluts", dict_pixluts)
+
+        rois = ImageLoading.get_roi_info(ds)
+        patient_dict_container.set("rois", rois)
+
+        patient_dict_container.set("selected_rois", [])
+        patient_dict_container.set("dict_polygons_axial", {})
