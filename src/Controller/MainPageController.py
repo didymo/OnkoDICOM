@@ -382,6 +382,119 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
 
     # The following function performs the saving of the clinical data csv
     # in the directory
+    def get_clinical_data(self):
+        """
+        Returns a list of two lists. The first list is column names, the
+        second list is column data.
+        :return: clinical_data, a list containing two lists.
+        """
+        clinical_data = []
+
+        # The headers of the file
+        column_names = ['PatientID', 'Gender', 'Country_of_Birth',
+                        'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10',
+                        'T_Stage',
+                        'N_Stage', 'M_Stage', 'OverallStage', 'Tx_Intent',
+                        'Surgery', 'Rad', 'Chemo',
+                        'Immuno', 'Brachy', 'Hormone', 'Death',
+                        'cancer_death',
+                        'Survival_Duration', 'LocalControl',
+                        'DateOfLocalFailure', 'LC_Duration',
+                        'RegionalControl', 'DateOfRegionalFailure',
+                        'RC_Duration', 'DistantControl',
+                        'DateOfDistantFailure', 'DC_Duration']
+        clinical_data.append(column_names)
+
+        # get the cancer death option and if alive leave empty
+        cancer_death = ''
+        status = self.ui.Death.currentText()
+        if status == "Dead":
+            cancer_death = str(self.ui.Cancer_death.currentText())
+
+        # get the age of the patient
+        age_at_diagnosis = round(float(calculate_years(
+            self.ui.date_of_birth.date(), self.ui.date_diagnosis.date())))
+
+        # get the local failure duration
+        local_failure = str(self.ui.Local_control.currentText())
+        if local_failure == "Control":
+            lc_duration = str(calculate_years(
+                self.ui.date_diagnosis.date(),
+                self.ui.Dt_Last_Existence.date()))
+            lc_date = ''
+        elif local_failure == "Failure":
+            lc_duration = str(calculate_years(
+                self.ui.date_diagnosis.date(),
+                self.ui.Dt_local_failure.date()))
+            lc_date = self.ui.Dt_local_failure.date().toString(
+                "dd/MM/yyyy")
+
+        # get the regional failure duration
+        regional_failure = str(self.ui.Regional_Control.currentText())
+        if regional_failure == "Control":
+            rc_duration = str(calculate_years(
+                self.ui.date_diagnosis.date(),
+                self.ui.Dt_Last_Existence.date()))
+            rc_date = ''
+        elif regional_failure == "Failure":
+            rc_duration = str(calculate_years(
+                self.ui.date_diagnosis.date(),
+                self.ui.Dt_REgional_failure.date()))
+            rc_date = self.ui.Dt_REgional_failure.date().toString(
+                "dd/MM/yyyy")
+
+        # get the distant failure duration
+        distant_failure = str(self.ui.Distant_Control.currentText())
+        if distant_failure == "Control":
+            dc_duration = str(calculate_years(
+                self.ui.date_diagnosis.date(),
+                self.ui.Dt_Last_Existence.date()))
+            dc_date = ''
+        elif distant_failure == "Failure":
+            dc_duration = str(calculate_years(
+                self.ui.date_diagnosis.date(),
+                self.ui.Dt_Distant_Failure.date()))
+            dc_date = self.ui.Dt_Distant_Failure.date().toString(
+                "dd/MM/yyyy")
+
+        # get the survival duration
+        survival_years = str(calculate_years(
+            self.ui.date_diagnosis.date(),
+            self.ui.Dt_Last_Existence.date()))
+
+        # the data array to be entered in the file
+        data_row = [self.pID, self.ui.gender.currentText(),
+                    self.ui.line_BP.text(),
+                    age_at_diagnosis, self.ui.date_diagnosis.date().year(),
+                    self.get_desease_code(self.ui.line_histology.text(
+                    )), self.get_desease_code(self.ui.line_icd.text()),
+                    self.ui.T_stage.currentText(),
+                    self.ui.N_stage.currentText(),
+                    self.ui.M_stage.currentText(),
+                    self.ui.Overall_Stage.currentText(),
+                    self.ui.Tx_intent.currentText(),
+                    self.get_code(self.ui.Surgery.currentText()),
+                    self.get_code(self.ui.Rad.currentText()),
+                    self.get_code(self.ui.Chemo.currentText()),
+                    self.get_code(
+                        self.ui.Immuno.currentText()),
+                    self.get_code(self.ui.Brachy.currentText()),
+                    self.get_code(self.ui.Hormone.currentText()),
+                    self.code_alive(
+                        self.ui.Death.currentText()),
+                    self.code_cancer_death(cancer_death), survival_years,
+                    self.code_control(self.ui.Local_control.currentText()),
+                    lc_date,
+                    lc_duration, self.code_control(
+                self.ui.Regional_Control.currentText()),
+                    rc_date, rc_duration,
+                    self.code_control(
+                        self.ui.Distant_Control.currentText()), dc_date,
+                    dc_duration]
+
+        clinical_data.append(data_row)
+
+        return clinical_data
 
     # here handles the event of the button save being pressed
     def save_clinical_data(self):
@@ -400,112 +513,14 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
                                  'CSV/ClinicalData_' + self.pID + '.csv')
             # open the file to save the clinical data in
             csv_file = open(new_file, 'w', newline='')
-            # The headers of the file
-            column_names = ['PatientID', 'Gender', 'Country_of_Birth',
-                            'AgeAtDiagnosis', 'DxYear', 'Histology', 'ICD10',
-                            'T_Stage',
-                            'N_Stage', 'M_Stage', 'OverallStage', 'Tx_Intent',
-                            'Surgery', 'Rad', 'Chemo',
-                            'Immuno', 'Brachy', 'Hormone', 'Death',
-                            'cancer_death',
-                            'Survival_Duration', 'LocalControl',
-                            'DateOfLocalFailure', 'LC_Duration',
-                            'RegionalControl', 'DateOfRegionalFailure',
-                            'RC_Duration', 'DistantControl',
-                            'DateOfDistantFailure', 'DC_Duration']
 
-            # get the cancer death option and if alive leave empty
-            cancer_death = ''
-            status = self.ui.Death.currentText()
-            if status == "Dead":
-                cancer_death = str(self.ui.Cancer_death.currentText())
-
-            # get the age of the patient
-            age_at_diagnosis = round(float(calculate_years(
-                self.ui.date_of_birth.date(), self.ui.date_diagnosis.date())))
-
-            # get the local failure duration
-            local_failure = str(self.ui.Local_control.currentText())
-            if local_failure == "Control":
-                lc_duration = str(calculate_years(
-                    self.ui.date_diagnosis.date(),
-                    self.ui.Dt_Last_Existence.date()))
-                lc_date = ''
-            elif local_failure == "Failure":
-                lc_duration = str(calculate_years(
-                    self.ui.date_diagnosis.date(),
-                    self.ui.Dt_local_failure.date()))
-                lc_date = self.ui.Dt_local_failure.date().toString(
-                    "dd/MM/yyyy")
-
-            # get the regional failure duration
-            regional_failure = str(self.ui.Regional_Control.currentText())
-            if regional_failure == "Control":
-                rc_duration = str(calculate_years(
-                    self.ui.date_diagnosis.date(),
-                    self.ui.Dt_Last_Existence.date()))
-                rc_date = ''
-            elif regional_failure == "Failure":
-                rc_duration = str(calculate_years(
-                    self.ui.date_diagnosis.date(),
-                    self.ui.Dt_REgional_failure.date()))
-                rc_date = self.ui.Dt_REgional_failure.date().toString(
-                    "dd/MM/yyyy")
-
-            # get the distant failure duration
-            distant_failure = str(self.ui.Distant_Control.currentText())
-            if distant_failure == "Control":
-                dc_duration = str(calculate_years(
-                    self.ui.date_diagnosis.date(),
-                    self.ui.Dt_Last_Existence.date()))
-                dc_date = ''
-            elif distant_failure == "Failure":
-                dc_duration = str(calculate_years(
-                    self.ui.date_diagnosis.date(),
-                    self.ui.Dt_Distant_Failure.date()))
-                dc_date = self.ui.Dt_Distant_Failure.date().toString(
-                    "dd/MM/yyyy")
-
-            # get the survival duration
-            survival_years = str(calculate_years(
-                self.ui.date_diagnosis.date(),
-                self.ui.Dt_Last_Existence.date()))
-
-            # the data array to be entered in the file
-            data_row = [self.pID, self.ui.gender.currentText(),
-                        self.ui.line_BP.text(),
-                        age_at_diagnosis, self.ui.date_diagnosis.date().year(),
-                        self.get_desease_code(self.ui.line_histology.text(
-                        )), self.get_desease_code(self.ui.line_icd.text()),
-                        self.ui.T_stage.currentText(),
-                        self.ui.N_stage.currentText(),
-                        self.ui.M_stage.currentText(),
-                        self.ui.Overall_Stage.currentText(),
-                        self.ui.Tx_intent.currentText(),
-                        self.get_code(self.ui.Surgery.currentText()),
-                        self.get_code(self.ui.Rad.currentText()),
-                        self.get_code(self.ui.Chemo.currentText()),
-                        self.get_code(
-                            self.ui.Immuno.currentText()),
-                        self.get_code(self.ui.Brachy.currentText()),
-                        self.get_code(self.ui.Hormone.currentText()),
-                        self.code_alive(
-                            self.ui.Death.currentText()),
-                        self.code_cancer_death(cancer_death), survival_years,
-                        self.code_control(self.ui.Local_control.currentText()),
-                        lc_date,
-                        lc_duration, self.code_control(
-                    self.ui.Regional_Control.currentText()),
-                        rc_date, rc_duration,
-                        self.code_control(
-                            self.ui.Distant_Control.currentText()), dc_date,
-                        dc_duration]
+            data = self.get_clinical_data()
 
             # Insert the header array and data array into the file
             with csv_file:
                 writer = csv.writer(csv_file)
-                writer.writerow(column_names)
-                writer.writerow(data_row)
+                writer.writerow(data[0])
+                writer.writerow(data[1])
 
             # save the dates in binary file with patient ID, for future editing
             file_name = Path(resource_path('data/records.pkl'))
@@ -725,9 +740,42 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         ds = patient_dict_container.dataset[0]
 
         print("Generating DICOM SR in " + str(file_path))
-        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds)
+
+        data = self.generate_clinical_data_text()
+
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, data)
         dicom_sr.save_as(file_path)
         print("success")
+
+    def generate_clinical_data_text(self):
+        """
+        Generates text representation of clinical data.
+        :return: data, string of clinical data.
+        """
+        # Create clinical data dictionary
+        clinical_data = {}
+
+        # Get clinical data
+        data = self.get_clinical_data()
+        keys = data[0]
+        values = data[1]
+
+        # Ensure keys and values are same length
+        if not (len(keys) == len(values)):
+            print("Error: length of keys does not match length of values.")
+            return
+
+        # Append keys and values to dictionary
+        for i in range(len(keys)):
+            clinical_data[keys[i]] = values[i]
+
+        # Add keys and values to the string
+        text = ""
+        for key in clinical_data:
+            text += str(key) + ": " + str(clinical_data[key]) + "\n"
+
+        # Return string
+        return text
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return:

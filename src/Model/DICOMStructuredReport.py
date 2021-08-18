@@ -7,13 +7,14 @@ from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 
 
-def generate_dicom_sr(file_path, img_ds):
+def generate_dicom_sr(file_path, img_ds, data):
     """
     Generates DICOM Structured Report files for the given file path.
     :param file_path: the file name and directory to save the DICOM
                       SR file in.
     :param img_ds: A CT or MR image from the dataset used to pull
                    general information for the DICOM SR.
+    :param data: Text data to be written to the DICOM SR file.
     :return: dicom_sr, a dataset for the new DICOM SR file.
     """
     if img_ds is None:
@@ -170,7 +171,7 @@ def generate_dicom_sr(file_path, img_ds):
     dicom_sr.ReferencedDateTime = ""  # Ask
 
     # Content!
-    dicom_sr.TextValue = ""
+    dicom_sr.TextValue = data
 
     concept_code_sequence = Sequence([Dataset()])
     concept_code_sequence[0].CodeValue = ''  # Ask
