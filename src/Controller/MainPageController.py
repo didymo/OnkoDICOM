@@ -635,6 +635,8 @@ class ClinicalDataForm(QtWidgets.QWidget, Ui_Form):
         else:
             reg = '/CSV/ClinicalData*[.csv]'
             pathcd = glob.glob(self.path + reg)
+            if not pathcd:
+                return
             clinical_data = self.load_data(pathcd[0])
         self.ui.note.setText(
             "You are editing the last known Clinical Data for this patient.")
