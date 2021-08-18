@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
-from src.View.OpenPatientProgWindow import OpenPatientProgWindow
+from src.View.OpenPatientProgressWindow import OpenPatientProgressWindow
 from src.View.resources_open_patient_rc import *
 from src.Model import ImageLoading
 
@@ -335,7 +335,7 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        self.progress_window = OpenPatientProgWindow(self)
+        self.progress_window = OpenPatientProgressWindow(self)
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
 
