@@ -131,7 +131,8 @@ class ImageLoader(QtCore.QObject):
         else:
             progress_callback.emit(("Generating temporary rtss...", 10))
             rtss_path = Path(path).joinpath('rtss.dcm')
-            rtss = create_initial_rtss_from_ct(patient_dict_container.dataset[0], rtss_path)
+            uid_list = ImageLoading.get_image_uid_list(patient_dict_container.dataset)
+            rtss = create_initial_rtss_from_ct(patient_dict_container.dataset[0], rtss_path, uid_list)
 
             # Set ROIs
             rois = ImageLoading.get_roi_info(rtss)
