@@ -19,7 +19,8 @@ import src.constants as constant
 class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slice_changed, current_slice, target_pixel_coords=set()):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slice_changed,
+                 current_slice, drawing_tool_radius, target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary components
@@ -49,7 +50,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.q_image = None
         self.q_pixmaps = None
         self.label = QtWidgets.QLabel()
-        self.draw_tool_radius = 19
+        self.draw_tool_radius = drawing_tool_radius
         self.is_current_pixel_coloured = False
         self._display_pixel_color()
 
@@ -142,7 +143,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
         # than the radius, remove it from the highlighted pixels.
 
-
         according_color_dict_key_list = list(self.according_color_dict.keys())
 
         color_to_draw = QtGui.QColor()
@@ -168,7 +168,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
         # than the radius, add it to the highlighted pixels.
-
 
         # Set of points to color
         points_to_color = set()
@@ -200,13 +199,20 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.q_image.setPixelColor(x_coord, y_coord, color_to_draw)
         self.refresh_image()
 
-    def draw_cursor(self, event_x, event_y, new_circle=False):
+    def clear_cursor(self, drawing_tool_radius):
+        self.draw_tool_radius = drawing_tool_radius
+        if self.cursor:
+            self.removeItem(self.cursor)
+            self.cursor = False
+
+    def draw_cursor(self, event_x, event_y, drawing_tool_radius, new_circle=False):
         """
         Draws a blue circle where the user clicked.
         :param event_x: QGraphicsScene event attribute: event.scenePos().x()
         :param event_y: QGraphicsScene event attribute: event.scenePos().y()
         :param new_circle: True when the circle object is being created rather than updated.
         """
+        self.draw_tool_radius = drawing_tool_radius
         self.current_cursor_x = event_x - self.draw_tool_radius
         self.current_cursor_y = event_y - self.draw_tool_radius
         if new_circle:
@@ -252,7 +258,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.is_current_pixel_coloured = (math.floor(event.scenePos().x()),
                                           math.floor(
                                               event.scenePos().y())) in self.according_color_dict
-        self.draw_cursor(event.scenePos().x(), event.scenePos().y(), new_circle=True)
+        self.draw_cursor(event.scenePos().x(), event.scenePos().y(), self.draw_tool_radius, new_circle=True)
 
         if self.is_current_pixel_coloured:
             self.fill_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
@@ -265,7 +271,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
         if self.cursor and self.isPressed:
-            self.draw_cursor(event.scenePos().x(), event.scenePos().y())
+            self.draw_cursor(event.scenePos().x(), event.scenePos().y(),self.draw_tool_radius)
             if self.is_current_pixel_coloured:
                 self.fill_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
             else:
