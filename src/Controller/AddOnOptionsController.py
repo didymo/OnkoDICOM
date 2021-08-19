@@ -391,10 +391,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             new_dir = self.change_default_directory. \
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
-            QMessageBox.about(
-                self,
-                "Success",
-                "Default directory was successfully updated")
         except SqlError:
             configuration.set_up_config_db()
             QMessageBox.critical(
@@ -402,8 +398,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "Config file error",
                 "Failed to update default directory.\nPlease try again.")
 
+        QMessageBox.about(
+            self,
+            "Success",
+            "Changes were successfully applied")
+        
         # Close the Add-On Options Window after saving
-
         if hasattr(self.window, 'structures_tab'):
             self.window.structures_tab.init_standard_names()
             self.window.structures_tab.update_content()
@@ -424,7 +424,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
                 ]
-                self.table_view.insertRow(i)
+                if i >= self.table_view.rowCount():
+                    self.table_view.setRowCount(self.table_view.rowCount() + 1)
                 self.table_view.setItem(i, 0, items[0])
                 self.table_view.setItem(i, 1, items[1])
                 self.table_view.setItem(i, 2, items[2])
@@ -440,13 +441,15 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
                 ]
-                self.table_organ.insertRow(i)
+                if i >= self.table_organ.rowCount():
+                    self.table_organ.setRowCount(self.table_organ.rowCount() + 1)
                 self.table_organ.setItem(i, 0, items[0])
                 self.table_organ.setItem(i, 1, items[1])
                 self.table_organ.setItem(i, 2, items[2])
                 if len(items) > 3:
                     self.table_organ.setItem(i, 3, items[3])
                 i += 1
+
 
         # volume name table
         with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
@@ -456,7 +459,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
                 ]
-                self.table_volume.insertRow(i)
+                if i >= self.table_volume.rowCount():
+                    self.table_volume.setRowCount(self.table_volume.rowCount() + 1)
                 self.table_volume.setItem(i, 0, items[0])
                 self.table_volume.setItem(i, 1, items[1])
                 i += 1
@@ -481,7 +485,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         # patients anonymized byt the software since intallation
         with open(resource_path("data/csv/patientHash.csv"),
                   "r") as file_input:
-            next(file_input)
+            next(file_input, None)
             i = 0
             for row in file_input:
                 items = [
@@ -489,7 +493,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if len(items) >= 2:
-                    self.table_ids.insertRow(i)
+                    if i >= self.table_ids.rowCount():
+                        self.table_ids.setRowCount(self.table_ids.rowCount() + 1)
                     self.table_ids.setItem(i, 0, items[0])
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
@@ -588,4 +593,5 @@ class AddOptions:
         self.options_window = AddOnOptions(window)
 
     def show_add_on_options(self):
+        self.options_window.fill_tables()
         self.options_window.show()
