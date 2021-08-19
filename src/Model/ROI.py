@@ -163,14 +163,15 @@ def create_roi(rtss, roi_name, roi_coordinates, data_set,
         referenced_sop_instance_uid = data_set.SOPInstanceUID
 
         # Check that ROIs exist
-        if len(rtss.StructureSetROISequence) > 0:
-            referenced_frame_of_reference_uid = \
-                rtss.StructureSetROISequence[-1].ReferencedFrameOfReferenceUID
-            roi_number = rtss.StructureSetROISequence[-1].ROINumber + 1
-        else:
-            referenced_frame_of_reference_uid =\
-                rtss.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
+        if not len(rtss["StructureSetROISequence"].value):
+            referenced_frame_of_reference_uid = data_set.FrameOfReferenceUID
             roi_number = 1
+        else:
+            first_roi_sequence = rtss["StructureSetROISequence"].value[0]
+            referenced_frame_of_reference_uid = \
+                first_roi_sequence.ReferencedFrameOfReferenceUID
+            roi_number = \
+                rtss["StructureSetROISequence"].value[-1].ROINumber + 1
 
         # Colour TBC
         red = random.randint(0, 255)
