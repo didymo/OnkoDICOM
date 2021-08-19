@@ -212,8 +212,8 @@ class ISO2ROI:
                 # Loop through each contour
                 for j in range(len(contours[item][i])):
                     single_array.append([])
-                    # Loop through each point in the contour
-                    for point in contours[item][i][j]:
+                    # Loop through every second point in the contour
+                    for point in contours[item][i][j][::2]:
                         # Transform into dose pixel
                         dose_pixels = [dose_pixluts[0][int(point[1])],
                                        dose_pixluts[1][int(point[0])]]
@@ -271,8 +271,10 @@ class ISO2ROI:
 
         # Create RT Struct file
         progress_callback.emit(("Generating RT Structure Set", 30))
+        ct_uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
         ds = ROI.create_initial_rtss_from_ct(
-            patient_dict_container.dataset[0], file_path)
+            patient_dict_container.dataset[0], file_path, ct_uid_list)
         ds.save_as(file_path)
 
         # Add RT Struct file path to patient dict container

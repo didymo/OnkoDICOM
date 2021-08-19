@@ -223,9 +223,13 @@ def test_create_rtss(test_object):
     file_path = Path(os.path.commonpath(file_path))
     file_path = str(file_path.joinpath("rtss.dcm"))
 
+    # Get CT UID list
+    ct_uid_list = ImageLoading.get_image_uid_list(
+        test_object.patient_dict_container.dataset)
+
     # Generate RTSS
     rtss = ROI.create_initial_rtss_from_ct(
-        test_object.patient_dict_container.dataset[0], file_path)
+        test_object.patient_dict_container.dataset[0], file_path, ct_uid_list)
 
     # Get test dataset
     test_ds = test_object.patient_dict_container.dataset[0]
