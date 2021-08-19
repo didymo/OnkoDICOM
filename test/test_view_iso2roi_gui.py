@@ -124,7 +124,3 @@ def test_rois_convert_isodose_to_roi_button_pressed(test_object):
 
     # Assert the length has not changed
     assert current_roi_count >= test_object.initial_roi_count
-
-
-
-
