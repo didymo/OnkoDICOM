@@ -1,0 +1,368 @@
+Standard Name,FMA ID,Organ,Url
+Adrenal_L,15630,Adrenal glands Left,http://purl.org/sig/ont/fma/fma15630
+Adrenal_R,15629,Adrenal glands Right,http://purl.org/sig/ont/fma/fma15629
+AnalCanal,15703,Anal canal,http://purl.org/sig/ont/fma/fma15703
+AnalSphincter,15710,Anal Sphincter internal,http://purl.org/sig/ont/fma/fma15710
+Aorta,3734,Aorta,http://purl.org/sig/ont/fma/fma3734
+Arytenoids,55109,Arytenoid cartilage combined,http://purl.org/sig/ont/fma/fma55109
+Arytenoid_L,55114,Arytenoid cartilage Left,http://purl.org/sig/ont/fma/fma55114
+Arytenoid_R,55113,Arytenoid cartilage Right,http://purl.org/sig/ont/fma/fma55113
+V_Azygos,4838,Azygos vein,http://purl.org/sig/ont/fma/fma4838
+BaseOfTongue,54645,Base of Tongue,http://purl.org/sig/ont/fma/fma54645
+Bladder,15900,Bladder - Urinary,http://purl.org/sig/ont/fma/fma15900
+BladderWall,15902,Bladder Wall,http://purl.org/sig/ont/fma/fma15902
+SmallIntestine,7200,Small intestine,http://purl.org/sig/ont/fma/fma7200
+Spc_Bowel,9908,BowelBag a la RTOG,http://purl.org/sig/ont/fma/fma9908
+BrachialPlexuss,5906,Brachial Plexus combined,http://purl.org/sig/ont/fma/fma5906
+BrachialPlexus_L,65221,Brachial Plexus Left,http://purl.org/sig/ont/fma/fma65221
+BrachialPlexus_R,65222,Brachial Plexus Right,http://purl.org/sig/ont/fma/fma65222
+A_Brachioceph,3932,Brachiocephalic artery,http://purl.org/sig/ont/fma/fma3932
+V_Brachioceph_L,4761,Brachiocephalic vein left,http://purl.org/sig/ont/fma/fma4761
+V_Brachioceph_R,4751,Brachiocephalic vein right,http://purl.org/sig/ont/fma/fma4751
+Brain,50801,Brain,http://purl.org/sig/ont/fma/fma50801
+Brainstem,79876,Brainstem,http://purl.org/sig/ont/fma/fma79876
+Breasts,9601,Breasts combined,http://purl.org/sig/ont/fma/fma9601
+Breast_L,73125,Breast Left,http://purl.org/sig/ont/fma/fma73125
+Breast_R,73124,Breast Right,http://purl.org/sig/ont/fma/fma73124
+Bronchuss,26660,Bronchial tree combined,http://purl.org/sig/ont/fma/fma26660
+Bronchus_R,26661,Bronchial tree Right,http://purl.org/sig/ont/fma/fma26661
+Bronchus_L,26662,Bronchial tree Left,http://purl.org/sig/ont/fma/fma26662
+VB_C1,12519,Atlas,http://purl.org/sig/ont/fma/fma12519
+VB_C2,12520,Axis,http://purl.org/sig/ont/fma/fma12520
+VB_C3,12521,Cervical Vertebra,http://purl.org/sig/ont/fma/fma12521
+VB_C4,12522,Cervical Vertebra,http://purl.org/sig/ont/fma/fma12522
+VB_C5,12523,Cervical Vertebra,http://purl.org/sig/ont/fma/fma12523
+VB_C6,12524,Cervical Vertebra,http://purl.org/sig/ont/fma/fma12524
+VB_C7,12525,Cervical Vertebra,http://purl.org/sig/ont/fma/fma12525
+VB_C8,23892,Cervical Vertebra,http://purl.org/sig/ont/fma/fma23892
+Carina,7465,Carina of trachea,http://purl.org/sig/ont/fma/fma7465
+Atriums,7099,Atrium of the heart combined,http://purl.org/sig/ont/fma/fma7099
+Atrium_L,7097,Atrium of the heart left,http://purl.org/sig/ont/fma/fma7097
+Atrium_R,7096,Atrium of the heart right,http://purl.org/sig/ont/fma/fma7096
+Ventricles,7100,Ventricle of the heart combined,http://purl.org/sig/ont/fma/fma7100
+Ventricle_L,7101,Ventricle of the heart left,http://purl.org/sig/ont/fma/fma7101
+Ventricle_R,7098,Ventricle of the heart right,http://purl.org/sig/ont/fma/fma7098
+A_Carotids,3939,Carotid artery combined,http://purl.org/sig/ont/fma/fma3939
+A_Carotid_L,4058,Left Carotid Artery,http://purl.org/sig/ont/fma/fma4058
+A_Carotid_R,3941,Right Carotid Artery,http://purl.org/sig/ont/fma/fma3941
+CaudaEquina,52590,Cauda Equina,http://purl.org/sig/ont/fma/fma52590
+A_Celiac,50737,Celiac artery,http://purl.org/sig/ont/fma/fma50737
+Cerebellum,67944,Cerebellum,http://purl.org/sig/ont/fma/fma67944
+Cerebrum,62000,Cerebrum,http://purl.org/sig/ont/fma/fma62000
+Cervix,17740,Cervix of uterus,http://purl.org/sig/ont/fma/fma17740
+ChestWall,50060,Chest Wall,http://purl.org/sig/ont/fma/fma50060
+Chiasm,62045,Optic chiasm,http://purl.org/sig/ont/fma/fma62045
+Clavicle_L,13323,Clavicle Left,http://purl.org/sig/ont/fma/fma13323
+Clavicle_R,13322,Clavicle Right,http://purl.org/sig/ont/fma/fma13322
+CN_III_L,50880,Oculomotor nerve Left,http://purl.org/sig/ont/fma/fma50880
+CN_III_R,50879,Oculomotor nerve Right,http://purl.org/sig/ont/fma/fma50879
+CN_IX_L,50892,Glossopharyngeal nerve Left,http://purl.org/sig/ont/fma/fma50892
+CN_IX_R,50870,Glossopharyngeal nerve Right ,http://purl.org/sig/ont/fma/fma50870
+CN_V_L,50885,Trigeminal nerve Left,http://purl.org/sig/ont/fma/fma50885
+CN_V1_L,52623,Trigeminal nerve Left (V1),http://purl.org/sig/ont/fma/fma52623
+CN_V2_L,52726,Trigeminal nerve Left (V2),http://purl.org/sig/ont/fma/fma52726
+CN_V3_L,52998,Trigeminal nerve Left (V3),http://purl.org/sig/ont/fma/fma52998
+CN_V_R,50884,Trigeminal nerve Right,http://purl.org/sig/ont/fma/fma50884
+CN_V1_R,52622,Trigeminal nerve Right (V1),http://purl.org/sig/ont/fma/fma52622
+CN_V2_R,52725,Trigeminal nerve Right (V2),http://purl.org/sig/ont/fma/fma52725
+CN_V3_R,52997,Trigeminal nerve Right (V3),http://purl.org/sig/ont/fma/fma52997
+CN_VI,50867,Abducens nerve,http://purl.org/sig/ont/fma/fma50867
+CN_VI_L,50887,Abducens nerve Left,http://purl.org/sig/ont/fma/fma50887
+CN_VI_R,50886,Abducens nerve Right,http://purl.org/sig/ont/fma/fma50886
+CN_VII_L,50889,Facial nerve Left,http://purl.org/sig/ont/fma/fma50889
+CN_VII_R,50888,Facial nerve Right,http://purl.org/sig/ont/fma/fma50888
+CN_XI_L,50899,Spinal accessory nerve Left,http://purl.org/sig/ont/fma/fma50899
+CN_XI_R,50897,Spinal accessory nerve Right,http://purl.org/sig/ont/fma/fma50897
+CN_XII_L,50903,Hypoglossal nerve Left,http://purl.org/sig/ont/fma/fma50903
+CN_XII_R,50901,Hypoglossal nerve Right,http://purl.org/sig/ont/fma/fma50901
+Cochleas,60201,Cochlea combined,http://purl.org/sig/ont/fma/fma60201
+Cochlea_L,60203,Cochlea Left,http://purl.org/sig/ont/fma/fma60203
+Cochlea_R,60202,Cochlea Right,http://purl.org/sig/ont/fma/fma60202
+Colon,7201,Large intestine,http://purl.org/sig/ont/fma/fma7201
+Constrictors,46620,Constrictor Muscle of Pharynx,http://purl.org/sig/ont/fma/fma46620
+Corneas,58238,Cornea combined,http://purl.org/sig/ont/fma/fma58238
+Cornea_L,58240,Cornea Left,http://purl.org/sig/ont/fma/fma58240
+Cornea_R,58239,Cornea Right,http://purl.org/sig/ont/fma/fma58239
+Cavernosum,75189,Penis - CORPUS CAVERNOSUM,http://purl.org/sig/ont/fma/fma75189
+Spongiosum,19617,Penis - CORPUS SPONGIOSUM,http://purl.org/sig/ont/fma/fma19617
+Cricoid,9615,Cricoid cartilage,http://purl.org/sig/ont/fma/fma9615
+Diaphragm,13295,Diaphragm,http://purl.org/sig/ont/fma/fma13295
+Digastric_L,46293,Digastric muscle Left,http://purl.org/sig/ont/fma/fma46293
+Digastric_R,46292,Digastric muscle Right,http://purl.org/sig/ont/fma/fma46292
+Duodenum,7206,Duodenum,http://purl.org/sig/ont/fma/fma7206
+Ear_Externals,52781,External Ear combined,http://purl.org/sig/ont/fma/fma52781
+Ear_External_L,53644,External Ear Left,http://purl.org/sig/ont/fma/fma53644
+Ear_External_R,53643,External Ear Right,http://purl.org/sig/ont/fma/fma53643
+Ear_Middles,56513,Middle Ear combined,http://purl.org/sig/ont/fma/fma56513
+Ear_Middle_L,56515,Middle Ear Left,http://purl.org/sig/ont/fma/fma56515
+Ear_Middle_R,56514,Middle Ear Right,http://purl.org/sig/ont/fma/fma56514
+Oesophagus,7131,Oesophagus,http://purl.org/sig/ont/fma/fma7131
+Esophagus,7131,Esophagus,http://purl.org/sig/ont/fma/fma7131
+Eye_L,12515,Eyeball Left,http://purl.org/sig/ont/fma/fma12515
+Eye_R,12514,Eyeball Right,http://purl.org/sig/ont/fma/fma12514
+A_Fem_L,70250,Femoral artery Left,http://purl.org/sig/ont/fma/fma70250
+A_Fem_R,70249,Femoral artery Right,http://purl.org/sig/ont/fma/fma70249
+V_Fem_L,21188,Femoral vein Left,http://purl.org/sig/ont/fma/fma21188
+V_Fem_R,21189,Femoral vein Right,http://purl.org/sig/ont/fma/fma21189
+FemurBase_L,32846,Femur bottom third Left,http://purl.org/sig/ont/fma/fma32846
+FemurBase_R,32845,Femur bottom third Right,http://purl.org/sig/ont/fma/fma32845
+FemurHead_L,32843,Femur top third Left,http://purl.org/sig/ont/fma/fma32843
+FemurHead_R,32842,Femur top third Right,http://purl.org/sig/ont/fma/fma32842
+FemurShaft_L,32849,Femur mid third Left,http://purl.org/sig/ont/fma/fma32849
+FemurShaft_R,32848,Femur mid third Right,http://purl.org/sig/ont/fma/fma32848
+Femur_L,24475,Femur Left,http://purl.org/sig/ont/fma/fma24475
+Femur_R,24474,Femur Right,http://purl.org/sig/ont/fma/fma24474
+FemurKneeJoint_L,35180,Femur lower articular surface Left,http://purl.org/sig/ont/fma/fma35180
+FemurKneeJoint_R,35179,Femur lower articular surface Right,http://purl.org/sig/ont/fma/fma35179
+Fibulas,24479,Fibula combined,http://purl.org/sig/ont/fma/fma24479
+Fibula_L,24481,Fibula Left,http://purl.org/sig/ont/fma/fma24481
+Fibula_R,24480,Fibula Right,http://purl.org/sig/ont/fma/fma24480
+FrontalLobe_L,72970,Frontal cerebral lobe left,http://purl.org/sig/ont/fma/fma72970
+FrontalLobe_R,72969,Frontal cerebral lobe right,http://purl.org/sig/ont/fma/fma72969
+Gallbladder,7202,Gall bladder,http://purl.org/sig/ont/fma/fma7202
+HepatogastricLigament,16520,Hepatogastric ligament,http://purl.org/sig/ont/fma/fma16520
+Glottis,55414,Vocal cords,http://purl.org/sig/ont/fma/fma55414
+Heart,7088,Heart,http://purl.org/sig/ont/fma/fma7088
+Hippocampuss,275020,Hippocampus combined,http://purl.org/sig/ont/fma/fma275020
+Hippocampus_L,275024,Hippocampus Left,http://purl.org/sig/ont/fma/fma275024
+Hippocampus_R,275022,Hippocampus Right,http://purl.org/sig/ont/fma/fma275022
+Humerus_L,23131,Humerus Left,http://purl.org/sig/ont/fma/fma23131
+Humerus_R,23130,Humerus Right,http://purl.org/sig/ont/fma/fma23130
+Hyoid,52749,Hyoid bone,http://purl.org/sig/ont/fma/fma52749
+A_Hypophyseal,49849,Hypophyseal artery,http://purl.org/sig/ont/fma/fma49849
+Hypothamalus,62008,Hypothalamus,http://purl.org/sig/ont/fma/fma62008
+A_Iliac,14764,Common Iliac arterial tree,http://purl.org/sig/ont/fma/fma14764
+A_Iliac_C_L,14766,Common iliac artery Left,http://purl.org/sig/ont/fma/fma14766
+A_Iliac_C_R,14765,Common iliac artery Right,http://purl.org/sig/ont/fma/fma14765
+V_Iliac_C_L,21388,Common iliac vein Left,http://purl.org/sig/ont/fma/fma21388
+V_Iliac_C_R,21387,Common iliac vein Right,http://purl.org/sig/ont/fma/fma21387
+A_Iliac_E_L,18807,External iliac artery Left,http://purl.org/sig/ont/fma/fma18807
+A_Iliac_E_R,18806,External iliac artery Right,http://purl.org/sig/ont/fma/fma18806
+V_Iliac_E_L,18886,External iliac vein Left,http://purl.org/sig/ont/fma/fma18886
+V_Iliac_E_R,18885,External iliac vein Right,http://purl.org/sig/ont/fma/fma18885
+A_Iliac_I_L,18810,Internal iliac artery Left,http://purl.org/sig/ont/fma/fma18810
+A_Iliac_I_R,18809,Internal iliac artery Right,http://purl.org/sig/ont/fma/fma18809
+V_Iliac_I_L,18888,Internal iliac vein Left,http://purl.org/sig/ont/fma/fma18888
+V_Iliac_I_R,18887,Internal iliac vein Right,http://purl.org/sig/ont/fma/fma18887
+Ilium_L,16591,Ilium Left,http://purl.org/sig/ont/fma/fma16591
+Ilium_R,16590,Ilium Right,http://purl.org/sig/ont/fma/fma16590
+V_InternalJugular_L,4762,Internal jugular vein,http://purl.org/sig/ont/fma/fma4762
+V_InternalJugular_R,4754,Internal jugular vein,http://purl.org/sig/ont/fma/fma4754
+Ischium_L,16594,Ischium Left,http://purl.org/sig/ont/fma/fma16594
+Ischium_R,16593,Ischium Right,http://purl.org/sig/ont/fma/fma16593
+IVC,10951,Inferior vena cava,http://purl.org/sig/ont/fma/fma10951
+Kidneys,264815,Kidneys combined,http://purl.org/sig/ont/fma/fma264815
+Kidney_L,7205,Kidney Left,http://purl.org/sig/ont/fma/fma7205
+Kidney_R,7204,Kidney Right,http://purl.org/sig/ont/fma/fma7204
+KidneyPelvis_L,15579,Renal pelvis Left,http://purl.org/sig/ont/fma/fma15579
+KidneyPelvis_R,15578,Renal pelvis Right,http://purl.org/sig/ont/fma/fma15578
+VB_L1,13072,Lumbar Vertebra,http://purl.org/sig/ont/fma/fma13072
+VB_L2,13073,Lumbar Vertebra,http://purl.org/sig/ont/fma/fma13073
+VB_L3,13074,Lumbar Vertebra,http://purl.org/sig/ont/fma/fma13074
+VB_L4,13075,Lumbar Vertebra,http://purl.org/sig/ont/fma/fma13075
+VB_L5,13076,Lumbar Vertebra,http://purl.org/sig/ont/fma/fma13076
+Lacrimal_L,59103,Lacrimal gland Left,http://purl.org/sig/ont/fma/fma59103
+Lacrimal_R,59102,Lacrimal gland Right,http://purl.org/sig/ont/fma/fma59102
+A_LAD,3862,Anterior interventricular branch of LCA,http://purl.org/sig/ont/fma/fma3862
+Larynx,55097,Larynx,http://purl.org/sig/ont/fma/fma55097
+Lens_L,58243,Lens Left,http://purl.org/sig/ont/fma/fma58243
+Lens_R,58242,Lens Right,http://purl.org/sig/ont/fma/fma58242
+Liver,7197,Liver,http://purl.org/sig/ont/fma/fma7197
+LN_HN_1a,223846,Lymph nodes - H&N 1a Submental combined,http://purl.org/sig/ont/fma/fma223846
+LN_HN_1a_L,235616,Lymph nodes - H&N 1a Submental Left,http://purl.org/sig/ont/fma/fma235616
+LN_HN_1a_R,235614,Lymph nodes - H&N 1a Submental Right,http://purl.org/sig/ont/fma/fma235614
+LN_HN_1b_L,224001,Lymph nodes - H&N 1b Submandibular Left,http://purl.org/sig/ont/fma/fma224001
+LN_HN_1b_R,223999,Lymph nodes - H&N 1b Submandibular Right,http://purl.org/sig/ont/fma/fma223999
+LN_HN_Fb_L,223832,Lymph nodes - H&N fb Faciobuccal Left [9],http://purl.org/sig/ont/fma/fma223832
+LN_HN_Fb_R,223830,Lymph nodes - H&N fb Faciobuccal Right [9],http://purl.org/sig/ont/fma/fma223830
+LN_HN_2a_L,241975,Lymph nodes - H&N 2a Left,http://purl.org/sig/ont/fma/fma241975
+LN_HN_2a_R,241973,Lymph nodes - H&N 2a Right,http://purl.org/sig/ont/fma/fma241973
+LN_HN_2b_L,241979,Lymph nodes - H&N 2b Left,http://purl.org/sig/ont/fma/fma241979
+LN_HN_2b_R,241977,Lymph nodes - H&N 2b Right,http://purl.org/sig/ont/fma/fma241977
+LN_HN_Rp_L,224033,Lymph nodes - H&N rp retropharyngeal Left [7a],http://purl.org/sig/ont/fma/fma224033
+LN_HN_Rp_R,224.31,Lymph nodes - H&N rp retropharyngeal Right [7a],http://purl.org/sig/ont/fma/fma224.31
+LN_HN_P_L,223806,Lymph nodes - H&N p parotid Left [8],http://purl.org/sig/ont/fma/fma223806
+LN_HN_P_R,223804,Lymph nodes - H&N p parotid Right [8],http://purl.org/sig/ont/fma/fma223804
+LN_HN_Pa_L,223794,Lymph nodes - H&N pa postauricular Left [10a],http://purl.org/sig/ont/fma/fma223794
+LN_HN_Pa_R,223972,Lymph nodes - H&N pa postauricular Right [10a],http://purl.org/sig/ont/fma/fma223972
+LN_HN_3_L,241953,Lymph nodes - H&N 3 Left,http://purl.org/sig/ont/fma/fma241953
+LN_HN_3_R,241951,Lymph nodes - H&N 3 Right,http://purl.org/sig/ont/fma/fma241951
+LN_HN_O_L,223788,Lymph nodes - H&N o occipital Left [10b],http://purl.org/sig/ont/fma/fma223788
+LN_HN_O_R,223786,Lymph nodes - H&N o occipital Right [10b],http://purl.org/sig/ont/fma/fma223786
+LN_HN_4_L,241959,Lymph nodes - H&N 4 Left,http://purl.org/sig/ont/fma/fma241959
+LN_HN_4_R,241957,Lymph nodes - H&N 4 Right,http://purl.org/sig/ont/fma/fma241957
+LN_HN_5_L,241965,Lymph nodes - H&N 5 Left,http://purl.org/sig/ont/fma/fma241965
+LN_HN_5_R,241963,Lymph nodes - H&N 5 Right,http://purl.org/sig/ont/fma/fma241963
+LN_Ax_L,73250,Lymph nodes - axillary Left,http://purl.org/sig/ont/fma/fma73250
+LN_Ax_R,73249,Lymph nodes - axillary Right,http://purl.org/sig/ont/fma/fma73249
+LN_Ax1_L,73253,Pectoral axillary lymphatics Left,http://purl.org/sig/ont/fma/fma73253
+LN_Ax1_R,73252,Pectoral axillary lymphatics Right,http://purl.org/sig/ont/fma/fma73252
+LN_Ax2_L,73263,Central axillary lymphatics Left,http://purl.org/sig/ont/fma/fma73263
+LN_Ax2_R,73262,Central axillary lymphatics Right,http://purl.org/sig/ont/fma/fma73262
+LN_Ax3_L,73265,Apical axillary lymphatics Left,http://purl.org/sig/ont/fma/fma73265
+LN_Ax3_R,73264,Apical axillary lymphatics Left Right,http://purl.org/sig/ont/fma/fma73264
+LN_IMC_L,5934,Lymph nodes - parasternal Left,http://purl.org/sig/ont/fma/fma5934
+LN_IMC_R,5933,Lymph nodes - parasternal Right,http://purl.org/sig/ont/fma/fma5933
+LN_P_Aortic_TxLy [Sup],278410,Lymph nodes - para-aortic,http://purl.org/sig/ont/fma/fma278410
+LN_P_Aortic_TxLy [Mid],278412,Lymph nodes - para-aortic,http://purl.org/sig/ont/fma/fma278412
+Ln_P_Aortic_TxLy [Inf],278404,Lymph nodes - para-aortic,http://purl.org/sig/ont/fma/fma278404
+LN_Iliac_Com_L,224269,Lymph nodes - pelvis - common iliac Left,http://purl.org/sig/ont/fma/fma224269
+LN_Iliac_Com_R,224271,Lymph nodes - pelvis - common iliac Right,http://purl.org/sig/ont/fma/fma224271
+LN_Iliac_Ext_L,229177,Lymph nodes - pelvis - external iliac Left,http://purl.org/sig/ont/fma/fma229177
+LN_Iliac_Ext_R,229179,Lymph nodes - pelvis - external iliac Right,http://purl.org/sig/ont/fma/fma229179
+LN_Iliac_Int_L,224275,Lymph nodes - pelvis - internal iliac Left,http://purl.org/sig/ont/fma/fma224275
+LN_Iliac_Int_R,224277,Lymph nodes - pelvis - internal iliac Right,http://purl.org/sig/ont/fma/fma224277
+LN_Obturator_L,16676,Lymph nodes - pelvis - obturator Left,http://purl.org/sig/ont/fma/fma16676
+LN_Obturator_R,16676,Lymph nodes - pelvis - obturator Right,http://purl.org/sig/ont/fma/fma16676
+LN_Presacral,234280,Lymph nodes - pelvis - presacral,http://purl.org/sig/ont/fma/fma234280
+LN_Inguinofems,236337,Lymph nodes - pelvis - Inguinofemoral combined,http://purl.org/sig/ont/fma/fma236337
+LN_Inguinofemoral_R,236339,Lymph nodes - pelvis - Inguinofemoral Right,http://purl.org/sig/ont/fma/fma236339
+LN_Inguinofemoral_L,236341,Lymph nodes - pelvis - Inguinofemoral Left,http://purl.org/sig/ont/fma/fma236341
+Lungs,68877,Lungs combined,http://purl.org/sig/ont/fma/fma68877
+Lung_L,7310,Lung Left,http://purl.org/sig/ont/fma/fma7310
+Lung_R,7309,Lung Right,http://purl.org/sig/ont/fma/fma7309
+Lung_LLL,7371,Lung - lower lobe of left,http://purl.org/sig/ont/fma/fma7371
+Lung_LUL,7370,Lung - upper lobe of left,http://purl.org/sig/ont/fma/fma7370
+Lung_RLL,7337,Lung - lower lobe of right,http://purl.org/sig/ont/fma/fma7337
+Lung_RML,7383,Lung - middle lobe of right,http://purl.org/sig/ont/fma/fma7383
+Lung_RUL,7333,Lung - upper lobe of right,http://purl.org/sig/ont/fma/fma7333
+Mandible,52748,Mandible,http://purl.org/sig/ont/fma/fma52748
+Masseter_L,48998,Masseter Left,http://purl.org/sig/ont/fma/fma48998
+Masseter_R,48997,Masseter Right,http://purl.org/sig/ont/fma/fma48997
+Mesorectum,7144,Mesorectum,http://purl.org/sig/ont/fma/fma7144
+Mucosa,85355,Mucosa,http://purl.org/sig/ont/fma/fma85355
+OccipitalLobe_L,72976,Occipital cerebral lobe left,http://purl.org/sig/ont/fma/fma72976
+OccipitalLobe_R,72975,Occipital cerebral lobe right,http://purl.org/sig/ont/fma/fma72975
+OpticNerve_L,50878,Optic nerve Left,http://purl.org/sig/ont/fma/fma50878
+OpticNerve_R,50875,Optic nerve Right,http://purl.org/sig/ont/fma/fma50875
+Orbit_L,53083,Orbit Left,http://purl.org/sig/ont/fma/fma53083
+Orbit_R,53082,Orbit Right,http://purl.org/sig/ont/fma/fma53082
+Ovary_L,7214,Ovary Left,http://purl.org/sig/ont/fma/fma7214
+Ovary_R,7213,Ovary Right,http://purl.org/sig/ont/fma/fma7213
+Pancreas,7198,Pancreas,http://purl.org/sig/ont/fma/fma7198
+Parametrium,77061,Parametrium,http://purl.org/sig/ont/fma/fma77061
+ParietalLobe_L,72974,Parietal cerebral lobe left,http://purl.org/sig/ont/fma/fma72974
+ParietalLobe_R,72973,Parietal cerebral lobe right,http://purl.org/sig/ont/fma/fma72973
+Parotid_L,59798,Parotid gland Left,http://purl.org/sig/ont/fma/fma59798
+Parotid_R,59797,Parotid gland Right,http://purl.org/sig/ont/fma/fma59797
+Pelvis,16586,Bony pelvis combined,http://purl.org/sig/ont/fma/fma16586
+Pelvis_L,20227,Bony pelvis Left,http://purl.org/sig/ont/fma/fma20227
+Pelvis_R,20226,Bony pelvis Right,http://purl.org/sig/ont/fma/fma20226
+Penis,9707,Penis,http://purl.org/sig/ont/fma/fma9707
+PenileBulb,19614,Bulb of Penis,http://purl.org/sig/ont/fma/fma19614
+Pericardium,9869,Pericardium,http://purl.org/sig/ont/fma/fma9869
+Perineum,9579,Perineum,http://purl.org/sig/ont/fma/fma9579
+Peritoneum,9908,Peritoneal sac,http://purl.org/sig/ont/fma/fma9908
+Pineal,62033,Pineal body,http://purl.org/sig/ont/fma/fma62033
+Pituitary,13889,Pituitary gland,http://purl.org/sig/ont/fma/fma13889
+Platysma_L,45740,Platysma Left,http://purl.org/sig/ont/fma/fma45740
+Platysma_R,45739,Platysma Right,http://purl.org/sig/ont/fma/fma45739
+Pons,67943,Pons,http://purl.org/sig/ont/fma/fma67943
+PortaHepatis,15758,Porta hepatis,http://purl.org/sig/ont/fma/fma15758
+Prostate,9600,Prostate,http://purl.org/sig/ont/fma/fma9600
+PterygoidLateral_L,49017,Pterygoid m. Left lateral,http://purl.org/sig/ont/fma/fma49017
+PterygoidLateral_R,49016,Pterygoid m. Right lateral ,http://purl.org/sig/ont/fma/fma49016
+PterygoidMedial_L,49013,Pterygoid m. Left medial,http://purl.org/sig/ont/fma/fma49013
+PterygoidMedial_R,49012,Pterygoid m. Right medial,http://purl.org/sig/ont/fma/fma49012
+Pubis_L,16597,Pubic bone Left,http://purl.org/sig/ont/fma/fma16597
+Pubis_R,16596,Pubic bone Right,http://purl.org/sig/ont/fma/fma16596
+A_Pulmonary,66326,Pulmonary artery,http://purl.org/sig/ont/fma/fma66326
+V_Pulmonary,66643,Pulmonary vein,http://purl.org/sig/ont/fma/fma66643
+Radius_L,23465,Radius Left,http://purl.org/sig/ont/fma/fma23465
+Radius_R,23464,Radius Right,http://purl.org/sig/ont/fma/fma23464
+Rectum,14544,Rectum,http://purl.org/sig/ont/fma/fma14544
+RectalWall,14626,Rectum,http://purl.org/sig/ont/fma/fma14626
+Retina_L,58303,Retina Left,http://purl.org/sig/ont/fma/fma58303
+Retina_R,58302,Retina Right,http://purl.org/sig/ont/fma/fma58302
+Rib1_L,7987,First Rib Left,http://purl.org/sig/ont/fma/fma7987
+Rib1_R,7857,First Rib Right,http://purl.org/sig/ont/fma/fma7857
+Rib10_L,8472,Tenth rib Left,http://purl.org/sig/ont/fma/fma8472
+Rib10_R,8445,Tenth rib Right,http://purl.org/sig/ont/fma/fma8445
+Rib11_L,8532,Eleventh rib Left,http://purl.org/sig/ont/fma/fma8532
+Rib11_R,8531,Eleventh rib Right,http://purl.org/sig/ont/fma/fma8531
+Rib12_L,8534,Twelfth rib Left,http://purl.org/sig/ont/fma/fma8534
+Rib12_R,8533,Twelfth rib Right,http://purl.org/sig/ont/fma/fma8533
+Rib2_L,8012,Second rib Left,http://purl.org/sig/ont/fma/fma8012
+Rib2_R,7882,Second rib Right,http://purl.org/sig/ont/fma/fma7882
+Rib3_L,8039,Third rib Left,http://purl.org/sig/ont/fma/fma8039
+Rib3_R,7909,Third rib Right,http://purl.org/sig/ont/fma/fma7909
+Rib4_L,8148,Fourth rib Left,http://purl.org/sig/ont/fma/fma8148
+Rib4_R,7957,Fourth rib Right,http://purl.org/sig/ont/fma/fma7957
+Rib5_L,8093,Fifth rib Left,http://purl.org/sig/ont/fma/fma8093
+Rib5_R,8066,Fifth rib Right,http://purl.org/sig/ont/fma/fma8066
+Rib6_L,8202,Sixth rib Left,http://purl.org/sig/ont/fma/fma8202
+Rib6_R,8175,Sixth rib Right,http://purl.org/sig/ont/fma/fma8175
+Rib7_L,8256,Seventh rib Left,http://purl.org/sig/ont/fma/fma8256
+Rib7_R,8229,Seventh rib Right,http://purl.org/sig/ont/fma/fma8229
+Rib8_L,8310,Eighth rib Left,http://purl.org/sig/ont/fma/fma8310
+Rib8_R,8283,Eighth rib Right,http://purl.org/sig/ont/fma/fma8283
+Rib9_L,8391,Ninth rib Left,http://purl.org/sig/ont/fma/fma8391
+Rib9_R,8364,Ninth rib Right,http://purl.org/sig/ont/fma/fma8364
+VB_S1,13077,Sacral Vertebra,http://purl.org/sig/ont/fma/fma13077
+VB_S2,13078,Sacral Vertebra,http://purl.org/sig/ont/fma/fma13078
+VB_S3,13079,Sacral Vertebra,http://purl.org/sig/ont/fma/fma13079
+VB_S4,13080,Sacral Vertebra,http://purl.org/sig/ont/fma/fma13080
+VB_S5,13081,Sacral Vertebra,http://purl.org/sig/ont/fma/fma13081
+Sacrum,16202,Sacrum,http://purl.org/sig/ont/fma/fma16202
+Scapula_L,13396,Scapula Left,http://purl.org/sig/ont/fma/fma13396
+Scapula_R,13395,Scapula Right,http://purl.org/sig/ont/fma/fma13395
+Scrotum,18252,Scrotum (skin & cremasteric fascia),http://purl.org/sig/ont/fma/fma18252
+SV,19387,Seminal vesicle,http://purl.org/sig/ont/fma/fma19387
+Skin,7163,Skin,http://purl.org/sig/ont/fma/fma7163
+Skull,46565,Skull,http://purl.org/sig/ont/fma/fma46565
+SmallBowel,7200,Small intestines,http://purl.org/sig/ont/fma/fma7200
+SpinalCanal,9680,Vertebral canal,http://purl.org/sig/ont/fma/fma9680
+SpinalCord,7647,Spinal cord combined,http://purl.org/sig/ont/fma/fma7647
+SpinalCord_C,71166,Spinal cord cervical,http://purl.org/sig/ont/fma/fma71166
+SpinalCord_T ,71167,Spinal cord thoracic,http://purl.org/sig/ont/fma/fma71167
+SpinalCord_L ,71168,Spinal cord lumbar,http://purl.org/sig/ont/fma/fma71168
+SpinalCord_S ,256623,Spinal cord sacral,http://purl.org/sig/ont/fma/fma256623
+Spleen,7196,Spleen,http://purl.org/sig/ont/fma/fma7196
+SpleenHilum,15841,Splenic hilum,http://purl.org/sig/ont/fma/fma15841
+SCM_L,13409,Sternocleidomastoid Left,http://purl.org/sig/ont/fma/fma13409
+SCM_R,13408,Sternocleidomastoid Right,http://purl.org/sig/ont/fma/fma13408
+Stomach,7148,Stomach,http://purl.org/sig/ont/fma/fma7148
+A_Subclavian_L,4694,Subclavian artery left,http://purl.org/sig/ont/fma/fma4694
+A_Subclavian_R,3953,Subclavian artery right,http://purl.org/sig/ont/fma/fma3953
+V_Subclavian_R,4755,Subclavian vein right,http://purl.org/sig/ont/fma/fma4755
+V_Subclavian_L,4763,Subclavian vein left,http://purl.org/sig/ont/fma/fma4763
+Sublinguals,59791,Sublingual glands combined,http://purl.org/sig/ont/fma/fma59791
+Sublingual_L,59805,Sublingual gland Left,http://purl.org/sig/ont/fma/fma59805
+Sublingual_R,59804,Sublingual gland Right,http://purl.org/sig/ont/fma/fma59804
+Submand_L,59803,Submandibular gland Left,http://purl.org/sig/ont/fma/fma59803
+Submand_R,59802,Submandibular gland Right,http://purl.org/sig/ont/fma/fma59802
+A_SMA,14749,Superior mesenteric artery,http://purl.org/sig/ont/fma/fma14749
+V_SVC,4720,Superior vena cava,http://purl.org/sig/ont/fma/fma4720
+PubicSymphysis,16950,Symphysis pubis,http://purl.org/sig/ont/fma/fma16950
+VB_T1,9165,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9165
+VB_T2,9187,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9187
+VB_T3,9209,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9209
+VB_T4,9248,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9248
+VB_T5,9922,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9922
+VB_T6,9945,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9945
+VB_T7,9968,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9968
+VB_T8,9991,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9991
+VB_T9,10014,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma10014
+VB_T10,10037,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma10037
+VB_T11,10059,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma10059
+VB_T12,10081,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma10081
+Teeth,314001,Teeth ,http://purl.org/sig/ont/fma/fma314001
+TMJs,54832,Temporomandibular joint,http://purl.org/sig/ont/fma/fma54832
+TMJ_L,54834,Temporomandibular joint left,http://purl.org/sig/ont/fma/fma54834
+TMJ_R,54833,Temporomandibular joint right,http://purl.org/sig/ont/fma/fma54833
+TemporalLobe_L,72972,Temporal cerebral lobe Left,http://purl.org/sig/ont/fma/fma72972
+TemporalLobe_R,72971,Temporal cerebral lobe Right,http://purl.org/sig/ont/fma/fma72971
+Testis_L,7212,Testis Left,http://purl.org/sig/ont/fma/fma7212
+Testis_R,7211,Testis Right,http://purl.org/sig/ont/fma/fma7211
+ThoracicDuct,5031,Thoracic Duct,http://purl.org/sig/ont/fma/fma5031
+Thyroid,9603,Thyroid,http://purl.org/sig/ont/fma/fma9603
+ThyroidCartilage,55099,Thyroid cartilage,http://purl.org/sig/ont/fma/fma55099
+Trachea,7394,Trachea,http://purl.org/sig/ont/fma/fma7394
+Ureter_L,17888,Ureter Left,http://purl.org/sig/ont/fma/fma17888
+Ureter_R,17887,Ureter Right,http://purl.org/sig/ont/fma/fma17887
+Urethra,19667,Urethra,http://purl.org/sig/ont/fma/fma19667
+Uterus,17558,Uterus,http://purl.org/sig/ont/fma/fma17558
+Vagina,19949,Vagina,http://purl.org/sig/ont/fma/fma19949
+Vulva,20462,Vulva (includes mons pubis),http://purl.org/sig/ont/fma/fma20462
+Tongue,54640,Tongue,http://purl.org/sig/ont/fma/fma54640
+Larynx,55097,Larynx,http://purl.org/sig/ont/fma/fma55097
