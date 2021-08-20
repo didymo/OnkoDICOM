@@ -165,7 +165,8 @@ def test_merge_rtss(qtbot, test_object):
     # Create a new rtss
     dataset = patient_dict_container.dataset[0]
     rtss_path = Path(patient_dict_container.path).joinpath('rtss.dcm')
-    new_rtss = create_initial_rtss_from_ct(dataset, rtss_path)
+    new_rtss = create_initial_rtss_from_ct(dataset, rtss_path, ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset))
 
     # Set ROIs
     rois = ImageLoading.get_roi_info(new_rtss)
