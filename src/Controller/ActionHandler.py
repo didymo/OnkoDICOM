@@ -427,19 +427,9 @@ class ActionHandler:
         else:
             print("No PET data in DICOM Image Set")
 
-        # Use CTAC data if it exists and there is the same or more of it
-        # than NAC data for further work, otherwise use NAC data
-        if len(selected_files["PT CTAC"]) >= len(selected_files["PT NAC"]):
-            data = selected_files["PT CTAC"]
-        else:
-            data = selected_files["PT NAC"]
-
-        # Convert to SUV
-        print("Calculating SUV data")
-        suv_data = suv2roi.get_SUV_data(data)
         # Calculate contours
         print("Calculating contours")
-        contour_data = suv2roi.calculate_contours(suv_data)
+        contour_data = suv2roi.calculate_contours()
         # Generate ROIs
         print("Generating ROIs")
         suv2roi.generate_ROI(contour_data)

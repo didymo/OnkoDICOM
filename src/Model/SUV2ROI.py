@@ -43,39 +43,6 @@ class SUV2ROI:
 
         return dicom_files
 
-    def get_SUV_data(self, selected_files):
-        """
-        Gets SUV pixel data from the files in the selected_files
-        dictionary.
-        :param selected_files: A dictionary of files to get SUV pixel
-                               data from.
-        :return: Dictionary of file names and SUV pixel data.
-        """
-        suv_data = []
-
-        # Loop through each file
-        for ds in selected_files:
-
-            # Read the file
-            suv = self.pet2suv(ds)
-            # NOTE - SliceLocation is relative to an unspecified
-            # reference point. A better Z for these slices would be in
-            # Image Position (Patient), however the Z value here most
-            # likely does not correspond to the Z value for the same (or
-            # closest) slice in CT scans. Aligning these requires image
-            # fusion and is out of the scope of this work.
-            slice_location = float(ds['SliceLocation'].value)
-
-            # Resize the SUV data to be 512x512 using nearest neighbour
-            # scaling as it preserves SUV values at the expense of
-            # accurate image scaling
-            suv_data.append((slice_location, resize(suv, (512, 512), order=0)))
-
-        # Sort the SUV data by Z value (-ve to +ve)
-        suv_data.sort(key=lambda x: x[0])
-
-        return suv_data
-
     def pet2suv(self, dataset):
         """
         Converts DICOM PET pixel array values (which are in Bq/ml) to
@@ -88,7 +55,8 @@ class SUV2ROI:
         #acquisition_time = dataset.AcquisitionTime
 
         # Get patient info
-        patient_weight = dataset.PatientWeight
+        #patient_weight = dataset.PatientWeight
+        patient_weight = 87
 
         # Get radiopharmaceutical information
         radiopharmaceutical_info = \
@@ -130,20 +98,36 @@ class SUV2ROI:
         # Return SUV data
         return suv
 
-    def calculate_contours(self, suv_data):
+    def calculate_contours(self):
         """
         Calculate SUV boundaries for each slice from an SUV value of 3
         all the way to the maximum SUV value in that slice.
-        :return: Dictionary where key is Z value of slice and value is
-                 list of lists of contours.
+        :return: Dictionary where key is SUV ROI name and value is
+                 a list containing tuples of slice id and lists of
+                 contours.
         """
         contour_data = {}
 
-        for i, slice in enumerate(suv_data):
-            contour_data[slice[0]] = []
-            for j in range(0, int(slice[1].max()) - 2):
-                contour_data[slice[0]].append(
-                    measure.find_contours(slice[1], j + 3))
+        patient_dict_container = PatientDictContainer()
+        slider_min = 0
+        slider_max = len(patient_dict_container.get("pixmaps_axial"))
+
+        for slider_id in range(slider_min, slider_max):
+            temp_ds = patient_dict_container.dataset[slider_id]
+
+            i = 1
+
+            while True:
+                suv_data = self.pet2suv(temp_ds)
+                contours = measure.find_contours(suv_data, i)
+                if not contours:
+                    break
+                else:
+                    name = "SUV-" + str(i)
+                    if name not in contour_data:
+                        contour_data[name] = []
+                    contour_data[name].append((slider_id, contours))
+                    i += 1
 
         return contour_data
 
@@ -156,41 +140,35 @@ class SUV2ROI:
         patient_dict_container = PatientDictContainer()
         dataset_rtss = patient_dict_container.get("dataset_rtss")
 
-        rtss = None
-
-        # Get pixluts (from first CT dataset encountered)
-        for ds in patient_dict_container.dataset:
-            dataset = patient_dict_container.dataset[ds]
-            if dataset.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
-                pixlut = patient_dict_container.get(
-                    "pixluts")[dataset.SOPInstanceUID]
-                break
-
-        # Calculate SUV ROI for each slice and SUV level from 3 to the
-        # max, skip if slice has no contour data
+        # Loop through each SUV level
         for item in contours:
-            if not len(contours[item]):
-                continue
+            print("\n==Generating ROIs for " + str(item) + "==")
+            # Loop through each slice
             for i in range(len(contours[item])):
-                roi_name = "SUV-" + str(i + 3)
+                slider_id = contours[item][i][0]
+                dataset = patient_dict_container.dataset[slider_id]
+                pixlut = patient_dict_container.get("pixluts")
+                pixlut = pixlut[dataset.SOPInstanceUID]
+                z_coord = dataset.SliceLocation
 
-                # Convert the pixel points to RCS points
+                # Convert pixel coordinates to RCS points
                 points = []
-                for j in range(len(contours[item][i])):
+                for j in range(len(contours[item][i][1])):
                     points.append([])
-                    for point in contours[item][i][j]:
+                    for point in contours[item][i][1][j]:
                         points[j].append(ROI.pixel_to_rcs(pixlut,
-                                          round(point[1]),
-                                          round(point[0])))
+                                                          round(point[1]),
+                                                          round(point[0])))
 
+                # Append Z coordinate
                 contour_data = []
                 for i in range(len(points)):
                     contour_data.append([])
                     for p in points[i]:
-                        coords = (p[0], p[1], float(item))
+                        coords = (p[0], p[1], z_coord)
                         contour_data[i].append(coords)
 
-                # Transform RCS points into 1D array, append z value
+                # Transform RCS points into 1D array
                 single_array = []
                 for i in range(len(contour_data)):
                     single_array.append([])
@@ -199,9 +177,10 @@ class SUV2ROI:
                             single_array[i].append(point)
 
                 # Create the ROI(s)
+                print("Generating ROI for slice " + str(slider_id))
                 for array in single_array:
                     # TODO: change "DOSE_REGION"!!
-                    rtss = ROI.create_roi(dataset_rtss, roi_name,
+                    rtss = ROI.create_roi(dataset_rtss, item,
                                           array, dataset, "DOSE_REGION")
 
                     # Save the updated rtss
@@ -209,14 +188,8 @@ class SUV2ROI:
                     patient_dict_container.set("rois",
                                                ImageLoading.get_roi_info(rtss))
 
-            # Emit that a new ROI has been created to update the
-            # structures tab
-            # if rtss:
-            #    self.signal_roi_drawn.emit((rtss, {"draw": item}))
-
         # Save the new ROIs to the RT Struct file
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
-
 
         message = "Are you sure you want to save the modified RTSTRUCT file? "
         message += "This will overwrite the existing file. "
@@ -263,7 +236,6 @@ class SUV2ROI:
         rtss.PatientName = patient_dict_container.dataset[0].PatientName
         rtss.PatientID = patient_dict_container.dataset[0].PatientID
         rtss.PatientBirthDate = patient_dict_container.dataset[0].PatientBirthDate
-        rtss.PatientSex = patient_dict_container.dataset[0].PatientSex
 
         # General study information
         rtss.StudyDate = time_now.strftime('%Y%m%d')
