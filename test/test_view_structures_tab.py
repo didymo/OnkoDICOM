@@ -1,11 +1,13 @@
 import os
 import pytest
 from pathlib import Path
+from PySide6 import QtWidgets, QtCore
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import get_contour_pixel, calc_roi_polygon
+from src.Model.ROI import get_contour_pixel, calc_roi_polygon, create_initial_rtss_from_ct, create_roi
 from src.Model import ImageLoading
+from src.View.mainpage.StructureTab import StructureTab
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -50,9 +52,9 @@ class TestStructureTab:
 
         # Set additional attributes in patient dict container (otherwise program will crash and test will fail)
         if "rtss" in file_names_dict:
-            dataset_rtss = dcmread(file_names_dict['rtss'])
-            self.rois = ImageLoading.get_roi_info(dataset_rtss)
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
+            self.dataset_rtss = dcmread(file_names_dict['rtss'])
+            self.rois = ImageLoading.get_roi_info(self.dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(self.dataset_rtss)
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             patient_dict_container.set("rois", self.rois)
@@ -149,3 +151,53 @@ def test_structure_tab_uncheck_checkboxes(test_object):
 
         # Assert that the unchecked ROI is not in the selected_roi_names list
         assert name not in selected_roi_names
+
+
+def test_merge_rtss(qtbot, test_object):
+    """Test merging rtss. This function creates a new rtss, then merges the new rtss with the
+    old rtss and asserts that duplicated ROIs will be overwritten when the other being merged.
+
+    :param test_object: test_object function, for accessing the shared TestStructureTab object.
+    """
+    patient_dict_container = PatientDictContainer()
+    old_rtss = test_object.dataset_rtss
+
+    # Create a new rtss
+    dataset = patient_dict_container.dataset[0]
+    rtss_path = Path(patient_dict_container.path).joinpath('rtss.dcm')
+    new_rtss = create_initial_rtss_from_ct(dataset, rtss_path)
+
+    # Set ROIs
+    rois = ImageLoading.get_roi_info(new_rtss)
+    patient_dict_container.set("rois", rois)
+
+    # Add a new ROI into the new rtss with the name of the first ROI in the old rtss
+    roi_name = test_object.rois.get(1)["name"]  # copy the name of the first ROI in the old rtss
+    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
+    new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
+
+    # Add a new ROI with a new name
+    roi_name = "NewTestROI"
+    new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
+
+    # Set ROIs
+    rois = ImageLoading.get_roi_info(new_rtss)
+    patient_dict_container.set("rois", rois)
+
+    # Merge the old and new rtss
+    structure_tab = StructureTab()
+    qtbot.addWidget(structure_tab)
+
+
+    def test_message_window():
+        messagebox = structure_tab.findChild(QtWidgets.QMessageBox)
+        assert messagebox is not None
+        ok_button = messagebox.button(QtWidgets.QMessageBox.Yes)
+        qtbot.mouseClick(ok_button, QtCore.Qt.LeftButton, delay=1)
+
+    QtCore.QTimer.singleShot(1000, test_message_window)
+    QtCore.QTimer.singleShot(1000, test_message_window)
+    merged_rtss = structure_tab.merge_rtss(new_rtss, old_rtss)
+
+    merged_rois = ImageLoading.get_roi_info(merged_rtss)
+    assert (len(test_object.rois) + 1 == len(merged_rois))
