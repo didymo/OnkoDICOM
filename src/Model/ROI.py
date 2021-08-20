@@ -4,6 +4,7 @@ import random
 from copy import copy as shallowcopy
 from copy import deepcopy
 
+import numpy
 import pydicom
 from pydicom import Dataset, Sequence
 from pydicom.tag import Tag
@@ -592,7 +593,8 @@ def transform_rois_contours(axial_rois_contours):
     return coronal_rois_contours, sagittal_rois_contours
 
 
-def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1,
+                     img_size=(512, 512)):
     """
     Calculate a list of polygons to display for a given ROI and a given slice.
 
@@ -600,6 +602,7 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     :param curr_slice: the current slice
     :param dict_rois_contours: the dictionary of ROI contours
     :param pixmap_aspect: the scaling ratio
+    :param img_size: the size of the image that the ROI is linked to
     :return: List of polygons of type QPolygonF.
     """
     # TODO Implement support for showing "holes" in contours.
@@ -618,6 +621,11 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     # holes. This second solution would definitely lead to more accurate representation of contours, but could
     # possibly be too slow to be viable.
 
+    # Scaling factor for x and y pixels - for if the ROIs come from
+    # images less than the DICOM View size of 512x512.
+    x_scale = 512 / img_size[0]
+    y_scale = 512 / img_size[1]
+
     if curr_slice not in dict_rois_contours[curr_roi]:
         return []
 
@@ -627,7 +635,8 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
         list_qpoints = []
         contour = pixel_list[i]
         for point in contour:
-            curr_qpoint = QtCore.QPoint(point[0], point[1] * pixmap_aspect)
+            curr_qpoint = QtCore.QPoint(point[0] * x_scale,
+                                        point[1] * pixmap_aspect * y_scale)
             list_qpoints.append(curr_qpoint)
         curr_polygon = QtGui.QPolygonF(list_qpoints)
         list_polygons.append(curr_polygon)

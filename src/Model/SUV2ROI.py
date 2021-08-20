@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import numpy
 from pydicom.dataset import FileDataset, FileMetaDataset
 from PySide6 import QtCore, QtWidgets
 from skimage import measure
@@ -106,29 +108,38 @@ class SUV2ROI:
                  a list containing tuples of slice id and lists of
                  contours.
         """
+        # Create dictionary to store contour data
         contour_data = {}
 
+        # Initialise variables needed for function
         patient_dict_container = PatientDictContainer()
         slider_min = 0
         slider_max = len(patient_dict_container.get("pixmaps_axial"))
 
+        # Loop through each PET image in the dataset
         for slider_id in range(slider_min, slider_max):
+            # Get SUV data from PET file
             temp_ds = patient_dict_container.dataset[slider_id]
+            suv_data = self.pet2suv(temp_ds)
 
-            i = 1
+            # Set current and max SUV for the current slice
+            current_suv = 1
+            max_suv = numpy.amax(suv_data)
 
-            while True:
-                suv_data = self.pet2suv(temp_ds)
-                contours = measure.find_contours(suv_data, i)
-                if not contours:
-                    break
-                else:
-                    name = "SUV-" + str(i)
-                    if name not in contour_data:
-                        contour_data[name] = []
-                    contour_data[name].append((slider_id, contours))
-                    i += 1
+            # Continue calculating SUV contours for the slice until the
+            # max SUV has been reached.
+            while current_suv < max_suv:
+                # Find the contours for the SUV (i)
+                contours = measure.find_contours(suv_data, current_suv)
 
+                # Get the SUV name
+                name = "SUV-" + str(current_suv)
+                if name not in contour_data:
+                    contour_data[name] = []
+                contour_data[name].append((slider_id, contours))
+                current_suv += 1
+
+        # Return contour data
         return contour_data
 
     def generate_ROI(self, contours):
