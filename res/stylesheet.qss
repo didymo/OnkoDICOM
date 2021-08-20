@@ -1,0 +1,328 @@
+QMainWindow {
+    background-color: rgb(244, 245, 245);
+}
+
+QProgressBar {
+    border-radius: 1px;
+    background-color: #b299e6;
+    color: rgb(230, 230, 235);
+    max-height: 32px;
+    text-align: center;
+    font-weight: semi-bold;
+}
+QProgressBar::chunk {
+    background-color: #5c2eb8;
+    width: 20px;
+}
+
+QCheckBox {
+    spacing: 5px;
+}
+
+
+QLabel {
+    color: black;
+}
+QLabel[QLabelClass="window-title"] {
+    margin: 8px;
+    padding: 4px;
+    border-bottom: 4px solid #9370DB;
+    border-radius: 0;
+    font-size: 32px;
+}
+QLabel[QLabelClass~="tree-view-label"] {
+    padding: 8px;
+    font-size: 20px;
+}
+QLabel[QLabelClass~="tree-view-label-keep-delete"] {
+    color: #f5f5f5;
+}
+
+
+QPushButton {
+    margin: 4px;
+    padding: 0 16px;
+    min-height: 36px;
+    border-radius: 2px;
+    color: #f5f5f5;
+    background-color: #9370DB;
+    font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    font-size: 14px;
+    text-align: center;
+    qproperty-iconSize: 18px;
+}
+QPushButton:hover { /* +10% saturation */
+    background-color: #b299e6;
+}
+QPushButton:pressed { /* -20% saturation */
+    background-color: #5c2eb8;
+}
+QPushButton:disabled, QPushButton[QPushButtonClass="success-button"]:disabled,
+QPushButton[QPushButtonClass="fail-button"]:disabled {
+    background-color: #b3b3b3;
+}
+
+QPushButton[QPushButtonClass="success-button"] {
+    background-color: #388e3c;
+}
+QPushButton[QPushButtonClass="success-button"]:hover {
+    background-color: #49b64e;
+}
+QPushButton[QPushButtonClass="success-button"]:pressed {
+    background-color: #1d491f;
+}
+
+QPushButton[QPushButtonClass="fail-button"] {
+    background-color: #f44336;
+}
+QPushButton[QPushButtonClass="fail-button"]:hover {
+    background-color: #f7776e;
+}
+QPushButton[QPushButtonClass="fail-button"]:pressed {
+    background-color: #c2160a;
+}
+
+/* First Time Welcome Page */
+QLabel#FirstTimeWelcomeWindowLabel {
+    font-weight: bold;
+    font-size: 18pt;
+}
+QLabel#FirstTimeWelcomeWindowSlogan, QLabel#FirstTimeWelcomeWindowPrompt {
+    font-weight: semi-bold;
+    font-size: 16px;
+}
+QLabel#FirstTimeWelcomeWindowPrompt {
+    padding: 0 8px;
+}
+
+/* Welcome Page */
+QLabel#WelcomeWindowLabel {
+    font-weight: bold;
+    font-size: 18pt;
+}
+QLabel#WelcomeWindowSlogan, QLabel#OpenPatientDirectoryPrompt,
+QLabel#OpenPatientDirectoryAppearPrompt, QLabel#OpenPatientDirectoryResultLabel,
+QLabel#DeleteRoiWindowInstruction {
+    font-weight: semi-bold;
+    font-size: 16px;
+}
+QLabel#OpenPatientDirectoryPrompt, QLabel#OpenPatientDirectoryResultLabel {
+    padding: 0 8px;
+}
+
+QLabel[PatientBarClass="label"] {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: right;
+    margin-right: 2px;
+}
+QLabel[PatientBarClass="value"] {
+    font-size: 12px;
+    text-align: left;
+    margin-right: 8px;
+}
+
+/* Open Patient */
+QLineEdit {
+    margin: 4px;
+    padding: 0 4px;
+    min-height: 36px;
+    border-bottom: 3px solid #b3b3b3;
+    border-radius: 0;
+    font-size: 14px;
+    background-color: rgb(244, 245, 245);
+}
+QLineEdit:disabled {
+    background-color: #b9b9b9;
+    color: black;
+}
+QLineEdit:hover {
+    background-color: rgb(230, 230, 235);
+    border-bottom: 3px solid #9370DB;
+}
+QLineEdit:focus {
+    border-bottom: 3px solid #5c2eb8;
+}
+
+/*This part is the styling for QTreeView in general*/
+QTreeView#OpenPatientWindowPatientsTree {
+    margin: 0 12px 4px 12px;
+}
+QHeaderView {
+    color: red;
+}
+QTreeView::item {
+    color: #000000;
+    min-height: 36px;
+    font-size: 14px;
+}
+QTreeView::item:hover:!focus {
+    background-color: #b299e6;
+}
+QTreeView::item:focus:!hover {
+    border: 2px solid #9370DB;
+}
+QTreeView::item:selected:hover:!focus, QTreeView::item:selected:hover {
+    background-color: #5c2eb8;
+    color: white;
+    border: 2px solid rgb(200, 200, 200);
+}
+QTreeView::item:selected:!hover:focus {
+    background-color: #5c2eb8;
+    color: white;
+    border: 2px solid #9370DB;
+}
+
+
+QTabWidget::tab-bar {
+    alignment: left;
+}
+QTabWidget::pane {
+    border: 0;
+    padding-top: 2px;
+    background-color: white;
+}
+QTabBar {
+    background-color: rgb(244, 245, 245);
+}
+QTabBar::tab {
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 3px solid #b3b3b3;
+    border-left: 0;
+    margin: 0;
+    padding: 0 12px;
+    background-color: rgb(244, 245, 245);
+    text-align: center;
+    height: 36px;
+    width: 100%;
+}
+QTabBar::tab:hover {
+    background-color: #b299e6;
+    border-bottom: 3px solid #9370DB;
+}
+QTabBar::tab:pressed {
+    background-color: #5c2eb8;
+}
+QTabBar::tab:selected {
+    background-color: white;
+    border-bottom: 3px solid #5c2eb8;
+}
+
+
+QToolBar, QToolButton {
+    background-color: rgb(244, 245, 245);
+    border: 0;
+    margin: 0;
+    padding: 2px;
+}
+QToolButton:hover:!focus {
+    background-color: #ededed;
+}
+QToolButton:!hover:focus {
+    background-color: #b299e6;
+}
+QToolButton:pressed, QToolButton:pressed:hover, QToolButton:pressed:focus {
+    background-color: #b5b5b5;
+}
+
+
+QComboBox, QDateEdit {
+    margin: 4px;
+    padding: 0 4px;
+    min-height: 36px;
+    border-bottom: 3px solid #b3b3b3;
+    border-radius: 0;
+    font-size: 14px;
+    background-color: rgb(244, 245, 245);
+    color: black;
+}
+QComboBox:disabled, QDateEdit:disabled {
+    background-color: #b9b9b9;
+}
+QComboBox:!hover:!focus, QDateEdit:!hover:!focus {
+    border-bottom: 3px solid #b3b3b3;
+}
+QComboBox:hover:!focus, QComboBox:hover:focus,
+ QDateEdit:hover:!focus, QDateEdit:hover:focus{
+    background-color: rgb(230, 230, 235);
+    border-bottom: 3px solid #b299e6;
+}
+QComboBox:focus:!hover, QDateEdit:focus:!hover {
+    border-bottom: 3px solid #5c2eb8;
+}
+QComboBox:hover:on:!focus, QComboBox:focus:on:!hover,
+ QDateEdit:hover:on:!focus, QDateEdit:focus:on:!hover{
+    background: rgb(230, 230, 235);
+    border-bottom: 3px solid #5c2eb8;
+}
+
+
+QComboBox#DicomTreeviewComboBox {
+    margin: 0;
+    background-color: white;
+    color: black;
+}
+
+
+QCalendarWidget QTableView, QTableView {
+    background-color: white;
+    color: black;
+    alternate-background-color: rgb(230, 230, 235);
+    selection-background-color: #b299e6;
+}
+QCalendarWidget QMenu {
+    color: black;
+    background-color: white;
+}
+QCalendarWidget QMenu::item {
+    padding: 8px 4px 8px 4px;
+    min-height: 24px;
+    font-size: 14px;
+    text-align: left;
+}
+QCalendarWidget QMenu::item:selected {
+    background-color: #b299e6;
+}
+QCalendarWidget QMenu::item:pressed {
+    color: white;
+    background-color: #5c2eb8;
+}
+QCalendarWidget QSpinBox {
+    color: black;
+    background-color: white;
+    selection-color: white;
+    selection-background-color: #5c2eb8;
+}
+QCalendarWidget QToolButton {
+    background-color: rgb(230, 230, 235);
+    color:black;
+    font-size: 14px;
+}
+QCalendarWidget QToolButton:hover:!focus {
+    background-color: rgb(215, 215, 220);
+}
+QCalendarWidget QToolButton:focus:!hover {
+    border: 1px solid #5c2eb8;
+}
+QCalendarWidget QToolButton:pressed:hover:!focus {
+    background-color: #b299e6;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: rgb(230, 230, 235);
+    color: black;
+}
+
+QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
+    padding: 0px;
+    border-radius: 2px;
+}
+QWidget#DeleteRoiWindowKeepWidget {
+    background-color: #388e3c;
+}
+QWidget#DeleteRoiWindowDeleteWidget {
+    background-color: #d32f2f ;
+}
+QWidget#ScrollAreaWidgetContents {
+    background-color: rgb(244, 245, 245);
+}
