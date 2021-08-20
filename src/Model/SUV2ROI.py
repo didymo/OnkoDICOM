@@ -56,9 +56,11 @@ class SUV2ROI:
         series_time = dataset.SeriesTime
         #acquisition_time = dataset.AcquisitionTime
 
-        # Get patient info
-        #patient_weight = dataset.PatientWeight
-        patient_weight = 87
+        # Get patient weight. An AttributeError will be raised if the
+        # dataset does not contain patient weight. This is because
+        # patient weight is needed to convert Bq/ml to SUV - without
+        # it, SUV2ROI conversion cannot take place.
+        patient_weight = dataset.PatientWeight
 
         # Get radiopharmaceutical information
         radiopharmaceutical_info = \
@@ -162,30 +164,22 @@ class SUV2ROI:
                 pixlut = pixlut[dataset.SOPInstanceUID]
                 z_coord = dataset.SliceLocation
 
-                # Convert pixel coordinates to RCS points
-                points = []
-                for j in range(len(contours[item][i][1])):
-                    points.append([])
-                    for point in contours[item][i][1][j]:
-                        points[j].append(ROI.pixel_to_rcs(pixlut,
-                                                          round(point[1]),
-                                                          round(point[0])))
-
-                # Append Z coordinate
-                contour_data = []
-                for i in range(len(points)):
-                    contour_data.append([])
-                    for p in points[i]:
-                        coords = (p[0], p[1], z_coord)
-                        contour_data[i].append(coords)
-
-                # Transform RCS points into 1D array
+                # List storing lists that contain all points for a
+                # contour.
                 single_array = []
-                for i in range(len(contour_data)):
+
+                # Loop through each contour
+                for j in range(len(contours[item][i][1])):
                     single_array.append([])
-                    for sublist in contour_data[i]:
-                        for point in sublist:
-                            single_array[i].append(point)
+                    # Loop through every point in the contour
+                    for point in contours[item][i][1][j]:
+                        # Convert pixel coordinates to RCS points
+                        rcs_pixels = ROI.pixel_to_rcs(pixlut, round(point[1]),
+                                                      round(point[0]))
+                        # Append RCS points to the single array
+                        single_array[j].append(rcs_pixels[0])
+                        single_array[j].append(rcs_pixels[1])
+                        single_array[j].append(z_coord)
 
                 # Create the ROI(s)
                 print("Generating ROI for slice " + str(slider_id))
