@@ -59,8 +59,7 @@ class ImageFusionView(QtWidgets.QWidget):
         """
         Create a slider for the DICOM Image View.
         """
-        #pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
-        pixmaps = [1]
+        pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -159,7 +158,7 @@ class ImageFusionView(QtWidgets.QWidget):
         self.metadata_layout.addWidget(bottom_widget, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
     def value_changed(self):
-        self.update_view()
+        self.update_view(color=True)
 
     def update_view(self, zoom_change=False, color=False):
         """
@@ -189,14 +188,16 @@ class ImageFusionView(QtWidgets.QWidget):
         """
         
         if(color):
-            pixmap = self.patient_dict_container.get("color_"+self.slice_view)
-            image = pixmap[0]
-           
+            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+            slider_id = self.slider.value()
+            image = pixmaps[slider_id]
+
             
         else:
             pixmaps = self.patient_dict_container.get("pixmaps_"+self.slice_view)
             slider_id = self.slider.value()
             image = pixmaps[slider_id]
+
            
             
             

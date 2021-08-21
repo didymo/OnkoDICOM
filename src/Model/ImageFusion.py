@@ -21,17 +21,37 @@ def create_fused_model(old_images, new_image):
     fused_image = register_images(old_images, new_image)
     print("fuseTest01")
     
+    array = sitk.GetArrayFromImage(old_images).shape
+    
+    axial_slice_count = array[0]
+    coronal_slice_count = array[1]
+    sagittal_slice_count = array[1]
+    
+    
+                  
     
     #create colored images
     sp_plane, _, sp_slice = old_images.GetSpacing()
     asp = (1.0*sp_slice)/sp_plane
     
+    
+    color_axial = {}
+    color_sagittal = {}
+    color_coronal = {} 
+    
     print("fuseTest1")
-    color_axial = get_fused_pixmap(old_images, fused_image, asp, "axial")
+    for i in range(axial_slice_count): 
+         color_axial[i] = get_fused_pixmap(old_images, fused_image, asp, i, "axial")
+    
+    
     print("fuseTest2")
-    color_sagittal = get_fused_pixmap(old_images, fused_image, asp, "sagittal")
+    for i in range(sagittal_slice_count): 
+        color_sagittal[i] = get_fused_pixmap(old_images, fused_image, asp, i, "sagittal")    
+    
     print("fuseTest3")
-    color_coronal = get_fused_pixmap(old_images, fused_image, asp, "coronal")
+    for i in range(coronal_slice_count): 
+        color_coronal[i] = get_fused_pixmap(old_images, fused_image, asp, i, "coronal")   
+    
     
     
     return color_axial, color_sagittal, color_coronal
@@ -56,7 +76,7 @@ def register_images(image_1, image_2):
 
 
 
-def get_fused_pixmap(orig_image, fused_image, aspect, view):
+def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
 
     # Get a color pixmap.
     # :param sitk image: original 3d image
@@ -71,13 +91,10 @@ def get_fused_pixmap(orig_image, fused_image, aspect, view):
     coronal_width, coronal_height = scaled_size(image_array.shape[1], image_array.shape[0] * aspect)
     sagittal_width, sagittal_height = scaled_size(image_array.shape[2] * aspect, image_array.shape[0])
 
-
-    slice_axial = int(image_array.shape[0]/2)
-    slice_other = int(image_array.shape[1]/2)
     
     #get an array in the form (:, i, :), (i, :, :), (:,:,i)
     if(view == "sagittal"): 
-        image_slice = return_slice("x", slice_other)
+        image_slice = return_slice("x", slice_num)
         
         pixel_array_color = np.array(generate_comparison_colormix([orig_image, fused_image], arr_slice = image_slice))
         
@@ -96,7 +113,7 @@ def get_fused_pixmap(orig_image, fused_image, aspect, view):
     
     ##########################################
     elif(view == "coronal"):
-        image_slice = return_slice("y", slice_other)
+        image_slice = return_slice("y", slice_num)
         
         pixel_array_color = np.array(generate_comparison_colormix([orig_image, fused_image], arr_slice = image_slice))
     
@@ -112,7 +129,7 @@ def get_fused_pixmap(orig_image, fused_image, aspect, view):
     
         pixmap = pixmap.scaled(512, 512, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
     else: 
-        image_slice = return_slice("z", slice_axial)
+        image_slice = return_slice("z", slice_num)
     
         pixel_array_color = np.array(generate_comparison_colormix([orig_image, fused_image], arr_slice = image_slice))
     

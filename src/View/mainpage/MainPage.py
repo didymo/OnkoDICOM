@@ -306,7 +306,7 @@ class UIMainWindow:
         self.image_fusion_view_axial.zoom = 0.5
         self.image_fusion_view_sagittal.zoom = 0.5
         self.image_fusion_view_coronal.zoom = 0.5
-        self.image_fusion_view_axial.update_view(zoom_change=True, color=True)
+        self.image_fusion_view_axial.update_view(zoom_change = True, color=True)
         self.image_fusion_view_sagittal.update_view(zoom_change=True, color=True)
         self.image_fusion_view_coronal.update_view(zoom_change=True, color=True)
 

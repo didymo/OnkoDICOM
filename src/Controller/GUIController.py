@@ -173,18 +173,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
         
-        
-        color_axial_dict = {}
-        color_sagittal_dict = {}
-        color_coronal_dict = {}
-        
-        color_axial_dict[0] = color_axial
-        color_sagittal_dict[0] = color_sagittal
-        color_coronal_dict[0] = color_coronal
-        
-        patient_dict_container.set("color_axial", color_axial_dict)
-        patient_dict_container.set("color_sagittal", color_sagittal_dict)
-        patient_dict_container.set("color_coronal", color_coronal_dict)
+  
+        patient_dict_container.set("color_axial", color_axial)
+        patient_dict_container.set("color_sagittal", color_sagittal)
+        patient_dict_container.set("color_coronal", color_coronal)
         
         print('hurray')
         
