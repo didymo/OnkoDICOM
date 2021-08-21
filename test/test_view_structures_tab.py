@@ -118,11 +118,12 @@ def test_structure_tab_check_checkboxes(test_object):
         assert name in selected_roi_names
 
         # Assert that the actual and expected dict_polygons dictionaries are equal in value
-        for key in test_object.new_polygons:
-            for uid in test_object.new_polygons[key]:
-                for polygon in range(0, len(test_object.new_polygons[key][uid])):
-                    for point in range(0, len(test_object.new_polygons[key][uid][polygon])):
-                        assert test_object.new_polygons[key][uid][polygon][point] == view_polygons[key][uid][polygon][point]
+        new_polygons = test_object.new_polygons
+        for key in new_polygons:
+            for uid in new_polygons[key]:
+                for polygon in range(0, len(new_polygons[key][uid])):
+                    for point in range(0, len(new_polygons[key][uid][polygon])):
+                        assert new_polygons[key][uid][polygon][point] == view_polygons[key][uid][polygon][point]
 
 
 def test_structure_tab_uncheck_checkboxes(test_object):
@@ -166,7 +167,7 @@ def test_merge_rtss(qtbot, test_object):
     dataset = patient_dict_container.dataset[0]
     rtss_path = Path(patient_dict_container.path).joinpath('rtss.dcm')
     new_rtss = create_initial_rtss_from_ct(dataset, rtss_path, ImageLoading.get_image_uid_list(
-            patient_dict_container.dataset))
+        patient_dict_container.dataset))
 
     # Set ROIs
     rois = ImageLoading.get_roi_info(new_rtss)
@@ -189,7 +190,6 @@ def test_merge_rtss(qtbot, test_object):
     structure_tab = StructureTab()
     qtbot.addWidget(structure_tab)
 
-
     def test_message_window():
         messagebox = structure_tab.findChild(QtWidgets.QMessageBox)
         assert messagebox is not None
@@ -197,7 +197,8 @@ def test_merge_rtss(qtbot, test_object):
         qtbot.mouseClick(ok_button, QtCore.Qt.LeftButton, delay=1)
 
     QtCore.QTimer.singleShot(1000, test_message_window)
-    QtCore.QTimer.singleShot(1000, test_message_window)
+    QtCore.QTimer.singleShot(3000, test_message_window)
+
     merged_rtss = structure_tab.merge_rtss(new_rtss, old_rtss)
 
     merged_rois = ImageLoading.get_roi_info(merged_rtss)
