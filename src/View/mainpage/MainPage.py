@@ -215,6 +215,14 @@ class UIMainWindow:
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
         """
+        
+        self.dicom_single_view.update_view()
+        self.dicom_axial_view.update_view()
+        self.dicom_coronal_view.update_view()
+        self.dicom_sagittal_view.update_view()
+        if hasattr(self, 'dvh_tab'):
+            self.dvh_tab.update_plot()
+        
         self.image_fusion_view_single_view.update_view(color=True)
         self.image_fusion_view_view_axial.update_view(color=True)
         self.image_fusion_view_view_coronal.update_view(color=True)
@@ -339,7 +347,3 @@ class UIMainWindow:
         self.image_fusion_view.setCurrentWidget(self.image_fusion_single_view)
         self.image_fusion_single_view.update_view()
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")'''
-        
-        
-        
-        

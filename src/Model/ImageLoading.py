@@ -113,7 +113,6 @@ def get_datasets(filepath_list):
 
     sorted_read_data_dict, sorted_file_names_dict = \
         image_stack_sort(read_data_dict, file_names_dict)
-        
 
     return sorted_read_data_dict, sorted_file_names_dict
 
