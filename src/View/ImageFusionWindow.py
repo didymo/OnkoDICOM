@@ -290,8 +290,11 @@ class UIImageFusionWindow(object):
                 self.last_patient.setSelected(False)
             self.last_patient = selected_patient
 
+
+
         # Get the types of all selected leaves
         self.selected_series_types = set()
+
         for checked_item in self.get_checked_leaves():
             series_type = checked_item.dicom_object.get_series_type()
             if type(series_type) == str:
@@ -299,20 +302,42 @@ class UIImageFusionWindow(object):
             else:
                 self.selected_series_types.update(series_type)
 
+        for series in self.selected_series_types:
+            print(series)
+
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTSTRUCT' not in self.selected_series_types:
-            header = "DVH and Radiomics calculations are not available without a RTSTRUCT file."
-        elif 'RTDOSE' not in self.selected_series_types:
-            header = "DVH calculations are not available without a RTDOSE file."
+        elif 'RTSTRUCT' in self.selected_series_types:
+            header = "Cannot fuse with a RTSTRUCT file."
+        elif 'RTDOSE' in self.selected_series_types:
+            header = "Cannot fuse with a RTDOSE file."
         else:
             header = ""
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
+
+        # Print Patient
+        print('Fixed patient')
+        self.patient = self.patient_dict_container.get("basic_info")
+        self.patient_id = self.patient['id']
+        print(self.patient_id)
+        print(type(self.patient_id))
+
+        # Print Patient
+        print('Moving Patient')
+        print(selected_patient.dicom_object.patient_id)
+        print(type(selected_patient.dicom_object.patient_id))
+
+        # Check if same patient
+        if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
+            print('Patients are not equal.')
+            patient_header = "Cannot proceed with different patient."
+            self.open_patient_window_confirm_button.setDisabled(True)
+            self.open_patient_window_patients_tree.setHeaderLabel(patient_header)
 
     def confirm_button_clicked(self):
         """
