@@ -28,8 +28,6 @@ class UIImageFusionWindow(object):
 
     def setup_ui(self, open_image_fusion_select_instance):
         
-        self.patient_dict_container = PatientDictContainer()
-
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
@@ -186,6 +184,10 @@ class UIImageFusionWindow(object):
 
         QtCore.QMetaObject.connectSlotsByName(open_image_fusion_select_instance)
 
+        self.patient_dict_container = PatientDictContainer()
+        self.patient = self.patient_dict_container.get("basic_info")
+        self.patient_id = self.patient['id']
+
     def retranslate_ui(self, open_image_fusion_select_instance):
         _translate = QtCore.QCoreApplication.translate
         open_image_fusion_select_instance.setWindowTitle(
@@ -307,9 +309,6 @@ class UIImageFusionWindow(object):
             else:
                 self.selected_series_types.update(series_type)
 
-        for series in self.selected_series_types:
-            print(series)
-
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
@@ -325,21 +324,8 @@ class UIImageFusionWindow(object):
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
 
-        # Print Patient
-        print('Fixed patient')
-        self.patient = self.patient_dict_container.get("basic_info")
-        self.patient_id = self.patient['id']
-        print(self.patient_id)
-        print(type(self.patient_id))
-
-        # Print Patient
-        print('Moving Patient')
-        print(selected_patient.dicom_object.patient_id)
-        print(type(selected_patient.dicom_object.patient_id))
-
         # Check if same patient
         if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
-            print('Patients are not equal.')
             patient_header = "Cannot proceed with different patient."
             self.open_patient_window_confirm_button.setDisabled(True)
             self.open_patient_window_patients_tree.setHeaderLabel(patient_header)
