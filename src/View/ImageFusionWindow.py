@@ -13,6 +13,8 @@ from src.Model.ImageFusion import dicom_crawler
 from src.View.ProgressWindow import ProgressWindow
 from src.View.resources_open_patient_rc import *
 
+from src.Model.PatientDictContainer import PatientDictContainer
+
 from src.Controller.PathHandler import resource_path
 import platform
 
@@ -25,6 +27,9 @@ class UIImageFusionWindow(object):
         super().__init__()
 
     def setup_ui(self, open_image_fusion_select_instance):
+        
+        self.patient_dict_container = PatientDictContainer()
+
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
