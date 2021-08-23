@@ -24,7 +24,7 @@ def generate_dicom_sr(file_path, img_ds, data):
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 238
     file_meta.FileMetaInformationVersion = b'\x00\x01'
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.88.11'
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.88.22'
     file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
     file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     validate_file_meta(file_meta)
@@ -155,34 +155,32 @@ def generate_dicom_sr(file_path, img_ds, data):
     # referenced_sop_sequence[0].ReferencedSegmentNumber = ''
 
     dicom_sr.ReferencedSOPSequence = referenced_sop_sequence
-    dicom_sr.ValueType = "TEXT"
+    dicom_sr.ValueType = "CONTAINER"
+
+    dicom_sr.ContinuityOfContent = "CONTINUOUS"
+    dicom_sr.TemporalRangeTime = ""  # Ask
+    dicom_sr.ReferencedTimeOffsets = ""  # Ask
+    dicom_sr.ReferencedDateTime = ""  # Ask
+
+    dicom_sr.MeasuredValueSequence = Sequence()  # Can be empty. Ask
+    og_frame_of_reference_UID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
+    dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID  # Ask
+
+    # == Content Sequence
+    content_sequence = Sequence([Dataset()])
+    content_sequence[0].RelationshipType = 'CONTAINS'
+    content_sequence[0].ValueType = 'TEXT'
 
     concept_name_code_sequence = Sequence([Dataset()])
     # Ask
     concept_name_code_sequence[0].CodeValue = ''
     concept_name_code_sequence[0].CodingSchemeDesignator = ''
-    concept_name_code_sequence[0].CodingSchemeVErsion = ''
     concept_name_code_sequence[0].CodeMeaning = ''
+    content_sequence[0].ConceptNameCodeSequence = concept_name_code_sequence
 
-    dicom_sr.ConceptNameCodeSequence = concept_name_code_sequence
-    dicom_sr.ContinuityOfContent = "CONTINUOUS"  # Ask
-    dicom_sr.TemporalRangeTime = ""  # Ask
-    dicom_sr.ReferencedTimeOffsets = ""  # Ask
-    dicom_sr.ReferencedDateTime = ""  # Ask
+    content_sequence[0].TextValue = data
 
-    # Content!
-    dicom_sr.TextValue = data
-
-    concept_code_sequence = Sequence([Dataset()])
-    concept_code_sequence[0].CodeValue = ''  # Ask
-    concept_code_sequence[0].CodingScehemDesignator = ''  # Ask
-    concept_code_sequence[0].CodingScehemVersion = ''  # Ask
-    concept_code_sequence[0].CodeMeaning = 'Required'  # Ask
-
-    dicom_sr.ConceptCodeSequence = concept_code_sequence
-    dicom_sr.MeasuredValueSequence = Sequence()  # Can be empty. Ask
-    og_frame_of_reference_UID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
-    dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID  # Ask
+    dicom_sr.ContentSequence = content_sequence
 
     # == SOP Common Module
     dicom_sr.SOPClassUID = ''  # Ask
