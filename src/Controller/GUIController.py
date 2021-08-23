@@ -10,6 +10,7 @@ from src.View.PyradiProgressBar import PyradiExtended
 from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
+from src.View.BatchProcessingWindow import UIBatchProcessingWindow
 from src.Controller.PathHandler import resource_path
 
 
@@ -56,12 +57,14 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
     go_next_window = QtCore.Signal(object)
+    go_batch_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self, default_directory):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.patient_info_initialized.connect(self.open_patient)
+        self.open_patient_window_batch_button.clicked.connect(self.open_batch_window)
 
         if default_directory is not None:
             self.filepath = default_directory
@@ -71,6 +74,8 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
 
+    def open_batch_window(self):
+        self.go_batch_window.emit()
 
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
@@ -171,6 +176,15 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 event.ignore()
         else:
             self.cleanup()
+
+
+class BatchWindow(QtWidgets.QWidget, UIBatchProcessingWindow):
+    go_next_window = QtCore.Signal()
+
+    # Initialize the batch window and set up the UI
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.setup_ui(self)
 
 
 class PyradiProgressBar(QtWidgets.QWidget):

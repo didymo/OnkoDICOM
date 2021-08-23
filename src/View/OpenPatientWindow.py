@@ -122,6 +122,18 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_patient_open_actions_horizontal_box.setObjectName(
             "OpenPatientWindowPatientOpenActionsHorizontalBox")
         self.open_patient_window_patient_open_actions_horizontal_box.addStretch(1)
+
+        # Add a button open the Batch Processing window
+        self.open_patient_window_batch_button = QPushButton()
+        self.open_patient_window_batch_button.setObjectName("OpenPatientWindowBatchButton")
+        self.open_patient_window_batch_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
+        self.open_patient_window_batch_button.resize(self.open_patient_window_batch_button.sizeHint().width(),
+                                                    self.open_patient_window_batch_button.sizeHint().height())
+        self.open_patient_window_batch_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.open_patient_window_batch_button.setProperty("QPushButtonClass", "Batch-button")
+        self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_batch_button)
+
         # Add a button to go back/exit from the application
         self.open_patient_window_exit_button = QPushButton()
         self.open_patient_window_exit_button.setObjectName("OpenPatientWindowExitButton")
@@ -191,6 +203,8 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_stop_button.setText(_translate("OpenPatientWindowInstance", "Stop Search"))
         self.open_patient_window_exit_button.setText(_translate("OpenPatientWindowInstance", "Exit"))
         self.open_patient_window_confirm_button.setText(_translate("OpenPatientWindowInstance", "Confirm"))
+
+        self.open_patient_window_batch_button.setText(_translate("QPushButtonClass", "Batch Processing"))
 
     def exit_button_clicked(self):
         QCoreApplication.exit(0)
