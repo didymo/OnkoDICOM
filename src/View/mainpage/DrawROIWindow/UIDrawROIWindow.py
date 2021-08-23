@@ -5,7 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
-    QMessageBox
+    QMessageBox, QComboBox
 from alphashape import alphashape
 from shapely.geometry import MultiPolygon
 
@@ -37,6 +37,7 @@ class UIDrawROIWindow:
         self.drawingROI = None
         self.slice_changed = False
         self.drawing_tool_radius = INITIAL_DRAWING_TOOL_RADIUS
+        self.keep_empty_pixel = False
         # pixel density
         self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
@@ -60,15 +61,15 @@ class UIDrawROIWindow:
             _translate("DrawRoiWindowInstance", "OnkoDICOM - Draw Region Of Interest"))
         self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
-        self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
+        self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Slice Number: "))
         self.image_slice_number_line_edit.setText(
             _translate("ImageSliceNumberLineEdit", str(self.dicom_view.current_slice_number)))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
         self.image_slice_number_box_draw_button.setText(_translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
-        self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
+        self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", ""))
         self.image_slice_number_move_backward_button.setText(
-            _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
+            _translate("ImageSliceNumberMoveBackwardButton", ""))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
         self.draw_roi_window_instance_cancel_button.setText(_translate("DrawRoiWindowInstanceCancelButton", "Cancel"))
         self.internal_hole_max_label.setText(_translate("InternalHoleLabel", "Maximum internal hole size (pixels): "))
@@ -79,6 +80,8 @@ class UIDrawROIWindow:
         self.min_pixel_density_line_edit.setText(_translate("MinPixelDensityInput", ""))
         self.max_pixel_density_label.setText(_translate("MaxPixelDensityLabel", "Maximum density (pixels): "))
         self.max_pixel_density_line_edit.setText(_translate("MaxPixelDensityInput", ""))
+        self.toggle_keep_empty_pixel_label.setText(_translate("ToggleKeepEmptyPixelLabel", "Keep empty pixel: "))
+
         self.draw_roi_window_viewport_zoom_label.setText(_translate("DrawRoiWindowViewportZoomLabel", "Zoom: "))
         self.draw_roi_window_cursor_radius_change_label.setText(
             _translate("DrawRoiWindowCursorRadiusChangeLabel", "Cursor Radius: "))
@@ -121,18 +124,50 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setEnabled(False)
         self.draw_roi_window_input_container_box.addRow(self.roi_name_label, self.roi_name_line_edit)
 
+
+        # Create horizontal box to store image slice number and backward, forward buttons
+        self.image_slice_number_box = QHBoxLayout()
+        self.image_slice_number_box.setObjectName("ImageSliceNumberBox")
+
+
         # Create a label for denoting the Image Slice Number
         self.image_slice_number_label = QLabel()
         self.image_slice_number_label.setObjectName("ImageSliceNumberLabel")
+        self.image_slice_number_box.addWidget(self.image_slice_number_label)
         # Create a line edit for containing the image slice number
         self.image_slice_number_line_edit = QLineEdit()
         self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
-        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
+        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(),
                                                  self.image_slice_number_line_edit.sizeHint().height())
+
+        self.image_slice_number_line_edit.setCursorPosition(0)
         self.image_slice_number_line_edit.setEnabled(False)
-        self.draw_roi_window_input_container_box.addRow(self.image_slice_number_label,
-                                                        self.image_slice_number_line_edit)
+        self.image_slice_number_box.addWidget(self.image_slice_number_line_edit)
+        # Create a button to move backward to the previous image
+        self.image_slice_number_move_backward_button = QPushButton()
+        self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
+        self.image_slice_number_move_backward_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.image_slice_number_move_backward_button.resize(QSize(24, 24))
+        self.image_slice_number_move_backward_button.clicked.connect(self.onBackwardClicked)
+        icon_move_backward = QtGui.QIcon()
+        icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/backward_slide_icon.png')))
+        self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
+        self.image_slice_number_box.addWidget(self.image_slice_number_move_backward_button)
+        # Create a button to move forward to the next image
+        self.image_slice_number_move_forward_button = QPushButton()
+        self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
+        self.image_slice_number_move_forward_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.image_slice_number_move_forward_button.resize(QSize(24, 24))
+        self.image_slice_number_move_forward_button.clicked.connect(self.onForwardClicked)
+        icon_move_forward = QtGui.QIcon()
+        icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/forward_slide_icon.png')))
+        self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
+        self.image_slice_number_box.addWidget(self.image_slice_number_move_forward_button)
+
+        self.draw_roi_window_input_container_box.addRow(self.image_slice_number_box)
 
         # Create a horizontal box for containing the zoom function
         self.draw_roi_window_viewport_zoom_box = QHBoxLayout()
@@ -179,37 +214,23 @@ class UIDrawROIWindow:
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_viewport_zoom_box)
 
         self.init_cursor_radius_change_box()
-
-        # Create a horizontal box for forward and backward button
-        self.draw_roi_window_backward_forward_box = QHBoxLayout()
-        self.draw_roi_window_backward_forward_box.setObjectName("DrawRoiWindowBackwardForwardBox")
-        # Create a button to move backward to the previous image
-        self.image_slice_number_move_backward_button = QPushButton()
-        self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
-        self.image_slice_number_move_backward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_move_backward_button.resize(
-            self.image_slice_number_move_backward_button.sizeHint().width(),
-            self.image_slice_number_move_backward_button.sizeHint().height())
-        self.image_slice_number_move_backward_button.clicked.connect(self.onBackwardClicked)
-        icon_move_backward = QtGui.QIcon()
-        icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/backward_slide_icon.png')))
-        self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
-        self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_backward_button)
-        # Create a button to move forward to the next image
-        self.image_slice_number_move_forward_button = QPushButton()
-        self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
-        self.image_slice_number_move_forward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_move_forward_button.resize(
-            self.image_slice_number_move_forward_button.sizeHint().width(),
-            self.image_slice_number_move_forward_button.sizeHint().height())
-        self.image_slice_number_move_forward_button.clicked.connect(self.onForwardClicked)
-        icon_move_forward = QtGui.QIcon()
-        icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/forward_slide_icon.png')))
-        self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
-        self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_forward_button)
-        self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_backward_forward_box)
+        # Create field to toggle two options: Keep empty pixel or fill empty pixel when using draw cursor
+        self.toggle_keep_empty_pixel_box = QHBoxLayout()
+        self.toggle_keep_empty_pixel_label = QLabel()
+        self.toggle_keep_empty_pixel_label.setObjectName("ToggleKeepEmptyPixelLabel")
+        # Create input for min pixel size
+        self.toggle_keep_empty_pixel_combo_box = QComboBox()
+        self.toggle_keep_empty_pixel_combo_box.addItems(["Off", "On"])
+        self.toggle_keep_empty_pixel_combo_box.setCurrentIndex(0)
+        self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
+        self.toggle_keep_empty_pixel_combo_box.setObjectName("ToggleKeepEmptyPixelComboBox")
+        self.toggle_keep_empty_pixel_combo_box.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.toggle_keep_empty_pixel_combo_box.resize(self.toggle_keep_empty_pixel_combo_box.sizeHint().width(),
+                                                      self.toggle_keep_empty_pixel_combo_box.sizeHint().height())
+        self.toggle_keep_empty_pixel_combo_box.currentIndexChanged.connect(self.toggle_keep_empty_pixel_box_index_changed)
+        self.toggle_keep_empty_pixel_box.addWidget(self.toggle_keep_empty_pixel_label)
+        self.toggle_keep_empty_pixel_box.addWidget(self.toggle_keep_empty_pixel_combo_box)
+        self.draw_roi_window_input_container_box.addRow(self.toggle_keep_empty_pixel_box)
 
         # Create a horizontal box for transect and draw button
         self.draw_roi_window_transect_draw_box = QHBoxLayout()
@@ -257,6 +278,9 @@ class UIDrawROIWindow:
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
 
+
+
+
         # Create a contour preview button
         self.row_preview_layout = QtWidgets.QHBoxLayout()
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
@@ -278,6 +302,7 @@ class UIDrawROIWindow:
         # Create a label for denoting the max internal hole size
         self.internal_hole_max_label = QLabel()
         self.internal_hole_max_label.setObjectName("InternalHoleLabel")
+
         # Create input for max internal hole size
         self.internal_hole_max_line_edit = QLineEdit()
         self.internal_hole_max_line_edit.setObjectName("InternalHoleInput")
@@ -440,6 +465,10 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
+    def toggle_keep_empty_pixel_box_index_changed(self):
+        self.keep_empty_pixel = self.toggle_keep_empty_pixel_combo_box.currentText() == "On"
+        self.drawingROI.keep_empty_pixel = self.keep_empty_pixel
+
     def onCancelButtonClicked(self):
         """
         This function is used for canceling the drawing
@@ -576,6 +605,7 @@ class UIDrawROIWindow:
                     self.slice_changed,
                     self.current_slice,
                     self.drawing_tool_radius,
+                    self.keep_empty_pixel,
                     set()
 
                 )
@@ -686,7 +716,7 @@ class UIDrawROIWindow:
         return contour_data
 
     def onPreviewClicked(self):
-        if hasattr(self, 'drawingROI') and len(self.drawingROI.target_pixel_coords) > 0:
+        if hasattr(self, 'drawingROI') and self.drawingROI and len(self.drawingROI.target_pixel_coords) > 0:
             list_of_points = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
             if list_of_points is not None:
                 self.drawingROI.draw_contour_preview(list_of_points)
@@ -790,10 +820,12 @@ class UIDrawROIWindow:
     def disable_cursor_radius_change_box(self):
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+        self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
 
     def enable_cursor_radius_change_box(self):
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
+        self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
 
     def display_multipolygon_warning(self, slice_id):
         QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",

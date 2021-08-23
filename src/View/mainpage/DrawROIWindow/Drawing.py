@@ -20,7 +20,7 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     # Initialisation function  of the class
     def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slice_changed,
-                 current_slice, drawing_tool_radius, target_pixel_coords=set()):
+                 current_slice, drawing_tool_radius, keep_empty_pixel, target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary components
@@ -52,6 +52,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.label = QtWidgets.QLabel()
         self.draw_tool_radius = drawing_tool_radius
         self.is_current_pixel_coloured = False
+        self.keep_empty_pixel = keep_empty_pixel
         self._display_pixel_color()
 
     def _display_pixel_color(self):
@@ -187,8 +188,9 @@ class Drawing(QtWidgets.QGraphicsScene):
                 clicked_point = numpy.array((clicked_x, clicked_y))
                 point_to_check = numpy.array((x_coord, y_coord))
                 distance = numpy.linalg.norm(clicked_point - point_to_check)
-                if (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
-                        self.pixel_array[y_coord][x_coord] <= self.max_pixel) and (distance <= self.draw_tool_radius):
+
+                if ((not self.keep_empty_pixel) and (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
+                        self.pixel_array[y_coord][x_coord] <= self.max_pixel) or self.keep_empty_pixel) and (distance <= self.draw_tool_radius):
                     c = self.q_image.pixel(x_coord, y_coord)
                     colors = QColor(c)
                     if (x_coord, y_coord) not in self.according_color_dict:
