@@ -270,7 +270,7 @@ class ISO2ROI:
         file_path = str(file_path.joinpath("rtss.dcm"))
 
         # Create RT Struct file
-        progress_callback.emit(("Generating RT Structure Set", 30))
+        progress_callback.emit(("Generating RT Structure Set", 60))
         ct_uid_list = ImageLoading.get_image_uid_list(
             patient_dict_container.dataset)
         ds = ROI.create_initial_rtss_from_ct(
