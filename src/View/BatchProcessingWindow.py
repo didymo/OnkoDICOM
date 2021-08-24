@@ -3,7 +3,7 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6.QtGui import QIcon, QPixmap, QFont
 from PySide6.QtWidgets import QFileDialog, QCheckBox
-from PySide6.QtCore import QThreadPool, Qt
+from PySide6.QtCore import QThreadPool
 from src.Model.Worker import Worker
 from src.Model import DICOMDirectorySearch
 from PySide6.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QGridLayout

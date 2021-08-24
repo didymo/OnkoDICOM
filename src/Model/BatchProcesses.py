@@ -130,9 +130,15 @@ class BatchProcessISO2ROI(BatchProcess):
         if not self.ready:
             return
 
+        self.progress_callback.emit(("Setting up .. ", 30))
+
         InitialModel.create_initial_model()
+
+        self.progress_callback.emit(("Performing ISO2ROI .. ", 40))
         dataset_complete = ImageLoading.is_dataset_dicom_rt(self.patient_dict_container.dataset)
+
         iso2roi = ISO2ROI()
+        self.progress_callback.emit(("Performing ISO2ROI .. ", 50))
 
         if not dataset_complete:
             # Check if RT struct file is missing. If yes, create one and
@@ -142,7 +148,7 @@ class BatchProcessISO2ROI(BatchProcess):
 
         # Get isodose levels to turn into ROIs
         isodose_levels = iso2roi.get_iso_levels()
-
+        self.progress_callback.emit(("Performing ISO2ROI .. ", 80))
         boundaries = iso2roi.calculate_isodose_boundaries(isodose_levels)
 
         # Return if boundaries could not be calculated

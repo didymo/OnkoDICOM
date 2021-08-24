@@ -30,7 +30,7 @@ class BatchProcessingController:
                     else:
                         cur_patient_files[class_id] = series
 
-            progress_callback.emit(("Setting up patient .. ", 20))
+            progress_callback.emit(("Loading dataset .. ", 20))
 
             # Perform iso2roi on patient
             if "iso2roi" in self.processes:
@@ -38,7 +38,7 @@ class BatchProcessingController:
 
                 process.start()
 
-                progress_callback.emit(("Completed ISO2ROI .. ", 80))
+                progress_callback.emit(("Completed ISO2ROI .. ", 90))
 
             if "suv2roi" in self.processes:
                 # Perform suv2roi on patient
@@ -46,6 +46,7 @@ class BatchProcessingController:
 
     def processing_completed(self):
         self.progress_window.update_progress(("Processing complete!", 100))
+        print("Processing completed!")
         self.progress_window.close()
 
     def processing_error(self):
