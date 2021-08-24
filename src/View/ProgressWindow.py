@@ -37,7 +37,8 @@ class ProgressWindow(QDialog):
         self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
+                              QIcon.Normal, QIcon.Off)
 
         self.setWindowIcon(window_icon)
         self.progress_bar.setStyleSheet(self.stylesheet)

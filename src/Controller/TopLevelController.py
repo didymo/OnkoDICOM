@@ -38,6 +38,7 @@ class Controller:
         """
         self.welcome_window = WelcomeWindow()
         self.welcome_window.go_next_window.connect(self.show_open_patient)
+        self.welcome_window.go_batch_window.connect(self.show_batch_window)
         self.welcome_window.show()
 
     def show_open_patient(self):
@@ -59,7 +60,6 @@ class Controller:
             self.open_patient_window.go_next_window.connect(
                 self.show_main_window)
 
-        self.open_patient_window.go_batch_window.connect(self.show_batch_window)
         self.open_patient_window.show()
 
     def show_main_window(self, progress_window):
@@ -85,10 +85,13 @@ class Controller:
         self.open_patient_window.close()
 
     def show_batch_window(self):
+        # Only initialise the batch processing window once
         if not isinstance(self.batch_window, BatchWindow):
             self.batch_window = BatchWindow()
 
+        # Close the main window and show the batch processing window
         self.batch_window.show()
+        self.welcome_window.close()
 
     def show_pyradi_progress(self, path, filepaths, target_path):
         """

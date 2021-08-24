@@ -41,12 +41,14 @@ class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
     go_next_window = QtCore.Signal()
+    go_batch_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.open_patient_button.clicked.connect(self.go_open_patient_window)
+        self.open_batch_button.clicked.connect(self.open_batch_window)
 
     def go_open_patient_window(self):
         """
@@ -54,17 +56,21 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
         """
         self.go_next_window.emit()
 
+    def open_batch_window(self):
+        """
+        Function to progress to the BatchProcessingWindow
+        """
+        self.go_batch_window.emit()
+
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
     go_next_window = QtCore.Signal(object)
-    go_batch_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self, default_directory):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.patient_info_initialized.connect(self.open_patient)
-        self.open_patient_window_batch_button.clicked.connect(self.open_batch_window)
 
         if default_directory is not None:
             self.filepath = default_directory
@@ -73,9 +79,6 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
-
-    def open_batch_window(self):
-        self.go_batch_window.emit()
 
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
