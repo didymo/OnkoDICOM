@@ -42,7 +42,7 @@ class TestIso2Roi:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.cwd().joinpath('test', 'testdata', 'DICOM-RT-TEST')
+        desired_path = Path.cwd().joinpath('test', 'testdata')
 
         # list of DICOM test files
         selected_files = find_DICOM_files(desired_path)
@@ -67,9 +67,14 @@ class TestIso2Roi:
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             self.patient_dict_container.set("rois", self.rois)
-            self.patient_dict_container.set("raw_contour", dict_raw_contour_data)
+            self.patient_dict_container.set("raw_contour",
+                                            dict_raw_contour_data)
             self.patient_dict_container.set("num_points", dict_numpoints)
             self.patient_dict_container.set("pixluts", dict_pixluts)
+
+            # Set location of rtss file
+            file_paths = self.patient_dict_container.filepaths
+            self.patient_dict_container.set("file_rtss", file_paths['rtss'])
 
         # Create ISO2ROI object
         self.iso2roi = ISO2ROI()
@@ -86,15 +91,15 @@ def test_select_prescription_dose_data(test_object):
     """
     Test selecting prescription dose data from both an RT Plan and an
     RT Dose. Assumes the test data set does not contain dose data.
-
     :param test_object: test_object function, for accessing the shared
-                        TestStructureTab object.
+                        TestIso2Roi object.
     """
     # Test selecting RT Plan dose data
     rt_plan_dose = test_object.patient_dict_container.dataset['rtdose']
     slider_id = 0
 
-    z = test_object.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+    dataset = test_object.patient_dict_container.dataset[slider_id]
+    z = dataset.ImagePositionPatient[2]
     grids = get_dose_grid(rt_plan_dose, float(z))
 
     # Assert that the dose grid has 121 entries
@@ -115,16 +120,16 @@ def test_calculate_prescription_dose_boundaries(test_object):
     """
     Test calculating prescription dose boundaries. Assumes that the test
     data set does not contain any dose data.
-
     :param test_object: test_object function, for accessing the shared
-                        TestStructureTab object.
+                        TestIso2Roi object.
     """
     boundaries = None
 
     # Get required dose data
     rt_plan_dose = test_object.patient_dict_container.dataset['rtdose']
     slider_id = 0
-    z = test_object.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+    dataset = test_object.patient_dict_container.dataset[slider_id]
+    z = dataset.ImagePositionPatient[2]
     grid = get_dose_grid(rt_plan_dose, float(z))
     rt_dose_dose = 100
 
@@ -145,14 +150,14 @@ def test_calculate_prescription_dose_boundaries(test_object):
 def test_generate_roi_from_iso(test_object):
     """
     Test for generating ROIs from ISO data.
-
     :param test_object: test_object function, for accessing the shared
-                        TestStructureTab object.
+                        TestIso2Roi object.
     """
     # Initialise variables needed for function
     slider_id = 0
     dataset = test_object.patient_dict_container.dataset[slider_id]
-    pixlut = test_object.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
+    pixlut = test_object.patient_dict_container.get("pixluts")
+    pixlut = pixlut[dataset.SOPInstanceUID]
     z_coord = dataset.SliceLocation
 
     # Create fake contour data
@@ -200,10 +205,43 @@ def test_find_rtss(test_object):
     """
     Test for finding existing RT Struct files. Assumes the test data
     contains an RT Struct file.
-
     :param test_object: test_object function, for accessing the shared
-                        TestStructureTab object.
+                        TestIso2Roi object.
     """
     rtss_directory = Path(test_object.patient_dict_container.get("file_rtss"))
 
     assert rtss_directory
+
+def test_create_rtss(test_object):
+    """
+    Test for creating an RT Struct file if one does not exist.
+    :param test_object: test_object function, for accessing the shared
+                        TestIso2Roi object.
+    """
+    # Create file path
+    file_path = test_object.patient_dict_container.filepaths.values()
+    file_path = Path(os.path.commonpath(file_path))
+    file_path = str(file_path.joinpath("rtss.dcm"))
+
+    # Get CT UID list
+    ct_uid_list = ImageLoading.get_image_uid_list(
+        test_object.patient_dict_container.dataset)
+
+    # Generate RTSS
+    rtss = ROI.create_initial_rtss_from_ct(
+        test_object.patient_dict_container.dataset[0], file_path, ct_uid_list)
+
+    # Get test dataset
+    test_ds = test_object.patient_dict_container.dataset[0]
+
+    # Assert that the ds exists and is not empty
+    assert rtss
+
+    # Assert that certain values are correct
+    assert rtss.PatientName == test_ds.PatientName
+    assert rtss.PatientID == test_ds.PatientID
+    assert rtss.PatientBirthDate == test_ds.PatientBirthDate
+    assert rtss.PatientSex == test_ds.PatientSex
+    assert rtss.StudyInstanceUID == test_ds.StudyInstanceUID
+    assert rtss.Modality == 'RTSTRUCT'
+    assert rtss.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.3'
