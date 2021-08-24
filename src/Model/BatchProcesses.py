@@ -9,19 +9,41 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class BatchProcess:
+
     def __init__(self, progress_callback, patient_files):
-        self.allowed_classes = {}
         self.patient_dict_container = PatientDictContainer()
         self.progress_callback = progress_callback
+        self.required_classes = ()
         self.patient_files = patient_files
+        self.ready = False
+
+    allowed_classes = {}
+
+    def is_ready(self):
+        return self.ready
 
     def start(self):
         pass
 
-    def load_images(self, files):
+    @classmethod
+    def load_images(cls, patient_files, required_classes):
+        files = []
+        found_classes = set()
+        for k, v in patient_files.items():
+            if k in cls.allowed_classes:
+                files.extend(v.get_files())
+                modality_name = cls.allowed_classes.get(k).get('name')
+                if modality_name not in found_classes \
+                        and modality_name in required_classes:
+                    found_classes.add(modality_name)
+
+        class_diff = set(required_classes).difference(found_classes)
+        if len(class_diff) > 0:
+            print("Skipping dataset. Missing required file(s) {}".format(class_diff))
+            return False
         try:
             path = os.path.dirname(os.path.commonprefix(files))  # Gets the common root folder.
-            read_data_dict, file_names_dict = self.get_datasets(files)
+            read_data_dict, file_names_dict = cls.get_datasets(files)
         except ImageLoading.NotAllowedClassError:
             raise ImageLoading.NotAllowedClassError
 
@@ -47,19 +69,8 @@ class BatchProcess:
 
         return True
 
-    def get_datasets(self, filepath_list):
-        """
-        This function generates two dictionaries: the dictionary of PyDicom
-        datasets, and the dictionary of filepaths. These two dictionaries are
-        used in the PatientDictContainer model as the class attributes:
-        'dataset' and 'filepaths' The keys of both dictionaries are the
-        dataset's slice number/RT modality. The values of the read_data_dict are
-        PyDicom Dataset objects, and the values of the file_names_dict are
-        filepaths pointing to the location of the .dcm file on the user's
-        computer.
-        :param filepath_list: List of all files to be searched.
-        :return: Tuple (read_data_dict, file_names_dict)
-        """
+    @classmethod
+    def get_datasets(cls, filepath_list):
         read_data_dict = {}
         file_names_dict = {}
 
@@ -70,14 +81,13 @@ class BatchProcess:
             except InvalidDicomError:
                 pass
             else:
-                if read_file.SOPClassUID in self.allowed_classes:
-                    allowed_class = self.allowed_classes[read_file.SOPClassUID]
+                if read_file.SOPClassUID in cls.allowed_classes:
+                    allowed_class = cls.allowed_classes[read_file.SOPClassUID]
                     if allowed_class["sliceable"]:
                         slice_name = slice_count
                         slice_count += 1
                     else:
                         slice_name = allowed_class["name"]
-
                     read_data_dict[slice_name] = read_file
                     file_names_dict[slice_name] = file
 
@@ -90,34 +100,37 @@ class BatchProcess:
 class BatchProcessISO2ROI(BatchProcess):
     def __init__(self, progress_callback, patient_files):
         super(BatchProcessISO2ROI, self).__init__(progress_callback, patient_files)
-
-        self.allowed_classes = {
-            # CT Image
-            "1.2.840.10008.5.1.4.1.1.2": {
-                "name": "ct",
-                "sliceable": True
-            },
-            # RT Structure Set
-            "1.2.840.10008.5.1.4.1.1.481.3": {
-                "name": "rtss",
-                "sliceable": False
-            },
-            # RT Dose
-            "1.2.840.10008.5.1.4.1.1.481.2": {
-                "name": "rtdose",
-                "sliceable": False
-            },
-        }
-
         self.patient_dict_container = PatientDictContainer()
-        self.load_images(patient_files)
-        InitialModel.create_initial_model()
+        self.required_classes = ('ct', 'rtdose')
+        self.ready = self.load_images(patient_files, self.required_classes)
+
+    allowed_classes = {
+        # CT Image
+        "1.2.840.10008.5.1.4.1.1.2": {
+            "name": "ct",
+            "sliceable": True
+        },
+        # RT Structure Set
+        "1.2.840.10008.5.1.4.1.1.481.3": {
+            "name": "rtss",
+            "sliceable": False
+        },
+        # RT Dose
+        "1.2.840.10008.5.1.4.1.1.481.2": {
+            "name": "rtdose",
+            "sliceable": False
+        },
+    }
 
     def start(self):
         """
         Goes the the steps of the iso2roi conversion.
         :patient_dict_container: dictionary containing dataset
         """
+        if not self.ready:
+            return
+
+        InitialModel.create_initial_model()
         dataset_complete = ImageLoading.is_dataset_dicom_rt(self.patient_dict_container.dataset)
         iso2roi = ISO2ROI()
 
