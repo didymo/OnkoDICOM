@@ -515,10 +515,10 @@ def get_pixluts(read_data_dict):
 
     return dict_pixluts
 
+
 def get_image_uid_list(dataset):
     """
     Extract the SOPInstanceUIDs from every image dataset
-
     :param dataset: A dictionary of datasets of all the DICOM files of the patient
     :return: uid_list, a list of SOPInstanceUIDs of all image slices of the patient
     """

@@ -2,10 +2,8 @@ import csv
 import pydicom
 from pathlib import Path
 from random import randint, seed
-
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
-
 from pydicom.tag import Tag
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
@@ -145,9 +143,14 @@ class StructureTab(QtWidgets.QWidget):
         layout_roi_buttons.addWidget(self.button_roi_delete)
 
     def update_ui(self):
+        """
+        Update the UI of Structure Tab when a new patient is opened
+        """
         self.rois = self.patient_dict_container.get("rois")
         self.color_dict = self.init_color_roi()
         self.patient_dict_container.set("roi_color_dict", self.color_dict)
+        if hasattr(self, "modified_indicator_widget"):
+            self.modified_indicator_widget.setParent(None)
         self.update_content()
 
     def update_content(self):
@@ -189,6 +192,8 @@ class StructureTab(QtWidgets.QWidget):
         Examples: {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has been renamed to TEETH.
         {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
         {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
+        Note: Use {"draw": None} after multiple ROIs are generated (E.g., from ISO2ROI functionality) instead of
+        calling this function multiple times.
         """
 
         new_dataset = changes[0]
@@ -272,7 +277,8 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.addWidget(modified_indicator_text)
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
-        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss  # When the widget is clicked, save the rtss
+        # When the widget is clicked, save the rtss
+        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss
 
         # Temporarily remove the ROI modify buttons, add this indicator, then add them back again.
         # This ensure that the modifier appears above the ROI modify buttons.
@@ -343,6 +349,10 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_sagittal.pop(roi_name, None)
 
     def save_new_rtss(self, event=None):
+        """
+        Save the current RTSS stored in patient dictionary to the file system.
+        :param event: Not used but will be passed as an argument from modified_indicator_widget on mouseReleaseEvent
+        """
         if self.patient_dict_container.get("existing_file_rtss") is not None:
             existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
         else:
@@ -412,13 +422,14 @@ class StructureTab(QtWidgets.QWidget):
             index += 1
 
         # Remove old values out of the original sequences
-        for name in duplicated_names:
+        rm_indices = [old_duplicated_roi_indexes[name] for name in duplicated_names]
+        for index in sorted(rm_indices, reverse=True):
             # Remove the old value out of the original structure set sequence
-            original_structure_set.pop(old_duplicated_roi_indexes[name])
+            original_structure_set.pop(index)
             # Remove the old value out of the original contour sequence
-            original_roi_contour.pop(old_duplicated_roi_indexes[name])
+            original_roi_contour.pop(index)
             # Remove the old value out of the original observation sequence
-            original_roi_observation_sequence.pop(old_duplicated_roi_indexes[name])
+            original_roi_observation_sequence.pop(index)
 
         # Merge the original sequences with the new sequences
         original_structure_set.extend(new_structure_set)

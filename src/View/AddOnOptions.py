@@ -22,10 +22,9 @@ class UIAddOnOptions(object):
         self.note = None
         self.fill_options = None
         self.change_default_directory_frame = None
-
-        # The following can be used for future implementation of creating ROIs from ISO dose.
-        # self.table_roi = None
-        # self.add_new_roi = None
+        self.table_roi = None
+        self.add_new_roi = None
+        self.delete_roi = None
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line, iso_opacity, line_width):
         """
@@ -55,6 +54,7 @@ class UIAddOnOptions(object):
         self.standard_volume_options = StandardVolumeOptions(self)
         self.patient_hash_options = PatientHashId(self)
         self.line_fill_options = LineFillOptions(self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
+        self.iso2roi_options = RoiFromIsodoseOptions(self)
         self.change_default_directory = ChangeDefaultDirectory(self)
 
         self.create_cancel_button()
@@ -85,14 +85,15 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.table_view, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_organ, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_volume, 1, 0, 1, 3)
-        # self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_ids, 1, 0, 1, 3)
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
         self.option_layout.addWidget(self.change_default_directory_frame, 1, 0, 1, 3)
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
-        # self.option_layout.addWidget(self.add_new_roi, 2, 2)
+        self.option_layout.addWidget(self.delete_roi, 2, 0)
+        self.option_layout.addWidget(self.add_new_roi, 2, 2)
         self.option_layout.addWidget(self.import_organ_csv, 2, 1)
         self.option_layout.addWidget(self.add_standard_organ_name, 2, 2)
         self.option_layout.addWidget(self.add_standard_volume_name, 2, 2)
@@ -176,10 +177,11 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(True)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(True)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -191,10 +193,11 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(True)
             self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
@@ -206,10 +209,11 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(True)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(False)
             self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(True)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -217,31 +221,33 @@ class UIAddOnOptions(object):
             self.fill_options.setVisible(False)
             self.change_default_directory_frame.setVisible(False)
 
-        # elif type == "Create ROI from Isodose":
-        #     self.table_modules.setVisible(False)
-        #     self.table_view.setVisible(False)
-        #     self.table_organ.setVisible(False)
-        #     self.table_volume.setVisible(False)
-        #     self.table_roi.setVisible(True)
-        #     self.table_Ids.setVisible(False)
-        #     self.add_new_window.setVisible(False)
-        #     self.add_new_roi.setVisible(True)
-        #     self.add_standard_volume_name.setVisible(False)
-        #     self.add_standard_organ_name.setVisible(False)
-        #     self.import_organ_csv.setVisible(False)
-        #     self.note.setVisible(False)
-        #     self.fill_options.setVisible(False)
-        # self.change_default_directory_frame.setVisible(False)
+        elif type == "Create ROIs from Isodoses":
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(True)
+            self.table_ids.setVisible(False)
+            self.add_new_window.setVisible(False)
+            self.add_new_roi.setVisible(True)
+            self.delete_roi.setVisible(True)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
 
         elif type == "Patient ID - Hash ID":
             self.table_modules.setVisible(False)
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(True)
             self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -250,7 +256,8 @@ class UIAddOnOptions(object):
             self.change_default_directory_frame.setVisible(False)
         elif type == "User Options" or type == "Configuration":
             self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -258,14 +265,15 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
             self.change_default_directory_frame.setVisible(False)
         elif type == "Line & Fill configuration":
             self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -273,14 +281,15 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(True)
             self.change_default_directory_frame.setVisible(False)
         elif type == "Default directory":
             self.add_new_window.setVisible(False)
-            # self.add_new_roi.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(False)
             self.import_organ_csv.setVisible(False)
@@ -288,7 +297,7 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(False)
             self.table_organ.setVisible(False)
             self.table_volume.setVisible(False)
-            # self.table_roi.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(False)
             self.note.setVisible(False)
             self.fill_options.setVisible(False)
@@ -457,39 +466,76 @@ class RoiFromIsodoseOptions(object):
         Create the components for the UI of ROI from Isodose view.
         """
         self.window = window_options
+        self.create_buttons()
+        self.create_table_view()
 
-    def create_add_button(self):
+    def create_buttons(self):
         """
-        Create a button to create a new ROI from isodose.
+        Create buttons to create and delete ROIs from isodose.
         """
+        # Buttons
         self.window.add_new_roi = QtWidgets.QPushButton(self.window.widget)
+        self.window.delete_roi = QtWidgets.QPushButton(self.window.widget)
+
+        # Set cursor
         self.window.add_new_roi.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.window.add_new_roi.setVisible(False)
+        self.window.delete_roi.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
+        # Set visibility
+        self.window.add_new_roi.setVisible(False)
+        self.window.delete_roi.setVisible(False)
+
+        # Set style
+        self.window.add_new_roi.setProperty("QPushButtonClass",
+                                            "success-button")
+        self.window.delete_roi.setProperty("QPushButtonClass", "fail-button")
+
+        # Set text
         _translate = QtCore.QCoreApplication.translate
-        self.window.add_new_roi.setText(_translate("Add_On_Options", "Add new Isodose"))
+        self.window.add_new_roi.setText(_translate("Add_On_Options",
+                                                   "Add new Isodose"))
+        self.window.delete_roi.setText(_translate("Add_On_Options",
+                                                  "Remove Isodose"))
 
     def create_table_view(self):
         """
         Create a table to hold all the ROI creation by isodose entries.
         """
         self.window.table_roi = QtWidgets.QTableWidget(self.window.widget)
-        self.window.table_roi.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.window.table_roi.setColumnCount(3)
+        self.window.table_roi.setStyleSheet(
+            "background-color: rgb(255, 255, 255);")
+        self.window.table_roi.setColumnCount(4)
         self.window.table_roi.verticalHeader().hide()
-        self.window.table_roi.setHorizontalHeaderLabels([" Isodose Level (cGy) ", " ROI Name ", " Notes "])
-        self.window.table_roi.horizontalHeaderItem(0).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.window.table_roi.horizontalHeaderItem(1).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.window.table_roi.horizontalHeaderItem(2).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.window.table_roi.setHorizontalHeaderLabels(
+            [" Isodose Level ", " Unit ", " ROI Name ", " Notes "])
+
+        self.window.table_roi.horizontalHeaderItem(0).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(1).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(2).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.window.table_roi.horizontalHeaderItem(3).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+
         roi_from_isodose_header = self.window.table_roi.horizontalHeader()
-        roi_from_isodose_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(0,
+                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(1,
+                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(2,
+                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(3,
+                                                     QtWidgets.QHeaderView.Stretch)
+
         self.window.table_roi.setVisible(False)
 
         # Removing the ability to edit tables with immediate click
-        self.window.table_roi.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers | QtWidgets.QTreeView.NoEditTriggers)
+        self.window.table_roi.setEditTriggers(
+            QtWidgets.QTreeView.NoEditTriggers |
+            QtWidgets.QTreeView.NoEditTriggers)
 
 
 class PatientHashId(object):

@@ -1,5 +1,5 @@
 import glob
-
+import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout
@@ -19,10 +19,7 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
-
 from src.Controller.PathHandler import resource_path
-import platform
-
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 
@@ -99,13 +96,10 @@ class UIMainWindow:
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
+            self.isodoses_tab.request_update_ui.connect(self.structures_tab.structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
-
-        # Hide left panel if no rtss or rtdose
-        if not patient_dict_container.has_modality("rtss") and not patient_dict_container.has_modality("rtdose"):
-            self.left_panel.hide()
 
         # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()

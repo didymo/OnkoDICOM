@@ -1,13 +1,12 @@
 import os
-
 import pydicom
-
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
     dict_instance_uid
 from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
+from src.Model import ImageLoading
 from src.Controller.PathHandler import resource_path
 
 
@@ -94,9 +93,12 @@ def create_initial_model():
     if patient_dict_container.has_modality("rtss"):
         patient_dict_container.set("file_rtss", filepaths['rtss'])
         patient_dict_container.set("dataset_rtss", dataset['rtss'])
+        dict_raw_contour_data, dict_numpoints = \
+            ImageLoading.get_raw_contour_data(dataset['rtss'])
+        patient_dict_container.set("raw_contour", dict_raw_contour_data)
 
         # dict_dicom_tree_rtss will be set in advance if the program generates a new rtss
-        # through the execution of ROI.generate_rtss(file_dir)
+        # through the execution of ROI.create_initial_rtss_from_ct(...)
         if patient_dict_container.get("dict_dicom_tree_rtss") is None:
             dicom_tree_rtss = DicomTree(filepaths['rtss'])
             patient_dict_container.set("dict_dicom_tree_rtss",
