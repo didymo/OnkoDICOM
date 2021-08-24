@@ -193,11 +193,10 @@ def test_merge_rtss(qtbot, test_object):
     def test_message_window():
         messagebox = structure_tab.findChild(QtWidgets.QMessageBox)
         assert messagebox is not None
-        ok_button = messagebox.button(QtWidgets.QMessageBox.Yes)
-        qtbot.mouseClick(ok_button, QtCore.Qt.LeftButton, delay=1)
+        yes_button = messagebox.buttons()[1]
+        qtbot.mouseClick(yes_button, QtCore.Qt.LeftButton, delay=1)
 
     QtCore.QTimer.singleShot(1000, test_message_window)
-    QtCore.QTimer.singleShot(3000, test_message_window)
 
     merged_rtss = structure_tab.merge_rtss(new_rtss, old_rtss)
 

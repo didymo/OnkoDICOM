@@ -1,5 +1,6 @@
 import csv
 import pydicom
+import platform
 from pathlib import Path
 from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
@@ -386,21 +387,26 @@ class StructureTab(QtWidgets.QWidget):
         duplicated_names = old_roi_names.intersection(new_roi_names)
 
         if duplicated_names:
-            confirm_merge = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                              "Conflicting ROI names found between new ROIs and "
-                                                              "existing ROIs:\n" + str(duplicated_names) +
-                                                              "\nAre you sure you want to merge the RTSTRUCT files? "
-                                                              "The new ROIs will replace the existing ROIs. ",
-                                                              QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-            if confirm_merge == QtWidgets.QMessageBox.Yes:
-                double_confirm_merge = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                                         "Are you really sure? "
-                                                                         "This action is not reversible.",
-                                                                         QtWidgets.QMessageBox.Yes,
-                                                                         QtWidgets.QMessageBox.No)
-                if double_confirm_merge != QtWidgets.QMessageBox.Yes:
-                    return None
-            else:
+            # Create a message box to ask for confirmation from user to merge files
+            confirm_merge = QtWidgets.QMessageBox(parent=self)
+            confirm_merge.setIcon(QtWidgets.QMessageBox.Question)
+            confirm_merge.setWindowTitle("Merge RTSTRUCTs?")
+            confirm_merge.setText("Conflicting ROI names found between new ROIs and "
+                                  "existing ROIs:\n" + str(duplicated_names) +
+                                  "\nAre you sure you want to merge the RTSTRUCT files? "
+                                  "The new ROIs will replace the existing ROIs. ")
+            button_yes = QtWidgets.QPushButton("Yes, I want to merge")
+            button_no = QtWidgets.QPushButton("No, I will change the names")
+            """ We want the buttons 'No' & 'Yes' to be displayed in that exact order. QMessageBox displays buttons in
+                respect to their assigned roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 'RejectRole' is 1 
+                thus by counterintuitively assigning 'No' to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
+                positioned as desired.
+            """
+            confirm_merge.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
+            confirm_merge.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
+            confirm_merge.exec_()
+
+            if confirm_merge.clickedButton() != button_yes:
                 return None
 
         # Original sequences
