@@ -191,6 +191,12 @@ class SUV2ROI:
         patient_dict_container = PatientDictContainer()
         dataset_rtss = patient_dict_container.get("dataset_rtss")
 
+        # Save RTSS if it has been modified but not saved
+        if patient_dict_container.get("rtss_modified"):
+            rtss_directory = Path(patient_dict_container.get("file_rtss"))
+            patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+            patient_dict_container.set("rtss_modified", False)
+
         # Loop through each SUV level
         for item in contours:
             print("\n==Generating ROIs for " + str(item) + "==")
@@ -233,20 +239,8 @@ class SUV2ROI:
 
         # Save the new ROIs to the RT Struct file
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
-
-        message = "Are you sure you want to save the modified RTSTRUCT file? "
-        message += "This will overwrite the existing file. "
-        message += "This is not reversible."
-        confirm_save = QtWidgets.QMessageBox.information(None, "Confirmation",
-                                                         message,
-                                                         QtWidgets.QMessageBox.Yes,
-                                                         QtWidgets.QMessageBox.No)
-
-        if confirm_save == QtWidgets.QMessageBox.Yes:
-            patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            QtWidgets.QMessageBox.about(None, "File saved",
-                                        "The RTSTRUCT file has been saved.")
-            patient_dict_container.set("rtss_modified", False)
+        patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+        patient_dict_container.set("rtss_modified", False)
 
     def create_new_rtstruct(self):
         """
