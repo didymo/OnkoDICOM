@@ -1,16 +1,16 @@
-from pathlib import Path
-
+import datetime
 import numpy
+import platform
+import pydicom
+from pathlib import Path
 from pydicom.dataset import FileDataset, FileMetaDataset
 from PySide6 import QtCore, QtWidgets
 from skimage import measure
-from skimage.transform import resize
+from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
-
-import datetime
-import pydicom
+from src.View.InputDialogs import PatientWeightDialog
 
 
 class WorkerSignals(QtCore.QObject):
@@ -59,38 +59,18 @@ class SUV2ROI:
         # Try get patient weight from dataset. An AttributeError will be
         # raised if the dataset does not contain patient weight
         try:
-            self.patient_weight = dataset.PatientWeight
+            patient_weight = dataset.PatientWeight
+            return patient_weight
         except AttributeError:
             # Since weight is not present, keep prompting the user for
             # it until they enter a valid number or close the dialog box
-            while True:
-                message = "Patient weight is needed for SUV2ROI conversion.\nPlease"
-                message += " enter patient weight in kg."
-
-                # Display entry box
-                text, ok = QtWidgets.QInputDialog.getText(None,
-                                                          "Enter Patient Weight",
-                                                          message)
-
-                # Check if OK clicked
-                if ok:
-                    # Try convert the number to a float. Continue if
-                    # successful, prompt again if not.
-                    try:
-                        float(text)
-                        return float(text)
-                    except ValueError:
-                        message = "Please enter a valid number."
-                        QtWidgets.QMessageBox.warning(None,
-                                                      "Invalid Number",
-                                                      message)
-                # Return nothing if box closed
-                else:
-                    message = "SUV2ROI cannot proceed without patient weight!"
-                    QtWidgets.QMessageBox.warning(None,
-                                                  "Cannot Proceed with SUV2ROI",
-                                                  message)
-                    return None
+            dialog = PatientWeightDialog()
+            if dialog.exec():
+                patient_weight = dialog.get_input()
+                return patient_weight
+            else:
+                print("Patient weight not entered. Stopping!")
+                return None
 
     def pet2suv(self, dataset):
         """
