@@ -260,15 +260,36 @@ class SUV2ROI:
             patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
             patient_dict_container.set("rtss_modified", False)
 
+        # Get existing ROIs
+        existing_rois = []
+        rois = patient_dict_container.get("dataset_rtss")
+        if rois:
+            for roi in rois.StructureSetROISequence:
+                existing_rois.append(roi.ROIName)
+
         # Loop through each SUV level
         item_count = len(contours)
         current_progress = 60
         progress_increment = round((95 - 60)/item_count)
-
         for item in contours:
+            # Delete ROI if it already exists to recreate it
+            if item in existing_rois:
+                dataset_rtss = ROI.delete_roi(dataset_rtss, item)
+
+                # Update patient dict container
+                current_rois = patient_dict_container.get("rois")
+                keys = []
+                for key, value in current_rois.items():
+                    if value["name"] == item:
+                        keys.append(key)
+                for key in keys:
+                    del current_rois[key]
+                patient_dict_container.set("rois", current_rois)
+
             print("\n==Generating ROIs for " + str(item) + "==")
             progress_callback.emit(("Generating ROIs", current_progress))
             current_progress += progress_increment
+
             # Loop through each slice
             for i in range(len(contours[item])):
                 slider_id = contours[item][i][0]
