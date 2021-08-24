@@ -429,19 +429,12 @@ class ActionHandler:
 
         # Calculate contours
         print("Calculating contours")
-        try:
-            contour_data = suv2roi.calculate_contours()
-        except AttributeError as error:
-            message = "Dataset does not contain patient weight! "
-            message += "SUV2ROI cannot proceed."
-            print(message)
-            print(str(error))
-            QtWidgets.QMessageBox.warning(self.__main_page, "SUV2ROI Failure", message)
-            return
-        # Generate ROIs
-        print("Generating ROIs")
-        suv2roi.generate_ROI(contour_data)
-        print("Done")
+        contour_data = suv2roi.calculate_contours()
+        # Generate ROIs if patient weight exists
+        if contour_data is not None:
+            print("Generating ROIs")
+            suv2roi.generate_ROI(contour_data)
+            print("Done")
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()

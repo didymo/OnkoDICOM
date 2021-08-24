@@ -19,9 +19,12 @@ class WorkerSignals(QtCore.QObject):
 
 class SUV2ROI:
     """This class is for converting SUV levels to ROIs."""
+
     def __init__(self):
         self.worker_signals = WorkerSignals()
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
+        self.patient_weight = None
+        self.weight_over_dose = None
 
     def find_PET_datasets(self):
         """
@@ -45,6 +48,50 @@ class SUV2ROI:
 
         return dicom_files
 
+    def get_patient_weight(self, dataset):
+        """
+        Attempts to get the patient weight from the dataset, then from
+        the user.
+        :param dataset: a DICOM PET dataset.
+        :return: patient_weight, either a float representing the
+                 patient's weight in kg, or None
+        """
+        # Try get patient weight from dataset. An AttributeError will be
+        # raised if the dataset does not contain patient weight
+        try:
+            self.patient_weight = dataset.PatientWeight
+        except AttributeError:
+            # Since weight is not present, keep prompting the user for
+            # it until they enter a valid number or close the dialog box
+            while True:
+                message = "Patient weight is needed for SUV2ROI conversion.\nPlease"
+                message += " enter patient weight in kg."
+
+                # Display entry box
+                text, ok = QtWidgets.QInputDialog.getText(None,
+                                                          "Enter Patient Weight",
+                                                          message)
+
+                # Check if OK clicked
+                if ok:
+                    # Try convert the number to a float. Continue if
+                    # successful, prompt again if not.
+                    try:
+                        float(text)
+                        return float(text)
+                    except ValueError:
+                        message = "Please enter a valid number."
+                        QtWidgets.QMessageBox.warning(None,
+                                                      "Invalid Number",
+                                                      message)
+                # Return nothing if box closed
+                else:
+                    message = "SUV2ROI cannot proceed without patient weight!"
+                    QtWidgets.QMessageBox.warning(None,
+                                                  "Cannot Proceed with SUV2ROI",
+                                                  message)
+                    return None
+
     def pet2suv(self, dataset):
         """
         Converts DICOM PET pixel array values (which are in Bq/ml) to
@@ -54,22 +101,32 @@ class SUV2ROI:
         """
         # Get series and acquisition time
         series_time = dataset.SeriesTime
-        #acquisition_time = dataset.AcquisitionTime
+        # acquisition_time = dataset.AcquisitionTime
 
-        # Get patient weight. An AttributeError will be raised if the
-        # dataset does not contain patient weight. This is because
-        # patient weight is needed to convert Bq/ml to SUV - without
-        # it, SUV2ROI conversion cannot take place.
-        patient_weight = dataset.PatientWeight
+        # Get patient weight. Return None if no patient weight has been
+        # obtained
+        if not self.patient_weight:
+            self.patient_weight = self.get_patient_weight(dataset)
+            if self.patient_weight is None:
+                return None
+            else:
+                # Convert patient weight to grams
+                self.patient_weight *= 1000
 
         # Get radiopharmaceutical information
         radiopharmaceutical_info = \
             dataset.RadiopharmaceuticalInformationSequence[0]
         radiopharmaceutical_start_time = \
             radiopharmaceutical_info['RadiopharmaceuticalStartTime'].value
-        radionuclide_total_dose = \
-            radiopharmaceutical_info['RadionuclideTotalDose'].value
-        #radionuclide_half_life = \
+
+        # Calculate patient weight divided by total dose once
+        if self.weight_over_dose is None:
+            radionuclide_total_dose = \
+                radiopharmaceutical_info['RadionuclideTotalDose'].value
+            self.weight_over_dose = \
+                self.patient_weight / radionuclide_total_dose
+
+        # radionuclide_half_life = \
         #    radiopharmaceutical_info['RadionuclideHalfLife'].value
 
         # Get rescale slope and intercept
@@ -77,10 +134,10 @@ class SUV2ROI:
         rescale_intercept = dataset.RescaleIntercept
 
         # Convert series and acquisition time to seconds
-        #series_time_s = (float(series_time[0:2]) * 3600) +\
+        # series_time_s = (float(series_time[0:2]) * 3600) +\
         #                (float(series_time[2:4]) * 60) +\
         #                float(series_time[4:6])
-        #radiopharmaceutical_start_time_s =\
+        # radiopharmaceutical_start_time_s =\
         #    (float(radiopharmaceutical_start_time[0:2]) * 3600) +\
         #    (float(radiopharmaceutical_start_time[2:4]) * 60) +\
         #    float(radiopharmaceutical_start_time[4:6])
@@ -96,8 +153,8 @@ class SUV2ROI:
         decay = 1
 
         # Convert Bq/ml to SUV
-        suv = (pixel_array * rescale_slope + rescale_intercept) * decay
-        suv = suv * (1000 * patient_weight) / radionuclide_total_dose
+        suv = (pixel_array * rescale_slope + rescale_intercept) * decay * \
+            self.weight_over_dose
 
         # Return SUV data
         return suv
@@ -123,6 +180,10 @@ class SUV2ROI:
             # Get SUV data from PET file
             temp_ds = patient_dict_container.dataset[slider_id]
             suv_data = self.pet2suv(temp_ds)
+
+            # Return if patient weight does not exist
+            if suv_data is None:
+                return None
 
             # Set current and max SUV for the current slice
             current_suv = 1
