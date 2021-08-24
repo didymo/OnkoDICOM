@@ -90,28 +90,27 @@ def create_initial_model():
     patient_dict_container.set("dict_uid", dict_instance_uid(dataset))
 
     # Set RTSS attributes
-    if patient_dict_container.has_modality("rtss"):
-        patient_dict_container.set("file_rtss", filepaths['rtss'])
-        patient_dict_container.set("dataset_rtss", dataset['rtss'])
-        dict_raw_contour_data, dict_numpoints = \
-            ImageLoading.get_raw_contour_data(dataset['rtss'])
-        patient_dict_container.set("raw_contour", dict_raw_contour_data)
+    patient_dict_container.set("file_rtss", filepaths['rtss'])
+    patient_dict_container.set("dataset_rtss", dataset['rtss'])
+    dict_raw_contour_data, dict_numpoints = \
+        ImageLoading.get_raw_contour_data(dataset['rtss'])
+    patient_dict_container.set("raw_contour", dict_raw_contour_data)
 
-        # dict_dicom_tree_rtss will be set in advance if the program generates a new rtss
-        # through the execution of ROI.create_initial_rtss_from_ct(...)
-        if patient_dict_container.get("dict_dicom_tree_rtss") is None:
-            dicom_tree_rtss = DicomTree(filepaths['rtss'])
-            patient_dict_container.set("dict_dicom_tree_rtss",
-                                       dicom_tree_rtss.dict)
+    # dict_dicom_tree_rtss will be set in advance if the program generates a new rtss
+    # through the execution of ROI.create_initial_rtss_from_ct(...)
+    if patient_dict_container.get("dict_dicom_tree_rtss") is None:
+        dicom_tree_rtss = DicomTree(filepaths['rtss'])
+        patient_dict_container.set("dict_dicom_tree_rtss",
+                                   dicom_tree_rtss.dict)
 
-        patient_dict_container.set(
-            "list_roi_numbers",
-            ordered_list_rois(patient_dict_container.get("rois")))
-        patient_dict_container.set("selected_rois", [])
+    patient_dict_container.set(
+        "list_roi_numbers",
+        ordered_list_rois(patient_dict_container.get("rois")))
+    patient_dict_container.set("selected_rois", [])
 
-        patient_dict_container.set("dict_polygons_axial", {})
-        patient_dict_container.set("dict_polygons_sagittal", {})
-        patient_dict_container.set("dict_polygons_coronal", {})
+    patient_dict_container.set("dict_polygons_axial", {})
+    patient_dict_container.set("dict_polygons_sagittal", {})
+    patient_dict_container.set("dict_polygons_coronal", {})
 
     # Set RTDOSE attributes
     if patient_dict_container.has_modality("rtdose"):

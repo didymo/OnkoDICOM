@@ -143,7 +143,7 @@ class UIMainWindow:
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         # Add DVH tab to right panel as a tab
-        if patient_dict_container.has_modality("rtss") and patient_dict_container.has_modality("rtdose"):
+        if patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = DVHTab()
             self.right_panel.addTab(self.dvh_tab, "DVH")
         elif hasattr(self, 'dvh_tab'):
