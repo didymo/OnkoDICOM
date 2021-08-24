@@ -1,14 +1,11 @@
-import datetime
 import numpy
-import platform
-import pydicom
+import os
 from pathlib import Path
-from pydicom.dataset import FileDataset, FileMetaDataset
 from PySide6 import QtCore, QtWidgets
 from skimage import measure
-from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
 from src.Model import ROI
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.InputDialogs import PatientWeightDialog
 
@@ -251,85 +248,47 @@ class SUV2ROI:
                                         "The RTSTRUCT file has been saved.")
             patient_dict_container.set("rtss_modified", False)
 
-    def generate_rtss(self, file_path):
+    def create_new_rtstruct(self):
         """
-        Creates an RT Struct file in the DICOM dataset directory if one
-        currently does not exist. All required tags will be present
-        making the file valid, however these tags will be blank.
-        :param file_path: directory where DICOM dataset is stored.
-        :return: ds, the newly created dataset.
+        Generates a new RTSS and edits the patient dict container.
         """
-        # Define file name of rtss
-        file_name = file_path.joinpath("rtss.dcm")
-
-        # Define time and date
-        time_now = datetime.datetime.now()
-
-        # Create file meta dataset
-        file_meta = FileMetaDataset()
-        file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-        file_meta.MediaStorageSOPInstanceUID = '1.2.3'
-        file_meta.ImplementationClassUID = '1.2.3.4'
-
-        # Create RTSS
-        rtss = FileDataset(file_name, {}, b"\0" * 128, file_meta)
-
-        # Get Study Instance UID from another file in the dataset
+        # Get common directory
         patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.filepaths.values()
+        file_path = Path(os.path.commonpath(file_path))
 
-        # Add required data elements
-        # Patient information
-        rtss.PatientName = patient_dict_container.dataset[0].PatientName
-        rtss.PatientID = patient_dict_container.dataset[0].PatientID
-        rtss.PatientBirthDate = patient_dict_container.dataset[0].PatientBirthDate
+        # Get new RT Struct file path
+        file_path = str(file_path.joinpath("rtss.dcm"))
 
-        # General study information
-        rtss.StudyDate = time_now.strftime('%Y%m%d')
-        rtss.StudyTime = time_now.strftime('%H%M%S.%f')
-        rtss.AccessionNumber = ''
-        rtss.ReferringPhysicianName = ''
-        rtss.StudyInstanceUID = patient_dict_container.dataset[0].StudyInstanceUID
-        rtss.StudyID = ''
+        # Create RT Struct file
+        ct_uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
+        ds = ROI.create_initial_rtss_from_ct(
+            patient_dict_container.dataset[0], file_path, ct_uid_list)
+        ds.save_as(file_path)
 
-        # RT series information
-        rtss.Modality = 'RTSTRUCT'
-        rtss.OperatorsName = ''
-        rtss.SeriesInstanceUID = '1.2.3.4'  # MUST be unique, currently not
-        rtss.SeriesNumber = ''
+        # Add RT Struct file path to patient dict container
+        patient_dict_container.filepaths['rtss'] = file_path
+        filepaths = patient_dict_container.filepaths
 
-        # General equipment information
-        rtss.Manufacturer = ''
+        # Add RT Struct dataset to patient dict container
+        patient_dict_container.dataset['rtss'] = ds
+        dataset = patient_dict_container.dataset
 
-        # Structure set information
-        rtss.StructureSetLabel = ''
-        rtss.StructureSetDate = ''
-        rtss.StructureSetTime = ''
-        rtss.StructureSetROISequence = ''
+        # Set some patient dict container attributes
+        patient_dict_container.set("file_rtss", filepaths['rtss'])
+        patient_dict_container.set("dataset_rtss", dataset['rtss'])
 
-        # ROI contour information
-        rtss.ROIContourSequence = ''
+        dicom_tree_rtss = DicomTree(filepaths['rtss'])
+        patient_dict_container.set("dict_dicom_tree_rtss",
+                                   dicom_tree_rtss.dict)
 
-        # RT ROI observations information
-        rtss.RTROIObservationsSequence = ''
-
-        # SOP common information
-        rtss.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-        rtss.SOPInstanceUID = '1.2.3.4'  # MUST be unique, currently not
-
-        # Write file
-        rtss.save_as(file_name)
-
-        # Read back in dataset
-        ds = pydicom.dcmread(file_name)
-
-        # Set patient dict container values
-        # Set pixluts
-        dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
+        dict_pixluts = ImageLoading.get_pixluts(
+            patient_dict_container.dataset)
         patient_dict_container.set("pixluts", dict_pixluts)
 
-        # Set ROIs
         rois = ImageLoading.get_roi_info(ds)
         patient_dict_container.set("rois", rois)
 
-        # Return new dataset
-        return ds
+        patient_dict_container.set("selected_rois", [])
+        patient_dict_container.set("dict_polygons_axial", {})
