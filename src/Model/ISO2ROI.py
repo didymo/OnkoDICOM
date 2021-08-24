@@ -130,12 +130,6 @@ class ISO2ROI:
         slider_min = 0
         slider_max = len(pixmaps) - 1
 
-        # Save RTSS if it has been modified but not saved
-        if patient_dict_container.get("rtss_modified"):
-            rtss_directory = Path(patient_dict_container.get("file_rtss"))
-            patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            patient_dict_container.set("rtss_modified", False)
-
         # Get existing ROIs
         existing_rois = []
         rois = patient_dict_container.get("dataset_rtss")
