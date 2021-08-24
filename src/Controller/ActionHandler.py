@@ -1,13 +1,9 @@
-from pathlib import Path
 from PySide6 import QtGui, QtWidgets, QtCore
-from src.Model import ImageLoading
 from src.Model.CalculateImages import get_pixmaps
-from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.Controller.PathHandler import resource_path
-
-import os.path
+from src.View.ProgressWindow import ProgressWindow
 
 class ActionHandler:
     """
@@ -224,6 +220,14 @@ class ActionHandler:
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
 
+        # Create variables for SUV2ROI - object and progress window
+        self.suv2roi = SUV2ROI()
+        self.progress_window = \
+            ProgressWindow(self.__main_page.main_window_instance,
+                           QtCore.Qt.WindowTitleHint |
+                           QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window.signal_loaded.connect(self.on_loaded_suv2roi)
+
     def init_windowing_menu(self):
         self.menu_windowing.setIcon(self.icon_windowing)
         self.menu_windowing.setTitle("Windowing")
@@ -368,46 +372,26 @@ class ActionHandler:
 
     def suv2roi_handler(self):
         """
-        Function triggered when the SUV2ROI button is pressed from the
-        toolbar. Initiates the SUV2ROI process.
+        Clicked action handler for the SUV2ROI button. Opens a progress
+        window and initiates the SUV2ROI conversion process.
         """
-        suv2roi = SUV2ROI()
+        # Get patient weight - needs to run first as GUI cannot run in
+        # threads, like the ProgressBar (thanks, Qt)
+        dataset = self.patient_dict_container.dataset[0]
+        self.suv2roi.get_patient_weight(dataset)
+        if self.suv2roi.patient_weight is None:
+            return
 
-        # Ensure dataset is a complete DICOM-RT object
-        patient_dict_container = PatientDictContainer()
-        val = ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+        # Start the SUV2ROI process
+        self.progress_window.start(self.suv2roi.start_conversion)
 
-        if val:
-            print("Dataset is complete")
-        else:
-            print("Not complete")
-            # Check if RT struct file is missing. If yes, create one.
-            # TODO: update main page once RT Struct added
-            if not patient_dict_container.get("file_rtss"):
-                # Create RT Struct file
-                suv2roi.create_new_rtstruct()
-
-        # Get PET datasets
-        print("Getting PET data")
-        selected_files = suv2roi.find_PET_datasets()
-        if "PT CTAC" in selected_files:
-            if "PT NAC" in selected_files:
-                print("CTAC and NAC data in DICOM Image Set")
-            else:
-                print("CTAC data in DICOM Image Set")
-        elif "PT NAC" in selected_files:
-            print("NAC data in DICOM Image Set")
-        else:
-            print("No PET data in DICOM Image Set")
-
-        # Calculate contours
-        print("Calculating contours")
-        contour_data = suv2roi.calculate_contours()
-        # Generate ROIs if patient weight exists
-        if contour_data is not None:
-            print("Generating ROIs")
-            suv2roi.generate_ROI(contour_data)
-            print("Done")
+    def on_loaded_suv2roi(self):
+        """
+        Called when progress bar has finished. Closes the progress
+        window and refreshes the main screen.
+        """
+        self.__main_page.main_window_instance.update_ui()
+        self.progress_window.close()
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()

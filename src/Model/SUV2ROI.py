@@ -1,7 +1,7 @@
 import numpy
 import os
 from pathlib import Path
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore
 from skimage import measure
 from src.Model import ImageLoading
 from src.Model import ROI
@@ -16,12 +16,83 @@ class WorkerSignals(QtCore.QObject):
 
 class SUV2ROI:
     """This class is for converting SUV levels to ROIs."""
-
     def __init__(self):
         self.worker_signals = WorkerSignals()
         self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
+
         self.patient_weight = None
         self.weight_over_dose = None
+
+    def start_conversion(self, interrupt_flag, progress_callback):
+        """
+        Goes the the steps of the SUV2ROI conversion.
+        :param interrupt_flag: interrupt flag to stop process.
+        :param progress_callback: signal that receives the current
+                                  progress of the process.
+        """
+        patient_dict_container = PatientDictContainer()
+
+        progress_callback.emit(("Validating Datasets", 0))
+        dataset_complete = \
+            ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
+
+        # Stop loading
+        if interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped SUV2ROI")
+            return False
+
+        if not dataset_complete:
+            # Check if RT struct file is missing. If yes, create one and
+            # add its data to the patient dict container
+            if not patient_dict_container.get("file_rtss"):
+                # Stop loading
+                if interrupt_flag.is_set():
+                    # TODO: convert print to logging
+                    print("Stopped SUV2ROI")
+                    return False
+                progress_callback.emit(("Creating RT Struct", 20))
+                self.create_new_rtstruct()
+
+        # Get PET datasets
+        progress_callback.emit(("Getting PET Data", 40))
+        selected_files = self.find_PET_datasets()
+
+        # Stop loading
+        if interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped SUV2ROI")
+            return False
+
+        if "PT CTAC" in selected_files:
+            if "PT NAC" in selected_files:
+                print("CTAC and NAC data in DICOM Image Set")
+            else:
+                print("CTAC data in DICOM Image Set")
+        elif "PT NAC" in selected_files:
+            print("NAC data in DICOM Image Set")
+        else:
+            print("No PET data in DICOM Image Set")
+
+        # Calculate contours
+        progress_callback.emit(("Calculating Boundaries", 50))
+        contour_data = self.calculate_contours()
+
+        # Stop loading
+        if interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped ISO2ROI")
+            return False
+
+        if not contour_data:
+            # TODO: convert print to logging
+            print("Boundaries could not be calculated.")
+            return
+
+        # Generate ROIs
+        progress_callback.emit(("Generating ROIs", 60))
+        self.generate_ROI(contour_data, progress_callback)
+        progress_callback.emit(("Reloading Window. Please Wait...", 95))
 
     def find_PET_datasets(self):
         """
@@ -47,27 +118,27 @@ class SUV2ROI:
 
     def get_patient_weight(self, dataset):
         """
-        Attempts to get the patient weight from the dataset, then from
-        the user.
+        Attempts to set the patient weight from the dataset, then from
+        the user. Sets the class' patient_weight variable with the
+        patient's weight in grams.
         :param dataset: a DICOM PET dataset.
-        :return: patient_weight, either a float representing the
-                 patient's weight in kg, or None
         """
         # Try get patient weight from dataset. An AttributeError will be
         # raised if the dataset does not contain patient weight
         try:
-            patient_weight = dataset.PatientWeight
-            return patient_weight
+            self.patient_weight = dataset.PatientWeight * 1000
+            return
         except AttributeError:
             # Since weight is not present, keep prompting the user for
             # it until they enter a valid number or close the dialog box
             dialog = PatientWeightDialog()
-            if dialog.exec():
-                patient_weight = dialog.get_input()
-                return patient_weight
+            if dialog.exec_():
+                self.patient_weight = dialog.get_input() * 1000
+                return
             else:
                 print("Patient weight not entered. Stopping!")
-                return None
+                self.patient_weight = None
+                return
 
     def pet2suv(self, dataset):
         """
@@ -79,16 +150,6 @@ class SUV2ROI:
         # Get series and acquisition time
         series_time = dataset.SeriesTime
         # acquisition_time = dataset.AcquisitionTime
-
-        # Get patient weight. Return None if no patient weight has been
-        # obtained
-        if not self.patient_weight:
-            self.patient_weight = self.get_patient_weight(dataset)
-            if self.patient_weight is None:
-                return None
-            else:
-                # Convert patient weight to grams
-                self.patient_weight *= 1000
 
         # Get radiopharmaceutical information
         radiopharmaceutical_info = \
@@ -182,10 +243,12 @@ class SUV2ROI:
         # Return contour data
         return contour_data
 
-    def generate_ROI(self, contours):
+    def generate_ROI(self, contours, progress_callback):
         """
         Generates new ROIs based on contour data.
-        :param contours: dictionary of contours to turn into ROIs
+        :param contours: dictionary of contours to turn into ROIs.
+        :param progress_callback: signal that receives the current
+                                  progress of the loading.
         """
         # Initialise variables needed for function
         patient_dict_container = PatientDictContainer()
@@ -198,8 +261,14 @@ class SUV2ROI:
             patient_dict_container.set("rtss_modified", False)
 
         # Loop through each SUV level
+        item_count = len(contours)
+        current_progress = 60
+        progress_increment = round((95 - 60)/item_count)
+
         for item in contours:
             print("\n==Generating ROIs for " + str(item) + "==")
+            progress_callback.emit(("Generating ROIs", current_progress))
+            current_progress += progress_increment
             # Loop through each slice
             for i in range(len(contours[item])):
                 slider_id = contours[item][i][0]
@@ -237,7 +306,7 @@ class SUV2ROI:
                     patient_dict_container.set("rois",
                                                ImageLoading.get_roi_info(rtss))
 
-        # Save the new ROIs to the RT Struct file
+        progress_callback.emit(("Writing to RT Structure Set", 85))
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
         patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
         patient_dict_container.set("rtss_modified", False)

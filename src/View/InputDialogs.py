@@ -274,6 +274,7 @@ class PatientWeightDialog(QDialog):
 
         # Input dialog layout
         entry_layout = QFormLayout(self)
+        entry_layout.addRow(QLabel(self.patient_weight_message))
         entry_layout.addRow(QLabel("Patient Weight:"),
                             self.patient_weight_entry)
         entry_layout.addWidget(buttonBox)
