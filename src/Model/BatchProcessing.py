@@ -34,10 +34,9 @@ class BatchProcessingController:
 
             # Perform iso2roi on patient
             if "iso2roi" in self.processes:
-                process = BatchProcessISO2ROI(progress_callback, cur_patient_files)
-
+                process = BatchProcessISO2ROI(progress_callback,
+                                              cur_patient_files)
                 process.start()
-
                 progress_callback.emit(("Completed ISO2ROI .. ", 90))
 
             if "suv2roi" in self.processes:
