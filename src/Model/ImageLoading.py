@@ -515,3 +515,19 @@ def get_pixluts(read_data_dict):
             dict_pixluts[img_ds.SOPInstanceUID] = pixlut
 
     return dict_pixluts
+
+
+def get_image_uid_list(dataset):
+    """
+    Extract the SOPInstanceUIDs from every image dataset
+    :param dataset: A dictionary of datasets of all the DICOM files of the patient
+    :return: uid_list, a list of SOPInstanceUIDs of all image slices of the patient
+    """
+    non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
+    uid_list = []
+
+    # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE, RTPLAN)
+    for key in dataset:
+        if key not in non_img_list:
+            uid_list.append(dataset[key].SOPInstanceUID)
+    return uid_list
