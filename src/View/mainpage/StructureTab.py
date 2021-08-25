@@ -7,7 +7,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
 from pydicom.tag import Tag
 
-from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
+from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, ROIManipulateOption
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -30,6 +30,7 @@ class StructureTab(QtWidgets.QWidget):
 
         self.roi_delete_handler = ROIDelOption(self.structure_modified)
         self.roi_draw_handler = ROIDrawOption(self.structure_modified)
+        self.roi_manipulate_handler = ROIManipulateOption(self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -53,6 +54,7 @@ class StructureTab(QtWidgets.QWidget):
         self.update_content()
 
         # Create ROI manipulation buttons
+        self.button_roi_manipulate = QtWidgets.QPushButton()
         self.button_roi_draw = QtWidgets.QPushButton()
         self.button_roi_delete = QtWidgets.QPushButton()
         self.roi_buttons = QtWidgets.QWidget()
@@ -128,18 +130,28 @@ class StructureTab(QtWidgets.QWidget):
             QtGui.QIcon.On
         )
 
-        # self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        icon_roi_manipulate = QtGui.QIcon()
+        icon_roi_manipulate.addPixmap(
+            QtGui.QPixmap(resource_path('res/images/btn-icons/draw_icon.png')),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
         self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
 
-        # self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_draw.setIcon(icon_roi_draw)
         self.button_roi_draw.setText("Draw ROI")
         self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
 
-        layout_roi_buttons = QtWidgets.QHBoxLayout(self.roi_buttons)
+        self.button_roi_manipulate.setIcon(icon_roi_manipulate)
+        self.button_roi_manipulate.setText("Manipulate ROI")
+        self.button_roi_manipulate.clicked.connect(self.roi_manipulate_clicked)
+
+        layout_roi_buttons = QtWidgets.QVBoxLayout(self.roi_buttons)
         layout_roi_buttons.setContentsMargins(0, 0, 0, 0)
+        layout_roi_buttons.addWidget(self.button_roi_manipulate)
         layout_roi_buttons.addWidget(self.button_roi_draw)
         layout_roi_buttons.addWidget(self.button_roi_delete)
 
@@ -184,6 +196,9 @@ class StructureTab(QtWidgets.QWidget):
 
     def roi_draw_clicked(self):
         self.roi_draw_handler.show_roi_draw_options()
+
+    def roi_manipulate_clicked(self):
+        self.roi_manipulate_handler.show_roi_manipulate_options()
 
     def structure_modified(self, changes):
         """

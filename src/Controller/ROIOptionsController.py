@@ -1,5 +1,6 @@
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow import *
+from src.View.mainpage.ManipulateROIWindow import *
 
 
 class RoiDeleteOptions(QtWidgets.QMainWindow, UIDeleteROIWindow):
@@ -43,7 +44,7 @@ class ROIDelOption:
         self.options_window.show()
 
 
-class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
+class RoiDrawOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
     """
     Create the ROI Draw Options class based on the UI from the file in
     View/ROI Draw Option
@@ -88,3 +89,41 @@ class ROIDrawOption:
 
         self.draw_window.set_selected_roi_name(roi_name)
         self.draw_window.show()
+
+
+class RoiManipulateOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
+    """
+    Create the ROI Manipulate Options class based on the UI from the file in
+    View/ROI Delete Option
+    """
+    signal_roi_manipulated = QtCore.Signal(tuple)
+
+    def __init__(self, rois, dataset_rtss):
+        super(RoiManipulateOptions, self).__init__()
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_manipulated)
+
+    def update_ui(self, rois, dataset_rtss):
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_manipulated)
+
+
+class ROIManipulateOption:
+    """
+    The class that will be called by the main page to access the ROI
+    Options controller
+    """
+
+    def __init__(self, structure_modified_function):
+        super(ROIManipulateOption, self).__init__()
+        self.structure_modified_function = structure_modified_function
+
+    def show_roi_manipulate_options(self):
+        patient_dict_container = PatientDictContainer()
+        rois = patient_dict_container.get("rois")
+        dataset_rtss = patient_dict_container.get("dataset_rtss")
+        if not hasattr(self, "manipulate_window"):
+            self.manipulate_window = RoiManipulateOptions(rois, dataset_rtss)
+            self.manipulate_window.signal_roi_manipulated.connect(
+                self.structure_modified_function)
+        else:
+            self.manipulate_window.update_ui(rois, dataset_rtss)
+        self.manipulate_window.show()
