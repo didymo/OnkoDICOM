@@ -1,5 +1,5 @@
 import platform
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
 
 
@@ -43,6 +43,19 @@ class ClinicalDataView(QtWidgets.QWidget):
             QtCore.Qt.AlignLeft)
         self.table_cd.horizontalHeaderItem(1).setTextAlignment(
             QtCore.Qt.AlignLeft)
+        self.table_cd.horizontalHeader().resize
+        self.table_cd.horizontalHeader().setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Fixed)
+        self.table_cd.horizontalHeader().setSectionResizeMode(
+            1, QtWidgets.QHeaderView.Fixed)
+
+        # Remove ability to edit table
+        self.table_cd.setEditTriggers(
+            QtWidgets.QTreeView.NoEditTriggers |
+            QtWidgets.QTreeView.NoEditTriggers)
+
+        # Populate table data
+        self.populate_table()
 
         # Add table to layout
         self.main_layout.addWidget(self.table_cd)
@@ -54,4 +67,57 @@ class ClinicalDataView(QtWidgets.QWidget):
         Creates a button for importing CSV data, and a button for
         manually saving clinical data to a DICOM-SR.
         """
+        # Layout for buttons
+        self.button_layout = QtWidgets.QHBoxLayout()
+
+        # Buttons
+        self.import_button = QtWidgets.QPushButton(self)
+        self.save_button = QtWidgets.QPushButton(self)
+
+        # Set cursor
+        self.import_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.save_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
+        # set button stylesheet
+        self.import_button.setStyleSheet(self.stylesheet)
+        self.save_button.setStyleSheet(self.stylesheet)
+
+        # Set text
+        _translate = QtCore.QCoreApplication.translate
+        self.import_button.setText(_translate("Clinical_Data",
+                                              "Import CSV Data"))
+        self.save_button.setText(_translate("Clinical_Data",
+                                            "Save to DICOM SR"))
+
+        # Connect button clicked events to functions
+        self.import_button.clicked.connect(self.import_clinical_data)
+        self.save_button.clicked.connect(self.save_clinical_data)
+
+        # Add buttons to layout
+        self.button_layout.addWidget(self.import_button)
+        self.button_layout.addWidget(self.save_button)
+        self.main_layout.addLayout(self.button_layout)
+
+    def populate_table(self):
+        """
+        Populates the table with data from the DICOM-SR file, if it
+        exists.
+        """
         print("")
+
+    def import_clinical_data(self):
+        """
+        Opens a file select dialog to open a CSV file containing patient
+        clinical data, then a window to select which patient the user
+        wants to import. Imports clinical data for that patient, and
+        displays it in the table.
+        """
+        print("importing")
+
+    def save_clinical_data(self):
+        """
+        Saves clinical data to a DICOM-SR file. Overwrites any existing
+        clinical data SR files in the dataset.
+        """
+        print("Saving")
