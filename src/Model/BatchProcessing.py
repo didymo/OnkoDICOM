@@ -1,6 +1,6 @@
 from src.View.ProgressWindow import ProgressWindow
 from src.Model.BatchProcesses import BatchProcessISO2ROI
-
+from src.Model.PatientDictContainer import PatientDictContainer
 
 class BatchProcessingController:
 
@@ -30,18 +30,28 @@ class BatchProcessingController:
                     else:
                         cur_patient_files[class_id] = series
 
+            # Stop loading
+            if interrupt_flag.is_set():
+                # TODO: convert print to logging
+                print("Stopped ISO2ROI")
+                PatientDictContainer().clear()
+                return False
+
             progress_callback.emit(("Loading dataset .. ", 20))
 
             # Perform iso2roi on patient
             if "iso2roi" in self.processes:
-                process = BatchProcessISO2ROI(progress_callback,
+                process = BatchProcessISO2ROI(progress_callback, interrupt_flag,
                                               cur_patient_files)
                 process.start()
+
                 progress_callback.emit(("Completed ISO2ROI .. ", 90))
 
             if "suv2roi" in self.processes:
                 # Perform suv2roi on patient
                 pass
+
+        PatientDictContainer().clear()
 
     def processing_completed(self):
         self.progress_window.update_progress(("Processing complete!", 100))

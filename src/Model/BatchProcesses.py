@@ -10,9 +10,10 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 class BatchProcess:
 
-    def __init__(self, progress_callback, patient_files):
+    def __init__(self, progress_callback, interrupt_flag, patient_files):
         self.patient_dict_container = PatientDictContainer()
         self.progress_callback = progress_callback
+        self.interrupt_flag = interrupt_flag
         self.required_classes = ()
         self.patient_files = patient_files
         self.ready = False
@@ -98,8 +99,8 @@ class BatchProcess:
 
 
 class BatchProcessISO2ROI(BatchProcess):
-    def __init__(self, progress_callback, patient_files):
-        super(BatchProcessISO2ROI, self).__init__(progress_callback, patient_files)
+    def __init__(self, progress_callback, interrupt_flag, patient_files):
+        super(BatchProcessISO2ROI, self).__init__(progress_callback, interrupt_flag, patient_files)
         self.patient_dict_container = PatientDictContainer()
         self.required_classes = ('ct', 'rtdose')
         self.ready = self.load_images(patient_files, self.required_classes)
@@ -127,6 +128,14 @@ class BatchProcessISO2ROI(BatchProcess):
         Goes the the steps of the iso2roi conversion.
         :patient_dict_container: dictionary containing dataset
         """
+
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped ISO2ROI")
+            self.patient_dict_container.clear()
+            return False
+
         if not self.ready:
             return
 
@@ -134,11 +143,25 @@ class BatchProcessISO2ROI(BatchProcess):
 
         InitialModel.create_initial_model()
 
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped ISO2ROI")
+            self.patient_dict_container.clear()
+            return False
+
         self.progress_callback.emit(("Performing ISO2ROI .. ", 40))
         dataset_complete = ImageLoading.is_dataset_dicom_rt(self.patient_dict_container.dataset)
 
         iso2roi = ISO2ROI()
         self.progress_callback.emit(("Performing ISO2ROI .. ", 50))
+
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped ISO2ROI")
+            self.patient_dict_container.clear()
+            return False
 
         if not dataset_complete:
             # Check if RT struct file is missing. If yes, create one and
@@ -148,6 +171,14 @@ class BatchProcessISO2ROI(BatchProcess):
 
         # Get isodose levels to turn into ROIs
         isodose_levels = iso2roi.get_iso_levels()
+
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped ISO2ROI")
+            self.patient_dict_container.clear()
+            return False
+
         self.progress_callback.emit(("Performing ISO2ROI .. ", 80))
         boundaries = iso2roi.calculate_isodose_boundaries(isodose_levels)
 
