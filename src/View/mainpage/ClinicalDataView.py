@@ -1,6 +1,8 @@
 import platform
+from pathlib import Path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
+from src.Model import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -13,6 +15,9 @@ class ClinicalDataView(QtWidgets.QWidget):
     """
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
+
+        # Create class attributes
+        self.data_dict = {}
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -116,15 +121,14 @@ class ClinicalDataView(QtWidgets.QWidget):
         text = clinical_data.ContentSequence[0].TextValue
 
         # Split text into dictionary
-        data_dict = {}
         text_data = text.splitlines()
         for row in text_data:
             key, value = row.split(":")
-            data_dict[key] = value
+            self.data_dict[key] = value
 
-        for i, key in enumerate(data_dict):
+        for i, key in enumerate(self.data_dict):
             attrib = QtWidgets.QTableWidgetItem(key)
-            value = QtWidgets.QTableWidgetItem(data_dict[key])
+            value = QtWidgets.QTableWidgetItem(self.data_dict[key])
             self.table_cd.insertRow(i)
             self.table_cd.setItem(i, 0, attrib)
             self.table_cd.setItem(i, 1, value)
@@ -145,4 +149,21 @@ class ClinicalDataView(QtWidgets.QWidget):
         Saves clinical data to a DICOM-SR file. Overwrites any existing
         clinical data SR files in the dataset.
         """
-        print("Saving")
+        # Only save if there is at least one row in the table
+        if self.table_cd.rowCount() <= 0:
+            print("Not saving.")
+            return
+
+        # Create string from clinical data dictionary
+        text = ""
+        for key in self.data_dict:
+            text += str(key) + ": " + str(self.data_dict[key]) + "\n"
+
+        # Create and save DICOM SR file
+        patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.path
+        file_path = Path(file_path).joinpath("Clinical-Data-SR.dcm")
+        ds = patient_dict_container.dataset[0]
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text)
+        dicom_sr.save_as(file_path)
+        print("Saved")
