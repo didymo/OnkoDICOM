@@ -91,9 +91,15 @@ class UIMainWindow:
 
         # Add structures tab to left panel
         if patient_dict_container.has_modality("rtss"):
-            self.structures_tab = StructureTab()
-            self.structures_tab.request_update_structures.connect(self.update_views)
-            self.left_panel.addTab(self.structures_tab, "Structures")
+            # Only add structures if ROIs exist, or there are no ROIs
+            # but the rtss is marked as being modified
+            if len(patient_dict_container.get("rois")) > 0 or\
+                (len(patient_dict_container.get("rois")) == 0\
+                 and patient_dict_container.get("rtss_modified") is True):
+                self.structures_tab = StructureTab()
+                self.structures_tab.request_update_structures.connect(
+                    self.update_views)
+                self.left_panel.addTab(self.structures_tab, "Structures")
         elif hasattr(self, 'structures_tab'):
             del self.structures_tab
 
@@ -101,6 +107,13 @@ class UIMainWindow:
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
+
+            # Only connect the structure modified signal if there is
+            # an rtss and there are ROIs
+            if patient_dict_container.has_modality("rtss") and \
+                    len(patient_dict_container.get("rois")) > 0:
+                self.isodoses_tab.iso2roi.signal_roi_drawn.connect(
+                    self.structures_tab.structure_modified)
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
 

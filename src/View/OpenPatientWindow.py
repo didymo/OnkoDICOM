@@ -8,8 +8,9 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
-from src.View.ProgressWindow import ProgressWindow
+from src.View.OpenPatientProgressWindow import OpenPatientProgressWindow
 from src.View.resources_open_patient_rc import *
+from src.Model import ImageLoading
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -334,12 +335,11 @@ class UIOpenPatientWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window = OpenPatientProgressWindow(self)
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
 
         self.progress_window.start_loading(selected_files)
-        self.progress_window.exec_()
 
     def on_loaded(self, results):
         """
@@ -348,15 +348,15 @@ class UIOpenPatientWindow(object):
         if results[0] is True:  # Will be NoneType if loading was interrupted.
             self.patient_info_initialized.emit(results[1])  # Emits the progress window.
 
-    def on_loading_error(self, error_code):
+    def on_loading_error(self, exception):
         """
         Error handling for progress window.
         """
-        if error_code == 0:
+        if type(exception[1]) == ImageLoading.NotRTSetError:
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they are not a DICOM-RT set.")
             self.progress_window.close()
-        elif error_code == 1:
+        elif type(exception[1]) == ImageLoading.NotAllowedClassError:
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they contain unsupported DICOM classes.")
             self.progress_window.close()

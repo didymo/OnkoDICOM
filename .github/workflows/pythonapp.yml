@@ -30,7 +30,8 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev libxt-dev
+        sudo apt-get update
+        sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
         # install test data
         sudo apt-get install wget unzip
         wget -P ~ https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
