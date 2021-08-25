@@ -65,8 +65,9 @@ class ISO2ROIOptions(QtWidgets.QWidget):
                                                   "Remove Isodose"))
 
         # Add buttons to the layout
-        self.button_layout.addWidget(self.add_new_roi)
+
         self.button_layout.addWidget(self.delete_roi)
+        self.button_layout.addWidget(self.add_new_roi)
         self.main_layout.addLayout(self.button_layout)
 
         # Connect button clicked events to functions

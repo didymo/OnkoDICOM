@@ -124,15 +124,17 @@ class UIBatchProcessingWindow(object):
         self.refresh_button.setStyleSheet(self.stylesheet)
 
         # Back button
-        self.back_button = QtWidgets.QPushButton("Back")
-        self.back_button.setObjectName("SkipButton")
+        self.back_button = QtWidgets.QPushButton("Exit")
+        self.back_button.setObjectName("BatchExitButton")
         self.back_button.setStyleSheet(self.stylesheet)
+        self.back_button.setProperty("QPushButtonClass", "fail-button")
 
         # Confirm button
         self.confirm_button = QtWidgets.QPushButton("Confirm")
         self.confirm_button.setObjectName("ConfirmButton")
         self.confirm_button.setEnabled(False)
         self.confirm_button.setStyleSheet(self.stylesheet)
+        self.confirm_button.setProperty("QPushButtonClass", "success-button")
 
         # == Set layout
         # Create layouts
