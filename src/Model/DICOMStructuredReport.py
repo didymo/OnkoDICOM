@@ -24,7 +24,7 @@ def generate_dicom_sr(file_path, img_ds, data):
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 238
     file_meta.FileMetaInformationVersion = b'\x00\x01'
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.88.22'
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.88.33'
     file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
     file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     validate_file_meta(file_meta)
@@ -183,7 +183,7 @@ def generate_dicom_sr(file_path, img_ds, data):
     dicom_sr.ContentSequence = content_sequence
 
     # == SOP Common Module
-    dicom_sr.SOPClassUID = ''  # Ask
+    dicom_sr.SOPClassUID = '1.2.840.10008.5.1.4.1.1.88.33'
     dicom_sr.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
 
     dicom_sr.is_little_endian = True
