@@ -57,7 +57,7 @@ class ISO2ROI:
                 self.create_new_rtstruct(progress_callback)
 
         # Get isodose levels to turn into ROIs
-        isodose_levels = self.get_iso_levels()
+        isodose_levels = self.get_iso_levels('data/csv/isodoseRoi.csv')
 
         # Stop loading
         if interrupt_flag.is_set():
@@ -85,7 +85,7 @@ class ISO2ROI:
         self.generate_roi(boundaries, progress_callback)
         progress_callback.emit(("Reloading Window. Please Wait...", 95))
 
-    def get_iso_levels(self):
+    def get_iso_levels(self, path):
         """
         Opens /data/csv/isodoseRoi.csv to find the isodose levels that
         the user wants turned into ROIs. Creates a
@@ -96,7 +96,7 @@ class ISO2ROI:
         isodose_levels = {}
 
         # Open isodoseRoi.csv
-        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+        with open(path, "r") as fileInput:
             for row in fileInput:
                 items = row.split(',')
                 isodose_levels[items[2]] = [items[1] == 'cGy',

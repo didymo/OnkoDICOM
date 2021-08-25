@@ -170,7 +170,7 @@ class BatchProcessISO2ROI(BatchProcess):
                 iso2roi.create_new_rtstruct(self.progress_callback)
 
         # Get isodose levels to turn into ROIs
-        isodose_levels = iso2roi.get_iso_levels()
+        isodose_levels = iso2roi.get_iso_levels('data/csv/batch_isodoseRoi.csv')
 
         # Stop loading
         if self.interrupt_flag.is_set():
