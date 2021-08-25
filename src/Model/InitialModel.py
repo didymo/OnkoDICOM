@@ -138,3 +138,9 @@ def create_initial_model():
         dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
         patient_dict_container.set("dict_dicom_tree_rtplan",
                                    dicom_tree_rtplan.dict)
+
+    # Set SR attributes
+    if patient_dict_container.has_modality("sr-cd"):
+        dicom_tree_sr_clinical_data = DicomTree(filepaths['sr-cd'])
+        patient_dict_container.set("dict_dicom_tree_sr_cd",
+                                   dicom_tree_sr_clinical_data.dict)

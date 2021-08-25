@@ -395,7 +395,7 @@ def get_pixluts(dict_ds):
     :return: a dictionary of transformation matrices
     """
     dict_pixluts = {}
-    non_img_type = ["rtdose", "rtplan", "rtss"]
+    non_img_type = ["rtdose", "rtplan", "rtss", "sr-cd"]
     for ds in dict_ds:
         if ds not in non_img_type:
             img_ds = dict_ds[ds]
