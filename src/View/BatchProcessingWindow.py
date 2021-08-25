@@ -101,10 +101,11 @@ class UIBatchProcessingWindow(object):
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
+        self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
-        self.suv2roi_tab = QtWidgets.QLabel("yes")
+        self.suv2roi_tab = QtWidgets.QLabel("Coming soon")
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
@@ -124,15 +125,17 @@ class UIBatchProcessingWindow(object):
         self.refresh_button.setStyleSheet(self.stylesheet)
 
         # Back button
-        self.back_button = QtWidgets.QPushButton("Back")
-        self.back_button.setObjectName("SkipButton")
+        self.back_button = QtWidgets.QPushButton("Exit")
+        self.back_button.setObjectName("BatchExitButton")
         self.back_button.setStyleSheet(self.stylesheet)
+        self.back_button.setProperty("QPushButtonClass", "fail-button")
 
         # Confirm button
         self.confirm_button = QtWidgets.QPushButton("Confirm")
         self.confirm_button.setObjectName("ConfirmButton")
         self.confirm_button.setEnabled(False)
         self.confirm_button.setStyleSheet(self.stylesheet)
+        self.confirm_button.setProperty("QPushButtonClass", "success-button")
 
         # == Set layout
         # Create layouts
@@ -168,7 +171,7 @@ class UIBatchProcessingWindow(object):
         self.browse_button.clicked.connect(self.show_file_browser)
         self.confirm_button.clicked.connect(self.confirm_button_clicked)
         self.refresh_button.clicked.connect(self.scan_directory_for_patients)
-        self.back_button.clicked.connect(lambda: batch_window_instance.close())
+        self.back_button.clicked.connect(lambda: QtCore.QCoreApplication.exit(0))
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)
