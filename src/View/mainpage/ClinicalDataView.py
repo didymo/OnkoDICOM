@@ -1,6 +1,7 @@
 import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class ClinicalDataView(QtWidgets.QWidget):
@@ -43,11 +44,6 @@ class ClinicalDataView(QtWidgets.QWidget):
             QtCore.Qt.AlignLeft)
         self.table_cd.horizontalHeaderItem(1).setTextAlignment(
             QtCore.Qt.AlignLeft)
-        self.table_cd.horizontalHeader().resize
-        self.table_cd.horizontalHeader().setSectionResizeMode(
-            0, QtWidgets.QHeaderView.Fixed)
-        self.table_cd.horizontalHeader().setSectionResizeMode(
-            1, QtWidgets.QHeaderView.Fixed)
 
         # Remove ability to edit table
         self.table_cd.setEditTriggers(
@@ -56,6 +52,10 @@ class ClinicalDataView(QtWidgets.QWidget):
 
         # Populate table data
         self.populate_table()
+
+        # Resize table columns
+        self.table_cd.setColumnWidth(0, self.width() * 0.3)
+        self.table_cd.horizontalHeader().setStretchLastSection(True)
 
         # Add table to layout
         self.main_layout.addWidget(self.table_cd)
@@ -104,6 +104,31 @@ class ClinicalDataView(QtWidgets.QWidget):
         Populates the table with data from the DICOM-SR file, if it
         exists.
         """
+        # Attempt to get clinical data dataset
+        patient_dict_container = PatientDictContainer()
+        try:
+            clinical_data = patient_dict_container.dataset['sr-cd']
+        except KeyError:
+            print("No DICOM SR containing clinical data in dataset.")
+            return
+
+        # Get text from clinical data dataset
+        text = clinical_data.ContentSequence[0].TextValue
+
+        # Split text into dictionary
+        data_dict = {}
+        text_data = text.splitlines()
+        for row in text_data:
+            key, value = row.split(":")
+            data_dict[key] = value
+
+        for i, key in enumerate(data_dict):
+            attrib = QtWidgets.QTableWidgetItem(key)
+            value = QtWidgets.QTableWidgetItem(data_dict[key])
+            self.table_cd.insertRow(i)
+            self.table_cd.setItem(i, 0, attrib)
+            self.table_cd.setItem(i, 1, value)
+
         print("")
 
     def import_clinical_data(self):
