@@ -101,10 +101,11 @@ class UIBatchProcessingWindow(object):
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
+        self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
-        self.suv2roi_tab = QtWidgets.QLabel("yes")
+        self.suv2roi_tab = QtWidgets.QLabel("Coming soon")
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
