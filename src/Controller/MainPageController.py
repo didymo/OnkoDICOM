@@ -13,6 +13,7 @@ import src.constants as constant
 from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.PathHandler import resource_path
+from src.View.mainpage import ClinicalDataView
 
 matplotlib.cbook.handle_exceptions = "print"  # default
 matplotlib.cbook.handle_exceptions = "raise"
@@ -388,7 +389,7 @@ class MainPageCallClass:
 
     # This function displays the clinical data tab
     def display_clinical_data(self, tab_window):
-        self.tab_cd = QtWidgets.QWidget()
+        self.tab_cd = ClinicalDataView.ClinicalDataView()
         tab_window.addTab(self.tab_cd, "Clinical Data")
 
     # This function runs Transect on button click
