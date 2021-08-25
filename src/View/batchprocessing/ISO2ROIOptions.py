@@ -118,8 +118,8 @@ class ISO2ROIOptions(QtWidgets.QWidget):
         self.table_roi.customContextMenuRequested.connect(
             self.on_custom_context_menu_requested_roi)
 
-        # Populate the table with data from isodoseRoi.csv
-        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+        # Populate the table with data from batch_isodoseRoi.csv
+        with open('data/csv/batch_isodoseRoi.csv', "r") as fileInput:
             # Clear table to prevent displaying data multiple times
             self.table_roi.setRowCount(0)
 
@@ -223,7 +223,7 @@ class ISO2ROIOptions(QtWidgets.QWidget):
         Called when batch conversion process starts, to save any changes
         that may have been made to the table.
         """
-        with open('data/csv/isodoseRoi.csv', 'w', newline="") as stream:
+        with open('data/csv/batch_isodoseRoi.csv', 'w', newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_roi.rowCount()):
                 rowdata = []
