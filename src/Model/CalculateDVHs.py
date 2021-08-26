@@ -1,8 +1,13 @@
 import multiprocessing
 
+from dicompylercore.dvh import DVH
 import numpy as np
 import pandas as pd
 from dicompylercore import dvhcalc
+from pydicom.dataset import Dataset
+from pydicom.sequence import Sequence
+from pydicom.tag import Tag
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
 def get_roi_info(ds_rtss):
@@ -133,25 +138,21 @@ def converge_to_zero_dvh(dict_dvh):
     return res
 
 
-def dvh2csv(dict_dvh, path, csv_name, patient_id):
+def dvh2pandas(dict_dvh, patient_id):
     """
-    Export dvh data to csv file.
-
+    Convert dvh data to pandas Dataframe.
     :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
-    :param path: Target path of CSV export
-    :param csv_name: CSV file name
     :param patient_id: Patient Identifier
+    :return: pddf, dvh data converted to pandas Dataframe
     """
-    # full path of the target csv file
-    tar_path = path + csv_name + '.csv'
-    dvh_csv_list = []
-
     csv_header = []
     csv_header.append('Patient ID')
     csv_header.append('ROI')
     csv_header.append('Volume (mL)')
 
     max_roi_dose = 0
+
+    dvh_csv_list = []
 
     for i in dict_dvh:
         dvh_roi_list = []
@@ -176,9 +177,113 @@ def dvh2csv(dict_dvh, path, csv_name, patient_id):
         csv_header.append(str(i) + 'cGy')
 
     # Convert the list into pandas dataframe, with 2 digit rounding.
-    pddf_csv = pd.DataFrame(dvh_csv_list, columns=csv_header).round(2)
+    pddf = pd.DataFrame(dvh_csv_list, columns=csv_header).round(2)
     # Fill empty blocks with 0.0
-    pddf_csv.fillna(0.0, inplace=True)
-    pddf_csv.set_index('Patient ID', inplace=True)
+    pddf.fillna(0.0, inplace=True)
+    pddf.set_index('Patient ID', inplace=True)
+
+    # Return pandas dataframe
+    return pddf
+
+
+def dvh2csv(dict_dvh, path, csv_name, patient_id):
+    """
+    Export dvh data to csv file.
+    :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
+    :param path: Target path of CSV export
+    :param csv_name: CSV file name
+    :param patient_id: Patient Identifier
+    """
+    # Full path of the target csv file
+    tar_path = path + csv_name + '.csv'
+
+    # Convert dvh data to pandas dataframe
+    pddf_csv = dvh2pandas(dict_dvh, patient_id)
+
     # Convert and export pandas dataframe to CSV file
     pddf_csv.to_csv(tar_path)
+
+
+def dvh2rtdose(dict_dvh, patient_id):
+    """
+    Export dvh data to RT DOSE file.
+    :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
+    :param patient_id: Patient Identifier
+    """
+    # Convert dvh data to pandas dataframe
+    pddf_dicomsr = dvh2pandas(dict_dvh, patient_id)
+
+    # Convert and export pandas dataframe to numpy array
+    pddf_dicomsr.to_numpy()
+
+    # Get RT Dose
+    patient_dict_container = PatientDictContainer()
+    rt_dose = patient_dict_container.dataset['rtdose']
+    try:
+        dvh_sequence = rt_dose['DVHSequence']
+    except KeyError:
+        dvh_sequence = Sequence()
+    print(dvh_sequence)
+    dvh_sequence.value = []
+
+    for ds in dict_dvh:
+        # Create new DVH dataset
+        new_ds = Dataset()
+
+        # Add attributes
+        new_ds.add_new(Tag("DVHType"), "CS", dict_dvh[ds].dvh_type.upper())
+        new_ds.add_new(Tag("DoseUnits"), "CS", dict_dvh[ds].dose_units.upper())
+        new_ds.add_new(Tag("DoseType"), "CS", "PHYSICAL")
+        new_ds.add_new(Tag("DVHDoseScaling"), "DS", "1.0")
+        new_ds.add_new(Tag("DVHVolumeUnits"), "CS", dict_dvh[ds].volume_units.upper())
+        new_ds.add_new(Tag("DVHNumberOfBins"), "IS", len(dict_dvh[ds].bins))
+
+        # Calculate and add DVH data
+        dvh_data = []
+        for i in range(len(dict_dvh[ds].counts)):
+            dvh_data.append(str(dict_dvh[ds].bins[1]))
+            dvh_data.append(str(dict_dvh[ds].counts[i]))
+        new_ds.add_new(Tag("DVHData"), "DS", dvh_data)
+
+        # Reference ROI sequence dataset/sequence
+        referenced_roi_sequence = Dataset()
+        referenced_roi_sequence.add_new(Tag("DVHROIContributionType"), "CS", "INCLUDED")
+        referenced_roi_sequence.add_new(Tag("ReferencedROINumber"), "IS", ds)
+        new_ds.add_new(Tag("DVHReferencedROISequence"), "SQ", Sequence([referenced_roi_sequence]))
+
+        # Add new DVH dataset to DVH sequences
+        dvh_sequence.value.append(new_ds)
+
+    # Save new RT DOSE
+    rt_dose.DVHSequence = dvh_sequence
+    print(dvh_sequence)
+
+    patient_dict_container.dataset['rtdose'] = rt_dose
+    path = patient_dict_container.filepaths['rtdose']
+    rt_dose.save_as(path)
+
+    print("")
+
+def rtdose2dvh():
+    # Get RT Dose
+    patient_dict_container = PatientDictContainer()
+    rtss = patient_dict_container.get("dataset_rtss")
+    rt_dose = patient_dict_container.dataset['rtdose']
+    dvh_seq = {}
+    count = 0
+    for item in rtss["StructureSetROISequence"]:
+        count += 1
+    if len(rt_dose['DVHSequence'].value) != count:
+        # Size of ROI and DVH sequence is different.
+        # alert user, ask for recalculate.
+        print("Different number of ROI's and DVH's")
+
+    for item in rtss["StructureSetROISequence"]:
+        try:
+            name = item.ROIName
+            dvh = DVH.from_dicom_dvh(rt_dose, item.ROINumber, name=name)
+            dvh_seq[item.ROINumber] = dvh
+        except AttributeError as e:
+            print(e)
+
+    return dvh_seq
