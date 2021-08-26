@@ -198,7 +198,7 @@ class StructureTab(QtWidgets.QWidget):
         self.roi_draw_handler.show_roi_draw_options()
 
     def roi_manipulate_clicked(self):
-        self.roi_manipulate_handler.show_roi_manipulate_options()
+        self.roi_manipulate_handler.show_roi_manipulate_options(self.color_dict)
 
     def structure_modified(self, changes):
         """

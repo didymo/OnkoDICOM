@@ -514,11 +514,11 @@ class UIDrawROIWindow:
             id = self.dicom_view.slider.value()
 
             # Getting most updated selected slice
-            if (self.forward_pressed):
+            if self.forward_pressed:
                 id = self.current_slice
-            elif (self.backward_pressed):
+            elif self.backward_pressed:
                 id = self.current_slice
-            elif (self.slider_changed):
+            elif self.slider_changed:
                 id = self.dicom_view.slider.value()
 
             dt = self.patient_dict_container.dataset[id]
