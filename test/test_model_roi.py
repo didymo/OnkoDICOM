@@ -3,11 +3,91 @@ Created on Thu Dec  5 05:25:04 2019
 
 @author: sjswerdloff
 """
-
+import pytest
+import os
 import numpy as np
+from pathlib import Path
 from pydicom import dataset
+from pydicom import dcmread
+from pydicom.errors import InvalidDicomError
+
+from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import add_to_roi, calculate_matrix, create_roi
+from src.Model.ROI import add_to_roi, calculate_matrix, create_roi, roi_to_geometry, \
+    get_roi_contour_pixel, intersect_rois, geometry_to_roi
+
+
+def find_DICOM_files(file_path):
+    """
+    Function to find DICOM files in a given folder.
+    :param file_path: File path of folder to search.
+    :return: List of file paths of DICOM files in given folder.
+    """
+
+    dicom_files = []
+
+    # Walk through directory
+    for root, dirs, files in os.walk(file_path, topdown=True):
+        for name in files:
+            # Attempt to open file as a DICOM file
+            try:
+                dcmread(os.path.join(root, name))
+            except (InvalidDicomError, FileNotFoundError):
+                pass
+            else:
+                dicom_files.append(os.path.join(root, name))
+    return dicom_files
+
+
+class TestROI:
+    """
+    Class to set up the OnkoDICOM main window for testing
+    ROI functionality
+    """
+    __test__ = False
+
+    def __init__(self):
+        # Load test DICOM files
+        desired_path = Path.cwd().joinpath('test', 'testdata')
+
+        # list of DICOM test files
+        selected_files = find_DICOM_files(desired_path)
+        # file path of DICOM files
+        file_path = os.path.dirname(os.path.commonprefix(selected_files))
+        read_data_dict, file_names_dict = \
+            ImageLoading.get_datasets(selected_files)
+
+        # Create patient dict container object
+        self.patient_dict_container = PatientDictContainer()
+        self.patient_dict_container.clear()
+        self.patient_dict_container.set_initial_values \
+            (file_path, read_data_dict, file_names_dict)
+
+        # Set additional attributes in patient dict container
+        # (otherwise program will crash and test will fail)
+        if "rtss" in file_names_dict:
+            dataset_rtss = dcmread(file_names_dict['rtss'])
+            self.rois = ImageLoading.get_roi_info(dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = \
+                ImageLoading.get_raw_contour_data(dataset_rtss)
+            dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
+
+            self.patient_dict_container.set("rois", self.rois)
+            self.patient_dict_container.set("raw_contour",
+                                            dict_raw_contour_data)
+            self.patient_dict_container.set("num_points", dict_numpoints)
+            self.patient_dict_container.set("pixluts", dict_pixluts)
+
+            # Set location of rtss file
+            file_paths = self.patient_dict_container.filepaths
+            self.patient_dict_container.set("file_rtss", file_paths['rtss'])
+
+
+@pytest.fixture(scope="module")
+def test_object():
+    """Function to pass a shared TestIso2Roi object to each test."""
+    test = TestROI()
+    return test
 
 
 def test_calculate_matrix():
@@ -94,3 +174,32 @@ def test_create_roi():
     )
     assert (first_contour.ContourGeometricType == "CLOSED_PLANAR")
     assert (rt_ss.RTROIObservationsSequence[0].RTROIInterpretedType == "ORGAN")
+
+
+def test_roi_to_geometry(test_object):
+    roi_names = [roi['name'] for roi in test_object.patient_dict_container.get("rois").values()
+                 if 'ISO' not in roi['name']]
+    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
+                                               roi_names, test_object.patient_dict_container.get("pixluts"))
+    for roi_name in roi_names:
+        roi_geometry = roi_to_geometry(dict_rois_contours[roi_name])
+        for slice_id, geometry in roi_geometry.items():
+            if geometry.geom_type == "Polygon":
+                assert len(geometry.exterior.coords) - len(dict_rois_contours[roi_name][slice_id][0]) <= 1
+            else:
+                for i in range(len(geometry)):
+                    assert len(geometry[i].exterior.coords) - len(dict_rois_contours[roi_name][slice_id][i]) <= 1
+
+
+def test_roi_intersection(test_object):
+    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
+                                               ['LUNG_R', 'LUNGS', 'LUNG_L'],
+                                               test_object.patient_dict_container.get("pixluts"))
+    lungs_geometry = roi_to_geometry(dict_rois_contours['LUNGS'])
+    lung_r_geometry = roi_to_geometry(dict_rois_contours['LUNG_R'])
+    lung_l_geometry = roi_to_geometry(dict_rois_contours['LUNG_L'])
+    uid_list = ImageLoading.get_image_uid_list(test_object.patient_dict_container.dataset)
+    result_geometry = intersect_rois(lungs_geometry, lung_r_geometry, uid_list)
+    empty_geometry = intersect_rois(result_geometry, lung_l_geometry, uid_list)
+    empty_rois_contours = geometry_to_roi(empty_geometry)
+    assert not empty_rois_contours

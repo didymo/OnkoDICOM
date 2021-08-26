@@ -9,6 +9,9 @@ from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
+from shapely.geometry import Polygon, MultiPolygon
+from shapely.errors import TopologicalError
+
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -789,3 +792,82 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     rt_ss.is_little_endian = True
     rt_ss.is_implicit_VR = True
     return rt_ss
+
+
+def roi_to_geometry(dict_rois_contours):
+    """
+    Convert ROI contour data in each image slice to a geometry object
+    :param dict_rois_contours: A dictionary with key-value pair {slice-id: contour sequence}
+    :return: A dictionary with key-value pair {slice-id: Polygon/Multipolygon Object}
+    """
+    roi_contour_sequence_geometry = {}
+
+    for slice_id, contour_sequence in dict_rois_contours.items():
+        multi = bool(len(contour_sequence) - 1)
+
+        # Generate geometry. Handling exceptions for invalid contour data, multiple polygons
+        if not multi:
+            contour_data = contour_sequence[0]
+            try:
+                polygon = Polygon(contour_data)
+                roi_contour_sequence_geometry[slice_id] = polygon
+            except (TopologicalError, ValueError):
+                polygon = Polygon()
+                roi_contour_sequence_geometry[slice_id] = polygon
+        else:
+            polygon_list = []
+            for contour_data in contour_sequence:
+                try:
+                    sub_polygon = Polygon(contour_data)
+                    polygon_list.append(sub_polygon)
+                except (TopologicalError, ValueError):
+                    sub_polygon = Polygon()
+                    polygon_list.append(sub_polygon)
+            polygon = MultiPolygon(polygon_list)
+            roi_contour_sequence_geometry[slice_id] = polygon
+    return roi_contour_sequence_geometry
+
+
+def intersect_rois(first_sequence_geometry, second_sequence_geometry, image_uids):
+    """
+    Compute the intersection of two ROIs
+    :param first_sequence_geometry: The geometry dictionary of the first ROI
+    :param second_sequence_geometry: The geometry dictionary of the second ROI
+    :param image_uids: The list of all image uids
+    :return: A dictionary with key-value pair {slice-id: Polygon/Multipolygon Object}
+    """
+    result_geometry_dict = {}
+    for slice_id in image_uids:
+        first_geometry = first_sequence_geometry.get(slice_id)
+        second_geometry = second_sequence_geometry.get(slice_id)
+        if first_geometry and second_geometry:
+            if first_geometry.is_valid and second_geometry.is_valid:
+                result_geometry = first_geometry.intersection(second_geometry)
+                result_geometry_dict[slice_id] = result_geometry
+    return result_geometry_dict
+
+
+def geometry_to_roi(roi_sequence_geometry):
+    """
+    Convert the geometry object in each image slice to ROI contour data
+    :param roi_sequence_geometry: A geometry dictionary
+    :return: A dictionary with key-value pair {slice-id: contour sequence}
+    """
+    roi_contour_sequence = {}
+    for slice_id, geometry in roi_sequence_geometry.items():
+        contour_sequence = []
+        geometry_type = geometry.geom_type
+        if not geometry.is_empty:
+            if geometry_type == "Polygon":
+                contour_data = []
+                for coord in geometry.exterior.coords:
+                    contour_data.append(list(map(int, coord)))
+                contour_sequence.append(contour_data)
+            elif geometry_type == "MultiPolygon":
+                for polygon in geometry:
+                    contour_data = []
+                    for coord in polygon.exterior.coords:
+                        contour_data.append(list(map(int, coord)))
+                    contour_sequence.append(contour_data)
+            roi_contour_sequence[slice_id] = contour_sequence
+    return roi_contour_sequence
