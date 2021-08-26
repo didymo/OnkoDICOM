@@ -63,7 +63,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
             if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
-                print(self.draw_roi_window_instance.bounds_box_draw)
                 self.min_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().x())
                 self.min_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().y())
                 self.max_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().width() + self.min_x)

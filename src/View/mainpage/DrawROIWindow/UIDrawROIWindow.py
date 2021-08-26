@@ -424,6 +424,9 @@ class UIDrawROIWindow:
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
     def slider_value_changed(self):
+        image_slice_number = self.current_slice
+        # save progress
+        self.save_drawing_progress(image_slice_number)
         self.set_current_slice(self.dicom_view.slider.value())
 
     def set_current_slice(self, slice_number):
@@ -746,13 +749,13 @@ class UIDrawROIWindow:
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
 
-    def on_radius_reduce_clicked(self):
+    def onRadiusReduceClicked(self):
         self.drawing_tool_radius = max(self.drawing_tool_radius - 1, 4)
         self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
         self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
         self.draw_cursor_when_radius_changed()
 
-    def on_radius_increase_clicked(self):
+    def onRadiusIncreaseClicked(self):
         self.drawing_tool_radius = min(self.drawing_tool_radius + 1, 25)
         self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
         self.draw_cursor_when_radius_changed()
@@ -796,7 +799,7 @@ class UIDrawROIWindow:
         icon_zoom_in = QtGui.QIcon()
         icon_zoom_in.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/zoom_in_icon.png')))
         self.draw_roi_window_cursor_radius_change_increase_button.setIcon(icon_zoom_in)
-        self.draw_roi_window_cursor_radius_change_increase_button.clicked.connect(self.on_radius_increase_clicked)
+        self.draw_roi_window_cursor_radius_change_increase_button.clicked.connect(self.onRadiusIncreaseClicked)
         # Reduce Button
         self.draw_roi_window_cursor_radius_change_reduce_button = QPushButton()
         self.draw_roi_window_cursor_radius_change_reduce_button.setObjectName("DrawRoiWindowCursorRadiusReduceButton")
@@ -807,7 +810,7 @@ class UIDrawROIWindow:
         icon_zoom_out = QtGui.QIcon()
         icon_zoom_out.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/zoom_out_icon.png')))
         self.draw_roi_window_cursor_radius_change_reduce_button.setIcon(icon_zoom_out)
-        self.draw_roi_window_cursor_radius_change_reduce_button.clicked.connect(self.on_radius_reduce_clicked)
+        self.draw_roi_window_cursor_radius_change_reduce_button.clicked.connect(self.onRadiusReduceClicked)
         self.draw_roi_window_cursor_radius_change_box.addWidget(self.draw_roi_window_cursor_radius_change_label)
         self.draw_roi_window_cursor_radius_change_box.addWidget(self.draw_roi_window_cursor_radius_change_input)
         self.draw_roi_window_cursor_radius_change_box.addWidget(self.draw_roi_window_cursor_radius_change_reduce_button)
