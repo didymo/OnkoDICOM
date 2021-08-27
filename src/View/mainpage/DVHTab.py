@@ -87,7 +87,6 @@ class DVHTab(QtWidgets.QWidget):
         """
         :return: DVH plot using Matplotlib library.
         """
-
         # Initialisation of the plots
         fig, ax = plt.subplots()
         fig.subplots_adjust(0.1, 0.15, 1, 1)
@@ -168,7 +167,10 @@ class DVHTab(QtWidgets.QWidget):
                 progress_window = CalculateDVHProgressWindow(self,
                                                              QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
                 progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
+                self.patient_dict_container.set("dvh_outdated", False)
                 progress_window.exec_()
+
+                self.export_rtdose()
         else:
             stylesheet_path = ""
 
@@ -182,9 +184,7 @@ class DVHTab(QtWidgets.QWidget):
             mb = QtWidgets.QMessageBox()
             mb.setIcon(QtWidgets.QMessageBox.Question)
             mb.setWindowTitle("Calculate DVHs?")
-            mb.setText("RTSTRUCT and RTDOSE datasets identified. Would you "
-                       "like to calculate DVHs? (This may take up to several "
-                       "minutes on some systems.)")
+            mb.setText("Would you like to (re)calculate DVHs?")
             button_no = QtWidgets.QPushButton("No")
             button_yes = QtWidgets.QPushButton("Yes")
 
@@ -206,6 +206,7 @@ class DVHTab(QtWidgets.QWidget):
                 progress_window = CalculateDVHProgressWindow(self,
                                                              QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
                 progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
+                self.patient_dict_container.set("dvh_outdated", False)
                 progress_window.exec_()
 
                 self.export_rtdose()

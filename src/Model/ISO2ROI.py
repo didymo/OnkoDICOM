@@ -253,6 +253,7 @@ class ISO2ROI:
         rtss_directory = Path(patient_dict_container.get("file_rtss"))
         patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
         patient_dict_container.set("rtss_modified", False)
+        patient_dict_container.set("dvh_outdated", True)
 
         # Allow the program to continue running
         self.advised_save_rtss = True
