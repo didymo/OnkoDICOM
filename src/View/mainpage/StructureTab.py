@@ -193,7 +193,7 @@ class StructureTab(QtWidgets.QWidget):
         {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
         {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
         Note: Use {"draw": None} after multiple ROIs are generated (E.g., from ISO2ROI functionality) instead of
-        calling this function multiple times.
+        calling this function multiple times. This will trigger auto save.
         """
 
         new_dataset = changes[0]
@@ -236,7 +236,7 @@ class StructureTab(QtWidgets.QWidget):
 
         if self.patient_dict_container.has_modality("raw_dvh"):
             # Rename structures in DVH list
-            if "rename" in changes[1]:
+            if "rename" in change_description:
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
                 for key, dvh in new_raw_dvh.items():
                     if dvh.name == change_description["rename"][0]:
@@ -246,7 +246,7 @@ class StructureTab(QtWidgets.QWidget):
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
 
             # Remove structures from DVH list - the only visible effect of this section is the exported DVH csv
-            if "delete" in changes[1]:
+            if "delete" in change_description:
                 list_of_deleted = []
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
                 for key, dvh in new_raw_dvh.items():
@@ -261,6 +261,9 @@ class StructureTab(QtWidgets.QWidget):
 
         # Refresh structure tab
         self.update_content()
+
+        if "draw" in change_description and change_description["draw"] is None:
+            self.save_new_rtss(auto=True)
 
     def show_modified_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
@@ -348,10 +351,11 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_coronal.pop(roi_name, None)
             new_dict_polygons_sagittal.pop(roi_name, None)
 
-    def save_new_rtss(self, event=None):
+    def save_new_rtss(self, event=None, auto=False):
         """
         Save the current RTSS stored in patient dictionary to the file system.
         :param event: Not used but will be passed as an argument from modified_indicator_widget on mouseReleaseEvent
+        :param auto: Used for auto save without user confirmation
         """
         if self.patient_dict_container.get("existing_file_rtss") is not None:
             existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
@@ -359,11 +363,14 @@ class StructureTab(QtWidgets.QWidget):
             existing_rtss_directory = None
         rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
 
-        confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                         "Are you sure you want to save the modified RTSTRUCT file? "
-                                                         "This will overwrite the existing file. "
-                                                         "This is not reversible.",
-                                                         QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if auto:
+            confirm_save = QtWidgets.QMessageBox.Yes
+        else:
+            confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                             "Are you sure you want to save the modified RTSTRUCT "
+                                                             "file? This will overwrite the existing file. "
+                                                             "This is not reversible.",
+                                                             QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             if existing_rtss_directory is None:
@@ -382,7 +389,8 @@ class StructureTab(QtWidgets.QWidget):
                 merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
                 merged_rtss.save_as(existing_rtss_directory)
 
-            QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
+            if not auto:
+                QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
             self.patient_dict_container.set("rtss_modified", False)
             self.modified_indicator_widget.setParent(None)
 
