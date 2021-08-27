@@ -260,14 +260,21 @@ def rtdose2dvh():
     rt_dose = patient_dict_container.dataset['rtdose']
     dvh_seq = {"diff": False}
 
-    # Count how mant ROIs there are
-    count = len(rtss['StructureSetROISequence'].value)
+    # Get ROI numbers
+    rois = []
+    for roi in rtss['StructureSetROISequence']:
+        rois.append(roi.ROINumber)
+
+    # Get DVH referenced ROI numbers
+    dvhs = []
+    for dvh in rt_dose['DVHSequence']:
+        dvhs.append(dvh.DVHReferencedROISequence[0].ReferencedROINumber)
 
     # If there are a different amount of ROIs to DVH sequences
-    if len(rt_dose['DVHSequence'].value) != count:
+    if rois.sort() != dvhs.sort():
         # Size of ROI and DVH sequence is different.
         # alert user, ask for recalculate.
-        print("Different number of ROI's and DVH's")
+        print("Different number of ROIs and DVHs")
         dvh_seq["diff"] = True
 
     # Try to get the DVHs for each ROI
