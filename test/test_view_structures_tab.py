@@ -1,11 +1,13 @@
 import os
+
+import pydicom
 import pytest
 from pathlib import Path
 from PySide6 import QtWidgets, QtCore
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import get_contour_pixel, calc_roi_polygon, create_initial_rtss_from_ct, create_roi
+from src.Model.ROI import get_contour_pixel, calc_roi_polygon, create_initial_rtss_from_ct, create_roi, merge_rtss
 from src.Model import ImageLoading
 from src.View.mainpage.StructureTab import StructureTab
 
@@ -161,7 +163,6 @@ def test_merge_rtss(qtbot, test_object):
     :param test_object: test_object function, for accessing the shared TestStructureTab object.
     """
     patient_dict_container = PatientDictContainer()
-    old_rtss = test_object.dataset_rtss
 
     # Create a new rtss
     dataset = patient_dict_container.dataset[0]
@@ -186,8 +187,13 @@ def test_merge_rtss(qtbot, test_object):
     rois = ImageLoading.get_roi_info(new_rtss)
     patient_dict_container.set("rois", rois)
 
+    patient_dict_container.set("existing_file_rtss", patient_dict_container.get("file_rtss"))
+    patient_dict_container.set("dataset_rtss", new_rtss)
+    patient_dict_container.set("file_rtss", rtss_path)
+
     # Merge the old and new rtss
     structure_tab = StructureTab()
+    structure_tab.show_modified_indicator()
     qtbot.addWidget(structure_tab)
 
     def test_message_window():
@@ -198,7 +204,8 @@ def test_merge_rtss(qtbot, test_object):
 
     QtCore.QTimer.singleShot(1000, test_message_window)
 
-    merged_rtss = structure_tab.merge_rtss(new_rtss, old_rtss)
+    structure_tab.save_new_rtss(auto=True)
 
+    merged_rtss = pydicom.read_file(patient_dict_container.get("existing_file_rtss"))
     merged_rois = ImageLoading.get_roi_info(merged_rtss)
     assert (len(test_object.rois) + 1 == len(merged_rois))
