@@ -210,16 +210,10 @@ def dvh2rtdose(dict_dvh):
     :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
     :param patient_id: Patient Identifier
     """
-    # Get RT Dose
-    patient_dict_container = PatientDictContainer()
-    rt_dose = patient_dict_container.dataset['rtdose']
-    try:
-        dvh_sequence = rt_dose['DVHSequence']
-    except KeyError:
-        dvh_sequence = Sequence()
-    print(dvh_sequence)
-    dvh_sequence.value = []
+    # Create DVH sequence
+    dvh_sequence = Sequence([])
 
+    # Add DVHs to the sequence
     for ds in dict_dvh:
         # Create new DVH dataset
         new_ds = Dataset()
@@ -246,17 +240,14 @@ def dvh2rtdose(dict_dvh):
         new_ds.add_new(Tag("DVHReferencedROISequence"), "SQ", Sequence([referenced_roi_sequence]))
 
         # Add new DVH dataset to DVH sequences
-        dvh_sequence.value.append(new_ds)
+        dvh_sequence.append(new_ds)
 
     # Save new RT DOSE
-    rt_dose.DVHSequence = dvh_sequence
-    print(dvh_sequence)
+    patient_dict_container = PatientDictContainer()
+    patient_dict_container.dataset['rtdose'].DVHSequence = dvh_sequence
 
-    patient_dict_container.dataset['rtdose'] = rt_dose
     path = patient_dict_container.filepaths['rtdose']
-    rt_dose.save_as(path)
-
-    print("")
+    patient_dict_container.dataset['rtdose'].save_as(path)
 
 
 def rtdose2dvh():

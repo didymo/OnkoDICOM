@@ -88,9 +88,12 @@ class ImageLoader(QtCore.QObject):
                 # Check to see if DVH data exists in the RT Dose. If
                 # it is there, return (it will be populated later). If
                 # not, ask if the user wants it calculated.
-                dvh_data = rtdose2dvh()
-                if bool(dvh_data) and not dvh_data["diff"]:
-                    return True
+                try:
+                    dvh_data = rtdose2dvh()
+                    if bool(dvh_data) and not dvh_data["diff"]:
+                        return True
+                except KeyError:
+                    pass
 
                 self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
                 self.signal_request_calc_dvh.emit()
