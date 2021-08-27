@@ -326,15 +326,22 @@ class UIOpenPatientWindow(object):
             self.open_patient_window_confirm_button.setDisabled(True)
 
         # If RTSTRUCT exists but not selected, save existing RTSTRUCT file path
-        self.existing_rtss_path = None
+        self.existing_rtss_path = self.get_existing_rtss_path(selected_series_types)
+
+        # Set the tree header
+        self.open_patient_window_patients_tree.setHeaderLabel(header)
+
+    def get_existing_rtss_path(self, selected_series_types):
+        """
+        Find and return the path of an existing RTSTRUCT file.
+        Return None if not found.
+        """
         if 'RTSTRUCT' not in selected_series_types and len(selected_series_types) > 0:
             selected_study = self.get_checked_leaves()[0].parent()
             for i in range(0, selected_study.childCount()):
                 if selected_study.child(i).dicom_object.get_series_type() == 'RTSTRUCT':
-                    self.existing_rtss_path = selected_study.child(i).dicom_object.get_files()[0]
-
-        # Set the tree header
-        self.open_patient_window_patients_tree.setHeaderLabel(header)
+                    return selected_study.child(i).dicom_object.get_files()[0]
+        return None
 
     def confirm_button_clicked(self):
         """
