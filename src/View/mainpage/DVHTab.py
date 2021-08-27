@@ -32,17 +32,17 @@ class DVHTab(QtWidgets.QWidget):
         self.dvh_tab_layout = QtWidgets.QVBoxLayout()
 
         try:
-            # Import the DVH from rt_dose
+            # Import the DVH from RT Dose
             self.import_rtdose()
         except (AttributeError, KeyError):
-            # Construct the layout based on whether or not the DVH has already been calculated.
-            print("AttributeError")
+            # Construct the layout based on whether or not the DVH has
+            # already been calculated.
+            print("DVH data not in RT Dose.")
             if self.dvh_calculated:
                 self.init_layout_dvh()
             else:
                 self.init_layout_no_dvh()
 
-        # Add alert for if rois count != DVH seq length
         self.setLayout(self.dvh_tab_layout)
 
     def init_layout_dvh(self):
@@ -63,10 +63,6 @@ class DVHTab(QtWidgets.QWidget):
         button_calc_dvh.clicked.connect(self.prompt_calc_dvh)
         button_layout.addWidget(button_calc_dvh)
 
-        # button_dvh2rtdose = QtWidgets.QPushButton("Export DVH to RT DOSE")
-        # button_dvh2rtdose.clicked.connect(self.export_rtdose)
-        # button_layout.addWidget(button_dvh2rtdose)
-
         self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
         self.dvh_tab_layout.addLayout(button_layout)
@@ -86,7 +82,6 @@ class DVHTab(QtWidgets.QWidget):
             else:
                 for j in reversed(range(item.count())):
                     item.itemAt(j).widget().setParent(None)
-            #self.dvh_tab_layout.itemAt(i).widget().setParent(None)
 
     def plot_dvh(self):
         """
@@ -215,7 +210,7 @@ class DVHTab(QtWidgets.QWidget):
                 progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
                 progress_window.exec_()
 
-            self.export_rtdose()  # TODO Automatically export calculated DVH to rt_dose
+                self.export_rtdose()
 
     def dvh_calculation_finished(self):
         # Clear the screen
@@ -256,26 +251,28 @@ class DVHTab(QtWidgets.QWidget):
         """
         Exports DVH data into a DICOM-SR file in the dataset directory.
         """
-        path = self.patient_dict_container.path
-        basic_info = self.patient_dict_container.get("basic_info")
-        dvh2rtdose(self.raw_dvh,
-                    basic_info['id'])
+        dvh2rtdose(self.raw_dvh)
         QtWidgets.QMessageBox.information(self, "Message",
                                           "The DVH Data was saved successfully in your directory!",
                                           QtWidgets.QMessageBox.Ok)
 
     def import_rtdose(self):
         """
-        Import DVH data from rtdose
+        Import DVH data from an RT Dose.
         """
+        # Get DVH data
         result = rtdose2dvh()
-        print("Importing DVH from rtdose.")
-        if bool(result):
+        print("Importing DVH from RT Dose.")
+
+        # If there is DVH data
+        if bool(result) and not result["diff"]:
+            result.pop("diff")
             dvh_x_y = ImageLoading.converge_to_0_dvh(result)
             self.patient_dict_container.set("raw_dvh", result)
             self.patient_dict_container.set("dvh_x_y", dvh_x_y)
             self.dvh_calculation_finished()
         else:
+            result.pop("diff")
             self.init_layout_no_dvh()
 
     def display_outdated_indicator(self):

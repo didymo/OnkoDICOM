@@ -204,18 +204,12 @@ def dvh2csv(dict_dvh, path, csv_name, patient_id):
     pddf_csv.to_csv(tar_path)
 
 
-def dvh2rtdose(dict_dvh, patient_id):
+def dvh2rtdose(dict_dvh):
     """
     Export dvh data to RT DOSE file.
     :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
     :param patient_id: Patient Identifier
     """
-    # Convert dvh data to pandas dataframe
-    pddf_dicomsr = dvh2pandas(dict_dvh, patient_id)
-
-    # Convert and export pandas dataframe to numpy array
-    pddf_dicomsr.to_numpy()
-
     # Get RT Dose
     patient_dict_container = PatientDictContainer()
     rt_dose = patient_dict_container.dataset['rtdose']
@@ -264,20 +258,28 @@ def dvh2rtdose(dict_dvh, patient_id):
 
     print("")
 
+
 def rtdose2dvh():
+    """
+    Gets DVH data from an RT Dose file.
+    """
     # Get RT Dose
     patient_dict_container = PatientDictContainer()
-    rtss = patient_dict_container.get("dataset_rtss")
+    rtss = patient_dict_container.dataset['rtss']
     rt_dose = patient_dict_container.dataset['rtdose']
-    dvh_seq = {}
-    count = 0
-    for item in rtss["StructureSetROISequence"]:
-        count += 1
+    dvh_seq = {"diff": False}
+
+    # Count how mant ROIs there are
+    count = len(rtss['StructureSetROISequence'].value)
+
+    # If there are a different amount of ROIs to DVH sequences
     if len(rt_dose['DVHSequence'].value) != count:
         # Size of ROI and DVH sequence is different.
         # alert user, ask for recalculate.
         print("Different number of ROI's and DVH's")
+        dvh_seq["diff"] = True
 
+    # Try to get the DVHs for each ROI
     for item in rtss["StructureSetROISequence"]:
         try:
             name = item.ROIName
