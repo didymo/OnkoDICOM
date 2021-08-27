@@ -264,14 +264,16 @@ def rtdose2dvh():
     rois = []
     for roi in rtss['StructureSetROISequence']:
         rois.append(roi.ROINumber)
+    rois.sort()
 
     # Get DVH referenced ROI numbers
     dvhs = []
     for dvh in rt_dose['DVHSequence']:
         dvhs.append(dvh.DVHReferencedROISequence[0].ReferencedROINumber)
+    dvhs.sort()
 
     # If there are a different amount of ROIs to DVH sequences
-    if rois.sort() != dvhs.sort():
+    if rois != dvhs:
         # Size of ROI and DVH sequence is different.
         # alert user, ask for recalculate.
         print("Different number of ROIs and DVHs")
