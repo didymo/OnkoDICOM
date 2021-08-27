@@ -161,9 +161,7 @@ class DVHTab(QtWidgets.QWidget):
         """
         if platform.system() == "Linux":
             choice = QtWidgets.QMessageBox.question(self, "Calculate DVHs?",
-                                                    "RTSTRUCT and RTDOSE datasets identified. Would you "
-                                                    "like to calculate DVHs? (This may take up to "
-                                                    "several minutes on some systems.)",
+                                                    "Would you like to (re)calculate DVHs?",
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 
             if choice == QtWidgets.QMessageBox.Yes:
@@ -265,11 +263,19 @@ class DVHTab(QtWidgets.QWidget):
         print("Importing DVH from RT Dose.")
 
         # If there is DVH data
-        if bool(result) and not result["diff"]:
+        if bool(result):
+            incomplete = result["diff"]
             result.pop("diff")
             dvh_x_y = ImageLoading.converge_to_0_dvh(result)
             self.patient_dict_container.set("raw_dvh", result)
             self.patient_dict_container.set("dvh_x_y", dvh_x_y)
+
+            # If incomplete, tell the user about this
+            if incomplete:
+                self.patient_dict_container.set("dvh_outdated", True)
+                self.display_outdated_indicator()
+
+            # Initialise the display
             self.dvh_calculation_finished()
         else:
             result.pop("diff")
