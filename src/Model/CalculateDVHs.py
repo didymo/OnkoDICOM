@@ -1,6 +1,6 @@
 import multiprocessing
 
-import dicompylercore.dvh
+from dicompylercore.dvh import DVH
 import numpy as np
 import pandas as pd
 from dicompylercore import dvhcalc
@@ -219,7 +219,11 @@ def dvh2rtdose(dict_dvh, patient_id):
     # Get RT Dose
     patient_dict_container = PatientDictContainer()
     rt_dose = patient_dict_container.dataset['rtdose']
-    dvh_sequence = rt_dose['DVHSequence']
+    try:
+        dvh_sequence = rt_dose['DVHSequence']
+    except KeyError:
+        dvh_sequence = Sequence()
+    print(dvh_sequence)
     dvh_sequence.value = []
 
     for ds in dict_dvh:
@@ -251,10 +255,35 @@ def dvh2rtdose(dict_dvh, patient_id):
         dvh_sequence.value.append(new_ds)
 
     # Save new RT DOSE
-    rt_dose['DVHSequence'] = dvh_sequence
+    rt_dose.DVHSequence = dvh_sequence
+    print(dvh_sequence)
 
+    patient_dict_container.dataset['rtdose'] = rt_dose
     path = patient_dict_container.filepaths['rtdose']
     rt_dose.save_as(path)
 
     print("")
 
+def rtdose2dvh():
+    # Get RT Dose
+    patient_dict_container = PatientDictContainer()
+    rtss = patient_dict_container.get("dataset_rtss")
+    rt_dose = patient_dict_container.dataset['rtdose']
+    dvh_seq = {}
+    count = 0
+    for item in rtss["StructureSetROISequence"]:
+        count += 1
+    if len(rt_dose['DVHSequence'].value) != count:
+        # Size of ROI and DVH sequence is different.
+        # alert user, ask for recalculate.
+        print("Different number of ROI's and DVH's")
+
+    for item in rtss["StructureSetROISequence"]:
+        try:
+            name = item.ROIName
+            dvh = DVH.from_dicom_dvh(rt_dose, item.ROINumber, name=name)
+            dvh_seq[item.ROINumber] = dvh
+        except AttributeError as e:
+            print(e)
+
+    return dvh_seq
