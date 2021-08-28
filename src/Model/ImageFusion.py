@@ -19,6 +19,11 @@ def create_fused_model(old_images, new_image):
     
     #fuse images
     fused_image = register_images(old_images, new_image)
+
+    print("Fused_Image Object")
+    print(type(fused_image[1]))
+    print(fused_image[1])
+
     print("fuseTest01")
     
     array = sitk.GetArrayFromImage(old_images).shape
@@ -26,9 +31,6 @@ def create_fused_model(old_images, new_image):
     axial_slice_count = array[0]
     coronal_slice_count = array[1]
     sagittal_slice_count = array[1]
-    
-    
-                  
     
     #create colored images
     sp_plane, _, sp_slice = old_images.GetSpacing()
@@ -41,16 +43,16 @@ def create_fused_model(old_images, new_image):
     
     print("fuseTest1")
     for i in range(axial_slice_count): 
-         color_axial[i] = get_fused_pixmap(old_images, fused_image, asp, i, "axial")
+         color_axial[i] = get_fused_pixmap(old_images, fused_image[0], asp, i, "axial")
     
     
     print("fuseTest2")
     for i in range(sagittal_slice_count): 
-        color_sagittal[i] = get_fused_pixmap(old_images, fused_image, asp, i, "sagittal")    
+        color_sagittal[i] = get_fused_pixmap(old_images, fused_image[0], asp, i, "sagittal")    
     
     print("fuseTest3")
     for i in range(coronal_slice_count): 
-        color_coronal[i] = get_fused_pixmap(old_images, fused_image, asp, i, "coronal")   
+        color_coronal[i] = get_fused_pixmap(old_images, fused_image[0], asp, i, "coronal")   
     
     
     
@@ -69,8 +71,40 @@ def register_images(image_1, image_2):
             reg_method='rigid',
             verbose = False
         )
-    return img_ct
+    return img_ct,tfm
 
+def write_transform_to_dcm(transform_object):
+
+    patient_dict_container = PatientDictContainer()
+
+    patient_path = patient_dict_container.path
+
+    now = datetime.datetime.now()
+    dicom_date = now.strftime("%Y%m%d")
+    dicom_time = now.strftime("%H%M")
+
+    top_level_tags_to_copy: list = [Tag("PatientName"),
+                                    Tag("PatientID"),
+                                    Tag("PatientBirthDate"),
+                                    Tag("PatientSex"),
+                                    Tag("StudyDate"),
+                                    Tag("StudyTime"),
+                                    Tag("ReferringPhysicianName"),
+                                    Tag("StudyDescription"),
+                                    Tag("StudyInstanceUID"),
+                                    Tag("StudyID"),
+                                    Tag("RequestingService"),
+                                    Tag("PatientAge"),
+                                    Tag("PatientSize"),
+                                    Tag("PatientWeight"),
+                                    Tag("MedicalAlerts"),
+                                    Tag("Allergies"),
+                                    Tag("PregnancyStatus"),
+                                    Tag("FrameOfReferenceUID"),
+                                    Tag("PositionReferenceIndicator"),
+                                    Tag("InstitutionName"),
+                                    Tag("InstitutionAddress")
+                                    ]
 
 
 
