@@ -1,4 +1,6 @@
 from shutil import which
+from pathlib import Path
+import os
 
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
@@ -207,9 +209,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         print('GUIController calling for Image Fusion - emit signals')
         patient_dict_container = PatientDictContainer()
         filepath = patient_dict_container.path
-        self.image_fusion_signal.emit(filepath)
-
-
+        self.image_fusion_signal.emit(os.path.dirname(filepath))
 
     def pyradiomics_handler(self, path, filepaths, hashed_path):
         """

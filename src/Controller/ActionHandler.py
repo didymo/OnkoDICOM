@@ -20,6 +20,7 @@ class ActionHandler:
     def __init__(self, main_page):
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
+        self.moving_dict_container = MovingDictContainer()
         self.is_four_view = False
 
         ##############################
@@ -305,6 +306,15 @@ class ActionHandler:
         self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
+
+        if hasattr(self, 'image_fusion_view'):
+            fusion_values = self.moving_dict_container.get("pixel_values")
+            fusion_aspect = self.moving_dict_container.get("pixmap_aspect")
+            fusion_axial, fusion_coronal, fusion_sagittal = get_pixmaps(fusion_values, window, level, fusion_aspect)
+            self.moving_dict_container.set("pixmaps_axial", fusion_axial)
+            self.moving_dict_container.set("pixmaps_coronal", fusion_coronal)
+            self.moving_dict_container.set("pixmaps_sagittal", fusion_sagittal)
+
 
         self.__main_page.update_views()
 

@@ -236,10 +236,11 @@ class UIMainWindow:
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
         
-        self.image_fusion_view_single_view.update_view(color=True)
-        self.image_fusion_view_view_axial.update_view(color=True)
-        self.image_fusion_view_view_coronal.update_view(color=True)
-        self.image_fusion_view_view_sagittal.update_view(color=True)     
+        # self.image_fusion_view_single_view.update_view(color=True)
+        if hasattr(self, 'image_fusion_view'):
+            self.image_fusion_view_axial.update_view(color=True)
+            self.image_fusion_view_coronal.update_view(color=True)
+            self.image_fusion_view_sagittal.update_view(color=True)
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or self.dicom_axial_view.vertical_view is None or\

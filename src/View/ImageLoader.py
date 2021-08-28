@@ -148,13 +148,6 @@ class ImageLoader(QtCore.QObject):
             print("stopped")
             return False
 
-        if 'rtss' in file_names_dict and 'rtdose' in file_names_dict:
-            self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
-            self.signal_request_calc_dvh.emit()
-
-            while not self.advised_calc_dvh:
-                pass
-
         if 'rtss' in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])
 
