@@ -19,7 +19,8 @@ class ImageLoader(QtCore.QObject):
 
     signal_request_calc_dvh = QtCore.Signal()
 
-    def __init__(self, selected_files, existing_rtss_path, parent_window, *args, **kwargs):
+    def __init__(self, selected_files, existing_rtss_path, parent_window,
+                 *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
         self.parent_window = parent_window
@@ -43,8 +44,12 @@ class ImageLoader(QtCore.QObject):
         # Populate the initial values in the PatientDictContainer singleton.
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
-        patient_dict_container.set_initial_values(path, read_data_dict, file_names_dict,
-                                                  existing_file_rtss=self.existing_rtss_path)
+        patient_dict_container.set_initial_values(
+            path,
+            read_data_dict,
+            file_names_dict,
+            existing_file_rtss=self.existing_rtss_path
+        )
 
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
         # interrupt flag has been set, in which case it will interrupt this method after the currently processing
@@ -131,16 +136,21 @@ class ImageLoader(QtCore.QObject):
         
     def load_temp_rtss(self, path, progress_callback, interrupt_flag):
         """
-        Generate a temporary rtss and load its data into PatientDictContainer
+        Generate a temporary rtss and load its data into
+        PatientDictContainer
         :param path: str. The common root folder of all DICOM files.
-        :param progress_callback: A signal that receives the current progress of the loading.
-        :param interrupt_flag: A threading.Event() object that tells the function to stop loading.
+        :param progress_callback: A signal that receives the current
+        progress of the loading.
+        :param interrupt_flag: A threading.Event() object that tells the
+        function to stop loading.
         """
         progress_callback.emit(("Generating temporary rtss...", 20))
         patient_dict_container = PatientDictContainer()
         rtss_path = Path(path).joinpath('rtss.dcm')
-        uid_list = ImageLoading.get_image_uid_list(patient_dict_container.dataset)
-        rtss = create_initial_rtss_from_ct(patient_dict_container.dataset[0], rtss_path, uid_list)
+        uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
+        rtss = create_initial_rtss_from_ct(
+            patient_dict_container.dataset[0], rtss_path, uid_list)
 
         if interrupt_flag.is_set():  # Stop loading.
             print("stopped")

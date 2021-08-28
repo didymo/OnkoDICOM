@@ -39,20 +39,23 @@ def find_DICOM_files(file_path):
 
 
 class TestROI:
-    """Class to set up the OnkoDICOM main window for testing the structures tab."""
+    """ Class to set up the OnkoDICOM main window for testing the
+    structures tab. """
     __test__ = False
 
     def __init__(self):
         # Load test DICOM files
         desired_path = Path.cwd().joinpath('test', 'testdata')
-        selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
-        file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
-        read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)
+        selected_files = find_DICOM_files(desired_path)
+        file_path = os.path.dirname(os.path.commonprefix(selected_files))
+        read_data_dict, file_names_dict = ImageLoading.get_datasets(
+            selected_files)
 
         # Create patient dict container object
         self.patient_dict_container = PatientDictContainer()
         self.patient_dict_container.clear()
-        self.patient_dict_container.set_initial_values(file_path, read_data_dict, file_names_dict)
+        self.patient_dict_container.set_initial_values(
+            file_path, read_data_dict, file_names_dict)
 
 
 
@@ -153,8 +156,10 @@ def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
     # Create a test rtss
     path = test_object.patient_dict_container.path
     rtss_path = Path(path).joinpath('rtss.dcm')
-    uid_list = ImageLoading.get_image_uid_list(test_object.patient_dict_container.dataset)
-    rtss = create_initial_rtss_from_ct(test_object.patient_dict_container.dataset[1], rtss_path, uid_list)
+    uid_list = ImageLoading.get_image_uid_list(
+        test_object.patient_dict_container.dataset)
+    rtss = create_initial_rtss_from_ct(
+        test_object.patient_dict_container.dataset[1], rtss_path, uid_list)
 
     # type 1 tags - must exist and not be empty
     type_1_tags: list = [Tag("StudyInstanceUID"),

@@ -9,8 +9,8 @@ from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, calc_roi_polygon, transform_rois_contours, \
-    merge_rtss
+from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, \
+    calc_roi_polygon, transform_rois_contours, merge_rtss
 from src.View.mainpage.StructureWidget import StructureWidget
 from src.Controller.PathHandler import resource_path
 
@@ -354,11 +354,13 @@ class StructureTab(QtWidgets.QWidget):
     def save_new_rtss(self, event=None, auto=False):
         """
         Save the current RTSS stored in patient dictionary to the file system.
-        :param event: Not used but will be passed as an argument from modified_indicator_widget on mouseReleaseEvent
+        :param event: Not used but will be passed as an argument from
+        modified_indicator_widget on mouseReleaseEvent
         :param auto: Used for auto save without user confirmation
         """
         if self.patient_dict_container.get("existing_file_rtss") is not None:
-            existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
+            existing_rtss_directory = str(Path(self.patient_dict_container.get(
+                "existing_file_rtss")))
         else:
             existing_rtss_directory = None
         rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
@@ -366,31 +368,44 @@ class StructureTab(QtWidgets.QWidget):
         if auto:
             confirm_save = QtWidgets.QMessageBox.Yes
         else:
-            confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                             "Are you sure you want to save the modified RTSTRUCT "
-                                                             "file? This will overwrite the existing file. "
-                                                             "This is not reversible.",
-                                                             QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+            confirm_save = \
+                QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                  "Are you sure you want to "
+                                                  "save the modified RTSTRUCT "
+                                                  "file? This will overwrite "
+                                                  "the existing file. This is "
+                                                  "not reversible.",
+                                                  QtWidgets.QMessageBox.Yes,
+                                                  QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             if existing_rtss_directory is None:
-                self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+                self.patient_dict_container.get("dataset_rtss").save_as(
+                    rtss_directory)
             else:
                 new_rtss = self.patient_dict_container.get("dataset_rtss")
                 old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
-                old_roi_names = set(value["name"] for value in ImageLoading.get_roi_info(old_rtss).values())
-                new_roi_names = set(value["name"] for value in self.patient_dict_container.get("rois").values())
+                old_roi_names = \
+                    set(value["name"] for value in
+                        ImageLoading.get_roi_info(old_rtss).values())
+                new_roi_names = \
+                    set(value["name"] for value in
+                        self.patient_dict_container.get("rois").values())
                 duplicated_names = old_roi_names.intersection(new_roi_names)
 
                 # stop if there are conflicting roi names and user do not wish to proceed.
-                if duplicated_names and not self.display_confirm_merge(duplicated_names):
+                if duplicated_names and not self.display_confirm_merge(
+                        duplicated_names):
                     return
 
                 merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
                 merged_rtss.save_as(existing_rtss_directory)
 
             if not auto:
-                QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
+                QtWidgets.QMessageBox.about(self.parentWidget(),
+                                            "File saved",
+                                            "The RTSTRUCT file has been saved."
+                                            )
             self.patient_dict_container.set("rtss_modified", False)
             self.modified_indicator_widget.setParent(None)
 
@@ -398,16 +413,20 @@ class StructureTab(QtWidgets.QWidget):
         confirm_merge = QtWidgets.QMessageBox(parent=self)
         confirm_merge.setIcon(QtWidgets.QMessageBox.Question)
         confirm_merge.setWindowTitle("Merge RTSTRUCTs?")
-        confirm_merge.setText("Conflicting ROI names found between new ROIs and "
-                              "existing ROIs:\n" + str(duplicated_names) +
-                              "\nAre you sure you want to merge the RTSTRUCT files? "
-                              "The new ROIs will replace the existing ROIs. ")
+        confirm_merge.setText("Conflicting ROI names found between new ROIs "
+                              "and existing ROIs:\n" + str(duplicated_names) +
+                              "\nAre you sure you want to merge the RTSTRUCT "
+                              "files? The new ROIs will replace the existing "
+                              "ROIs. ")
         button_yes = QtWidgets.QPushButton("Yes, I want to merge")
         button_no = QtWidgets.QPushButton("No, I will change the names")
-        """ We want the buttons 'No' & 'Yes' to be displayed in that exact order. QMessageBox displays buttons in
-            respect to their assigned roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 'RejectRole' is 1 
-            thus by counterintuitively assigning 'No' to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
-            positioned as desired.
+        """ 
+        We want the buttons 'No' & 'Yes' to be displayed in that exact 
+        order. QMessageBox displays buttons in respect to their assigned 
+        roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 
+        'RejectRole' is 1 thus by counterintuitively assigning 'No' to 
+        'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
+        positioned as desired.
         """
         confirm_merge.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
         confirm_merge.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)

@@ -336,10 +336,12 @@ class UIOpenPatientWindow(object):
         Find and return the path of an existing RTSTRUCT file.
         Return None if not found.
         """
-        if 'RTSTRUCT' not in selected_series_types and len(selected_series_types) > 0:
+        if 'RTSTRUCT' not in selected_series_types and \
+                len(selected_series_types) > 0:
             selected_study = self.get_checked_leaves()[0].parent()
             for i in range(0, selected_study.childCount()):
-                if selected_study.child(i).dicom_object.get_series_type() == 'RTSTRUCT':
+                if selected_study.child(i).dicom_object.get_series_type() == \
+                        'RTSTRUCT':
                     return selected_study.child(i).dicom_object.get_files()[0]
         return None
 
@@ -355,7 +357,8 @@ class UIOpenPatientWindow(object):
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
 
-        self.progress_window.start_loading(selected_files, self.existing_rtss_path)
+        self.progress_window.start_loading(selected_files,
+                                           self.existing_rtss_path)
 
     def on_loaded(self, results):
         """

@@ -794,7 +794,8 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
 def merge_rtss(old_rtss, new_rtss, duplicated_names):
     """
     Merge two RTSTRUCT datasets.
-    Replace the ROIs in old_rtss with the ROIs in new_rtss which have same names.
+    Replace the ROIs in old_rtss with the ROIs in new_rtss which have
+    same names.
     :return: merged rtss
     """
     # Original sequences
@@ -833,12 +834,15 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
     # Renumber the ROINumber and ReferencedROINumber tags
     original_structure_set = renumber_roi_number(original_structure_set)
     original_roi_contour = renumber_roi_number(original_roi_contour)
-    original_roi_observation_sequence = renumber_roi_number(original_roi_observation_sequence)
+    original_roi_observation_sequence = \
+        renumber_roi_number(original_roi_observation_sequence)
 
     # Set the new value
-    old_rtss.add_new(Tag("StructureSetROISequence"), "SQ", original_structure_set)
+    old_rtss.add_new(Tag("StructureSetROISequence"), "SQ",
+                     original_structure_set)
     old_rtss.add_new(Tag("ROIContourSequence"), "SQ", original_roi_contour)
-    old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_roi_observation_sequence)
+    old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ",
+                     original_roi_observation_sequence)
 
     return old_rtss
 
