@@ -6,8 +6,6 @@ from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QMessageBox
 
-from src.Model import ImageLoading
-from src.Model.Worker import Worker
 from src.View.ImageLoader import ImageLoader
 from src.Controller.PathHandler import resource_path
 
@@ -87,16 +85,17 @@ class ProgressWindow(QDialog):
 
     def prompt_calc_dvh(self):
         """
-            Windows displays buttons in a different order from Linux. A check for
-            platform is performed to ensure consistency of button positioning across
-            platforms.
+        Windows displays buttons in a different order from Linux. A check
+        for platform is performed to ensure consistency of button
+        positioning across platforms.
         """
         if platform.system() == "Linux":
-            choice = QMessageBox.question(self, "Calculate DVHs?",
-                                          "RTSTRUCT and RTDOSE datasets identified. Would you "
-                                          "like to calculate DVHs? (This may take up to "
-                                          "several minutes on some systems.)",
-                                          QMessageBox.Yes | QMessageBox.No)
+            choice = QMessageBox.question(
+                self, "Calculate DVHs?",
+                "RTSTRUCT and RTDOSE datasets identified. Would you "
+                "like to calculate DVHs? (This may take up to "
+                "several minutes on some systems.)",
+                QMessageBox.Yes | QMessageBox.No)
 
             if choice == QMessageBox.Yes:
                 self.signal_advise_calc_dvh.emit(True)
@@ -109,8 +108,9 @@ class ProgressWindow(QDialog):
             if platform.system() == 'Darwin':
                 stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
             else:
-                stylesheet_path = Path.cwd().joinpath('res',
-                                                      'stylesheet-win-linux.qss')
+                stylesheet_path = Path.cwd().joinpath(
+                    'res',
+                    'stylesheet-win-linux.qss')
 
             # Create a message box and add attributes
             mb = QMessageBox()
@@ -122,11 +122,12 @@ class ProgressWindow(QDialog):
             button_no = QtWidgets.QPushButton("No")
             button_yes = QtWidgets.QPushButton("Yes")
 
-            """ We want the buttons 'No' & 'Yes' to be displayed in that exact order. QMessageBox displays buttons in
-                respect to their assigned roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 'RejectRole' is 1 
-                thus by counterintuitively assigning 'No' to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
-                positioned as desired.
-            """
+            """We want the buttons 'No' & 'Yes' to be displayed in that 
+            exact order. QMessageBox displays buttons in respect to their 
+            assigned roles. (0 first, then 0 and so on) 'AcceptRole' is 0 
+            and 'RejectRole' is 1 thus by counterintuitively assigning 'No' 
+            to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
+            positioned as desired. """
             mb.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
             mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
 
