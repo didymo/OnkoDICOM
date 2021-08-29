@@ -253,7 +253,6 @@ class UIMainWindow:
             self.dicom_axial_view.zoom_in()
             self.dicom_coronal_view.zoom_in()
             self.dicom_sagittal_view.zoom_in()
-            self.three_dimension_view.zoom_in()
         else:
             self.dicom_single_view.zoom_in()
 
@@ -267,7 +266,6 @@ class UIMainWindow:
             self.dicom_axial_view.zoom_out()
             self.dicom_coronal_view.zoom_out()
             self.dicom_sagittal_view.zoom_out()
-            self.three_dimension_view.zoom_out()
         else:
             self.dicom_single_view.zoom_out()
 
