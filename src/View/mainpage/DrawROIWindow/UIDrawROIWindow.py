@@ -211,37 +211,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_in_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_viewport_zoom_box)
 
-        # Create a horizontal box for forward and backward button
-        self.draw_roi_window_backward_forward_box = QHBoxLayout()
-        self.draw_roi_window_backward_forward_box.setObjectName("DrawRoiWindowBackwardForwardBox")
-        # Create a button to move backward to the previous image
-        self.image_slice_number_move_backward_button = QPushButton()
-        self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
-        self.image_slice_number_move_backward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_move_backward_button.resize(
-            self.image_slice_number_move_backward_button.sizeHint().width(),
-            self.image_slice_number_move_backward_button.sizeHint().height())
-        self.image_slice_number_move_backward_button.clicked.connect(self.onBackwardClicked)
-        icon_move_backward = QtGui.QIcon()
-        icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/backward_slide_icon.png')))
-        self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
-        self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_backward_button)
-        # Create a button to move forward to the next image
-        self.image_slice_number_move_forward_button = QPushButton()
-        self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
-        self.image_slice_number_move_forward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_move_forward_button.resize(
-            self.image_slice_number_move_forward_button.sizeHint().width(),
-            self.image_slice_number_move_forward_button.sizeHint().height())
-        self.image_slice_number_move_forward_button.clicked.connect(self.onForwardClicked)
-        icon_move_forward = QtGui.QIcon()
-        icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/forward_slide_icon.png')))
-        self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
-        self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_forward_button)
-        self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_backward_forward_box)
-
         self.init_cursor_radius_change_box()
         # Create field to toggle two options: Keep empty pixel or fill empty pixel when using draw cursor
         self.toggle_keep_empty_pixel_box = QHBoxLayout()
