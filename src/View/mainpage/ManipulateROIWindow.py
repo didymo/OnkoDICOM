@@ -1,7 +1,7 @@
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon, QPixmap, QFont
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QSizePolicy, QPushButton, \
     QLabel, QWidget, QFormLayout
 
@@ -16,7 +16,8 @@ import platform
 
 class UIManipulateROIWindow:
 
-    def setup_ui(self, manipulate_roi_window_instance, rois, dataset_rtss, roi_color, signal_roi_manipulated):
+    def setup_ui(self, manipulate_roi_window_instance, rois, dataset_rtss,
+                 roi_color, signal_roi_manipulated):
 
         self.patient_dict_container = PatientDictContainer()
         self.rois = rois
@@ -33,7 +34,6 @@ class UIManipulateROIWindow:
 
         self.new_ROI_contours = None
         self.manipulate_roi_window_instance = manipulate_roi_window_instance
-        self.ds = None
 
         self.dicom_view = DicomAxialView(roi_color=roi_color, metadata_formatted=True)
         self.dicom_preview = DicomAxialView(metadata_formatted=True)
@@ -95,7 +95,7 @@ class UIManipulateROIWindow:
         self.first_roi_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.first_roi_name_dropdown_list.resize(self.first_roi_name_dropdown_list.sizeHint().width(),
                                                  self.first_roi_name_dropdown_list.sizeHint().height())
-        self.first_roi_name_dropdown_list.activated.connect(self.display_roi)
+        self.first_roi_name_dropdown_list.activated.connect(self.display_selected_roi)
         self.manipulate_roi_window_input_container_box.addRow(self.first_roi_name_label,
                                                               self.first_roi_name_dropdown_list)
 
@@ -122,7 +122,7 @@ class UIManipulateROIWindow:
         self.second_roi_name_dropdown_list.resize(self.second_roi_name_dropdown_list.sizeHint().width(),
                                                   self.second_roi_name_dropdown_list.sizeHint().height())
         self.second_roi_name_dropdown_list.setVisible(False)
-        self.second_roi_name_dropdown_list.activated.connect(self.display_roi)
+        self.second_roi_name_dropdown_list.activated.connect(self.display_selected_roi)
         self.manipulate_roi_window_input_container_box.addRow(self.second_roi_name_label,
                                                               self.second_roi_name_dropdown_list)
 
@@ -206,9 +206,15 @@ class UIManipulateROIWindow:
         # Creating a horizontal box to hold the ROI view and the preview
         self.manipulate_roi_window_instance_view_box = QHBoxLayout()
         self.manipulate_roi_window_instance_view_box.setObjectName("ManipulateRoiWindowInstanceViewBoxes")
+        # Font for the ROI view and preview's labels
+        font = QFont()
+        font.setBold(True)
+        font.setPixelSize(20)
         # Creating the ROI view
         self.ROI_view_box_layout = QVBoxLayout()
         self.ROI_view_box_label = QLabel()
+        self.ROI_view_box_label.setFont(font)
+        self.ROI_view_box_label.setAlignment(Qt.AlignHCenter)
         self.ROI_view_box_layout.addWidget(self.ROI_view_box_label)
         self.ROI_view_box_layout.addWidget(self.dicom_view)
         self.ROI_view_box_widget = QWidget()
@@ -216,6 +222,8 @@ class UIManipulateROIWindow:
         # Creating the preview
         self.preview_box_layout = QVBoxLayout()
         self.preview_box_label = QLabel()
+        self.preview_box_label.setFont(font)
+        self.preview_box_label.setAlignment(Qt.AlignHCenter)
         self.preview_box_layout.addWidget(self.preview_box_label)
         self.preview_box_layout.addWidget(self.dicom_preview)
         self.preview_box_widget = QWidget()
@@ -248,7 +256,7 @@ class UIManipulateROIWindow:
         QtCore.QMetaObject.connectSlotsByName(self.manipulate_roi_window_instance)
 
     def dicom_view_slider_value_changed(self):
-        self.display_roi()
+        self.display_selected_roi()
 
     def dicom_preview_slider_value_changed(self):
         self.draw_roi()
@@ -269,44 +277,113 @@ class UIManipulateROIWindow:
         roi_2 = self.second_roi_name_dropdown_list.currentText()
         new_roi_name = self.new_roi_name_line_edit.text()
 
+        # Check the selected inputs and execute the operations
         if roi_1 != "" and selected_operation in self.single_roi_operation_names and self.margin_line_edit.text() != ""\
                 and new_roi_name != "":
+            # Single ROI operations
             print("single roi operation selected")
             return
         elif roi_1 != "" and selected_operation in self.multiple_roi_operation_names and roi_2 != "" and \
                 new_roi_name != "":
-            dict_rois_contours = ROI.get_roi_contour_pixel(self.patient_dict_container.get("raw_contour"),
-                                                           [roi_1, roi_2],
-                                                           self.patient_dict_container.get("pixluts"))
+            # Multiple ROI operations
+            dict_rois_contours = ROI.get_roi_contour_pixel(
+                self.patient_dict_container.get("raw_contour"),
+                [roi_1, roi_2],
+                self.patient_dict_container.get("pixluts"))
             roi_1_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_1])
             roi_2_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_2])
-            uid_list = ImageLoading.get_image_uid_list(self.patient_dict_container.dataset)
+            uid_list = ImageLoading.get_image_uid_list(
+                self.patient_dict_container.dataset)
 
+            # Execute the selected operation
             if selected_operation == "Union":
                 print("Union selected")
             elif selected_operation == "Intersection":
-                intersected_geometry = ROI.intersect_rois(roi_1_geometry, roi_2_geometry, uid_list)
-                self.new_ROI_contours = ROI.geometry_to_roi(intersected_geometry)
+                intersected_geometry = ROI.intersect_rois(roi_1_geometry,
+                                                          roi_2_geometry,
+                                                          uid_list)
+                self.new_ROI_contours = \
+                    ROI.geometry_to_roi(intersected_geometry)
             elif selected_operation == "Difference":
                 print("Difference selected")
 
             self.draw_roi()
             return
 
-        QMessageBox.about(self.manipulate_roi_window_instance, "Not Enough Data",
+        QMessageBox.about(self.manipulate_roi_window_instance,
+                          "Not Enough Data",
                           "Not all values are specified or correct.")
 
-    def draw_roi(self):
+    def onSaveClicked(self):
+        """ Save the new ROI """
+        # Get the name of the new ROI
         new_roi_name = self.new_roi_name_line_edit.text()
+
+        if self.new_ROI_contours is None:
+            QMessageBox.about(self.manipulate_roi_window_instance,
+                              "Empty ROI", "No new ROI has been drawn")
+            return
+
+        # Get the required info to create the new ROI
+        slider_id = self.dicom_preview.slider.value()
+        dataset = self.patient_dict_container.dataset[slider_id]
+        location = self.patient_dict_container.filepaths[slider_id]
+        ds = pydicom.dcmread(location)
+        pixlut = self.patient_dict_container.get("pixluts")
+        pixlut = pixlut[dataset.SOPInstanceUID]
+        z_coord = dataset.SliceLocation
+
+        # Get the new contour sequence
+        if dataset.SOPInstanceUID not in self.new_ROI_contours:
+            # TODO: delete after merged with ROI create multiple
+            QMessageBox.about(self.manipulate_roi_window_instance,
+                              "Empty slice",
+                              "The current slice doesn't contain new ROI"
+                              "\nPlease move to other slices")
+            return
+        contour_sequence = self.new_ROI_contours[dataset.SOPInstanceUID]
+
+        # Transform the contour sequence to a 1D array
+        # Convert the pixel points to RCS points, then append z coordinate
+        single_array = []
+        for contour_data in contour_sequence:
+            for point in contour_data:
+                rcs_pixels = ROI.pixel_to_rcs(pixlut,
+                                              round(point[0]),
+                                              round(point[1]))
+                single_array.append(rcs_pixels[0])
+                single_array.append(rcs_pixels[1])
+                single_array.append(z_coord)
+
+        # Create a popup window that modifies the RTSTRUCT and tells the user
+        # that processing is happening.
+        progress_window = SaveROIProgressWindow(
+            self, QtCore.Qt.WindowTitleHint)
+        progress_window.signal_roi_saved.connect(self.roi_saved)
+        progress_window.start_saving(
+            self.dataset_rtss, new_roi_name, single_array, ds)
+        progress_window.show()
+
+    def draw_roi(self):
+        """ Draw the new ROI """
+        # Get the new ROI's name
+        new_roi_name = self.new_roi_name_line_edit.text()
+
+        # Check if the new ROI contour is None
         if self.new_ROI_contours is None:
             return
+
+        # Get the info required to draw the new ROI
         slider_id = self.dicom_preview.slider.value()
         curr_slice = self.patient_dict_container.get("dict_uid")[slider_id]
 
+        # Calculate the new ROI's polygon
         dict_ROI_contours = {}
         dict_ROI_contours[new_roi_name] = self.new_ROI_contours
-        polygons = ROI.calc_roi_polygon(new_roi_name, curr_slice, dict_ROI_contours)
+        polygons = ROI.calc_roi_polygon(new_roi_name, curr_slice,
+                                        dict_ROI_contours)
 
+        # Set the new ROI color
         color = QtGui.QColor()
         color.setRgb(90, 250, 175, 200)
         pen_color = QtGui.QColor(color.red(), color.green(), color.blue())
@@ -314,32 +391,38 @@ class UIManipulateROIWindow:
         pen.setStyle(QtCore.Qt.PenStyle(1))
         pen.setWidthF(2.0)
 
+        # Draw the new ROI
+        self.dicom_preview.update_view()
         for i in range(len(polygons)):
-            self.dicom_preview.scene.addPolygon(polygons[i], pen, QtGui.QBrush(color))
+            self.dicom_preview.scene.addPolygon(polygons[i], pen,
+                                                QtGui.QBrush(color))
 
-    def display_roi(self):
+    def display_selected_roi(self):
         """ Display selected ROIs """
+        # Get the names of selected ROIs
         roi_names = []
         if self.first_roi_name_dropdown_list.currentText() != "":
             roi_names.append(self.first_roi_name_dropdown_list.currentText())
         if self.second_roi_name_dropdown_list.currentText() != "":
             roi_names.append(self.second_roi_name_dropdown_list.currentText())
 
+        # Get the info required to display the selected ROIs
         slider_id = self.dicom_view.slider.value()
         curr_slice = self.patient_dict_container.get("dict_uid")[slider_id]
         self.rois = self.patient_dict_container.get("rois")
 
+        # Display the selected ROIs
+        self.dicom_view.update_view()
         for roi_id, roi_dict in self.rois.items():
             roi_name = roi_dict['name']
             if roi_name in roi_names:
-                dict_rois_contours_axial = ROI.get_roi_contour_pixel(self.patient_dict_container.get("raw_contour"),
-                                                                     [roi_name],
-                                                                     self.patient_dict_container.get("pixluts"))
-                polygons = ROI.calc_roi_polygon(roi_name, curr_slice, dict_rois_contours_axial)
+                dict_rois_contours_axial = ROI.get_roi_contour_pixel(
+                    self.patient_dict_container.get("raw_contour"),
+                    [roi_name],
+                    self.patient_dict_container.get("pixluts"))
+                polygons = ROI.calc_roi_polygon(roi_name, curr_slice,
+                                                dict_rois_contours_axial)
                 self.dicom_view.draw_roi_polygons(roi_id, polygons)
-
-    def onSaveClicked(self):
-        print("Save pressed")
 
     def operation_changed(self):
         selected_operation = self.operation_name_dropdown_list.currentText()
@@ -354,10 +437,18 @@ class UIManipulateROIWindow:
             self.margin_label.setVisible(False)
             self.margin_line_edit.setVisible(False)
 
+    def roi_saved(self, new_rtss):
+        new_roi_name = self.new_roi_name_line_edit.text()
+        self.signal_roi_manipulated.emit((new_rtss, {"draw": new_roi_name}))
+        QMessageBox.about(self.manipulate_roi_window_instance, "Saved",
+                          "New contour successfully created!")
+        self.close()
+
 class SaveROIProgressWindow(QtWidgets.QDialog):
     """
-    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
-    thread where the new RTSTRUCT is modified.
+    This class displays a window that advises the user that the RTSTRUCT is
+    being modified, and then creates a new thread where the new RTSTRUCT is
+    modified.
     """
 
     signal_roi_saved = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
@@ -381,13 +472,16 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
         :param single_array: Coordinates of pixels for new ROI
         :param ds: Data Set of selected DICOM image file
         """
-        worker = Worker(ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
+        worker = Worker(
+            ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
+
         worker.signals.result.connect(self.roi_saved)
         self.threadpool.start(worker)
 
     def roi_saved(self, result):
         """
-        This method is called when the second thread completes generation of the new dataset object.
+        This method is called when the second thread completes generation of
+        the new dataset object.
         :param result: The resulting dataset from the ROI.create_roi function.
         """
         self.signal_roi_saved.emit(result)

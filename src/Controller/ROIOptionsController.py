@@ -100,10 +100,11 @@ class RoiManipulateOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
 
     def __init__(self, rois, dataset_rtss, roi_color):
         super(RoiManipulateOptions, self).__init__()
+        self.roi_color = roi_color
         self.setup_ui(self, rois, dataset_rtss, roi_color, self.signal_roi_manipulated)
 
     def update_ui(self, rois, dataset_rtss):
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_manipulated)
+        self.setup_ui(self, rois, dataset_rtss, self.roi_color, self.signal_roi_manipulated)
 
 
 class ROIManipulateOption:
