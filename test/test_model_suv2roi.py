@@ -45,7 +45,7 @@ class TestSuv2Roi:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.cwd().joinpath('test', 'testdata', 'DICOM-PT-TEST')
+        desired_path = Path.cwd().joinpath('test', 'testdata')
 
         # list of DICOM test files
         selected_files = find_dicom_files(desired_path)
@@ -62,10 +62,13 @@ class TestSuv2Roi:
 
         # Create variables to be initialised later
         self.dicom_files = None
-        self.suv_data = None
+        self.suv_data = []
 
         # Create ISO2ROI object
         self.suv2roi = SUV2ROI()
+        # Set patient weight. Not actual weight, just for testing
+        # purposes.
+        self.suv2roi.patient_weight = 70000
 
 
 @pytest.fixture(scope="module")
@@ -84,11 +87,11 @@ def test_select_pet_files(test_object):
     # Get DICOM files in directory
     test_object.dicom_files = test_object.suv2roi.find_PET_datasets()
 
-    # Assert that there are both PT CTAC and PT NAC files in the DICOM
+    # Assert that there are PT CTAC and no PT NAC files in the DICOM
     # dataset
     assert test_object.dicom_files
     assert len(test_object.dicom_files["PT CTAC"]) > 0
-    assert len(test_object.dicom_files["PT NAC"]) > 0
+    assert len(test_object.dicom_files["PT NAC"]) == 0
 
 
 def test_calculate_suv_values(test_object):
@@ -103,14 +106,11 @@ def test_calculate_suv_values(test_object):
     for ds in test_object.dicom_files["PT CTAC"]:
         datasets.append(ds)
 
-    # Loop through each dataset in PT NAC, append them to datasets
-    for ds in test_object.dicom_files["PT NAC"]:
-        datasets.append(ds)
-
     # Loop through each dataset, perform tests
     for ds in datasets:
         # Calculate SUV values
         suv_values = test_object.suv2roi.pet2suv(ds)
+        test_object.suv_data.append(suv_values)
 
         # Assert that there are SUV values, and that there are the same
         # amount of SUV values as there are pixels in the dataset
@@ -123,42 +123,14 @@ def test_calculate_suv_values(test_object):
         pixel_array = ds.pixel_array
         radiopharmaceutical_info = \
             ds.RadiopharmaceuticalInformationSequence[0]
-        radionuclide_total_dose = \
-            radiopharmaceutical_info['RadionuclideTotalDose'].value
-        patient_weight = ds.PatientWeight
 
         # Convert Bq/ml to SUV
-        suv = (pixel_array * rescale_slope + rescale_intercept)
-        suv = suv * (1000 * patient_weight) / radionuclide_total_dose
+        suv = (pixel_array * rescale_slope + rescale_intercept) * \
+              test_object.suv2roi.weight_over_dose
 
         # Assert that manually-generated SUV values are the same as
         # code-generated SUV values
         assert numpy.array_equal(suv_values, suv)
-
-
-def test_select_pixel_data(test_object):
-    """
-    Test for selecting pixel data from PET files.
-    :param test_object: test_object function, for accessing the shared
-                        TestStructureTab object.
-    """
-    # Get PT NAC data
-    files = test_object.dicom_files["PT NAC"]
-    test_object.suv_data = test_object.suv2roi.get_SUV_data(files)
-
-    # Assert that there is SUV data and that it is the same length as
-    # the PT CTAC and PT NAC lists inside dicom_files
-    assert test_object.suv_data
-    assert len(test_object.suv_data) == len(test_object.dicom_files["PT NAC"])
-
-    # Get PT CTAC SUV data
-    files = test_object.dicom_files["PT CTAC"]
-    test_object.suv_data = test_object.suv2roi.get_SUV_data(files)
-
-    # Assert that there is SUV data and that it is the same length as
-    # the PT CTAC and PT NAC lists inside dicom_files
-    assert test_object.suv_data
-    assert len(test_object.suv_data) == len(test_object.dicom_files["PT CTAC"])
 
 
 def test_calculate_suv_boundaries(test_object):
@@ -168,27 +140,31 @@ def test_calculate_suv_boundaries(test_object):
                         TestStructureTab object.
     """
 
-    # Get code-generated contours
-    contour_data = test_object.suv2roi.calculate_contours(test_object.suv_data)
-
-    # Assert that there is contour data
-    assert len(contour_data) > 0
-
-    # Manually calculate contour data
+    # Manually calculate contour data (one slice only)
     manual_contour_data = {}
 
-    for i, slice in enumerate(test_object.suv_data):
-        manual_contour_data[slice[0]] = []
-        for j in range(0, int(slice[1].max()) - 2):
-            manual_contour_data[slice[0]].append(
-                measure.find_contours(slice[1], j + 3))
+    # Get SUV data from PET file
+    suv_data = test_object.suv_data[40]
+    current_suv = 1
+    max_suv = numpy.amax(suv_data)
 
-    # Assert the manually-generated and code-generated contour data is
-    # the same.
-    assert len(manual_contour_data) == len(contour_data)
+    # Continue calculating SUV contours for the slice until the
+    # max SUV has been reached.
+    while current_suv < max_suv:
+        # Find the contours for the SUV (i)
+        contours = measure.find_contours(suv_data, current_suv)
+
+        # Get the SUV name
+        name = "SUV-" + str(current_suv)
+        if name not in manual_contour_data:
+            manual_contour_data[name] = []
+        manual_contour_data[name].append((0, contours))
+        current_suv += 1
+
+    # Assert the manually-generated contour data exists
+    assert len(manual_contour_data) > 0
     for key in manual_contour_data:
-        assert key in contour_data
-        assert len(manual_contour_data[key]) == len(contour_data[key])
+        assert len(manual_contour_data[key][0][1]) >= 0
 
 
 def test_generate_roi_from_suv(test_object):
@@ -205,31 +181,18 @@ def test_generate_roi_from_suv(test_object):
 
     # Calculate SUV ROI for each slice and SUV level from 3 to the
     # max, skip if slice has no contour data
-    points = []
-    for i, item in enumerate(contours):
-        if not len(contours[item]):
-            continue
-        for j in range(len(contours[item])):
-            # Convert the pixel points to RCS points
-            for k in range(len(contours[item][j])):
-                points.append([])
-                for point in contours[item][j][k]:
-                    points[i].append((round(point[1]), round(point[0])))
-
-    contour_data = []
-    for i in range(len(points)):
-        contour_data.append([])
-        for p in points[i]:
-            coords = (p[0], p[1], float(item))
-            contour_data[i].append(coords)
-
-    # Transform RCS points into 1D array, append z value
     single_array = []
-    for i in range(len(contour_data)):
-        for sublist in contour_data[i]:
-            for point in sublist:
-                single_array.append(point)
+    # Loop through each contour
+    for item in contours:
+        for i in range(len(contours[item])):
+            for j in range(len(contours[item][i][0])):
+                # Loop through every point in the contour
+                for point in contours[item][i][0][j]:
+                    # Append points to the single array. Converting to
+                    # RCS points is skipped on purpose.
+                    single_array.append(point)
+                single_array.append(1)
 
     # Assert ROI points exist
     assert len(single_array) == 15
-    assert len(single_array) == 3 * len(contour_data)
+    assert len(single_array) == 3 * len(contours)
