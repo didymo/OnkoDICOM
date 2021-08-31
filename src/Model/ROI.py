@@ -896,12 +896,13 @@ def roi_to_geometry(dict_rois_contours):
     return roi_contour_sequence_geometry
 
 
-def intersect_rois(first_sequence_geometry, second_sequence_geometry, image_uids):
+def manipulate_rois(first_sequence_geometry, second_sequence_geometry, image_uids, operation):
     """
     Compute the intersection of two ROIs
     :param first_sequence_geometry: The geometry dictionary of the first ROI
     :param second_sequence_geometry: The geometry dictionary of the second ROI
     :param image_uids: The list of all image uids
+    :param operation: A string of either "INTERSECTION", "UNION", or "DIFFERENCE"
     :return: A dictionary with key-value pair {slice-id: Polygon/Multipolygon Object}
     """
     result_geometry_dict = {}
@@ -911,7 +912,14 @@ def intersect_rois(first_sequence_geometry, second_sequence_geometry, image_uids
         if first_geometry and second_geometry:
             first_geometry = make_valid(first_geometry)
             second_geometry = make_valid(second_geometry)
-            result_geometry = first_geometry.intersection(second_geometry)
+            if operation == "INTERSECTION":
+                result_geometry = first_geometry.intersection(second_geometry)
+            elif operation == "UNION":
+                result_geometry = first_geometry.union(second_geometry)
+            elif operation == "DIFFERENCE":
+                result_geometry = first_geometry.difference(second_geometry)
+            else:
+                raise ValueError("Operation must be either INTERSECTION/UNION/DIFFERENCE")
             result_geometry_dict[slice_id] = result_geometry
     return result_geometry_dict
 

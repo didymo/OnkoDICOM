@@ -198,7 +198,7 @@ def test_roi_intersection(test_object):
     lung_r_geometry = roi_to_geometry(dict_rois_contours['LUNG_R'])
     liver_geometry = roi_to_geometry(dict_rois_contours['LIVER'])
     uid_list = ImageLoading.get_image_uid_list(test_object.patient_dict_container.dataset)
-    result_geometry = intersect_rois(lung_r_geometry, liver_geometry, uid_list)
+    result_geometry = intersect_rois(lung_r_geometry, liver_geometry, uid_list, "INTERSECTION")
     result_contours = geometry_to_roi(result_geometry)
     assert len(result_contours.keys()) == 1
 

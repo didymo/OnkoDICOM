@@ -299,9 +299,9 @@ class UIManipulateROIWindow:
             if selected_operation == "Union":
                 print("Union selected")
             elif selected_operation == "Intersection":
-                intersected_geometry = ROI.intersect_rois(roi_1_geometry,
+                intersected_geometry = ROI.manipulate_rois(roi_1_geometry,
                                                           roi_2_geometry,
-                                                          uid_list)
+                                                          uid_list, "INTERSECTION")
                 self.new_ROI_contours = \
                     ROI.geometry_to_roi(intersected_geometry)
             elif selected_operation == "Difference":
