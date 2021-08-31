@@ -1,3 +1,4 @@
+import csv
 import platform
 from pathlib import Path
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -113,18 +114,23 @@ class ClinicalDataView(QtWidgets.QWidget):
         patient_dict_container = PatientDictContainer()
         try:
             clinical_data = patient_dict_container.dataset['sr-cd']
+
+            # Get text from clinical data dataset
+            text = clinical_data.ContentSequence[0].TextValue
+
+            # Split text into dictionary
+            text_data = text.splitlines()
+            for row in text_data:
+                key, value = row.split(":")
+                self.data_dict[key] = value
         except KeyError:
             print("No DICOM SR containing clinical data in dataset.")
-            return
 
-        # Get text from clinical data dataset
-        text = clinical_data.ContentSequence[0].TextValue
-
-        # Split text into dictionary
-        text_data = text.splitlines()
-        for row in text_data:
-            key, value = row.split(":")
-            self.data_dict[key] = value
+            # See if data has been imported
+            if self.data_dict:
+                pass
+            else:
+                return
 
         for i, key in enumerate(self.data_dict):
             attrib = QtWidgets.QTableWidgetItem(key)
@@ -135,14 +141,81 @@ class ClinicalDataView(QtWidgets.QWidget):
 
         print("")
 
+    def clear_table(self):
+        """
+        Clears the table of all data.
+        """
+        if self.table_cd.rowCount() > 0:
+            for i in range(self.table_cd.rowCount()):
+                self.table_cd.removeRow(i)
+
     def import_clinical_data(self):
         """
         Opens a file select dialog to open a CSV file containing patient
-        clinical data, then a window to select which patient the user
-        wants to import. Imports clinical data for that patient, and
+        clinical data. Imports clinical data for that patient (matches
+        patient ID in the dataset to patient ID in the CSV file), and
         displays it in the table.
         """
-        print("importing")
+        # Clear data dictionary
+        self.data_dict = {}
+
+        # Current patient's ID
+        patient_dict_container = PatientDictContainer()
+        patient_id = patient_dict_container.dataset[0].PatientID
+
+        file_path = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open Data File", "", "CSV data files (*.csv)")[0]
+
+        # Get CSV data
+        if file_path != "":
+            with open(file_path, newline="") as stream:
+                data = list(csv.reader(stream))
+        else:
+            # Clear table
+            self.clear_table()
+
+            # Write warning to table
+            message = "No clinical data CSV selected."
+            attrib = QtWidgets.QTableWidgetItem("Warning")
+            value = QtWidgets.QTableWidgetItem(message)
+            self.table_cd.insertRow(0)
+            self.table_cd.setItem(0, 0, attrib)
+            self.table_cd.setItem(0, 1, value)
+            
+            return
+
+        # See if CSV data matches patient ID
+        patient_in_file = False
+        row_num = 0
+        for i, row in enumerate(data):
+            if row[0] == patient_id:
+                patient_in_file = True
+                row_num = i
+                break
+
+        # Return if patient's data not in the CSV file
+        if not patient_in_file:
+            # Clear table
+            self.clear_table()
+
+            # Write warning to table
+            message = "Patient clinical data not found in CSV."
+            attrib = QtWidgets.QTableWidgetItem("Warning")
+            value = QtWidgets.QTableWidgetItem(message)
+            self.table_cd.insertRow(0)
+            self.table_cd.setItem(0, 0, attrib)
+            self.table_cd.setItem(0, 1, value)
+
+            return
+
+        # Put patient data into dictionary
+        headings = data[0]
+        attribs = data[row_num]
+        for i, heading in enumerate(headings):
+            self.data_dict[heading] = attribs[i]
+
+        # Update table
+        self.populate_table()
 
     def save_clinical_data(self):
         """
