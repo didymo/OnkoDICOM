@@ -64,6 +64,9 @@ class DicomView(QtWidgets.QWidget):
         :param zoom_change: Boolean indicating whether the user wants to change the zoom. False by default.
         """
         self.image_display()
+        # Update roi colours if they are not explicitly set to None
+        if self.roi_color is not None:
+            self.roi_color = self.patient_dict_container.get("roi_color_dict")
 
         # If roi colours are set and rois are selected then update the display
         if self.roi_color and self.patient_dict_container.get("selected_rois"):
@@ -94,7 +97,7 @@ class DicomView(QtWidgets.QWidget):
         :param roi_id: ROI number
         :param polygons: List of ROI polygons
         """
-        color = self.patient_dict_container.get("roi_color_dict")[roi_id]
+        color = self.roi_color[roi_id]
         with open(resource_path('data/line&fill_configuration'), 'r') as stream:
             elements = stream.readlines()
             if len(elements) > 0:

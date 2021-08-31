@@ -84,8 +84,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
 
-
-
     def init_layout(self):
         """
         Initialize the layout for the DICOM View tab.
@@ -109,7 +107,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_input_container_box.setObjectName("DrawRoiWindowInputContainerBox")
         self.draw_roi_window_input_container_box.setLabelAlignment(Qt.AlignLeft)
 
-
         # Create a label for denoting the ROI name
         self.roi_name_label = QLabel()
         self.roi_name_label.setObjectName("ROINameLabel")
@@ -122,7 +119,6 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setEnabled(False)
         self.draw_roi_window_input_container_box.addRow(self.roi_name_label, self.roi_name_line_edit)
 
-
         # Create a label for denoting the Image Slice Number
         self.image_slice_number_label = QLabel()
         self.image_slice_number_label.setObjectName("ImageSliceNumberLabel")
@@ -134,7 +130,6 @@ class UIDrawROIWindow:
                                                  self.image_slice_number_line_edit.sizeHint().height())
         self.image_slice_number_line_edit.setEnabled(False)
         self.draw_roi_window_input_container_box.addRow(self.image_slice_number_label, self.image_slice_number_line_edit)
-
 
         # Create a horizontal box for containing the zoom function
         self.draw_roi_window_viewport_zoom_box = QHBoxLayout()
@@ -180,7 +175,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_in_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_viewport_zoom_box)
 
-
         # Create a horizontal box for forward and backward button
         self.draw_roi_window_backward_forward_box = QHBoxLayout()
         self.draw_roi_window_backward_forward_box.setObjectName("DrawRoiWindowBackwardForwardBox")
@@ -211,7 +205,6 @@ class UIDrawROIWindow:
         self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
         self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_forward_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_backward_forward_box)
-
 
         # Create a horizontal box for transect and draw button
         self.draw_roi_window_transect_draw_box = QHBoxLayout()
@@ -284,7 +277,6 @@ class UIDrawROIWindow:
                                                 self.internal_hole_max_line_edit.sizeHint().height())
         self.draw_roi_window_input_container_box.addRow(self.internal_hole_max_label, self.internal_hole_max_line_edit)
 
-
         # Create a label for denoting the isthmus width size
         self.isthmus_width_max_label = QLabel()
         self.isthmus_width_max_label.setObjectName("IsthmusWidthLabel")
@@ -295,7 +287,6 @@ class UIDrawROIWindow:
         self.isthmus_width_max_line_edit.resize(self.isthmus_width_max_line_edit.sizeHint().width(),
                                                 self.isthmus_width_max_line_edit.sizeHint().height())
         self.draw_roi_window_input_container_box.addRow(self.isthmus_width_max_label, self.isthmus_width_max_line_edit)
-
 
         # Create a label for denoting the minimum pixel density
         self.min_pixel_density_label = QLabel()
@@ -308,7 +299,6 @@ class UIDrawROIWindow:
                                                 self.min_pixel_density_line_edit.sizeHint().height())
         self.draw_roi_window_input_container_box.addRow(self.min_pixel_density_label, self.min_pixel_density_line_edit)
 
-
         # Create a label for denoting the minimum pixel density
         self.max_pixel_density_label = QLabel()
         self.max_pixel_density_label.setObjectName("MaxPixelDensityLabel")
@@ -319,7 +309,6 @@ class UIDrawROIWindow:
         self.max_pixel_density_line_edit.resize(self.max_pixel_density_line_edit.sizeHint().width(),
                                                 self.max_pixel_density_line_edit.sizeHint().height())
         self.draw_roi_window_input_container_box.addRow(self.max_pixel_density_label, self.max_pixel_density_line_edit)
-
 
         # Create a button to clear the draw
         self.draw_roi_window_instance_action_reset_button = QPushButton()
@@ -335,7 +324,6 @@ class UIDrawROIWindow:
         icon_clear_roi_draw.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/reset_roi_draw_icon.png')))
         self.draw_roi_window_instance_action_reset_button.setIcon(icon_clear_roi_draw)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_instance_action_reset_button)
-
 
         # Create a horizontal box for saving and cancel the drawing
         self.draw_roi_window_cancel_save_box = QHBoxLayout()
@@ -372,7 +360,6 @@ class UIDrawROIWindow:
 
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cancel_save_box)
 
-
         # Creating a horizontal box to hold the ROI view and slider
         self.draw_roi_window_instance_view_box = QHBoxLayout()
         self.draw_roi_window_instance_view_box.setObjectName("DrawRoiWindowInstanceViewBox")
@@ -385,13 +372,11 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_view_widget.setLayout(
             self.draw_roi_window_instance_view_box)
 
-
         # Create a horizontal box for containing the input fields and the viewport
         self.draw_roi_window_main_box = QHBoxLayout()
         self.draw_roi_window_main_box.setObjectName("DrawRoiWindowMainBox")
         self.draw_roi_window_main_box.addLayout(self.draw_roi_window_input_container_box, 1)
         self.draw_roi_window_main_box.addWidget(self.draw_roi_window_instance_view_widget, 11)
-
 
         # Create a new central widget to hold the vertical box layout
         self.draw_roi_window_instance_central_widget = QWidget()
