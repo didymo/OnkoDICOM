@@ -1,5 +1,6 @@
 import os
 import platform
+from pathlib import Path
 
 from PySide6 import QtCore
 from pydicom import dcmread
@@ -7,6 +8,8 @@ from pydicom import dcmread
 from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2rtdose, rtdose2dvh
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.ROI import create_initial_rtss_from_ct
+from src.Model.GetPatientInfo import DicomTree
 
 
 class ImageLoader(QtCore.QObject):
@@ -17,10 +20,12 @@ class ImageLoader(QtCore.QObject):
 
     signal_request_calc_dvh = QtCore.Signal()
 
-    def __init__(self, selected_files, parent_window, *args, **kwargs):
+    def __init__(self, selected_files, existing_rtss_path, parent_window,
+                 *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
         self.parent_window = parent_window
+        self.existing_rtss_path = existing_rtss_path
         self.calc_dvh = False
         self.advised_calc_dvh = False
 
@@ -40,7 +45,12 @@ class ImageLoader(QtCore.QObject):
         # Populate the initial values in the PatientDictContainer singleton.
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
-        patient_dict_container.set_initial_values(path, read_data_dict, file_names_dict)
+        patient_dict_container.set_initial_values(
+            path,
+            read_data_dict,
+            file_names_dict,
+            existing_file_rtss=self.existing_rtss_path
+        )
 
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
         # interrupt flag has been set, in which case it will interrupt this method after the currently processing
@@ -136,11 +146,70 @@ class ImageLoader(QtCore.QObject):
 
                     return True
                 else:
-                    return True
-            else:
-                return True
+                    progress_callback.emit(("Calculating DVHs... (This may take a while)", 60))
+                    raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)
+
+                if interrupt_flag.is_set():  # Stop loading.
+                    print("stopped")
+                    return False
+
+                progress_callback.emit(("Converging to zero...", 80))
+                dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
+
+                if interrupt_flag.is_set():  # Stop loading.
+                    print("stopped")
+                    return False
+
+                # Add DVH values to PatientDictContainer
+                patient_dict_container.set("raw_dvh", raw_dvh)
+                patient_dict_container.set("dvh_x_y", dvh_x_y)
+                patient_dict_container.set("dvh_outdated", False)
+        else:
+            self.load_temp_rtss(path, progress_callback, interrupt_flag)
 
         return True
+        
+    def load_temp_rtss(self, path, progress_callback, interrupt_flag):
+        """
+        Generate a temporary rtss and load its data into
+        PatientDictContainer
+        :param path: str. The common root folder of all DICOM files.
+        :param progress_callback: A signal that receives the current
+        progress of the loading.
+        :param interrupt_flag: A threading.Event() object that tells the
+        function to stop loading.
+        """
+        progress_callback.emit(("Generating temporary rtss...", 20))
+        patient_dict_container = PatientDictContainer()
+        rtss_path = Path(path).joinpath('rtss.dcm')
+        uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
+        rtss = create_initial_rtss_from_ct(
+            patient_dict_container.dataset[0], rtss_path, uid_list)
+
+        if interrupt_flag.is_set():  # Stop loading.
+            print("stopped")
+            return False
+
+        progress_callback.emit(("Loading temporary rtss...", 50))
+        # Set ROIs
+        rois = ImageLoading.get_roi_info(rtss)
+        patient_dict_container.set("rois", rois)
+
+        # Set pixluts
+        dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
+        patient_dict_container.set("pixluts", dict_pixluts)
+
+        # Add RT Struct file path and dataset to patient dict container
+        patient_dict_container.filepaths['rtss'] = rtss_path
+        patient_dict_container.dataset['rtss'] = rtss
+
+        # Set some patient dict container attributes
+        patient_dict_container.set("file_rtss", rtss_path)
+        patient_dict_container.set("dataset_rtss", rtss)
+        ordered_dict = DicomTree(None).dataset_to_dict(rtss)
+        patient_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
+        patient_dict_container.set("selected_rois", [])
 
     def update_calc_dvh(self, advice):
         self.advised_calc_dvh = True

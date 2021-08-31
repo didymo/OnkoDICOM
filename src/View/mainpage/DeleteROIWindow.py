@@ -11,7 +11,7 @@ import platform
 from src.Model.Worker import Worker
 
 
-class UIDeleteROIWindow():
+class UIDeleteROIWindow:
     def setup_ui(self, delete_roi_window_instance, regions_of_interest, dataset_rtss, deleting_rois_structure_tuple):
         # Initialise the 2 lists for containing the ROI(s) that we are going to keep and delete respectively
         self.regions_of_interest_to_keep = []
@@ -248,7 +248,6 @@ class UIDeleteROIWindow():
         for index in self.regions_of_interest_to_keep:
             item = QTreeWidgetItem([index])
             self.delete_roi_window_keep_tree_view.addTopLevelItem(item)
-
 
     def move_right_button_onClicked(self):
         root_item = self.delete_roi_window_keep_tree_view.invisibleRootItem()

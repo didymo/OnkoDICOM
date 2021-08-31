@@ -1,11 +1,16 @@
 import os
+
+import pydicom
 import pytest
 from pathlib import Path
+from PySide6 import QtWidgets, QtCore
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import get_contour_pixel, calc_roi_polygon
+from src.Model.ROI import get_contour_pixel, calc_roi_polygon, \
+    create_initial_rtss_from_ct, create_roi
 from src.Model import ImageLoading
+from src.View.mainpage.StructureTab import StructureTab
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -50,9 +55,10 @@ class TestStructureTab:
 
         # Set additional attributes in patient dict container (otherwise program will crash and test will fail)
         if "rtss" in file_names_dict:
-            dataset_rtss = dcmread(file_names_dict['rtss'])
-            self.rois = ImageLoading.get_roi_info(dataset_rtss)
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
+            self.dataset_rtss = dcmread(file_names_dict['rtss'])
+            self.rois = ImageLoading.get_roi_info(self.dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = \
+                ImageLoading.get_raw_contour_data(self.dataset_rtss)
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             patient_dict_container.set("rois", self.rois)
@@ -116,11 +122,14 @@ def test_structure_tab_check_checkboxes(test_object):
         assert name in selected_roi_names
 
         # Assert that the actual and expected dict_polygons dictionaries are equal in value
-        for key in test_object.new_polygons:
-            for uid in test_object.new_polygons[key]:
-                for polygon in range(0, len(test_object.new_polygons[key][uid])):
-                    for point in range(0, len(test_object.new_polygons[key][uid][polygon])):
-                        assert test_object.new_polygons[key][uid][polygon][point] == view_polygons[key][uid][polygon][point]
+        new_polygons = test_object.new_polygons
+        for key in new_polygons:
+            for uid in new_polygons[key]:
+                for polygon in range(0, len(new_polygons[key][uid])):
+                    for point in \
+                            range(0, len(new_polygons[key][uid][polygon])):
+                        assert new_polygons[key][uid][polygon][point] == \
+                               view_polygons[key][uid][polygon][point]
 
 
 def test_structure_tab_uncheck_checkboxes(test_object):
@@ -149,3 +158,64 @@ def test_structure_tab_uncheck_checkboxes(test_object):
 
         # Assert that the unchecked ROI is not in the selected_roi_names list
         assert name not in selected_roi_names
+
+
+def test_merge_rtss(qtbot, test_object):
+    """Test merging rtss. This function creates a new rtss, then merges
+    the new rtss with the old rtss and asserts that duplicated ROIs
+    will be overwritten when the other being merged.
+
+    :param test_object: test_object function, for accessing the shared
+    TestStructureTab object.
+    """
+    patient_dict_container = PatientDictContainer()
+
+    # Create a new rtss
+    dataset = patient_dict_container.dataset[0]
+    rtss_path = Path(patient_dict_container.path).joinpath('rtss.dcm')
+    new_rtss = create_initial_rtss_from_ct(
+        dataset, rtss_path, ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset))
+
+    # Set ROIs
+    rois = ImageLoading.get_roi_info(new_rtss)
+    patient_dict_container.set("rois", rois)
+
+    # Add a new ROI into the new rtss with the name of the first ROI in
+    # the old rtss
+    roi_name = test_object.rois.get(1)["name"]
+    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
+    new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
+
+    # Add a new ROI with a new name
+    roi_name = "NewTestROI"
+    new_rtss = create_roi(new_rtss, roi_name, roi_coordinates, dataset)
+
+    # Set ROIs
+    rois = ImageLoading.get_roi_info(new_rtss)
+    patient_dict_container.set("rois", rois)
+
+    patient_dict_container.set("existing_file_rtss",
+                               patient_dict_container.get("file_rtss"))
+    patient_dict_container.set("dataset_rtss", new_rtss)
+    patient_dict_container.set("file_rtss", rtss_path)
+
+    # Merge the old and new rtss
+    structure_tab = StructureTab()
+    structure_tab.show_modified_indicator()
+    qtbot.addWidget(structure_tab)
+
+    def test_message_window():
+        messagebox = structure_tab.findChild(QtWidgets.QMessageBox)
+        assert messagebox is not None
+        yes_button = messagebox.buttons()[1]
+        qtbot.mouseClick(yes_button, QtCore.Qt.LeftButton, delay=1)
+
+    QtCore.QTimer.singleShot(1000, test_message_window)
+
+    structure_tab.save_new_rtss(auto=True)
+
+    merged_rtss = pydicom.read_file(patient_dict_container.get(
+        "existing_file_rtss"))
+    merged_rois = ImageLoading.get_roi_info(merged_rtss)
+    assert (len(test_object.rois) + 1 == len(merged_rois))
