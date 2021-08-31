@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
-from src.Model.ImageFusion import dicom_crawler
+# from src.Model.ImageFusion import dicom_crawler
 from src.View.ProgressWindow import ProgressWindow
 from src.View.resources_open_patient_rc import *
 
