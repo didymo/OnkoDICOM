@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 
 from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
-    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow
+    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow, BatchWindow
 
 
 class Controller:
@@ -12,6 +12,7 @@ class Controller:
         self.welcome_window = QtWidgets.QMainWindow()
         self.open_patient_window = QtWidgets.QMainWindow()
         self.main_window = QtWidgets.QMainWindow()
+        self.batch_window = QtWidgets.QMainWindow()
         self.pyradi_progressbar = QtWidgets.QWidget()
         # This will contain a filepath of a folder that is dragged onto
         self.default_directory = default_directory
@@ -37,6 +38,7 @@ class Controller:
         """
         self.welcome_window = WelcomeWindow()
         self.welcome_window.go_next_window.connect(self.show_open_patient)
+        self.welcome_window.go_batch_window.connect(self.show_batch_window)
         self.welcome_window.show()
 
     def show_open_patient(self):
@@ -81,6 +83,15 @@ class Controller:
         progress_window.close()
         self.main_window.show()
         self.open_patient_window.close()
+
+    def show_batch_window(self):
+        # Only initialise the batch processing window once
+        if not isinstance(self.batch_window, BatchWindow):
+            self.batch_window = BatchWindow()
+
+        # Close the main window and show the batch processing window
+        self.batch_window.show()
+        self.welcome_window.close()
 
     def show_pyradi_progress(self, path, filepaths, target_path):
         """
