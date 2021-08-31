@@ -905,22 +905,39 @@ def manipulate_rois(first_sequence_geometry, second_sequence_geometry, image_uid
     :param operation: A string of either "INTERSECTION", "UNION", or "DIFFERENCE"
     :return: A dictionary with key-value pair {slice-id: Polygon/Multipolygon Object}
     """
+    if operation not in ["INTERSECTION", "UNION", "DIFFERENCE"]:
+        raise ValueError("Operation must be either INTERSECTION/UNION/DIFFERENCE")
+
     result_geometry_dict = {}
     for slice_id in image_uids:
         first_geometry = first_sequence_geometry.get(slice_id)
         second_geometry = second_sequence_geometry.get(slice_id)
-        if first_geometry and second_geometry:
-            first_geometry = make_valid(first_geometry)
-            second_geometry = make_valid(second_geometry)
-            if operation == "INTERSECTION":
-                result_geometry = first_geometry.intersection(second_geometry)
-            elif operation == "UNION":
+        first_geometry = make_valid(first_geometry) if first_geometry else first_geometry
+        second_geometry = make_valid(second_geometry) if second_geometry else second_geometry
+
+        if not first_geometry and not second_geometry:
+            continue
+
+        if operation == "INTERSECTION" and first_geometry and second_geometry:
+            result_geometry = first_geometry.intersection(second_geometry)
+        elif operation == "UNION":
+            if not first_geometry and second_geometry:
+                result_geometry = second_geometry
+            elif not second_geometry and first_geometry:
+                result_geometry = first_geometry
+            else:
                 result_geometry = first_geometry.union(second_geometry)
-            elif operation == "DIFFERENCE":
+        elif operation == "DIFFERENCE":
+            if first_geometry and not second_geometry:
+                result_geometry = first_geometry
+            elif first_geometry and second_geometry:
                 result_geometry = first_geometry.difference(second_geometry)
             else:
-                raise ValueError("Operation must be either INTERSECTION/UNION/DIFFERENCE")
-            result_geometry_dict[slice_id] = result_geometry
+                continue
+        else:
+            continue
+
+        result_geometry_dict[slice_id] = result_geometry
     return result_geometry_dict
 
 
