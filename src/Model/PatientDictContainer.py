@@ -97,7 +97,7 @@ class PatientDictContainer(metaclass=Singleton):
 
     def has_modality(self, dicom_type):
         """
-        Example usage: dicom_data.has_modality("rtss")
+        Example usage: dicom_data.has_modality("rtdose")
         :param dicom_type: A string containing a DICOM class name as defined
             in ImageLoading.allowed_classes
         :return: True if dataset contains provided DICOM type.
