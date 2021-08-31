@@ -324,6 +324,8 @@ class StructureTab(QtWidgets.QWidget):
         aspect = self.patient_dict_container.get("pixmap_aspect")
         roi_name = rois[roi_id]['name']
 
+        image_size = self.patient_dict_container.dataset[0].pixel_array.shape
+
         if state:
             new_dict_polygons_axial[roi_name] = {}
             new_dict_polygons_coronal[roi_name] = {}
@@ -333,13 +335,13 @@ class StructureTab(QtWidgets.QWidget):
             dict_rois_contours_coronal, dict_rois_contours_sagittal = transform_rois_contours(dict_rois_contours_axial)
 
             for slice_id in self.patient_dict_container.get("dict_uid").values():
-                polygons = calc_roi_polygon(roi_name, slice_id, dict_rois_contours_axial)
+                polygons = calc_roi_polygon(roi_name, slice_id, dict_rois_contours_axial, img_size=image_size)
                 new_dict_polygons_axial[roi_name][slice_id] = polygons
 
             for slice_id in range(0, len(self.patient_dict_container.get("pixmaps_coronal"))):
-                polygons_coronal = calc_roi_polygon(roi_name, slice_id, dict_rois_contours_coronal, aspect["coronal"])
+                polygons_coronal = calc_roi_polygon(roi_name, slice_id, dict_rois_contours_coronal, aspect["coronal"], image_size)
                 polygons_sagittal = calc_roi_polygon(roi_name, slice_id,
-                                                     dict_rois_contours_sagittal, 1 / aspect["sagittal"])
+                                                     dict_rois_contours_sagittal, 1 / aspect["sagittal"], image_size)
                 new_dict_polygons_coronal[roi_name][slice_id] = polygons_coronal
                 new_dict_polygons_sagittal[roi_name][slice_id] = polygons_sagittal
 
