@@ -70,39 +70,31 @@ class ClinicalDataView(QtWidgets.QWidget):
 
     def create_buttons(self):
         """
-        Creates a button for importing CSV data, and a button for
-        manually saving clinical data to a DICOM-SR.
+        Creates a button for importing CSV data.
         """
         # Layout for buttons
         self.button_layout = QtWidgets.QHBoxLayout()
 
         # Buttons
         self.import_button = QtWidgets.QPushButton(self)
-        self.save_button = QtWidgets.QPushButton(self)
 
         # Set cursor
         self.import_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.save_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
         # set button stylesheet
         self.import_button.setStyleSheet(self.stylesheet)
-        self.save_button.setStyleSheet(self.stylesheet)
 
         # Set text
         _translate = QtCore.QCoreApplication.translate
         self.import_button.setText(_translate("Clinical_Data",
                                               "Import CSV Data"))
-        self.save_button.setText(_translate("Clinical_Data",
-                                            "Save to DICOM SR"))
 
         # Connect button clicked events to functions
         self.import_button.clicked.connect(self.import_clinical_data)
-        self.save_button.clicked.connect(self.save_clinical_data)
 
         # Add buttons to layout
         self.button_layout.addWidget(self.import_button)
-        self.button_layout.addWidget(self.save_button)
         self.main_layout.addLayout(self.button_layout)
 
     def populate_table(self):
@@ -181,7 +173,7 @@ class ClinicalDataView(QtWidgets.QWidget):
             self.table_cd.insertRow(0)
             self.table_cd.setItem(0, 0, attrib)
             self.table_cd.setItem(0, 1, value)
-            
+
             return
 
         # See if CSV data matches patient ID
@@ -216,6 +208,9 @@ class ClinicalDataView(QtWidgets.QWidget):
 
         # Update table
         self.populate_table()
+
+        # Save clinical data to DICOM SR
+        self.save_clinical_data()
 
     def save_clinical_data(self):
         """
