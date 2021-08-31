@@ -401,14 +401,6 @@ class UIImageFusionWindow(object):
         recurse(self.open_patient_window_patients_tree.invisibleRootItem())
         return checked_items
 
-    def run_dicom_crawler(self):
-        filepath = self.open_patient_directory_input_box.text()
-        temp_path = os.path.join(filepath, 'tempFolder')
-        dicom_crawler(filepath,
-                      "overwrite",
-                      temp_path
-                      )
-
 
 # This is to allow for dropping a directory into the input text.
 class UIImageFusionWindowDragAndDropEvent(QLineEdit):

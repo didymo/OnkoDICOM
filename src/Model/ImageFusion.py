@@ -260,12 +260,6 @@ def write_transform_to_dcm(affine_matrix):
     print(ds)
 
 
-def dicom_crawler(filepath, overwrite, output):
-    process_dicom_directory(filepath,
-                            overwrite_existing_files=overwrite,
-                            output_directory=output)
-
-
 def create_fused_model(old_images, new_image):
 
     # fuse images
