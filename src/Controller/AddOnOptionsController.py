@@ -398,6 +398,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             new_dir = self.change_default_directory. \
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
+            QMessageBox.about(
+                self,
+                "Success",
+                "Default directory was successfully updated")
         except SqlError:
             configuration.set_up_config_db()
             QMessageBox.critical(
@@ -405,11 +409,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "Config file error",
                 "Failed to update default directory.\nPlease try again.")
 
-        QMessageBox.about(
-            self,
-            "Success",
-            "Changes were successfully applied")
-        
         # Close the Add-On Options Window after saving
         if hasattr(self.window, 'structures_tab'):
             self.window.structures_tab.init_standard_names()

@@ -51,6 +51,7 @@ class PatientDictContainer(metaclass=Singleton):
         :param kwargs: Any additional values that are required
             (e.g. rois, raw_dvh, raw_contour, etc)
         """
+        
         self.path = path
         self.dataset = dataset
         self.filepaths = filepaths
@@ -64,6 +65,7 @@ class PatientDictContainer(metaclass=Singleton):
         self.dataset = None
         self.filepaths = None
         self.additional_data = None
+
 
     def is_empty(self):
         """

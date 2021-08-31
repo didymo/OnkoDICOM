@@ -2,6 +2,7 @@ from PySide6 import QtGui, QtWidgets, QtCore
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
 from src.Controller.PathHandler import resource_path
 
 
@@ -19,6 +20,7 @@ class ActionHandler:
     def __init__(self, main_page):
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
+        self.moving_dict_container = MovingDictContainer()
         self.is_four_view = False
 
         ##############################
@@ -207,6 +209,23 @@ class ActionHandler:
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
 
+        # Image Fusion Action
+        self.icon_image_fusion = QtGui.QIcon()
+        self.icon_image_fusion.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/btn-icons/image_fusion_purple_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_image_fusion = QtGui.QAction()
+        self.action_image_fusion.setIcon(self.icon_image_fusion)
+        self.action_image_fusion.setIconVisibleInMenu(True)
+        self.action_image_fusion.setText("Image Fusion")
+
+        # Disables connection to the handler
+        # If this is disabled. GUIController will be the other way to access
+        # image fusion functionality.
+        # self.action_image_fusion.triggered.connect(self.image_fusion_handler)
+
     def init_windowing_menu(self):
         self.menu_windowing.setIcon(self.icon_windowing)
         self.menu_windowing.setTitle("Windowing")
@@ -287,6 +306,15 @@ class ActionHandler:
         self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
+
+        if hasattr(self, 'image_fusion_view'):
+            fusion_values = self.moving_dict_container.get("pixel_values")
+            fusion_aspect = self.moving_dict_container.get("pixmap_aspect")
+            fusion_axial, fusion_coronal, fusion_sagittal = get_pixmaps(fusion_values, window, level, fusion_aspect)
+            self.moving_dict_container.set("pixmaps_axial", fusion_axial)
+            self.moving_dict_container.set("pixmaps_coronal", fusion_coronal)
+            self.moving_dict_container.set("pixmaps_sagittal", fusion_sagittal)
+
 
         self.__main_page.update_views()
 
@@ -381,5 +409,20 @@ class ActionHandler:
             self.patient_dict_container.filepaths,
             '')
 
+
+    # Refers to the ImageController instantiated from the mainpage
+    def image_fusion_handler(self):
+             
+             
+        # print('Image Fusion Handler being called in Action Handler')
+        patient_directory_path = self.patient_dict_container.path
+        self.__main_page.image_fusion_controller.set_path(patient_directory_path)
+        self.__main_page.image_fusion_controller.show_image_fusion_select_window()
+
+        # self.__main_page.create_image_fusion_tab()
+
+
     def action_exit_handler(self):
         QtCore.QCoreApplication.exit(0)
+
+

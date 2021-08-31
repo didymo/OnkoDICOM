@@ -2,7 +2,7 @@ import glob
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -19,6 +19,11 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
+
+from src.Controller.ImageFusionController import ImageFusionController
+from src.View.mainpage.ImageFusionView import ImageFusionView
+from src.Model.MovingDictContainer import MovingDictContainer
+
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
@@ -38,10 +43,14 @@ class UIMainWindow:
     """
     pyradi_trigger = QtCore.Signal(str, dict, str)
 
+    # Connect to GUIController
+    image_fusion_main_window = QtCore.Signal()
+
     def setup_ui(self, main_window_instance):
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
+        self.image_fusion_controller = ImageFusionController(self)
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
@@ -203,12 +212,19 @@ class UIMainWindow:
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
         """
+        
         self.dicom_single_view.update_view()
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
         self.dicom_sagittal_view.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+        
+        # self.image_fusion_view_single_view.update_view(color=True)
+        if hasattr(self, 'image_fusion_view'):
+            self.image_fusion_view_axial.update_view(color=True)
+            self.image_fusion_view_coronal.update_view(color=True)
+            self.image_fusion_view_sagittal.update_view(color=True)
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or self.dicom_axial_view.vertical_view is None or\
@@ -255,3 +271,77 @@ class UIMainWindow:
         size: The size of the DicomStackedWidget
         """
         self.dicom_axial_view.format_metadata(size)
+
+    def create_image_fusion_tab(self):
+        # Instance of Moving Model
+        moving_dict_container = MovingDictContainer()
+
+        if moving_dict_container.has_modality("rtss"):
+            self.structures_tab = StructureTab()
+            self.structures_tab.request_update_structures.connect(self.update_views)
+            self.left_panel.addTab(self.structures_tab, "Structures")
+        elif hasattr(self, 'structures_tab'):
+            del self.structures_tab
+
+        if moving_dict_container.has_modality("rtdose"):
+            self.isodoses_tab = IsodoseTab()
+            self.isodoses_tab.request_update_isodoses.connect(self.update_views)
+            self.left_panel.addTab(self.isodoses_tab, "Isodoses")
+        elif hasattr(self, 'isodoses_tab'):
+            del self.isodoses_tab
+
+        # Hide left panel if no rtss or rtdose
+        if not moving_dict_container.has_modality("rtss") and not moving_dict_container.has_modality("rtdose"):
+            self.left_panel.hide()
+
+        roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
+        iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
+
+        # Add it to the panel
+        # Create an Image Fusion View containing single-slice and 3-slice views
+        # Add structures tab to left panel
+        
+        self.image_fusion_view = QStackedWidget()
+        
+        print("Create Image Fusion Tab")
+        self.image_fusion_view_axial = ImageFusionView(format_metadata=False, color=True)
+        self.image_fusion_view_sagittal = ImageFusionView(slice_view="sagittal", color=True)
+        self.image_fusion_view_coronal = ImageFusionView(slice_view="coronal", color=True)
+        
+        # Rescale the size of the scenes inside the 3-slice views
+        self.image_fusion_view_axial.zoom = 0.5
+        self.image_fusion_view_sagittal.zoom = 0.5
+        self.image_fusion_view_coronal.zoom = 0.5
+        self.image_fusion_view_axial.update_view(zoom_change = True, color=True)
+        self.image_fusion_view_sagittal.update_view(zoom_change=True, color=True)
+        self.image_fusion_view_coronal.update_view(zoom_change=True, color=True)
+
+        self.image_fusion_four_views = QWidget()
+        self.image_fusion_four_views_layout = QGridLayout()
+        for i in range(2):
+            self.image_fusion_four_views_layout.setColumnStretch(i, 1)
+            self.image_fusion_four_views_layout.setRowStretch(i, 1)
+        self.image_fusion_four_views_layout.addWidget(self.image_fusion_view_axial, 0, 0)
+        self.image_fusion_four_views_layout.addWidget(self.image_fusion_view_sagittal, 0, 1)
+        self.image_fusion_four_views_layout.addWidget(self.image_fusion_view_coronal, 1, 0)
+        self.image_fusion_four_views.setLayout(self.image_fusion_four_views_layout)
+        
+        self.image_fusion_single_view = ImageFusionView(color=True)
+        
+        self.image_fusion_view.addWidget(self.image_fusion_four_views)
+        self.image_fusion_view.addWidget(self.image_fusion_single_view)
+        self.image_fusion_view.setCurrentWidget(self.image_fusion_four_views)
+        
+
+        # Add Image Fusion Tab
+        self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
+        
+        
+        
+        '''
+        self.image_fusion_view = DicomStackedWidget(self.format_data)
+        self.image_fusion_single_view = ImageFusionView(color=True)
+        self.image_fusion_view.addWidget(self.image_fusion_single_view)
+        self.image_fusion_view.setCurrentWidget(self.image_fusion_single_view)
+        self.image_fusion_single_view.update_view()
+        self.right_panel.addTab(self.image_fusion_view, "Image Fusion")'''
