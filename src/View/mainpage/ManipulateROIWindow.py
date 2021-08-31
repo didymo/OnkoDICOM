@@ -35,6 +35,11 @@ class UIManipulateROIWindow:
         self.new_ROI_contours = None
         self.manipulate_roi_window_instance = manipulate_roi_window_instance
 
+        self.dict_rois_contours_axial = ROI.get_roi_contour_pixel(
+            self.patient_dict_container.get("raw_contour"),
+            self.roi_names,
+            self.patient_dict_container.get("pixluts"))
+
         self.dicom_view = DicomAxialView(roi_color=roi_color, metadata_formatted=True)
         self.dicom_preview = DicomAxialView(metadata_formatted=True)
         self.dicom_view.slider.valueChanged.connect(self.dicom_view_slider_value_changed)
@@ -296,16 +301,10 @@ class UIManipulateROIWindow:
                 self.patient_dict_container.dataset)
 
             # Execute the selected operation
-            if selected_operation == "Union":
-                print("Union selected")
-            elif selected_operation == "Intersection":
-                intersected_geometry = ROI.manipulate_rois(roi_1_geometry,
-                                                          roi_2_geometry,
-                                                          uid_list, "INTERSECTION")
-                self.new_ROI_contours = \
-                    ROI.geometry_to_roi(intersected_geometry)
-            elif selected_operation == "Difference":
-                print("Difference selected")
+            new_geometry = ROI.manipulate_rois(roi_1_geometry, roi_2_geometry,
+                                               uid_list,
+                                               selected_operation.upper())
+            self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
             self.draw_roi()
             return
@@ -357,11 +356,11 @@ class UIManipulateROIWindow:
 
         # Create a popup window that modifies the RTSTRUCT and tells the user
         # that processing is happening.
-        progress_window = SaveROIProgressWindow(
-            self, QtCore.Qt.WindowTitleHint)
+        progress_window = SaveROIProgressWindow(self,
+                                                QtCore.Qt.WindowTitleHint)
         progress_window.signal_roi_saved.connect(self.roi_saved)
-        progress_window.start_saving(
-            self.dataset_rtss, new_roi_name, single_array, ds)
+        progress_window.start_saving(self.dataset_rtss, new_roi_name,
+                                     single_array, ds)
         progress_window.show()
 
     def draw_roi(self):
@@ -411,17 +410,14 @@ class UIManipulateROIWindow:
         curr_slice = self.patient_dict_container.get("dict_uid")[slider_id]
         self.rois = self.patient_dict_container.get("rois")
 
+
         # Display the selected ROIs
         self.dicom_view.update_view()
         for roi_id, roi_dict in self.rois.items():
             roi_name = roi_dict['name']
             if roi_name in roi_names:
-                dict_rois_contours_axial = ROI.get_roi_contour_pixel(
-                    self.patient_dict_container.get("raw_contour"),
-                    [roi_name],
-                    self.patient_dict_container.get("pixluts"))
                 polygons = ROI.calc_roi_polygon(roi_name, curr_slice,
-                                                dict_rois_contours_axial)
+                                                self.dict_rois_contours_axial)
                 self.dicom_view.draw_roi_polygons(roi_id, polygons)
 
     def operation_changed(self):
