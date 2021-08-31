@@ -9,7 +9,7 @@ isodose_percentages = [107, 105, 100, 95, 90, 80, 70, 60, 30, 10]
 class IsodoseTab(QtWidgets.QWidget):
 
     request_update_isodoses = QtCore.Signal()
-    request_update_ui = QtCore.Signal()
+    request_update_ui = QtCore.Signal(tuple)
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
@@ -170,5 +170,6 @@ class IsodoseTab(QtWidgets.QWidget):
         Closes the progress window and refreshes
         the main screen.
         """
-        self.request_update_ui.emit()
+        self.request_update_ui.emit((
+            self.patient_dict_container.get('dataset_rtss'), {"draw": None}))
         self.progress_window.close()
