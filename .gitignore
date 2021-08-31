@@ -1,3 +1,23 @@
+# Ignore venv
+venv/
 
+# Ignore .idea
+.idea/
+
+# Ignore pyc
 *.pyc
 *.pyc
+
+# Ignore testdata
+test/testdata
+
+# Ignore .pyc
+*.pyc
+*.pkl
+data/csv/patientHash.csv
+Hash_map.csv
+*.pyo
+
+# Ignore compile results
+build/
+dist/

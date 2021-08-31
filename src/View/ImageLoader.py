@@ -137,6 +137,7 @@ class ImageLoader(QtCore.QObject):
         # Populate the initial values in the PatientDictContainer singleton.
 
         moving_dict_container = MovingDictContainer()
+        moving_dict_container.clear()
         moving_dict_container.set_initial_values(path, read_data_dict, file_names_dict)
 
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
@@ -147,13 +148,6 @@ class ImageLoader(QtCore.QObject):
         if interrupt_flag.is_set():
             print("stopped")
             return False
-
-        if 'rtss' in file_names_dict and 'rtdose' in file_names_dict:
-            self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
-            self.signal_request_calc_dvh.emit()
-
-            while not self.advised_calc_dvh:
-                pass
 
         if 'rtss' in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])

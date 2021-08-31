@@ -72,12 +72,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "parent_ID": 442,
                 "short_name": "Standard Volume Names",
             },
-            # {
-            #   'level': 1,
-            #   'dbID': 528,
-            #   'parent_ID': 442,
-            #   'short_name': 'Create ROI from Isodose'
-            #   }, # extra option not fully supported
+            {
+                'level': 1,
+                'dbID': 528,
+                'parent_ID': 442,
+                'short_name': 'Create ROIs from Isodoses'
+            },
             {
                 "level": 1,
                 "dbID": 520,
@@ -123,8 +123,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.add_new_window.clicked.connect(self.new_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
-        # self.add_new_roi.clicked.connect(self.new_isodose) # extra
-        # functionality
+        self.add_new_roi.clicked.connect(self.new_isodose)
+        self.delete_roi.clicked.connect(self.remove_isodose)
         self.import_organ_csv.clicked.connect(self.import_organs)
 
         # adding the right click menus for each table
@@ -143,9 +143,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.table_volume.customContextMenuRequested.connect(
             self.onCustomContextMenuRequestedVolume
         )
-        # self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # self.table_roi.customContextMenuRequested.connect(
-        # self.on_customContextMenuRequested_Roi)
+        self.table_roi.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.table_roi.customContextMenuRequested.connect(
+            self.on_custom_context_menu_requested_roi)
         # making the URL column a double clicked link
         self.table_organ.itemDoubleClicked.connect(self.open_link)
 
@@ -261,33 +261,38 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.table_volume.setItem(c, 0, QTableWidgetItem(new_data[0]))
                 self.table_volume.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    # This option is extra and not fully supported yet, TO DO in the future
-    # # ROI from IsoDoses
-    # @QtCore.pyqtSlot(QtCore.QPoint)
-    # def on_customContextMenuRequested_Roi(self, pos):
-    #     it = self.table_roi.itemAt(pos)
-    #     if it is None:
-    #         return
-    #     c = it.row()
-    #     item_range = QtWidgets.QTableWidgetSelectionRange(
-    #         c, 0, c, self.table_roi.columnCount() - 1)
-    #     self.table_roi.setRangeSelected(item_range, True)
-    #
-    #     menu = QtWidgets.QMenu()
-    #     modify_row_action = menu.addAction("Modify")
-    #     menu.addSeparator()
-    #     delete_row_action = menu.addAction("Delete")
-    #     action = menu.exec_(self.table_roi.viewport().mapToGlobal(pos))
-    #     if action == delete_row_action:
-    #         self.table_roi.removeRow(c)
-    #     if action == modify_row_action:
-    #         dialog = Dialog_Dose(self.table_roi.item(
-    #             c, 0).text(), self.table_roi.item(c, 2).text())
-    #         if dialog.exec():
-    #             new_data = dialog.getInputs()
-    #             self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
-    #             self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
-    #             self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
+    # ROI from IsoDoses
+    @Slot(QtCore.QPoint)
+    def on_custom_context_menu_requested_roi(self, pos):
+        it = self.table_roi.itemAt(pos)
+        if it is None:
+            return
+        c = it.row()
+        item_range = QtWidgets.QTableWidgetSelectionRange(
+            c, 0, c, self.table_roi.columnCount() - 1)
+        self.table_roi.setRangeSelected(item_range, True)
+
+        # Add right click menu
+        menu = QtWidgets.QMenu()
+        modify_row_action = menu.addAction("Modify")
+        menu.addSeparator()
+        delete_row_action = menu.addAction("Delete")
+        action = menu.exec(self.table_roi.viewport().mapToGlobal(pos))
+
+        # Delete row
+        if action == delete_row_action:
+            self.table_roi.removeRow(c)
+
+        # Insert row
+        if action == modify_row_action:
+            dialog = Dialog_Dose(self.table_roi.item(
+                c, 0).text(), self.table_roi.item(c, 3).text())
+            if dialog.exec():
+                new_data = dialog.getInputs()
+                self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
+                self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
+                self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
+                self.table_roi.setItem(c, 3, QTableWidgetItem(new_data[3]))
 
     # This function creates the tree view on the left according
     # to the given data
@@ -359,18 +364,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
 
-        # saves the new ROI from Isodoses, To Do in the future
-        # with open('src/data/csv/isodoseRoi.csv', 'w') as stream:
-        #     writer = csv.writer(stream)
-        #     for row in range(self.table_roi.rowCount()):
-        #         rowdata = []
-        #         for column in range(self.table_roi.columnCount()):
-        #             item = self.table_roi.item(row, column)
-        #             if item is not None:
-        #                 rowdata.append(item.text())
-        #             else:
-        #                 rowdata.append('')
-        #         writer.writerow(rowdata)
+        # saves the new ROI from Isodoses
+        with open('data/csv/isodoseRoi.csv', 'w', newline="") as stream:
+            writer = csv.writer(stream)
+            for row in range(self.table_roi.rowCount()):
+                rowdata = []
+                for column in range(self.table_roi.columnCount()):
+                    item = self.table_roi.item(row, column)
+                    if item is not None:
+                        rowdata.append(item.text())
+                    else:
+                        rowdata.append('')
+                writer.writerow(rowdata)
 
         # save configuration file
         with open(resource_path("data/line&fill_configuration"),
@@ -405,7 +410,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "Failed to update default directory.\nPlease try again.")
 
         # Close the Add-On Options Window after saving
-
         if hasattr(self.window, 'structures_tab'):
             self.window.structures_tab.init_standard_names()
             self.window.structures_tab.update_content()
@@ -426,7 +430,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
                 ]
-                self.table_view.insertRow(i)
+                if i >= self.table_view.rowCount():
+                    self.table_view.setRowCount(self.table_view.rowCount() + 1)
                 self.table_view.setItem(i, 0, items[0])
                 self.table_view.setItem(i, 1, items[1])
                 self.table_view.setItem(i, 2, items[2])
@@ -442,13 +447,15 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
                 ]
-                self.table_organ.insertRow(i)
+                if i >= self.table_organ.rowCount():
+                    self.table_organ.setRowCount(self.table_organ.rowCount() + 1)
                 self.table_organ.setItem(i, 0, items[0])
                 self.table_organ.setItem(i, 1, items[1])
                 self.table_organ.setItem(i, 2, items[2])
                 if len(items) > 3:
                     self.table_organ.setItem(i, 3, items[3])
                 i += 1
+
 
         # volume name table
         with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
@@ -458,32 +465,37 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     QTableWidgetItem(str(item.replace("\n", "")))
                     for item in row.split(",")
                 ]
-                self.table_volume.insertRow(i)
+                if i >= self.table_volume.rowCount():
+                    self.table_volume.setRowCount(self.table_volume.rowCount() + 1)
                 self.table_volume.setItem(i, 0, items[0])
                 self.table_volume.setItem(i, 1, items[1])
                 i += 1
 
-        # roi isodose table, TO DO in the future
+        # roi isodose table
+        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+            # Clear table to prevent displaying data multiple times
+            self.table_roi.setRowCount(0)
 
-        # with open('src/data/csv/isodoseRoi.csv', "r") as fileInput:
-        #     i = 0;
-        #     for row in fileInput:
-        #         items = [
-        #             QTableWidgetItem(str(item.replace('\n', '')))
-        #             for item in row.split(',')
-        #         ]
-        #         self.table_roi.insertRow(i)
-        #         self.table_roi.setItem(i, 0, items[0])
-        #         self.table_roi.setItem(i, 1, items[1])
-        #         if len(items) > 2:
-        #             self.table_roi.setItem(i, 2, items[2])
-        #         i += 1
+            # Loop through each row
+            for i, row in enumerate(fileInput):
+                items = [
+                    QTableWidgetItem(str(item.replace('\n', '')))
+                    for item in row.split(',')
+                ]
+
+                # Add row to table
+                self.table_roi.insertRow(i)
+                self.table_roi.setItem(i, 0, items[0])
+                self.table_roi.setItem(i, 1, items[1])
+                self.table_roi.setItem(i, 2, items[2])
+                if len(items) > 3:
+                    self.table_roi.setItem(i, 3, items[3])
 
         # patient hash ID table, which is just for displaying all the
         # patients anonymized byt the software since intallation
         with open(resource_path("data/csv/patientHash.csv"),
                   "r") as file_input:
-            next(file_input)
+            next(file_input, None)
             i = 0
             for row in file_input:
                 items = [
@@ -491,7 +503,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if len(items) >= 2:
-                    self.table_ids.insertRow(i)
+                    if i >= self.table_ids.rowCount():
+                        self.table_ids.setRowCount(self.table_ids.rowCount() + 1)
                     self.table_ids.setItem(i, 0, items[0])
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
@@ -534,18 +547,39 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self.table_volume.setItem(c, 0, QTableWidgetItem(new_data[0]))
             self.table_volume.setItem(c, 1, QTableWidgetItem(new_data[1]))
 
-    # def new_isodose(self):
-    #     dialog = Dialog_Dose('')
-    #     c = self.table_roi.rowCount()
-    #     if dialog.exec():
-    #         new_data = dialog.getInputs()
-    #         self.table_roi.insertRow(c)
-    #         self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
-    #         self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
+    # This function enables the entry of a new isodose level
+    def new_isodose(self):
+        dialog = Dialog_Dose("", "")
+        c = self.table_roi.rowCount()
+        if dialog.exec():
+            new_data = dialog.getInputs()
+            self.table_roi.insertRow(c)
+            self.table_roi.setItem(c, 0, QTableWidgetItem(new_data[0]))
+            self.table_roi.setItem(c, 1, QTableWidgetItem(new_data[1]))
+            self.table_roi.setItem(c, 2, QTableWidgetItem(new_data[2]))
+            self.table_roi.setItem(c, 3, QTableWidgetItem(new_data[3]))
+
+    # This function enables deletion of an isodose level
+    def remove_isodose(self):
+        # Get selected rows
+        rows = sorted(set(index.row() for index in
+                          self.table_roi.selectedIndexes()))
+        if rows:
+            # Remove selected rows. Variable i is needed as, for example
+            # if row 0 and 1 are to be removed, row 0 will be removed
+            # first, making row 1 now row 0. Therefore, to remove row
+            # '1', we need to remove row 1 minus the amount of rows that
+            # have already been removed.
+            i = 0
+            for row in rows:
+                self.table_roi.removeRow(row - i)
+                i += 1
+        else:
+            QMessageBox.warning(self, "No Isodose Selected",
+                                      "No isodose levels have been selected.")
 
     # the following function lets you import a csv of organ names into the
     # table if the csv is in the given format
-
     def import_organs(self):
         self.check_change = False
         path = QFileDialog.getOpenFileName(
@@ -587,4 +621,5 @@ class AddOptions:
         self.options_window = AddOnOptions(window)
 
     def show_add_on_options(self):
+        self.options_window.fill_tables()
         self.options_window.show()

@@ -15,7 +15,9 @@ from src.Model.MovingDictContainer import  MovingDictContainer
 
 from platipy.dicom.io.crawl import process_dicom_directory
 from platipy.imaging.registration.linear import linear_registration
-from platipy.imaging.visualisation.utils import (generate_comparison_colormix, return_slice)
+from platipy.imaging.visualisation.utils import generate_comparison_colormix, \
+    return_slice
+
 
 # Utility Functions
 
@@ -319,6 +321,7 @@ def register_images(image_1, image_2):
     return img_ct, tfm
 
 
+
 def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
     # Get a color pixmap.
     # :param sitk image: original 3d image
@@ -384,12 +387,10 @@ def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
 
         # Then continues to convert to pixmap just like in onko
         pixmap = QtGui.QPixmap(qimage)
-
         pixmap = pixmap.scaled(512, 512, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
 
     # Generates an rgb color overlaid image,
     # convert to contiguous array, and also flip the array if it is a coronal (y) or sagittal (x)
-
     return pixmap
 
 

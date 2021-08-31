@@ -6,6 +6,7 @@ from src.Model.MovingModel import create_moving_model
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 
+
 class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
     go_next_window = QtCore.Signal(object)
 
@@ -22,9 +23,9 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
 
+
 # This Controller is currently being called by the MainPage only
 class ImageFusionController:
-
     progress_window_signal = QtCore.Signal()
 
     def __init__(self, window, default_directory=None):
@@ -32,7 +33,8 @@ class ImageFusionController:
         self.window = window
         self.image_fusion_select_window = QtWidgets.QMainWindow()
         self.image_fusion_select_window = ImageFusionWindow()
-        self.image_fusion_select_window.go_next_window.connect(self.close_select_window)
+        self.image_fusion_select_window.go_next_window.connect(
+            self.close_select_window)
 
     def set_path(self, directory):
         self.image_fusion_select_window.set_up_directory(directory)
@@ -41,26 +43,12 @@ class ImageFusionController:
         self.image_fusion_select_window.show()
 
     def close_select_window(self, progress_window):
-
-        
-        
         print('Creating Moving Model')
         create_moving_model()
         print('Finished Creating Moving Model')
-       
-        
-        
-        
-        
+
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
-       
+
         self.image_fusion_select_window.close()
         self.progress_window_signal.emit()
-
-
-
-
-
-
-

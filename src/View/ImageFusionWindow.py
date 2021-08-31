@@ -219,7 +219,8 @@ class UIImageFusionWindow(object):
             self.open_patient_window_patients_tree.clear()
 
             # Next, update the tree widget
-            self.open_patient_window_patients_tree.addTopLevelItem(QTreeWidgetItem(["Loading selected directory..."]))
+            self.open_patient_window_patients_tree.addTopLevelItem(
+                QTreeWidgetItem(["Loading selected directory..."]))
 
             # The choose button is disabled until the thread finishes executing
             self.open_patient_directory_choose_button.setEnabled(False)
@@ -227,7 +228,8 @@ class UIImageFusionWindow(object):
             # Reveals the Stop Search button for the duration of the search
             self.open_patient_window_stop_button.setVisible(True)
 
-            # The interrupt flag is then un-set if a previous search has been stopped.
+            # The interrupt flag is then un-set if a previous search
+            # has been stopped.
             self.interrupt_flag.clear()
 
             # Then, create a new thread that will load the selected folder
@@ -245,7 +247,8 @@ class UIImageFusionWindow(object):
         Gets filepath from the user and loads all files and subdirectories.
         """
         # Get folder path from pop up dialog box
-        self.filepath = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select patient folder...', '')
+        self.filepath = QtWidgets.QFileDialog.getExistingDirectory(
+            None, 'Select patient folder...', '')
         self.open_patient_directory_input_box.setText(self.filepath)
         self.scan_directory_for_patient()
 
@@ -257,8 +260,10 @@ class UIImageFusionWindow(object):
         Current progress of the file search.
         """
         self.open_patient_window_patients_tree.clear()
-        self.open_patient_window_patients_tree.addTopLevelItem(QTreeWidgetItem(["Loading selected directory... (%s files searched)"
-                                                          % progress_update]))
+        self.open_patient_window_patients_tree.addTopLevelItem(
+            QTreeWidgetItem(
+                ["Loading selected directory... (%s files searched)" %
+                 progress_update]))
 
     def on_search_complete(self, dicom_structure):
         """
@@ -269,7 +274,8 @@ class UIImageFusionWindow(object):
         self.open_patient_window_stop_button.setVisible(False)
         self.open_patient_window_patients_tree.clear()
 
-        if dicom_structure is None:  # dicom_structure will be None if function was interrupted.
+        if dicom_structure is None:  # dicom_structure will be None if
+            # function was interrupted.
             return
 
         for patient_item in dicom_structure.get_tree_items_list():
@@ -285,7 +291,8 @@ class UIImageFusionWindow(object):
             Inform user about missing DICOM files.
         """
         selected_patient = item
-        # If the item is not top-level, bubble up to see which top-level item this item belongs to
+        # If the item is not top-level, bubble up to see which top-level
+        # item this item belongs to
         if self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(item) == -1:
             while self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(selected_patient) == -1:
                 selected_patient = selected_patient.parent()
@@ -334,7 +341,8 @@ class UIImageFusionWindow(object):
         """
         Begins loading of the selected files.
         """
-        # Currently testing if it's possible to run dicom_crawler on patient directory
+        # Currently testing if it's possible to run dicom_crawler
+        # on patient directory
         # Calls for line:380 in this file
         # self.run_dicom_crawler()
 
@@ -342,13 +350,12 @@ class UIImageFusionWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        self.progress_window = ProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window = ProgressWindow(
+            self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
         self.progress_window.start_load_moving_image(selected_files)
         self.progress_window.exec_()
-
-
 
     def on_loaded(self, results):
         """
@@ -362,17 +369,22 @@ class UIImageFusionWindow(object):
         Error handling for progress window.
         """
         if error_code == 0:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
-                              "Selected files cannot be opened as they are not a DICOM-RT set.")
+            QMessageBox.about(
+                self.progress_window, "Unable to open selection",
+                "Selected files cannot be opened as they are not a "
+                "DICOM-RT set.")
             self.progress_window.close()
         elif error_code == 1:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
-                              "Selected files cannot be opened as they contain unsupported DICOM classes.")
+            QMessageBox.about(
+                self.progress_window, "Unable to open selection",
+                "Selected files cannot be opened as they contain "
+                "unsupported DICOM classes.")
             self.progress_window.close()
 
     def get_checked_leaves(self):
         """
-        :return: A list of all QTreeWidgetItems in the QTreeWidget that are both leaves and checked.
+        :return: A list of all QTreeWidgetItems in the QTreeWidget that are
+        both leaves and checked.
         """
         checked_items = []
 
@@ -397,14 +409,15 @@ class UIImageFusionWindow(object):
                       temp_path
                       )
 
+
 # This is to allow for dropping a directory into the input text.
 class UIImageFusionWindowDragAndDropEvent(QLineEdit):
 
     parent_window = None
 
-    def __init__(self, UIImageFusionWindowInstance):
+    def __init__(self, ui_image_fusion_window_instance):
         super(UIImageFusionWindowDragAndDropEvent, self).__init__()
-        self.parent_window = UIImageFusionWindowInstance
+        self.parent_window = ui_image_fusion_window_instance
         self.setDragEnabled(True)
 
     def dragEnterEvent(self, event):

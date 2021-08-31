@@ -98,9 +98,15 @@ class UIMainWindow:
 
         # Add structures tab to left panel
         if patient_dict_container.has_modality("rtss"):
-            self.structures_tab = StructureTab()
-            self.structures_tab.request_update_structures.connect(self.update_views)
-            self.left_panel.addTab(self.structures_tab, "Structures")
+            # Only add structures if ROIs exist, or there are no ROIs
+            # but the rtss is marked as being modified
+            if len(patient_dict_container.get("rois")) > 0 or\
+                (len(patient_dict_container.get("rois")) == 0\
+                 and patient_dict_container.get("rtss_modified") is True):
+                self.structures_tab = StructureTab()
+                self.structures_tab.request_update_structures.connect(
+                    self.update_views)
+                self.left_panel.addTab(self.structures_tab, "Structures")
         elif hasattr(self, 'structures_tab'):
             del self.structures_tab
 
@@ -108,6 +114,13 @@ class UIMainWindow:
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
+
+            # Only connect the structure modified signal if there is
+            # an rtss and there are ROIs
+            if patient_dict_container.has_modality("rtss") and \
+                    len(patient_dict_container.get("rois")) > 0:
+                self.isodoses_tab.iso2roi.signal_roi_drawn.connect(
+                    self.structures_tab.structure_modified)
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
 
@@ -215,10 +228,19 @@ class UIMainWindow:
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
         """
-        self.image_fusion_view_single_view.update_view(color=True)
-        self.image_fusion_view_view_axial.update_view(color=True)
-        self.image_fusion_view_view_coronal.update_view(color=True)
-        self.image_fusion_view_view_sagittal.update_view(color=True)     
+        
+        self.dicom_single_view.update_view()
+        self.dicom_axial_view.update_view()
+        self.dicom_coronal_view.update_view()
+        self.dicom_sagittal_view.update_view()
+        if hasattr(self, 'dvh_tab'):
+            self.dvh_tab.update_plot()
+        
+        # self.image_fusion_view_single_view.update_view(color=True)
+        if hasattr(self, 'image_fusion_view'):
+            self.image_fusion_view_axial.update_view(color=True)
+            self.image_fusion_view_coronal.update_view(color=True)
+            self.image_fusion_view_sagittal.update_view(color=True)
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or self.dicom_axial_view.vertical_view is None or\
@@ -339,7 +361,3 @@ class UIMainWindow:
         self.image_fusion_view.setCurrentWidget(self.image_fusion_single_view)
         self.image_fusion_single_view.update_view()
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")'''
-        
-        
-        
-        

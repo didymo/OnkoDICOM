@@ -1,4 +1,6 @@
 from shutil import which
+from pathlib import Path
+import os
 
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
@@ -125,14 +127,17 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         # Connect signal from mainpage to the function located in mainpage.py
         self.image_fusion_main_window.connect(self.create_image_fusion_tab)
 
-
     def update_ui(self):
         create_initial_model()
         self.setup_central_widget()
         self.setup_actions()
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
-        self.pyradi_trigger.connect(self.pyradiomics_handler)
+
+        # Add isodose tab update signal if RT Dose loaded
+        patient_dict_container = PatientDictContainer()
+        if patient_dict_container.has_modality("rtdose"):
+            self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
         # This will invoke load_moving_model which would then be updated by the
         # Top Level Controller
@@ -142,29 +147,27 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         print('Fusing Images')
         patient_dict_container = PatientDictContainer()
         moving_dict_container = MovingDictContainer()
-        
+
         amount = len(patient_dict_container.filepaths)
         orig_fusion_list = []
-        
+
         for i in range(amount):
             try:
                  orig_fusion_list.append(patient_dict_container.filepaths[i])
             except KeyError:
                  continue
-                 
-        orig_image = sitk.ReadImage(orig_fusion_list)           
-        
-        moving_dict_container = MovingDictContainer()
-        
+
+        orig_image = sitk.ReadImage(orig_fusion_list)
+
         amount = len(moving_dict_container.filepaths)
         new_fusion_list = []
-        
+
         for i in range(amount):
             try:
                  new_fusion_list.append(moving_dict_container.filepaths[i])
             except KeyError:
                  continue
-                 
+
         new_image = sitk.ReadImage(new_fusion_list)
 
         color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
@@ -172,9 +175,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container.set("color_axial", color_axial)
         patient_dict_container.set("color_sagittal", color_sagittal)
         patient_dict_container.set("color_coronal", color_coronal)
-        
+
         print('hurray')
-        
 
     def open_new_patient(self):
         """
@@ -194,9 +196,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         print('GUIController calling for Image Fusion - emit signals')
         patient_dict_container = PatientDictContainer()
         filepath = patient_dict_container.path
-        self.image_fusion_signal.emit(filepath)
-
-
+        self.image_fusion_signal.emit(os.path.dirname(filepath))
 
     def pyradiomics_handler(self, path, filepaths, hashed_path):
         """
