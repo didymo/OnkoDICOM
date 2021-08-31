@@ -1,20 +1,16 @@
-import math
-
 import numpy as np
 import vtk
 from PySide6 import QtWidgets
-from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtWidgets import QPushButton, QLabel
+from PySide6.QtWidgets import QPushButton
 from vtkmodules.util import numpy_support
-from vtkmodules.util.vtkConstants import VTK_DOUBLE, VTK_INT
+from vtkmodules.util.vtkConstants import VTK_INT
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
 from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty, \
-    vtkLODProp3D, vtkImageProperty, vtkVolume
-from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper, vtkGPUVolumeRayCastMapper
+    vtkVolume
+from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 
 class DicomView3D(QtWidgets.QWidget):
@@ -22,7 +18,6 @@ class DicomView3D(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.is_rendered = False
-        self.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.patient_dict_container = PatientDictContainer()
         # Create the layout
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
@@ -46,37 +41,7 @@ class DicomView3D(QtWidgets.QWidget):
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
         self.vtk_widget.GetRenderWindow().FullScreenOff()
 
-    def update_volume_by_window_level(self):
-        # Convert pixel_values in patient_dict_container into a 3D numpy array
-        three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
-        three_dimension_np_array = three_dimension_np_array.astype(np.int16)
-        three_dimension_np_array = (three_dimension_np_array - (
-            self.patient_dict_container.get("level"))) / self.patient_dict_container.get("window") * 255
-        three_dimension_np_array[three_dimension_np_array < 0] = 0
-        three_dimension_np_array[three_dimension_np_array > 255] = 255
-        three_dimension_np_array = three_dimension_np_array.astype(np.int8)
-        depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
-                                                 , array_type=VTK_INT)
-
-        # Convert 3d pixel array into vtkImageData to display as vtkVolume
-        self.imdata.GetPointData().SetScalars(depth_array)
-        self.volume_mapper.SetInputData(self.imdata)
-        self.volume.SetMapper(self.volume_mapper)
-        self.volume.SetProperty(self.volume_property)
-        self.volume.SetScale(
-            self.patient_dict_container.get("pixmap_aspect")["axial"],
-            self.patient_dict_container.get("pixmap_aspect")["sagittal"],
-            self.patient_dict_container.get("pixmap_aspect")["sagittal"]
-        )
-
-        # Add the volume to the renderer
-        self.renderer.ResetCamera()
-        self.renderer.RemoveVolume(self.volume)
-        self.renderer.AddVolume(self.volume)
-
-    def populate_volume_data(self):
-
-        # Convert pixel_values in patient_dict_container into a 3D numpy array
+    def convert_pixel_values_to_vtk_3d_array(self):
         three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
         three_dimension_np_array = three_dimension_np_array.astype(np.int16)
         three_dimension_np_array = (three_dimension_np_array - (
@@ -86,10 +51,30 @@ class DicomView3D(QtWidgets.QWidget):
         three_dimension_np_array = three_dimension_np_array.astype(np.int8)
         self.depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
                                                       , array_type=VTK_INT)
+        self.shape = three_dimension_np_array.shape
+
+    def update_volume_by_window_level(self):
+        # Convert pixel_values in patient_dict_container into a 3D numpy array
+        self.convert_pixel_values_to_vtk_3d_array()
+
+        # Convert 3d pixel array into vtkImageData to display as vtkVolume
+        self.imdata.GetPointData().SetScalars(self.depth_array)
+        self.volume_mapper.SetInputData(self.imdata)
+        self.volume.SetMapper(self.volume_mapper)
+
+        # Add the volume to the renderer
+        self.renderer.ResetCamera()
+        self.renderer.RemoveVolume(self.volume)
+        self.renderer.AddVolume(self.volume)
+
+    def populate_volume_data(self):
+
+        # Convert pixel_values in patient_dict_container into a 3D numpy array
+        self.convert_pixel_values_to_vtk_3d_array()
 
         # Convert 3d pixel array into vtkImageData to display as vtkVolume
         self.imdata = vtkImageData()
-        self.imdata.SetDimensions(three_dimension_np_array.shape)
+        self.imdata.SetDimensions(self.shape)
         self.imdata.GetPointData().SetScalars(self.depth_array)
 
         self.volume_mapper = vtkFixedPointVolumeRayCastMapper()
@@ -112,13 +97,12 @@ class DicomView3D(QtWidgets.QWidget):
         self.renderer.RemoveVolume(self.volume)
         self.renderer.AddVolume(self.volume)
 
-
     def init_camera(self):
         # Set up an initial view of the volume. The focal point will be the
         # center of the volume, and the zoom is 0.5
         self.camera = self.renderer.GetActiveCamera()
         self.camera.SetFocalPoint(self.volume.GetCenter())
-        self.camera.Zoom(self.zoom)
+        self.camera.Zoom(0.5)
 
     def initialize_volume_color(self):
         # The colorTransferFunction maps voxel intensities to colors.
@@ -201,4 +185,3 @@ class DicomView3D(QtWidgets.QWidget):
         if self.vtk_widget:
             self.vtk_widget.Finalize()
             self.vtk_widget.close()
-
