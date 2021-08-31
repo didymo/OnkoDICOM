@@ -6,6 +6,7 @@ from PySide6 import QtCore
 from pydicom import dcmread
 
 from src.Model import ImageLoading
+from src.Model.CalculateDVHs import dvh2rtdose, rtdose2dvh
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.GetPatientInfo import DicomTree
@@ -60,13 +61,6 @@ class ImageLoader(QtCore.QObject):
             print("stopped")
             return False
 
-        if 'rtss' in file_names_dict and 'rtdose' in file_names_dict:
-            self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
-            self.signal_request_calc_dvh.emit()
-
-            while not self.advised_calc_dvh:
-                pass
-
         if 'rtss' in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])
 
@@ -100,16 +94,57 @@ class ImageLoader(QtCore.QObject):
             patient_dict_container.set("num_points", dict_numpoints)
             patient_dict_container.set("pixluts", dict_pixluts)
 
-            if 'rtdose' in file_names_dict and self.calc_dvh:
-                dataset_rtdose = dcmread(file_names_dict['rtdose'])
+            if 'rtdose' in file_names_dict:
+                # Check to see if DVH data exists in the RT Dose. If
+                # it is there, return (it will be populated later). If
+                # not, ask if the user wants it calculated.
+                try:
+                    dvh_data = rtdose2dvh()
+                    if bool(dvh_data) and not dvh_data["diff"]:
+                        return True
+                except KeyError:
+                    pass
 
-                # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which
-                # ends up making multiprocessing on these platforms more expensive than linear calculation. As such,
-                # multiprocessing is only available on Linux until a better solution is found.
-                fork_safe_platforms = ['Linux']
-                if platform.system() in fork_safe_platforms:
-                    progress_callback.emit(("Calculating DVHs...", 60))
-                    raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness)
+                self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
+                self.signal_request_calc_dvh.emit()
+
+                while not self.advised_calc_dvh:
+                    pass
+
+                if self.calc_dvh:
+                    dataset_rtdose = dcmread(file_names_dict['rtdose'])
+
+                    # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which
+                    # ends up making multiprocessing on these platforms more expensive than linear calculation. As such,
+                    # multiprocessing is only available on Linux until a better solution is found.
+                    fork_safe_platforms = ['Linux']
+                    if platform.system() in fork_safe_platforms:
+                        progress_callback.emit(("Calculating DVHs...", 60))
+                        raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness)
+                    else:
+                        progress_callback.emit(("Calculating DVHs... (This may take a while)", 60))
+                        raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)
+
+                    if interrupt_flag.is_set():  # Stop loading.
+                        print("stopped")
+                        return False
+
+                    progress_callback.emit(("Converging to zero...", 80))
+                    dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
+
+                    if interrupt_flag.is_set():  # Stop loading.
+                        print("stopped")
+                        return False
+
+                    # Add DVH values to PatientDictContainer
+                    patient_dict_container.set("raw_dvh", raw_dvh)
+                    patient_dict_container.set("dvh_x_y", dvh_x_y)
+                    patient_dict_container.set("dvh_outdated", False)
+
+                    # Write DVH data to the RT Dose
+                    dvh2rtdose(raw_dvh)
+
+                    return True
                 else:
                     progress_callback.emit(("Calculating DVHs... (This may take a while)", 60))
                     raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)

@@ -32,9 +32,9 @@ class OpenPatientProgressWindow(ProgressWindow):
         platform is performed to ensure consistency of button positioning across
         platforms.
         """
-        message = "RTSTRUCT and RTDOSE datasets identified. Would you like to "
-        message += "calculate DVHs? (This may take up to several minutes on "
-        message += "some systems.)"
+        message = "DVHs not present in RT DOSE or do not correspond to ROIs. "
+        message += "Would you like to calculate DVHs? (This may take up to "
+        message += "several minutes on some systems.)"
         if platform.system() == "Linux":
             choice = QMessageBox.question(self, "Calculate DVHs?", message,
                                           QMessageBox.Yes | QMessageBox.No)
