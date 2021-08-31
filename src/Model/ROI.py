@@ -11,6 +11,7 @@ from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 from shapely.geometry import Polygon, MultiPolygon
 from shapely.errors import TopologicalError
+from shapely.validation import make_valid
 
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -908,9 +909,10 @@ def intersect_rois(first_sequence_geometry, second_sequence_geometry, image_uids
         first_geometry = first_sequence_geometry.get(slice_id)
         second_geometry = second_sequence_geometry.get(slice_id)
         if first_geometry and second_geometry:
-            if first_geometry.is_valid and second_geometry.is_valid:
-                result_geometry = first_geometry.intersection(second_geometry)
-                result_geometry_dict[slice_id] = result_geometry
+            first_geometry = make_valid(first_geometry)
+            second_geometry = make_valid(second_geometry)
+            result_geometry = first_geometry.intersection(second_geometry)
+            result_geometry_dict[slice_id] = result_geometry
     return result_geometry_dict
 
 
@@ -925,16 +927,18 @@ def geometry_to_roi(roi_sequence_geometry):
         contour_sequence = []
         geometry_type = geometry.geom_type
         if not geometry.is_empty:
-            if geometry_type == "Polygon":
+            if geometry_type == 'Polygon':
                 contour_data = []
                 for coord in geometry.exterior.coords:
                     contour_data.append(list(map(int, coord)))
                 contour_sequence.append(contour_data)
-            elif geometry_type == "MultiPolygon":
+            elif geometry_type in ['MultiPolygon', 'GeometryCollection']:
                 for polygon in geometry:
-                    contour_data = []
-                    for coord in polygon.exterior.coords:
-                        contour_data.append(list(map(int, coord)))
-                    contour_sequence.append(contour_data)
-            roi_contour_sequence[slice_id] = contour_sequence
+                    if polygon.geom_type == 'Polygon' and not polygon.is_empty:
+                        contour_data = []
+                        for coord in polygon.exterior.coords:
+                            contour_data.append(list(map(int, coord)))
+                        contour_sequence.append(contour_data)
+            if contour_sequence:
+                roi_contour_sequence[slice_id] = contour_sequence
     return roi_contour_sequence

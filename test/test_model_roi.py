@@ -176,6 +176,33 @@ def test_create_roi():
     assert (rt_ss.RTROIObservationsSequence[0].RTROIInterpretedType == "ORGAN")
 
 
+def test_roi_to_geometry(test_object):
+    roi_names = [roi['name'] for roi in test_object.patient_dict_container.get("rois").values()
+                 if 'ISO' not in roi['name']]
+    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
+                                               roi_names, test_object.patient_dict_container.get("pixluts"))
+    for roi_name in roi_names:
+        roi_geometry = roi_to_geometry(dict_rois_contours[roi_name])
+        for slice_id, geometry in roi_geometry.items():
+            if geometry.geom_type == "Polygon":
+                assert len(geometry.exterior.coords) - len(dict_rois_contours[roi_name][slice_id][0]) <= 1
+            else:
+                for i in range(len(geometry)):
+                    assert len(geometry[i].exterior.coords) - len(dict_rois_contours[roi_name][slice_id][i]) <= 1
+
+
+def test_roi_intersection(test_object):
+    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
+                                               ['LUNG_R', 'LIVER'],
+                                               test_object.patient_dict_container.get("pixluts"))
+    lung_r_geometry = roi_to_geometry(dict_rois_contours['LUNG_R'])
+    liver_geometry = roi_to_geometry(dict_rois_contours['LIVER'])
+    uid_list = ImageLoading.get_image_uid_list(test_object.patient_dict_container.dataset)
+    result_geometry = intersect_rois(lung_r_geometry, liver_geometry, uid_list)
+    result_contours = geometry_to_roi(result_geometry)
+    assert len(result_contours.keys()) == 1
+
+
 def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
     # Create a test rtss
     path = test_object.patient_dict_container.path
@@ -229,32 +256,3 @@ def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
     # Checking type 1 sequence tags
     for tag in type_1_sequence_tags:
         assert (tag in rtss) is True
-
-
-def test_roi_to_geometry(test_object):
-    roi_names = [roi['name'] for roi in test_object.patient_dict_container.get("rois").values()
-                 if 'ISO' not in roi['name']]
-    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
-                                               roi_names, test_object.patient_dict_container.get("pixluts"))
-    for roi_name in roi_names:
-        roi_geometry = roi_to_geometry(dict_rois_contours[roi_name])
-        for slice_id, geometry in roi_geometry.items():
-            if geometry.geom_type == "Polygon":
-                assert len(geometry.exterior.coords) - len(dict_rois_contours[roi_name][slice_id][0]) <= 1
-            else:
-                for i in range(len(geometry)):
-                    assert len(geometry[i].exterior.coords) - len(dict_rois_contours[roi_name][slice_id][i]) <= 1
-
-
-def test_roi_intersection(test_object):
-    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
-                                               ['LUNG_R', 'LUNGS', 'LUNG_L'],
-                                               test_object.patient_dict_container.get("pixluts"))
-    lungs_geometry = roi_to_geometry(dict_rois_contours['LUNGS'])
-    lung_r_geometry = roi_to_geometry(dict_rois_contours['LUNG_R'])
-    lung_l_geometry = roi_to_geometry(dict_rois_contours['LUNG_L'])
-    uid_list = ImageLoading.get_image_uid_list(test_object.patient_dict_container.dataset)
-    result_geometry = intersect_rois(lungs_geometry, lung_r_geometry, uid_list)
-    empty_geometry = intersect_rois(result_geometry, lung_l_geometry, uid_list)
-    empty_rois_contours = geometry_to_roi(empty_geometry)
-    assert not empty_rois_contours
