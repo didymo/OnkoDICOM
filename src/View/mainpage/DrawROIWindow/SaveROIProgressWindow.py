@@ -11,7 +11,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_saved = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_saved = QtCore.Signal(pydicom.Dataset)  # Emits the new dataset
 
     def __init__(self, *args, **kwargs):
         super(SaveROIProgressWindow, self).__init__(*args, **kwargs)

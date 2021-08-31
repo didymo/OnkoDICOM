@@ -170,7 +170,7 @@ def add_new_roi(rtss, roi_name, roi_coordinates, data_set, rt_roi_interpreted_ty
     referenced_sop_class_uid = data_set.SOPClassUID
     referenced_sop_instance_uid = data_set.SOPInstanceUID
 
-    # Check that ROIs exist
+    # Check if there is any ROIs in rtss
     if not len(rtss["StructureSetROISequence"].value):
         referenced_frame_of_reference_uid = data_set.FrameOfReferenceUID
         roi_number = 1
