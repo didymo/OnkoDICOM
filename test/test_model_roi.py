@@ -14,7 +14,7 @@ from pydicom.tag import Tag
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import add_to_roi, calculate_matrix, create_roi, roi_to_geometry, \
-    get_roi_contour_pixel, intersect_rois, geometry_to_roi, create_initial_rtss_from_ct
+    get_roi_contour_pixel, manipulate_rois, geometry_to_roi, create_initial_rtss_from_ct
 
 
 def find_DICOM_files(file_path):
@@ -192,13 +192,16 @@ def test_roi_to_geometry(test_object):
 
 
 def test_roi_intersection(test_object):
-    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
-                                               ['LUNG_R', 'LIVER'],
-                                               test_object.patient_dict_container.get("pixluts"))
+    dict_rois_contours = get_roi_contour_pixel(
+        test_object.patient_dict_container.get("raw_contour"),
+        ['LUNG_R', 'LIVER'],
+        test_object.patient_dict_container.get("pixluts"))
     lung_r_geometry = roi_to_geometry(dict_rois_contours['LUNG_R'])
     liver_geometry = roi_to_geometry(dict_rois_contours['LIVER'])
-    uid_list = ImageLoading.get_image_uid_list(test_object.patient_dict_container.dataset)
-    result_geometry = intersect_rois(lung_r_geometry, liver_geometry, uid_list, "INTERSECTION")
+    uid_list = ImageLoading.get_image_uid_list(
+        test_object.patient_dict_container.dataset)
+    result_geometry = manipulate_rois(lung_r_geometry, liver_geometry,
+                                      uid_list, "INTERSECTION")
     result_contours = geometry_to_roi(result_geometry)
     assert len(result_contours.keys()) == 1
 
