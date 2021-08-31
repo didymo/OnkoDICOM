@@ -15,6 +15,10 @@ class RoiDeleteOptions(QtWidgets.QMainWindow, UIDeleteROIWindow):
         self.setup_ui(
             self, rois, dataset_rtss, self.deleting_rois_structure_tuple)
 
+    def update_ui(self, rois, dataset_rtss):
+        self.setup_ui(
+            self, rois, dataset_rtss, self.deleting_rois_structure_tuple)
+
 
 class ROIDelOption:
     """
@@ -30,9 +34,12 @@ class ROIDelOption:
         patient_dict_container = PatientDictContainer()
         rois = patient_dict_container.get("rois")
         dataset_rtss = patient_dict_container.get("dataset_rtss")
-        self.options_window = RoiDeleteOptions(rois, dataset_rtss)
-        self.options_window.deleting_rois_structure_tuple.connect(
-            self.structure_modified_function)
+        if not hasattr(self, "options_window"):
+            self.options_window = RoiDeleteOptions(rois, dataset_rtss)
+            self.options_window.deleting_rois_structure_tuple.connect(
+                self.structure_modified_function)
+        else:
+            self.options_window.update_ui(rois, dataset_rtss)
         self.options_window.show()
 
 
@@ -45,6 +52,9 @@ class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn)
+
+    def update_ui(self, rois, dataset_rtss):
         self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn)
 
 
@@ -68,8 +78,13 @@ class ROIDrawOption:
         patient_dict_container = PatientDictContainer()
         rois = patient_dict_container.get("rois")
         dataset_rtss = patient_dict_container.get("dataset_rtss")
-        self.draw_window = RoiDrawOptions(rois, dataset_rtss)
+
+        if not hasattr(self, "draw_window"):
+            self.draw_window = RoiDrawOptions(rois, dataset_rtss)
+            self.draw_window.signal_roi_drawn.connect(
+                self.structure_modified_function)
+        else:
+            self.draw_window.update_ui(rois, dataset_rtss)
+
         self.draw_window.set_selected_roi_name(roi_name)
-        self.draw_window.signal_roi_drawn.connect(
-            self.structure_modified_function)
         self.draw_window.show()
