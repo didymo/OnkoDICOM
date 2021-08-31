@@ -13,6 +13,8 @@ from src.Model.ImageFusion import dicom_crawler
 from src.View.ProgressWindow import ProgressWindow
 from src.View.resources_open_patient_rc import *
 
+from src.Model.PatientDictContainer import PatientDictContainer
+
 from src.Controller.PathHandler import resource_path
 import platform
 
@@ -25,6 +27,7 @@ class UIImageFusionWindow(object):
         super().__init__()
 
     def setup_ui(self, open_image_fusion_select_instance):
+        
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
@@ -181,6 +184,10 @@ class UIImageFusionWindow(object):
 
         QtCore.QMetaObject.connectSlotsByName(open_image_fusion_select_instance)
 
+        self.patient_dict_container = PatientDictContainer()
+        self.patient = self.patient_dict_container.get("basic_info")
+        self.patient_id = self.patient['id']
+
     def retranslate_ui(self, open_image_fusion_select_instance):
         _translate = QtCore.QCoreApplication.translate
         open_image_fusion_select_instance.setWindowTitle(
@@ -297,8 +304,11 @@ class UIImageFusionWindow(object):
                 self.last_patient.setSelected(False)
             self.last_patient = selected_patient
 
+
+
         # Get the types of all selected leaves
         self.selected_series_types = set()
+
         for checked_item in self.get_checked_leaves():
             series_type = checked_item.dicom_object.get_series_type()
             if type(series_type) == str:
@@ -310,16 +320,22 @@ class UIImageFusionWindow(object):
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTSTRUCT' not in self.selected_series_types:
-            header = "DVH and Radiomics calculations are not available without a RTSTRUCT file."
-        elif 'RTDOSE' not in self.selected_series_types:
-            header = "DVH calculations are not available without a RTDOSE file."
+        elif 'RTSTRUCT' in self.selected_series_types:
+            header = "Cannot fuse with a RTSTRUCT file."
+        elif 'RTDOSE' in self.selected_series_types:
+            header = "Cannot fuse with a RTDOSE file."
         else:
             header = ""
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
+
+        # Check if same patient
+        if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
+            patient_header = "Cannot proceed with different patient."
+            self.open_patient_window_confirm_button.setDisabled(True)
+            self.open_patient_window_patients_tree.setHeaderLabel(patient_header)
 
     def confirm_button_clicked(self):
         """

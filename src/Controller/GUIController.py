@@ -126,11 +126,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         # Connect signal from mainpage to the function located in mainpage.py
         self.image_fusion_main_window.connect(self.create_image_fusion_tab)
-    
-        # Add isodose tab UI update signal if RT Dose loaded
-        patient_dict_container = PatientDictContainer()
-        if patient_dict_container.has_modality("rtdose"):
-            self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
     def update_ui(self):
         create_initial_model()
@@ -175,7 +170,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         new_image = sitk.ReadImage(new_fusion_list)
 
-
         color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
 
         patient_dict_container.set("color_axial", color_axial)
@@ -183,10 +177,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container.set("color_coronal", color_coronal)
 
         print('hurray')
-
-
-
-
 
     def open_new_patient(self):
         """
