@@ -23,27 +23,30 @@ class UIManipulateROIWindow:
         self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.signal_roi_manipulated = signal_roi_manipulated
+        self.roi_color = roi_color
 
-        self.roi_names = []
+        self.roi_names = [] # Names of selected ROIs
+        self.all_roi_names = [] # Names of all existing ROIs
         for roi_id, roi_dict in self.rois.items():
-            self.roi_names.append(roi_dict['name'])
+            self.all_roi_names.append(roi_dict['name'])
 
-        self.single_roi_operation_names = ["Expand", "Contract", "Inner Rind (annulus)", "Outer Rind (annulus)"]
-        self.multiple_roi_operation_names = ["Union", "Intersection", "Difference"]
-        self.operation_names = self.single_roi_operation_names + self.multiple_roi_operation_names
+        self.single_roi_operation_names = ["Expand", "Contract",
+                                           "Inner Rind (annulus)",
+                                           "Outer Rind (annulus)"]
+        self.multiple_roi_operation_names = ["Union", "Intersection",
+                                             "Difference"]
+        self.operation_names = self.multiple_roi_operation_names + \
+                               self.single_roi_operation_names
 
         self.new_ROI_contours = None
         self.manipulate_roi_window_instance = manipulate_roi_window_instance
 
-        self.dict_rois_contours_axial = ROI.get_roi_contour_pixel(
-            self.patient_dict_container.get("raw_contour"),
-            self.roi_names,
-            self.patient_dict_container.get("pixluts"))
-
-        self.dicom_view = DicomAxialView(roi_color=roi_color, metadata_formatted=True)
+        self.dicom_view = DicomAxialView(metadata_formatted=True)
         self.dicom_preview = DicomAxialView(metadata_formatted=True)
-        self.dicom_view.slider.valueChanged.connect(self.dicom_view_slider_value_changed)
-        self.dicom_preview.slider.valueChanged.connect(self.dicom_preview_slider_value_changed)
+        self.dicom_view.slider.valueChanged.connect(
+            self.dicom_view_slider_value_changed)
+        self.dicom_preview.slider.valueChanged.connect(
+            self.dicom_preview_slider_value_changed)
         self.init_layout()
 
         QtCore.QMetaObject.connectSlotsByName(manipulate_roi_window_instance)
@@ -53,13 +56,13 @@ class UIManipulateROIWindow:
         manipulate_roi_window_instance.setWindowTitle(_translate("ManipulateRoiWindowInstance", "OnkoDICOM - Draw Region Of Interest"))
         self.first_roi_name_label.setText(_translate("FirstROINameLabel", "ROI 1: "))
         self.first_roi_name_dropdown_list.setPlaceholderText("ROI 1")
-        self.first_roi_name_dropdown_list.addItems(self.roi_names)
+        self.first_roi_name_dropdown_list.addItems(self.all_roi_names)
         self.operation_name_label.setText(_translate("OperationNameLabel", "Operation"))
         self.operation_name_dropdown_list.setPlaceholderText("Operation")
         self.operation_name_dropdown_list.addItems(self.operation_names)
         self.second_roi_name_label.setText(_translate("SecondROINameLabel", "ROI 2: "))
         self.second_roi_name_dropdown_list.setPlaceholderText("ROI 2")
-        self.second_roi_name_dropdown_list.addItems(self.roi_names)
+        self.second_roi_name_dropdown_list.addItems(self.all_roi_names)
         self.manipulate_roi_window_instance_draw_button.setText(_translate("ManipulateRoiWindowInstanceDrawButton", "Draw"))
         self.manipulate_roi_window_instance_save_button.setText(_translate("ManipulateRoiWindowInstanceSaveButton", "Save"))
         self.manipulate_roi_window_instance_cancel_button.setText(_translate("ManipulateRoiWindowInstanceCancelButton", "Cancel"))
@@ -100,7 +103,7 @@ class UIManipulateROIWindow:
         self.first_roi_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.first_roi_name_dropdown_list.resize(self.first_roi_name_dropdown_list.sizeHint().width(),
                                                  self.first_roi_name_dropdown_list.sizeHint().height())
-        self.first_roi_name_dropdown_list.activated.connect(self.display_selected_roi)
+        self.first_roi_name_dropdown_list.activated.connect(self.update_selected_rois)
         self.manipulate_roi_window_input_container_box.addRow(self.first_roi_name_label,
                                                               self.first_roi_name_dropdown_list)
 
@@ -127,7 +130,7 @@ class UIManipulateROIWindow:
         self.second_roi_name_dropdown_list.resize(self.second_roi_name_dropdown_list.sizeHint().width(),
                                                   self.second_roi_name_dropdown_list.sizeHint().height())
         self.second_roi_name_dropdown_list.setVisible(False)
-        self.second_roi_name_dropdown_list.activated.connect(self.display_selected_roi)
+        self.second_roi_name_dropdown_list.activated.connect(self.update_selected_rois)
         self.manipulate_roi_window_input_container_box.addRow(self.second_roi_name_label,
                                                               self.second_roi_name_dropdown_list)
 
@@ -283,13 +286,17 @@ class UIManipulateROIWindow:
         new_roi_name = self.new_roi_name_line_edit.text()
 
         # Check the selected inputs and execute the operations
-        if roi_1 != "" and selected_operation in self.single_roi_operation_names and self.margin_line_edit.text() != ""\
-                and new_roi_name != "":
+        if roi_1 != "" and new_roi_name != "" and \
+                self.margin_line_edit.text() != "" and \
+                selected_operation in self.single_roi_operation_names:
             # Single ROI operations
-            print("single roi operation selected")
+            QMessageBox.about(self.manipulate_roi_window_instance,
+                              "Operation under implementing",
+                              "Single ROI operations have not been supported "
+                              "yet.\nPlease select another operation!")
             return
-        elif roi_1 != "" and selected_operation in self.multiple_roi_operation_names and roi_2 != "" and \
-                new_roi_name != "":
+        elif roi_1 != "" and roi_2 != "" and new_roi_name != "" and \
+                selected_operation in self.multiple_roi_operation_names:
             # Multiple ROI operations
             dict_rois_contours = ROI.get_roi_contour_pixel(
                 self.patient_dict_container.get("raw_contour"),
@@ -396,15 +403,22 @@ class UIManipulateROIWindow:
             self.dicom_preview.scene.addPolygon(polygons[i], pen,
                                                 QtGui.QBrush(color))
 
+    def update_selected_rois(self):
+        """ Get the names of selected ROIs """
+        if self.first_roi_name_dropdown_list.currentText() != "":
+            self.roi_names.append(self.first_roi_name_dropdown_list.currentText())
+        if self.second_roi_name_dropdown_list.currentText() != "":
+            self.roi_names.append(self.second_roi_name_dropdown_list.currentText())
+
+        self.dict_rois_contours_axial = ROI.get_roi_contour_pixel(
+            self.patient_dict_container.get("raw_contour"),
+            self.roi_names,
+            self.patient_dict_container.get("pixluts"))
+
+        self.display_selected_roi()
+
     def display_selected_roi(self):
         """ Display selected ROIs """
-        # Get the names of selected ROIs
-        roi_names = []
-        if self.first_roi_name_dropdown_list.currentText() != "":
-            roi_names.append(self.first_roi_name_dropdown_list.currentText())
-        if self.second_roi_name_dropdown_list.currentText() != "":
-            roi_names.append(self.second_roi_name_dropdown_list.currentText())
-
         # Get the info required to display the selected ROIs
         slider_id = self.dicom_view.slider.value()
         curr_slice = self.patient_dict_container.get("dict_uid")[slider_id]
@@ -415,10 +429,10 @@ class UIManipulateROIWindow:
         self.dicom_view.update_view()
         for roi_id, roi_dict in self.rois.items():
             roi_name = roi_dict['name']
-            if roi_name in roi_names:
+            if roi_name in self.roi_names:
                 polygons = ROI.calc_roi_polygon(roi_name, curr_slice,
                                                 self.dict_rois_contours_axial)
-                self.dicom_view.draw_roi_polygons(roi_id, polygons)
+                self.dicom_view.draw_roi_polygons(roi_id, polygons, self.roi_color)
 
     def operation_changed(self):
         selected_operation = self.operation_name_dropdown_list.currentText()

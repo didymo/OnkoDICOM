@@ -91,13 +91,18 @@ class DicomView(QtWidgets.QWidget):
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
 
-    def draw_roi_polygons(self, roi_id, polygons):
+    def draw_roi_polygons(self, roi_id, polygons, roi_color=None):
         """
         Draw ROI polygons on the image slice
         :param roi_id: ROI number
         :param polygons: List of ROI polygons
+        :param roi_color: colors for ROIs used when displaying selected rois in
+        manipulate ROI window
         """
-        color = self.roi_color[roi_id]
+        if roi_color is None:
+            color = self.roi_color[roi_id]
+        else:
+            color = roi_color[roi_id]
         with open(resource_path('data/line&fill_configuration'), 'r') as stream:
             elements = stream.readlines()
             if len(elements) > 0:
