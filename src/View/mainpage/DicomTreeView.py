@@ -52,9 +52,8 @@ class DicomTreeView(QtWidgets.QWidget):
         # determines which files are included
         self.special_files = []
 
-        if self.patient_dict_container.has_modality("rtss"):
-            combobox.addItem("RT Structure Set")
-            self.special_files.append("rtss")
+        combobox.addItem("RT Structure Set")
+        self.special_files.append("rtss")
 
         if self.patient_dict_container.has_modality("rtdose"):
             combobox.addItem("RT Dose")
