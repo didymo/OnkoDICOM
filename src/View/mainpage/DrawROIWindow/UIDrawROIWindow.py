@@ -1,48 +1,45 @@
-import csv
-import math
+import platform
 
-import numpy
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QIcon, QPixmap, QColor, QPen
-from PySide6.QtWidgets import QMessageBox, QHBoxLayout, QLineEdit, QSizePolicy, QPushButton, QDialog, QListWidget, \
-    QGraphicsPixmapItem, QGraphicsEllipseItem, QVBoxLayout, QLabel, QWidget, QFormLayout
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
+    QMessageBox, QComboBox
 from alphashape import alphashape
 from shapely.geometry import MultiPolygon
 
-import src.constants as constant
 from src.Controller.MainPageController import MainPageCallClass
+from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.Worker import Worker
 from src.View.mainpage.DicomAxialView import DicomAxialView
+from src.View.mainpage.DrawROIWindow.Drawing import Drawing
+from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import SaveROIProgressWindow
+from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
+from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
-from src.Controller.PathHandler import resource_path
-import platform
 
-
-# noinspection PyAttributeOutsideInit
 class UIDrawROIWindow:
 
     def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss, signal_roi_drawn):
-
         self.patient_dict_container = PatientDictContainer()
 
         self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.signal_roi_drawn = signal_roi_drawn
-
-        self.current_slice = 0
-        self.forward_pressed = None
-        self.backward_pressed = None
-        self.slider_changed = None
+        self.drawn_roi_list = {}
         self.standard_organ_names = []
         self.standard_volume_names = []
-        self.standard_names = [] # Combination of organ and volume
+        self.standard_names = []  # Combination of organ and volume
         self.ROI_name = None  # Selected ROI name
-        self.target_pixel_coords = []  # This will contain the new pixel coordinates specifed by the min and max pixel density
-        self.target_pixel_coords_single_array = [] # 1D array
+        self.target_pixel_coords = []  # This will contain the new pixel coordinates specified by the min and max
+        self.drawingROI = None
+        self.slice_changed = False
+        self.drawing_tool_radius = INITIAL_DRAWING_TOOL_RADIUS
+        self.keep_empty_pixel = False
+        # pixel density
+        self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
         self.colour = None
         self.ds = None
@@ -52,6 +49,7 @@ class UIDrawROIWindow:
         self.lower_limit = None
 
         self.dicom_view = DicomAxialView()
+        self.current_slice = self.dicom_view.slider.value()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
 
@@ -59,17 +57,19 @@ class UIDrawROIWindow:
 
     def retranslate_ui(self, draw_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
-        draw_roi_window_instance.setWindowTitle(_translate("DrawRoiWindowInstance", "OnkoDICOM - Draw Region Of Interest"))
+        draw_roi_window_instance.setWindowTitle(
+            _translate("DrawRoiWindowInstance", "OnkoDICOM - Draw Region Of Interest"))
         self.roi_name_label.setText(_translate("ROINameLabel", "Region of Interest: "))
         self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
-        self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Image Slice Number: "))
-        self.image_slice_number_line_edit.setText(_translate("ImageSliceNumberLineEdit", str(self.dicom_view.current_slice_number)))
+        self.image_slice_number_label.setText(_translate("ImageSliceNumberLabel", "Slice Number: "))
+        self.image_slice_number_line_edit.setText(
+            _translate("ImageSliceNumberLineEdit", str(self.dicom_view.current_slice_number)))
         self.image_slice_number_transect_button.setText(_translate("ImageSliceNumberTransectButton", "Transect"))
         self.image_slice_number_box_draw_button.setText(_translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(_translate("ImageSliceNumberDrawButton", "Draw"))
-        self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", "Forward"))
+        self.image_slice_number_move_forward_button.setText(_translate("ImageSliceNumberMoveForwardButton", ""))
         self.image_slice_number_move_backward_button.setText(
-            _translate("ImageSliceNumberMoveBackwardButton", "Backward"))
+            _translate("ImageSliceNumberMoveBackwardButton", ""))
         self.draw_roi_window_instance_save_button.setText(_translate("DrawRoiWindowInstanceSaveButton", "Save"))
         self.draw_roi_window_instance_cancel_button.setText(_translate("DrawRoiWindowInstanceCancelButton", "Cancel"))
         self.internal_hole_max_label.setText(_translate("InternalHoleLabel", "Maximum internal hole size (pixels): "))
@@ -80,7 +80,12 @@ class UIDrawROIWindow:
         self.min_pixel_density_line_edit.setText(_translate("MinPixelDensityInput", ""))
         self.max_pixel_density_label.setText(_translate("MaxPixelDensityLabel", "Maximum density (pixels): "))
         self.max_pixel_density_line_edit.setText(_translate("MaxPixelDensityInput", ""))
+        self.toggle_keep_empty_pixel_label.setText(_translate("ToggleKeepEmptyPixelLabel", "Keep empty pixel: "))
+
         self.draw_roi_window_viewport_zoom_label.setText(_translate("DrawRoiWindowViewportZoomLabel", "Zoom: "))
+        self.draw_roi_window_cursor_radius_change_label.setText(
+            _translate("DrawRoiWindowCursorRadiusChangeLabel", "Cursor Radius: "))
+
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
 
@@ -119,17 +124,48 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setEnabled(False)
         self.draw_roi_window_input_container_box.addRow(self.roi_name_label, self.roi_name_line_edit)
 
+        # Create horizontal box to store image slice number and backward, forward buttons
+        self.image_slice_number_box = QHBoxLayout()
+        self.image_slice_number_box.setObjectName("ImageSliceNumberBox")
+
         # Create a label for denoting the Image Slice Number
         self.image_slice_number_label = QLabel()
         self.image_slice_number_label.setObjectName("ImageSliceNumberLabel")
+        self.image_slice_number_box.addWidget(self.image_slice_number_label)
         # Create a line edit for containing the image slice number
         self.image_slice_number_line_edit = QLineEdit()
         self.image_slice_number_line_edit.setObjectName("ImageSliceNumberLineEdit")
-        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
+        self.image_slice_number_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.image_slice_number_line_edit.resize(self.image_slice_number_line_edit.sizeHint().width(),
                                                  self.image_slice_number_line_edit.sizeHint().height())
+
+        self.image_slice_number_line_edit.setCursorPosition(0)
         self.image_slice_number_line_edit.setEnabled(False)
-        self.draw_roi_window_input_container_box.addRow(self.image_slice_number_label, self.image_slice_number_line_edit)
+        self.image_slice_number_box.addWidget(self.image_slice_number_line_edit)
+        # Create a button to move backward to the previous image
+        self.image_slice_number_move_backward_button = QPushButton()
+        self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
+        self.image_slice_number_move_backward_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.image_slice_number_move_backward_button.resize(QSize(24, 24))
+        self.image_slice_number_move_backward_button.clicked.connect(self.onBackwardClicked)
+        icon_move_backward = QtGui.QIcon()
+        icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/backward_slide_icon.png')))
+        self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
+        self.image_slice_number_box.addWidget(self.image_slice_number_move_backward_button)
+        # Create a button to move forward to the next image
+        self.image_slice_number_move_forward_button = QPushButton()
+        self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
+        self.image_slice_number_move_forward_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.image_slice_number_move_forward_button.resize(QSize(24, 24))
+        self.image_slice_number_move_forward_button.clicked.connect(self.onForwardClicked)
+        icon_move_forward = QtGui.QIcon()
+        icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/forward_slide_icon.png')))
+        self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
+        self.image_slice_number_box.addWidget(self.image_slice_number_move_forward_button)
+
+        self.draw_roi_window_input_container_box.addRow(self.image_slice_number_box)
 
         # Create a horizontal box for containing the zoom function
         self.draw_roi_window_viewport_zoom_box = QHBoxLayout()
@@ -175,36 +211,24 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_box.addWidget(self.draw_roi_window_viewport_zoom_in_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_viewport_zoom_box)
 
-        # Create a horizontal box for forward and backward button
-        self.draw_roi_window_backward_forward_box = QHBoxLayout()
-        self.draw_roi_window_backward_forward_box.setObjectName("DrawRoiWindowBackwardForwardBox")
-        # Create a button to move backward to the previous image
-        self.image_slice_number_move_backward_button = QPushButton()
-        self.image_slice_number_move_backward_button.setObjectName("ImageSliceNumberMoveBackwardButton")
-        self.image_slice_number_move_backward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_move_backward_button.resize(
-            self.image_slice_number_move_backward_button.sizeHint().width(),
-            self.image_slice_number_move_backward_button.sizeHint().height())
-        self.image_slice_number_move_backward_button.clicked.connect(self.onBackwardClicked)
-        icon_move_backward = QtGui.QIcon()
-        icon_move_backward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/backward_slide_icon.png')))
-        self.image_slice_number_move_backward_button.setIcon(icon_move_backward)
-        self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_backward_button)
-        # Create a button to move forward to the next image
-        self.image_slice_number_move_forward_button = QPushButton()
-        self.image_slice_number_move_forward_button.setObjectName("ImageSliceNumberMoveForwardButton")
-        self.image_slice_number_move_forward_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_move_forward_button.resize(
-            self.image_slice_number_move_forward_button.sizeHint().width(),
-            self.image_slice_number_move_forward_button.sizeHint().height())
-        self.image_slice_number_move_forward_button.clicked.connect(self.onForwardClicked)
-        icon_move_forward = QtGui.QIcon()
-        icon_move_forward.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/forward_slide_icon.png')))
-        self.image_slice_number_move_forward_button.setIcon(icon_move_forward)
-        self.draw_roi_window_backward_forward_box.addWidget(self.image_slice_number_move_forward_button)
-        self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_backward_forward_box)
+        self.init_cursor_radius_change_box()
+        # Create field to toggle two options: Keep empty pixel or fill empty pixel when using draw cursor
+        self.toggle_keep_empty_pixel_box = QHBoxLayout()
+        self.toggle_keep_empty_pixel_label = QLabel()
+        self.toggle_keep_empty_pixel_label.setObjectName("ToggleKeepEmptyPixelLabel")
+        # Create input for min pixel size
+        self.toggle_keep_empty_pixel_combo_box = QComboBox()
+        self.toggle_keep_empty_pixel_combo_box.addItems(["Off", "On"])
+        self.toggle_keep_empty_pixel_combo_box.setCurrentIndex(0)
+        self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
+        self.toggle_keep_empty_pixel_combo_box.setObjectName("ToggleKeepEmptyPixelComboBox")
+        self.toggle_keep_empty_pixel_combo_box.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.toggle_keep_empty_pixel_combo_box.resize(self.toggle_keep_empty_pixel_combo_box.sizeHint().width(),
+                                                      self.toggle_keep_empty_pixel_combo_box.sizeHint().height())
+        self.toggle_keep_empty_pixel_combo_box.currentIndexChanged.connect(self.toggle_keep_empty_pixel_box_index_changed)
+        self.toggle_keep_empty_pixel_box.addWidget(self.toggle_keep_empty_pixel_label)
+        self.toggle_keep_empty_pixel_box.addWidget(self.toggle_keep_empty_pixel_combo_box)
+        self.draw_roi_window_input_container_box.addRow(self.toggle_keep_empty_pixel_box)
 
         # Create a horizontal box for transect and draw button
         self.draw_roi_window_transect_draw_box = QHBoxLayout()
@@ -252,23 +276,31 @@ class UIDrawROIWindow:
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
 
-        # Create a contour preview button and alpha selection input
+
+
+
+        # Create a contour preview button
         self.row_preview_layout = QtWidgets.QHBoxLayout()
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
         self.button_contour_preview.clicked.connect(self.onPreviewClicked)
-        self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
-        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
         self.row_preview_layout.addWidget(self.button_contour_preview)
-        self.row_preview_layout.addWidget(self.label_alpha_value)
-        self.row_preview_layout.addWidget(self.input_alpha_value)
         self.draw_roi_window_input_container_box.addRow(self.row_preview_layout)
         icon_preview = QtGui.QIcon()
         icon_preview.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/preview_icon.png')))
         self.button_contour_preview.setIcon(icon_preview)
 
+        # Create input line edit for alpha value
+        self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
+        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
+        self.input_alpha_value.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
+        self.input_alpha_value.resize(self.input_alpha_value.sizeHint().width(),
+                                      self.input_alpha_value.sizeHint().height())
+        self.draw_roi_window_input_container_box.addRow(self.label_alpha_value, self.input_alpha_value)
+
         # Create a label for denoting the max internal hole size
         self.internal_hole_max_label = QLabel()
         self.internal_hole_max_label.setObjectName("InternalHoleLabel")
+
         # Create input for max internal hole size
         self.internal_hole_max_line_edit = QLineEdit()
         self.internal_hole_max_line_edit.setObjectName("InternalHoleInput")
@@ -334,8 +366,9 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_cancel_button.setObjectName("DrawRoiWindowInstanceCancelButton")
         self.draw_roi_window_instance_cancel_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.draw_roi_window_instance_cancel_button.resize(self.draw_roi_window_instance_cancel_button.sizeHint().width(),
-                                                    self.draw_roi_window_instance_cancel_button.sizeHint().height())
+        self.draw_roi_window_instance_cancel_button.resize(
+            self.draw_roi_window_instance_cancel_button.sizeHint().width(),
+            self.draw_roi_window_instance_cancel_button.sizeHint().height())
         self.draw_roi_window_instance_cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.draw_roi_window_instance_cancel_button.clicked.connect(self.onCancelButtonClicked)
         self.draw_roi_window_instance_cancel_button.setProperty("QPushButtonClass", "fail-button")
@@ -389,7 +422,27 @@ class UIDrawROIWindow:
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
     def slider_value_changed(self):
-        self.image_slice_number_line_edit.setText(str(self.dicom_view.current_slice_number))
+        image_slice_number = self.current_slice
+        # save progress
+        self.save_drawing_progress(image_slice_number)
+        self.set_current_slice(self.dicom_view.slider.value())
+
+    def set_current_slice(self, slice_number):
+        self.image_slice_number_line_edit.setText(str(slice_number + 1))
+        self.current_slice = slice_number
+        self.dicom_view.update_view()
+
+        # check if this slice has any drawings before
+        if self.drawn_roi_list.get(self.current_slice) is not None:
+            self.drawingROI = self.drawn_roi_list[self.current_slice]['drawingROI']
+            self.ds = self.drawn_roi_list[self.current_slice]['ds']
+            self.dicom_view.view.setScene(self.drawingROI)
+            self.enable_cursor_radius_change_box()
+            self.drawingROI.clear_cursor(self.drawing_tool_radius)
+
+        else:
+            self.disable_cursor_radius_change_box()
+            self.ds = None
 
     def onZoomInClicked(self):
         """
@@ -397,6 +450,8 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
+        if self.drawingROI and self.drawingROI.current_slice == self.current_slice:
+            self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
@@ -406,53 +461,41 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
+        if self.drawingROI and self.drawingROI.current_slice == self.current_slice:
+            self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+
+    def toggle_keep_empty_pixel_box_index_changed(self):
+        self.keep_empty_pixel = self.toggle_keep_empty_pixel_combo_box.currentText() == "On"
+        self.drawingROI.keep_empty_pixel = self.keep_empty_pixel
 
     def onCancelButtonClicked(self):
         """
         This function is used for canceling the drawing
         """
-        self.close()
+        self.closeWindow()
 
     def onBackwardClicked(self):
-        self.backward_pressed = True
-        self.forward_pressed = False
-        self.slider_changed = False
-
-        image_slice_number = self.dicom_view.current_slice_number
-
-        # Backward will only execute if current image slice is above 1.
-        if int(image_slice_number) > 1:
-            self.current_slice = int(image_slice_number)
-
-            # decrements slice by 1
-            self.current_slice = self.current_slice - 2
-
-            # Update slider to move to correct position
-            self.dicom_view.slider.setValue(self.current_slice)
-            self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
-            self.dicom_view.update_view()
+        image_slice_number = self.current_slice
+        # save progress
+        if self.save_drawing_progress(image_slice_number):
+            # Backward will only execute if current image slice is above 0.
+            if int(image_slice_number) > 0:
+                # decrements slice by 1 and update slider to move to correct position
+                self.dicom_view.slider.setValue(image_slice_number - 1)
 
     def onForwardClicked(self):
-        pixmaps = self.patient_dict_container.get("pixmaps_axial")
-        total_slices = len(pixmaps)
+        image_slice_number = self.current_slice
+        # save progress
+        if self.save_drawing_progress(image_slice_number):
+            pixmaps = self.patient_dict_container.get("pixmaps_axial")
+            total_slices = len(pixmaps)
 
-        self.backward_pressed = False
-        self.forward_pressed = True
-        self.slider_changed = False
-
-        image_slice_number = self.dicom_view.current_slice_number
-
-        # Forward will only execute if current image slice is below the total number of slices.
-        if int(image_slice_number) < total_slices:
-            # increments slice by 1
-            self.current_slice = int(image_slice_number)
-
-            # Update slider to move to correct position
-            self.dicom_view.slider.setValue(self.current_slice)
-            self.image_slice_number_line_edit.setText(str(self.current_slice + 1))
-            self.dicom_view.update_view()
+            # Forward will only execute if current image slice is below the total number of slices.
+            if int(image_slice_number) < total_slices:
+                # increments slice by 1 and update slider to move to correct position
+                self.dicom_view.slider.setValue(image_slice_number + 1)
 
     def onResetClicked(self):
         self.dicom_view.image_display()
@@ -463,6 +506,9 @@ class UIDrawROIWindow:
         self.max_pixel_density_line_edit.setText("")
         if hasattr(self, 'bounds_box_draw'):
             delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+        self.ds = None
 
     def transect_handler(self):
         """
@@ -470,16 +516,7 @@ class UIDrawROIWindow:
         """
 
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
-        id = self.dicom_view.slider.value()
-
-        # Getting most updated selected slice
-        if (self.forward_pressed):
-            id = self.current_slice
-        elif (self.backward_pressed):
-            id = self.current_slice
-        elif (self.slider_changed):
-            id = self.dicom_view.slider.value()
-
+        id = self.current_slice
         dt = self.patient_dict_container.dataset[id]
         rowS = dt.PixelSpacing[0]
         colS = dt.PixelSpacing[1]
@@ -493,6 +530,31 @@ class UIDrawROIWindow:
             colS,
             is_roi_draw=True,
         )
+
+    def save_drawing_progress(self, image_slice_number):
+        #  Save drawing progress only when roi on current slice has changed
+        if self.slice_changed:
+            if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None and len(
+                    self.drawingROI.target_pixel_coords) != 0:
+
+                pixel_hull = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
+                if pixel_hull is not None:
+                    self.drawn_roi_list[image_slice_number] = {
+                        'coords': pixel_hull,
+                        'ds': self.ds,
+                        'drawingROI': self.drawingROI
+                    }
+                    self.slice_changed = False
+                    return True
+                else:
+                    self.display_multipolygon_warning(image_slice_number)
+                    return False
+        else:
+            return True
+
+        return True
+
+
 
     def on_transect_close(self):
         if self.upper_limit and self.lower_limit:
@@ -511,15 +573,8 @@ class UIDrawROIWindow:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Not all values are specified or correct.")
         else:
-            id = self.dicom_view.slider.value()
-
             # Getting most updated selected slice
-            if (self.forward_pressed):
-                id = self.current_slice
-            elif (self.backward_pressed):
-                id = self.current_slice
-            elif (self.slider_changed):
-                id = self.dicom_view.slider.value()
+            id = self.current_slice
 
             dt = self.patient_dict_container.dataset[id]
             dt.convert_pixel_data()
@@ -547,66 +602,82 @@ class UIDrawROIWindow:
                     min_pixel,
                     max_pixel,
                     self.patient_dict_container.dataset[id],
-                    self.draw_roi_window_instance
-                )
-                self.dicom_view.view.setScene(self.drawingROI)
+                    self.draw_roi_window_instance,
+                    self.slice_changed,
+                    self.current_slice,
+                    self.drawing_tool_radius,
+                    self.keep_empty_pixel,
+                    set()
 
+                )
+                self.slice_changed = True
+                self.dicom_view.view.setScene(self.drawingROI)
+                self.enable_cursor_radius_change_box()
             else:
-                QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data", "Not all values are specified or correct.")
+                QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
+                                  "Not all values are specified or correct.")
 
     def onBoxDrawClicked(self):
-        id = self.dicom_view.slider.value()
+        id = self.current_slice
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
+        self.disable_cursor_radius_change_box()
 
     def onSaveClicked(self):
         # Make sure the user has clicked Draw first
-        if self.ds is not None:
-            # Because the contour data needs to be a list of points that form a polygon, the list of pixel points need
-            # to be converted to a concave hull.
-            pixel_hull = self.calculate_concave_hull_of_points()
+        if self.save_drawing_progress(image_slice_number=self.current_slice):
+            self.saveROIList()
+
+    def saveROIList(self):
+        roi_list = []
+        if self.drawn_roi_list == {}:
+            QMessageBox.about(self.draw_roi_window_instance, "No ROI Detected",
+                              "Please ensure you have drawn your ROI first.")
+            return
+        for slice_id, slice_info in self.drawn_roi_list.items():
+            pixel_hull = slice_info['coords']
             if pixel_hull is not None:
-                hull = self.convert_hull_to_rcs(pixel_hull)  # Convert the polygon's pixel points to RCS locations.
-                # The list of points will need to be converted into a single-dimensional array, as RTSTRUCT contour
-                # data is stored in such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...]
+                hull = self.convert_hull_to_rcs(pixel_hull,
+                                                slice_id)  # Convert the polygon's pixel points to RCS locations.
+
                 single_array = []
                 for sublist in hull:
                     for item in sublist:
                         single_array.append(item)
-
-                # Create a popup window that modifies the RTSTRUCT and tells the user that processing is happening.
-                progress_window = SaveROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
-                progress_window.signal_roi_saved.connect(self.roi_saved)
-                progress_window.start_saving(self.dataset_rtss, self.ROI_name, single_array, self.ds)
-                progress_window.show()
+                roi_list.append({
+                    'ds': slice_info['ds'],
+                    'coords': single_array
+                })
             else:
-                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
-                                  "Selected points will generate multiple contours, which is not currently supported. "
-                                  "If the region you are drawing is not meant to generate multiple contours, please "
-                                  "ajust your selected alpha value.")
-        else:
-            QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
-                              "Please ensure you have drawn your ROI first.")
+                self.display_multipolygon_warning(slice_id)
+                return
+
+        # The list of points will need to be converted into a single-dimensional array, as RTSTRUCT contour
+        # data is stored in such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...]
+        # Create a popup window that modifies the RTSTRUCT and tells the user that processing is happening.
+        progress_window = SaveROIProgressWindow(self, QtCore.Qt.WindowTitleHint)
+        progress_window.signal_roi_saved.connect(self.roi_saved)
+        progress_window.start_saving(self.dataset_rtss, self.ROI_name, roi_list)
+        progress_window.show()
 
     def roi_saved(self, new_rtss):
         self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
         QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
-        self.close()
+        self.closeWindow()
 
-    def calculate_concave_hull_of_points(self):
+    def calculate_concave_hull_of_points(self, pixel_coords):
         """
         Return the alpha shape of the highlighted pixels using the alpha entered by the user.
         :return: List of points ordered to form a polygon.
         """
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
-        target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in self.drawingROI.target_pixel_coords]
-
+        target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in pixel_coords]
         # Calculate the concave hull of the points.
-        #alpha = 0.95 * alphashape.optimizealpha(points)
+        # alpha = 0.95 * alphashape.optimizealpha(points)
         alpha = float(self.input_alpha_value.text())
         hull = alphashape(target_pixel_coords, alpha)
         if isinstance(hull, MultiPolygon):
@@ -617,16 +688,18 @@ class UIDrawROIWindow:
         points = []
         for i in range(len(hull_xy[0])):
             points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
-
         return points
 
-    def convert_hull_to_rcs(self, hull_pts):
+    def convert_hull_to_rcs(self, hull_pts, slider_id):
         """
         Converts all the pixel coordinates in the given polygon to RCS coordinates based off the CT image's matrix.
         :param hull_pts: List of pixel coordinates ordered to form a polygon.
         :return: List of RCS coordinates ordered to form a polygon
+
+        Parameters
+        ----------
+        slider_id: id of the slide to convert to rcs (z coordinate)
         """
-        slider_id = self.dicom_view.slider.value()
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
         z_coord = dataset.SliceLocation
@@ -644,15 +717,12 @@ class UIDrawROIWindow:
         return contour_data
 
     def onPreviewClicked(self):
-        if hasattr(self, 'drawingROI') and len(self.drawingROI.target_pixel_coords) > 0:
-            list_of_points = self.calculate_concave_hull_of_points()
+        if hasattr(self, 'drawingROI') and self.drawingROI and len(self.drawingROI.target_pixel_coords) > 0:
+            list_of_points = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
             if list_of_points is not None:
                 self.drawingROI.draw_contour_preview(list_of_points)
             else:
-                QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
-                                  "Selected points will generate multiple contours, which is not currently supported. "
-                                  "If the region you are drawing is not meant to generate multiple contours, please "
-                                  "ajust your selected alpha value.")
+                self.display_multipolygon_warning(self.current_slice)
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
@@ -677,429 +747,99 @@ class UIDrawROIWindow:
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
 
+    def onRadiusReduceClicked(self):
+        self.drawing_tool_radius = max(self.drawing_tool_radius - 1, 4)
+        self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
+        self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
+        self.draw_cursor_when_radius_changed()
 
-class SaveROIProgressWindow(QtWidgets.QDialog):
-    """
-    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
-    thread where the new RTSTRUCT is modified.
-    """
+    def onRadiusIncreaseClicked(self):
+        self.drawing_tool_radius = min(self.drawing_tool_radius + 1, 25)
+        self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
+        self.draw_cursor_when_radius_changed()
 
-    signal_roi_saved = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
-
-    def __init__(self, *args, **kwargs):
-        super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
-        layout = QtWidgets.QVBoxLayout()
-        text = QtWidgets.QLabel("Creating ROI...")
-        layout.addWidget(text)
-        self.setWindowTitle("Please wait...")
-        self.setFixedWidth(150)
-        self.setLayout(layout)
-
-        self.threadpool = QtCore.QThreadPool()
-
-    def start_saving(self, dataset_rtss, roi_name, single_array, ds):
-        """
-        Creates a thread that generates the new dataset object.
-        :param dataset_rtss: dataset of RTSS
-        :param roi_name: ROIName
-        :param single_array: Coordinates of pixels for new ROI
-        :param ds: Data Set of selected DICOM image file
-        """
-        worker = Worker(ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
-        worker.signals.result.connect(self.roi_saved)
-        self.threadpool.start(worker)
-
-    def roi_saved(self, result):
-        """
-        This method is called when the second thread completes generation of the new dataset object.
-        :param result: The resulting dataset from the ROI.create_roi function.
-        """
-        self.signal_roi_saved.emit(result)
-        self.close()
-
-
-#####################################################################################################################
-#                                                                                                                   #
-#  This Class handles the ROI Pop Up functionalities                                                                    #
-#                                                                                                                   #
-#####################################################################################################################
-class SelectROIPopUp(QDialog):
-    signal_roi_name = QtCore.Signal(str)
-
-    def __init__(self):
-        QDialog.__init__(self)
-
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
+    def draw_cursor_when_radius_changed(self):
+        if self.drawingROI.cursor:
+            self.drawingROI.draw_cursor(self.drawingROI.current_cursor_x + self.drawing_tool_radius,
+                                        self.drawingROI.current_cursor_y + self.drawing_tool_radius,
+                                        self.drawing_tool_radius)
         else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
-        self.setStyleSheet(stylesheet)
-        self.standard_names = []
-        self.init_standard_names()
+            self.drawingROI.draw_cursor((self.drawingROI.min_x + self.drawingROI.max_x) / 2,
+                                        (self.drawingROI.min_y + self.drawingROI.max_y) / 2, self.drawing_tool_radius,
+                                        True)
 
-        self.setWindowTitle("Select A Region of Interest To Draw")
-        self.setMinimumSize(350, 180)
+    def init_cursor_radius_change_box(self):
+        # Create a horizontal box for containing the cursor radius changing function
+        self.draw_roi_window_cursor_radius_change_box = QHBoxLayout()
+        self.draw_roi_window_cursor_radius_change_box.setObjectName("DrawRoiWindowCursorRadiusChangeBox")
+        # Create a label for cursor radius change
+        self.draw_roi_window_cursor_radius_change_label = QLabel()
+        self.draw_roi_window_cursor_radius_change_label.setObjectName("DrawRoiWindowCursorRadiusChangeLabel")
+        # Create an input box for cursor radius
+        self.draw_roi_window_cursor_radius_change_input = QLineEdit()
+        self.draw_roi_window_cursor_radius_change_input.setObjectName("DrawRoiWindowCursorRadiusChangeInput")
+        self.draw_roi_window_cursor_radius_change_input.setText(str(19))
+        self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
+        self.draw_roi_window_cursor_radius_change_input.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_input.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.draw_roi_window_cursor_radius_change_input.resize(
+            self.draw_roi_window_cursor_radius_change_input.sizeHint().width(),
+            self.draw_roi_window_cursor_radius_change_input.sizeHint().height())
+        # Create 2 buttons for increasing and reducing cursor radius
+        # Increase Button
+        self.draw_roi_window_cursor_radius_change_increase_button = QPushButton()
+        self.draw_roi_window_cursor_radius_change_increase_button.setObjectName(
+            "DrawRoiWindowCursorRadiusIncreaseButton")
+        self.draw_roi_window_cursor_radius_change_increase_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.draw_roi_window_cursor_radius_change_increase_button.resize(QSize(24, 24))
+        self.draw_roi_window_cursor_radius_change_increase_button.setProperty("QPushButtonClass", "zoom-button")
+        icon_zoom_in = QtGui.QIcon()
+        icon_zoom_in.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/zoom_in_icon.png')))
+        self.draw_roi_window_cursor_radius_change_increase_button.setIcon(icon_zoom_in)
+        self.draw_roi_window_cursor_radius_change_increase_button.clicked.connect(self.onRadiusIncreaseClicked)
+        # Reduce Button
+        self.draw_roi_window_cursor_radius_change_reduce_button = QPushButton()
+        self.draw_roi_window_cursor_radius_change_reduce_button.setObjectName("DrawRoiWindowCursorRadiusReduceButton")
+        self.draw_roi_window_cursor_radius_change_reduce_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.draw_roi_window_cursor_radius_change_reduce_button.resize(QSize(24, 24))
+        self.draw_roi_window_cursor_radius_change_reduce_button.setProperty("QPushButtonClass", "zoom-button")
+        icon_zoom_out = QtGui.QIcon()
+        icon_zoom_out.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/zoom_out_icon.png')))
+        self.draw_roi_window_cursor_radius_change_reduce_button.setIcon(icon_zoom_out)
+        self.draw_roi_window_cursor_radius_change_reduce_button.clicked.connect(self.onRadiusReduceClicked)
+        self.draw_roi_window_cursor_radius_change_box.addWidget(self.draw_roi_window_cursor_radius_change_label)
+        self.draw_roi_window_cursor_radius_change_box.addWidget(self.draw_roi_window_cursor_radius_change_input)
+        self.draw_roi_window_cursor_radius_change_box.addWidget(self.draw_roi_window_cursor_radius_change_reduce_button)
+        self.draw_roi_window_cursor_radius_change_box.addWidget(
+            self.draw_roi_window_cursor_radius_change_increase_button)
+        self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_cursor_radius_change_box)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
 
-        self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowIcon(self.icon)
+    def disable_cursor_radius_change_box(self):
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
+        self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
 
-        self.explanation_text = QLabel("Search for ROI:")
+    def enable_cursor_radius_change_box(self):
+        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
+        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
+        self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
 
-        self.input_field = QLineEdit()
-        self.input_field.textChanged.connect(self.on_text_edited)
+    def display_multipolygon_warning(self, slice_id):
+        QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
+                          "Selected points in slice " + str(slice_id + 1) + " will generate multiple contours, "
+                                                                            "which is not currently supported. "
+                                                                            "If the region you are drawing is not meant to generate multiple contours, please "
+                                                                            "adjust your selected alpha value.")
 
-        self.button_area = QWidget()
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.clicked.connect(self.on_cancel_clicked)
-        self.begin_draw_button = QPushButton("Begin Draw Process")
-
-        self.begin_draw_button.clicked.connect(self.on_begin_clicked)
-
-        self.button_layout = QHBoxLayout()
-        self.button_layout.addWidget(self.cancel_button)
-        self.button_layout.addWidget(self.begin_draw_button)
-        self.button_area.setLayout(self.button_layout)
-
-        self.list_label = QLabel()
-        self.list_label.setText("Select a Standard Region of Interest")
-
-        self.list_of_ROIs = QListWidget()
-        for standard_name in self.standard_names:
-            self.list_of_ROIs.addItem(standard_name)
-
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.explanation_text)
-        self.layout.addWidget(self.input_field)
-        self.layout.addWidget(self.list_label)
-        self.layout.addWidget(self.list_of_ROIs)
-        self.layout.addWidget(self.button_area)
-        self.setLayout(self.layout)
-
-        self.list_of_ROIs.clicked.connect(self.on_roi_clicked)
-
-    def init_standard_names(self):
-        """
-        Create two lists containing standard organ and standard volume names as set by the Add-On options.
-        """
-        with open(resource_path('data/csv/organName.csv'), 'r') as f:
-            standard_organ_names = []
-
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                standard_organ_names.append(row[0])
-
-        with open(resource_path('data/csv/volumeName.csv'), 'r') as f:
-            standard_volume_names = []
-
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                standard_volume_names.append(row[1])
-
-        self.standard_names = standard_organ_names + standard_volume_names
-
-    def on_text_edited(self, text):
-        self.list_of_ROIs.clear()
-        text_upper_case = text.upper()
-        for item in self.standard_names:
-            if item.startswith(text) or item.startswith(text_upper_case):
-                self.list_of_ROIs.addItem(item)
-
-    def on_roi_clicked(self):
-        self.begin_draw_button.setEnabled(True)
-        self.begin_draw_button.setFocus()
-
-    def on_begin_clicked(self):
-        # If there is a ROI Selected
-        if self.list_of_ROIs.currentItem() != None:
-            roi = self.list_of_ROIs.currentItem()
-            self.roi_name = str(roi.text())
-
-            # Call function on UIDrawWindow so it has selected ROI
-            self.signal_roi_name.emit(self.roi_name)
-            self.close()
-
-    def on_cancel_clicked(self):
+    def closeWindow(self):
+        self.drawn_roi_list = {}
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+        self.ds = None
         self.close()
-
-
-#####################################################################################################################
-#                                                                                                                   #
-#  This Class handles the Drawing functionality                                                                    #
-#                                                                                                                   #
-#####################################################################################################################
-class Drawing(QtWidgets.QGraphicsScene):
-
-    # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance):
-        super(Drawing, self).__init__()
-
-        #create the canvas to draw the line on and all its necessary components
-        self.draw_roi_window_instance = draw_roi_window_instance
-        self.min_pixel = min_pixel
-        self.max_pixel = max_pixel
-        self.addItem(QGraphicsPixmapItem(imagetoPaint))
-        self.img = imagetoPaint
-        self.data = pixmapdata
-        self.values = []
-        self.getValues()
-        self.rect = QtCore.QRect(250, 300, 20, 20)
-        self.update()
-        self._points = {}
-        self._circlePoints = []
-        self.drag_position = QtCore.QPoint()
-        self.cursor = None
-        self.polygon_preview = None
-        self.isPressed = False
-        self.dataset = dataset
-        self.pixel_array = None
-        # This will contain the new pixel coordinates specifed by the min and max pixel density
-        self.target_pixel_coords = []
-        self.accordingColorList = []
-        self.q_image = None
-        self.q_pixmaps = None
-        self.label = QtWidgets.QLabel()
-        self.draw_tool_radius = 19
-        self._display_pixel_color()
-
-    def _display_pixel_color(self):
-        """
-        Creates the initial list of pixel values within the given minimum and maximum densities, then displays them
-        on the view.
-        """
-        if self.min_pixel <= self.max_pixel:
-            data_set = self.dataset
-            if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
-                min_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().x())
-                min_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().y())
-                max_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().width() + min_x)
-                max_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().height() + min_y)
-            else:
-                min_x = 0
-                min_y = 0
-                max_x = data_set.Rows
-                max_y = data_set.Columns
-
-            """
-            pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-            pixel_array[x][y] will return the density of the pixel
-            """
-            self.pixel_array = data_set._pixel_array
-            self.q_image = self.img.toImage()
-            for x_coord in range(min_y, max_y):
-                for y_coord in range(min_x, max_x):
-                    if (self.pixel_array[x_coord][y_coord] >= self.min_pixel) and (
-                            self.pixel_array[x_coord][y_coord] <= self.max_pixel):
-                        self.target_pixel_coords.append((y_coord, x_coord))
-
-            """
-            For the meantime, a new image is created and the pixels specified are coloured. 
-            This will need to altered so that it creates a new layer over the existing image instead of replacing it.
-            """
-            # Convert QPixMap into Qimage
-            for x_coord, y_coord in self.target_pixel_coords:
-                c = self.q_image.pixel(x_coord, y_coord)
-                colors = QColor(c).getRgbF()
-                self.accordingColorList.append((x_coord, y_coord, colors))
-
-            color = QtGui.QColor()
-            color.setRgb(90, 250, 175, 200)
-            for x_coord, y_coord, colors in self.accordingColorList:
-                self.q_image.setPixelColor(x_coord, y_coord, color)
-
-            self.refresh_image()
-
-    def _find_neighbor_point(self, event):
-        """
-        Find point around mouse position. This function is for if we want to choose and drag the circle
-        :rtype: ((int, int)|None)
-        :return: (x, y) if there are any point around mouse else None
-        """
-        distance_threshold = 3.0
-        nearest_point = None
-        min_distance = math.sqrt(2 * (100 ** 2))
-        for x, y in self._points.items():
-            distance = math.hypot(event.xdata - x, event.ydata - y)
-            if distance < min_distance:
-                min_distance = distance
-                nearest_point = (x, y)
-        if min_distance < distance_threshold:
-            return nearest_point
-        return None
-
-    def getValues(self):
-        """
-        This function gets the corresponding values of all the points in the drawn line from the dataset.
-        """
-        for i in range(constant.DEFAULT_WINDOW_SIZE):
-            for j in range(constant.DEFAULT_WINDOW_SIZE):
-                self.values.append(self.data[i][j])
-
-    def refresh_image(self):
-        """
-        Convert QImage containing modified CT slice with highlighted pixels into a QPixmap, and then display it onto
-        the view.
-        """
-        self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap.fromImage(self.q_image))
-        self.addItem(self.q_pixmaps)
-
-    def remove_pixels_within_circle(self, clicked_x, clicked_y):
-        """
-        Removes all highlighted pixels within the selected circle and updates the image.
-        """
-        # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
-        # than the radius, remove it from the highlighted pixels.
-        for x, y, colors in self.accordingColorList[:]:
-            clicked_point = numpy.array((clicked_x, clicked_y))
-            point_to_check = numpy.array((x, y))
-            distance = numpy.linalg.norm(clicked_point - point_to_check)
-            if distance <= self.draw_tool_radius:
-                self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
-                self.target_pixel_coords.remove((x, y))
-                self.accordingColorList.remove((x, y, colors))
-
-        self.refresh_image()
-
-    def draw_cursor(self, event_x, event_y, new_circle=False):
-        """
-        Draws a blue circle where the user clicked.
-        :param event_x: QGraphicsScene event attribute: event.scenePos().x()
-        :param event_y: QGraphicsScene event attribute: event.scenePos().y()
-        :param new_circle: True when the circle object is being created rather than updated.
-        """
-        x = event_x - self.draw_tool_radius
-        y = event_y - self.draw_tool_radius
-        if new_circle:
-            self.cursor = QGraphicsEllipseItem(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
-            pen = QPen(QColor("blue"))
-            pen.setWidth(0)
-            self.cursor.setPen(pen)
-            self.cursor.setZValue(1)
-            self.addItem(self.cursor)
-        elif self.cursor is not None:
-            self.cursor.setRect(x, y, self.draw_tool_radius * 2, self.draw_tool_radius * 2)
-
-    def draw_contour_preview(self, list_of_points):
-        """
-        Draws a polygon onto the view so the user can preview what their contour will look like once exported.
-        :param list_of_points: A list of points ordered to form a polygon.
-        """
-        qpoint_list = []
-        for point in list_of_points:
-            qpoint = QtCore.QPoint(point[0], point[1])
-            qpoint_list.append(qpoint)
-        if self.polygon_preview is not None:        # Erase the existing preview
-            self.removeItem(self.polygon_preview)
-        polygon = QtGui.QPolygonF(qpoint_list)
-        self.polygon_preview = QtWidgets.QGraphicsPolygonItem(polygon)
-        pen = QtGui.QPen(QtGui.QColor("yellow"))
-        pen.setStyle(QtCore.Qt.DashDotDotLine)
-        self.polygon_preview.setPen(pen)
-        self.addItem(self.polygon_preview)
-
-    def wheelEvent(self, event):
-        delta = event.delta() / 120
-        change = int(delta * 3)
-
-        if delta <= -1:
-            self.draw_tool_radius = max(self.draw_tool_radius + change, 4)
-        elif delta >= 1:
-            self.draw_tool_radius = min(self.draw_tool_radius + change, 25)
-
-        self.draw_cursor(event.scenePos().x(), event.scenePos().y())
-
-    def mousePressEvent(self, event):
-        if self.cursor:
-            self.removeItem(self.cursor)
-        self.isPressed = True
-        if (
-                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
-                < self.rect.width()
-        ):
-            self.drag_position = event.pos() - self.rect.topLeft()
-        super().mousePressEvent(event)
-        self.draw_cursor(event.scenePos().x(), event.scenePos().y(), new_circle=True)
-        self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
-        self.update()
-
-    def mouseMoveEvent(self, event):
-        if not self.drag_position.isNull():
-            self.rect.moveTopLeft(event.pos() - self.drag_position)
-        super().mouseMoveEvent(event)
-        if self.cursor and self.isPressed:
-            self.draw_cursor(event.scenePos().x(), event.scenePos().y())
-            self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
-        self.update()
-
-    def mouseReleaseEvent(self, event):
-        self.isPressed = False
-        self.drag_position = QtCore.QPoint()
-        super().mouseReleaseEvent(event)
-        self.update()
-
-
-class DrawBoundingBox(QtWidgets.QGraphicsScene):
-    """
-    Object responsible for updating and displaying the bounds of the ROI draw.
-    """
-
-    def __init__(self, image_to_paint, pixmap_data):
-        super().__init__()
-        self.addItem(QGraphicsPixmapItem(image_to_paint))
-        self.img = image_to_paint
-        self.pixmap_data = pixmap_data
-        self.drawing = False
-        self.start_x = None
-        self.start_y = None
-        self.end_x = None
-        self.end_y = None
-        self.box = None
-
-    def draw_bounding_box(self, new_box=False):
-        if new_box:
-            self.box = QtWidgets.QGraphicsRectItem(self.start_x, self.start_y, 0, 0)
-            pen = QtGui.QPen(QtGui.QColor("red"))
-            pen.setStyle(QtCore.Qt.DashDotDotLine)
-            pen.setWidth(0)
-            self.box.setPen(pen)
-            self.addItem(self.box)
-        else:
-            if self.start_x < self.end_x:
-                x = self.start_x
-                width = self.end_x - self.start_x
-            else:
-                x = self.end_x
-                width = self.start_x - self.end_x
-
-            if self.start_y < self.end_y:
-                y = self.start_y
-                height = self.end_y - self.start_y
-            else:
-                y = self.end_y
-                height = self.start_y - self.end_y
-
-            self.box.setRect(x, y, width, height)
-
-    def mousePressEvent(self, event):
-        if self.box:
-            self.removeItem(self.box)
-        self.drawing = True
-        self.start_x = event.scenePos().x()
-        self.start_y = event.scenePos().y()
-        self.draw_bounding_box(new_box=True)
-
-    def mouseMoveEvent(self, event):
-        if self.drawing:
-            self.end_x = event.scenePos().x()
-            self.end_y = event.scenePos().y()
-            self.draw_bounding_box()
-
-    def mouseReleaseEvent(self, event):
-        if self.drawing:
-            self.drawing = False
-            self.end_x = event.scenePos().x()
-            self.end_y = event.scenePos().y()
-            self.draw_bounding_box()
