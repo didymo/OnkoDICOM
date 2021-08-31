@@ -88,7 +88,8 @@ class UIMainWindow:
         # Add structures tab to left panel
         if not hasattr(self, 'structures_tab'):
             self.structures_tab = StructureTab()
-            self.structures_tab.request_update_structures.connect(self.update_views)
+            self.structures_tab.request_update_structures.connect(
+                self.update_views)
         else:
             self.structures_tab.update_ui()
         self.left_panel.addTab(self.structures_tab, "Structures")
@@ -96,7 +97,8 @@ class UIMainWindow:
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(self.update_views)
-            self.isodoses_tab.request_update_ui.connect(self.structures_tab.structure_modified)
+            self.isodoses_tab.request_update_ui.connect(
+                self.structures_tab.structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab

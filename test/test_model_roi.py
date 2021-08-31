@@ -7,14 +7,14 @@ import pytest
 import os
 import numpy as np
 from pathlib import Path
-from pydicom import dataset
-from pydicom import dcmread
+from pydicom import dataset, dcmread
 from pydicom.errors import InvalidDicomError
+from pydicom.tag import Tag
 
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import add_to_roi, calculate_matrix, create_roi, roi_to_geometry, \
-    get_roi_contour_pixel, intersect_rois, geometry_to_roi
+    get_roi_contour_pixel, intersect_rois, geometry_to_roi, create_initial_rtss_from_ct
 
 
 def find_DICOM_files(file_path):
@@ -85,7 +85,7 @@ class TestROI:
 
 @pytest.fixture(scope="module")
 def test_object():
-    """Function to pass a shared TestIso2Roi object to each test."""
+    """Function to pass a shared TestROI object to each test."""
     test = TestROI()
     return test
 
@@ -174,6 +174,61 @@ def test_create_roi():
     )
     assert (first_contour.ContourGeometricType == "CLOSED_PLANAR")
     assert (rt_ss.RTROIObservationsSequence[0].RTROIInterpretedType == "ORGAN")
+
+
+def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
+    # Create a test rtss
+    path = test_object.patient_dict_container.path
+    rtss_path = Path(path).joinpath('rtss.dcm')
+    uid_list = ImageLoading.get_image_uid_list(
+        test_object.patient_dict_container.dataset)
+    rtss = create_initial_rtss_from_ct(
+        test_object.patient_dict_container.dataset[1], rtss_path, uid_list)
+
+    # type 1 tags - must exist and not be empty
+    type_1_tags: list = [Tag("StudyInstanceUID"),
+                         Tag("Modality"),
+                         Tag("SeriesInstanceUID"),
+                         Tag("StructureSetLabel"),
+                         Tag("SOPClassUID"),
+                         Tag("SOPInstanceUID")
+                         ]
+    # type 2 tags - must exist and be at least an empty string
+    type_2_tags: list = [Tag("PatientName"),
+                         Tag("PatientBirthDate"),
+                         Tag("PatientSex"),
+                         Tag("StudyDate"),
+                         Tag("StudyTime"),
+                         Tag("AccessionNumber"),
+                         Tag("ReferringPhysicianName"),
+                         Tag("StudyID"),
+                         Tag("OperatorsName"),
+                         Tag("SeriesNumber"),
+                         Tag("Manufacturer"),
+                         Tag("StructureSetDate"),
+                         Tag("StructureSetTime")
+                         ]
+
+    # type 1 sequence tags - must exist
+    type_1_sequence_tags: list = [Tag("StructureSetROISequence"),
+                                  Tag("ROIContourSequence"),
+                                  Tag("RTROIObservationsSequence")
+                                  ]
+
+    # Checking type 1 tags
+    for tag in type_1_tags:
+        assert (tag in rtss) is True
+        assert rtss[tag].is_empty is False
+
+    # Checking type 2 tags
+    for tag in type_2_tags:
+        assert (tag in rtss) is True
+        if rtss[tag].value != "":
+            assert rtss[tag].is_empty is False
+
+    # Checking type 1 sequence tags
+    for tag in type_1_sequence_tags:
+        assert (tag in rtss) is True
 
 
 def test_roi_to_geometry(test_object):

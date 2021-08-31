@@ -76,7 +76,8 @@ def create_initial_model():
     pixmap_aspect["axial"] = pixel_spacing[1] / pixel_spacing[0]
     pixmap_aspect["sagittal"] = pixel_spacing[1] / slice_thickness
     pixmap_aspect["coronal"] = slice_thickness / pixel_spacing[0]
-    pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
+    pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
+        get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
     patient_dict_container.set("pixmaps_axial", pixmaps_axial)
     patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -96,8 +97,9 @@ def create_initial_model():
         ImageLoading.get_raw_contour_data(dataset['rtss'])
     patient_dict_container.set("raw_contour", dict_raw_contour_data)
 
-    # dict_dicom_tree_rtss will be set in advance if the program generates a new rtss
-    # through the execution of ROI.create_initial_rtss_from_ct(...)
+    # dict_dicom_tree_rtss will be set in advance if the program
+    # generates a new rtss through the execution of
+    # ROI.create_initial_rtss_from_ct(...)
     if patient_dict_container.get("dict_dicom_tree_rtss") is None:
         dicom_tree_rtss = DicomTree(filepaths['rtss'])
         patient_dict_container.set("dict_dicom_tree_rtss",

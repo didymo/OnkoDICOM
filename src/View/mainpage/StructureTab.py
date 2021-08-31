@@ -1,17 +1,16 @@
 import csv
 import pydicom
-import platform
 from pathlib import Path
 from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
-from pydicom.tag import Tag
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, ROIManipulateOption
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, calc_roi_polygon, transform_rois_contours
+from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, \
+    calc_roi_polygon, transform_rois_contours, merge_rtss
 from src.View.mainpage.StructureWidget import StructureWidget
 from src.Controller.PathHandler import resource_path
 
@@ -209,7 +208,7 @@ class StructureTab(QtWidgets.QWidget):
         {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA structures have been deleted.
         {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
         Note: Use {"draw": None} after multiple ROIs are generated (E.g., from ISO2ROI functionality) instead of
-        calling this function multiple times.
+        calling this function multiple times. This will trigger auto save.
         """
 
         new_dataset = changes[0]
@@ -252,7 +251,7 @@ class StructureTab(QtWidgets.QWidget):
 
         if self.patient_dict_container.has_modality("raw_dvh"):
             # Rename structures in DVH list
-            if "rename" in changes[1]:
+            if "rename" in change_description:
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
                 for key, dvh in new_raw_dvh.items():
                     if dvh.name == change_description["rename"][0]:
@@ -262,7 +261,7 @@ class StructureTab(QtWidgets.QWidget):
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
 
             # Remove structures from DVH list - the only visible effect of this section is the exported DVH csv
-            if "delete" in changes[1]:
+            if "delete" in change_description:
                 list_of_deleted = []
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
                 for key, dvh in new_raw_dvh.items():
@@ -277,6 +276,9 @@ class StructureTab(QtWidgets.QWidget):
 
         # Refresh structure tab
         self.update_content()
+
+        if "draw" in change_description and change_description["draw"] is None:
+            self.save_new_rtss(auto=True)
 
     def show_modified_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
@@ -364,118 +366,87 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_coronal.pop(roi_name, None)
             new_dict_polygons_sagittal.pop(roi_name, None)
 
-    def save_new_rtss(self, event=None):
+    def save_new_rtss(self, event=None, auto=False):
         """
         Save the current RTSS stored in patient dictionary to the file system.
-        :param event: Not used but will be passed as an argument from modified_indicator_widget on mouseReleaseEvent
+        :param event: Not used but will be passed as an argument from
+        modified_indicator_widget on mouseReleaseEvent
+        :param auto: Used for auto save without user confirmation
         """
         if self.patient_dict_container.get("existing_file_rtss") is not None:
-            existing_rtss_directory = str(Path(self.patient_dict_container.get("existing_file_rtss")))
+            existing_rtss_directory = str(Path(self.patient_dict_container.get(
+                "existing_file_rtss")))
         else:
             existing_rtss_directory = None
         rtss_directory = str(Path(self.patient_dict_container.get("file_rtss")))
 
-        confirm_save = QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                         "Are you sure you want to save the modified RTSTRUCT file? "
-                                                         "This will overwrite the existing file. "
-                                                         "This is not reversible.",
-                                                         QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if auto:
+            confirm_save = QtWidgets.QMessageBox.Yes
+        else:
+            confirm_save = \
+                QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                  "Are you sure you want to "
+                                                  "save the modified RTSTRUCT "
+                                                  "file? This will overwrite "
+                                                  "the existing file. This is "
+                                                  "not reversible.",
+                                                  QtWidgets.QMessageBox.Yes,
+                                                  QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
             if existing_rtss_directory is None:
-                self.patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+                self.patient_dict_container.get("dataset_rtss").save_as(
+                    rtss_directory)
             else:
                 new_rtss = self.patient_dict_container.get("dataset_rtss")
                 old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
-                merged_rtss = self.merge_rtss(new_rtss, old_rtss)
-                if merged_rtss is None:
+                old_roi_names = \
+                    set(value["name"] for value in
+                        ImageLoading.get_roi_info(old_rtss).values())
+                new_roi_names = \
+                    set(value["name"] for value in
+                        self.patient_dict_container.get("rois").values())
+                duplicated_names = old_roi_names.intersection(new_roi_names)
+
+                # stop if there are conflicting roi names and user do not wish to proceed.
+                if duplicated_names and not self.display_confirm_merge(
+                        duplicated_names):
                     return
+
+                merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
                 merged_rtss.save_as(existing_rtss_directory)
 
-            QtWidgets.QMessageBox.about(self.parentWidget(), "File saved", "The RTSTRUCT file has been saved.")
+            if not auto:
+                QtWidgets.QMessageBox.about(self.parentWidget(),
+                                            "File saved",
+                                            "The RTSTRUCT file has been saved."
+                                            )
             self.patient_dict_container.set("rtss_modified", False)
             self.modified_indicator_widget.setParent(None)
 
-    def merge_rtss(self, new_rtss, old_rtss):
-        old_roi_names = set(value["name"] for value in ImageLoading.get_roi_info(old_rtss).values())
-        new_roi_names = set(value["name"] for value in self.patient_dict_container.get("rois").values())
-        duplicated_names = old_roi_names.intersection(new_roi_names)
+    def display_confirm_merge(self, duplicated_names):
+        confirm_merge = QtWidgets.QMessageBox(parent=self)
+        confirm_merge.setIcon(QtWidgets.QMessageBox.Question)
+        confirm_merge.setWindowTitle("Merge RTSTRUCTs?")
+        confirm_merge.setText("Conflicting ROI names found between new ROIs "
+                              "and existing ROIs:\n" + str(duplicated_names) +
+                              "\nAre you sure you want to merge the RTSTRUCT "
+                              "files? The new ROIs will replace the existing "
+                              "ROIs. ")
+        button_yes = QtWidgets.QPushButton("Yes, I want to merge")
+        button_no = QtWidgets.QPushButton("No, I will change the names")
+        """ 
+        We want the buttons 'No' & 'Yes' to be displayed in that exact 
+        order. QMessageBox displays buttons in respect to their assigned 
+        roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 
+        'RejectRole' is 1 thus by counterintuitively assigning 'No' to 
+        'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
+        positioned as desired.
+        """
+        confirm_merge.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
+        confirm_merge.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
+        confirm_merge.exec_()
 
-        if duplicated_names:
-            # Create a message box to ask for confirmation from user to merge files
-            confirm_merge = QtWidgets.QMessageBox(parent=self)
-            confirm_merge.setIcon(QtWidgets.QMessageBox.Question)
-            confirm_merge.setWindowTitle("Merge RTSTRUCTs?")
-            confirm_merge.setText("Conflicting ROI names found between new ROIs and "
-                                  "existing ROIs:\n" + str(duplicated_names) +
-                                  "\nAre you sure you want to merge the RTSTRUCT files? "
-                                  "The new ROIs will replace the existing ROIs. ")
-            button_yes = QtWidgets.QPushButton("Yes, I want to merge")
-            button_no = QtWidgets.QPushButton("No, I will change the names")
-            """ We want the buttons 'No' & 'Yes' to be displayed in that exact order. QMessageBox displays buttons in
-                respect to their assigned roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 'RejectRole' is 1 
-                thus by counterintuitively assigning 'No' to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
-                positioned as desired.
-            """
-            confirm_merge.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
-            confirm_merge.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
-            confirm_merge.exec_()
-
-            if confirm_merge.clickedButton() != button_yes:
-                return None
-
-        # Original sequences
-        original_structure_set = old_rtss.StructureSetROISequence
-        original_roi_contour = old_rtss.ROIContourSequence
-        original_roi_observation_sequence = old_rtss.RTROIObservationsSequence
-
-        # New sequences
-        new_structure_set = new_rtss.StructureSetROISequence
-        new_roi_contour = new_rtss.ROIContourSequence
-        new_roi_observation_sequence = new_rtss.RTROIObservationsSequence
-
-        # Get the indexes of duplicated ROIs
-        old_duplicated_roi_indexes = {}
-        index = 0
-        for structure_set in original_structure_set:
-            if structure_set.ROIName in duplicated_names:
-                old_duplicated_roi_indexes[structure_set.ROIName] = index
-            index += 1
-
-        # Remove old values out of the original sequences
-        rm_indices = [old_duplicated_roi_indexes[name] for name in duplicated_names]
-        for index in sorted(rm_indices, reverse=True):
-            # Remove the old value out of the original structure set sequence
-            original_structure_set.pop(index)
-            # Remove the old value out of the original contour sequence
-            original_roi_contour.pop(index)
-            # Remove the old value out of the original observation sequence
-            original_roi_observation_sequence.pop(index)
-
-        # Merge the original sequences with the new sequences
-        original_structure_set.extend(new_structure_set)
-        original_roi_contour.extend(new_roi_contour)
-        original_roi_observation_sequence.extend(new_roi_observation_sequence)
-
-        # Renumber the ROINumber and ReferencedROINumber tags
-        original_structure_set = StructureTab.renumber_roi_number(original_structure_set)
-        original_roi_contour = StructureTab.renumber_roi_number(original_roi_contour)
-        original_roi_observation_sequence = StructureTab.renumber_roi_number(original_roi_observation_sequence)
-
-        # Set the new value
-        old_rtss.add_new(Tag("StructureSetROISequence"), "SQ",original_structure_set)
-        old_rtss.add_new(Tag("ROIContourSequence"), "SQ", original_roi_contour)
-        old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_roi_observation_sequence)
-
-        return old_rtss
-
-    @staticmethod
-    def renumber_roi_number(sequence):
-        roi_number = 1
-        for item in sequence:
-            if item.get("ROINumber") is not None:
-                item.add_new(Tag("ROINumber"), 'IS', str(roi_number))
-            elif item.get("ReferencedROINumber") is not None:
-                item.add_new(Tag("ReferencedROINumber"), "IS", str(roi_number))
-            roi_number += 1
-        return sequence
+        if confirm_merge.clickedButton() == button_yes:
+            return True
+        return False

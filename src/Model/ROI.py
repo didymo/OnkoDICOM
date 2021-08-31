@@ -794,6 +794,73 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     return rt_ss
 
 
+def merge_rtss(old_rtss, new_rtss, duplicated_names):
+    """
+    Merge two RTSTRUCT datasets.
+    Replace the ROIs in old_rtss with the ROIs in new_rtss which have
+    same names.
+    :return: merged rtss
+    """
+    # Original sequences
+    original_structure_set = old_rtss.StructureSetROISequence
+    original_roi_contour = old_rtss.ROIContourSequence
+    original_roi_observation_sequence = old_rtss.RTROIObservationsSequence
+
+    # New sequences
+    new_structure_set = new_rtss.StructureSetROISequence
+    new_roi_contour = new_rtss.ROIContourSequence
+    new_roi_observation_sequence = new_rtss.RTROIObservationsSequence
+
+    # Get the indexes of duplicated ROIs
+    old_duplicated_roi_indexes = {}
+    index = 0
+    for structure_set in original_structure_set:
+        if structure_set.ROIName in duplicated_names:
+            old_duplicated_roi_indexes[structure_set.ROIName] = index
+        index += 1
+
+    # Remove old values out of the original sequences
+    rm_indices = [old_duplicated_roi_indexes[name] for name in duplicated_names]
+    for index in sorted(rm_indices, reverse=True):
+        # Remove the old value out of the original structure set sequence
+        original_structure_set.pop(index)
+        # Remove the old value out of the original contour sequence
+        original_roi_contour.pop(index)
+        # Remove the old value out of the original observation sequence
+        original_roi_observation_sequence.pop(index)
+
+    # Merge the original sequences with the new sequences
+    original_structure_set.extend(new_structure_set)
+    original_roi_contour.extend(new_roi_contour)
+    original_roi_observation_sequence.extend(new_roi_observation_sequence)
+
+    # Renumber the ROINumber and ReferencedROINumber tags
+    original_structure_set = renumber_roi_number(original_structure_set)
+    original_roi_contour = renumber_roi_number(original_roi_contour)
+    original_roi_observation_sequence = \
+        renumber_roi_number(original_roi_observation_sequence)
+
+    # Set the new value
+    old_rtss.add_new(Tag("StructureSetROISequence"), "SQ",
+                     original_structure_set)
+    old_rtss.add_new(Tag("ROIContourSequence"), "SQ", original_roi_contour)
+    old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ",
+                     original_roi_observation_sequence)
+
+    return old_rtss
+
+
+def renumber_roi_number(sequence):
+    roi_number = 1
+    for item in sequence:
+        if item.get("ROINumber") is not None:
+            item.add_new(Tag("ROINumber"), 'IS', str(roi_number))
+        elif item.get("ReferencedROINumber") is not None:
+            item.add_new(Tag("ReferencedROINumber"), "IS", str(roi_number))
+        roi_number += 1
+    return sequence
+
+
 def roi_to_geometry(dict_rois_contours):
     """
     Convert ROI contour data in each image slice to a geometry object

@@ -166,5 +166,6 @@ class IsodoseTab(QtWidgets.QWidget):
         Closes the progress window and refreshes
         the main screen.
         """
-        self.request_update_ui.emit((self.patient_dict_container.get('dataset_rtss'), {"draw": None}))
+        self.request_update_ui.emit((
+            self.patient_dict_container.get('dataset_rtss'), {"draw": None}))
         self.progress_window.close()
