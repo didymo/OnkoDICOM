@@ -125,10 +125,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         # Connect signal from mainpage to the function located in mainpage.py
         self.image_fusion_main_window.connect(self.create_image_fusion_tab)
 
-    
-        
-    
-    
+
     def update_ui(self):
         create_initial_model()
         self.setup_central_widget()
@@ -169,19 +166,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                  continue
                  
         new_image = sitk.ReadImage(new_fusion_list)
-        
 
         color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
-        
-  
+
         patient_dict_container.set("color_axial", color_axial)
         patient_dict_container.set("color_sagittal", color_sagittal)
         patient_dict_container.set("color_coronal", color_coronal)
         
         print('hurray')
-        
-        
-    
         
 
     def open_new_patient(self):

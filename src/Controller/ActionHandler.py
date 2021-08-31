@@ -409,7 +409,6 @@ class ActionHandler:
         self.__main_page.image_fusion_controller.set_path(patient_directory_path)
         self.__main_page.image_fusion_controller.show_image_fusion_select_window()
 
-        
         # self.__main_page.create_image_fusion_tab()
 
 
