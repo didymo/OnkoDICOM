@@ -405,6 +405,7 @@ class UIManipulateROIWindow:
 
     def update_selected_rois(self):
         """ Get the names of selected ROIs """
+        self.roi_names = []
         if self.first_roi_name_dropdown_list.currentText() != "":
             self.roi_names.append(self.first_roi_name_dropdown_list.currentText())
         if self.second_roi_name_dropdown_list.currentText() != "":
@@ -423,7 +424,6 @@ class UIManipulateROIWindow:
         slider_id = self.dicom_view.slider.value()
         curr_slice = self.patient_dict_container.get("dict_uid")[slider_id]
         self.rois = self.patient_dict_container.get("rois")
-
 
         # Display the selected ROIs
         self.dicom_view.update_view()
