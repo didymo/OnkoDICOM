@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from pathlib import Path
 from skimage import measure
@@ -214,7 +215,8 @@ class ISO2ROI:
 
     def create_new_rtstruct(self, progress_callback):
         """
-        Generates a new RTSS and edits the patient dict container.
+        Generates a new RTSS and edits the patient dict container. Used
+        for batch processing.
         """
         # Get common directory
         patient_dict_container = PatientDictContainer()
@@ -222,7 +224,8 @@ class ISO2ROI:
         file_path = Path(os.path.commonpath(file_path))
 
         # Get new RT Struct file path
-        file_path = str(file_path.joinpath("rtss.dcm"))
+        file_path = file_path.as_posix()
+        file_path += os.sep + "rtss.dcm"
 
         # Create RT Struct file
         progress_callback.emit(("Generating RT Structure Set", 60))
@@ -257,3 +260,5 @@ class ISO2ROI:
 
         patient_dict_container.set("selected_rois", [])
         patient_dict_container.set("dict_polygons_axial", {})
+
+        patient_dict_container.set("rtss_modified", True)
