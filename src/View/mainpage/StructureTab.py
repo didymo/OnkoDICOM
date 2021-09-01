@@ -5,7 +5,8 @@ from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
 
-from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, ROIManipulateOption
+from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, \
+    ROIManipulateOption
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -29,7 +30,8 @@ class StructureTab(QtWidgets.QWidget):
 
         self.roi_delete_handler = ROIDelOption(self.structure_modified)
         self.roi_draw_handler = ROIDrawOption(self.structure_modified)
-        self.roi_manipulate_handler = ROIManipulateOption(self.structure_modified)
+        self.roi_manipulate_handler = ROIManipulateOption(
+            self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -197,7 +199,8 @@ class StructureTab(QtWidgets.QWidget):
         self.roi_draw_handler.show_roi_draw_options()
 
     def roi_manipulate_clicked(self):
-        self.roi_manipulate_handler.show_roi_manipulate_options(self.color_dict)
+        self.roi_manipulate_handler.show_roi_manipulate_options(
+            self.color_dict)
 
     def structure_modified(self, changes):
         """
