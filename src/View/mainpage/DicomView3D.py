@@ -14,8 +14,14 @@ from src.View.util.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
 class DicomView3D(QtWidgets.QWidget):
+    """
+    This class is responsible for displaying the 3D construction of DICOM image slices
+    """
 
     def __init__(self):
+        """
+        Initialize layout
+        """
         QtWidgets.QWidget.__init__(self)
         self.is_rendered = False
         self.patient_dict_container = PatientDictContainer()
@@ -31,7 +37,11 @@ class DicomView3D(QtWidgets.QWidget):
         self.dicom_view_layout.addWidget(self.start_interaction_button)
         self.setLayout(self.dicom_view_layout)
 
-    def init_vtk_widget(self):
+    def initialize_vtk_widget(self):
+        """
+        Initialize vtk widget for displaying 3D volume on PySide6
+        """
+
         # Create the renderer, the render window, and the interactor.
         # The renderer draws into the render window,
         # The interactor enables mouse and keyboard-based interaction with the scene.
@@ -42,6 +52,10 @@ class DicomView3D(QtWidgets.QWidget):
         self.vtk_widget.GetRenderWindow().FullScreenOff()
 
     def convert_pixel_values_to_vtk_3d_array(self):
+        """
+        Scale pixel_values based on W/L and convert it to a vtk 3D array
+        """
+
         three_dimension_np_array = np.array(self.patient_dict_container.additional_data["pixel_values"])
         three_dimension_np_array = three_dimension_np_array.astype(np.int16)
         three_dimension_np_array = (three_dimension_np_array - (
@@ -54,6 +68,10 @@ class DicomView3D(QtWidgets.QWidget):
         self.shape = three_dimension_np_array.shape
 
     def update_volume_by_window_level(self):
+        """
+        Update volume input data when window level is changed
+        """
+
         # Convert pixel_values in patient_dict_container into a 3D numpy array
         self.convert_pixel_values_to_vtk_3d_array()
 
@@ -68,6 +86,9 @@ class DicomView3D(QtWidgets.QWidget):
         self.renderer.AddVolume(self.volume)
 
     def populate_volume_data(self):
+        """
+        Populate volume data
+        """
 
         # Convert pixel_values in patient_dict_container into a 3D numpy array
         self.convert_pixel_values_to_vtk_3d_array()
@@ -97,7 +118,11 @@ class DicomView3D(QtWidgets.QWidget):
         self.renderer.RemoveVolume(self.volume)
         self.renderer.AddVolume(self.volume)
 
-    def init_camera(self):
+    def initialize_camera(self):
+        """
+        Initialize the camera
+        """
+
         # Set up an initial view of the volume. The focal point will be the
         # center of the volume, and the zoom is 0.5
         self.camera = self.renderer.GetActiveCamera()
@@ -105,6 +130,10 @@ class DicomView3D(QtWidgets.QWidget):
         self.camera.Zoom(0.5)
 
     def initialize_volume_color(self):
+        """
+        Initialize volume color
+        """
+
         # The colorTransferFunction maps voxel intensities to colors.
 
         self.volume_color = vtkColorTransferFunction()
@@ -146,18 +175,24 @@ class DicomView3D(QtWidgets.QWidget):
         self.volume_property.SetSpecular(0.5)
 
     def update_view(self):
+        """
+        Update volume when there is change in window level
+        """
         if self.is_rendered:
             self.update_volume_by_window_level()
             self.volume.Update()
 
     def start_interaction(self):
+        """
+        Start displaying and interacting with 3D image
+        """
 
         # Initialize vtk widget
-        self.init_vtk_widget()
+        self.initialize_vtk_widget()
         # Populate image data to vtkVolume for 3D rendering
         self.initialize_volume_color()
         self.populate_volume_data()
-        self.init_camera()
+        self.initialize_camera()
         # Render vtk widget
         self.start_interaction_button.setVisible(False)
         self.dicom_view_layout.removeWidget(self.start_interaction_button)
@@ -171,6 +206,10 @@ class DicomView3D(QtWidgets.QWidget):
         self.is_rendered = True
 
     def closeEvent(self, QCloseEvent):
+        """
+        Clean up function when the window is closed
+        """
+
         super().closeEvent(QCloseEvent)
         # Clean up renderer
         if hasattr(self, 'renderer') and self.renderer:
