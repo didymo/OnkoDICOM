@@ -10,20 +10,20 @@ import src.constants as constant
 
 # noinspection PyAttributeOutsideInit
 
-
-#####################################################################################################################
-#                                                                                                                   #
-#  This Class handles the Drawing functionality                                                                     #
-#                                                                                                                   #
-#####################################################################################################################
 class Drawing(QtWidgets.QGraphicsScene):
+    """
+        Class responsible for the ROI drawing functionality
+        """
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slice_changed,
-                 current_slice, drawing_tool_radius, keep_empty_pixel, target_pixel_coords=set()):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
+                 draw_roi_window_instance, slice_changed,
+                 current_slice, drawing_tool_radius, keep_empty_pixel,
+                 target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
-        # create the canvas to draw the line on and all its necessary components
+        # create the canvas to draw the line on and all its necessary
+        # components
         self.draw_roi_window_instance = draw_roi_window_instance
         self.slice_changed = slice_changed
         self.current_slice = current_slice
@@ -44,7 +44,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.isPressed = False
         self.dataset = dataset
         self.pixel_array = None
-        # This will contain the new pixel coordinates specifed by the min and max pixel density
+        # This will contain the new pixel coordinates specifed by the min
+        # and max pixel density
         self.target_pixel_coords = target_pixel_coords
         self.according_color_dict = {}
         self.q_image = None
@@ -57,39 +58,43 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def _display_pixel_color(self):
         """
-        Creates the initial list of pixel values within the given minimum and maximum densities, then displays them
-        on the view.
+        Creates the initial list of pixel values within the given minimum
+        and maximum densities, then displays them on the view.
         """
         if self.min_pixel <= self.max_pixel:
             data_set = self.dataset
             if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
-                self.min_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().x())
-                self.min_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().y())
-                self.max_x = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().width() + self.min_x)
-                self.max_y = int(self.draw_roi_window_instance.bounds_box_draw.box.rect().height() + self.min_y)
+                self.min_x = int(self.draw_roi_window_instance.bounds_box_draw.
+                                 box.rect().x())
+                self.min_y = int(self.draw_roi_window_instance.bounds_box_draw.
+                                 box.rect().y())
+                self.max_x = int(self.draw_roi_window_instance.bounds_box_draw.
+                                 box.rect().width() + self.min_x)
+                self.max_y = int(self.draw_roi_window_instance.bounds_box_draw.
+                                 box.rect().height() + self.min_y)
             else:
                 self.min_x = 0
                 self.min_y = 0
                 self.max_x = data_set.Rows
                 self.max_y = data_set.Columns
 
-            """
-            pixel_array is a 2-Dimensional array containing all pixel coordinates of the q_image. 
-            pixel_array[x][y] will return the density of the pixel
-            """
+            """pixel_array is a 2-Dimensional array containing all pixel 
+            coordinates of the q_image. pixel_array[x][y] will return the 
+            density of the pixel """
             self.pixel_array = data_set._pixel_array
             self.q_image = self.img.toImage()
             for y_coord in range(self.min_y, self.max_y):
                 for x_coord in range(self.min_x, self.max_x):
 
-                    if (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
-                            self.pixel_array[y_coord][x_coord] <= self.max_pixel):
+                    if (self.pixel_array[y_coord][x_coord] >= self.min_pixel) \
+                            and (self.pixel_array[y_coord][
+                                     x_coord] <= self.max_pixel):
                         self.target_pixel_coords.add((x_coord, y_coord))
 
-            """
-            For the meantime, a new image is created and the pixels specified are coloured. 
-            This will need to altered so that it creates a new layer over the existing image instead of replacing it.
-            """
+            """For the meantime, a new image is created and the pixels 
+            specified are coloured. This will need to altered so that it 
+            creates a new layer over the existing image instead of replacing 
+            it. """
             # Convert QPixMap into Qimage
             for x_coord, y_coord in self.target_pixel_coords:
                 c = self.q_image.pixel(x_coord, y_coord)
@@ -104,9 +109,10 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def _find_neighbor_point(self, event):
         """
-        Find point around mouse position. This function is for if we want to choose and drag the circle
-        :rtype: ((int, int)|None)
-        :return: (x, y) if there are any point around mouse else None
+        Find point around mouse position. This function is for if we want to
+        choose and drag the circle :rtype: ((int, int)|None) :param event:
+        the mouse event :return: (x, y) if there are any point around mouse
+        else None
         """
         distance_threshold = 3.0
         nearest_point = None
@@ -122,7 +128,8 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def getValues(self):
         """
-        This function gets the corresponding values of all the points in the drawn line from the dataset.
+        This function gets the corresponding values of all the points in the
+        drawn line from the dataset.
         """
         for i in range(constant.DEFAULT_WINDOW_SIZE):
             for j in range(constant.DEFAULT_WINDOW_SIZE):
@@ -130,20 +137,25 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def refresh_image(self):
         """
-        Convert QImage containing modified CT slice with highlighted pixels into a QPixmap, and then display it onto
-        the view.
+        Convert QImage containing modified CT slice with highlighted pixels
+        into a QPixmap, and then display it onto the view.
         """
-        self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap.fromImage(self.q_image))
+        self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(
+            QtGui.QPixmap.fromImage(self.q_image))
         self.addItem(self.q_pixmaps)
 
     def remove_pixels_within_circle(self, clicked_x, clicked_y):
         """
-        Removes all highlighted pixels within the selected circle and updates the image.
+        Removes all highlighted pixels within the selected circle and
+        updates the image. :param clicked_x: the current x coordinate :param
+        clicked_y: the current y coordinate
         """
-        # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
-        # than the radius, remove it from the highlighted pixels.
+        # Calculate euclidean distance between each highlighted point and
+        # the clicked point. If the distance is less than the radius,
+        # remove it from the highlighted pixels.
 
-        # The roi drawn on current slice is changed after several pixels are modified
+        # The roi drawn on current slice is changed after several pixels are
+        # modified
         self.slice_changed = True
 
         according_color_dict_key_list = list(self.according_color_dict.keys())
@@ -157,43 +169,58 @@ class Drawing(QtWidgets.QGraphicsScene):
             point_to_check = numpy.array((x, y))
             distance = numpy.linalg.norm(clicked_point - point_to_check)
             if distance <= self.draw_tool_radius:
-                self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0], colors[1], colors[2], colors[3]))
+                self.q_image.setPixelColor(x, y, QColor.fromRgbF(colors[0],
+                                                                 colors[1],
+                                                                 colors[2],
+                                                                 colors[3]))
                 self.target_pixel_coords.remove((x, y))
                 self.according_color_dict.pop((x, y))
-                # The roi drawn on current slice is changed after several pixels are modified
+                # The roi drawn on current slice is changed after several
+                # pixels are modified
                 self.slice_changed = True
 
         self.refresh_image()
 
     def fill_pixels_within_circle(self, clicked_x, clicked_y):
         """
-        Add all highlighted pixels within the selected circle and updates the image.
+        Add all highlighted pixels within the selected circle and updates
+        the image. :param clicked_x: the current x coordinate :param
+        clicked_y: the current y coordinate
         """
-        # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
-        # than the radius, add it to the highlighted pixels.
+        # Calculate euclidean distance between each highlighted point and
+        # the clicked point. If the distance is less than the radius,
+        # add it to the highlighted pixels.
 
         # Set of points to color
         points_to_color = set()
 
-        # The roi drawn on current slice is changed after several pixels are modified
+        # The roi drawn on current slice is changed after several pixels are
+        # modified
         self.slice_changed = True
 
         min_y_bound_square = math.floor(clicked_y) - self.draw_tool_radius
         min_x_bound_square = math.floor(clicked_x) - self.draw_tool_radius
         max_y_bound_square = math.floor(clicked_y) + self.draw_tool_radius
         max_x_bound_square = math.floor(clicked_x) + self.draw_tool_radius
-        for y_coord in range(max(self.min_y, min_y_bound_square), min(self.max_y, max_y_bound_square)):
-            for x_coord in range(max(self.min_x, min_x_bound_square), min(self.max_x, max_x_bound_square)):
+        for y_coord in range(
+                max(self.min_y, min_y_bound_square),
+                min(self.max_y, max_y_bound_square)):
+            for x_coord in range(
+                    max(self.min_x, min_x_bound_square),
+                    min(self.max_x, max_x_bound_square)):
                 clicked_point = numpy.array((clicked_x, clicked_y))
                 point_to_check = numpy.array((x_coord, y_coord))
                 distance = numpy.linalg.norm(clicked_point - point_to_check)
 
-                if ((not self.keep_empty_pixel) and (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
-                        self.pixel_array[y_coord][x_coord] <= self.max_pixel) or self.keep_empty_pixel) and (distance <= self.draw_tool_radius):
+                if (self.keep_empty_pixel or
+                    self.min_pixel <= self.pixel_array[y_coord][
+                        x_coord] <= self.max_pixel) \
+                        and distance <= self.draw_tool_radius:
                     c = self.q_image.pixel(x_coord, y_coord)
                     colors = QColor(c)
                     if (x_coord, y_coord) not in self.according_color_dict:
-                        self.according_color_dict[(x_coord, y_coord)] = colors.getRgbF()
+                        self.according_color_dict[
+                            (x_coord, y_coord)] = colors.getRgbF()
                         points_to_color.add((x_coord, y_coord))
                         self.target_pixel_coords.add((x_coord, y_coord))
 
@@ -206,23 +233,32 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.refresh_image()
 
     def clear_cursor(self, drawing_tool_radius):
+        """
+        Clean the current cursor
+        :param drawing_tool_radius: the current radius of the drawing tool
+        """
         self.draw_tool_radius = drawing_tool_radius
         if self.cursor:
             self.removeItem(self.cursor)
             self.cursor = False
 
-    def draw_cursor(self, event_x, event_y, drawing_tool_radius, new_circle=False):
+    def draw_cursor(self, event_x, event_y, drawing_tool_radius,
+                    new_circle=False):
         """
-        Draws a blue circle where the user clicked.
-        :param event_x: QGraphicsScene event attribute: event.scenePos().x()
-        :param event_y: QGraphicsScene event attribute: event.scenePos().y()
-        :param new_circle: True when the circle object is being created rather than updated.
+        Draws a blue circle where the user clicked. :param event_x:
+        QGraphicsScene event attribute: event.scenePos().x() :param event_y:
+        QGraphicsScene event attribute: event.scenePos().y() :param
+        drawing_tool_radius: the current radius of the drawing tool :param
+        new_circle: True when the circle object is being created rather than
+        updated.
         """
         self.draw_tool_radius = drawing_tool_radius
         self.current_cursor_x = event_x - self.draw_tool_radius
         self.current_cursor_y = event_y - self.draw_tool_radius
         if new_circle:
-            self.cursor = QGraphicsEllipseItem(self.current_cursor_x, self.current_cursor_y, self.draw_tool_radius * 2,
+            self.cursor = QGraphicsEllipseItem(self.current_cursor_x,
+                                               self.current_cursor_y,
+                                               self.draw_tool_radius * 2,
                                                self.draw_tool_radius * 2)
             pen = QPen(QColor("blue"))
             pen.setWidth(0)
@@ -230,13 +266,15 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.cursor.setZValue(1)
             self.addItem(self.cursor)
         elif self.cursor is not None:
-            self.cursor.setRect(self.current_cursor_x, self.current_cursor_y, self.draw_tool_radius * 2,
+            self.cursor.setRect(self.current_cursor_x, self.current_cursor_y,
+                                self.draw_tool_radius * 2,
                                 self.draw_tool_radius * 2)
 
     def draw_contour_preview(self, list_of_points):
         """
-        Draws a polygon onto the view so the user can preview what their contour will look like once exported.
-        :param list_of_points: A list of points ordered to form a polygon.
+        Draws a polygon onto the view so the user can preview what their
+        contour will look like once exported. :param list_of_points: A list
+        of points ordered to form a polygon.
         """
         qpoint_list = []
         for point in list_of_points:
@@ -252,6 +290,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.addItem(self.polygon_preview)
 
     def mousePressEvent(self, event):
+        """
+            This method is called to handle a mouse press event
+            :param event: the mouse event
+        """
         if self.cursor:
             self.removeItem(self.cursor)
         self.isPressed = True
@@ -261,30 +303,45 @@ class Drawing(QtWidgets.QGraphicsScene):
         ):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
-        self.is_current_pixel_coloured = (math.floor(event.scenePos().x()),
-                                          math.floor(
-                                              event.scenePos().y())) in self.according_color_dict
-        self.draw_cursor(event.scenePos().x(), event.scenePos().y(), self.draw_tool_radius, new_circle=True)
+        is_coloured = (math.floor(
+            event.scenePos().x()), math.floor(event.scenePos().y())
+            ) in self.according_color_dict
+        self.is_current_pixel_coloured = is_coloured
+        self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
+                         self.draw_tool_radius, new_circle=True)
 
         if self.is_current_pixel_coloured:
-            self.fill_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
+            self.fill_pixels_within_circle(event.scenePos().x(),
+                                           event.scenePos().y())
         else:
-            self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
+            self.remove_pixels_within_circle(event.scenePos().x(),
+                                             event.scenePos().y())
         self.update()
 
     def mouseMoveEvent(self, event):
+        """
+            This method is called to handle a mouse move event
+            :param event: the mouse event
+        """
         if not self.drag_position.isNull():
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
         if self.cursor and self.isPressed:
-            self.draw_cursor(event.scenePos().x(), event.scenePos().y(),self.draw_tool_radius)
+            self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
+                             self.draw_tool_radius)
             if self.is_current_pixel_coloured:
-                self.fill_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
+                self.fill_pixels_within_circle(event.scenePos().x(),
+                                               event.scenePos().y())
             else:
-                self.remove_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
+                self.remove_pixels_within_circle(event.scenePos().x(),
+                                                 event.scenePos().y())
         self.update()
 
     def mouseReleaseEvent(self, event):
+        """
+            This method is called to handle a mouse release event
+            :param event: the mouse event
+        """
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)

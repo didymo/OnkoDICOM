@@ -135,11 +135,14 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
 def create_roi(rtss, roi_name, roi_list,
                rt_roi_interpreted_type="ORGAN"):
     """
-        Create new ROI to rtss
+        Create new contours of an ROI to rtss
         :param rtss: dataset of RTSS
         :param roi_name: ROIName
-        :param roi_coordinates: Coordinates of pixels for new ROI
-        :param data_set: Data Set of selected DICOM image file
+        :param roi_list: the list of contours to be added to the rtss.
+            Each element consists of coordinates of pixels for new
+            contour and data set of selected DICOM image file.
+        :param rt_roi_interpreted_type: the interpreted type
+            of the new ROI
         :return: rtss, with added ROI
         """
     patient_dict_container = PatientDictContainer()
@@ -156,7 +159,8 @@ def create_roi(rtss, roi_name, roi_list,
         data_set = roi_info['ds']
         roi_coordinates = roi_info['coords']
         if not roi_exists:
-            rtss = add_new_roi(rtss, roi_name, roi_coordinates, data_set, rt_roi_interpreted_type)
+            rtss = add_new_roi(rtss, roi_name, roi_coordinates, data_set,
+                               rt_roi_interpreted_type)
             roi_exists = True
         else:
             # Add contour image data to existing ROI
@@ -165,7 +169,18 @@ def create_roi(rtss, roi_name, roi_list,
     return rtss
 
 
-def add_new_roi(rtss, roi_name, roi_coordinates, data_set, rt_roi_interpreted_type):
+def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
+                rt_roi_interpreted_type):
+    """
+            Add the information of a new ROI to the rtss
+            :param rtss: dataset of RTSS
+            :param roi_name: ROIName
+            :param roi_coordinates: Coordinates of pixels for new ROI
+            :param data_set: data set of selected DICOM image file
+            :param rt_roi_interpreted_type: the interpreted type
+                of the new ROI
+            :return: rtss, with added ROI
+            """
     number_of_contour_points = len(roi_coordinates) / 3
     referenced_sop_class_uid = data_set.SOPClassUID
     referenced_sop_instance_uid = data_set.SOPInstanceUID

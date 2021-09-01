@@ -7,7 +7,8 @@ from src.Model.Worker import Worker
 
 class SaveROIProgressWindow(QtWidgets.QDialog):
     """
-    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
+    This class displays a window that advises the user that
+    the RTSTRUCT is being modified, and then creates a new
     thread where the new RTSTRUCT is modified.
     """
 
@@ -29,8 +30,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
         Creates a thread that generates the new dataset object.
         :param dataset_rtss: dataset of RTSS
         :param roi_name: ROIName
-        :param single_array: Coordinates of pixels for new ROI
-        :param ds: Data Set of selected DICOM image file
+        :param roi_list: list of contours to be saved
         """
         worker = Worker(ROI.create_roi, dataset_rtss, roi_name, roi_list)
         worker.signals.result.connect(self.roi_saved)
@@ -38,8 +38,9 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
 
     def roi_saved(self, result):
         """
-        This method is called when the second thread completes generation of the new dataset object.
-        :param result: The resulting dataset from the ROI.create_roi function.
+        This method is called when the second thread completes generation of
+        the new dataset object. :param result: The resulting dataset from
+        the ROI.create_roi function.
         """
         self.signal_roi_saved.emit(result)
         self.close()
