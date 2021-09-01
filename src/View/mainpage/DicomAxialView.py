@@ -177,7 +177,6 @@ class DicomAxialView(DicomView):
         total_slices = len(self.patient_dict_container.get("pixmaps_axial"))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
-        patient_pos = dataset['PatientPosition'].value
         window = self.patient_dict_container.get("window")
         level = self.patient_dict_container.get("level")
         slice_pos = dataset['SliceLocation'].value
@@ -188,7 +187,10 @@ class DicomAxialView(DicomView):
         self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
         self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
         self.label_zoom.setText("Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
-        self.label_patient_pos.setText("Patient Position: %s" % (str(patient_pos)))
+
+        if hasattr(dataset, 'PatientPosition'):
+            patient_pos = dataset['PatientPosition'].value
+            self.label_patient_pos.setText("Patient Position: %s" % (str(patient_pos)))
 
     def roi_display(self):
         """

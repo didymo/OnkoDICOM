@@ -70,8 +70,9 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     np_pixels = np_pixels.astype(np.int8)
 
     # Convert numpy array data to QImage for PySide6
+    bytes_per_line = np_pixels.shape[1]
     qimage = QtGui.QImage(
-        np_pixels, np_pixels.shape[1], np_pixels.shape[0],
+        np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
         QtGui.QImage.Format_Indexed8)
     pixmap = QtGui.QPixmap(qimage)
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)

@@ -1,7 +1,6 @@
 import numpy
 import os
 from pathlib import Path
-from PySide6 import QtCore
 from skimage import measure
 from src.Model import ImageLoading
 from src.Model import ROI
@@ -10,16 +9,9 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.InputDialogs import PatientWeightDialog
 
 
-class WorkerSignals(QtCore.QObject):
-    signal_roi_drawn = QtCore.Signal(tuple)
-
-
 class SUV2ROI:
     """This class is for converting SUV levels to ROIs."""
     def __init__(self):
-        self.worker_signals = WorkerSignals()
-        self.signal_roi_drawn = self.worker_signals.signal_roi_drawn
-
         self.patient_weight = None
         self.weight_over_dose = None
 
@@ -30,29 +22,13 @@ class SUV2ROI:
         :param progress_callback: signal that receives the current
                                   progress of the process.
         """
-        patient_dict_container = PatientDictContainer()
-
         progress_callback.emit(("Validating Datasets", 0))
-        dataset_complete = \
-            ImageLoading.is_dataset_dicom_rt(patient_dict_container.dataset)
 
         # Stop loading
         if interrupt_flag.is_set():
             # TODO: convert print to logging
             print("Stopped SUV2ROI")
             return False
-
-        if not dataset_complete:
-            # Check if RT struct file is missing. If yes, create one and
-            # add its data to the patient dict container
-            if not patient_dict_container.get("file_rtss"):
-                # Stop loading
-                if interrupt_flag.is_set():
-                    # TODO: convert print to logging
-                    print("Stopped SUV2ROI")
-                    return False
-                progress_callback.emit(("Creating RT Struct", 20))
-                self.create_new_rtstruct()
 
         # Get PET datasets
         progress_callback.emit(("Getting PET Data", 40))
@@ -254,12 +230,6 @@ class SUV2ROI:
         patient_dict_container = PatientDictContainer()
         dataset_rtss = patient_dict_container.get("dataset_rtss")
 
-        # Save RTSS if it has been modified but not saved
-        if patient_dict_container.get("rtss_modified"):
-            rtss_directory = Path(patient_dict_container.get("file_rtss"))
-            patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-            patient_dict_container.set("rtss_modified", False)
-
         # Get existing ROIs
         existing_rois = []
         rois = patient_dict_container.get("dataset_rtss")
@@ -326,53 +296,3 @@ class SUV2ROI:
                     patient_dict_container.set("dataset_rtss", rtss)
                     patient_dict_container.set("rois",
                                                ImageLoading.get_roi_info(rtss))
-
-        progress_callback.emit(("Writing to RT Structure Set", 85))
-        rtss_directory = Path(patient_dict_container.get("file_rtss"))
-        patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
-        patient_dict_container.set("rtss_modified", False)
-
-    def create_new_rtstruct(self):
-        """
-        Generates a new RTSS and edits the patient dict container.
-        """
-        # Get common directory
-        patient_dict_container = PatientDictContainer()
-        file_path = patient_dict_container.filepaths.values()
-        file_path = Path(os.path.commonpath(file_path))
-
-        # Get new RT Struct file path
-        file_path = str(file_path.joinpath("rtss.dcm"))
-
-        # Create RT Struct file
-        ct_uid_list = ImageLoading.get_image_uid_list(
-            patient_dict_container.dataset)
-        ds = ROI.create_initial_rtss_from_ct(
-            patient_dict_container.dataset[0], file_path, ct_uid_list)
-        ds.save_as(file_path)
-
-        # Add RT Struct file path to patient dict container
-        patient_dict_container.filepaths['rtss'] = file_path
-        filepaths = patient_dict_container.filepaths
-
-        # Add RT Struct dataset to patient dict container
-        patient_dict_container.dataset['rtss'] = ds
-        dataset = patient_dict_container.dataset
-
-        # Set some patient dict container attributes
-        patient_dict_container.set("file_rtss", filepaths['rtss'])
-        patient_dict_container.set("dataset_rtss", dataset['rtss'])
-
-        dicom_tree_rtss = DicomTree(filepaths['rtss'])
-        patient_dict_container.set("dict_dicom_tree_rtss",
-                                   dicom_tree_rtss.dict)
-
-        dict_pixluts = ImageLoading.get_pixluts(
-            patient_dict_container.dataset)
-        patient_dict_container.set("pixluts", dict_pixluts)
-
-        rois = ImageLoading.get_roi_info(ds)
-        patient_dict_container.set("rois", rois)
-
-        patient_dict_container.set("selected_rois", [])
-        patient_dict_container.set("dict_polygons_axial", {})

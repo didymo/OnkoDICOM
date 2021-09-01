@@ -390,7 +390,8 @@ class ActionHandler:
         Called when progress bar has finished. Closes the progress
         window and refreshes the main screen.
         """
-        self.__main_page.main_window_instance.update_ui()
+        self.__main_page.structures_tab.structure_modified((
+            self.patient_dict_container.get('dataset_rtss'), {"draw": None}))
         self.progress_window.close()
 
     def add_on_options_handler(self):
