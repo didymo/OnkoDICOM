@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from src.Model import DICOMDirectorySearch
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model.Worker import Worker
+from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 
 
@@ -106,10 +107,12 @@ class UIBatchProcessingWindow(object):
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
         self.suv2roi_tab = QtWidgets.QLabel("Coming soon")
+        self.dvh2csv_tab = DVH2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
+        self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
 
         # == Bottom widgets
         # Info text
@@ -258,7 +261,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi']
+        processes = ['iso2roi', 'suv2roi', 'dvh2csv']
         selected_processes = []
 
         # Get the selected processes

@@ -1,5 +1,5 @@
 from src.View.ProgressWindow import ProgressWindow
-from src.Model.BatchProcesses import BatchProcessISO2ROI
+from src.Model.BatchProcesses import BatchProcessDVH2CSV, BatchProcessISO2ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -65,7 +65,8 @@ class BatchProcessingController:
 
             # Perform ISO2ROI on patient
             if "iso2roi" in self.processes:
-                process = BatchProcessISO2ROI(progress_callback, interrupt_flag,
+                process = BatchProcessISO2ROI(progress_callback,
+                                              interrupt_flag,
                                               cur_patient_files)
                 process.start()
 
@@ -74,6 +75,15 @@ class BatchProcessingController:
             # Perform SUV2ROI on patient
             if "suv2roi" in self.processes:
                 pass
+
+            # Perform DVH2CSV on patient
+            if "dvh2csv" in self.processes:
+                process = BatchProcessDVH2CSV(progress_callback,
+                                              interrupt_flag,
+                                              cur_patient_files)
+                process.start()
+
+                progress_callback.emit(("Completed DVH2CSV", 90))
 
         PatientDictContainer().clear()
 
