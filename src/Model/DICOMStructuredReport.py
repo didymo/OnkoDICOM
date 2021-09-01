@@ -77,9 +77,6 @@ def generate_dicom_sr(file_path, img_ds, data):
     dicom_sr.SeriesDescription = "Optional"  #TODO replace with Clinical Data/Pyradiomics
     # Can be empty
     referenced_performed_procedure_step_sequence = Sequence()
-    # Ask about these
-    #referenced_performed_procedure_step_sequence[0].ReferencedSOPClassUID = ''
-    #referenced_performed_procedure_step_sequence[0].ReferencedSOPInstanceUID = ''
     dicom_sr.ReferencedPerformedProcedureStepSequence = \
         referenced_performed_procedure_step_sequence
     dicom_sr.SeriesInstanceUID = pydicom.uid.generate_uid()
@@ -95,76 +92,33 @@ def generate_dicom_sr(file_path, img_ds, data):
     dicom_sr.ContentDate = dicom_date
     dicom_sr.ContentTime = dicom_time
 
-    # Required if the identity of a CDA Document equivalent to the
-    # current SOP Instance is known at the time of creation of this SOP
-    # Instance
-    # dicom_sr.ReferencedInstanceSequence = Sequence()
-
     dicom_sr.InstanceNumber = 1
-
-    # Required if VerificationFlag = VERIFIED
-    # dicom_sr.VerifyingObserverSequence = Sequence()
-
-    # Required if document includes content from other documents
-    # dicom_sr.PredecessorDocumentsSequence = Sequence()
-
-    # Required if document fulfulls one+ requested procedure
-    # dicom_sr.ReferencedRequestSequence = Sequence()
 
     # Empty if unknown
     performed_procedure_code_sequence = Sequence()
 
     dicom_sr.PerformedProcedureCodeSequence = performed_procedure_code_sequence
 
-    # Required if the creator is aware of Composite Objects acquired in
-    # order to satisfy the Requested Procedure(s) for which the SR
-    # Document is or if Instances are referenced in the content tree
-    # dicom_sr.CurrentRequestedProcedureEvidenceSequence = Sequence()
-
-    # Required if pertinent evidence from other requested procedures
-    # needs to be recorded
-    # dicom_sr.PertinentOtherEvidenceSequence = Sequence()
-
     # Do not want to mark as complete in case it isn't!
     dicom_sr.CompletionFlag = "PARTIAL"
     dicom_sr.VerificationFlag = "UNVERIFIED"
 
-    # Required if document stored with different SOP instance UIDs in
-    # one or more other studies
-    # dicom_sr.IdenticalDocumentsSequence = Sequence()
-
     # == SR Document Content Module
     referenced_sop_sequence = Sequence([Dataset()])
-    # Ask
     referenced_sop_sequence[0].ReferencedSOPClassUID = ''
     referenced_sop_sequence[0].ReferencedSOPInstanceUID = ''
-
-    # Required if the Referenced SOP Instance is a multi-frame image and
-    # the reference does not apply to all frames, and Referenced Segment
-    # Number (0062,000B) is not present.
-    # referenced_sop_sequence[0].ReferencedFrameNumber = ''
-
-    # Required if the Referenced SOP Instance is a Waveform that
-    # contains multiple Channels and not all Channels in the Waveform
-    # are referenced.
-    # referenced_sop_sequence[0].ReferencedWaveformChannels = ''
-
-    # Required if the Referenced SOP Instance is a Segmentation and the
-    # reference does not apply to all segments and Referenced Frame
-    # Number (0008,1160) is not present.
-    # referenced_sop_sequence[0].ReferencedSegmentNumber = ''
 
     dicom_sr.ReferencedSOPSequence = referenced_sop_sequence
     dicom_sr.ValueType = "CONTAINER"
 
     dicom_sr.ContinuityOfContent = "CONTINUOUS"
-    dicom_sr.TemporalRangeTime = ""  # Ask
-    dicom_sr.ReferencedTimeOffsets = ""  # Ask
-    dicom_sr.ReferencedDateTime = ""  # Ask
+    dicom_sr.TemporalRangeTime = ""
+    dicom_sr.ReferencedTimeOffsets = ""
+    dicom_sr.ReferencedDateTime = ""
 
-    dicom_sr.MeasuredValueSequence = Sequence()  # Can be empty. Ask
+    dicom_sr.MeasuredValueSequence = Sequence()
     og_frame_of_reference_UID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
-    dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID  # Ask
+    dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID
 
     # == Content Sequence
     content_sequence = Sequence([Dataset()])
@@ -172,7 +126,6 @@ def generate_dicom_sr(file_path, img_ds, data):
     content_sequence[0].ValueType = 'TEXT'
 
     concept_name_code_sequence = Sequence([Dataset()])
-    # Ask
     concept_name_code_sequence[0].CodeValue = ''
     concept_name_code_sequence[0].CodingSchemeDesignator = ''
     concept_name_code_sequence[0].CodeMeaning = ''
