@@ -20,8 +20,13 @@ class DrawBoundingBox(QtWidgets.QGraphicsScene):
         self.box = None
 
     def draw_bounding_box(self, new_box=False):
+        """
+            his method is called to draw the bounding box in draw ROI window.
+            :param new_box: check if any box has been drawn before
+        """
         if new_box:
-            self.box = QtWidgets.QGraphicsRectItem(self.start_x, self.start_y, 0, 0)
+            self.box = QtWidgets.QGraphicsRectItem(self.start_x, self.start_y,
+                                                   0, 0)
             pen = QtGui.QPen(QtGui.QColor("red"))
             pen.setStyle(QtCore.Qt.DashDotDotLine)
             pen.setWidth(0)
@@ -45,6 +50,10 @@ class DrawBoundingBox(QtWidgets.QGraphicsScene):
             self.box.setRect(x, y, width, height)
 
     def mousePressEvent(self, event):
+        """
+            This method is called to handle a mouse press event
+            :param event: the mouse event
+        """
         if self.box:
             self.removeItem(self.box)
         self.drawing = True
@@ -53,12 +62,20 @@ class DrawBoundingBox(QtWidgets.QGraphicsScene):
         self.draw_bounding_box(new_box=True)
 
     def mouseMoveEvent(self, event):
+        """
+            This method is called to handle a mouse move event
+            :param event: the mouse event
+        """
         if self.drawing:
             self.end_x = event.scenePos().x()
             self.end_y = event.scenePos().y()
             self.draw_bounding_box()
 
     def mouseReleaseEvent(self, event):
+        """
+            This method is called to handle a mouse release event
+            :param event: the mouse event
+        """
         if self.drawing:
             self.drawing = False
             self.end_x = event.scenePos().x()

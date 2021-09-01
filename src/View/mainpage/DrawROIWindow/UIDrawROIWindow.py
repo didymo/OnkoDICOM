@@ -22,7 +22,18 @@ from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
 class UIDrawROIWindow:
 
-    def setup_ui(self, draw_roi_window_instance, rois, dataset_rtss, signal_roi_drawn):
+    def setup_ui(self, draw_roi_window_instance,
+                 rois, dataset_rtss, signal_roi_drawn):
+        """
+        this function is responsible for setting up the UI
+        for DrawROIWindow
+        param draw_roi_window_instance: the current drawing
+        window instance.
+        :param rois: the rois to be drawn
+        :param dataset_rtss: the rtss to be written to
+        :param signal_roi_drawn: the signal to be triggered
+        when roi is drawn
+        """
         self.patient_dict_container = PatientDictContainer()
 
         self.rois = rois
@@ -56,6 +67,12 @@ class UIDrawROIWindow:
         QtCore.QMetaObject.connectSlotsByName(draw_roi_window_instance)
 
     def retranslate_ui(self, draw_roi_window_instance):
+        """
+            this function retranslate the ui for draw roi window
+
+            :param draw_roi_window_instance: the current drawing
+            window instance.
+            """
         _translate = QtCore.QCoreApplication.translate
         draw_roi_window_instance.setWindowTitle(
             _translate("DrawRoiWindowInstance", "OnkoDICOM - Draw Region Of Interest"))
@@ -225,7 +242,8 @@ class UIDrawROIWindow:
         self.toggle_keep_empty_pixel_combo_box.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.toggle_keep_empty_pixel_combo_box.resize(self.toggle_keep_empty_pixel_combo_box.sizeHint().width(),
                                                       self.toggle_keep_empty_pixel_combo_box.sizeHint().height())
-        self.toggle_keep_empty_pixel_combo_box.currentIndexChanged.connect(self.toggle_keep_empty_pixel_box_index_changed)
+        self.toggle_keep_empty_pixel_combo_box.currentIndexChanged.connect(
+            self.toggle_keep_empty_pixel_box_index_changed)
         self.toggle_keep_empty_pixel_box.addWidget(self.toggle_keep_empty_pixel_label)
         self.toggle_keep_empty_pixel_box.addWidget(self.toggle_keep_empty_pixel_combo_box)
         self.draw_roi_window_input_container_box.addRow(self.toggle_keep_empty_pixel_box)
@@ -275,9 +293,6 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box.addRow(self.draw_roi_window_transect_draw_box)
-
-
-
 
         # Create a contour preview button
         self.row_preview_layout = QtWidgets.QHBoxLayout()
@@ -422,12 +437,20 @@ class UIDrawROIWindow:
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)
 
     def slider_value_changed(self):
+        """
+        actions to be taken when slider value changes
+
+        """
         image_slice_number = self.current_slice
         # save progress
         self.save_drawing_progress(image_slice_number)
         self.set_current_slice(self.dicom_view.slider.value())
 
     def set_current_slice(self, slice_number):
+        """
+            set the current slice
+            :param slice_number: the slice number to be set
+        """
         self.image_slice_number_line_edit.setText(str(slice_number + 1))
         self.current_slice = slice_number
         self.dicom_view.update_view()
@@ -477,6 +500,9 @@ class UIDrawROIWindow:
         self.closeWindow()
 
     def onBackwardClicked(self):
+        """
+        This function is used when backward button is clicked
+        """
         image_slice_number = self.current_slice
         # save progress
         if self.save_drawing_progress(image_slice_number):
@@ -486,6 +512,9 @@ class UIDrawROIWindow:
                 self.dicom_view.slider.setValue(image_slice_number - 1)
 
     def onForwardClicked(self):
+        """
+        This function is used when forward button is clicked
+        """
         image_slice_number = self.current_slice
         # save progress
         if self.save_drawing_progress(image_slice_number):
@@ -498,6 +527,9 @@ class UIDrawROIWindow:
                 self.dicom_view.slider.setValue(image_slice_number + 1)
 
     def onResetClicked(self):
+        """
+        This function is used when reset button is clicked
+        """
         self.dicom_view.image_display()
         self.dicom_view.update_view()
         self.isthmus_width_max_line_edit.setText("5")
@@ -532,7 +564,10 @@ class UIDrawROIWindow:
         )
 
     def save_drawing_progress(self, image_slice_number):
-        #  Save drawing progress only when roi on current slice has changed
+        """
+        this function saves the drawing progress on current slice
+        :param image_slice_number: the slice number to be saved
+        """
         if self.slice_changed:
             if hasattr(self, 'drawingROI') and self.drawingROI and self.ds is not None and len(
                     self.drawingROI.target_pixel_coords) != 0:
@@ -554,9 +589,10 @@ class UIDrawROIWindow:
 
         return True
 
-
-
     def on_transect_close(self):
+        """
+        Function triggered when transect is closed
+        """
         if self.upper_limit and self.lower_limit:
             self.min_pixel_density_line_edit.setText(str(self.lower_limit))
             self.max_pixel_density_line_edit.setText(str(self.upper_limit))
@@ -618,6 +654,9 @@ class UIDrawROIWindow:
                                   "Not all values are specified or correct.")
 
     def onBoxDrawClicked(self):
+        """
+        Function triggered when bounding box button is pressed
+        """
         id = self.current_slice
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
@@ -628,11 +667,17 @@ class UIDrawROIWindow:
         self.disable_cursor_radius_change_box()
 
     def onSaveClicked(self):
+        """
+            Function triggered when Save button is clicked
+        """
         # Make sure the user has clicked Draw first
         if self.save_drawing_progress(image_slice_number=self.current_slice):
             self.saveROIList()
 
     def saveROIList(self):
+        """
+            Function triggered when saving ROI list
+        """
         roi_list = []
         if self.drawn_roi_list == {}:
             QMessageBox.about(self.draw_roi_window_instance, "No ROI Detected",
@@ -665,6 +710,9 @@ class UIDrawROIWindow:
         progress_window.show()
 
     def roi_saved(self, new_rtss):
+        """
+            Function to call save ROI and display progress
+        """
         self.signal_roi_drawn.emit((new_rtss, {"draw": self.ROI_name}))
         QMessageBox.about(self.draw_roi_window_instance, "Saved", "New contour successfully created!")
         self.closeWindow()
@@ -672,6 +720,7 @@ class UIDrawROIWindow:
     def calculate_concave_hull_of_points(self, pixel_coords):
         """
         Return the alpha shape of the highlighted pixels using the alpha entered by the user.
+        :param pixel_coords: the coordinates of the contour pixels
         :return: List of points ordered to form a polygon.
         """
         # Get all the pixels in the drawing window's list of highlighted pixels, excluding the removed pixels.
@@ -694,11 +743,9 @@ class UIDrawROIWindow:
         """
         Converts all the pixel coordinates in the given polygon to RCS coordinates based off the CT image's matrix.
         :param hull_pts: List of pixel coordinates ordered to form a polygon.
+        :param slider_id: id of the slide to convert to rcs (z coordinate)
         :return: List of RCS coordinates ordered to form a polygon
 
-        Parameters
-        ----------
-        slider_id: id of the slide to convert to rcs (z coordinate)
         """
         dataset = self.patient_dict_container.dataset[slider_id]
         pixlut = self.patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
@@ -717,6 +764,9 @@ class UIDrawROIWindow:
         return contour_data
 
     def onPreviewClicked(self):
+        """
+        function triggered when Preview button is clicked
+        """
         if hasattr(self, 'drawingROI') and self.drawingROI and len(self.drawingROI.target_pixel_coords) > 0:
             list_of_points = self.calculate_concave_hull_of_points(self.drawingROI.target_pixel_coords)
             if list_of_points is not None:
@@ -728,7 +778,10 @@ class UIDrawROIWindow:
                               "Please ensure you have drawn your ROI first.")
 
     def set_selected_roi_name(self, roi_name):
-
+        """
+        function to set selected roi name
+        :param roi_name: roi name selected
+        """
         roi_exists = False
 
         patient_dict_container = PatientDictContainer()
@@ -748,17 +801,26 @@ class UIDrawROIWindow:
         self.roi_name_line_edit.setText(self.ROI_name)
 
     def onRadiusReduceClicked(self):
+        """
+        function triggered when user reduce cursor radius
+        """
         self.drawing_tool_radius = max(self.drawing_tool_radius - 1, 4)
         self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
         self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
         self.draw_cursor_when_radius_changed()
 
     def onRadiusIncreaseClicked(self):
+        """
+        function triggered when user increase cursor radius
+        """
         self.drawing_tool_radius = min(self.drawing_tool_radius + 1, 25)
         self.draw_roi_window_cursor_radius_change_input.setText(str(self.drawing_tool_radius))
         self.draw_cursor_when_radius_changed()
 
     def draw_cursor_when_radius_changed(self):
+        """
+        function to update drawing cursor when radius changed
+        """
         if self.drawingROI.cursor:
             self.drawingROI.draw_cursor(self.drawingROI.current_cursor_x + self.drawing_tool_radius,
                                         self.drawingROI.current_cursor_y + self.drawing_tool_radius,
@@ -769,6 +831,9 @@ class UIDrawROIWindow:
                                         True)
 
     def init_cursor_radius_change_box(self):
+        """
+        function to init cursor radius change box
+        """
         # Create a horizontal box for containing the cursor radius changing function
         self.draw_roi_window_cursor_radius_change_box = QHBoxLayout()
         self.draw_roi_window_cursor_radius_change_box.setObjectName("DrawRoiWindowCursorRadiusChangeBox")
@@ -819,23 +884,39 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
 
     def disable_cursor_radius_change_box(self):
+        """
+        function  to disable cursor radius change box
+        """
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(False)
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(False)
         self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
 
     def enable_cursor_radius_change_box(self):
+        """
+        function  to enable cursor radius change box
+        """
         self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(True)
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(True)
         self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
 
     def display_multipolygon_warning(self, slice_id):
+        """
+        function to display multipolygon warning
+        :param slice_id: the slice id where
+        multipolygon exists
+        """
         QMessageBox.about(self.draw_roi_window_instance, "Multipolygon detected",
                           "Selected points in slice " + str(slice_id + 1) + " will generate multiple contours, "
                                                                             "which is not currently supported. "
-                                                                            "If the region you are drawing is not meant to generate multiple contours, please "
+                                                                            "If the region you are drawing is not "
+                                                                            "meant to generate multiple contours, "
+                                                                            "please "
                                                                             "adjust your selected alpha value.")
 
     def closeWindow(self):
+        """
+        function to close draw roi window
+        """
         self.drawn_roi_list = {}
         if hasattr(self, 'bounds_box_draw'):
             delattr(self, 'bounds_box_draw')

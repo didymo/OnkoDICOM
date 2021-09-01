@@ -10,17 +10,15 @@ import src.constants as constant
 
 # noinspection PyAttributeOutsideInit
 
-
-#####################################################################################################################
-#                                                                                                                   #
-#  This Class handles the Drawing functionality                                                                     #
-#                                                                                                                   #
-#####################################################################################################################
 class Drawing(QtWidgets.QGraphicsScene):
+    """
+        Class responsible for the ROI drawing functionality
+        """
 
     # Initialisation function  of the class
-    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset, draw_roi_window_instance, slice_changed,
-                 current_slice, drawing_tool_radius, keep_empty_pixel, target_pixel_coords=set()):
+    def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
+                 draw_roi_window_instance, slice_changed, current_slice,
+                 drawing_tool_radius, keep_empty_pixel, target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary components
@@ -106,6 +104,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         Find point around mouse position. This function is for if we want to choose and drag the circle
         :rtype: ((int, int)|None)
+        :param event: the mouse event
         :return: (x, y) if there are any point around mouse else None
         """
         distance_threshold = 3.0
@@ -139,6 +138,8 @@ class Drawing(QtWidgets.QGraphicsScene):
     def remove_pixels_within_circle(self, clicked_x, clicked_y):
         """
         Removes all highlighted pixels within the selected circle and updates the image.
+        :param clicked_x: the current x coordinate
+        :param clicked_y: the current y coordinate
         """
         # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
         # than the radius, remove it from the highlighted pixels.
@@ -168,6 +169,8 @@ class Drawing(QtWidgets.QGraphicsScene):
     def fill_pixels_within_circle(self, clicked_x, clicked_y):
         """
         Add all highlighted pixels within the selected circle and updates the image.
+        :param clicked_x: the current x coordinate
+        :param clicked_y: the current y coordinate
         """
         # Calculate euclidean distance between each highlighted point and the clicked point. If the distance is less
         # than the radius, add it to the highlighted pixels.
@@ -182,14 +185,19 @@ class Drawing(QtWidgets.QGraphicsScene):
         min_x_bound_square = math.floor(clicked_x) - self.draw_tool_radius
         max_y_bound_square = math.floor(clicked_y) + self.draw_tool_radius
         max_x_bound_square = math.floor(clicked_x) + self.draw_tool_radius
-        for y_coord in range(max(self.min_y, min_y_bound_square), min(self.max_y, max_y_bound_square)):
-            for x_coord in range(max(self.min_x, min_x_bound_square), min(self.max_x, max_x_bound_square)):
+        for y_coord in range(
+                max(self.min_y, min_y_bound_square),
+                min(self.max_y, max_y_bound_square)):
+            for x_coord in range(
+                    max(self.min_x, min_x_bound_square),
+                    min(self.max_x, max_x_bound_square)):
                 clicked_point = numpy.array((clicked_x, clicked_y))
                 point_to_check = numpy.array((x_coord, y_coord))
                 distance = numpy.linalg.norm(clicked_point - point_to_check)
 
-                if ((not self.keep_empty_pixel) and (self.pixel_array[y_coord][x_coord] >= self.min_pixel) and (
-                        self.pixel_array[y_coord][x_coord] <= self.max_pixel) or self.keep_empty_pixel) and (distance <= self.draw_tool_radius):
+                if (self.keep_empty_pixel or
+                    self.min_pixel <= self.pixel_array[y_coord][
+                        x_coord] <= self.max_pixel) and distance <= self.draw_tool_radius:
                     c = self.q_image.pixel(x_coord, y_coord)
                     colors = QColor(c)
                     if (x_coord, y_coord) not in self.according_color_dict:
@@ -206,6 +214,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.refresh_image()
 
     def clear_cursor(self, drawing_tool_radius):
+        """
+        Clean the current cursor
+        :param drawing_tool_radius: the current radius of the drawing tool
+        """
         self.draw_tool_radius = drawing_tool_radius
         if self.cursor:
             self.removeItem(self.cursor)
@@ -216,6 +228,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         Draws a blue circle where the user clicked.
         :param event_x: QGraphicsScene event attribute: event.scenePos().x()
         :param event_y: QGraphicsScene event attribute: event.scenePos().y()
+        :param drawing_tool_radius: the current radius of the drawing tool
         :param new_circle: True when the circle object is being created rather than updated.
         """
         self.draw_tool_radius = drawing_tool_radius
@@ -252,6 +265,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.addItem(self.polygon_preview)
 
     def mousePressEvent(self, event):
+        """
+            This method is called to handle a mouse press event
+            :param event: the mouse event
+        """
         if self.cursor:
             self.removeItem(self.cursor)
         self.isPressed = True
@@ -273,11 +290,15 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.update()
 
     def mouseMoveEvent(self, event):
+        """
+            This method is called to handle a mouse move event
+            :param event: the mouse event
+        """
         if not self.drag_position.isNull():
             self.rect.moveTopLeft(event.pos() - self.drag_position)
         super().mouseMoveEvent(event)
         if self.cursor and self.isPressed:
-            self.draw_cursor(event.scenePos().x(), event.scenePos().y(),self.draw_tool_radius)
+            self.draw_cursor(event.scenePos().x(), event.scenePos().y(), self.draw_tool_radius)
             if self.is_current_pixel_coloured:
                 self.fill_pixels_within_circle(event.scenePos().x(), event.scenePos().y())
             else:
@@ -285,6 +306,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.update()
 
     def mouseReleaseEvent(self, event):
+        """
+            This method is called to handle a mouse release event
+            :param event: the mouse event
+        """
         self.isPressed = False
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
