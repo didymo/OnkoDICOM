@@ -2,16 +2,16 @@ import csv
 import platform
 
 from PySide6 import QtCore, QtGui
-from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QWidget, QPushButton, QHBoxLayout, QListWidget, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, \
+    QWidget, QPushButton, QHBoxLayout, QListWidget, QVBoxLayout
 
 from src.Controller.PathHandler import resource_path
 
+"""
+This Class handles the ROI Pop Up functionalities       
+"""
 
-#####################################################################################################################
-#                                                                                                                   #
-#  This Class handles the ROI Pop Up functionalities                                                                #
-#                                                                                                                   #
-#####################################################################################################################
+
 class SelectROIPopUp(QDialog):
     signal_roi_name = QtCore.Signal(str)
 
@@ -31,7 +31,9 @@ class SelectROIPopUp(QDialog):
         self.setMinimumSize(350, 180)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.icon.addPixmap(
+            QtGui.QPixmap(resource_path("res/images/icon.ico")),
+            QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Search for ROI:")
@@ -52,7 +54,8 @@ class SelectROIPopUp(QDialog):
         self.button_area.setLayout(self.button_layout)
 
         self.list_label = QLabel()
-        self.list_label.setText("Select a Standard Region of Interest")
+        self.list_label.setText(
+            "Select a Standard Region of Interest")
 
         self.list_of_ROIs = QListWidget()
         for standard_name in self.standard_names:
@@ -70,7 +73,8 @@ class SelectROIPopUp(QDialog):
 
     def init_standard_names(self):
         """
-        Create two lists containing standard organ and standard volume names as set by the Add-On options.
+        Create two lists containing standard organ
+        and standard volume names as set by the Add-On options.
         """
         with open(resource_path('data/csv/organName.csv'), 'r') as f:
             standard_organ_names = []
@@ -91,6 +95,12 @@ class SelectROIPopUp(QDialog):
         self.standard_names = standard_organ_names + standard_volume_names
 
     def on_text_edited(self, text):
+        """
+        function triggered when text in
+        the ROI popup is edited
+        -------
+        :param text: text in the pop up
+        """
         self.list_of_ROIs.clear()
         text_upper_case = text.upper()
         for item in self.standard_names:
@@ -98,10 +108,16 @@ class SelectROIPopUp(QDialog):
                 self.list_of_ROIs.addItem(item)
 
     def on_roi_clicked(self):
+        """
+        function triggered when an ROI is clicked
+        """
         self.begin_draw_button.setEnabled(True)
         self.begin_draw_button.setFocus()
 
     def on_begin_clicked(self):
+        """
+        function to start the draw ROI function
+        """
         # If there is a ROI Selected
         if self.list_of_ROIs.currentItem() is not None:
             roi = self.list_of_ROIs.currentItem()
@@ -112,4 +128,7 @@ class SelectROIPopUp(QDialog):
             self.close()
 
     def on_cancel_clicked(self):
+        """
+        function to cancel the operation
+        """
         self.close()
