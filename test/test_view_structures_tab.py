@@ -185,11 +185,13 @@ def test_merge_rtss(qtbot, test_object):
     # the old rtss
     roi_name = test_object.rois.get(1)["name"]
     roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
-    new_rtss = create_roi(new_rtss, roi_name, [{'coords': roi_coordinates, 'ds': dataset}])
+    new_rtss = create_roi(new_rtss, roi_name,
+                          [{'coords': roi_coordinates, 'ds': dataset}])
 
     # Add a new ROI with a new name
     roi_name = "NewTestROI"
-    new_rtss = create_roi(new_rtss, roi_name, [{'coords': roi_coordinates, 'ds': dataset}])
+    new_rtss = create_roi(new_rtss, roi_name,
+                          [{'coords': roi_coordinates, 'ds': dataset}])
 
     # Set ROIs
     rois = ImageLoading.get_roi_info(new_rtss)
