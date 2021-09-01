@@ -3,7 +3,7 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Model import DICOMDirectorySearch
-from src.Model.BatchProcessing import BatchProcessingController
+from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model.Worker import Worker
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 
@@ -211,6 +211,9 @@ class UIBatchProcessingWindow(object):
         self.file_path = self.directory_input.text()
 
     def search_progress(self):
+        """
+        Sets the patient label text.
+        """
         self.patient_label.setText("Loading files .. ")
 
     def scan_directory_for_patients(self):
