@@ -1,5 +1,4 @@
 import os
-import pathlib
 
 from pathlib import Path
 from skimage import measure
@@ -224,8 +223,7 @@ class ISO2ROI:
         file_path = Path(os.path.commonpath(file_path))
 
         # Get new RT Struct file path
-        file_path = file_path.as_posix()
-        file_path += os.sep + "rtss.dcm"
+        file_path = str(file_path.joinpath("rtss.dcm"))
 
         # Create RT Struct file
         progress_callback.emit(("Generating RT Structure Set", 60))

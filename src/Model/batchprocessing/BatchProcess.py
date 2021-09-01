@@ -1,5 +1,6 @@
 import os
 
+from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from src.Model import ImageLoading
@@ -81,6 +82,9 @@ class BatchProcess:
 
         # Try to get the datasets from the selected files
         try:
+            # Convert paths to a common file system representation
+            for i, file in enumerate(files):
+                files[i] = Path(file).as_posix()
             path = os.path.dirname(os.path.commonprefix(files))
             read_data_dict, file_names_dict = cls.get_datasets(files)
         # Otherwise raise an exception (OnkoDICOM does not support the
