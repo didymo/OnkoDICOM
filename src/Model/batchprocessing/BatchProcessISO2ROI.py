@@ -27,6 +27,11 @@ class BatchProcessISO2ROI(BatchProcess):
             "name": "rtdose",
             "sliceable": False
         },
+        # RT Plan
+        "1.2.840.10008.5.1.4.1.1.481.5": {
+            "name": "rtplan",
+            "sliceable": False
+        }
     }
 
     def __init__(self, progress_callback, interrupt_flag, patient_files):
@@ -45,7 +50,7 @@ class BatchProcessISO2ROI(BatchProcess):
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
-        self.required_classes = ('ct', 'rtdose')
+        self.required_classes = ('ct', 'rtdose', 'rtplan')
         self.ready = self.load_images(patient_files, self.required_classes)
 
     def start(self):
