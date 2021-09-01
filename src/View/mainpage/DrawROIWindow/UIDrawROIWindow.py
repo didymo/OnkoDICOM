@@ -4,7 +4,8 @@ import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
+from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
+    QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
     QMessageBox, QComboBox
 from alphashape import alphashape
 from shapely.geometry import MultiPolygon
