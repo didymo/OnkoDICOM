@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 
 from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
-    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow
+    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow, ImageFusionWindow
 
 
 class Controller:
@@ -15,6 +15,8 @@ class Controller:
         self.pyradi_progressbar = QtWidgets.QWidget()
         # This will contain a filepath of a folder that is dragged onto
         self.default_directory = default_directory
+
+        self.image_fusion_window = QtWidgets.QMainWindow()
         # the executable icon
 
     def show_first_time_welcome(self):
@@ -72,6 +74,9 @@ class Controller:
             self.main_window.open_patient_window.connect(
                 self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
+
+            # This is actually being used in GUIController
+            self.main_window.image_fusion_signal.connect(self.show_image_fusion_select)
         else:
             self.main_window.update_ui()
 
@@ -81,6 +86,10 @@ class Controller:
         progress_window.close()
         self.main_window.show()
         self.open_patient_window.close()
+
+        if isinstance(self.image_fusion_window, ImageFusionWindow):
+            self.image_fusion_window.close()
+            self.main_window.image_fusion_main_window.emit()
 
     def show_pyradi_progress(self, path, filepaths, target_path):
         """
@@ -97,3 +106,11 @@ class Controller:
         Close pyradiomics progress bar
         """
         self.pyradi_progressbar.close()
+
+    def show_image_fusion_select(self, path):
+        print('Open Image Fusion Select Window from Top Level Controller')
+        self.image_fusion_window = ImageFusionWindow(path)
+        self.image_fusion_window.set_up_directory(path)
+        self.image_fusion_window.go_next_window.connect(self.show_main_window)
+        self.image_fusion_window.show()
+

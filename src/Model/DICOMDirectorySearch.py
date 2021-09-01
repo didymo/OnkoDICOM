@@ -118,6 +118,8 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                 if not existing_series.has_image(
                                         dicom_file.SOPInstanceUID):
                                     existing_series.add_image(new_image)
+                                    
+    
 
     return dicom_structure
 

@@ -683,6 +683,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
     ValueError
         [description]
     """
+
     if img_ds is None:
         raise ValueError("No CT data to initialize RT SS")
 
