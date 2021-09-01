@@ -38,8 +38,9 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
 
     def roi_saved(self, result):
         """
-        This method is called when the second thread completes generation of the new dataset object.
-        :param result: The resulting dataset from the ROI.create_roi function.
+        This method is called when the second thread completes generation of
+        the new dataset object. :param result: The resulting dataset from
+        the ROI.create_roi function.
         """
         self.signal_roi_saved.emit(result)
         self.close()
