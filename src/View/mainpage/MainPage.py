@@ -205,12 +205,15 @@ class UIMainWindow:
         changes made by other components of the main window (for example, when a structure in the structures tab is
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
+
+        :param update_3d_window: a boolean to mark if 3d model
+        needs to be updated
         """
         self.dicom_single_view.update_view()
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
         self.dicom_sagittal_view.update_view()
-        if (update_3d_window):
+        if update_3d_window:
             self.three_dimension_view.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
