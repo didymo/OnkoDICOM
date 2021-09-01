@@ -199,7 +199,7 @@ class UIMainWindow:
 
         layout_footer.addWidget(label_footer)
 
-    def update_views(self):
+    def update_views(self, update_3d_window=False):
         """
         This function is a slot for signals to request the updating of the DICOM View and DVH tabs in order to reflect
         changes made by other components of the main window (for example, when a structure in the structures tab is
@@ -210,7 +210,8 @@ class UIMainWindow:
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
         self.dicom_sagittal_view.update_view()
-        self.three_dimension_view.update_view()
+        if (update_3d_window):
+            self.three_dimension_view.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
 

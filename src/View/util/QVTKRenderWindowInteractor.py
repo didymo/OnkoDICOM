@@ -1,6 +1,3 @@
-
-
-
 import vtkmodules.qt
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
@@ -13,25 +10,25 @@ from PySide6.QtCore import QObject
 from PySide6.QtCore import QSize
 from PySide6.QtCore import QEvent
 
-
 # Define types for base class, based on string
 QVTKRWIBaseClass = QWidget
 
-class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
+class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
     _CURSOR_MAP = {
-        0:  Qt.ArrowCursor,          # VTK_CURSOR_DEFAULT
-        1:  Qt.ArrowCursor,          # VTK_CURSOR_ARROW
-        2:  Qt.SizeBDiagCursor,      # VTK_CURSOR_SIZENE
-        3:  Qt.SizeFDiagCursor,      # VTK_CURSOR_SIZENWSE
-        4:  Qt.SizeBDiagCursor,      # VTK_CURSOR_SIZESW
-        5:  Qt.SizeFDiagCursor,      # VTK_CURSOR_SIZESE
-        6:  Qt.SizeVerCursor,        # VTK_CURSOR_SIZENS
-        7:  Qt.SizeHorCursor,        # VTK_CURSOR_SIZEWE
-        8:  Qt.SizeAllCursor,        # VTK_CURSOR_SIZEALL
-        9:  Qt.PointingHandCursor,   # VTK_CURSOR_HAND
-        10: Qt.CrossCursor,          # VTK_CURSOR_CROSSHAIR
+        0: Qt.ArrowCursor,  # VTK_CURSOR_DEFAULT
+        1: Qt.ArrowCursor,  # VTK_CURSOR_ARROW
+        2: Qt.SizeBDiagCursor,  # VTK_CURSOR_SIZENE
+        3: Qt.SizeFDiagCursor,  # VTK_CURSOR_SIZENWSE
+        4: Qt.SizeBDiagCursor,  # VTK_CURSOR_SIZESW
+        5: Qt.SizeFDiagCursor,  # VTK_CURSOR_SIZESE
+        6: Qt.SizeVerCursor,  # VTK_CURSOR_SIZENS
+        7: Qt.SizeHorCursor,  # VTK_CURSOR_SIZEWE
+        8: Qt.SizeAllCursor,  # VTK_CURSOR_SIZEALL
+        9: Qt.PointingHandCursor,  # VTK_CURSOR_HAND
+        10: Qt.CrossCursor,  # VTK_CURSOR_CROSSHAIR
     }
+
     def __init__(self, parent=None, **kw):
         # the current button
         self._ActiveButton = Qt.NoButton
@@ -64,40 +61,39 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             wflags = Qt.WindowFlags()
         QWidget.__init__(self, parent, wflags | Qt.MSWindowsOwnDC)
 
-
-        if rw: # user-supplied render window
+        if rw:  # user-supplied render window
             self._RenderWindow = rw
         else:
             self._RenderWindow = vtkRenderWindow()
 
-        WId = self.winId()
+        win_id = self.winId()
 
         # Python2
-        if type(WId).__name__ == 'PyCObject':
+        if type(win_id).__name__ == 'PyCObject':
             from ctypes import pythonapi, c_void_p, py_object
 
-            pythonapi.PyCObject_AsVoidPtr.restype  = c_void_p
+            pythonapi.PyCObject_AsVoidPtr.restype = c_void_p
             pythonapi.PyCObject_AsVoidPtr.argtypes = [py_object]
 
-            WId = pythonapi.PyCObject_AsVoidPtr(WId)
+            win_id = pythonapi.PyCObject_AsVoidPtr(win_id)
 
         # Python3
-        elif type(WId).__name__ == 'PyCapsule':
+        elif type(win_id).__name__ == 'PyCapsule':
             from ctypes import pythonapi, c_void_p, py_object, c_char_p
 
             pythonapi.PyCapsule_GetName.restype = c_char_p
             pythonapi.PyCapsule_GetName.argtypes = [py_object]
 
-            name = pythonapi.PyCapsule_GetName(WId)
+            name = pythonapi.PyCapsule_GetName(win_id)
 
-            pythonapi.PyCapsule_GetPointer.restype  = c_void_p
+            pythonapi.PyCapsule_GetPointer.restype = c_void_p
             pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
 
-            WId = pythonapi.PyCapsule_GetPointer(WId, name)
+            win_id = pythonapi.PyCapsule_GetPointer(win_id, name)
 
-        self._RenderWindow.SetWindowInfo(str(int(WId)))
+        self._RenderWindow.SetWindowInfo(str(int(win_id)))
 
-        if stereo: # stereo mode
+        if stereo:  # stereo mode
             self._RenderWindow.StereoCapableWindowOn()
             self._RenderWindow.SetStereoTypeToCrystalEyes()
 
@@ -110,9 +106,10 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
         # do all the necessary qt setup
         self.setAttribute(Qt.WA_OpaquePaintEvent)
         self.setAttribute(Qt.WA_PaintOnScreen)
-        self.setMouseTracking(True) # get all mouse events
+        self.setMouseTracking(True)  # get all mouse events
         self.setFocusPolicy(Qt.WheelFocus)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
 
         self._Timer = QTimer(self)
         self._Timer.timeout.connect(self.TimerEvent)
@@ -122,9 +119,9 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
         self._Iren.GetRenderWindow().AddObserver('CursorChangedEvent',
                                                  self.CursorChangedEvent)
 
-        #Create a hidden child widget and connect its destroyed signal to its
-        #parent ``Finalize`` slot. The hidden children will be destroyed before
-        #its parent thus allowing cleanup of VTK elements.
+        # Create a hidden child widget and connect its destroyed signal to
+        # its parent ``Finalize`` slot. The hidden children will be
+        # destroyed before its parent thus allowing cleanup of VTK elements.
         self._hidden = QWidget(self)
         self._hidden.hide()
         self._hidden.destroyed.connect(self.Finalize)
@@ -137,12 +134,12 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             return getattr(self._Iren, attr)
         else:
             raise AttributeError(self.__class__.__name__ +
-                  " has no attribute named " + attr)
+                                 " has no attribute named " + attr)
 
     def Finalize(self):
-        '''
+        """
         Call internal cleanup method on VTK objects
-        '''
+        """
         self._RenderWindow.Finalize()
 
     def CreateTimer(self, obj, evt):
@@ -186,14 +183,13 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
     def resizeEvent(self, ev):
         scale = self._getPixelRatio()
-        w = int(round(scale*self.width()))
-        h = int(round(scale*self.height()))
-        self._RenderWindow.SetDPI(int(round(72*scale)))
+        w = int(round(scale * self.width()))
+        h = int(round(scale * self.height()))
+        self._RenderWindow.SetDPI(int(round(72 * scale)))
         vtkRenderWindow.SetSize(self._RenderWindow, w, h)
         self._Iren.SetSize(w, h)
         self._Iren.ConfigureEvent()
         self.update()
-
 
     def _GetKeyCharAndKeySym(self, ev):
         """ Convert a Qt key into a char and a vtk keysym.
@@ -245,8 +241,9 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
     def _setEventInformation(self, x, y, ctrl, shift,
                              key, repeat=0, keysum=None):
         scale = self._getPixelRatio()
-        self._Iren.SetEventInformation(int(round(x*scale)),
-                                       int(round((self.height()-y-1)*scale)),
+        self._Iren.SetEventInformation(int(round(x * scale)),
+                                       int(round(
+                                           (self.height() - y - 1) * scale)),
                                        ctrl, shift, key, repeat, keysum)
 
     def enterEvent(self, ev):
@@ -340,7 +337,8 @@ def QVTKRenderWidgetConeExample():
     """A simple example that uses the QVTKRenderWindowInteractor class."""
 
     from vtkmodules.vtkFiltersSources import vtkConeSource
-    from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkRenderer
+    from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, \
+        vtkRenderer
     # load implementations for rendering and interaction factory classes
     import vtkmodules.vtkRenderingOpenGL2
     import vtkmodules.vtkInteractionStyle
@@ -395,7 +393,7 @@ _keysyms_for_ascii = (
     "h", "i", "j", "k", "l", "m", "n", "o",
     "p", "q", "r", "s", "t", "u", "v", "w",
     "x", "y", "z", "braceleft", "bar", "braceright", "asciitilde", "Delete",
-    )
+)
 
 _keysyms = {
     Qt.Key_Backspace: 'BackSpace',
@@ -490,4 +488,4 @@ _keysyms = {
     Qt.Key_F24: 'F24',
     Qt.Key_NumLock: 'Num_Lock',
     Qt.Key_ScrollLock: 'Scroll_Lock',
-    }
+}
