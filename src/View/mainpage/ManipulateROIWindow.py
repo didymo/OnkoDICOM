@@ -1,7 +1,7 @@
 import pydicom
 from PySide6 import QtCore, QtGui
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QPixmap, QFont
+from PySide6.QtCore import Qt, QRegularExpression
+from PySide6.QtGui import QIcon, QPixmap, QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, \
     QLineEdit, QSizePolicy, QPushButton, \
     QLabel, QWidget, QFormLayout
@@ -178,6 +178,8 @@ class UIManipulateROIWindow:
         self.margin_line_edit.resize(self.margin_line_edit.sizeHint().width(),
                                      self.margin_line_edit.sizeHint().height())
         self.margin_line_edit.setVisible(False)
+        self.margin_line_edit.setValidator(
+            QRegularExpressionValidator(QRegularExpression("^[0-9][.]?[0-9]*$")))
         self.manipulate_roi_window_input_container_box.addRow(
             self.margin_label, self.margin_line_edit)
 
@@ -201,6 +203,26 @@ class UIManipulateROIWindow:
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         spacer.setFocusPolicy(Qt.NoFocus)
         self.manipulate_roi_window_input_container_box.addRow(spacer)
+
+        # Create a warning message when missing inputs
+        self.warning_message = QWidget()
+        self.warning_message.setContentsMargins(8, 5, 8, 5)
+        warning_message_layout = QHBoxLayout()
+        warning_message_layout.setAlignment(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+
+        warning_message_icon = QLabel()
+        warning_message_icon.setPixmap(QtGui.QPixmap(
+            resource_path("res/images/btn-icons/alert_icon.png")))
+        warning_message_layout.addWidget(warning_message_icon)
+
+        self.warning_message_text = QLabel()
+        self.warning_message_text.setStyleSheet("color: red")
+        warning_message_layout.addWidget(self.warning_message_text)
+        self.warning_message.setLayout(warning_message_layout)
+        self.warning_message.setVisible(False)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.warning_message)
 
         # Create a draw button
         self.manipulate_roi_window_instance_draw_button = QPushButton()
@@ -349,6 +371,9 @@ class UIManipulateROIWindow:
         """
         Function triggered when the Draw button is pressed from the menu.
         """
+        # Hide warning message
+        self.warning_message.setVisible(False)
+
         # Check inputs
         selected_operation = self.operation_name_dropdown_list.currentText()
         roi_1 = self.first_roi_name_dropdown_list.currentText()
@@ -367,26 +392,20 @@ class UIManipulateROIWindow:
             roi_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_1])
             uid_list = ImageLoading.get_image_uid_list(
                 self.patient_dict_container.dataset)
+            margin = float(self.margin_line_edit.text())
 
             if selected_operation == self.single_roi_operation_names[0]:
-                new_geometry = ROI.scale_roi(roi_geometry,
-                                             int(self.margin_line_edit.text()),
-                                             uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry, margin, uid_list)
             elif selected_operation == self.single_roi_operation_names[1]:
-                new_geometry = ROI.scale_roi(roi_geometry, -int(
-                    self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry, -margin, uid_list)
             elif selected_operation == self.single_roi_operation_names[2]:
-                new_geometry = ROI.rind_roi(roi_geometry,
-                                            -int(self.margin_line_edit.text()),
-                                            uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry, -margin, uid_list)
             else:
-                new_geometry = ROI.rind_roi(roi_geometry,
-                                            int(self.margin_line_edit.text()),
-                                            uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry, margin, uid_list)
             self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
             self.draw_roi()
-            return
+            return True
         elif roi_1 != "" and roi_2 != "" and new_roi_name != "" and \
                 selected_operation in self.multiple_roi_operation_names:
             # Multiple ROI operations
@@ -406,27 +425,28 @@ class UIManipulateROIWindow:
             self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
             self.draw_roi()
-            return
+            return True
 
-        QMessageBox.about(self.manipulate_roi_window_instance,
-                          "Not Enough Data",
-                          "Not all values are specified or correct.")
+        self.warning_message_text.setText("Not all values are specified.")
+        self.warning_message.setVisible(True)
+        return False
 
     def onSaveClicked(self):
         """ Save the new ROI """
         # Get the name of the new ROI
         new_roi_name = self.new_roi_name_line_edit.text()
 
+        # If the new ROI hasn't been drawn, draw the new ROI. Then if the new
+        # ROI is drawn successfully, proceed to save the new ROI.
         if self.new_ROI_contours is None:
-            QMessageBox.about(self.manipulate_roi_window_instance,
-                              "Empty ROI", "No new ROI has been drawn")
-            return
+            if not self.onDrawButtonClicked():
+                return
 
-        # get a dict to convert SOPInstanceUID to slice id
+        # Get a dict to convert SOPInstanceUID to slice id
         slice_ids_dict = dict(
             (v, k) for k, v in PatientDictContainer().get("dict_uid").items())
 
-        # transform new_ROI_contours to a list of roi information
+        # Transform new_ROI_contours to a list of roi information
         rois_to_save = {}
 
         for uid, contour_sequence in self.new_ROI_contours.items():
@@ -442,7 +462,8 @@ class UIManipulateROIWindow:
         roi_list = ROI.convert_hull_list_to_contours_data(
             rois_to_save, self.patient_dict_container)
 
-        connectSaveROIProgress(self, roi_list, self.dataset_rtss, new_roi_name, self.roi_saved)
+        connectSaveROIProgress(self, roi_list, self.dataset_rtss, new_roi_name,
+                               self.roi_saved)
 
     def draw_roi(self):
         """ Draw the new ROI """
@@ -479,11 +500,15 @@ class UIManipulateROIWindow:
 
     def update_selected_rois(self):
         """ Get the names of selected ROIs """
+        # Hide warning message
+        self.warning_message.setVisible(False)
+
         self.roi_names = []
         if self.first_roi_name_dropdown_list.currentText() != "":
             self.roi_names.append(
                 self.first_roi_name_dropdown_list.currentText())
-        if self.second_roi_name_dropdown_list.currentText() != "":
+        if self.second_roi_name_dropdown_list.currentText() != "" and \
+                self.second_roi_name_dropdown_list.isVisible():
             self.roi_names.append(
                 self.second_roi_name_dropdown_list.currentText())
 
@@ -513,17 +538,22 @@ class UIManipulateROIWindow:
 
     def operation_changed(self):
         """ Change the form when users select different operations """
+        # Hide warning message
+        self.warning_message.setVisible(False)
+
         selected_operation = self.operation_name_dropdown_list.currentText()
         if selected_operation in self.single_roi_operation_names:
             self.second_roi_name_label.setVisible(False)
             self.second_roi_name_dropdown_list.setVisible(False)
             self.margin_label.setVisible(True)
             self.margin_line_edit.setVisible(True)
+            self.update_selected_rois()
         else:
             self.second_roi_name_label.setVisible(True)
             self.second_roi_name_dropdown_list.setVisible(True)
             self.margin_label.setVisible(False)
             self.margin_line_edit.setVisible(False)
+            self.update_selected_rois()
 
     def roi_saved(self, new_rtss):
         new_roi_name = self.new_roi_name_line_edit.text()
