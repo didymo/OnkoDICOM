@@ -1,15 +1,15 @@
 import pydicom
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPixmap, QFont
-from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QSizePolicy, QPushButton, \
+from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, \
+    QLineEdit, QSizePolicy, QPushButton, \
     QLabel, QWidget, QFormLayout
 
 from src.Model import ROI, ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.Worker import Worker
+from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
-from src.View.mainpage.DrawROIWindow import SaveROIProgressWindow
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -26,8 +26,8 @@ class UIManipulateROIWindow:
         self.signal_roi_manipulated = signal_roi_manipulated
         self.roi_color = roi_color
 
-        self.roi_names = [] # Names of selected ROIs
-        self.all_roi_names = [] # Names of all existing ROIs
+        self.roi_names = []  # Names of selected ROIs
+        self.all_roi_names = []  # Names of all existing ROIs
         for roi_id, roi_dict in self.rois.items():
             self.all_roi_names.append(roi_dict['name'])
 
@@ -369,13 +369,20 @@ class UIManipulateROIWindow:
                 self.patient_dict_container.dataset)
 
             if selected_operation == self.single_roi_operation_names[0]:
-                new_geometry = ROI.scale_roi(roi_geometry, int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry,
+                                             int(self.margin_line_edit.text()),
+                                             uid_list)
             elif selected_operation == self.single_roi_operation_names[1]:
-                new_geometry = ROI.scale_roi(roi_geometry, -int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry, -int(
+                    self.margin_line_edit.text()), uid_list)
             elif selected_operation == self.single_roi_operation_names[2]:
-                new_geometry = ROI.rind_roi(roi_geometry, -int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry,
+                                            -int(self.margin_line_edit.text()),
+                                            uid_list)
             else:
-                new_geometry = ROI.rind_roi(roi_geometry, int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry,
+                                            int(self.margin_line_edit.text()),
+                                            uid_list)
             self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
             self.draw_roi()
@@ -415,45 +422,27 @@ class UIManipulateROIWindow:
                               "Empty ROI", "No new ROI has been drawn")
             return
 
-        # Get the required info to create the new ROI
-        slider_id = self.dicom_preview.slider.value()
-        dataset = self.patient_dict_container.dataset[slider_id]
-        location = self.patient_dict_container.filepaths[slider_id]
-        ds = pydicom.dcmread(location)
-        pixlut = self.patient_dict_container.get("pixluts")
-        pixlut = pixlut[dataset.SOPInstanceUID]
-        z_coord = dataset.SliceLocation
+        # get a dict to convert SOPInstanceUID to slice id
+        slice_ids_dict = dict(
+            (v, k) for k, v in PatientDictContainer().get("dict_uid").items())
 
-        # Get the new contour sequence
-        if dataset.SOPInstanceUID not in self.new_ROI_contours:
-            # TODO: delete after merged with ROI create multiple
-            QMessageBox.about(self.manipulate_roi_window_instance,
-                              "Empty slice",
-                              "The current slice doesn't contain new ROI"
-                              "\nPlease move to other slices")
-            return
-        contour_sequence = self.new_ROI_contours[dataset.SOPInstanceUID]
+        # transform new_ROI_contours to a list of roi information
+        rois_to_save = {}
 
-        # Transform the contour sequence to a 1D array
-        # Convert the pixel points to RCS points, then append z coordinate
-        single_array = []
-        for contour_data in contour_sequence:
-            for point in contour_data:
-                rcs_pixels = ROI.pixel_to_rcs(pixlut,
-                                              round(point[0]),
-                                              round(point[1]))
-                single_array.append(rcs_pixels[0])
-                single_array.append(rcs_pixels[1])
-                single_array.append(z_coord)
+        for uid, contour_sequence in self.new_ROI_contours.items():
+            slider_id = slice_ids_dict[uid]
+            location = self.patient_dict_container.filepaths[slider_id]
+            ds = pydicom.dcmread(location)
+            slice_info = {
+                'coords': contour_sequence,
+                'ds': ds
+            }
+            rois_to_save[slider_id] = slice_info
 
-        # Create a popup window that modifies the RTSTRUCT and tells the user
-        # that processing is happening.
-        progress_window = SaveROIProgressWindow(self,
-                                                QtCore.Qt.WindowTitleHint)
-        progress_window.signal_roi_saved.connect(self.roi_saved)
-        progress_window.start_saving(self.dataset_rtss, new_roi_name,
-                                     single_array, ds)
-        progress_window.show()
+        roi_list = ROI.convert_hull_list_to_contours_data(
+            rois_to_save, self.patient_dict_container)
+
+        connectSaveROIProgress(self, roi_list, self.dataset_rtss, new_roi_name, self.roi_saved)
 
     def draw_roi(self):
         """ Draw the new ROI """
