@@ -40,10 +40,12 @@ class Drawing(QtWidgets.QGraphicsScene):
         self._circlePoints = []
         self.drag_position = QtCore.QPoint()
         self.cursor = None
-        self.polygon_preview = None
+        self.polygon_preview = []
         self.isPressed = False
         self.dataset = dataset
         self.pixel_array = None
+        self.pen = QtGui.QPen(QtGui.QColor("yellow"))
+        self.pen.setStyle(QtCore.Qt.DashDotDotLine)
         # This will contain the new pixel coordinates specifed by the min
         # and max pixel density
         self.target_pixel_coords = target_pixel_coords
@@ -270,24 +272,34 @@ class Drawing(QtWidgets.QGraphicsScene):
                                 self.draw_tool_radius * 2,
                                 self.draw_tool_radius * 2)
 
-    def draw_contour_preview(self, list_of_points):
+    def draw_contour_preview(self, point_list):
         """
         Draws a polygon onto the view so the user can preview what their
-        contour will look like once exported. :param list_of_points: A list
-        of points ordered to form a polygon.
+        contour will look like once exported.
+        :param list of list_of_points: A list of lists of points ordered to
+        form polygons.
         """
-        qpoint_list = []
-        for point in list_of_points:
-            qpoint = QtCore.QPoint(point[0], point[1])
-            qpoint_list.append(qpoint)
-        if self.polygon_preview is not None:  # Erase the existing preview
-            self.removeItem(self.polygon_preview)
-        polygon = QtGui.QPolygonF(qpoint_list)
-        self.polygon_preview = QtWidgets.QGraphicsPolygonItem(polygon)
-        pen = QtGui.QPen(QtGui.QColor("yellow"))
-        pen.setStyle(QtCore.Qt.DashDotDotLine)
-        self.polygon_preview.setPen(pen)
-        self.addItem(self.polygon_preview)
+        # Extract a list of lists of points
+        list_of_qpoint_list = []
+        for list_of_points in point_list:
+            qpoint_list = []
+            for point in list_of_points:
+                qpoint = QtCore.QPoint(point[0], point[1])
+                qpoint_list.append(qpoint)
+            list_of_qpoint_list.append(qpoint_list)
+
+        # Remove previously added polygons
+        for polygon in self.polygon_preview:
+            self.removeItem(polygon)
+        self.polygon_preview.clear()
+
+        # Draw new polygons
+        for qpoint_list in list_of_qpoint_list:
+            polygon = QtGui.QPolygonF(qpoint_list)
+            graphics_polygon_item = QtWidgets.QGraphicsPolygonItem(polygon)
+            graphics_polygon_item.setPen(self.pen)
+            self.polygon_preview.append(graphics_polygon_item)
+            self.addItem(graphics_polygon_item)
 
     def mousePressEvent(self, event):
         """
