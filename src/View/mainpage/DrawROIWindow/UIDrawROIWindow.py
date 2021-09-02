@@ -14,6 +14,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.ROI import convert_hull_to_rcs
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import \
@@ -831,13 +832,10 @@ class UIDrawROIWindow:
         for slice_id, slice_info in self.drawn_roi_list.items():
             pixel_hull_list = slice_info['coords']
             for pixel_hull in pixel_hull_list:
-                hull = self.convert_hull_to_rcs(pixel_hull, slice_id)
-
-                # Convert the polygon's pixel points to RCS locations.
-                single_array = []
-                for sublist in hull:
-                    for item in sublist:
-                        single_array.append(item)
+                single_array = ROI.convert_hull_to_single_array_of_rcs(
+                    self.patient_dict_container,
+                    pixel_hull, slice_id
+                )
                 roi_list.append({
                     'ds': slice_info['ds'],
                     'coords': single_array
@@ -898,32 +896,7 @@ class UIDrawROIWindow:
                 polygon_list.append(hull_to_points(polygon))
         return polygon_list
 
-    def convert_hull_to_rcs(self, hull_pts, slider_id):
-        """
-        Converts all the pixel coordinates in the given polygon to RCS
-        coordinates based off the CT image's matrix. :param hull_pts: List
-        of pixel coordinates ordered to form a polygon. :param slider_id: id
-        of the slide to convert to rcs (z coordinate) :return: List of RCS
-        coordinates ordered to form a polygon
 
-        """
-        dataset = self.patient_dict_container.dataset[slider_id]
-        pixlut = self.patient_dict_container.get("pixluts")[
-            dataset.SOPInstanceUID]
-        z_coord = dataset.SliceLocation
-        points = []
-
-        # Convert the pixels to an RCS location and move them to a list of
-        # points.
-        for i, item in enumerate(hull_pts):
-            points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
-
-        contour_data = []
-        for p in points:
-            coords = (p[0], p[1], z_coord)
-            contour_data.append(coords)
-
-        return contour_data
 
     def onPreviewClicked(self):
         """

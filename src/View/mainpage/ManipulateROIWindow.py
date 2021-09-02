@@ -423,14 +423,17 @@ class UIManipulateROIWindow:
             QMessageBox.about(self.manipulate_roi_window_instance,
                               "Empty ROI", "No new ROI has been drawn")
             return
-
+        print(self.new_ROI_contours)
         # Get the required info to create the new ROI
         slider_id = self.dicom_preview.slider.value()
-        dataset = self.patient_dict_container.dataset[slider_id]
+
         location = self.patient_dict_container.filepaths[slider_id]
         ds = pydicom.dcmread(location)
-        pixlut = self.patient_dict_container.get("pixluts")
-        pixlut = pixlut[dataset.SOPInstanceUID]
+
+        dataset = self.patient_dict_container.dataset[slider_id]
+        pixlut = self.patient_dict_container.get("pixluts")[
+            dataset.SOPInstanceUID]
+
         z_coord = dataset.SliceLocation
 
         # Get the new contour sequence
@@ -445,15 +448,17 @@ class UIManipulateROIWindow:
 
         # Transform the contour sequence to a 1D array
         # Convert the pixel points to RCS points, then append z coordinate
-        single_array = []
+        roi_list = []
         for contour_data in contour_sequence:
-            for point in contour_data:
-                rcs_pixels = ROI.pixel_to_rcs(pixlut,
-                                              round(point[0]),
-                                              round(point[1]))
-                single_array.append(rcs_pixels[0])
-                single_array.append(rcs_pixels[1])
-                single_array.append(z_coord)
+            single_array = ROI.convert_hull_to_single_array_of_rcs(
+                self.patient_dict_container,
+                contour_data, slider_id
+            )
+            roi_list.append({
+                'ds': ds,
+                'coords': single_array
+            })
+
 
         # Create a popup window that modifies the RTSTRUCT and tells the user
         # that processing is happening.
@@ -461,10 +466,7 @@ class UIManipulateROIWindow:
                                                 QtCore.Qt.WindowTitleHint)
         progress_window.signal_roi_saved.connect(self.roi_saved)
         progress_window.start_saving(self.dataset_rtss, new_roi_name,
-                                     [{
-                                         'ds': ds,
-                                         'coords': single_array
-                                     }])
+                                     roi_list)
         progress_window.show()
 
     def draw_roi(self):

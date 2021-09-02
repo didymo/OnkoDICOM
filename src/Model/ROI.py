@@ -503,6 +503,49 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
     return pixels
 
 
+def convert_hull_to_single_array_of_rcs(patient_dict_container, contour_data,
+                                        slider_id):
+    hull = convert_hull_to_rcs(patient_dict_container, contour_data, slider_id)
+
+    # Convert the polygon's pixel points to RCS locations.
+    single_array = []
+    for sublist in hull:
+        for item in sublist:
+            single_array.append(item)
+    return single_array
+
+
+def convert_hull_to_rcs(patient_dict_container, hull_pts, slider_id):
+    """
+    Converts all the pixel coordinates in the given polygon to RCS
+    coordinates based off the CT image's matrix.
+    :param hull_pts: List
+    of pixel coordinates ordered to form a polygon.
+    :param slider_id: id
+    of the slide to convert to rcs (z coordinate)
+    :return: List of RCS
+    coordinates ordered to form a polygon
+
+    """
+    dataset = patient_dict_container.dataset[slider_id]
+    pixlut = patient_dict_container.get("pixluts")[
+        dataset.SOPInstanceUID]
+    z_coord = dataset.SliceLocation
+    points = []
+
+    # Convert the pixels to an RCS location and move them to a list of
+    # points.
+    for i, item in enumerate(hull_pts):
+        points.append(pixel_to_rcs(pixlut, round(item[0]), round(item[1])))
+
+    contour_data = []
+    for p in points:
+        coords = (p[0], p[1], round(z_coord))
+        contour_data.append(coords)
+    print(contour_data)
+    return contour_data
+
+
 def pixel_to_rcs(pixlut, x, y):
     """
     :param pixlut: Transformation matrix
@@ -591,7 +634,8 @@ def transform_rois_contours(axial_rois_contours):
     """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
-    slice_ids = dict((v, k) for k, v in PatientDictContainer().get("dict_uid").items())
+    slice_ids = dict(
+        (v, k) for k, v in PatientDictContainer().get("dict_uid").items())
     for name in axial_rois_contours.keys():
         coronal_rois_contours[name] = {}
         sagittal_rois_contours[name] = {}
@@ -600,20 +644,25 @@ def transform_rois_contours(axial_rois_contours):
             for contour in contours:
                 for i in range(len(contour)):
                     if contour[i][1] in coronal_rois_contours[name]:
-                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0].append(
+                            [contour[i][0], slice_ids[slice_id]])
                     else:
                         coronal_rois_contours[name][contour[i][1]] = [[]]
-                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0].append(
+                            [contour[i][0], slice_ids[slice_id]])
 
                     if contour[i][0] in sagittal_rois_contours[name]:
-                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0].append(
+                            [contour[i][1], slice_ids[slice_id]])
                     else:
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
-                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0].append(
+                            [contour[i][1], slice_ids[slice_id]])
     return coronal_rois_contours, sagittal_rois_contours
 
 
-def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
+                     pixmap_aspect=1):
     """
     Calculate a list of polygons to display for a given ROI and a given slice.
     :param curr_roi: the ROI structure
@@ -661,7 +710,8 @@ def ordered_list_rois(rois):
     return sorted(res)
 
 
-def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
+def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
+                                filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
     """Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
@@ -842,7 +892,8 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
         index += 1
 
     # Remove old values out of the original sequences
-    rm_indices = [old_duplicated_roi_indexes[name] for name in duplicated_names]
+    rm_indices = [old_duplicated_roi_indexes[name] for name in
+                  duplicated_names]
     for index in sorted(rm_indices, reverse=True):
         # Remove the old value out of the original structure set sequence
         original_structure_set.pop(index)
@@ -917,7 +968,8 @@ def roi_to_geometry(dict_rois_contours):
     return roi_contour_sequence_geometry
 
 
-def manipulate_rois(first_sequence_geometry, second_sequence_geometry, image_uids, operation):
+def manipulate_rois(first_sequence_geometry, second_sequence_geometry,
+                    image_uids, operation):
     """
     Compute the intersection of two ROIs
     :param first_sequence_geometry: The geometry dictionary of the first ROI
@@ -927,14 +979,17 @@ def manipulate_rois(first_sequence_geometry, second_sequence_geometry, image_uid
     :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
     """
     if operation not in ["INTERSECTION", "UNION", "DIFFERENCE"]:
-        raise ValueError("Operation must be either INTERSECTION/UNION/DIFFERENCE")
+        raise ValueError(
+            "Operation must be either INTERSECTION/UNION/DIFFERENCE")
 
     result_geometry_dict = {}
     for slice_id in image_uids:
         first_geometry = first_sequence_geometry.get(slice_id)
         second_geometry = second_sequence_geometry.get(slice_id)
-        first_geometry = make_valid(first_geometry) if first_geometry else first_geometry
-        second_geometry = make_valid(second_geometry) if second_geometry else second_geometry
+        first_geometry = make_valid(
+            first_geometry) if first_geometry else first_geometry
+        second_geometry = make_valid(
+            second_geometry) if second_geometry else second_geometry
 
         if not first_geometry and not second_geometry:
             continue
