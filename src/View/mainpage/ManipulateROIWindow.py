@@ -77,7 +77,7 @@ class UIManipulateROIWindow:
         self.manipulate_roi_window_instance_cancel_button.setText(_translate(
             "ManipulateRoiWindowInstanceCancelButton", "Cancel"))
         self.margin_label.setText(_translate("MarginLabel",
-                                             "Margin (pixels): "))
+                                             "Margin (mm): "))
         self.new_roi_name_label.setText(_translate("NewROINameLabel",
                                                    "New ROI Name"))
         self.ROI_view_box_label.setText("ROI")

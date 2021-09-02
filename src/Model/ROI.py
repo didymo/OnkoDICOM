@@ -964,8 +964,35 @@ def scale_roi(geometry_dict, millimetres, image_uids):
 
 
 def rind_roi(geometry_dict, millimetres, image_uids):
-    # TODO: Implementation of Inner and Outer Rinds for ROI
-    return scale_roi(geometry_dict, millimetres, image_uids)
+    """
+    Create Inner/Outer Rind for ROI
+    :param geometry_dict: The geometry dictionary of the ROI
+    :param millimetres: int, positive means outer rind, negative means inner rind
+    :param image_uids: The list of all image uids
+    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
+    """
+    new_roi_dict = scale_roi(geometry_dict, millimetres, image_uids)
+
+    result_geometry_dict = {}
+    for slice_id in geometry_dict:
+        orig_geometry = geometry_dict.get(slice_id)
+        new_geometry = new_roi_dict.get(slice_id)
+        polygon_list = []
+
+        if orig_geometry.geom_type == 'MultiPolygon':
+            polygon_list += [polygon for polygon in orig_geometry]
+        else:
+            polygon_list.append(orig_geometry)
+
+        if new_geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
+            polygon_list += [polygon for polygon in new_geometry if polygon.geom_type == 'Polygon']
+        elif new_geometry.geom_type == 'Polygon':
+            polygon_list.append(new_geometry)
+
+        result_geometry = MultiPolygon(polygon_list)
+        result_geometry_dict[slice_id] = result_geometry
+
+    return result_geometry_dict
 
 
 def geometry_to_roi(roi_sequence_geometry):
