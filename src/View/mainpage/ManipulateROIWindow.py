@@ -1,18 +1,20 @@
 import pydicom
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPixmap, QFont
-from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QSizePolicy, QPushButton, \
+from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, \
+    QLineEdit, QSizePolicy, QPushButton, \
     QLabel, QWidget, QFormLayout
 
 from src.Model import ROI, ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.Worker import Worker
 from src.View.mainpage.DicomAxialView import DicomAxialView
-from src.View.mainpage.DrawROIWindow import SaveROIProgressWindow
 
 from src.Controller.PathHandler import resource_path
 import platform
+
+from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import \
+    SaveROIProgressWindow
 
 
 class UIManipulateROIWindow:
@@ -26,8 +28,8 @@ class UIManipulateROIWindow:
         self.signal_roi_manipulated = signal_roi_manipulated
         self.roi_color = roi_color
 
-        self.roi_names = [] # Names of selected ROIs
-        self.all_roi_names = [] # Names of all existing ROIs
+        self.roi_names = []  # Names of selected ROIs
+        self.all_roi_names = []  # Names of all existing ROIs
         for roi_id, roi_dict in self.rois.items():
             self.all_roi_names.append(roi_dict['name'])
 
@@ -369,13 +371,20 @@ class UIManipulateROIWindow:
                 self.patient_dict_container.dataset)
 
             if selected_operation == self.single_roi_operation_names[0]:
-                new_geometry = ROI.scale_roi(roi_geometry, int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry,
+                                             int(self.margin_line_edit.text()),
+                                             uid_list)
             elif selected_operation == self.single_roi_operation_names[1]:
-                new_geometry = ROI.scale_roi(roi_geometry, -int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry, -int(
+                    self.margin_line_edit.text()), uid_list)
             elif selected_operation == self.single_roi_operation_names[2]:
-                new_geometry = ROI.rind_roi(roi_geometry, -int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry,
+                                            -int(self.margin_line_edit.text()),
+                                            uid_list)
             else:
-                new_geometry = ROI.rind_roi(roi_geometry, int(self.margin_line_edit.text()), uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry,
+                                            int(self.margin_line_edit.text()),
+                                            uid_list)
             self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
             self.draw_roi()
@@ -452,7 +461,10 @@ class UIManipulateROIWindow:
                                                 QtCore.Qt.WindowTitleHint)
         progress_window.signal_roi_saved.connect(self.roi_saved)
         progress_window.start_saving(self.dataset_rtss, new_roi_name,
-                                     single_array, ds)
+                                     [{
+                                         'ds': ds,
+                                         'coords': single_array
+                                     }])
         progress_window.show()
 
     def draw_roi(self):
