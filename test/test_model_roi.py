@@ -126,7 +126,8 @@ def test_add_to_roi():
     patient_dict_container.set_initial_values(None, None, None, blah="blah", rois={})
     if patient_dict_container.get("rois") is not None:
         print("rois are present in patient dict container")
-    updated_rtss = create_roi(rt_ss, roi_name, roi_coordinates, image_ds)
+    updated_rtss = create_roi(rt_ss, roi_name,
+                              [{'coords': roi_coordinates, 'ds': image_ds}])
     # clearly the above is an opportunity to factor out to a fixture or similar
     rtss_with_added_roi = add_to_roi(updated_rtss, roi_name, roi_coordinates, image_ds)
     first_contour = rtss_with_added_roi.ROIContourSequence[0].ContourSequence[0]
@@ -164,7 +165,8 @@ def test_create_roi():
     patient_dict_container.set_initial_values(None, None, None, blah="blah", rois={})
     if patient_dict_container.get("rois") is not None:
         print("rois are present in patient dict container")
-    updated_rtss = create_roi(rt_ss, roi_name, roi_coordinates, image_ds)
+    updated_rtss = create_roi(rt_ss, roi_name,
+                              [{'coords': roi_coordinates, 'ds': image_ds}])
     first_contour = updated_rtss.ROIContourSequence[0].ContourSequence[0]
     assert (
         first_contour

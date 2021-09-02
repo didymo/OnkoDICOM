@@ -1,5 +1,6 @@
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow import *
+from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
+from src.View.mainpage.DrawROIWindow.UIDrawROIWindow import UIDrawROIWindow
 from src.View.mainpage.ManipulateROIWindow import *
 
 
