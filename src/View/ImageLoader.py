@@ -145,25 +145,6 @@ class ImageLoader(QtCore.QObject):
                     dvh2rtdose(raw_dvh)
 
                     return True
-                else:
-                    progress_callback.emit(("Calculating DVHs... (This may take a while)", 60))
-                    raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)
-
-                if interrupt_flag.is_set():  # Stop loading.
-                    print("stopped")
-                    return False
-
-                progress_callback.emit(("Converging to zero...", 80))
-                dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
-
-                if interrupt_flag.is_set():  # Stop loading.
-                    print("stopped")
-                    return False
-
-                # Add DVH values to PatientDictContainer
-                patient_dict_container.set("raw_dvh", raw_dvh)
-                patient_dict_container.set("dvh_x_y", dvh_x_y)
-                patient_dict_container.set("dvh_outdated", False)
         else:
             self.load_temp_rtss(path, progress_callback, interrupt_flag)
 
