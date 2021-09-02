@@ -503,6 +503,24 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
     return pixels
 
 
+def convert_hull_list_to_contours_data(rois_to_save, patient_dict_container):
+    roi_list = []
+    if rois_to_save == {}:
+        return []
+    for slice_id, slice_info in rois_to_save.items():
+        pixel_hull_list = slice_info['coords']
+        for pixel_hull in pixel_hull_list:
+            single_array = convert_hull_to_single_array_of_rcs(
+                patient_dict_container,
+                pixel_hull, slice_id
+            )
+            roi_list.append({
+                'ds': slice_info['ds'],
+                'coords': single_array
+            })
+    return roi_list
+
+
 def convert_hull_to_single_array_of_rcs(patient_dict_container, contour_data,
                                         slider_id):
     hull = convert_hull_to_rcs(patient_dict_container, contour_data, slider_id)
@@ -542,7 +560,6 @@ def convert_hull_to_rcs(patient_dict_container, hull_pts, slider_id):
     for p in points:
         coords = (p[0], p[1], round(z_coord))
         contour_data.append(coords)
-    print(contour_data)
     return contour_data
 
 

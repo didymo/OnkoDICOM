@@ -14,11 +14,9 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import convert_hull_to_rcs
+from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
-from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import \
-    SaveROIProgressWindow
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
@@ -824,34 +822,20 @@ class UIDrawROIWindow:
         """
             Function triggered when saving ROI list
         """
-        roi_list = []
-        if self.drawn_roi_list == {}:
+        roi_list = ROI.convert_hull_list_to_contours_data(
+            self.drawn_roi_list, self.patient_dict_container)
+        if len(roi_list) == 0:
             QMessageBox.about(self.draw_roi_window_instance, "No ROI Detected",
                               "Please ensure you have drawn your ROI first.")
             return
-        for slice_id, slice_info in self.drawn_roi_list.items():
-            pixel_hull_list = slice_info['coords']
-            for pixel_hull in pixel_hull_list:
-                single_array = ROI.convert_hull_to_single_array_of_rcs(
-                    self.patient_dict_container,
-                    pixel_hull, slice_id
-                )
-                roi_list.append({
-                    'ds': slice_info['ds'],
-                    'coords': single_array
-                })
 
         # The list of points will need to be converted into a
         # single-dimensional array, as RTSTRUCT contour data is stored in
         # such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...] Create a
         # popup window that modifies the RTSTRUCT and tells the user that
         # processing is happening.
-        progress_window = SaveROIProgressWindow(self,
-                                                QtCore.Qt.WindowTitleHint)
-        progress_window.signal_roi_saved.connect(self.roi_saved)
-        progress_window.start_saving(self.dataset_rtss, self.ROI_name,
-                                     roi_list)
-        progress_window.show()
+        connectSaveROIProgress(
+            self, roi_list, self.dataset_rtss, self.ROI_name, self.roi_saved)
 
     def roi_saved(self, new_rtss):
         """

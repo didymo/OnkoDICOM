@@ -8,13 +8,11 @@ from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, 
 
 from src.Model import ROI, ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path
 import platform
-
-from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import \
-    SaveROIProgressWindow
 
 
 class UIManipulateROIWindow:
@@ -423,51 +421,28 @@ class UIManipulateROIWindow:
             QMessageBox.about(self.manipulate_roi_window_instance,
                               "Empty ROI", "No new ROI has been drawn")
             return
-        print(self.new_ROI_contours)
-        # Get the required info to create the new ROI
-        slider_id = self.dicom_preview.slider.value()
 
-        location = self.patient_dict_container.filepaths[slider_id]
-        ds = pydicom.dcmread(location)
+        # get a dict to convert SOPInstanceUID to slice id
+        slice_ids_dict = dict(
+            (v, k) for k, v in PatientDictContainer().get("dict_uid").items())
 
-        dataset = self.patient_dict_container.dataset[slider_id]
-        pixlut = self.patient_dict_container.get("pixluts")[
-            dataset.SOPInstanceUID]
+        # transform new_ROI_contours to a list of roi information
+        rois_to_save = {}
 
-        z_coord = dataset.SliceLocation
+        for uid, contour_sequence in self.new_ROI_contours.items():
+            slider_id = slice_ids_dict[uid]
+            location = self.patient_dict_container.filepaths[slider_id]
+            ds = pydicom.dcmread(location)
+            slice_info = {
+                'coords': contour_sequence,
+                'ds': ds
+            }
+            rois_to_save[slider_id] = slice_info
 
-        # Get the new contour sequence
-        if dataset.SOPInstanceUID not in self.new_ROI_contours:
-            # TODO: delete after merged with ROI create multiple
-            QMessageBox.about(self.manipulate_roi_window_instance,
-                              "Empty slice",
-                              "The current slice doesn't contain new ROI"
-                              "\nPlease move to other slices")
-            return
-        contour_sequence = self.new_ROI_contours[dataset.SOPInstanceUID]
+        roi_list = ROI.convert_hull_list_to_contours_data(
+            rois_to_save, self.patient_dict_container)
 
-        # Transform the contour sequence to a 1D array
-        # Convert the pixel points to RCS points, then append z coordinate
-        roi_list = []
-        for contour_data in contour_sequence:
-            single_array = ROI.convert_hull_to_single_array_of_rcs(
-                self.patient_dict_container,
-                contour_data, slider_id
-            )
-            roi_list.append({
-                'ds': ds,
-                'coords': single_array
-            })
-
-
-        # Create a popup window that modifies the RTSTRUCT and tells the user
-        # that processing is happening.
-        progress_window = SaveROIProgressWindow(self,
-                                                QtCore.Qt.WindowTitleHint)
-        progress_window.signal_roi_saved.connect(self.roi_saved)
-        progress_window.start_saving(self.dataset_rtss, new_roi_name,
-                                     roi_list)
-        progress_window.show()
+        connectSaveROIProgress(self, roi_list, self.dataset_rtss, new_roi_name, self.roi_saved)
 
     def draw_roi(self):
         """ Draw the new ROI """
