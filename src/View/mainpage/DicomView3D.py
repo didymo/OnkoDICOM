@@ -5,8 +5,8 @@ from PySide6.QtWidgets import QPushButton
 from vtkmodules.util import numpy_support
 from vtkmodules.util.vtkConstants import VTK_INT
 from vtkmodules.vtkCommonDataModel import vtkImageData, vtkPiecewiseFunction
-from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkRenderer, vtkVolumeProperty, \
-    vtkVolume
+from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, \
+    vtkRenderer, vtkVolumeProperty, vtkVolume
 from vtkmodules.vtkRenderingVolume import vtkFixedPointVolumeRayCastMapper
 
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -68,8 +68,10 @@ class DicomView3D(QtWidgets.QWidget):
         three_dimension_np_array[three_dimension_np_array < 0] = 0
         three_dimension_np_array[three_dimension_np_array > 255] = 255
         three_dimension_np_array = three_dimension_np_array.astype(np.int8)
-        self.depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.ravel(order="F"), deep=True
-                                                      , array_type=VTK_INT)
+        self.depth_array = numpy_support.numpy_to_vtk(three_dimension_np_array.
+                                                      ravel(order="F"),
+                                                      deep=True,
+                                                      array_type=VTK_INT)
         self.shape = three_dimension_np_array.shape
 
     def update_volume_by_window_level(self):
@@ -215,6 +217,7 @@ class DicomView3D(QtWidgets.QWidget):
     def closeEvent(self, QCloseEvent):
         """
         Clean up function when the window is closed
+        :param QCloseEvent: event fired when a QWidget is closed
         """
         super().closeEvent(QCloseEvent)
         # Clean up renderer
