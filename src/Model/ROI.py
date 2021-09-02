@@ -176,15 +176,14 @@ def create_roi(rtss, roi_name, roi_list,
 def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
                 rt_roi_interpreted_type):
     """
-            Add the information of a new ROI to the rtss
-            :param rtss: dataset of RTSS
-            :param roi_name: ROIName
-            :param roi_coordinates: Coordinates of pixels for new ROI
-            :param data_set: data set of selected DICOM image file
-            :param rt_roi_interpreted_type: the interpreted type
-                of the new ROI
-            :return: rtss, with added ROI
-            """
+    Add the information of a new ROI to the rtss
+    :param rtss: dataset of RTSS
+    :param roi_name: ROIName
+    :param roi_coordinates: Coordinates of pixels for new ROI
+    :param data_set: data set of selected DICOM image file
+    :param rt_roi_interpreted_type: the interpreted type of the new ROI
+    :return: rtss, with added ROI
+    """
     number_of_contour_points = len(roi_coordinates) / 3
     referenced_sop_class_uid = data_set.SOPClassUID
     referenced_sop_instance_uid = data_set.SOPInstanceUID

@@ -880,8 +880,6 @@ class UIDrawROIWindow:
                 polygon_list.append(hull_to_points(polygon))
         return polygon_list
 
-
-
     def onPreviewClicked(self):
         """
         function triggered when Preview button is clicked
