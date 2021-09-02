@@ -77,6 +77,7 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     qimage = QtGui.QImage(
         np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
         QtGui.QImage.Format_Indexed8)
+
     pixmap = QtGui.QPixmap(qimage)
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
     return pixmap
