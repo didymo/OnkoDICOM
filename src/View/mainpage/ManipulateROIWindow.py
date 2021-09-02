@@ -66,7 +66,7 @@ class UIManipulateROIWindow:
         self.manipulate_roi_window_instance_draw_button.setText(_translate("ManipulateRoiWindowInstanceDrawButton", "Draw"))
         self.manipulate_roi_window_instance_save_button.setText(_translate("ManipulateRoiWindowInstanceSaveButton", "Save"))
         self.manipulate_roi_window_instance_cancel_button.setText(_translate("ManipulateRoiWindowInstanceCancelButton", "Cancel"))
-        self.margin_label.setText(_translate("MarginLabel", "Margin (pixels): "))
+        self.margin_label.setText(_translate("MarginLabel", "Margin (mm): "))
         self.new_roi_name_label.setText(_translate("NewROINameLabel", "New ROI Name"))
         self.ROI_view_box_label.setText("ROI")
         self.preview_box_label.setText("Preview")
@@ -290,10 +290,25 @@ class UIManipulateROIWindow:
                 self.margin_line_edit.text() != "" and \
                 selected_operation in self.single_roi_operation_names:
             # Single ROI operations
-            QMessageBox.about(self.manipulate_roi_window_instance,
-                              "Operation under implementing",
-                              "Single ROI operations have not been supported "
-                              "yet.\nPlease select another operation!")
+            dict_rois_contours = ROI.get_roi_contour_pixel(
+                self.patient_dict_container.get("raw_contour"),
+                [roi_1],
+                self.patient_dict_container.get("pixluts"))
+            roi_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_1])
+            uid_list = ImageLoading.get_image_uid_list(
+                self.patient_dict_container.dataset)
+
+            if selected_operation == self.single_roi_operation_names[0]:
+                new_geometry = ROI.scale_roi(roi_geometry, int(self.margin_line_edit.text()), uid_list)
+            elif selected_operation == self.single_roi_operation_names[1]:
+                new_geometry = ROI.scale_roi(roi_geometry, -int(self.margin_line_edit.text()), uid_list)
+            elif selected_operation == self.single_roi_operation_names[2]:
+                new_geometry = ROI.rind_roi(roi_geometry, -int(self.margin_line_edit.text()), uid_list)
+            else:
+                new_geometry = ROI.rind_roi(roi_geometry, int(self.margin_line_edit.text()), uid_list)
+            self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
+
+            self.draw_roi()
             return
         elif roi_1 != "" and roi_2 != "" and new_roi_name != "" and \
                 selected_operation in self.multiple_roi_operation_names:

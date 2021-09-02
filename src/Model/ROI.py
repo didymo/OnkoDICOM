@@ -866,7 +866,7 @@ def roi_to_geometry(dict_rois_contours):
     """
     Convert ROI contour data in each image slice to a geometry object
     :param dict_rois_contours: A dictionary with key-value pair {slice-id: contour sequence}
-    :return: A dictionary with key-value pair {slice-id: Polygon/Multipolygon Object}
+    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
     """
     roi_contour_sequence_geometry = {}
 
@@ -903,7 +903,7 @@ def manipulate_rois(first_sequence_geometry, second_sequence_geometry, image_uid
     :param second_sequence_geometry: The geometry dictionary of the second ROI
     :param image_uids: The list of all image uids
     :param operation: A string of either "INTERSECTION", "UNION", or "DIFFERENCE"
-    :return: A dictionary with key-value pair {slice-id: Polygon/Multipolygon Object}
+    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
     """
     if operation not in ["INTERSECTION", "UNION", "DIFFERENCE"]:
         raise ValueError("Operation must be either INTERSECTION/UNION/DIFFERENCE")
@@ -941,11 +941,38 @@ def manipulate_rois(first_sequence_geometry, second_sequence_geometry, image_uid
     return result_geometry_dict
 
 
+def scale_roi(geometry_dict, millimetres, image_uids):
+    """
+    Scale the ROI using millimetres as the unit of measurement
+    :param geometry_dict: The geometry dictionary of the ROI
+    :param millimetres: int, positive means expansion, negative means contraction
+    :param image_uids: The list of all image uids
+    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
+    """
+    pixel_spacing = PatientDictContainer().dataset[0].PixelSpacing[0]
+    margin_change = millimetres / pixel_spacing
+
+    result_geometry_dict = {}
+    for slice_id in image_uids:
+        geometry = geometry_dict.get(slice_id)
+        geometry = make_valid(geometry) if geometry else geometry
+        if geometry:
+            result_geometry = geometry.buffer(margin_change)
+            result_geometry_dict[slice_id] = result_geometry
+
+    return result_geometry_dict
+
+
+def rind_roi(geometry_dict, millimetres, image_uids):
+    # TODO: Implementation of Inner and Outer Rinds for ROI
+    return scale_roi(geometry_dict, millimetres, image_uids)
+
+
 def geometry_to_roi(roi_sequence_geometry):
     """
     Convert the geometry object in each image slice to ROI contour data
     :param roi_sequence_geometry: A geometry dictionary
-    :return: A dictionary with key-value pair {slice-id: contour sequence}
+    :return: A dictionary with key-value pair {slice-uid: contour sequence}
     """
     roi_contour_sequence = {}
     for slice_id, geometry in roi_sequence_geometry.items():
