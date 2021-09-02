@@ -1,20 +1,220 @@
-import vtkmodules.qt
+"""
+/*=========================================================================
+
+  Program:   Visualization Toolkit
+  Module:    Copyright.txt
+
+Copyright (c) 1993-2015 Ken Martin, Will Schroeder, Bill Lorensen
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ * Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+ * Neither name of Ken Martin, Will Schroeder, or Bill Lorensen nor the names
+   of any contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+=========================================================================*/
+
+A simple VTK widget for PyQt or PySide.
+See http://www.trolltech.com for Qt documentation,
+http://www.riverbankcomputing.co.uk for PyQt, and
+http://pyside.github.io for PySide.
+This class is based on the vtkGenericRenderWindowInteractor and is
+therefore fairly powerful.  It should also play nicely with the
+vtk3DWidget code.
+Created by Prabhu Ramachandran, May 2002
+Based on David Gobbi's QVTKRenderWidget.py
+Changes by Gerard Vermeulen Feb. 2003
+ Win32 support.
+Changes by Gerard Vermeulen, May 2003
+ Bug fixes and better integration with the Qt framework.
+Changes by Phil Thompson, Nov. 2006
+ Ported to PyQt v4.
+ Added support for wheel events.
+Changes by Phil Thompson, Oct. 2007
+ Bug fixes.
+Changes by Phil Thompson, Mar. 2008
+ Added cursor support.
+Changes by Rodrigo Mologni, Sep. 2013 (Credit to Daniele Esposti)
+ Bug fix to PySide: Converts PyCObject to void pointer.
+Changes by Greg Schussman, Aug. 2014
+ The keyPressEvent function now passes keysym instead of None.
+Changes by Alex Tsui, Apr. 2015
+ Port from PyQt4 to PyQt5.
+Changes by Fabian Wenzel, Jan. 2016
+ Support for Python3
+Changes by Tobias Hänel, Sep. 2018
+ Support for PySide2
+Changes by Ruben de Bruin, Aug. 2019
+ Fixes to the keyPressEvent function
+Changes by Chen Jintao, Aug. 2021
+ Support for PySide6
+
+"""
+
+# coding=utf-8
+
+
+# Check whether a specific PyQt implementation was chosen
+try:
+    import vtkmodules.qt
+
+    PyQtImpl = vtkmodules.qt.PyQtImpl
+except ImportError:
+    pass
+
+# Check whether a specific QVTKRenderWindowInteractor base
+# class was chosen, can be set to "QGLWidget" in
+# PyQt implementation version lower than Pyside6,
+# or "QOpenGLWidget" in Pyside6
+QVTKRWIBase = "QWidget"
+try:
+    import vtkmodules.qt
+
+    QVTKRWIBase = vtkmodules.qt.QVTKRWIBase
+except ImportError:
+    pass
+
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
-from PySide6.QtWidgets import QWidget
-from PySide6.QtWidgets import QSizePolicy
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
-from PySide6.QtCore import QTimer
-from PySide6.QtCore import QObject
-from PySide6.QtCore import QSize
-from PySide6.QtCore import QEvent
+
+if PyQtImpl is None:
+    # Autodetect the PyQt implementation to use
+    try:
+        import PySide6
+
+        PyQtImpl = "PySide6"
+    except ImportError:
+        try:
+            import PyQt5
+
+            PyQtImpl = "PyQt5"
+        except ImportError:
+            try:
+                import PySide2
+
+                PyQtImpl = "PySide2"
+            except ImportError:
+                try:
+                    import PyQt4
+
+                    PyQtImpl = "PyQt4"
+                except ImportError:
+                    try:
+                        import PySide
+
+                        PyQtImpl = "PySide"
+                    except ImportError:
+                        raise ImportError("Cannot load either PyQt or PySide")
+
+# Check the compatibility of PyQtImpl and QVTKRWIBase
+if QVTKRWIBase != "QWidget":
+    if PyQtImpl in ["PySide6"] and QVTKRWIBase == "QOpenGLWidget":
+        pass  # compatible
+    elif PyQtImpl in ["PyQt5", "PySide2", "PyQt4", "PySide"] and QVTKRWIBase == "QGLWidget":
+        pass  # compatible
+    else:
+        raise ImportError("Cannot load " + QVTKRWIBase + " from " + PyQtImpl)
+
+if PyQtImpl == "PySide6":
+    if QVTKRWIBase == "QOpenGLWidget":
+        from PySide6.QtOpenGLWidgets import QOpenGLWidget
+    from PySide6.QtWidgets import QWidget
+    from PySide6.QtWidgets import QSizePolicy
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QMainWindow
+    from PySide6.QtGui import QCursor
+    from PySide6.QtCore import Qt
+    from PySide6.QtCore import QTimer
+    from PySide6.QtCore import QObject
+    from PySide6.QtCore import QSize
+    from PySide6.QtCore import QEvent
+else:
+    raise ImportError("Unknown PyQt implementation " + repr(PyQtImpl))
 
 # Define types for base class, based on string
-QVTKRWIBaseClass = QWidget
+if QVTKRWIBase == "QWidget":
+    QVTKRWIBaseClass = QWidget
+elif QVTKRWIBase == "QOpenGLWidget":
+    QVTKRWIBaseClass = QOpenGLWidget
+else:
+    raise ImportError("Unknown base class for QVTKRenderWindowInteractor " + QVTKRWIBase)
 
 
 class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
+    """ A QVTKRenderWindowInteractor for Python and Qt.  Uses a
+    vtkGenericRenderWindowInteractor to handle the interactions.  Use
+    GetRenderWindow() to get the vtkRenderWindow.  Create with the
+    keyword stereo=1 in order to generate a stereo-capable window.
+    The user interface is summarized in vtkInteractorStyle.h:
+    - Keypress j / Keypress t: toggle between joystick (position
+    sensitive) and trackball (motion sensitive) styles. In joystick
+    style, motion occurs continuously as long as a mouse button is
+    pressed. In trackball style, motion occurs when the mouse button
+    is pressed and the mouse pointer moves.
+    - Keypress c / Keypress o: toggle between camera and object
+    (actor) modes. In camera mode, mouse events affect the camera
+    position and focal point. In object mode, mouse events affect
+    the actor that is under the mouse pointer.
+    - Button 1: rotate the camera around its focal point (if camera
+    mode) or rotate the actor around its origin (if actor mode). The
+    rotation is in the direction defined from the center of the
+    renderer's viewport towards the mouse position. In joystick mode,
+    the magnitude of the rotation is determined by the distance the
+    mouse is from the center of the render window.
+    - Button 2: pan the camera (if camera mode) or translate the actor
+    (if object mode). In joystick mode, the direction of pan or
+    translation is from the center of the viewport towards the mouse
+    position. In trackball mode, the direction of motion is the
+    direction the mouse moves. (Note: with 2-button mice, pan is
+    defined as <Shift>-Button 1.)
+    - Button 3: zoom the camera (if camera mode) or scale the actor
+    (if object mode). Zoom in/increase scale if the mouse position is
+    in the top half of the viewport; zoom out/decrease scale if the
+    mouse position is in the bottom half. In joystick mode, the amount
+    of zoom is controlled by the distance of the mouse pointer from
+    the horizontal centerline of the window.
+    - Keypress 3: toggle the render window into and out of stereo
+    mode.  By default, red-blue stereo pairs are created. Some systems
+    support Crystal Eyes LCD stereo glasses; you have to invoke
+    SetStereoTypeToCrystalEyes() on the rendering window.  Note: to
+    use stereo you also need to pass a stereo=1 keyword argument to
+    the constructor.
+    - Keypress e: exit the application.
+    - Keypress f: fly to the picked point
+    - Keypress p: perform a pick operation. The render window interactor
+    has an internal instance of vtkCellPicker that it uses to pick.
+    - Keypress r: reset the camera view along the current view
+    direction. Centers the actors and moves the camera so that all actors
+    are visible.
+    - Keypress s: modify the representation of all actors so that they
+    are surfaces.
+    - Keypress u: invoke the user-defined function. Typically, this
+    keypress will bring up an interactor that you can type commands in.
+    - Keypress w: modify the representation of all actors so that they
+    are wireframe.
+    """
+
+    # Map between VTK and Qt cursors.
     _CURSOR_MAP = {
         0: Qt.ArrowCursor,  # VTK_CURSOR_DEFAULT
         1: Qt.ArrowCursor,  # VTK_CURSOR_ARROW
@@ -54,44 +254,46 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             rw = None
 
         # create base qt-level widget
-
-        if "wflags" in kw:
-            wflags = kw['wflags']
-        else:
-            wflags = Qt.WindowFlags()
-        QWidget.__init__(self, parent, wflags | Qt.MSWindowsOwnDC)
+        if QVTKRWIBase == "QWidget":
+            if "wflags" in kw:
+                wflags = kw['wflags']
+            else:
+                wflags = Qt.WindowFlags()
+            QWidget.__init__(self, parent, wflags | Qt.MSWindowsOwnDC)
+        elif QVTKRWIBase == "QOpenGLWidget":
+            QOpenGLWidget.__init__(self, parent)
 
         if rw:  # user-supplied render window
             self._RenderWindow = rw
         else:
             self._RenderWindow = vtkRenderWindow()
 
-        win_id = self.winId()
+        WId = self.winId()
 
         # Python2
-        if type(win_id).__name__ == 'PyCObject':
+        if type(WId).__name__ == 'PyCObject':
             from ctypes import pythonapi, c_void_p, py_object
 
             pythonapi.PyCObject_AsVoidPtr.restype = c_void_p
             pythonapi.PyCObject_AsVoidPtr.argtypes = [py_object]
 
-            win_id = pythonapi.PyCObject_AsVoidPtr(win_id)
+            WId = pythonapi.PyCObject_AsVoidPtr(WId)
 
         # Python3
-        elif type(win_id).__name__ == 'PyCapsule':
+        elif type(WId).__name__ == 'PyCapsule':
             from ctypes import pythonapi, c_void_p, py_object, c_char_p
 
             pythonapi.PyCapsule_GetName.restype = c_char_p
             pythonapi.PyCapsule_GetName.argtypes = [py_object]
 
-            name = pythonapi.PyCapsule_GetName(win_id)
+            name = pythonapi.PyCapsule_GetName(WId)
 
             pythonapi.PyCapsule_GetPointer.restype = c_void_p
             pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
 
-            win_id = pythonapi.PyCapsule_GetPointer(win_id, name)
+            WId = pythonapi.PyCapsule_GetPointer(WId, name)
 
-        self._RenderWindow.SetWindowInfo(str(int(win_id)))
+        self._RenderWindow.SetWindowInfo(str(int(WId)))
 
         if stereo:  # stereo mode
             self._RenderWindow.StereoCapableWindowOn()
@@ -108,8 +310,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
         self.setAttribute(Qt.WA_PaintOnScreen)
         self.setMouseTracking(True)  # get all mouse events
         self.setFocusPolicy(Qt.WheelFocus)
-        self.setSizePolicy(
-            QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
 
         self._Timer = QTimer(self)
         self._Timer.timeout.connect(self.TimerEvent)
@@ -119,12 +320,11 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
         self._Iren.GetRenderWindow().AddObserver('CursorChangedEvent',
                                                  self.CursorChangedEvent)
 
-        # Create a hidden child widget and connect its destroyed signal to
-        # its parent ``Finalize`` slot. The hidden children will be
-        # destroyed before its parent thus allowing cleanup of VTK elements.
-        self._hidden = QWidget(self)
-        self._hidden.hide()
-        self._hidden.destroyed.connect(self.Finalize)
+        # If we've a parent, it does not close the child when closed.
+        # Connect the parent's destroyed signal to this widget's close
+        # slot for proper cleanup of VTK objects.
+        if self.parent():
+            self.parent().destroyed.connect(self.close, Qt.DirectConnection)
 
     def __getattr__(self, attr):
         """Makes the object behave like a vtkGenericRenderWindowInteractor"""
@@ -137,9 +337,9 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
                                  " has no attribute named " + attr)
 
     def Finalize(self):
-        """
+        '''
         Call internal cleanup method on VTK objects
-        """
+        '''
         self._RenderWindow.Finalize()
 
     def CreateTimer(self, obj, evt):
@@ -193,7 +393,6 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
     def _GetKeyCharAndKeySym(self, ev):
         """ Convert a Qt key into a char and a vtk keysym.
-
         This is essentially copied from the c++ implementation in
         GUISupport/Qt/QVTKInteractorAdapter.cxx.
         """
@@ -236,14 +435,25 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
     @staticmethod
     def _getPixelRatio():
-        return 1.
+        if PyQtImpl in ["PyQt5", "PySide2", "PySide6"]:
+            # Source: https://stackoverflow.com/a/40053864/3388962
+            pos = QCursor.pos()
+            for screen in QApplication.screens():
+                rect = screen.geometry()
+                if rect.contains(pos):
+                    return screen.devicePixelRatio()
+            # Should never happen, but try to find a good fallback.
+            return QApplication.instance().devicePixelRatio()
+        else:
+            # Qt4 seems not to provide any cross-platform means to get the
+            # pixel ratio.
+            return 1.
 
     def _setEventInformation(self, x, y, ctrl, shift,
                              key, repeat=0, keysum=None):
         scale = self._getPixelRatio()
         self._Iren.SetEventInformation(int(round(x * scale)),
-                                       int(round(
-                                           (self.height() - y - 1) * scale)),
+                                       int(round((self.height() - y - 1) * scale)),
                                        ctrl, shift, key, repeat, keysum)
 
     def enterEvent(self, ev):
@@ -272,7 +482,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             self._Iren.LeftButtonPressEvent()
         elif self._ActiveButton == Qt.RightButton:
             self._Iren.RightButtonPressEvent()
-        elif self._ActiveButton == Qt.MiddleButton:
+        elif self._ActiveButton == Qt.MidButton:
             self._Iren.MiddleButtonPressEvent()
 
     def mouseReleaseEvent(self, ev):
@@ -284,7 +494,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             self._Iren.LeftButtonReleaseEvent()
         elif self._ActiveButton == Qt.RightButton:
             self._Iren.RightButtonReleaseEvent()
-        elif self._ActiveButton == Qt.MiddleButton:
+        elif self._ActiveButton == Qt.MidButton:
             self._Iren.MiddleButtonReleaseEvent()
 
     def mouseMoveEvent(self, ev):
@@ -331,46 +541,6 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
     def Render(self):
         self.update()
-
-
-def QVTKRenderWidgetConeExample():
-    """A simple example that uses the QVTKRenderWindowInteractor class."""
-
-    from vtkmodules.vtkFiltersSources import vtkConeSource
-    from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, \
-        vtkRenderer
-    # load implementations for rendering and interaction factory classes
-    import vtkmodules.vtkRenderingOpenGL2
-    import vtkmodules.vtkInteractionStyle
-
-    # every QT app needs an app
-    app = QApplication(['QVTKRenderWindowInteractor'])
-
-    # create the widget
-    widget = QVTKRenderWindowInteractor()
-    widget.Initialize()
-    widget.Start()
-    # if you don't want the 'q' key to exit comment this.
-    widget.AddObserver("ExitEvent", lambda o, e, a=app: a.quit())
-
-    ren = vtkRenderer()
-    widget.GetRenderWindow().AddRenderer(ren)
-
-    cone = vtkConeSource()
-    cone.SetResolution(8)
-
-    coneMapper = vtkPolyDataMapper()
-    coneMapper.SetInputConnection(cone.GetOutputPort())
-
-    coneActor = vtkActor()
-    coneActor.SetMapper(coneMapper)
-
-    ren.AddActor(coneActor)
-
-    # show the widget
-    widget.show()
-    # start event processing
-    app.exec_()
 
 
 _keysyms_for_ascii = (
