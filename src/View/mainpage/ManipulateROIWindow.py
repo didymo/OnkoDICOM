@@ -9,6 +9,7 @@ from src.Model import ROI, ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.mainpage.DicomAxialView import DicomAxialView
+from src.View.mainpage.DrawROIWindow import SaveROIProgressWindow
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -30,6 +31,7 @@ class UIManipulateROIWindow:
         for roi_id, roi_dict in self.rois.items():
             self.all_roi_names.append(roi_dict['name'])
 
+        # Operation names
         self.single_roi_operation_names = ["Expand", "Contract",
                                            "Inner Rind (annulus)",
                                            "Outer Rind (annulus)"]
@@ -53,21 +55,31 @@ class UIManipulateROIWindow:
 
     def retranslate_ui(self, manipulate_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
-        manipulate_roi_window_instance.setWindowTitle(_translate("ManipulateRoiWindowInstance", "OnkoDICOM - Draw Region Of Interest"))
-        self.first_roi_name_label.setText(_translate("FirstROINameLabel", "ROI 1: "))
+        manipulate_roi_window_instance.setWindowTitle(_translate(
+            "ManipulateRoiWindowInstance",
+            "OnkoDICOM - Draw Region Of Interest"))
+        self.first_roi_name_label.setText(_translate("FirstROINameLabel",
+                                                     "ROI 1: "))
         self.first_roi_name_dropdown_list.setPlaceholderText("ROI 1")
         self.first_roi_name_dropdown_list.addItems(self.all_roi_names)
-        self.operation_name_label.setText(_translate("OperationNameLabel", "Operation"))
+        self.operation_name_label.setText(_translate("OperationNameLabel",
+                                                     "Operation"))
         self.operation_name_dropdown_list.setPlaceholderText("Operation")
         self.operation_name_dropdown_list.addItems(self.operation_names)
-        self.second_roi_name_label.setText(_translate("SecondROINameLabel", "ROI 2: "))
+        self.second_roi_name_label.setText(_translate("SecondROINameLabel",
+                                                      "ROI 2: "))
         self.second_roi_name_dropdown_list.setPlaceholderText("ROI 2")
         self.second_roi_name_dropdown_list.addItems(self.all_roi_names)
-        self.manipulate_roi_window_instance_draw_button.setText(_translate("ManipulateRoiWindowInstanceDrawButton", "Draw"))
-        self.manipulate_roi_window_instance_save_button.setText(_translate("ManipulateRoiWindowInstanceSaveButton", "Save"))
-        self.manipulate_roi_window_instance_cancel_button.setText(_translate("ManipulateRoiWindowInstanceCancelButton", "Cancel"))
-        self.margin_label.setText(_translate("MarginLabel", "Margin (mm): "))
-        self.new_roi_name_label.setText(_translate("NewROINameLabel", "New ROI Name"))
+        self.manipulate_roi_window_instance_draw_button.setText(_translate(
+            "ManipulateRoiWindowInstanceDrawButton", "Draw"))
+        self.manipulate_roi_window_instance_save_button.setText(_translate(
+            "ManipulateRoiWindowInstanceSaveButton", "Save"))
+        self.manipulate_roi_window_instance_cancel_button.setText(_translate(
+            "ManipulateRoiWindowInstanceCancelButton", "Cancel"))
+        self.margin_label.setText(_translate("MarginLabel",
+                                             "Margin (pixels): "))
+        self.new_roi_name_label.setText(_translate("NewROINameLabel",
+                                                   "New ROI Name"))
         self.ROI_view_box_label.setText("ROI")
         self.preview_box_label.setText("Preview")
 
@@ -85,39 +97,54 @@ class UIManipulateROIWindow:
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Normal, QIcon.Off)
-        self.manipulate_roi_window_instance.setObjectName("ManipulateRoiWindowInstance")
+        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
+                              QIcon.Normal, QIcon.Off)
+        self.manipulate_roi_window_instance.setObjectName(
+            "ManipulateRoiWindowInstance")
         self.manipulate_roi_window_instance.setWindowIcon(window_icon)
 
         # Creating a form box to hold all buttons and input fields
         self.manipulate_roi_window_input_container_box = QFormLayout()
-        self.manipulate_roi_window_input_container_box.setObjectName("ManipulateRoiWindowInputContainerBox")
-        self.manipulate_roi_window_input_container_box.setLabelAlignment(Qt.AlignLeft)
+        self.manipulate_roi_window_input_container_box.setObjectName(
+            "ManipulateRoiWindowInputContainerBox")
+        self.manipulate_roi_window_input_container_box.setLabelAlignment(
+            Qt.AlignLeft)
 
         # Create a label for denoting the first ROI name
         self.first_roi_name_label = QLabel()
         self.first_roi_name_label.setObjectName("FirstROINameLabel")
         self.first_roi_name_dropdown_list = QComboBox()
         # Create an dropdown list for ROI name
-        self.first_roi_name_dropdown_list.setObjectName("FirstROINameDropdownList")
-        self.first_roi_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.first_roi_name_dropdown_list.resize(self.first_roi_name_dropdown_list.sizeHint().width(),
-                                                 self.first_roi_name_dropdown_list.sizeHint().height())
-        self.first_roi_name_dropdown_list.activated.connect(self.update_selected_rois)
-        self.manipulate_roi_window_input_container_box.addRow(self.first_roi_name_label,
-                                                              self.first_roi_name_dropdown_list)
+        self.first_roi_name_dropdown_list.setObjectName(
+            "FirstROINameDropdownList")
+        self.first_roi_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum,
+                                                        QSizePolicy.Minimum)
+        self.first_roi_name_dropdown_list.resize(
+            self.first_roi_name_dropdown_list.sizeHint().width(),
+            self.first_roi_name_dropdown_list.sizeHint().height())
+        self.first_roi_name_dropdown_list.activated.connect(
+            self.update_selected_rois)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.first_roi_name_label,
+            self.first_roi_name_dropdown_list)
 
         # Create a label for denoting the operation
         self.operation_name_label = QLabel()
         self.operation_name_label.setObjectName("OperationNameLabel")
         self.operation_name_dropdown_list = QComboBox()
         # Create an dropdown list for operation name
-        self.operation_name_dropdown_list.setObjectName("OperationNameDropdownList")
-        self.operation_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.operation_name_dropdown_list.resize(self.operation_name_dropdown_list.sizeHint().width(),
-                                                 self.operation_name_dropdown_list.sizeHint().height())
-        self.operation_name_dropdown_list.activated.connect(self.operation_changed)
-        self.manipulate_roi_window_input_container_box.addRow(self.operation_name_label, self.operation_name_dropdown_list)
+        self.operation_name_dropdown_list.setObjectName(
+            "OperationNameDropdownList")
+        self.operation_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum,
+                                                        QSizePolicy.Minimum)
+        self.operation_name_dropdown_list.resize(
+            self.operation_name_dropdown_list.sizeHint().width(),
+            self.operation_name_dropdown_list.sizeHint().height())
+        self.operation_name_dropdown_list.activated.connect(
+            self.operation_changed)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.operation_name_label,
+            self.operation_name_dropdown_list)
 
         # Create a label for denoting the second ROI name
         self.second_roi_name_label = QLabel()
@@ -125,14 +152,19 @@ class UIManipulateROIWindow:
         self.second_roi_name_label.setVisible(False)
         self.second_roi_name_dropdown_list = QComboBox()
         # Create an dropdown list for ROI name
-        self.second_roi_name_dropdown_list.setObjectName("SecondROINameDropdownList")
-        self.second_roi_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.second_roi_name_dropdown_list.resize(self.second_roi_name_dropdown_list.sizeHint().width(),
-                                                  self.second_roi_name_dropdown_list.sizeHint().height())
+        self.second_roi_name_dropdown_list.setObjectName(
+            "SecondROINameDropdownList")
+        self.second_roi_name_dropdown_list.setSizePolicy(QSizePolicy.Minimum,
+                                                         QSizePolicy.Minimum)
+        self.second_roi_name_dropdown_list.resize(
+            self.second_roi_name_dropdown_list.sizeHint().width(),
+            self.second_roi_name_dropdown_list.sizeHint().height())
         self.second_roi_name_dropdown_list.setVisible(False)
-        self.second_roi_name_dropdown_list.activated.connect(self.update_selected_rois)
-        self.manipulate_roi_window_input_container_box.addRow(self.second_roi_name_label,
-                                                              self.second_roi_name_dropdown_list)
+        self.second_roi_name_dropdown_list.activated.connect(
+            self.update_selected_rois)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.second_roi_name_label,
+            self.second_roi_name_dropdown_list)
 
         # Create a label for denoting the margin
         self.margin_label = QLabel()
@@ -141,11 +173,13 @@ class UIManipulateROIWindow:
         # Create input for the new ROI name
         self.margin_line_edit = QLineEdit()
         self.margin_line_edit.setObjectName("MarginInput")
-        self.margin_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
+        self.margin_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding,
+                                            QSizePolicy.Minimum)
         self.margin_line_edit.resize(self.margin_line_edit.sizeHint().width(),
                                      self.margin_line_edit.sizeHint().height())
         self.margin_line_edit.setVisible(False)
-        self.manipulate_roi_window_input_container_box.addRow(self.margin_label, self.margin_line_edit)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.margin_label, self.margin_line_edit)
 
         # Create a label for denoting the new ROI name
         self.new_roi_name_label = QLabel()
@@ -153,10 +187,14 @@ class UIManipulateROIWindow:
         # Create input for the new ROI name
         self.new_roi_name_line_edit = QLineEdit()
         self.new_roi_name_line_edit.setObjectName("NewROINameInput")
-        self.new_roi_name_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-        self.new_roi_name_line_edit.resize(self.new_roi_name_line_edit.sizeHint().width(),
-                                                self.new_roi_name_line_edit.sizeHint().height())
-        self.manipulate_roi_window_input_container_box.addRow(self.new_roi_name_label, self.new_roi_name_line_edit)
+        self.new_roi_name_line_edit.setSizePolicy(QSizePolicy.MinimumExpanding,
+                                                  QSizePolicy.Minimum)
+        self.new_roi_name_line_edit.resize(
+            self.new_roi_name_line_edit.sizeHint().width(),
+            self.new_roi_name_line_edit.sizeHint().height())
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.new_roi_name_label,
+            self.new_roi_name_line_edit)
 
         # Create a spacer between inputs and buttons
         spacer = QWidget()
@@ -166,54 +204,76 @@ class UIManipulateROIWindow:
 
         # Create a draw button
         self.manipulate_roi_window_instance_draw_button = QPushButton()
-        self.manipulate_roi_window_instance_draw_button.setObjectName("ManipulateRoiWindowInstanceDrawButton")
+        self.manipulate_roi_window_instance_draw_button.setObjectName(
+            "ManipulateRoiWindowInstanceDrawButton")
         self.manipulate_roi_window_instance_draw_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.manipulate_roi_window_instance_draw_button.resize(
             self.manipulate_roi_window_instance_draw_button.sizeHint().width(),
-            self.manipulate_roi_window_instance_draw_button.sizeHint().height())
-        self.manipulate_roi_window_instance_draw_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.manipulate_roi_window_instance_draw_button.clicked.connect(self.onDrawButtonClicked)
-        self.manipulate_roi_window_input_container_box.addRow(self.manipulate_roi_window_instance_draw_button)
+            self.manipulate_roi_window_instance_draw_button.sizeHint().height()
+        )
+        self.manipulate_roi_window_instance_draw_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.manipulate_roi_window_instance_draw_button.clicked.connect(
+            self.onDrawButtonClicked)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.manipulate_roi_window_instance_draw_button)
 
         # Create a horizontal box for saving and cancel the drawing
         self.manipulate_roi_window_cancel_save_box = QHBoxLayout()
-        self.manipulate_roi_window_cancel_save_box.setObjectName("ManipulateRoiWindowCancelSaveBox")
+        self.manipulate_roi_window_cancel_save_box.setObjectName(
+            "ManipulateRoiWindowCancelSaveBox")
         # Create an exit button to cancel the drawing
         # Add a button to go back/exit from the application
         self.manipulate_roi_window_instance_cancel_button = QPushButton()
-        self.manipulate_roi_window_instance_cancel_button.setObjectName("ManipulateRoiWindowInstanceCancelButton")
+        self.manipulate_roi_window_instance_cancel_button.setObjectName(
+            "ManipulateRoiWindowInstanceCancelButton")
         self.manipulate_roi_window_instance_cancel_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.manipulate_roi_window_instance_cancel_button.resize(
-            self.manipulate_roi_window_instance_cancel_button.sizeHint().width(),
-            self.manipulate_roi_window_instance_cancel_button.sizeHint().height())
-        self.manipulate_roi_window_instance_cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.manipulate_roi_window_instance_cancel_button.clicked.connect(self.onCancelButtonClicked)
-        self.manipulate_roi_window_instance_cancel_button.setProperty("QPushButtonClass", "fail-button")
+            self.manipulate_roi_window_instance_cancel_button.sizeHint()
+                .width(),
+            self.manipulate_roi_window_instance_cancel_button.sizeHint()
+                .height())
+        self.manipulate_roi_window_instance_cancel_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.manipulate_roi_window_instance_cancel_button.clicked.connect(
+            self.onCancelButtonClicked)
+        self.manipulate_roi_window_instance_cancel_button.setProperty(
+            "QPushButtonClass", "fail-button")
         icon_cancel = QtGui.QIcon()
-        icon_cancel.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/cancel_icon.png')))
+        icon_cancel.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/cancel_icon.png')))
         self.manipulate_roi_window_instance_cancel_button.setIcon(icon_cancel)
-        self.manipulate_roi_window_cancel_save_box.addWidget(self.manipulate_roi_window_instance_cancel_button)
+        self.manipulate_roi_window_cancel_save_box.addWidget(
+            self.manipulate_roi_window_instance_cancel_button)
         # Create a save button to save all the changes
         self.manipulate_roi_window_instance_save_button = QPushButton()
-        self.manipulate_roi_window_instance_save_button.setObjectName("ManipulateRoiWindowInstanceSaveButton")
+        self.manipulate_roi_window_instance_save_button.setObjectName(
+            "ManipulateRoiWindowInstanceSaveButton")
         self.manipulate_roi_window_instance_save_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.manipulate_roi_window_instance_save_button.resize(
             self.manipulate_roi_window_instance_save_button.sizeHint().width(),
-            self.manipulate_roi_window_instance_save_button.sizeHint().height())
-        self.manipulate_roi_window_instance_save_button.setProperty("QPushButtonClass", "success-button")
+            self.manipulate_roi_window_instance_save_button.sizeHint().height()
+        )
+        self.manipulate_roi_window_instance_save_button.setProperty(
+            "QPushButtonClass", "success-button")
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap(resource_path('res/images/btn-icons/save_icon.png')))
+        icon_save.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/save_icon.png')))
         self.manipulate_roi_window_instance_save_button.setIcon(icon_save)
-        self.manipulate_roi_window_instance_save_button.clicked.connect(self.onSaveClicked)
-        self.manipulate_roi_window_cancel_save_box.addWidget(self.manipulate_roi_window_instance_save_button)
-        self.manipulate_roi_window_input_container_box.addRow(self.manipulate_roi_window_cancel_save_box)
+        self.manipulate_roi_window_instance_save_button.clicked.connect(
+            self.onSaveClicked)
+        self.manipulate_roi_window_cancel_save_box.addWidget(
+            self.manipulate_roi_window_instance_save_button)
+        self.manipulate_roi_window_input_container_box.addRow(
+            self.manipulate_roi_window_cancel_save_box)
 
         # Creating a horizontal box to hold the ROI view and the preview
         self.manipulate_roi_window_instance_view_box = QHBoxLayout()
-        self.manipulate_roi_window_instance_view_box.setObjectName("ManipulateRoiWindowInstanceViewBoxes")
+        self.manipulate_roi_window_instance_view_box.setObjectName(
+            "ManipulateRoiWindowInstanceViewBoxes")
         # Font for the ROI view and preview's labels
         font = QFont()
         font.setBold(True)
@@ -238,8 +298,10 @@ class UIManipulateROIWindow:
         self.preview_box_widget.setLayout(self.preview_box_layout)
 
         # Add View and Slider into horizontal box
-        self.manipulate_roi_window_instance_view_box.addWidget(self.ROI_view_box_widget)
-        self.manipulate_roi_window_instance_view_box.addWidget(self.preview_box_widget)
+        self.manipulate_roi_window_instance_view_box.addWidget(
+            self.ROI_view_box_widget)
+        self.manipulate_roi_window_instance_view_box.addWidget(
+            self.preview_box_widget)
         # Create a widget to hold the image slice box
         self.manipulate_roi_window_instance_view_widget = QWidget()
         self.manipulate_roi_window_instance_view_widget.setObjectName(
@@ -247,21 +309,29 @@ class UIManipulateROIWindow:
         self.manipulate_roi_window_instance_view_widget.setLayout(
             self.manipulate_roi_window_instance_view_box)
 
-        # Create a horizontal box for containing the input fields and the viewports
+        # Create a horizontal box for containing the input fields and the
+        # viewports
         self.manipulate_roi_window_main_box = QHBoxLayout()
-        self.manipulate_roi_window_main_box.setObjectName("ManipulateRoiWindowMainBox")
-        self.manipulate_roi_window_main_box.addLayout(self.manipulate_roi_window_input_container_box, 1)
-        self.manipulate_roi_window_main_box.addWidget(self.manipulate_roi_window_instance_view_widget, 11)
+        self.manipulate_roi_window_main_box.setObjectName(
+            "ManipulateRoiWindowMainBox")
+        self.manipulate_roi_window_main_box.addLayout(
+            self.manipulate_roi_window_input_container_box, 1)
+        self.manipulate_roi_window_main_box.addWidget(
+            self.manipulate_roi_window_instance_view_widget, 11)
 
         # Create a new central widget to hold the horizontal box layout
         self.manipulate_roi_window_instance_central_widget = QWidget()
-        self.manipulate_roi_window_instance_central_widget.setObjectName("ManipulateRoiWindowInstanceCentralWidget")
-        self.manipulate_roi_window_instance_central_widget.setLayout(self.manipulate_roi_window_main_box)
+        self.manipulate_roi_window_instance_central_widget.setObjectName(
+            "ManipulateRoiWindowInstanceCentralWidget")
+        self.manipulate_roi_window_instance_central_widget.setLayout(
+            self.manipulate_roi_window_main_box)
 
         self.retranslate_ui(self.manipulate_roi_window_instance)
         self.manipulate_roi_window_instance.setStyleSheet(stylesheet)
-        self.manipulate_roi_window_instance.setCentralWidget(self.manipulate_roi_window_instance_central_widget)
-        QtCore.QMetaObject.connectSlotsByName(self.manipulate_roi_window_instance)
+        self.manipulate_roi_window_instance.setCentralWidget(
+            self.manipulate_roi_window_instance_central_widget)
+        QtCore.QMetaObject.connectSlotsByName(
+            self.manipulate_roi_window_instance)
 
     def dicom_view_slider_value_changed(self):
         self.display_selected_roi()
@@ -422,9 +492,11 @@ class UIManipulateROIWindow:
         """ Get the names of selected ROIs """
         self.roi_names = []
         if self.first_roi_name_dropdown_list.currentText() != "":
-            self.roi_names.append(self.first_roi_name_dropdown_list.currentText())
+            self.roi_names.append(
+                self.first_roi_name_dropdown_list.currentText())
         if self.second_roi_name_dropdown_list.currentText() != "":
-            self.roi_names.append(self.second_roi_name_dropdown_list.currentText())
+            self.roi_names.append(
+                self.second_roi_name_dropdown_list.currentText())
 
         self.dict_rois_contours_axial = ROI.get_roi_contour_pixel(
             self.patient_dict_container.get("raw_contour"),
@@ -447,9 +519,11 @@ class UIManipulateROIWindow:
             if roi_name in self.roi_names:
                 polygons = ROI.calc_roi_polygon(roi_name, curr_slice,
                                                 self.dict_rois_contours_axial)
-                self.dicom_view.draw_roi_polygons(roi_id, polygons, self.roi_color)
+                self.dicom_view.draw_roi_polygons(roi_id, polygons,
+                                                  self.roi_color)
 
     def operation_changed(self):
+        """ Change the form when users select different operations """
         selected_operation = self.operation_name_dropdown_list.currentText()
         if selected_operation in self.single_roi_operation_names:
             self.second_roi_name_label.setVisible(False)
@@ -467,47 +541,4 @@ class UIManipulateROIWindow:
         self.signal_roi_manipulated.emit((new_rtss, {"draw": new_roi_name}))
         QMessageBox.about(self.manipulate_roi_window_instance, "Saved",
                           "New contour successfully created!")
-        self.close()
-
-class SaveROIProgressWindow(QtWidgets.QDialog):
-    """
-    This class displays a window that advises the user that the RTSTRUCT is
-    being modified, and then creates a new thread where the new RTSTRUCT is
-    modified.
-    """
-
-    signal_roi_saved = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
-
-    def __init__(self, *args, **kwargs):
-        super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
-        layout = QtWidgets.QVBoxLayout()
-        text = QtWidgets.QLabel("Creating ROI...")
-        layout.addWidget(text)
-        self.setWindowTitle("Please wait...")
-        self.setFixedWidth(150)
-        self.setLayout(layout)
-
-        self.threadpool = QtCore.QThreadPool()
-
-    def start_saving(self, dataset_rtss, roi_name, single_array, ds):
-        """
-        Creates a thread that generates the new dataset object.
-        :param dataset_rtss: dataset of RTSS
-        :param roi_name: ROIName
-        :param single_array: Coordinates of pixels for new ROI
-        :param ds: Data Set of selected DICOM image file
-        """
-        worker = Worker(
-            ROI.create_roi, dataset_rtss, roi_name, single_array, ds)
-
-        worker.signals.result.connect(self.roi_saved)
-        self.threadpool.start(worker)
-
-    def roi_saved(self, result):
-        """
-        This method is called when the second thread completes generation of
-        the new dataset object.
-        :param result: The resulting dataset from the ROI.create_roi function.
-        """
-        self.signal_roi_saved.emit(result)
         self.close()
