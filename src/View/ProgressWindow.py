@@ -57,7 +57,7 @@ class ProgressWindow(QDialog):
         self.exec_()
 
     def start_load_moving_image(self, selected_files):
-        image_loader = ImageLoader(selected_files, self)
+        image_loader = ImageLoader(selected_files, None, self)
         image_loader.signal_request_calc_dvh.connect(self.prompt_calc_dvh)
 
         worker = Worker(image_loader.load_moving_image,

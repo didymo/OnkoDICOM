@@ -1,5 +1,8 @@
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow import *
+from src.View.mainpage.DrawROIWindow.Drawing import *
+from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
+from src.View.mainpage.DrawROIWindow.UIDrawROIWindow import UIDrawROIWindow
 
 
 class RoiDeleteOptions(QtWidgets.QMainWindow, UIDeleteROIWindow):
