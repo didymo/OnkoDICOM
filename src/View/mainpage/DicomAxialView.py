@@ -193,7 +193,6 @@ class DicomAxialView(DicomView):
         self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
         self.label_zoom.setText("Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
 
-
     def roi_display(self):
         """
         Display ROI structures on the DICOM Image.

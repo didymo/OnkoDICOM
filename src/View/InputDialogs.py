@@ -3,7 +3,7 @@ import re
 
 from PySide6 import QtGui
 from PySide6.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, \
-    QDialog, QComboBox, \
+    QDialog, QComboBox, QVBoxLayout, \
     QMessageBox
 from src.Controller.PathHandler import resource_path
 
@@ -251,3 +251,78 @@ class Dialog_Dose(QDialog):
                 "The Isodose field should not be empty!", QMessageBox.Ok)
             if buttonReply == QMessageBox.Ok:
                 pass
+
+class PatientWeightDialog(QDialog):
+    """
+    This class creates the user input dialog for requesting the
+    patient's weight from the user. Used for SUV2ROI functionality.
+    """
+
+    def __init__(self):
+        super(PatientWeightDialog, self).__init__()
+
+        # Class variables
+        self.patient_weight_message = "Patient weight is needed for SUV2ROI "
+        self.patient_weight_message += "conversion.\nPlease enter patient "
+        self.patient_weight_message += "weight in kg."
+
+        self.setWindowIcon(QtGui.QIcon(
+            "res/images/btn-icons/onkodicom_icon.png"))
+        buttonBox = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.patient_weight_entry = QLineEdit()
+
+        # Input dialog layout
+        entry_layout = QFormLayout(self)
+        entry_layout.addRow(QLabel(self.patient_weight_message))
+        entry_layout.addRow(QLabel("Patient Weight:"),
+                            self.patient_weight_entry)
+        entry_layout.addWidget(buttonBox)
+        buttonBox.accepted.connect(self.accepting)
+        buttonBox.rejected.connect(self.rejecting)
+        self.setWindowTitle("Enter Patient Weight")
+
+    def get_input(self):
+        """
+        Return the input from the dialog box.
+        :return: patient_weight, a float
+        """
+        # Return patient weight from dialog box
+        return float(self.patient_weight_entry.text())
+
+    def accepting(self):
+        """
+        Process the event when the user clicks "ok" in the dialog box.
+        """
+        # Make sure the patient weight is a number
+        if self.patient_weight_entry.text() != '':
+            try:
+                float(self.patient_weight_entry.text())
+                self.accept()
+            except ValueError:
+                buttonReply = QMessageBox.warning(
+                    self, "Invalid Patient Weight",
+                    "Please enter a valid number.",
+                    QMessageBox.Ok)
+                if buttonReply == QMessageBox.Ok:
+                    pass
+        # Make sure the patient weight is not blank
+        else:
+            button_reply = QMessageBox.warning(
+                self, "Invalid Patient Weight",
+                "Please enter a valid number.",
+                QMessageBox.Ok)
+            if button_reply == QMessageBox.Ok:
+                pass
+
+    def rejecting(self):
+        """
+        Process the event when the user clicks "cancel" in the dialog
+        box.
+        """
+        button_reply = QMessageBox.warning(
+            self, "Cannot Proceed with SUV2ROI",
+            "SUV2ROI cannot proceed without patient weight!",
+            QMessageBox.Ok)
+        if button_reply == QMessageBox.Ok:
+            self.reject()
