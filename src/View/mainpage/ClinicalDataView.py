@@ -66,8 +66,6 @@ class ClinicalDataView(QtWidgets.QWidget):
         # Add table to layout
         self.main_layout.addWidget(self.table_cd)
 
-        print("")
-
     def create_buttons(self):
         """
         Creates a button for importing CSV data.
@@ -130,8 +128,6 @@ class ClinicalDataView(QtWidgets.QWidget):
             self.table_cd.insertRow(i)
             self.table_cd.setItem(i, 0, attrib)
             self.table_cd.setItem(i, 1, value)
-
-        print("")
 
     def clear_table(self):
         """
