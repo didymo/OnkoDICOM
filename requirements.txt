@@ -15,5 +15,6 @@ git+https://github.com/Radiomics/pyradiomics.git
 pytest-qt>=4.0.2
 pytest
 pyside6
+vtk
 git+https://github.com/matplotlib/matplotlib.git
 shapely==1.8a3
