@@ -181,16 +181,17 @@ class DicomAxialView(DicomView):
         level = self.patient_dict_container.get("level")
         slice_pos = dataset['SliceLocation'].value
 
+        if hasattr(dataset, 'PatientPosition'):
+            patient_pos = dataset['PatientPosition'].value
+            self.label_patient_pos.setText(
+                "Patient Position: %s" % (str(patient_pos)))
+
         # Update labels
         self.label_image_id.setText("Image: %s / %s" % (str(self.current_slice_number), str(total_slices)))
         self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
         self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
         self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
         self.label_zoom.setText("Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
-
-        if hasattr(dataset, 'PatientPosition'):
-            patient_pos = dataset['PatientPosition'].value
-            self.label_patient_pos.setText("Patient Position: %s" % (str(patient_pos)))
 
     def roi_display(self):
         """
@@ -263,7 +264,7 @@ class DicomAxialView(DicomView):
         for contour in contours:
             list_qpoints = []
             # Slicing controls how many points considered for visualization
-            # Essentially effects sharpness of edges, fewer points equals "smoother" edges
+            # Essentially affects sharpness of edges, fewer points equals "smoother" edges
             for point in contour[::2]:
                 curr_qpoint = QtCore.QPoint(dose_pixluts[0][int(point[1])], dose_pixluts[1][int(point[0])])
                 list_qpoints.append(curr_qpoint)

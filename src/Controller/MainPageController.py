@@ -989,7 +989,15 @@ class Transect(QtWidgets.QGraphicsScene):
     def get_values(self):
         for i, j in self.points:
             if i in range(constant.DEFAULT_WINDOW_SIZE) and j in range(constant.DEFAULT_WINDOW_SIZE):
-                self.values.append(self.data[i][j])
+                x, y = self.transect_linear_transform(i, j)
+                self.values.append(self.data[x][y])
+
+    # This function performs a linear transformation on the transect input if
+    # the default window size != pixel size
+    def transect_linear_transform(self, x, y):
+        m_x = float(len(self.data))/constant.DEFAULT_WINDOW_SIZE
+        m_y = float(len(self.data[0]))/constant.DEFAULT_WINDOW_SIZE
+        return int(m_x*x), int(m_y*y)
 
     # Get the distance of each point from the end of the line
     def get_distances(self):

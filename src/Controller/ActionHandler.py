@@ -309,7 +309,7 @@ class ActionHandler:
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
 
-        self.__main_page.update_views()
+        self.__main_page.update_views(update_3d_window=True)
 
     def anonymization_handler(self):
         """

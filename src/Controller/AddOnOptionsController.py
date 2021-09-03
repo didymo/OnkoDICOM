@@ -409,7 +409,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self,
             "Success",
             "Changes were successfully applied")
-        
+
         # Close the Add-On Options Window after saving
         if hasattr(self.window, 'structures_tab'):
             self.window.structures_tab.init_standard_names()
@@ -456,7 +456,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 if len(items) > 3:
                     self.table_organ.setItem(i, 3, items[3])
                 i += 1
-
 
         # volume name table
         with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
@@ -577,7 +576,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
         else:
             QMessageBox.warning(self, "No Isodose Selected",
-                                      "No isodose levels have been selected.")
+                                "No isodose levels have been selected.")
 
     # the following function lets you import a csv of organ names into the
     # table if the csv is in the given format
