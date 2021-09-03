@@ -9,8 +9,7 @@ from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
-from shapely.geometry import Polygon, MultiPolygon
-from shapely.errors import TopologicalError
+from shapely.geometry import Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import make_valid
 
 from src.Model.CalculateImages import *
@@ -953,163 +952,106 @@ def renumber_roi_number(sequence):
 def roi_to_geometry(dict_rois_contours):
     """
     Convert ROI contour data in each image slice to a geometry object
-    :param dict_rois_contours: A dictionary with key-value pair {slice-id: contour sequence}
-    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
+    :param dict_rois_contours: A dictionary with key-value pair {slice-uid: contour sequence}
+    :return: A dictionary with key-value pair {slice-uid: Geometry object}
     """
-    roi_contour_sequence_geometry = {}
+    dict_geometry = {}
 
-    for slice_id, contour_sequence in dict_rois_contours.items():
-        multi = bool(len(contour_sequence) - 1)
+    for slice_uid, contour_sequence in dict_rois_contours.items():
+        # convert contour data to polygon omitting data with less than 3 points
+        polygon_list = [Polygon(contour_data) for contour_data in contour_sequence if len(contour_data) >= 3]
+        result_geometry = make_valid(MultiPolygon(polygon_list))
+        dict_geometry[slice_uid] = result_geometry
 
-        # Generate geometry. Handling exceptions for invalid contour data, multiple polygons
-        if not multi:
-            contour_data = contour_sequence[0]
-            try:
-                polygon = Polygon(contour_data)
-                roi_contour_sequence_geometry[slice_id] = polygon
-            except (TopologicalError, ValueError):
-                polygon = Polygon()
-                roi_contour_sequence_geometry[slice_id] = polygon
-        else:
-            polygon_list = []
-            for contour_data in contour_sequence:
-                try:
-                    sub_polygon = Polygon(contour_data)
-                    polygon_list.append(sub_polygon)
-                except (TopologicalError, ValueError):
-                    sub_polygon = Polygon()
-                    polygon_list.append(sub_polygon)
-            polygon = MultiPolygon(polygon_list)
-            roi_contour_sequence_geometry[slice_id] = polygon
-    return roi_contour_sequence_geometry
+    return dict_geometry
 
 
-def manipulate_rois(first_sequence_geometry, second_sequence_geometry,
-                    image_uids, operation):
+geometry_manipulation = {
+    'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
+    'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
+    'DIFFERENCE': lambda geom_1, geom_2: geom_1.difference(geom_2)
+}
+
+
+def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
     """
     Compute the intersection of two ROIs
-    :param first_sequence_geometry: The geometry dictionary of the first ROI
-    :param second_sequence_geometry: The geometry dictionary of the second ROI
-    :param image_uids: The list of all image uids
-    :param operation: A string of either "INTERSECTION", "UNION", or "DIFFERENCE"
-    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
+    :param first_geometry_dict: The geometry dictionary of the first ROI
+    :param second_geometry_dict: The geometry dictionary of the second ROI
+    :param operation: A string specifying the operation
+    :return: A dictionary with key-value pair {slice-uid: Geometry Object}
     """
-    if operation not in ["INTERSECTION", "UNION", "DIFFERENCE"]:
-        raise ValueError(
-            "Operation must be either INTERSECTION/UNION/DIFFERENCE")
-
+    image_uids = first_geometry_dict.keys() | second_geometry_dict.keys()
     result_geometry_dict = {}
-    for slice_id in image_uids:
-        first_geometry = first_sequence_geometry.get(slice_id)
-        second_geometry = second_sequence_geometry.get(slice_id)
-        first_geometry = make_valid(
-            first_geometry) if first_geometry else first_geometry
-        second_geometry = make_valid(
-            second_geometry) if second_geometry else second_geometry
 
-        if not first_geometry and not second_geometry:
-            continue
-
-        if operation == "INTERSECTION" and first_geometry and second_geometry:
-            result_geometry = first_geometry.intersection(second_geometry)
-        elif operation == "UNION":
-            if not first_geometry and second_geometry:
-                result_geometry = second_geometry
-            elif not second_geometry and first_geometry:
-                result_geometry = first_geometry
-            else:
-                result_geometry = first_geometry.union(second_geometry)
-        elif operation == "DIFFERENCE":
-            if first_geometry and not second_geometry:
-                result_geometry = first_geometry
-            elif first_geometry and second_geometry:
-                result_geometry = first_geometry.difference(second_geometry)
-            else:
-                continue
-        else:
-            continue
-
-        result_geometry_dict[slice_id] = result_geometry
+    for slice_uid in image_uids:
+        first_geometry = first_geometry_dict.get(slice_uid, Polygon())
+        second_geometry = second_geometry_dict.get(slice_uid, Polygon())
+        try:
+            result_geometry_dict[slice_uid] = geometry_manipulation[operation](first_geometry, second_geometry)
+        except KeyError:
+            raise Exception("Invalid operation string")
     return result_geometry_dict
 
 
-def scale_roi(geometry_dict, millimetres, image_uids):
+def scale_roi(geometry_dict, millimetres):
     """
     Scale the ROI using millimetres as the unit of measurement
     :param geometry_dict: The geometry dictionary of the ROI
     :param millimetres: int, positive means expansion, negative means contraction
-    :param image_uids: The list of all image uids
-    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
+    :return: A dictionary with key-value pair {slice-uid: Geometry Object}
     """
     pixel_spacing = PatientDictContainer().dataset[0].PixelSpacing[0]
-    margin_change = millimetres / pixel_spacing
+    pixel_change = millimetres / pixel_spacing
 
     result_geometry_dict = {}
-    for slice_id in image_uids:
-        geometry = geometry_dict.get(slice_id)
-        geometry = make_valid(geometry) if geometry else geometry
-        if geometry:
-            result_geometry = geometry.buffer(margin_change)
-            result_geometry_dict[slice_id] = result_geometry
+    for slice_uid in geometry_dict.keys():
+        geometry = geometry_dict.get(slice_uid)
+        result_geometry = geometry.buffer(pixel_change)
+        result_geometry_dict[slice_uid] = result_geometry
 
     return result_geometry_dict
 
 
-def rind_roi(geometry_dict, millimetres, image_uids):
+def rind_roi(geometry_dict, millimetres):
     """
     Create Inner/Outer Rind for ROI
     :param geometry_dict: The geometry dictionary of the ROI
     :param millimetres: int, positive means outer rind, negative means inner rind
-    :param image_uids: The list of all image uids
-    :return: A dictionary with key-value pair {slice-uid: Polygon/Multipolygon Object}
+    :return: A dictionary with key-value pair {slice-uid: Geometry Object}
     """
-    new_roi_dict = scale_roi(geometry_dict, millimetres, image_uids)
+    new_roi_dict = scale_roi(geometry_dict, millimetres)
 
     result_geometry_dict = {}
-    for slice_id in geometry_dict:
-        orig_geometry = geometry_dict.get(slice_id)
-        new_geometry = new_roi_dict.get(slice_id)
-        polygon_list = []
-
-        if orig_geometry.geom_type == 'MultiPolygon':
-            polygon_list += [polygon for polygon in orig_geometry]
-        else:
-            polygon_list.append(orig_geometry)
-
-        if new_geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
-            polygon_list += [polygon for polygon in new_geometry if polygon.geom_type == 'Polygon']
-        elif new_geometry.geom_type == 'Polygon':
-            polygon_list.append(new_geometry)
-
-        result_geometry = MultiPolygon(polygon_list)
-        result_geometry_dict[slice_id] = result_geometry
+    for slice_uid in geometry_dict:
+        orig_geometry = geometry_dict.get(slice_uid)
+        new_geometry = new_roi_dict.get(slice_uid)
+        # Create 2 polygons with one nested inside the other
+        polygon_list = list([orig_geometry] if orig_geometry.geom_type == 'Polygon' else orig_geometry) + \
+                       list([new_geometry] if new_geometry.geom_type == 'Polygon' else new_geometry)
+        result_geometry = GeometryCollection(polygon_list)
+        result_geometry_dict[slice_uid] = result_geometry
 
     return result_geometry_dict
 
 
-def geometry_to_roi(roi_sequence_geometry):
+def geometry_to_roi(geometry_dict):
     """
     Convert the geometry object in each image slice to ROI contour data
-    :param roi_sequence_geometry: A geometry dictionary
+    :param geometry_dict: A geometry dictionary
     :return: A dictionary with key-value pair {slice-uid: contour sequence}
     """
     roi_contour_sequence = {}
-    for slice_id, geometry in roi_sequence_geometry.items():
+    for slice_id, geometry in geometry_dict.items():
         contour_sequence = []
-        geometry_type = geometry.geom_type
-        if not geometry.is_empty:
-            if geometry_type == 'Polygon':
-                contour_data = []
-                for coord in geometry.exterior.coords:
-                    contour_data.append(list(map(int, coord)))
-                contour_sequence.append(contour_data)
-            elif geometry_type in ['MultiPolygon', 'GeometryCollection']:
-                for polygon in geometry:
-                    if polygon.geom_type == 'Polygon' and not polygon.is_empty:
-                        contour_data = []
-                        for coord in polygon.exterior.coords:
-                            contour_data.append(list(map(int, coord)))
-                        contour_sequence.append(contour_data)
-            if contour_sequence:
-                roi_contour_sequence[slice_id] = contour_sequence
+        if geometry.geom_type == 'Polygon' and not geometry.is_empty:
+            contour_data = [list(map(int, coord)) for coord in geometry.exterior.coords]
+            contour_sequence.append(contour_data)
+        elif geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
+            for sub_geometry in geometry:
+                if sub_geometry.geom_type == 'Polygon' and not sub_geometry.is_empty:
+                    contour_data = [list(map(int, coord)) for coord in sub_geometry.exterior.coords]
+                    contour_sequence.append(contour_data)
+        if contour_sequence:
+            roi_contour_sequence[slice_id] = contour_sequence
     return roi_contour_sequence

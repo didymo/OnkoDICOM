@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, 
     QLineEdit, QSizePolicy, QPushButton, \
     QLabel, QWidget, QFormLayout
 
-from src.Model import ROI, ImageLoading
+from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -390,18 +390,16 @@ class UIManipulateROIWindow:
                 [roi_1],
                 self.patient_dict_container.get("pixluts"))
             roi_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_1])
-            uid_list = ImageLoading.get_image_uid_list(
-                self.patient_dict_container.dataset)
             margin = float(self.margin_line_edit.text())
 
             if selected_operation == self.single_roi_operation_names[0]:
-                new_geometry = ROI.scale_roi(roi_geometry, margin, uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry, margin)
             elif selected_operation == self.single_roi_operation_names[1]:
-                new_geometry = ROI.scale_roi(roi_geometry, -margin, uid_list)
+                new_geometry = ROI.scale_roi(roi_geometry, -margin)
             elif selected_operation == self.single_roi_operation_names[2]:
-                new_geometry = ROI.rind_roi(roi_geometry, -margin, uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry, -margin)
             else:
-                new_geometry = ROI.rind_roi(roi_geometry, margin, uid_list)
+                new_geometry = ROI.rind_roi(roi_geometry, margin)
             self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
             self.draw_roi()
@@ -415,12 +413,9 @@ class UIManipulateROIWindow:
                 self.patient_dict_container.get("pixluts"))
             roi_1_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_1])
             roi_2_geometry = ROI.roi_to_geometry(dict_rois_contours[roi_2])
-            uid_list = ImageLoading.get_image_uid_list(
-                self.patient_dict_container.dataset)
 
             # Execute the selected operation
             new_geometry = ROI.manipulate_rois(roi_1_geometry, roi_2_geometry,
-                                               uid_list,
                                                selected_operation.upper())
             self.new_ROI_contours = ROI.geometry_to_roi(new_geometry)
 
