@@ -64,7 +64,6 @@ class TestOneViewAndFourViewsHandling:
         # Open the main window
         self.main_window = MainWindow()
 
-
 @pytest.fixture(scope="module")
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
