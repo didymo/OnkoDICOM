@@ -15,6 +15,7 @@ from src.View.mainpage.DicomCoronalView import DicomCoronalView
 from src.View.mainpage.DicomSagittalView import DicomSagittalView
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
+from src.View.mainpage.DicomView3D import DicomView3D
 from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
@@ -118,6 +119,7 @@ class UIMainWindow:
                                                      cut_line_color=QtGui.QColor(0, 255, 0))
         self.dicom_coronal_view = DicomCoronalView(roi_color=roi_color_dict, iso_color=iso_color_dict,
                                                    cut_line_color=QtGui.QColor(0, 0, 255))
+        self.three_dimension_view = DicomView3D()
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_axial_view.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -135,6 +137,7 @@ class UIMainWindow:
         self.dicom_four_views_layout.addWidget(self.dicom_axial_view, 0, 0)
         self.dicom_four_views_layout.addWidget(self.dicom_sagittal_view, 0, 1)
         self.dicom_four_views_layout.addWidget(self.dicom_coronal_view, 1, 0)
+        self.dicom_four_views_layout.addWidget(self.three_dimension_view, 1, 1)
         self.dicom_four_views.setLayout(self.dicom_four_views_layout)
 
         self.dicom_view.addWidget(self.dicom_four_views)
@@ -183,17 +186,22 @@ class UIMainWindow:
 
         layout_footer.addWidget(label_footer)
 
-    def update_views(self):
+    def update_views(self, update_3d_window=False):
         """
         This function is a slot for signals to request the updating of the DICOM View and DVH tabs in order to reflect
         changes made by other components of the main window (for example, when a structure in the structures tab is
         selected, this method needs to be called in order for the DICOM view window to be updated to show the new
         region of interest.
+
+        :param update_3d_window: a boolean to mark if 3d model
+        needs to be updated
         """
         self.dicom_single_view.update_view()
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
         self.dicom_sagittal_view.update_view()
+        if update_3d_window:
+            self.three_dimension_view.update_view()
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
 

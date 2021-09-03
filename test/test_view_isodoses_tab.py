@@ -83,6 +83,7 @@ def test_object():
     Function to pass a shared TestStructureTab object to each test.
     """
     test = TestIsodosesTab()
+
     return test
 
 
