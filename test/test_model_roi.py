@@ -190,7 +190,9 @@ def test_roi_to_geometry(test_object):
                 assert len(geometry.exterior.coords) - len(dict_rois_contours[roi_name][slice_id][0]) <= 1
             else:
                 for i in range(len(geometry)):
-                    assert len(geometry[i].exterior.coords) - len(dict_rois_contours[roi_name][slice_id][i]) <= 1
+                    if geometry.geom_type == "Polygon":
+                        assert len(geometry[i].exterior.coords) - \
+                               len(dict_rois_contours[roi_name][slice_id][i]) <= 1
 
 
 def test_roi_intersection(test_object):
@@ -202,8 +204,7 @@ def test_roi_intersection(test_object):
     liver_geometry = roi_to_geometry(dict_rois_contours['LIVER'])
     uid_list = ImageLoading.get_image_uid_list(
         test_object.patient_dict_container.dataset)
-    result_geometry = manipulate_rois(lung_r_geometry, liver_geometry,
-                                      uid_list, "INTERSECTION")
+    result_geometry = manipulate_rois(lung_r_geometry, liver_geometry, "INTERSECTION")
     result_contours = geometry_to_roi(result_geometry)
     assert len(result_contours.keys()) == 1
 

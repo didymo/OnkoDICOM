@@ -1049,8 +1049,14 @@ def geometry_to_roi(geometry_dict):
             contour_sequence.append(contour_data)
         elif geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
             for sub_geometry in geometry:
+                contour_data = []
                 if sub_geometry.geom_type == 'Polygon' and not sub_geometry.is_empty:
                     contour_data = [list(map(int, coord)) for coord in sub_geometry.exterior.coords]
+                # It is possible for MultiPolygon to be inside GeometryCollection
+                elif sub_geometry.geom_type == 'MultiPolygon':
+                    contour_data = [list(map(int, coord)) for polygon in sub_geometry
+                                    for coord in polygon.exterior.coords]
+                if contour_data:
                     contour_sequence.append(contour_data)
         if contour_sequence:
             roi_contour_sequence[slice_id] = contour_sequence
