@@ -228,6 +228,7 @@ class ClinicalDataView(QtWidgets.QWidget):
         file_path = patient_dict_container.path
         file_path = Path(file_path).joinpath("Clinical-Data-SR.dcm")
         ds = patient_dict_container.dataset[0]
-        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text)
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text,
+                                                           "CLINICAL-DATA")
         dicom_sr.save_as(file_path)
         print("Saved")
