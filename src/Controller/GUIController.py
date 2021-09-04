@@ -229,6 +229,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     def cleanup(self):
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
+        # Close 3d vtk widget
+        self.three_dimension_view.close()
 
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()

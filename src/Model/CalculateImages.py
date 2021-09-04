@@ -21,6 +21,7 @@ def convert_raw_data(ds):
             np_tmp = ds[key]
             np_tmp.convert_pixel_data()
             np_pixels.append(np_tmp._pixel_array)
+
     return np_pixels
 
 
@@ -59,6 +60,8 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     # Rescale pixel arrays
     np_pixels = np_pixels.astype(np.int16)
     if window != 0 and level != 0:
+        # Transformation applied to each individual pixel to unique
+        # contrast level
         np_pixels = (np_pixels - level) / window * 255
     else:
         max_val = np.amax(np_pixels)
@@ -70,9 +73,11 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     np_pixels = np_pixels.astype(np.int8)
 
     # Convert numpy array data to QImage for PySide6
+    bytes_per_line = np_pixels.shape[1]
     qimage = QtGui.QImage(
-        np_pixels, np_pixels.shape[1], np_pixels.shape[0],
+        np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
         QtGui.QImage.Format_Indexed8)
+
     pixmap = QtGui.QPixmap(qimage)
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
     return pixmap
@@ -107,7 +112,7 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
 
     for i in range(pixel_array_3d.shape[1]):
         dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :], window, level, coronal_width, coronal_height)
-        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width,sagittal_height)
+        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width, sagittal_height)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 

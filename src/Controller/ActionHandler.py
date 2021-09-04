@@ -315,8 +315,8 @@ class ActionHandler:
             self.moving_dict_container.set("pixmaps_coronal", fusion_coronal)
             self.moving_dict_container.set("pixmaps_sagittal", fusion_sagittal)
 
+        self.__main_page.update_views(update_3d_window=True)
 
-        self.__main_page.update_views()
 
     def anonymization_handler(self):
         """
