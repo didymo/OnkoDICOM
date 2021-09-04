@@ -343,13 +343,3 @@ class UIMainWindow:
 
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
-        
-        
-        
-        '''
-        self.image_fusion_view = DicomStackedWidget(self.format_data)
-        self.image_fusion_single_view = ImageFusionView(color=True)
-        self.image_fusion_view.addWidget(self.image_fusion_single_view)
-        self.image_fusion_view.setCurrentWidget(self.image_fusion_single_view)
-        self.image_fusion_single_view.update_view()
-        self.right_panel.addTab(self.image_fusion_view, "Image Fusion")'''

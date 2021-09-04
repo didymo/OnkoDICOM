@@ -16,10 +16,10 @@ from src.Controller.PathHandler import resource_path
 
 ###Testing###
 from src.View.ImageFusionWindow import UIImageFusionWindow
-from src.Model.MovingModel import create_moving_model
+from src.Model.MovingModel import read_images_for_fusion
 from src.Model.MovingDictContainer import MovingDictContainer
-from src.Model.ImageFusion import create_fused_model
-import SimpleITK as sitk
+
+
 
 import matplotlib.pyplot as plt
 
@@ -88,19 +88,19 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
     go_next_window = QtCore.Signal(object)
 
-    def __init__(self, default_directory=None):
-        # super(ImageFusionWindow, self).__init__()
+    def __init__(self, directory_in):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.image_fusion_info_initialized.connect(self.open_patient)
 
-    def set_up_directory(self, default_directory):
-        self.filepath = default_directory
-        self.open_patient_directory_input_box.setText(default_directory)
-        self.scan_directory_for_patient()
-
+        if directory_in is not None:
+            self.filepath = directory_in
+            self.open_patient_directory_input_box.setText(directory_in)
+            self.scan_directory_for_patient()
+        
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
+
 
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
@@ -109,7 +109,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     run_pyradiomics = QtCore.Signal(str, dict, str)
     # When the image fusion button is pressed
     image_fusion_signal = QtCore.Signal(str)
-    image_progress_window = QtCore.Signal()
+
+    # Not being used?
+    # image_progress_window = QtCore.Signal()
 
     # Initialising the main window and setting up the UI
     def __init__(self):
@@ -122,10 +124,11 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         # This is another way/method of prompting the image fusion select window
         # This handler is connected to the function below
-        self.action_handler.action_image_fusion.triggered.connect(self.open_image_fusion)
+        self.action_handler.action_image_fusion.triggered.connect(
+            self.open_image_fusion)
 
         # Connect signal from mainpage to the function located in mainpage.py
-        self.image_fusion_main_window.connect(self.create_image_fusion_tab)
+        self.image_fusion_main_window.connect(self.update_image_fusion_ui)
 
     def update_ui(self):
         create_initial_model()
@@ -134,49 +137,19 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
 
+        self.action_handler.action_image_fusion.triggered.connect(
+            self.open_image_fusion)
+
         # Add isodose tab update signal if RT Dose loaded
         patient_dict_container = PatientDictContainer()
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
-        # This will invoke load_moving_model which would then be updated by the
-        # Top Level Controller
-        print('Creating Moving Model')
-        create_moving_model()
-        print('Finished Creating Moving Model')
-        print('Fusing Images')
-        patient_dict_container = PatientDictContainer()
-        moving_dict_container = MovingDictContainer()
-
-        amount = len(patient_dict_container.filepaths)
-        orig_fusion_list = []
-
-        for i in range(amount):
-            try:
-                 orig_fusion_list.append(patient_dict_container.filepaths[i])
-            except KeyError:
-                 continue
-
-        orig_image = sitk.ReadImage(orig_fusion_list)
-
-        amount = len(moving_dict_container.filepaths)
-        new_fusion_list = []
-
-        for i in range(amount):
-            try:
-                 new_fusion_list.append(moving_dict_container.filepaths[i])
-            except KeyError:
-                 continue
-
-        new_image = sitk.ReadImage(new_fusion_list)
-
-        color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
-
-        patient_dict_container.set("color_axial", color_axial)
-        patient_dict_container.set("color_sagittal", color_sagittal)
-        patient_dict_container.set("color_coronal", color_coronal)
-
-        print('hurray')
+    def update_image_fusion_ui(self):
+        mvd = MovingDictContainer()
+        if not mvd.is_empty():
+            read_images_for_fusion()
+            self.create_image_fusion_tab()
 
     def open_new_patient(self):
         """
