@@ -33,6 +33,7 @@ class ImageFusionController:
         self.window = window
         self.image_fusion_select_window = QtWidgets.QMainWindow()
         self.image_fusion_select_window = ImageFusionWindow()
+
         self.image_fusion_select_window.go_next_window.connect(
             self.close_select_window)
 
@@ -43,11 +44,9 @@ class ImageFusionController:
         self.image_fusion_select_window.show()
 
     def close_select_window(self, progress_window):
-        print('Creating Moving Model')
+        progress_window.update_progress(("Creating Moving Model", 50))
         create_moving_model()
-        print('Finished Creating Moving Model')
-
-        progress_window.update_progress(("Loading complete!", 100))
+        progress_window.update_progress(("Finished Creating Moving Model", 60))
         progress_window.close()
 
         self.image_fusion_select_window.close()

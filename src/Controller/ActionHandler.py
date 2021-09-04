@@ -1,5 +1,7 @@
 from PySide6 import QtGui, QtWidgets, QtCore
 
+import os
+
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -20,7 +22,6 @@ class ActionHandler:
     def __init__(self, main_page):
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
-        self.moving_dict_container = MovingDictContainer()
         self.is_four_view = False
 
         ##############################
@@ -412,11 +413,12 @@ class ActionHandler:
 
     # Refers to the ImageController instantiated from the mainpage
     def image_fusion_handler(self):
+        # Initialize the moving dict container
+        self.moving_dict_container = MovingDictContainer()
              
-             
-        # print('Image Fusion Handler being called in Action Handler')
-        patient_directory_path = self.patient_dict_container.path
-        self.__main_page.image_fusion_controller.set_path(patient_directory_path)
+        print('Image Fusion Handler being called in Action Handler')
+        filepath = self.patient_dict_container.path
+        self.__main_page.image_fusion_controller.set_path(os.path.dirname(filepath))
         self.__main_page.image_fusion_controller.show_image_fusion_select_window()
 
         # self.__main_page.create_image_fusion_tab()

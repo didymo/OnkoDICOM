@@ -280,8 +280,8 @@ def write_transform_to_dcm(affine_matrix):
     spatial_registration.save_as(filepath)
 
     # Debug Statement
-    ds = dcmread(filepath, force = True)
-    print(ds)
+    # ds = dcmread(filepath, force = True)
+    # print(ds)
 
 
 def create_fused_model(old_images, new_image):

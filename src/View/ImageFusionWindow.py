@@ -303,9 +303,7 @@ class UIImageFusionWindow(object):
                 self.last_patient.setCheckState(0, Qt.CheckState.Unchecked)
                 self.last_patient.setSelected(False)
             self.last_patient = selected_patient
-
-
-
+            
         # Get the types of all selected leaves
         self.selected_series_types = set()
 
@@ -341,11 +339,6 @@ class UIImageFusionWindow(object):
         """
         Begins loading of the selected files.
         """
-        # Currently testing if it's possible to run dicom_crawler
-        # on patient directory
-        # Calls for line:380 in this file
-        # self.run_dicom_crawler()
-
         selected_files = []
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
