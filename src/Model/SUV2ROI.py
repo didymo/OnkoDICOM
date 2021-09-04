@@ -118,20 +118,28 @@ class SUV2ROI:
 
     def pet2suv(self, dataset):
         """
-        Converts DICOM PET pixel array values (which are in Bq/ml) to
-        SUV values.
+        Converts DICOM PET pixel array values to SUV values. Currently
+        only handles PET datasets in Bq/mL that are attentuation and
+        decay corrected.
         :param dataset: the DICOM PET dataset.
         :return: DICOM PET pixel data in SUV.
         """
-        # Get series and acquisition time
-        series_time = dataset.SeriesTime
-        # acquisition_time = dataset.AcquisitionTime
+        # Return if units are not Bq/mL
+        # TODO: accommodate PETs that are not in Bq/mL
+        if not dataset.Units == "BQML":
+            return None
+
+        # Return if CorrectedImage does not contain ATTN and DECY, and
+        # decay correction is not START
+        # TODO: accommodate PETs that are not attenuation and decay
+        #       corrected
+        if (["ATTN", "DECY"] not in dataset.CorrectedImage) and \
+                (dataset.DecayCorrection != "START"):
+            return None
 
         # Get radiopharmaceutical information
         radiopharmaceutical_info = \
             dataset.RadiopharmaceuticalInformationSequence[0]
-        radiopharmaceutical_start_time = \
-            radiopharmaceutical_info['RadiopharmaceuticalStartTime'].value
 
         # Calculate patient weight divided by total dose once
         if self.weight_over_dose is None:
@@ -140,35 +148,16 @@ class SUV2ROI:
             self.weight_over_dose = \
                 self.patient_weight / radionuclide_total_dose
 
-        # radionuclide_half_life = \
-        #    radiopharmaceutical_info['RadionuclideHalfLife'].value
-
         # Get rescale slope and intercept
         rescale_slope = dataset.RescaleSlope
         rescale_intercept = dataset.RescaleIntercept
 
-        # Convert series and acquisition time to seconds
-        # series_time_s = (float(series_time[0:2]) * 3600) +\
-        #                (float(series_time[2:4]) * 60) +\
-        #                float(series_time[4:6])
-        # radiopharmaceutical_start_time_s =\
-        #    (float(radiopharmaceutical_start_time[0:2]) * 3600) +\
-        #    (float(radiopharmaceutical_start_time[2:4]) * 60) +\
-        #    float(radiopharmaceutical_start_time[4:6])
-
         # Get pixel data
         pixel_array = dataset.pixel_array
 
-        # Calculate decay
-        # do not need to take decay into account if DECY in CorrectedImage
-        # decay = numpy.exp(numpy.log(2) *
-        #                  (series_time_s - radiopharmaceutical_start_time_s)
-        #                  / radionuclide_half_life)
-        decay = 1
-
         # Convert Bq/ml to SUV
-        suv = (pixel_array * rescale_slope + rescale_intercept) * decay * \
-            self.weight_over_dose
+        suv = (pixel_array * rescale_slope + rescale_intercept) \
+            * self.weight_over_dose
 
         # Return SUV data
         return suv
@@ -288,9 +277,9 @@ class SUV2ROI:
                 # Create the ROI(s)
                 print("Generating ROI for slice " + str(slider_id))
                 for array in single_array:
-                    # TODO: change "DOSE_REGION"!!
                     rtss = ROI.create_roi(dataset_rtss, item,
-                                          array, dataset, "DOSE_REGION")
+                                          [{'coords': array, 'ds': dataset}],
+                                          "")
 
                     # Save the updated rtss
                     patient_dict_container.set("dataset_rtss", rtss)
