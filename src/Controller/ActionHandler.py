@@ -20,6 +20,7 @@ class ActionHandler:
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
         self.is_four_view = False
+        self.pet_opened = False
 
         ##############################
         # Init all actions and icons #
@@ -37,18 +38,24 @@ class ActionHandler:
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
 
-        # SUV2ROI action
-        self.icon_suv2roi = QtGui.QIcon()
-        self.icon_suv2roi.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
-            QtGui.QIcon.Normal,
-            QtGui.QIcon.On
-        )
-        self.action_suv2roi = QtGui.QAction()
-        self.action_suv2roi.setIcon(self.icon_suv2roi)
-        self.action_suv2roi.setText("Convert SUV to ROI")
-        self.action_suv2roi.setIconVisibleInMenu(True)
-        self.action_suv2roi.triggered.connect(self.suv2roi_handler)
+        # SUV2ROI action - only load if dataset contains PET files
+        datasets = self.patient_dict_container.dataset
+        for ds in datasets:
+            if datasets[ds].SOPClassUID == "1.2.840.10008.5.1.4.1.1.128":
+                self.pet_opened = True
+                break
+        if self.pet_opened:
+            self.icon_suv2roi = QtGui.QIcon()
+            self.icon_suv2roi.addPixmap(
+                QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
+                QtGui.QIcon.Normal,
+                QtGui.QIcon.On
+            )
+            self.action_suv2roi = QtGui.QAction()
+            self.action_suv2roi.setIcon(self.icon_suv2roi)
+            self.action_suv2roi.setText("Convert SUV to ROI")
+            self.action_suv2roi.setIconVisibleInMenu(True)
+            self.action_suv2roi.triggered.connect(self.suv2roi_handler)
 
         # Save RTSTRUCT changes action
         self.icon_save_structure = QtGui.QIcon()
