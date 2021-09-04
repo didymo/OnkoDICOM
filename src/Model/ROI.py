@@ -4,11 +4,13 @@ import random
 from copy import deepcopy
 from pathlib import Path
 import pydicom
+from alphashape import alphashape
 from pydicom.uid import generate_uid
 from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
+from scipy.spatial.qhull import QhullError
 from shapely.geometry import Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import make_valid
 
@@ -673,7 +675,61 @@ def transform_rois_contours(axial_rois_contours):
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
                         sagittal_rois_contours[name][contour[i][0]][0].append(
                             [contour[i][1], slice_ids[slice_id]])
+
+    coronal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
+        coronal_rois_contours)
+    sagittal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
+        sagittal_rois_contours)
     return coronal_rois_contours, sagittal_rois_contours
+
+
+def convert_coordinates_map_to_polygon_of_rois(contours_map):
+    polygon_dict = {}
+    for name, contours_dict in contours_map.items():
+        polygon_dict[name] = {}
+        for slice_id, contour_array in contours_dict.items():
+            roi_array = contour_array[0]
+            hull_list = calculate_concave_hull_of_points(roi_array, alpha=0)
+            polygon_dict[name][slice_id] = hull_list
+    return polygon_dict
+
+
+def calculate_concave_hull_of_points(pixel_coords, alpha):
+    """
+        Return the alpha shape of the highlighted pixels using the alpha
+        entered by the user.
+        :param pixel_coords: the coordinates of the contour pixels
+        :return: List of lists of points ordered to form polygon(s).
+        """
+    # Get all the pixels in the drawing window's list of highlighted
+    # pixels, excluding the removed pixels.
+    target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in
+                           pixel_coords]
+    # Calculate the concave hull of the points.
+    # alpha = 0.95 * alphashape.optimizealpha(points)
+    hull = target_pixel_coords
+    try:
+        hull = alphashape(target_pixel_coords, alpha)
+    except QhullError:
+        pass
+    polygon_list = []
+    if isinstance(hull, Polygon):
+        polygon_list.append(hull_to_points(hull))
+    elif isinstance(hull, MultiPolygon):
+        for polygon in hull:
+            polygon_list.append(hull_to_points(polygon))
+    return polygon_list
+
+
+# Convert hull to points
+def hull_to_points(hull):
+    hull_xy = hull.exterior.coords.xy
+
+    points = []
+    for i in range(len(hull_xy[0])):
+        points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
+
+    return points
 
 
 def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
@@ -959,7 +1015,8 @@ def roi_to_geometry(dict_rois_contours):
 
     for slice_uid, contour_sequence in dict_rois_contours.items():
         # convert contour data to polygon omitting data with less than 3 points
-        polygon_list = [Polygon(contour_data) for contour_data in contour_sequence if len(contour_data) >= 3]
+        polygon_list = [Polygon(contour_data) for contour_data in
+                        contour_sequence if len(contour_data) >= 3]
         result_geometry = make_valid(MultiPolygon(polygon_list))
         dict_geometry[slice_uid] = result_geometry
 
@@ -988,7 +1045,8 @@ def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
         first_geometry = first_geometry_dict.get(slice_uid, Polygon())
         second_geometry = second_geometry_dict.get(slice_uid, Polygon())
         try:
-            result_geometry_dict[slice_uid] = geometry_manipulation[operation](first_geometry, second_geometry)
+            result_geometry_dict[slice_uid] = geometry_manipulation[operation](
+                first_geometry, second_geometry)
         except KeyError:
             raise Exception("Invalid operation string")
     return result_geometry_dict
@@ -1027,8 +1085,10 @@ def rind_roi(geometry_dict, millimetres):
         orig_geometry = geometry_dict.get(slice_uid)
         new_geometry = new_roi_dict.get(slice_uid)
         # Create 2 polygons with one nested inside the other
-        polygon_list = list([orig_geometry] if orig_geometry.geom_type == 'Polygon' else orig_geometry) + \
-                       list([new_geometry] if new_geometry.geom_type == 'Polygon' else new_geometry)
+        polygon_list = list([
+                                orig_geometry] if orig_geometry.geom_type == 'Polygon' else orig_geometry) + \
+                       list([
+                                new_geometry] if new_geometry.geom_type == 'Polygon' else new_geometry)
         result_geometry = GeometryCollection(polygon_list)
         result_geometry_dict[slice_uid] = result_geometry
 
@@ -1045,16 +1105,19 @@ def geometry_to_roi(geometry_dict):
     for slice_id, geometry in geometry_dict.items():
         contour_sequence = []
         if geometry.geom_type == 'Polygon' and not geometry.is_empty:
-            contour_data = [list(map(int, coord)) for coord in geometry.exterior.coords]
+            contour_data = [list(map(int, coord)) for coord in
+                            geometry.exterior.coords]
             contour_sequence.append(contour_data)
         elif geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
             for sub_geometry in geometry:
                 contour_data = []
                 if sub_geometry.geom_type == 'Polygon' and not sub_geometry.is_empty:
-                    contour_data = [list(map(int, coord)) for coord in sub_geometry.exterior.coords]
+                    contour_data = [list(map(int, coord)) for coord in
+                                    sub_geometry.exterior.coords]
                 # It is possible for MultiPolygon to be inside GeometryCollection
                 elif sub_geometry.geom_type == 'MultiPolygon':
-                    contour_data = [list(map(int, coord)) for polygon in sub_geometry
+                    contour_data = [list(map(int, coord)) for polygon in
+                                    sub_geometry
                                     for coord in polygon.exterior.coords]
                 if contour_data:
                     contour_sequence.append(contour_data)
