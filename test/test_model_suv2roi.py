@@ -121,12 +121,10 @@ def test_calculate_suv_values(test_object):
         rescale_slope = ds.RescaleSlope
         rescale_intercept = ds.RescaleIntercept
         pixel_array = ds.pixel_array
-        radiopharmaceutical_info = \
-            ds.RadiopharmaceuticalInformationSequence[0]
 
         # Convert Bq/ml to SUV
-        suv = (pixel_array * rescale_slope + rescale_intercept) * \
-              test_object.suv2roi.weight_over_dose
+        suv = (pixel_array * rescale_slope + rescale_intercept) \
+            * test_object.suv2roi.weight_over_dose
 
         # Assert that manually-generated SUV values are the same as
         # code-generated SUV values
