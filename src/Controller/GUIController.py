@@ -146,8 +146,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             self.isodoses_tab.request_update_ui.connect(self.update_ui)
 
     def update_image_fusion_ui(self):
-        read_images_for_fusion()
-        self.create_image_fusion_tab()
+        mvd = MovingDictContainer()
+        if not mvd.is_empty():
+            read_images_for_fusion()
+            self.create_image_fusion_tab()
 
     def open_new_patient(self):
         """
