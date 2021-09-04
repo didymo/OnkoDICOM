@@ -76,8 +76,8 @@ class Controller:
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
 
             # This is actually being used in GUIController
-            self.main_window.image_fusion_signal.\
-                connect(self.show_image_fusion_select_window)
+            self.main_window.image_fusion_signal.connect(
+                self.show_image_fusion_select_window)
         else:
             self.main_window.update_ui()
 
@@ -110,7 +110,12 @@ class Controller:
 
     def show_image_fusion_select_window(self, path):
         print('Open Image Fusion Select Window from Top Level Controller')
-        self.image_fusion_window = ImageFusionWindow(path)
-        self.image_fusion_window.go_next_window.connect(self.show_main_window)
+
+        # only initialize image fusion window
+        if not isinstance(self.image_fusion_window, ImageFusionWindow):
+            self.image_fusion_window = ImageFusionWindow(path)
+            self.image_fusion_window.go_next_window.connect(
+                self.show_main_window)
+
         self.image_fusion_window.show()
 
