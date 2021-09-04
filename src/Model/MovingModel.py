@@ -130,42 +130,35 @@ def create_moving_model():
 
 
 def read_images_for_fusion():
-    # This will invoke load_moving_model which would then be updated by the
-        # Top Level Controller
-        print('Creating Moving Model')
-        create_moving_model()
-        print('Finished Creating Moving Model')
-        print('Fusing Images')
-        
-        patient_dict_container = PatientDictContainer()
-        moving_dict_container = MovingDictContainer()
+    create_moving_model()
+      
+    patient_dict_container = PatientDictContainer()
+    moving_dict_container = MovingDictContainer()
 
-        amount = len(patient_dict_container.filepaths)
-        orig_fusion_list = []
+    amount = len(patient_dict_container.filepaths)
+    orig_fusion_list = []
 
-        for i in range(amount):
-            try:
-                 orig_fusion_list.append(patient_dict_container.filepaths[i])
-            except KeyError:
-                 continue
+    for i in range(amount):
+        try:
+             orig_fusion_list.append(patient_dict_container.filepaths[i])
+        except KeyError:
+             continue
 
-        orig_image = sitk.ReadImage(orig_fusion_list)
+    orig_image = sitk.ReadImage(orig_fusion_list)
 
-        amount = len(moving_dict_container.filepaths)
-        new_fusion_list = []
+    amount = len(moving_dict_container.filepaths)
+    new_fusion_list = []
 
-        for i in range(amount):
-            try:
-                 new_fusion_list.append(moving_dict_container.filepaths[i])
-            except KeyError:
-                 continue
+    for i in range(amount):
+        try:
+            new_fusion_list.append(moving_dict_container.filepaths[i])
+        except KeyError:
+            continue
 
-        new_image = sitk.ReadImage(new_fusion_list)
+    new_image = sitk.ReadImage(new_fusion_list)
 
-        color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
+    color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
 
-        patient_dict_container.set("color_axial", color_axial)
-        patient_dict_container.set("color_sagittal", color_sagittal)
-        patient_dict_container.set("color_coronal", color_coronal)
-
-        print('hurray')
+    patient_dict_container.set("color_axial", color_axial)
+    patient_dict_container.set("color_sagittal", color_sagittal)
+    patient_dict_container.set("color_coronal", color_coronal)

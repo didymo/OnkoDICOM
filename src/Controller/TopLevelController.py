@@ -81,16 +81,21 @@ class Controller:
         else:
             self.main_window.update_ui()
 
+        if isinstance(self.image_fusion_window, ImageFusionWindow):
+            progress_window.update_progress(
+                ("Registering Images...\n This may take a few minutes", 
+                95))
+            self.main_window.update_image_fusion_ui()
+            
+
         # Once the MainWindow has finished loading (which takes some time)
         # close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.main_window.show()
         self.open_patient_window.close()
+        self.image_fusion_window.close()
 
-        if isinstance(self.image_fusion_window, ImageFusionWindow):
-            self.image_fusion_window.close()
-            self.main_window.image_fusion_main_window.emit()
 
     def show_pyradi_progress(self, path, filepaths, target_path):
         """
@@ -109,8 +114,6 @@ class Controller:
         self.pyradi_progressbar.close()
 
     def show_image_fusion_select_window(self, path):
-        print('Open Image Fusion Select Window from Top Level Controller')
-
         # only initialize image fusion window
         if not isinstance(self.image_fusion_window, ImageFusionWindow):
             self.image_fusion_window = ImageFusionWindow(path)
