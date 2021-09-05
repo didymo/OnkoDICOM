@@ -98,7 +98,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             it. """
             # Convert QPixMap into Qimage
             for x_coord, y_coord in self.target_pixel_coords:
-                c = self.q_image.pixel(x_coord, y_coord)
+                x_colour, y_colour = self.inv_linear_transform(
+                    x_coord, y_coord)
+                c = self.q_image.pixel(x_colour[0], y_colour[0])
                 colors = QColor(c).getRgbF()
                 self.according_color_dict[(x_coord, y_coord)] = colors
             color = QtGui.QColor()
@@ -179,7 +181,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         # modified
         self.slice_changed = True
         clicked_x, clicked_y = self.linear_transform(clicked_x, clicked_y)
-
         according_color_dict_key_list = list(self.according_color_dict.keys())
 
         color_to_draw = QtGui.QColor()
@@ -190,10 +191,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             clicked_point = numpy.array((clicked_x, clicked_y))
             point_to_check = numpy.array((x, y))
             distance = numpy.linalg.norm(clicked_point - point_to_check)
-            if distance <= self.draw_tool_radius*(
-                    float(len(self.data))/constant.DEFAULT_WINDOW_SIZE):
+            if distance <= self.draw_tool_radius * (
+                    float(len(self.data)) / constant.DEFAULT_WINDOW_SIZE):
                 x_arr, y_arr = self.inv_linear_transform(x, y)
-                print(x, y)
                 for x_t in x_arr:
                     for y_t in y_arr:
                         self.q_image.setPixelColor(x_t, y_t,
@@ -226,11 +226,14 @@ class Drawing(QtWidgets.QGraphicsScene):
         # The roi drawn on current slice is changed after several pixels are
         # modified
         self.slice_changed = True
+        clicked_x, clicked_y = self.linear_transform(clicked_x, clicked_y)
+        scaled_tool_radius = int(self.draw_tool_radius* (
+                    float(len(self.data)) / constant.DEFAULT_WINDOW_SIZE))
 
-        min_y_bound_square = math.floor(clicked_y) - self.draw_tool_radius
-        min_x_bound_square = math.floor(clicked_x) - self.draw_tool_radius
-        max_y_bound_square = math.floor(clicked_y) + self.draw_tool_radius
-        max_x_bound_square = math.floor(clicked_x) + self.draw_tool_radius
+        min_y_bound_square = math.floor(clicked_y) - scaled_tool_radius
+        min_x_bound_square = math.floor(clicked_x) - scaled_tool_radius
+        max_y_bound_square = math.floor(clicked_y) + scaled_tool_radius
+        max_x_bound_square = math.floor(clicked_x) + scaled_tool_radius
         for y_coord in range(
                 max(self.min_y, min_y_bound_square),
                 min(self.max_y, max_y_bound_square)):
@@ -244,8 +247,10 @@ class Drawing(QtWidgets.QGraphicsScene):
                 if (self.keep_empty_pixel or
                     self.min_pixel <= self.pixel_array[y_coord][
                         x_coord] <= self.max_pixel) \
-                        and distance <= self.draw_tool_radius:
-                    c = self.q_image.pixel(x_coord, y_coord)
+                        and distance <= scaled_tool_radius:
+                    x_colour, y_colour = self.inv_linear_transform(
+                        x_coord, y_coord)
+                    c = self.q_image.pixel(x_colour[0], y_colour[0])
                     colors = QColor(c)
                     if (x_coord, y_coord) not in self.according_color_dict:
                         self.according_color_dict[
@@ -258,7 +263,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         color_to_draw.setRgb(90, 250, 175, 200)
 
         for x_coord, y_coord in points_to_color:
-            self.q_image.setPixelColor(x_coord, y_coord, color_to_draw)
+            x_arr, y_arr = self.inv_linear_transform(x_coord, y_coord)
+            for x in x_arr:
+                for y in y_arr:
+                    self.q_image.setPixelColor(x, y, color_to_draw)
         self.refresh_image()
 
     def clear_cursor(self, drawing_tool_radius):
@@ -307,8 +315,11 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         qpoint_list = []
         for point in list_of_points:
-            qpoint = QtCore.QPoint(point[0], point[1])
-            qpoint_list.append(qpoint)
+            x_arr, y_arr = self.inv_linear_transform(point[0], point[1])
+            for x in x_arr:
+                for y in y_arr:
+                    qpoint = QtCore.QPoint(x, y)
+                    qpoint_list.append(qpoint)
         if self.polygon_preview is not None:  # Erase the existing preview
             self.removeItem(self.polygon_preview)
         polygon = QtGui.QPolygonF(qpoint_list)
@@ -332,14 +343,14 @@ class Drawing(QtWidgets.QGraphicsScene):
         ):
             self.drag_position = event.pos() - self.rect.topLeft()
         super().mousePressEvent(event)
-        is_coloured = (math.floor(
-            event.scenePos().x()), math.floor(event.scenePos().y())
-                      ) in self.according_color_dict
+        x, y = self.linear_transform(
+            math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
+        is_coloured = (x, y) in self.according_color_dict
         self.is_current_pixel_coloured = is_coloured
         self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
                          self.draw_tool_radius, new_circle=True)
 
-        if self.is_current_pixel_coloured:
+        if not self.is_current_pixel_coloured:
             self.fill_pixels_within_circle(event.scenePos().x(),
                                            event.scenePos().y())
         else:
@@ -358,7 +369,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.cursor and self.isPressed:
             self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
                              self.draw_tool_radius)
-            if self.is_current_pixel_coloured:
+            if not self.is_current_pixel_coloured:
                 self.fill_pixels_within_circle(event.scenePos().x(),
                                                event.scenePos().y())
             else:
