@@ -131,11 +131,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
 
-        # Add isodose tab update signal if RT Dose loaded
-        patient_dict_container = PatientDictContainer()
-        if patient_dict_container.has_modality("rtdose"):
-            self.isodoses_tab.request_update_ui.connect(self.update_ui)
-
     def open_new_patient(self):
         """
         Function to handle the Open patient button being clicked
