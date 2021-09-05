@@ -131,7 +131,7 @@ def create_moving_model():
 
 def read_images_for_fusion():
     create_moving_model()
-      
+    
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
 

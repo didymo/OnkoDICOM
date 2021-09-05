@@ -21,7 +21,6 @@ from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 
-from src.Controller.ImageFusionController import ImageFusionController
 from src.View.mainpage.ImageFusionView import ImageFusionView
 from src.Model.MovingDictContainer import MovingDictContainer
 
@@ -51,7 +50,6 @@ class UIMainWindow:
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
-        self.image_fusion_controller = ImageFusionController(self)
 
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
