@@ -15,8 +15,7 @@ from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DicomAxialView import DicomAxialView
-from src.View.mainpage.DrawROIWindow.Drawing import Drawing, \
-    linear_transform, inv_linear_transform
+from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import \
     SaveROIProgressWindow
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
