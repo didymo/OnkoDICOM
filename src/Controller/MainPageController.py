@@ -1003,8 +1003,11 @@ class Transect(QtWidgets.QGraphicsScene):
     def get_distances(self):
         for i, j in self.points:
             if i in range(constant.DEFAULT_WINDOW_SIZE) and j in range(constant.DEFAULT_WINDOW_SIZE):
+                x, y = self.transect_linear_transform(i, j)
+                x_2, y_2 = self.transect_linear_transform(
+                    round(self.pos2.x()), round(self.pos2.y()))
                 self.distances.append(self.calculate_distance(
-                    i, j, round(self.pos2.x()), round(self.pos2.y())))
+                    x, y, x_2, y_2))
         self.distances.reverse()
 
     # This function handles the closing event of the transect graph
