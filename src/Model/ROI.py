@@ -12,9 +12,7 @@ from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 
-from src.View.mainpage.DrawROIWindow.Drawing import linear_transform, \
-    inv_linear_transform
-
+from src.View.mainpage.DrawROIWindow.Drawing import inv_linear_transform
 
 def rename_roi(rtss, roi_id, new_name):
     """
@@ -644,7 +642,6 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     pixel_list = dict_rois_contours[curr_roi][curr_slice]
     patient_dict_container = PatientDictContainer()
     dataset = patient_dict_container.dataset[0]
-
 
     for i in range(len(pixel_list)):
         list_qpoints = []
