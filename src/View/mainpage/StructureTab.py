@@ -152,8 +152,8 @@ class StructureTab(QtWidgets.QWidget):
 
         layout_roi_buttons = QtWidgets.QVBoxLayout(self.roi_buttons)
         layout_roi_buttons.setContentsMargins(0, 0, 0, 0)
-        layout_roi_buttons.addWidget(self.button_roi_manipulate)
         layout_roi_buttons.addWidget(self.button_roi_draw)
+        layout_roi_buttons.addWidget(self.button_roi_manipulate)
         layout_roi_buttons.addWidget(self.button_roi_delete)
 
     def update_ui(self):
