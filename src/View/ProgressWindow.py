@@ -57,8 +57,8 @@ class ProgressWindow(QDialog):
         self.exec_()
 
     def start_load_moving_image(self, selected_files):
-        image_loader = ImageLoader(selected_files, None, self)
-        worker = Worker(image_loader.load_moving_image,
+        image_loader = ImageLoader("moving", selected_files, None, self)
+        worker = Worker(image_loader.load,
                         self.interrupt_flag, progress_callback=True)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)
