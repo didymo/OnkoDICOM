@@ -83,8 +83,8 @@ class Controller:
 
         if isinstance(self.image_fusion_window, ImageFusionWindow):
             progress_window.update_progress(
-                ("Registering Images...\n This may take a few minutes", 
-                95))
+                ("Registering Images...\nThis may take a few minutes.", 
+                90))
             self.main_window.update_image_fusion_ui()
             
 

@@ -1,6 +1,7 @@
 import os
 import platform
 from pathlib import Path
+from src.Model.MovingModel import create_moving_model
 
 from PySide6 import QtCore
 from pydicom import dcmread
@@ -267,6 +268,12 @@ class ImageLoader(QtCore.QObject):
                 return True
             else:
                 return True
+
+        progress_callback.emit(("Loading Moving Model", 85))        
+        create_moving_model()
+        if interrupt_flag.is_set():  # Stop loading.
+            progress_callback.emit(("Stopping", 85)) 
+            return False
 
         return True
 

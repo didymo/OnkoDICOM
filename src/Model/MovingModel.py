@@ -18,9 +18,10 @@ from src.Model.ImageFusion import create_fused_model
 
 def create_moving_model():
     """
-    This function initializes all the attributes in the PatientDictContainer model required for the operation of the
-    main window. This should be called before the main window's components are constructed, but after the initial
-    values of the PatientDictContainer instance are set (i.e. dataset and filepaths).
+    This function initializes all the attributes in the MovingDictContainer model 
+    required for the operation of the main window. This should be called before the 
+    main window's components are constructed, but after the initial
+    values of the MovingDictContainer instance are set (i.e. dataset and filepaths).
     """
     ##############################
     #  LOAD PATIENT INFORMATION  #
@@ -130,8 +131,6 @@ def create_moving_model():
 
 
 def read_images_for_fusion():
-    create_moving_model()
-    
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
 
