@@ -145,7 +145,6 @@ class ImageLoader(QtCore.QObject):
         if self.dict_type == "moving":
             progress_callback.emit(("Loading Moving Model", 85))        
             create_moving_model()
-            progress_callback.emit(("Finished loading Moving Model", 87))  
             if interrupt_flag.is_set():  # Stop loading.
                 progress_callback.emit(("Stopping", 85)) 
                 return False 

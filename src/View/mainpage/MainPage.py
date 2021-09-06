@@ -21,7 +21,9 @@ from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 
-from src.View.mainpage.ImageFusionView import ImageFusionView
+from src.View.mainpage.ImageFusionAxialView import ImageFusionAxialView
+from src.View.mainpage.ImageFusionSagittalView import ImageFusionSagittalView
+from src.View.mainpage.ImageFusionCoronalView import ImageFusionCoronalView
 from src.Model.MovingDictContainer import MovingDictContainer
 
 from src.Controller.PathHandler import resource_path
@@ -221,16 +223,17 @@ class UIMainWindow:
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
         self.dicom_sagittal_view.update_view()
+
         if update_3d_window:
             self.three_dimension_view.update_view()
+
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
-        
-        # self.image_fusion_view_single_view.update_view(color=True)
+
         if hasattr(self, 'image_fusion_view'):
-            self.image_fusion_view_axial.update_view(color=True)
-            self.image_fusion_view_coronal.update_view(color=True)
-            self.image_fusion_view_sagittal.update_view(color=True)
+            self.image_fusion_view_axial.update_view(cut_line_color=True)
+            self.image_fusion_view_coronal.update_view(cut_line_color=True)
+            self.image_fusion_view_sagittal.update_view(cut_line_color=True)
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or self.dicom_axial_view.vertical_view is None or\
@@ -296,31 +299,18 @@ class UIMainWindow:
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
 
-        # Hide left panel if no rtss or rtdose
-        if not moving_dict_container.has_modality("rtss") and not moving_dict_container.has_modality("rtdose"):
-            self.left_panel.hide()
-
-        roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
-        iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
-
-        # Add it to the panel
-        # Create an Image Fusion View containing single-slice and 3-slice views
-        # Add structures tab to left panel
-        
         self.image_fusion_view = QStackedWidget()
-        
-        print("Create Image Fusion Tab")
-        self.image_fusion_view_axial = ImageFusionView(format_metadata=False, color=True)
-        self.image_fusion_view_sagittal = ImageFusionView(slice_view="sagittal", color=True)
-        self.image_fusion_view_coronal = ImageFusionView(slice_view="coronal", color=True)
+        self.image_fusion_view_axial = ImageFusionAxialView(metadata_formatted=True, cut_line_color=True)
+        self.image_fusion_view_sagittal = ImageFusionSagittalView(cut_line_color=True)
+        self.image_fusion_view_coronal = ImageFusionCoronalView(cut_line_color=True)
         
         # Rescale the size of the scenes inside the 3-slice views
-        self.image_fusion_view_axial.zoom = 0.5
-        self.image_fusion_view_sagittal.zoom = 0.5
-        self.image_fusion_view_coronal.zoom = 0.5
-        self.image_fusion_view_axial.update_view(zoom_change = True, color=True)
-        self.image_fusion_view_sagittal.update_view(zoom_change=True, color=True)
-        self.image_fusion_view_coronal.update_view(zoom_change=True, color=True)
+        self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.image_fusion_view_axial.update_view(zoom_change = True, cut_line_color=True)
+        self.image_fusion_view_sagittal.update_view(zoom_change=True, cut_line_color=True)
+        self.image_fusion_view_coronal.update_view(zoom_change=True, cut_line_color=True)
 
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
@@ -332,12 +322,11 @@ class UIMainWindow:
         self.image_fusion_four_views_layout.addWidget(self.image_fusion_view_coronal, 1, 0)
         self.image_fusion_four_views.setLayout(self.image_fusion_four_views_layout)
         
-        self.image_fusion_single_view = ImageFusionView(color=True)
+        self.image_fusion_single_view = ImageFusionAxialView(metadata_formatted=False, cut_line_color=True)
         
         self.image_fusion_view.addWidget(self.image_fusion_four_views)
         self.image_fusion_view.addWidget(self.image_fusion_single_view)
         self.image_fusion_view.setCurrentWidget(self.image_fusion_four_views)
-        
 
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
