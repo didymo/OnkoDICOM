@@ -11,6 +11,7 @@ from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.constants import DEFAULT_WINDOW_SIZE
 
 from src.View.mainpage.DrawROIWindow.Drawing import inv_linear_transform
 
@@ -647,13 +648,17 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
         list_qpoints = []
         contour = pixel_list[i]
         for point in contour:
-            x_t, y_t = inv_linear_transform(
-                point[0], point[1],
-                dataset['Rows'].value, dataset['Columns'].value)
-            for x in x_t:
-                for y in y_t:
-                    curr_qpoint = QtCore.QPoint(x, y * pixmap_aspect)
-                    list_qpoints.append(curr_qpoint)
+            if dataset['Rows'].value != DEFAULT_WINDOW_SIZE:
+                x_t, y_t = inv_linear_transform(
+                    point[0], point[1],
+                    dataset['Rows'].value, dataset['Columns'].value)
+                for x in x_t:
+                    for y in y_t:
+                        curr_qpoint = QtCore.QPoint(x, y * pixmap_aspect)
+                        list_qpoints.append(curr_qpoint)
+            else:
+                curr_qpoint = QtCore.QPoint(point[0], point[1] * pixmap_aspect)
+                list_qpoints.append(curr_qpoint)
         curr_polygon = QtGui.QPolygonF(list_qpoints)
         list_polygons.append(curr_polygon)
     return list_polygons
