@@ -1,10 +1,8 @@
-import platform, threading
+import platform
 from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
-from src.Model import DICOMDirectorySearch
 from src.Controller.BatchProcessingController import BatchProcessingController
-from src.Model.Worker import Worker
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 
@@ -122,11 +120,6 @@ class UIBatchProcessingWindow(object):
         self.info_label = QtWidgets.QLabel(info_text)
         self.info_label.setFont(label_font)
 
-        # Refresh button
-        self.refresh_button = QtWidgets.QPushButton("Refresh")
-        self.refresh_button.setObjectName("NormalButton")
-        self.refresh_button.setStyleSheet(self.stylesheet)
-
         # Back button
         self.back_button = QtWidgets.QPushButton("Exit")
         self.back_button.setObjectName("BatchExitButton")
@@ -164,7 +157,6 @@ class UIBatchProcessingWindow(object):
 
         # Add bottom widgets (buttons)
         self.bottom_layout.addWidget(self.info_label, 0, 0, 2, 4)
-        self.bottom_layout.addWidget(self.refresh_button, 2, 0, 1, 1)
         self.bottom_layout.addWidget(self.back_button, 2, 2, 1, 1)
         self.bottom_layout.addWidget(self.confirm_button, 2, 3, 1, 1)
         self.layout.addLayout(self.bottom_layout)
