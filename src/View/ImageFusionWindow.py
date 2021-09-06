@@ -371,6 +371,7 @@ class UIImageFusionWindow(object):
             self.open_patient_window_confirm_button.setDisabled(True)
         elif 'RTDOSE' in self.selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
+            self.open_patient_window_confirm_button.setDisabled(True)
         else:
             header = ""
         self.open_patient_window_patients_tree.setHeaderLabel(header)

@@ -233,12 +233,16 @@ def write_transform_to_dcm(affine_matrix):
     # Create Reference Image Sequence items
     reference_image_sequences = []
     for x in range(len(moving_dict_container.dataset.keys())):
-        reference_image_sequence_item = pydicom.dataset.Dataset()
-        reference_image_sequence_item.ReferencedSOPClassUID = \
-            moving_dict_container.dataset[x].SOPClassUID
-        reference_image_sequence_item.ReferencedSOPInstanceUID = \
-            moving_dict_container.dataset[x].SOPInstanceUID
-        reference_image_sequences.append(reference_image_sequence_item)
+
+        try:
+            reference_image_sequence_item = pydicom.dataset.Dataset()
+            reference_image_sequence_item.ReferencedSOPClassUID = \
+                moving_dict_container.dataset[x].SOPClassUID
+            reference_image_sequence_item.ReferencedSOPInstanceUID = \
+                moving_dict_container.dataset[x].SOPInstanceUID
+            reference_image_sequences.append(reference_image_sequence_item)
+        except:
+            continue
 
     registration_sequence = pydicom.dataset.Dataset()
     registration_sequence.ReferencedImageSequence = reference_image_sequences
