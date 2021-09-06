@@ -19,6 +19,7 @@ from src.View.mainpage.ClinicalDataDisplay import Ui_CD_Display
 from src.View.mainpage.ClinicalDataForm import Ui_Form
 from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Transform import linear_transform
 from src.Controller.PathHandler import resource_path
 
 matplotlib.cbook.handle_exceptions = "print"  # default
@@ -988,24 +989,22 @@ class Transect(QtWidgets.QGraphicsScene):
     # drawn line from the dataset
     def get_values(self):
         for i, j in self.points:
-            if i in range(constant.DEFAULT_WINDOW_SIZE) and j in range(constant.DEFAULT_WINDOW_SIZE):
-                x, y = self.transect_linear_transform(i, j)
+            if i in range(constant.DEFAULT_WINDOW_SIZE) \
+                    and j in range(constant.DEFAULT_WINDOW_SIZE):
+                x, y = linear_transform(
+                    i, j, len(self.data), len(self.data[0]))
                 self.values.append(self.data[x][y])
-
-    # This function performs a linear transformation on the transect input if
-    # the default window size != pixel size
-    def transect_linear_transform(self, x, y):
-        m_x = float(len(self.data))/constant.DEFAULT_WINDOW_SIZE
-        m_y = float(len(self.data[0]))/constant.DEFAULT_WINDOW_SIZE
-        return int(m_x*x), int(m_y*y)
 
     # Get the distance of each point from the end of the line
     def get_distances(self):
         for i, j in self.points:
-            if i in range(constant.DEFAULT_WINDOW_SIZE) and j in range(constant.DEFAULT_WINDOW_SIZE):
-                x, y = self.transect_linear_transform(i, j)
-                x_2, y_2 = self.transect_linear_transform(
-                    round(self.pos2.x()), round(self.pos2.y()))
+            if i in range(constant.DEFAULT_WINDOW_SIZE) \
+                    and j in range(constant.DEFAULT_WINDOW_SIZE):
+                x, y = linear_transform(i, j,
+                                        len(self.data), len(self.data[0]))
+                x_2, y_2 = linear_transform(
+                    round(self.pos2.x()), round(self.pos2.y()),
+                    len(self.data), len(self.data[0]))
                 self.distances.append(self.calculate_distance(
                     x, y, x_2, y_2))
         self.distances.reverse()

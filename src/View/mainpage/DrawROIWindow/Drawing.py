@@ -7,6 +7,8 @@ from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
 
 import src.constants as constant
 from src.constants import DEFAULT_WINDOW_SIZE
+from src.Model.Transform import linear_transform, get_pixel_coords, \
+    get_first_entry
 
 
 # noinspection PyAttributeOutsideInit
@@ -83,8 +85,8 @@ class Drawing(QtWidgets.QGraphicsScene):
             else:
                 self.min_x = 0
                 self.min_y = 0
-                self.max_x = data_set.Rows
-                self.max_y = data_set.Columns
+                self.max_x = self.rows
+                self.max_y = self.cols
 
             """pixel_array is a 2-Dimensional array containing all pixel 
             coordinates of the q_image. pixel_array[x][y] will return the 
@@ -103,31 +105,21 @@ class Drawing(QtWidgets.QGraphicsScene):
             creates a new layer over the existing image instead of replacing 
             it. """
             # Convert QPixMap into Qimage
-            if self.different_sizes:
-                for x_coord, y_coord in self.target_pixel_coords:
-                    x_colour, y_colour = inv_linear_transform(
-                        x_coord, y_coord, self.rows, self.cols)
-                    c = self.q_image.pixel(x_colour[0], y_colour[0])
-                    colors = QColor(c).getRgbF()
-                    self.according_color_dict[(x_coord, y_coord)] = colors
-            else:
-                for x_coord, y_coord in self.target_pixel_coords:
-                    c = self.q_image.pixel(x_coord, y_coord)
-                    colors = QColor(c).getRgbF()
-                    self.according_color_dict[(x_coord, y_coord)] = colors
+            for x_coord, y_coord in self.target_pixel_coords:
+                temp = set()
+                temp.add((x_coord, y_coord))
+                points = get_pixel_coords(temp, self.rows, self.cols)
+                temp_2 = get_first_entry(points)
+                c = self.q_image.pixel(temp_2[0], temp_2[1])
+                colors = QColor(c).getRgbF()
+                self.according_color_dict[(x_coord, y_coord)] = colors
 
             color = QtGui.QColor()
             color.setRgb(90, 250, 175, 200)
-            if self.different_sizes:
-                for x_coord, y_coord in self.according_color_dict:
-                    x_arr, y_arr = inv_linear_transform(
-                        x_coord, y_coord, self.rows, self.cols)
-                    for x in x_arr:
-                        for y in y_arr:
-                            self.q_image.setPixelColor(x, y, color)
-            else:
-                for x_coord, y_coord in self.according_color_dict:
-                    self.q_image.setPixelColor(x_coord, y_coord, color)
+            points = get_pixel_coords(self.according_color_dict, self.rows,
+                                      self.cols)
+            for x_coord, y_coord in points:
+                self.q_image.setPixelColor(x_coord, y_coord, color)
 
             self.refresh_image()
 
@@ -190,48 +182,30 @@ class Drawing(QtWidgets.QGraphicsScene):
         color_to_draw = QtGui.QColor()
         color_to_draw.setRgb(90, 250, 175, 200)
 
-        if self.different_sizes:
-            for x, y in according_color_dict_key_list:
-                colors = self.according_color_dict[(x, y)]
-                clicked_point = numpy.array((clicked_x, clicked_y))
-                point_to_check = numpy.array((x, y))
-                distance = numpy.linalg.norm(clicked_point - point_to_check)
-                if distance <= self.draw_tool_radius * (
-                        float(self.rows) / DEFAULT_WINDOW_SIZE):
-                    x_arr, y_arr = inv_linear_transform(
-                        x, y, self.rows, self.cols)
-                    for x_t in x_arr:
-                        for y_t in y_arr:
-                            self.q_image.setPixelColor(x_t, y_t,
-                                                       QColor.fromRgbF(
-                                                           colors[0],
-                                                           colors[1],
-                                                           colors[2],
-                                                           colors[3]))
-                    self.target_pixel_coords.remove((x, y))
-                    self.according_color_dict.pop((x, y))
-                    # The roi drawn on current slice is changed after several
-                    # pixels are modified
-                    self.slice_changed = True
-        else:
-            for x, y in according_color_dict_key_list:
-                colors = self.according_color_dict[(x, y)]
-                clicked_point = numpy.array((clicked_x, clicked_y))
-                point_to_check = numpy.array((x, y))
-                distance = numpy.linalg.norm(clicked_point - point_to_check)
-                if distance <= self.draw_tool_radius * (
-                        float(self.rows) / DEFAULT_WINDOW_SIZE):
-                    self.q_image.setPixelColor(x, y,
-                                               QColor.fromRgbF(colors[0],
-                                                               colors[1],
-                                                               colors[2],
-                                                               colors[3]))
-
-                    self.target_pixel_coords.remove((x, y))
-                    self.according_color_dict.pop((x, y))
-                    # The roi drawn on current slice is changed after several
-                    # pixels are modified
-                    self.slice_changed = True
+        for x, y in according_color_dict_key_list:
+            colors = self.according_color_dict[(x, y)]
+            clicked_point = numpy.array((clicked_x, clicked_y))
+            point_to_check = numpy.array((x, y))
+            distance = numpy.linalg.norm(clicked_point - point_to_check)
+            if distance <= self.draw_tool_radius * (
+                    float(self.rows) / DEFAULT_WINDOW_SIZE):
+                temp = set()
+                temp.add((x, y))
+                points = get_pixel_coords(temp,
+                                          self.rows,
+                                          self.cols)
+                for x_t, y_t in points:
+                    self.q_image.setPixelColor(x_t, y_t,
+                                               QColor.fromRgbF(
+                                                   colors[0],
+                                                   colors[1],
+                                                   colors[2],
+                                                   colors[3]))
+                self.target_pixel_coords.remove((x, y))
+                self.according_color_dict.pop((x, y))
+                # The roi drawn on current slice is changed after several
+                # pixels are modified
+                self.slice_changed = True
 
         self.refresh_image()
 
@@ -260,70 +234,40 @@ class Drawing(QtWidgets.QGraphicsScene):
         min_x_bound_square = math.floor(clicked_x) - scaled_tool_radius
         max_y_bound_square = math.floor(clicked_y) + scaled_tool_radius
         max_x_bound_square = math.floor(clicked_x) + scaled_tool_radius
-        if self.different_sizes:
-            for y_coord in range(
-                    max(self.min_y, min_y_bound_square),
-                    min(self.max_y, max_y_bound_square)):
-                for x_coord in range(
-                        max(self.min_x, min_x_bound_square),
-                        min(self.max_x, max_x_bound_square)):
-                    clicked_point = numpy.array((clicked_x, clicked_y))
-                    point_to_check = numpy.array((x_coord, y_coord))
-                    distance = numpy.linalg.norm(
-                        clicked_point - point_to_check)
+        for y_coord in range(
+                max(self.min_y, min_y_bound_square),
+                min(self.max_y, max_y_bound_square)):
+            for x_coord in range(
+                    max(self.min_x, min_x_bound_square),
+                    min(self.max_x, max_x_bound_square)):
+                clicked_point = numpy.array((clicked_x, clicked_y))
+                point_to_check = numpy.array((x_coord, y_coord))
+                distance = numpy.linalg.norm(
+                    clicked_point - point_to_check)
 
-                    if (self.keep_empty_pixel or
-                        self.min_pixel <= self.pixel_array[y_coord][
-                            x_coord] <= self.max_pixel) \
-                            and distance <= scaled_tool_radius:
-                        x_colour, y_colour = inv_linear_transform(
-                                x_coord, y_coord,
-                                self.rows, self.cols)
-                        c = self.q_image.pixel(x_colour[0], y_colour[0])
-                        colors = QColor(c)
-                        if (x_coord, y_coord) not in self.according_color_dict:
-                            self.according_color_dict[
-                                (x_coord, y_coord)] = colors.getRgbF()
-                            points_to_color.add((x_coord, y_coord))
-                            self.target_pixel_coords.add((x_coord, y_coord))
+                if (self.keep_empty_pixel or
+                    self.min_pixel <= self.pixel_array[y_coord][
+                        x_coord] <= self.max_pixel) \
+                        and distance <= scaled_tool_radius:
+                    temp = set()
+                    temp.add((x_coord, y_coord))
+                    points = get_pixel_coords(temp, self.rows, self.cols)
+                    temp_2 = get_first_entry(points)
+                    c = self.q_image.pixel(temp_2[0], temp_2[1])
+                    colors = QColor(c)
+                    if (x_coord, y_coord) not in self.according_color_dict:
+                        self.according_color_dict[
+                            (x_coord, y_coord)] = colors.getRgbF()
+                        points_to_color.add((x_coord, y_coord))
+                        self.target_pixel_coords.add((x_coord, y_coord))
 
-        else:
-            for y_coord in range(
-                    max(self.min_y, min_y_bound_square),
-                    min(self.max_y, max_y_bound_square)):
-                for x_coord in range(
-                        max(self.min_x, min_x_bound_square),
-                        min(self.max_x, max_x_bound_square)):
-                    clicked_point = numpy.array((clicked_x, clicked_y))
-                    point_to_check = numpy.array((x_coord, y_coord))
-                    distance = numpy.linalg.norm(
-                        clicked_point - point_to_check)
-
-                    if (self.keep_empty_pixel or
-                        self.min_pixel <= self.pixel_array[y_coord][
-                            x_coord] <= self.max_pixel) \
-                            and distance <= scaled_tool_radius:
-                        c = self.q_image.pixel(x_coord, y_coord)
-                        colors = QColor(c)
-                        if (x_coord, y_coord) not in self.according_color_dict:
-                            self.according_color_dict[
-                                (x_coord, y_coord)] = colors.getRgbF()
-                            points_to_color.add((x_coord, y_coord))
-                            self.target_pixel_coords.add((x_coord, y_coord))
         # Color to draw
         color_to_draw = QtGui.QColor()
         color_to_draw.setRgb(90, 250, 175, 200)
 
-        if self.different_sizes:
-            for x_coord, y_coord in points_to_color:
-                x_arr, y_arr = inv_linear_transform(
-                    x_coord, y_coord, self.rows, self.cols)
-                for x in x_arr:
-                    for y in y_arr:
-                        self.q_image.setPixelColor(x, y, color_to_draw)
-        else:
-            for x_coord, y_coord in points_to_color:
-                self.q_image.setPixelColor(x_coord, y_coord, color_to_draw)
+        points = get_pixel_coords(points_to_color, self.rows, self.cols)
+        for x_coord, y_coord in points:
+            self.q_image.setPixelColor(x_coord, y_coord, color_to_draw)
         self.refresh_image()
 
     def clear_cursor(self, drawing_tool_radius):
@@ -371,18 +315,10 @@ class Drawing(QtWidgets.QGraphicsScene):
         of points ordered to form a polygon.
         """
         qpoint_list = []
-        if self.different_sizes:
-            for point in list_of_points:
-                x_arr, y_arr = inv_linear_transform(
-                    point[0], point[1], self.rows, self.cols)
-                for x in x_arr:
-                    for y in y_arr:
-                        qpoint = QtCore.QPoint(x, y)
-                        qpoint_list.append(qpoint)
-        else:
-            for point in list_of_points:
-                qpoint = QtCore.QPoint(point[0], point[1])
-                qpoint_list.append(qpoint)
+        points = get_pixel_coords(list_of_points, self.rows, self.cols)
+        for x, y in points:
+            qpoint = QtCore.QPoint(x, y)
+            qpoint_list.append(qpoint)
 
         if self.polygon_preview is not None:  # Erase the existing preview
             self.removeItem(self.polygon_preview)
@@ -415,7 +351,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
                          self.draw_tool_radius, new_circle=True)
 
-        if not self.is_current_pixel_coloured:
+        if self.is_current_pixel_coloured:
             self.fill_pixels_within_circle(event.scenePos().x(),
                                            event.scenePos().y())
         else:
@@ -434,7 +370,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         if self.cursor and self.isPressed:
             self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
                              self.draw_tool_radius)
-            if not self.is_current_pixel_coloured:
+            if self.is_current_pixel_coloured:
                 self.fill_pixels_within_circle(event.scenePos().x(),
                                                event.scenePos().y())
             else:
@@ -451,20 +387,3 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.drag_position = QtCore.QPoint()
         super().mouseReleaseEvent(event)
         self.update()
-
-
-# These functions scale window input to Image Size
-def linear_transform(x, y, m1, m2):
-    m_x = float(m1) / constant.DEFAULT_WINDOW_SIZE
-    m_y = float(m2) / constant.DEFAULT_WINDOW_SIZE
-    return int(m_x * x), int(m_y * y)
-
-
-def inv_linear_transform(x, y, m1, m2):
-    m_x = float(constant.DEFAULT_WINDOW_SIZE) / m1
-    m_y = float(constant.DEFAULT_WINDOW_SIZE) / m2
-    x_min = int(m_x * x)
-    x_max = int(m_x * (x + 1))
-    y_min = int(m_y * y)
-    y_max = int(m_y * (y + 1))
-    return numpy.arange(x_min, x_max), numpy.arange(y_min, y_max)
