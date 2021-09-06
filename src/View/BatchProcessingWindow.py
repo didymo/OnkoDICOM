@@ -90,8 +90,8 @@ class UIBatchProcessingWindow(object):
         self.directory_input = QtWidgets.QLineEdit()
         self.directory_input.setText(self.file_path)
         self.directory_input.textChanged.connect(self.line_edit_changed)
-        self.directory_input.returnPressed.connect(
-            self.scan_directory_for_patients)
+        #self.directory_input.returnPressed.connect(
+        #    self.scan_directory_for_patients)
         self.directory_input.setStyleSheet(self.stylesheet)
 
         # Browse button
@@ -136,7 +136,6 @@ class UIBatchProcessingWindow(object):
         # Confirm button
         self.confirm_button = QtWidgets.QPushButton("Confirm")
         self.confirm_button.setObjectName("ConfirmButton")
-        self.confirm_button.setEnabled(False)
         self.confirm_button.setStyleSheet(self.stylesheet)
         self.confirm_button.setProperty("QPushButtonClass", "success-button")
 
@@ -173,15 +172,10 @@ class UIBatchProcessingWindow(object):
         # Connect buttons to functions
         self.browse_button.clicked.connect(self.show_file_browser)
         self.confirm_button.clicked.connect(self.confirm_button_clicked)
-        self.refresh_button.clicked.connect(self.scan_directory_for_patients)
         self.back_button.clicked.connect(lambda: QtCore.QCoreApplication.exit(0))
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)
-
-        # Variables to store the DICOM structure and the thread
-        self.dicom_structure = {}
-        self.threadpool = QtCore.QThreadPool()
 
     def show_file_browser(self):
         """
@@ -204,58 +198,13 @@ class UIBatchProcessingWindow(object):
 
         # Update directory text
         self.directory_input.setText(self.file_path)
-        self.scan_directory_for_patients()
 
     def line_edit_changed(self):
         """
         When the line edit box is changed, update related fields.
         """
-        self.confirm_button.setEnabled(False)
         self.file_path = self.directory_input.text()
-
-    def search_progress(self):
-        """
-        Sets the patient label text.
-        """
-        self.patient_label.setText("Loading files .. ")
-
-    def scan_directory_for_patients(self):
-        """
-        Scans the selected directory for DICOM patients.
-        """
-        self.confirm_button.setEnabled(False)
-        if self.file_path != "":
-            interrupt_flag = threading.Event()
-
-            # Then, create a new thread that will load the selected folder
-            worker = Worker(DICOMDirectorySearch.get_dicom_structure,
-                            self.file_path,
-                            interrupt_flag, progress_callback=True)
-
-            worker.signals.result.connect(self.on_search_complete)
-            worker.signals.progress.connect(self.search_progress)
-
-            # Execute the thread
-            self.threadpool.start(worker)
-        else:
-            self.patient_label.setText("No patients in the selected directory")
-
-    def on_search_complete(self, dicom_structure):
-        """
-        Executes once the directory search is complete.
-        :param dicom_structure: DICOMStructure object constructed by the
-                                directory search.
-        """
-        # dicom_structure will be None if function was interrupted
-        if dicom_structure is None:
-            return
-        self.confirm_button.setEnabled(True)
-
-        self.patient_count = len(dicom_structure.patients)
-        text = "There are {} patient(s) in this directory".format(
-            self.patient_count)
-        self.patient_label.setText(text)
-        self.dicom_structure = dicom_structure
+        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
 
     def confirm_button_clicked(self):
         """
@@ -272,6 +221,11 @@ class UIBatchProcessingWindow(object):
         # Save the changed settings
         self.iso2roi_tab.save_isodoses()
 
+        file_directories = {
+            "batch_path": self.file_path,
+            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location()
+        }
+
         batch_processing_controller =\
-            BatchProcessingController(self.dicom_structure, selected_processes)
+            BatchProcessingController(file_directories, selected_processes)
         batch_processing_controller.start_processing()

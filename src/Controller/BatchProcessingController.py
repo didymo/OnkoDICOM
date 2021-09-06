@@ -4,13 +4,16 @@ from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 
+from src.Model import DICOMDirectorySearch
+import os
+
 
 class BatchProcessingController:
     """
     This class is the controller for batch processing. It starts and
     ends processes, and controls the progress window.
     """
-    def __init__(self, dicom_structure, processes):
+    def __init__(self, file_paths, processes):
         """
         Class initialiser function.
         :param dicom_structure: DICOMStructure object containing each
@@ -18,21 +21,80 @@ class BatchProcessingController:
         :param processes: list of processes to be done to the patients
                           selected.
         """
-        self.dicom_structure = dicom_structure
+        self.batch_path = file_paths.get('batch_path')
+        self.dvh_output_path = file_paths.get('dvh_output_path')
         self.processes = processes
-
-        # Create progress window and connect signals
+        self.dicom_structure = None
+        self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
-        self.progress_window.signal_error.connect(self.processing_error)
-        self.progress_window.signal_loaded.connect(self.processing_completed)
 
     def start_processing(self):
         """
         Starts the batch process.
         """
+        # Create progress window and connect signals
+        self.progress_window = ProgressWindow(None)
+        self.progress_window.signal_error.connect(
+            self.error_loading_patient_files)
+
+        self.patient_files_loaded = False
+        self.progress_window.start(self.load_patient_files)
+
+        while not self.dicom_structure:
+            if self.patient_files_loaded:
+                print("Error when loading files. Check that the directory is "
+                      "correct and try again.")
+                self.progress_window.close()
+            else:
+                pass
+
+        self.progress_window = ProgressWindow(None)
+        self.progress_window.signal_error.connect(
+            self.processing_error)
+        self.progress_window.signal_loaded.connect(
+            self.processing_completed)
+
         self.progress_window.start(self.perform_processes)
 
-    def get_patient_files(self, patient):
+    def load_patient_files(self, interrupt_flag, progress_callback):
+
+        class Callback:
+            @staticmethod
+            def emit(message):
+                """
+                Method to catch the callback from get_dicom_structure()
+                :message: str returned from get_dicom_structure()
+
+                Get the number from the returned string.
+                Each % is for every 100 files counted
+                Clamp the number to 100
+                """
+                max_num = 99
+                message += " files loaded"
+                num = int(message.split(' ')[0]) / 100
+                progress_callback.emit(
+                    (message, max_num if max_num < num else num)
+                )
+
+        dicom_structure = DICOMDirectorySearch.get_dicom_structure(
+                                                self.batch_path,
+                                                interrupt_flag,
+                                                Callback)
+
+        self.completed_loading_patient_files(dicom_structure)
+
+    def error_loading_patient_files(self):
+        print("Error when loading files. Check that the directory "
+              "is correct and try again. ")
+        self.progress_window.close()
+
+    def completed_loading_patient_files(self, dicom_structure):
+        self.patient_files_loaded = True
+        self.dicom_structure = dicom_structure
+        self.progress_window.close()
+
+    @staticmethod
+    def get_patient_files(patient):
         """
         Get patient files.
         :param patient: patient data.
@@ -118,7 +180,8 @@ class BatchProcessingController:
                 cur_patient_files = self.get_patient_files(patient)
                 process = BatchProcessDVH2CSV(progress_callback,
                                               interrupt_flag,
-                                              cur_patient_files)
+                                              cur_patient_files,
+                                              self.dvh_output_path)
                 process.start()
 
                 progress_callback.emit(("Completed DVH2CSV", 90))
