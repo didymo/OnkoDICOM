@@ -132,7 +132,8 @@ class ActionHandler:
         # Switch to Single View Action
         self.icon_one_view = QtGui.QIcon()
         self.icon_one_view.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/axial_view_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -145,7 +146,8 @@ class ActionHandler:
         # Switch to 4 Views Action
         self.icon_four_views = QtGui.QIcon()
         self.icon_four_views.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/four_views_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/four_views_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -158,7 +160,8 @@ class ActionHandler:
         # Show cut lines
         self.icon_cut_lines = QtGui.QIcon()
         self.icon_cut_lines.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/cut_line_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/cut_line_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -213,7 +216,8 @@ class ActionHandler:
         # Image Fusion Action
         self.icon_image_fusion = QtGui.QIcon()
         self.icon_image_fusion.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/image_fusion_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/image_fusion_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -295,7 +299,8 @@ class ActionHandler:
         # values
         pixel_values = self.patient_dict_container.get("pixel_values")
         pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
-        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
+        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
+                    get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -306,7 +311,8 @@ class ActionHandler:
         if hasattr(self, 'image_fusion_view'):
             fusion_values = self.moving_dict_container.get("pixel_values")
             fusion_aspect = self.moving_dict_container.get("pixmap_aspect")
-            fusion_axial, fusion_coronal, fusion_sagittal = get_pixmaps(fusion_values, window, level, fusion_aspect)
+            fusion_axial, fusion_coronal, fusion_sagittal = \
+                get_pixmaps(fusion_values, window, level, fusion_aspect)
             self.moving_dict_container.set("pixmaps_axial", fusion_axial)
             self.moving_dict_container.set("pixmaps_coronal", fusion_coronal)
             self.moving_dict_container.set("pixmaps_sagittal", fusion_sagittal)
@@ -378,12 +384,14 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.is_four_view = False
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_single_view)
+        self.__main_page.dicom_view.setCurrentWidget(
+            self.__main_page.dicom_single_view)
         self.__main_page.dicom_single_view.update_view()
 
     def four_views_handler(self):
         self.is_four_view = True
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
+        self.__main_page.dicom_view.setCurrentWidget(
+            self.__main_page.dicom_four_views)
         self.__main_page.dicom_axial_view.update_view()
 
     def cut_lines_handler(self):

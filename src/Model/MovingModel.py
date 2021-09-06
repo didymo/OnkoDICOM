@@ -78,7 +78,8 @@ def create_moving_model():
     pixmap_aspect["axial"] = pixel_spacing[1] / pixel_spacing[0]
     pixmap_aspect["sagittal"] = pixel_spacing[1] / slice_thickness
     pixmap_aspect["coronal"] = slice_thickness / pixel_spacing[0]
-    pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
+    pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
+        get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
     moving_dict_container.set("pixmaps_axial", pixmaps_axial)
     moving_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -99,7 +100,8 @@ def create_moving_model():
         dicom_tree_rtss = DicomTree(filepaths['rtss'])
         moving_dict_container.set("dict_dicom_tree_rtss", dicom_tree_rtss.dict)
 
-        moving_dict_container.set("list_roi_numbers", ordered_list_rois(moving_dict_container.get("rois")))
+        moving_dict_container.set("list_roi_numbers", ordered_list_rois(
+            moving_dict_container.get("rois")))
         moving_dict_container.set("selected_rois", [])
 
         moving_dict_container.set("dict_polygons", {})
@@ -112,22 +114,17 @@ def create_moving_model():
         moving_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
 
         moving_dict_container.set("selected_doses", [])
-        moving_dict_container.set("rx_dose_in_cgray", 1)  # This will be overwritten if an RTPLAN is present.
+        # This will be overwritten if an RTPLAN is present.
+        moving_dict_container.set("rx_dose_in_cgray", 1) 
 
     # Set RTPLAN attributes
     if moving_dict_container.has_modality("rtplan"):
-        # the TargetPrescriptionDose is type 3 (optional), so it may not be there
-        # However, it is preferable to the sum of the beam doses
-        # DoseReferenceStructureType is type 1 (value is mandatory),
-        # but it can have a value of ORGAN_AT_RISK rather than TARGET
-        # in which case there will *not* be a TargetPrescriptionDose
-        # and even if it is TARGET, that's no guarantee that TargetPrescriptionDose
-        # will be encoded and have a value
         rx_dose_in_cgray = calculate_rx_dose_in_cgray(dataset["rtplan"])
         moving_dict_container.set("rx_dose_in_cgray", rx_dose_in_cgray)
 
         dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
-        moving_dict_container.set("dict_dicom_tree_rtplan", dicom_tree_rtplan.dict)
+        moving_dict_container.set("dict_dicom_tree_rtplan", 
+                                    dicom_tree_rtplan.dict)
 
 
 def read_images_for_fusion():
@@ -156,7 +153,8 @@ def read_images_for_fusion():
 
     new_image = sitk.ReadImage(new_fusion_list)
 
-    color_axial, color_sagittal, color_coronal = create_fused_model(orig_image, new_image)
+    color_axial, color_sagittal, color_coronal = \
+        create_fused_model(orig_image, new_image)
 
     patient_dict_container.set("color_axial", color_axial)
     patient_dict_container.set("color_sagittal", color_sagittal)

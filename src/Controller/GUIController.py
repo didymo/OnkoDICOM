@@ -81,9 +81,6 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
 
-# This class is currently a clone from the ImageFusionController.py file.
-# The purpose of placing another Window class here is so that the
-# TopLevelController can call for this window
 
 class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
     go_next_window = QtCore.Signal(object)

@@ -119,10 +119,17 @@ class ImageLoader(QtCore.QObject):
                 fork_safe_platforms = ['Linux']
                 if platform.system() in fork_safe_platforms:
                     progress_callback.emit(("Calculating DVHs...", 60))
-                    raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness)
+                    raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, 
+                                                        dataset_rtdose, 
+                                                        rois, 
+                                                        dict_thickness)
                 else:
                     progress_callback.emit(("Calculating DVHs... (This may take a while)", 60))
-                    raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)
+                    raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, 
+                                                    dataset_rtdose, 
+                                                    rois, 
+                                                    dict_thickness, 
+                                                    interrupt_flag)
 
                 if interrupt_flag.is_set():  # Stop loading.
                     print("stopped")

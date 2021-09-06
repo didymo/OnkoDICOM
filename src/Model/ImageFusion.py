@@ -7,21 +7,16 @@ import pydicom
 import os
 
 from copy import deepcopy
-from pydicom import dcmread
 from pydicom.tag import Tag
-from pydicom.uid import generate_uid
 
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.MovingDictContainer import  MovingDictContainer
-
-from platipy.dicom.io.crawl import process_dicom_directory
+from src.Model.MovingDictContainer import MovingDictContainer
 from platipy.imaging.registration.linear import linear_registration
 from platipy.imaging.visualisation.utils import generate_comparison_colormix, \
     return_slice
 
 
 # Utility Functions
-
 def point2str(point, precision=1):
     """
     Format a point for printing, based on specified precision with trailing zeros.
@@ -54,7 +49,7 @@ def uniform_random_points(bounds, num_points):
     # Generate rows for each of the coordinates according to the given bounds,
     # stack into an array,
     # and split into a list of points.
-    mat = np.vstack([np.random.uniform(b[0], b[1], num_points) \
+    mat = np.vstack([np.random.uniform(b[0], b[1], num_points)
                      for b in internal_bounds])
 
     return list(mat[:len(bounds)].T)
@@ -93,7 +88,6 @@ def print_transformation_differences(tx1, tx2):
           tx2.GetName() +
           f':\tminDifference: {min(differences):.2f} maxDifference: '
           f'{max(differences):.2f}')
-
 
 def convert_composite_to_affine_transform(composite_transform):
     """
@@ -160,7 +154,6 @@ def check_affine_conversion(composite_transform, combined_affine):
     print('combined_affine')
     print(combined_affine)
 
-
 def convert_combined_affine_to_matrix(combined_affine):
     A = np.array(combined_affine.GetMatrix()).reshape(3, 3)
     c = np.array(combined_affine.GetCenter())
@@ -182,17 +175,17 @@ def write_transform_to_dcm(affine_matrix):
     dicom_time = now.strftime("%H%M")
 
     top_level_tags_to_copy: list = [
-                                    Tag("PatientName"),
-                                    Tag("PatientID"),
-                                    Tag("StudyDate"),
-                                    Tag("StudyTime"),
-                                    Tag("AccessionNumber"),
-                                    Tag("ReferringPhysicianName"),
-                                    Tag("StudyDescription"),
-                                    Tag("StudyInstanceUID"),
-                                    Tag("StudyID"),
-                                    Tag("PositionReferenceIndicator"),
-                                    ]
+        Tag("PatientName"),
+        Tag("PatientID"),
+        Tag("StudyDate"),
+        Tag("StudyTime"),
+        Tag("AccessionNumber"),
+        Tag("ReferringPhysicianName"),
+        Tag("StudyDescription"),
+        Tag("StudyInstanceUID"),
+        Tag("StudyID"),
+        Tag("PositionReferenceIndicator"),
+    ]
 
     # Get Patient Dataset
     patient_dataset = patient_dict_container.dataset[0]
@@ -209,7 +202,6 @@ def write_transform_to_dcm(affine_matrix):
 
     # Get the MovingDictContainer
     moving_dict_container = MovingDictContainer()
-
 
     # Conversion of the numpy.ndarray to array of strings
     x = []
@@ -279,11 +271,6 @@ def write_transform_to_dcm(affine_matrix):
 
     spatial_registration.save_as(filepath)
 
-    # Debug Statement
-    # ds = dcmread(filepath, force = True)
-    # print(ds)
-
-
 def create_fused_model(old_images, new_image):
 
     fused_image = register_images(old_images, new_image)
@@ -336,28 +323,16 @@ def register_images(image_1, image_2):
     return img_ct, tfm
 
 
-
 def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
-    # Get a color pixmap.
-    # :param sitk image: original 3d image
-    # :param sikt image: fused 3d image
-    # :param aspect: scaled pixel spacing of first image
-    # :return: color pixmap.
-
+    """
+    Get a color pixmap.
+    :param sitk image: original 3d image
+    :param sikt image: fused 3d image
+    :param aspect: scaled pixel spacing of first image
+    :return: color pixmap.
+    """
     # Get dimension /could also input dimensions as parameters
     image_array = sitk.GetArrayFromImage(orig_image)
-
-    # Unused Code?
-    # axial_width, axial_height = \
-    #    scaled_size(image_array.shape[1] * aspect, image_array.shape[2])
-
-    #coronal_width, coronal_height = \
-    #    scaled_size(image_array.shape[1], image_array.shape[0] * aspect)
-
-    #sagittal_width, sagittal_height = \
-    #    scaled_size(image_array.shape[2] * aspect, image_array.shape[0])
-
-    # get an array in the form (:, i, :), (i, :, :), (:,:,i)
     if (view == "sagittal"):
         image_slice = return_slice("x", slice_num)
 
@@ -365,15 +340,11 @@ def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
             np.array(generate_comparison_colormix([orig_image, fused_image],
                                                   arr_slice=image_slice))
 
-        # pixel_array_color = np.array(
-        #                               np.flip(
-        #                                   generate_comparison_colormix([orig_image, fused_image],
-        #                                   arr_slice = image_slice)))
-
         # resize dimensions to stop image stretch
         pixel_array_color = np.resize(pixel_array_color, (512, 345, 3))
 
-        # first adjusts rgb (0,1) scale to greyscale (0,255) then converts type and formats it to color.
+        # first adjusts rgb (0,1) scale to greyscale (0,255)
+        # then converts type and formats it to color.
         qimage2 = \
             QtGui.QImage(((255 * pixel_array_color).astype(np.uint8)),
                          image_array.shape[1], image_array.shape[0],
@@ -386,39 +357,53 @@ def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
                                512,
                                QtCore.Qt.IgnoreAspectRatio,
                                QtCore.Qt.SmoothTransformation)
-
-    ##########################################
     elif view == "coronal":
         image_slice = return_slice("y", slice_num)
 
-        pixel_array_color = np.array(generate_comparison_colormix([orig_image, fused_image], arr_slice=image_slice))
+        pixel_array_color = np.array(generate_comparison_colormix(
+            [orig_image, fused_image],
+            arr_slice=image_slice))
 
         # resize dimensions to stop image stretch
         pixel_array_color = np.resize(pixel_array_color, (512, 345, 3))
 
-        # first adjusts rgb (0,1) scale to greyscale (0,255) then converts type and formats it to color.
-        qimage2 = QtGui.QImage(((255 * pixel_array_color).astype(np.uint8)), image_array.shape[1], image_array.shape[0],
+        # first adjusts rgb (0,1) scale to greyscale (0,255)
+        # then converts type and formats it to color.
+        qimage2 = QtGui.QImage(((255 * pixel_array_color).astype(np.uint8)),
+                               image_array.shape[1],
+                               image_array.shape[0],
                                QtGui.QImage.Format_RGB888)
 
         # Then continues to convert to pixmap just like in onko
         pixmap = QtGui.QPixmap(qimage2)
-
-        pixmap = pixmap.scaled(512, 512, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+        pixmap = pixmap.scaled(512,
+                               512,
+                               QtCore.Qt.IgnoreAspectRatio,
+                               QtCore.Qt.SmoothTransformation)
     else:
         image_slice = return_slice("z", slice_num)
 
-        pixel_array_color = np.array(generate_comparison_colormix([orig_image, fused_image], arr_slice=image_slice))
+        pixel_array_color = np.array(generate_comparison_colormix(
+            [orig_image, fused_image],
+            arr_slice=image_slice))
 
-        # first adjusts rgb (0,1) scale to greyscale (0,255) then converts type and formats it to color.
-        qimage = QtGui.QImage(((255 * pixel_array_color).astype(np.uint8)), image_array.shape[1], image_array.shape[1],
+        # first adjusts rgb (0,1) scale to greyscale (0,255)
+        # then converts type and formats it to color.
+        qimage = QtGui.QImage(((255 * pixel_array_color).astype(np.uint8)),
+                              image_array.shape[1],
+                              image_array.shape[1],
                               QtGui.QImage.Format_RGB888)
 
         # Then continues to convert to pixmap just like in onko
         pixmap = QtGui.QPixmap(qimage)
-        pixmap = pixmap.scaled(512, 512, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+        pixmap = pixmap.scaled(512,
+                               512,
+                               QtCore.Qt.IgnoreAspectRatio,
+                               QtCore.Qt.SmoothTransformation)
 
     # Generates an rgb color overlaid image,
-    # convert to contiguous array, and also flip the array if it is a coronal (y) or sagittal (x)
+    # convert to contiguous array,
+    # and also flip the array if it is a coronal (y) or sagittal (x)
     return pixmap
 
 

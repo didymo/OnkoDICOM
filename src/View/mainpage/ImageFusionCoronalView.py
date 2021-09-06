@@ -1,5 +1,6 @@
 from src.View.mainpage.ImageFusionAxialView import ImageFusionAxialView
 
+
 class ImageFusionCoronalView(ImageFusionAxialView):
     def __init__(self, roi_color=None, iso_color=None, cut_line_color=None):
         self.slice_view = 'coronal'
