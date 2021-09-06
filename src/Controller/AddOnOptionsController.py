@@ -398,10 +398,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             new_dir = self.change_default_directory. \
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
-            QMessageBox.about(
-                self,
-                "Success",
-                "Default directory was successfully updated")
         except SqlError:
             configuration.set_up_config_db()
             QMessageBox.critical(

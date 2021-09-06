@@ -110,9 +110,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When the image fusion button is pressed
     image_fusion_signal = QtCore.Signal(str)
 
-    # Not being used?
-    # image_progress_window = QtCore.Signal()
-
     # Initialising the main window and setting up the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -120,15 +117,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.setup_ui(self)
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
-        self.pyradi_trigger.connect(self.pyradiomics_handler)
-
-        # This is another way/method of prompting the image fusion select window
-        # This handler is connected to the function below
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
-
-        # Connect signal from mainpage to the function located in mainpage.py
-        self.image_fusion_main_window.connect(self.update_image_fusion_ui)
+        self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def update_ui(self):
         create_initial_model()
@@ -139,17 +130,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
-
-        # Add isodose tab update signal if RT Dose loaded
-        patient_dict_container = PatientDictContainer()
-        if patient_dict_container.has_modality("rtdose"):
-            self.isodoses_tab.request_update_ui.connect(self.update_ui)
-
-    def update_image_fusion_ui(self):
-        mvd = MovingDictContainer()
-        if not mvd.is_empty():
-            read_images_for_fusion()
-            self.create_image_fusion_tab()
 
     def open_new_patient(self):
         """
@@ -164,12 +144,16 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         if confirmation_dialog == QMessageBox.Yes:
             self.open_patient_window.emit()
 
-    # Signal is sent to the
     def open_image_fusion(self):
-        print('GUIController calling for Image Fusion - emit signals')
         patient_dict_container = PatientDictContainer()
         filepath = patient_dict_container.path
         self.image_fusion_signal.emit(os.path.dirname(filepath))
+
+    def update_image_fusion_ui(self):
+        mvd = MovingDictContainer()
+        if not mvd.is_empty():
+            read_images_for_fusion()
+            self.create_image_fusion_tab()
 
     def pyradiomics_handler(self, path, filepaths, hashed_path):
         """

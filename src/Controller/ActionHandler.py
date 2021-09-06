@@ -222,11 +222,6 @@ class ActionHandler:
         self.action_image_fusion.setIconVisibleInMenu(True)
         self.action_image_fusion.setText("Image Fusion")
 
-        # Disables connection to the handler
-        # If this is disabled. GUIController will be the other way to access
-        # image fusion functionality.
-        # self.action_image_fusion.triggered.connect(self.image_fusion_handler)
-
     def init_windowing_menu(self):
         self.menu_windowing.setIcon(self.icon_windowing)
         self.menu_windowing.setTitle("Windowing")
@@ -409,20 +404,6 @@ class ActionHandler:
             self.patient_dict_container.path,
             self.patient_dict_container.filepaths,
             '')
-
-
-    # Refers to the ImageController instantiated from the mainpage
-    def image_fusion_handler(self):
-        # Initialize the moving dict container
-        self.moving_dict_container = MovingDictContainer()
-             
-        print('Image Fusion Handler being called in Action Handler')
-        filepath = self.patient_dict_container.path
-        self.__main_page.image_fusion_controller.set_path(os.path.dirname(filepath))
-        self.__main_page.image_fusion_controller.show_image_fusion_select_window()
-
-        # self.__main_page.create_image_fusion_tab()
-
 
     def action_exit_handler(self):
         QtCore.QCoreApplication.exit(0)

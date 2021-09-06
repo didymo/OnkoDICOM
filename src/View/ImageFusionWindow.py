@@ -1,4 +1,5 @@
 import os
+from src.View.OpenPatientWindow import UIOpenPatientWindow
 import threading
 
 from PySide6 import QtGui, QtWidgets
@@ -41,41 +42,59 @@ class UIImageFusionWindow(object):
 
         # Create a vertical box for containing the other elements and layouts
         self.open_patient_window_instance_vertical_box = QVBoxLayout()
-        self.open_patient_window_instance_vertical_box.setObjectName("OpenPatientWindowInstanceVerticalBox")
+        self.open_patient_window_instance_vertical_box.setObjectName(
+            "OpenPatientWindowInstanceVerticalBox")
 
         # Create a label to prompt the user to enter the path to the directory that contains the DICOM files
         self.open_patient_directory_prompt = QLabel()
-        self.open_patient_directory_prompt.setObjectName("OpenPatientDirectoryPrompt")
+        self.open_patient_directory_prompt.setObjectName(
+            "OpenPatientDirectoryPrompt")
         self.open_patient_directory_prompt.setAlignment(Qt.AlignLeft)
-        self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_directory_prompt)
+        self.open_patient_window_instance_vertical_box.addWidget(
+            self.open_patient_directory_prompt)
 
         # Create a horizontal box to hold the input box for the directory and the choose button
         self.open_patient_directory_input_horizontal_box = QHBoxLayout()
-        self.open_patient_directory_input_horizontal_box.setObjectName("OpenPatientDirectoryInputHorizontalBox")
+        self.open_patient_directory_input_horizontal_box.setObjectName(
+            "OpenPatientDirectoryInputHorizontalBox")
         # Create a textbox to contain the path to the directory that contains the DICOM files
-        self.open_patient_directory_input_box = UIImageFusionWindowDragAndDropEvent(self)
+        self.open_patient_directory_input_box = \
+        UIImageFusionWindowDragAndDropEvent(self)
 
-        self.open_patient_directory_input_box.setObjectName("OpenPatientDirectoryInputBox")
+        self.open_patient_directory_input_box.setObjectName(
+            "OpenPatientDirectoryInputBox")
         self.open_patient_directory_input_box.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
-        self.open_patient_directory_input_box.returnPressed.connect(self.scan_directory_for_patient)
-        self.open_patient_directory_input_horizontal_box.addWidget(self.open_patient_directory_input_box)
+            QSizePolicy(QSizePolicy.MinimumExpanding, 
+            QSizePolicy.MinimumExpanding))
+        self.open_patient_directory_input_box.returnPressed.connect(
+            self.scan_directory_for_patient)
+        self.open_patient_directory_input_horizontal_box.addWidget(
+            self.open_patient_directory_input_box)
 
         # Create a choose button to open the file dialog
         self.open_patient_directory_choose_button = QPushButton()
-        self.open_patient_directory_choose_button.setObjectName("OpenPatientDirectoryChooseButton")
+        self.open_patient_directory_choose_button.setObjectName(
+            "OpenPatientDirectoryChooseButton")
         self.open_patient_directory_choose_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
-        self.open_patient_directory_choose_button.resize(self.open_patient_directory_choose_button.sizeHint().width(),
-                                                         self.open_patient_directory_input_box.height())
-        self.open_patient_directory_choose_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.open_patient_directory_input_horizontal_box.addWidget(self.open_patient_directory_choose_button)
-        self.open_patient_directory_choose_button.clicked.connect(self.choose_button_clicked)
+            QSizePolicy(QSizePolicy.MinimumExpanding, 
+            QSizePolicy.MinimumExpanding))
+        self.open_patient_directory_choose_button.resize(
+            self.open_patient_directory_choose_button.sizeHint().width(),
+            self.open_patient_directory_input_box.height())
+        self.open_patient_directory_choose_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.open_patient_directory_input_horizontal_box.addWidget(
+            self.open_patient_directory_choose_button)
+        self.open_patient_directory_choose_button.clicked.connect(
+            self.choose_button_clicked)
+
         # Create a widget to hold the input fields
         self.open_patient_directory_input_widget = QWidget()
         self.open_patient_directory_input_horizontal_box.setStretch(0, 4)
-        self.open_patient_directory_input_widget.setLayout(self.open_patient_directory_input_horizontal_box)
-        self.open_patient_window_instance_vertical_box.addWidget(self.open_patient_directory_input_widget)
+        self.open_patient_directory_input_widget.setLayout(
+            self.open_patient_directory_input_horizontal_box)
+        self.open_patient_window_instance_vertical_box.addWidget(
+            self.open_patient_directory_input_widget)
 
         # Create a horizontal box to hold the stop button and direction to the user on where to select the patient
         self.open_patient_appear_prompt_and_stop_horizontal_box = QHBoxLayout()
@@ -83,17 +102,21 @@ class UIImageFusionWindow(object):
             "OpenPatientAppearPromptAndStopHorizontalBox")
         # Create a label to show direction on where the files will appear
         self.open_patient_directory_appear_prompt = QLabel()
-        self.open_patient_directory_appear_prompt.setObjectName("OpenPatientDirectoryAppearPrompt")
+        self.open_patient_directory_appear_prompt.setObjectName(
+            "OpenPatientDirectoryAppearPrompt")
         self.open_patient_directory_appear_prompt.setAlignment(Qt.AlignLeft)
-        self.open_patient_appear_prompt_and_stop_horizontal_box.addWidget(self.open_patient_directory_appear_prompt)
+        self.open_patient_appear_prompt_and_stop_horizontal_box.addWidget(
+            self.open_patient_directory_appear_prompt)
         self.open_patient_appear_prompt_and_stop_horizontal_box.addStretch(1)
         # Create a button to stop searching
         self.open_patient_window_stop_button = QPushButton()
-        self.open_patient_window_stop_button.setObjectName("OpenPatientWindowStopButton")
+        self.open_patient_window_stop_button.setObjectName(
+            "OpenPatientWindowStopButton")
         self.open_patient_window_stop_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
-        self.open_patient_window_stop_button.resize(self.open_patient_window_stop_button.sizeHint().width(),
-                                                    self.open_patient_window_stop_button.sizeHint().height())
+        self.open_patient_window_stop_button.resize(
+            self.open_patient_window_stop_button.sizeHint().width(),
+            self.open_patient_window_stop_button.sizeHint().height())
         self.open_patient_window_stop_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.open_patient_window_stop_button.clicked.connect(self.stop_button_clicked)
         self.open_patient_window_stop_button.setProperty("QPushButtonClass", "fail-button")
@@ -318,8 +341,6 @@ class UIImageFusionWindow(object):
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTSTRUCT' in self.selected_series_types:
-            header = "Cannot fuse with a RTSTRUCT file."
         elif 'RTDOSE' in self.selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
         else:
