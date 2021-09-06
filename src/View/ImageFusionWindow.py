@@ -1,4 +1,5 @@
 import os
+from src.View.OpenPatientWindow import UIOpenPatientWindow
 import threading
 
 from PySide6 import QtGui, QtWidgets
@@ -19,7 +20,7 @@ from src.Controller.PathHandler import resource_path
 import platform
 
 
-class UIImageFusionWindow(object):
+class UIImageFusionWindow(UIOpenPatientWindow):
 
     image_fusion_info_initialized = QtCore.Signal(object)
 
@@ -340,8 +341,6 @@ class UIImageFusionWindow(object):
         if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTSTRUCT' in self.selected_series_types:
-            header = "Cannot fuse with a RTSTRUCT file."
         elif 'RTDOSE' in self.selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
         else:
