@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
 import src.constants as constant
 from src.constants import DEFAULT_WINDOW_SIZE
 from src.Model.Transform import linear_transform, get_pixel_coords, \
-    get_first_entry
+    get_first_entry, inv_linear_transform
 
 
 # noinspection PyAttributeOutsideInit
@@ -314,10 +314,18 @@ class Drawing(QtWidgets.QGraphicsScene):
         of points ordered to form a polygon.
         """
         qpoint_list = []
-        points = get_pixel_coords(list_of_points, self.rows, self.cols)
-        for x, y in points:
-            qpoint = QtCore.QPoint(x, y)
-            qpoint_list.append(qpoint)
+        if self.rows != DEFAULT_WINDOW_SIZE:
+            for point in list_of_points:
+                x_arr, y_arr = inv_linear_transform(
+                    point[0], point[1], self.rows, self.cols)
+                for x in x_arr:
+                    for y in y_arr:
+                        qpoint = QtCore.QPoint(x, y)
+                        qpoint_list.append(qpoint)
+        else:
+            for point in list_of_points:
+                qpoint = QtCore.QPoint(point[0], point[1])
+                qpoint_list.append(qpoint)
 
         if self.polygon_preview is not None:  # Erase the existing preview
             self.removeItem(self.polygon_preview)
