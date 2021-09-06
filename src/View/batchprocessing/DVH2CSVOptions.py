@@ -1,7 +1,7 @@
 import platform
 from os.path import expanduser
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtWidgets
 from src.Controller.PathHandler import resource_path
 
 

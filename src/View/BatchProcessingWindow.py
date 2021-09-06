@@ -22,7 +22,8 @@ class CheckableTabWidget(QtWidgets.QTabWidget):
         QtWidgets.QTabWidget.addTab(self, widget, title)
         checkbox = QtWidgets.QCheckBox()
         self.checked_list.append(checkbox)
-        self.tabBar().setTabButton(self.tabBar().count()-1, QtWidgets.QTabBar.LeftSide, checkbox)
+        self.tabBar().setTabButton(self.tabBar().count()-1,
+                                   QtWidgets.QTabBar.LeftSide, checkbox)
 
     def isChecked(self, index):
         """
@@ -31,7 +32,9 @@ class CheckableTabWidget(QtWidgets.QTabWidget):
         :return: True if the checkbox at index is checked, False
                  otherwise.
         """
-        return self.tabBar().tabButton(index, QtWidgets.QTabBar.LeftSide).checkState() != QtCore.Qt.Unchecked
+        return self.tabBar().tabButton(
+            index,
+            QtWidgets.QTabBar.LeftSide).checkState() != QtCore.Qt.Unchecked
 
     def setCheckState(self, index, check_state):
         """
@@ -40,7 +43,9 @@ class CheckableTabWidget(QtWidgets.QTabWidget):
         :param check_state: QtCore.CheckState, state to set the checkbox
                             to.
         """
-        self.tabBar().tabButton(index, QtWidgets.QTabBar.LeftSide).setCheckState(check_state)
+        self.tabBar().tabButton(
+            index,
+            QtWidgets.QTabBar.LeftSide).setCheckState(check_state)
 
 
 class UIBatchProcessingWindow(object):
@@ -164,7 +169,8 @@ class UIBatchProcessingWindow(object):
         # Connect buttons to functions
         self.browse_button.clicked.connect(self.show_file_browser)
         self.confirm_button.clicked.connect(self.confirm_button_clicked)
-        self.back_button.clicked.connect(lambda: QtCore.QCoreApplication.exit(0))
+        self.back_button.clicked.connect(
+            lambda: QtCore.QCoreApplication.exit(0))
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)

@@ -78,7 +78,8 @@ class ProgressWindow(QDialog):
     def update_progress(self, progress_update):
         """
         Function responsible for updating the bar percentage and the label.
-        :param progress_update: A tuple containing update text and update percentage
+        :param progress_update: A tuple containing update text and update
+        percentages
         """
         self.text_field.setText(progress_update[0])
         self.progress_bar.setValue(progress_update[1])

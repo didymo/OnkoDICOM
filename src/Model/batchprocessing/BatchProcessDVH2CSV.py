@@ -1,6 +1,4 @@
 import os
-
-from src.Model import CalculateDVHs
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess
