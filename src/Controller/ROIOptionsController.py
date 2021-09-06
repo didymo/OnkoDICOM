@@ -102,11 +102,13 @@ class RoiManipulateOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
     def __init__(self, rois, dataset_rtss, roi_color):
         super(RoiManipulateOptions, self).__init__()
         self.roi_color = roi_color
-        self.setup_ui(self, rois, dataset_rtss, roi_color, self.signal_roi_manipulated)
+        self.setup_ui(self, rois, dataset_rtss, roi_color,
+                      self.signal_roi_manipulated)
 
     def update_ui(self, rois, dataset_rtss, roi_color):
         self.roi_color = roi_color
-        self.setup_ui(self, rois, dataset_rtss, self.roi_color, self.signal_roi_manipulated)
+        self.setup_ui(self, rois, dataset_rtss, self.roi_color,
+                      self.signal_roi_manipulated)
 
 
 class ROIManipulateOption:
@@ -124,7 +126,8 @@ class ROIManipulateOption:
         rois = patient_dict_container.get("rois")
         dataset_rtss = patient_dict_container.get("dataset_rtss")
         if not hasattr(self, "manipulate_window"):
-            self.manipulate_window = RoiManipulateOptions(rois, dataset_rtss, roi_color)
+            self.manipulate_window = RoiManipulateOptions(rois, dataset_rtss,
+                                                          roi_color)
             self.manipulate_window.signal_roi_manipulated.connect(
                 self.structure_modified_function)
         else:
