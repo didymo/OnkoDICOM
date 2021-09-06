@@ -133,7 +133,7 @@ class StructureTab(QtWidgets.QWidget):
 
         icon_roi_manipulate = QtGui.QIcon()
         icon_roi_manipulate.addPixmap(
-            QtGui.QPixmap(resource_path('res/images/btn-icons/draw_icon.png')),
+            QtGui.QPixmap(resource_path('res/images/btn-icons/manipulate_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
