@@ -642,12 +642,13 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     list_polygons = []
     pixel_list = dict_rois_contours[curr_roi][curr_slice]
     dataset = PatientDictContainer().dataset[0]
+    different_sizes = (dataset['Rows'].value != DEFAULT_WINDOW_SIZE)
 
     for i in range(len(pixel_list)):
         list_qpoints = []
         contour = pixel_list[i]
         for point in contour:
-            if dataset['Rows'].value != DEFAULT_WINDOW_SIZE:
+            if different_sizes:
                 x_t, y_t = inv_linear_transform(
                     point[0], point[1],
                     dataset['Rows'].value, dataset['Columns'].value)
