@@ -28,7 +28,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         # create the canvas to draw the line on and all its necessary
         # components
         self.dataset = dataset
-        self.different_sizes = (dataset['Rows'].value != DEFAULT_WINDOW_SIZE)
         self.rows = dataset['Rows'].value
         self.cols = dataset['Columns'].value
         self.draw_roi_window_instance = draw_roi_window_instance
