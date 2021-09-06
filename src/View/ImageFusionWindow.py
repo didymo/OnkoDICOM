@@ -20,7 +20,7 @@ from src.Controller.PathHandler import resource_path
 import platform
 
 
-class UIImageFusionWindow(UIOpenPatientWindow):
+class UIImageFusionWindow(object):
 
     image_fusion_info_initialized = QtCore.Signal(object)
 
