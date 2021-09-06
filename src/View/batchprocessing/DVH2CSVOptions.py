@@ -20,7 +20,6 @@ class DVH2CSVOptions(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # Get the stylesheet
-        # Get the stylesheet
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
@@ -51,9 +50,14 @@ class DVH2CSVOptions(QtWidgets.QWidget):
         self.main_layout.addLayout(self.directory_layout)
         self.setLayout(self.main_layout)
 
-    def set_dvh_output_location(self, path, enable=True):
-        self.directory_input.setText(path)
-        self.directory_input.setEnabled(enable)
+    def set_dvh_output_location(self, path, enable=True,
+                                change_if_modified=False):
+        if not self.directory_input.isEnabled():
+            self.directory_input.setText(path)
+            self.directory_input.setEnabled(enable)
+        elif change_if_modified:
+            self.directory_input.setText(path)
+            self.directory_input.setEnabled(enable)
 
     def get_dvh_output_location(self):
         return self.directory_input.text()
@@ -75,4 +79,4 @@ class DVH2CSVOptions(QtWidgets.QWidget):
             path = expanduser("~")
 
         # Update file path
-        self.set_dvh_output_location(path)
+        self.set_dvh_output_location(path, change_if_modified=True)
