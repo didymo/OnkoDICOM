@@ -77,10 +77,18 @@ class BatchProcessDVH2CSV(BatchProcess):
         dataset_rtss = self.patient_dict_container.dataset['rtss']
         dataset_rtdose = self.patient_dict_container.dataset['rtdose']
         rois = self.patient_dict_container.get("rois")
-        dict_thickness = ImageLoading.get_thickness_dict(dataset_rtss,
+        try:
+            dict_thickness = ImageLoading.get_thickness_dict(dataset_rtss,
                                                          read_data_dict)
-        raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois,
-                                         dict_thickness, self.interrupt_flag)
+            raw_dvh = ImageLoading.calc_dvhs(dataset_rtss,
+                                             dataset_rtdose,
+                                             rois,
+                                            dict_thickness,
+                                             self.interrupt_flag)
+        except TypeError:
+            print("Error when calculating ROI thickness. The dataset may be "
+                  "incomplete. \nSkipping DVH2CSV.")
+            return
 
         # Stop loading
         if self.interrupt_flag.is_set():

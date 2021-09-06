@@ -204,7 +204,7 @@ class UIBatchProcessingWindow(object):
         When the line edit box is changed, update related fields.
         """
         self.file_path = self.directory_input.text()
-        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False, )
+        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False,)
 
     def confirm_button_clicked(self):
         """
