@@ -1,3 +1,4 @@
+platipy
 alphashape
 pandas
 scikit-build

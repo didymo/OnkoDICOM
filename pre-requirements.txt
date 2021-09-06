@@ -1,3 +1,2 @@
-platipy
 cython
 numpy==1.21.0
