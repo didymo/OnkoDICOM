@@ -3,9 +3,7 @@ from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
-
 from src.Model import DICOMDirectorySearch
-import os
 
 
 class BatchProcessingController:
@@ -125,6 +123,9 @@ class BatchProcessingController:
         :param progress_callback: A signal that receives the current
                                   progress of the loading.
         """
+        patient_count = len(self.dicom_structure.patients)
+        cur_patient_num = 0
+
         # Loop through each patient
         for patient in self.dicom_structure.patients.values():
             # Stop loading
@@ -134,7 +135,10 @@ class BatchProcessingController:
                 PatientDictContainer().clear()
                 return False
 
-            progress_callback.emit(("Loading dataset .. ", 20))
+            cur_patient_num += 1
+
+            progress_callback.emit(("Loading patient ({}/{}) .. ".format(
+                                     cur_patient_num, patient_count), 20))
 
             # Perform ISO2ROI on patient
             if "iso2roi" in self.processes:
@@ -203,5 +207,3 @@ class BatchProcessingController:
         print("Error performing batch processing.")
         self.progress_window.close()
         return
-
-
