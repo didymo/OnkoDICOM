@@ -14,6 +14,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Transform import get_pixel_coords
 from src.constants import DEFAULT_WINDOW_SIZE
 
+
 def rename_roi(rtss, roi_id, new_name):
     """
     Renames the given Region of Interest. Creates a csv file storing all the
@@ -588,7 +589,8 @@ def transform_rois_contours(axial_rois_contours):
     """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
-    slice_ids = dict((v, k) for k, v in PatientDictContainer().get("dict_uid").items())
+    slice_ids = dict((v, k) for k, v
+                     in PatientDictContainer().get("dict_uid").items())
     for name in axial_rois_contours.keys():
         coronal_rois_contours[name] = {}
         sagittal_rois_contours[name] = {}
@@ -597,20 +599,25 @@ def transform_rois_contours(axial_rois_contours):
             for contour in contours:
                 for i in range(len(contour)):
                     if contour[i][1] in coronal_rois_contours[name]:
-                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0]\
+                            .append([contour[i][0], slice_ids[slice_id]])
                     else:
                         coronal_rois_contours[name][contour[i][1]] = [[]]
-                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0]\
+                            .append([contour[i][0], slice_ids[slice_id]])
 
                     if contour[i][0] in sagittal_rois_contours[name]:
-                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0]\
+                            .append([contour[i][1], slice_ids[slice_id]])
                     else:
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
-                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0]\
+                            .append([contour[i][1], slice_ids[slice_id]])
     return coronal_rois_contours, sagittal_rois_contours
 
 
-def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
+                     pixmap_aspect=1):
     """
     Calculate a list of polygons to display for a given ROI and a given slice.
     :param curr_roi: the ROI structure
@@ -623,17 +630,22 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     # Possible process for this is:
     # 1. Calculate the areas of each contour on the slice
     # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-    # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
-    # largest contour.
+    # 2. Compare each contour to the largest contour by area to determine if
+    # it is contained entirely within the largest contour.
     # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
-    # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
-    # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
-    # This process should provide fast and reliable results, however it should be noted that this method may fall
-    # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
-    # solution to that may be to compare every contour against one another and determine which ones have holes
-    # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
-    # holes. This second solution would definitely lead to more accurate representation of contours, but could
-    # possibly be too slow to be viable.
+
+    # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to
+    # subtract the smaller "hole" polygon from the largest polygon, and then
+    # remove the polygon from the list of polygons to be displayed. This
+    # process should provide fast and reliable results, however it should be
+    # noted that this method may fall apart in a situation where there are
+    # multiple "large" polygons, each with their own hole in it. An
+    # appropriate solution to that may be to compare every contour against
+    # one another and determine which ones have holes encompassed entirely
+    # by them, and then subtract each hole from the larger polygon and
+    # delete the smaller holes. This second solution would definitely lead
+    # to more accurate representation of contours, but could possibly be too
+    # slow to be viable.
 
     if curr_slice not in dict_rois_contours[curr_roi]:
         return []
@@ -663,7 +675,8 @@ def ordered_list_rois(rois):
     return sorted(res)
 
 
-def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset, filepath: Path,
+def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
+                                filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
     """Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
@@ -844,7 +857,8 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
         index += 1
 
     # Remove old values out of the original sequences
-    rm_indices = [old_duplicated_roi_indexes[name] for name in duplicated_names]
+    rm_indices = [old_duplicated_roi_indexes[name]
+                  for name in duplicated_names]
     for index in sorted(rm_indices, reverse=True):
         # Remove the old value out of the original structure set sequence
         original_structure_set.pop(index)

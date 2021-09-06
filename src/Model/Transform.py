@@ -42,4 +42,3 @@ def get_pixel_coords(points, rows, cols):
 
 def get_first_entry(points):
     return next(iter(points))
-
