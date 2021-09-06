@@ -641,8 +641,7 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
 
     list_polygons = []
     pixel_list = dict_rois_contours[curr_roi][curr_slice]
-    patient_dict_container = PatientDictContainer()
-    dataset = patient_dict_container.dataset[0]
+    dataset = PatientDictContainer().dataset[0]
 
     for i in range(len(pixel_list)):
         list_qpoints = []
