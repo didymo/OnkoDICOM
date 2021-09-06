@@ -129,9 +129,9 @@ class UIBatchProcessingWindow(object):
         self.back_button.setStyleSheet(self.stylesheet)
         self.back_button.setProperty("QPushButtonClass", "fail-button")
 
-        # Confirm button
-        self.confirm_button = QtWidgets.QPushButton("Confirm")
-        self.confirm_button.setObjectName("ConfirmButton")
+        # Begin button
+        self.confirm_button = QtWidgets.QPushButton("Begin")
+        self.confirm_button.setObjectName("BeginButton")
         self.confirm_button.setStyleSheet(self.stylesheet)
         self.confirm_button.setProperty("QPushButtonClass", "success-button")
 
