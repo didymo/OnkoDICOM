@@ -80,7 +80,7 @@ class BatchProcessingController:
                 Clamp the number to 100
                 """
                 max_num = 99
-                message += " files loaded"
+                message += " Files Loaded"
                 num = int(message.split(' ')[0]) / 100
                 progress_callback.emit(
                     (message, max_num if max_num < num else num)

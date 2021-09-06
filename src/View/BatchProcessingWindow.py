@@ -126,12 +126,14 @@ class UIBatchProcessingWindow(object):
         # Back button
         self.back_button = QtWidgets.QPushButton("Exit")
         self.back_button.setObjectName("BatchExitButton")
+        self.back_button.setMaximumWidth(80)
         self.back_button.setStyleSheet(self.stylesheet)
         self.back_button.setProperty("QPushButtonClass", "fail-button")
 
         # Begin button
         self.confirm_button = QtWidgets.QPushButton("Begin")
         self.confirm_button.setObjectName("BeginButton")
+        self.confirm_button.setMaximumWidth(100)
         self.confirm_button.setStyleSheet(self.stylesheet)
         self.confirm_button.setProperty("QPushButtonClass", "success-button")
 
