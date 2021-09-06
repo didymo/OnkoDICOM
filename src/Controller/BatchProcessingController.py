@@ -201,6 +201,7 @@ class BatchProcessingController:
         Runs when there is an error during batch processing.
         """
         print("Error performing batch processing.")
+        self.progress_window.close()
         return
 
 
