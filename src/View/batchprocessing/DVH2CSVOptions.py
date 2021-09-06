@@ -52,6 +52,14 @@ class DVH2CSVOptions(QtWidgets.QWidget):
 
     def set_dvh_output_location(self, path, enable=True,
                                 change_if_modified=False):
+        """
+        Set the location for the DVH2CSV resulting .csv file.
+        ----------
+        :param path: desired path.
+        :param enable: Enable the directory text bar.
+        :param change_if_modified: Change the directory if already been
+        changed.
+        """
         if not self.directory_input.isEnabled():
             self.directory_input.setText(path)
             self.directory_input.setEnabled(enable)
@@ -60,6 +68,9 @@ class DVH2CSVOptions(QtWidgets.QWidget):
             self.directory_input.setEnabled(enable)
 
     def get_dvh_output_location(self):
+        """
+        Get the location of the desired output directory.
+        """
         return self.directory_input.text()
 
     def show_file_browser(self):

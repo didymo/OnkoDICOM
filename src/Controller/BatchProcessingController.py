@@ -14,8 +14,8 @@ class BatchProcessingController:
     def __init__(self, file_paths, processes):
         """
         Class initialiser function.
-        :param dicom_structure: DICOMStructure object containing each
-                                patient in selected directory.
+        :param file_paths: dict containing paths needed for inputs and
+        outputs during the batch processing
         :param processes: list of processes to be done to the patients
                           selected.
         """
@@ -35,9 +35,13 @@ class BatchProcessingController:
         self.progress_window.signal_error.connect(
             self.error_loading_patient_files)
 
+        # Flag set if patients are loaded
         self.patient_files_loaded = False
+
+        # Start loading in the patient files
         self.progress_window.start(self.load_patient_files)
 
+        # Wait while patient files are being loaded.
         while not self.dicom_structure:
             if self.patient_files_loaded:
                 print("Error when loading files. Check that the directory is "
@@ -48,14 +52,22 @@ class BatchProcessingController:
 
         self.progress_window = ProgressWindow(None)
         self.progress_window.signal_error.connect(
-            self.processing_error)
+            self.error_processing)
         self.progress_window.signal_loaded.connect(
-            self.processing_completed)
+            self.completed_processing)
 
+        # Start performing processes on patient files
         self.progress_window.start(self.perform_processes)
 
     def load_patient_files(self, interrupt_flag, progress_callback):
+        """
+        Load the patient files from directory.
+        :param interrupt_flag: interrupt flag
+        :param progress_callback: callback for progress
+        """
 
+        # Nested function to work with progress callback from
+        # DICOMDirectorySearch
         class Callback:
             @staticmethod
             def emit(message):
@@ -82,11 +94,18 @@ class BatchProcessingController:
         self.completed_loading_patient_files(dicom_structure)
 
     def error_loading_patient_files(self):
+        """
+        Called when an error occurred whilst loading files
+        """
         print("Error when loading files. Check that the directory "
               "is correct and try again. ")
         self.progress_window.close()
 
     def completed_loading_patient_files(self, dicom_structure):
+        """
+        Called when completed loading the patient files.
+        :param dicom_structure: DicomStructure object
+        """
         self.patient_files_loaded = True
         self.dicom_structure = dicom_structure
         self.progress_window.close()
@@ -192,7 +211,7 @@ class BatchProcessingController:
 
         PatientDictContainer().clear()
 
-    def processing_completed(self):
+    def completed_processing(self):
         """
         Runs when batch processing has been completed.
         """
@@ -200,7 +219,7 @@ class BatchProcessingController:
         print("Processing completed!")
         self.progress_window.close()
 
-    def processing_error(self):
+    def error_processing(self):
         """
         Runs when there is an error during batch processing.
         """

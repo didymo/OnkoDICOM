@@ -93,8 +93,6 @@ class UIBatchProcessingWindow(object):
         self.directory_input = QtWidgets.QLineEdit()
         self.directory_input.setText(self.file_path)
         self.directory_input.textChanged.connect(self.line_edit_changed)
-        #self.directory_input.returnPressed.connect(
-        #    self.scan_directory_for_patients)
         self.directory_input.setStyleSheet(self.stylesheet)
 
         # Browse button
@@ -224,6 +222,7 @@ class UIBatchProcessingWindow(object):
             "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location()
         }
 
+        # Create batch processing controller, enable the processing
         batch_processing_controller =\
             BatchProcessingController(file_directories, selected_processes)
         batch_processing_controller.start_processing()

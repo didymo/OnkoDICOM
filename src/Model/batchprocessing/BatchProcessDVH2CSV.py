@@ -114,6 +114,7 @@ class BatchProcessDVH2CSV(BatchProcess):
     def dvh2csv(self, dict_dvh, path, csv_name, patient_id):
         """
         Export dvh data to csv file.
+        Append to existing file
 
         :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
         :param path: Target path of CSV export
