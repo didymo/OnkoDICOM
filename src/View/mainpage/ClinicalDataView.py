@@ -1,9 +1,11 @@
 import csv
+import os
 import platform
 from pathlib import Path
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import resource_path
 from src.Model import DICOMStructuredReport
+from src.Model.Configuration import Configuration, SqlError
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -19,6 +21,7 @@ class ClinicalDataView(QtWidgets.QWidget):
 
         # Create class attributes
         self.data_dict = {}
+        self.table_populated = False
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -31,8 +34,8 @@ class ClinicalDataView(QtWidgets.QWidget):
         self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         self.create_cd_table()
-        self.create_buttons()
         self.setLayout(self.main_layout)
+        self.import_clinical_data()
 
     def create_cd_table(self):
         """
@@ -65,35 +68,6 @@ class ClinicalDataView(QtWidgets.QWidget):
 
         # Add table to layout
         self.main_layout.addWidget(self.table_cd)
-
-    def create_buttons(self):
-        """
-        Creates a button for importing CSV data.
-        """
-        # Layout for buttons
-        self.button_layout = QtWidgets.QHBoxLayout()
-
-        # Buttons
-        self.import_button = QtWidgets.QPushButton(self)
-
-        # Set cursor
-        self.import_button.setCursor(
-            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-
-        # set button stylesheet
-        self.import_button.setStyleSheet(self.stylesheet)
-
-        # Set text
-        _translate = QtCore.QCoreApplication.translate
-        self.import_button.setText(_translate("Clinical_Data",
-                                              "Import CSV Data"))
-
-        # Connect button clicked events to functions
-        self.import_button.clicked.connect(self.import_clinical_data)
-
-        # Add buttons to layout
-        self.button_layout.addWidget(self.import_button)
-        self.main_layout.addLayout(self.button_layout)
 
     def populate_table(self):
         """
@@ -128,6 +102,7 @@ class ClinicalDataView(QtWidgets.QWidget):
             self.table_cd.insertRow(i)
             self.table_cd.setItem(i, 0, attrib)
             self.table_cd.setItem(i, 1, value)
+        self.table_populated = True
 
     def clear_table(self):
         """
@@ -139,37 +114,51 @@ class ClinicalDataView(QtWidgets.QWidget):
 
     def import_clinical_data(self):
         """
-        Opens a file select dialog to open a CSV file containing patient
-        clinical data. Imports clinical data for that patient (matches
-        patient ID in the dataset to patient ID in the CSV file), and
-        displays it in the table.
+        Attempt to import clinical data from the CSV stored in the
+        program's settings database.
         """
-        # Clear data dictionary
+        # Return if data has been imported from DICOM SR
+        if self.table_populated:
+            return
+
+        # Clear data dictionary and table
         self.data_dict = {}
+        self.clear_table()
 
         # Current patient's ID
         patient_dict_container = PatientDictContainer()
         patient_id = patient_dict_container.dataset[0].PatientID
 
-        file_path = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open Data File", "", "CSV data files (*.csv)")[0]
-
-        # Get CSV data
-        if file_path != "":
-            with open(file_path, newline="") as stream:
-                data = list(csv.reader(stream))
-        else:
-            # Clear table
-            self.clear_table()
-
+        # Try get the clinical data CSV file path
+        try:
+            config = Configuration()
+            file_path = config.get_clinical_data_csv_dir()
+        except SqlError:
             # Write warning to table
-            message = "No clinical data CSV selected."
+            message = "Failed to access configuration file."
             attrib = QtWidgets.QTableWidgetItem("Warning")
             value = QtWidgets.QTableWidgetItem(message)
             self.table_cd.insertRow(0)
             self.table_cd.setItem(0, 0, attrib)
             self.table_cd.setItem(0, 1, value)
+            return
 
+        # Get CSV data
+        if file_path != "" and file_path is not None:
+            if os.path.exists(file_path):
+                with open(file_path, newline="") as stream:
+                    data = list(csv.reader(stream))
+        else:
+            # Clear table
+            self.clear_table()
+
+            # Write warning to table
+            message = "Clinical data CSV could not be found."
+            attrib = QtWidgets.QTableWidgetItem("Warning")
+            value = QtWidgets.QTableWidgetItem(message)
+            self.table_cd.insertRow(0)
+            self.table_cd.setItem(0, 0, attrib)
+            self.table_cd.setItem(0, 1, value)
             return
 
         # See if CSV data matches patient ID
@@ -193,7 +182,6 @@ class ClinicalDataView(QtWidgets.QWidget):
             self.table_cd.insertRow(0)
             self.table_cd.setItem(0, 0, attrib)
             self.table_cd.setItem(0, 1, value)
-
             return
 
         # Put patient data into dictionary
