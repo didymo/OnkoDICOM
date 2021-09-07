@@ -25,15 +25,17 @@ class UIImageFusionWindow(object):
         super().__init__()
 
     def setup_ui(self, open_image_fusion_select_instance):
-        
+        """Sets up a UI"""
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
 
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Normal, QIcon.Off)
-        open_image_fusion_select_instance.setObjectName("OpenPatientWindowInstance")
+        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
+                              QIcon.Normal, QIcon.Off)
+        open_image_fusion_select_instance.setObjectName(
+            "OpenPatientWindowInstance")
         open_image_fusion_select_instance.setWindowIcon(window_icon)
         open_image_fusion_select_instance.resize(840, 530)
 
@@ -42,7 +44,8 @@ class UIImageFusionWindow(object):
         self.open_patient_window_instance_vertical_box.setObjectName(
             "OpenPatientWindowInstanceVerticalBox")
 
-        # Create a label to prompt the user to enter the path to the directory that contains the DICOM files
+        # Create a label to prompt the user to enter the path to the
+        # directory that contains the DICOM files
         self.open_patient_directory_prompt = QLabel()
         self.open_patient_directory_prompt.setObjectName(
             "OpenPatientDirectoryPrompt")
@@ -50,19 +53,21 @@ class UIImageFusionWindow(object):
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_directory_prompt)
 
-        # Create a horizontal box to hold the input box for the directory and the choose button
+        # Create a horizontal box to hold the input box for the directory 
+        # and the choose button
         self.open_patient_directory_input_horizontal_box = QHBoxLayout()
         self.open_patient_directory_input_horizontal_box.setObjectName(
             "OpenPatientDirectoryInputHorizontalBox")
-        # Create a textbox to contain the path to the directory that contains the DICOM files
+        # Create a textbox to contain the path to the directory that contains 
+        # the DICOM files
         self.open_patient_directory_input_box = \
-        UIImageFusionWindowDragAndDropEvent(self)
+            UIImageFusionWindowDragAndDropEvent(self)
 
         self.open_patient_directory_input_box.setObjectName(
             "OpenPatientDirectoryInputBox")
         self.open_patient_directory_input_box.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, 
-            QSizePolicy.MinimumExpanding))
+            QSizePolicy(QSizePolicy.MinimumExpanding,
+                        QSizePolicy.MinimumExpanding))
         self.open_patient_directory_input_box.returnPressed.connect(
             self.scan_directory_for_patient)
         self.open_patient_directory_input_horizontal_box.addWidget(
@@ -73,8 +78,8 @@ class UIImageFusionWindow(object):
         self.open_patient_directory_choose_button.setObjectName(
             "OpenPatientDirectoryChooseButton")
         self.open_patient_directory_choose_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, 
-            QSizePolicy.MinimumExpanding))
+            QSizePolicy(QSizePolicy.MinimumExpanding,
+                        QSizePolicy.MinimumExpanding))
         self.open_patient_directory_choose_button.resize(
             self.open_patient_directory_choose_button.sizeHint().width(),
             self.open_patient_directory_input_box.height())
@@ -93,7 +98,8 @@ class UIImageFusionWindow(object):
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_directory_input_widget)
 
-        # Create a horizontal box to hold the stop button and direction to the user on where to select the patient
+        # Create a horizontal box to hold the stop button and direction to 
+        # the user on where to select the patient
         self.open_patient_appear_prompt_and_stop_horizontal_box = QHBoxLayout()
         self.open_patient_appear_prompt_and_stop_horizontal_box.setObjectName(
             "OpenPatientAppearPromptAndStopHorizontalBox")
@@ -110,15 +116,18 @@ class UIImageFusionWindow(object):
         self.open_patient_window_stop_button.setObjectName(
             "OpenPatientWindowStopButton")
         self.open_patient_window_stop_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
+            QSizePolicy(QSizePolicy.MinimumExpanding, 
+                        QSizePolicy.MinimumExpanding))
         self.open_patient_window_stop_button.resize(
             self.open_patient_window_stop_button.sizeHint().width(),
             self.open_patient_window_stop_button.sizeHint().height())
         self.open_patient_window_stop_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.open_patient_window_stop_button.clicked.connect(self.stop_button_clicked)
-        self.open_patient_window_stop_button.setProperty("QPushButtonClass", "fail-button")
-        self.open_patient_window_stop_button.setVisible(False)  
+        self.open_patient_window_stop_button.clicked.connect(
+            self.stop_button_clicked)
+        self.open_patient_window_stop_button.setProperty(
+            "QPushButtonClass", "fail-button")
+        self.open_patient_window_stop_button.setVisible(False)
         self.open_patient_appear_prompt_and_stop_horizontal_box.addWidget(
             self.open_patient_window_stop_button)
         # Create a widget to hold the layout
@@ -128,57 +137,66 @@ class UIImageFusionWindow(object):
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_appear_prompt_and_stop_widget)
 
-        # Create a tree view list to list out all patients in the directory selected above
+        # Create a tree view list to list out all patients in the directory 
+        # selected above
         self.open_patient_window_patients_tree = QTreeWidget()
-        self.open_patient_window_patients_tree.setObjectName("OpenPatientWindowPatientsTree")
+        self.open_patient_window_patients_tree.setObjectName(
+            "OpenPatientWindowPatientsTree")
         self.open_patient_window_patients_tree.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
+            QSizePolicy(QSizePolicy.MinimumExpanding, 
+                        QSizePolicy.MinimumExpanding))
         self.open_patient_window_patients_tree.resize(
             self.open_patient_window_patients_tree.sizeHint().width(),
             self.open_patient_window_patients_tree.sizeHint().height())
         self.open_patient_window_patients_tree.setHeaderHidden(False)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
-        self.open_patient_window_patients_tree.itemChanged.connect(self.tree_item_changed)
+        self.open_patient_window_patients_tree.itemChanged.connect(
+            self.tree_item_changed)
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_window_patients_tree)
         self.last_patient = None
 
-
         # Create a label to show what would happen if they select the patient
         self.open_patient_directory_result_label = QtWidgets.QLabel()
-        self.open_patient_directory_result_label.setObjectName("OpenPatientDirectoryResultLabel")
+        self.open_patient_directory_result_label.setObjectName(
+            "OpenPatientDirectoryResultLabel")
         self.open_patient_directory_result_label.setAlignment(Qt.AlignLeft)
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_directory_result_label)
 
         # Create a horizontal box to hold the Cancel and Open button
-        self.open_patient_window_patient_open_actions_horizontal_box = QHBoxLayout()
-        self.open_patient_window_patient_open_actions_horizontal_box.setObjectName(
-            "OpenPatientWindowPatientOpenActionsHorizontalBox")
-        self.open_patient_window_patient_open_actions_horizontal_box.addStretch(1)
+        self.open_patient_window_patient_open_actions_horizontal_box = \
+            QHBoxLayout()
+        self.open_patient_window_patient_open_actions_horizontal_box.\
+            setObjectName("OpenPatientWindowPatientOpenActionsHorizontalBox")
+        self.open_patient_window_patient_open_actions_horizontal_box.\
+            addStretch(1)
         # Add a button to go back/close from the application
         self.open_patient_window_close_button = QPushButton()
         self.open_patient_window_close_button.setObjectName(
             "OpenPatientWindowcloseButton")
         self.open_patient_window_close_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
+            QSizePolicy(QSizePolicy.MinimumExpanding, 
+                        QSizePolicy.MinimumExpanding))
         self.open_patient_window_close_button.resize(
             self.open_patient_window_stop_button.sizeHint().width(),
             self.open_patient_window_stop_button.sizeHint().height())
         self.open_patient_window_close_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.open_patient_window_close_button.clicked.connect(self.close_button_clicked)
+        self.open_patient_window_close_button.clicked.connect(
+            self.close_button_clicked)
         self.open_patient_window_close_button.setProperty(
             "QPushButtonClass", "fail-button")
-        self.open_patient_window_patient_open_actions_horizontal_box.addWidget(
-            self.open_patient_window_close_button)
+        self.open_patient_window_patient_open_actions_horizontal_box.\
+            addWidget(self.open_patient_window_close_button)
 
         # Add a button to confirm opening of the patient
         self.open_patient_window_confirm_button = QPushButton()
         self.open_patient_window_confirm_button.setObjectName(
             "OpenPatientWindowConfirmButton")
         self.open_patient_window_confirm_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
+            QSizePolicy(QSizePolicy.MinimumExpanding, 
+                        QSizePolicy.MinimumExpanding))
         self.open_patient_window_confirm_button.resize(
             self.open_patient_window_confirm_button.sizeHint().width(),
             self.open_patient_window_confirm_button.sizeHint().height())
@@ -186,20 +204,24 @@ class UIImageFusionWindow(object):
         self.open_patient_window_confirm_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.open_patient_window_confirm_button.setDisabled(True)
-        self.open_patient_window_confirm_button.clicked.connect(self.confirm_button_clicked)
+        self.open_patient_window_confirm_button.clicked.connect(
+            self.confirm_button_clicked)
         self.open_patient_window_confirm_button.setProperty(
             "QPushButtonClass", "success-button")
-        self.open_patient_window_patient_open_actions_horizontal_box.addWidget(
+        self.open_patient_window_patient_open_actions_horizontal_box.\
+            addWidget(
             self.open_patient_window_confirm_button)
 
-        # Create a widget to house all of the actions button for open patient window
+        # Create a widget to house all of the actions button for open patient
+        #  window
         self.open_patient_window_patient_open_actions_widget = QWidget()
         self.open_patient_window_patient_open_actions_widget.setLayout(
             self.open_patient_window_patient_open_actions_horizontal_box)
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_window_patient_open_actions_widget)
 
-        # Set the vertical box fourth element, the tree view, to stretch out as far as possible
+        # Set the vertical box fourth element, the tree view, to stretch 
+        # out as far as possible
         self.open_patient_window_instance_vertical_box.setStretch(3, 4)
         self.open_patient_window_instance_central_widget = QWidget()
         self.open_patient_window_instance_central_widget.setObjectName(
@@ -209,43 +231,51 @@ class UIImageFusionWindow(object):
 
         # Create threadpool for multithreading
         self.threadpool = QThreadPool()
-        # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        # print("Multithreading with maximum %d threads" % self.threadpool.
+        # maxThreadCount())
         # Create interrupt event for stopping the directory search
         self.interrupt_flag = threading.Event()
 
         # Bind all texts into the buttons and labels
         self.retranslate_ui(open_image_fusion_select_instance)
         # Set the central widget, ready for display
-        open_image_fusion_select_instance.setCentralWidget(self.open_patient_window_instance_central_widget)
+        open_image_fusion_select_instance.setCentralWidget(
+            self.open_patient_window_instance_central_widget)
 
-        # Set the current stylesheet to the instance and connect it back to the caller through slot
+        # Set the current stylesheet to the instance and connect it back 
+        # to the caller through slot
         _stylesheet = open(resource_path(self.stylesheet_path)).read()
         open_image_fusion_select_instance.setStyleSheet(_stylesheet)
 
-        QtCore.QMetaObject.connectSlotsByName(open_image_fusion_select_instance)
+        QtCore.QMetaObject.connectSlotsByName(
+            open_image_fusion_select_instance)
 
         self.patient_dict_container = PatientDictContainer()
         self.patient = self.patient_dict_container.get("basic_info")
         self.patient_id = self.patient['id']
 
     def retranslate_ui(self, open_image_fusion_select_instance):
+        """Translates UI"""
         _translate = QtCore.QCoreApplication.translate
         open_image_fusion_select_instance.setWindowTitle(
-            _translate("OpenPatientWindowInstance", "OnkoDICOM - Select Patient"))
+            _translate("OpenPatientWindowInstance", 
+                        "OnkoDICOM - Select Patient"))
         self.open_patient_directory_prompt.setText(_translate(
             "OpenPatientWindowInstance",
             "Choose an image to merge with:"))
         self.open_patient_directory_input_box.setPlaceholderText(
             _translate("OpenPatientWindowInstance",
-                        "Enter DICOM Files Path (For example, C:\path\\to\your\DICOM\Files)"))
+                       "Enter DICOM Files Path (For example, \
+                           C:\path\\to\your\DICOM\Files)"))
         self.open_patient_directory_choose_button.setText(_translate(
-            "OpenPatientWindowInstance", 
+            "OpenPatientWindowInstance",
             "Choose"))
         self.open_patient_directory_appear_prompt.setText(_translate(
             "OpenPatientWindowInstance",
             "Please select below the image set you wish to overlay:"))
-        self.open_patient_directory_result_label.setText(
-            "The selected imageset(s) above will be co-registered with the current imageset.")
+        self.open_patient_directory_result_label.\
+            setText("The selected imageset(s) above will be \
+                co-registered with the current imageset.")
         self.open_patient_window_stop_button.setText(_translate(
             "OpenPatientWindowInstance", "Stop Search"))
         self.open_patient_window_close_button.setText(_translate(
@@ -254,9 +284,11 @@ class UIImageFusionWindow(object):
             "OpenPatientWindowInstance", "Confirm"))
 
     def close_button_clicked(self):
+        """Closes the window."""
         self.close()
 
     def scan_directory_for_patient(self):
+        """Scans for patients in directory"""
         # Reset tree view header and last patient
         self.open_patient_window_patients_tree.setHeaderLabels([""])
         self.last_patient = None
@@ -282,7 +314,7 @@ class UIImageFusionWindow(object):
             self.interrupt_flag.clear()
 
             # Then, create a new thread that will load the selected folder
-            worker = Worker(DICOMDirectorySearch.get_dicom_structure, 
+            worker = Worker(DICOMDirectorySearch.get_dicom_structure,
                             self.filepath,
                             self.interrupt_flag, progress_callback=True)
             worker.signals.result.connect(self.on_search_complete)
@@ -318,7 +350,8 @@ class UIImageFusionWindow(object):
     def on_search_complete(self, dicom_structure):
         """
         Executes once the directory search is complete.
-        :param dicom_structure: DICOMStructure object constructed by the directory search.
+        :param dicom_structure: DICOMStructure object constructed by the 
+        directory search.
         """
         self.open_patient_directory_choose_button.setEnabled(True)
         self.open_patient_window_stop_button.setVisible(False)
@@ -333,28 +366,32 @@ class UIImageFusionWindow(object):
                 patient_item)
 
         if len(dicom_structure.patients) == 0:
-            QMessageBox.about(self, "No files found", "Selected directory contains no DICOM files.")
+            QMessageBox.about(self, "No files found",
+                              "Selected directory contains no DICOM files.")
 
     def tree_item_changed(self, item, _):
         """
-            Executes when a tree item is checked or unchecked.
-            If a different patient is checked, uncheck the previous patient.
-            Inform user about missing DICOM files.
+        Executes when a tree item is checked or unchecked.
+        If a different patient is checked, uncheck the previous patient.
+        Inform user about missing DICOM files.
         """
         selected_patient = item
         # If the item is not top-level, bubble up to see which top-level
         # item this item belongs to
-        if self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(item) == -1:
-            while self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(selected_patient) == -1:
+        if self.open_patient_window_patients_tree.invisibleRootItem().\
+            indexOfChild(item) == -1:
+            while self.open_patient_window_patients_tree.invisibleRootItem().\
+                indexOfChild(selected_patient) == -1:
                 selected_patient = selected_patient.parent()
 
         # Uncheck previous patient if a different patient is selected
-        if item.checkState(0) == Qt.CheckState.Checked and self.last_patient != selected_patient:
+        if item.checkState(0) == Qt.CheckState.Checked and \
+            self.last_patient != selected_patient:
             if self.last_patient is not None:
                 self.last_patient.setCheckState(0, Qt.CheckState.Unchecked)
                 self.last_patient.setSelected(False)
             self.last_patient = selected_patient
-            
+
         # Get the types of all selected leaves
         self.selected_series_types = set()
 
@@ -383,7 +420,8 @@ class UIImageFusionWindow(object):
         if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
             patient_header = "Cannot proceed with different patient."
             self.open_patient_window_confirm_button.setDisabled(True)
-            self.open_patient_window_patients_tree.setHeaderLabel(patient_header)
+            self.open_patient_window_patients_tree.setHeaderLabel(
+                patient_header)
 
     def confirm_button_clicked(self):
         """
@@ -405,7 +443,8 @@ class UIImageFusionWindow(object):
         Executes when the progress bar finishes loaded the selected files.
         """
         if results[0] is True:  # Will be NoneType if loading was interrupted.
-            self.image_fusion_info_initialized.emit(results[1])  # Emits the progress window.
+            # Emits the progress window.
+            self.image_fusion_info_initialized.emit(results[1])
 
     def on_loading_error(self, error_code):
         """

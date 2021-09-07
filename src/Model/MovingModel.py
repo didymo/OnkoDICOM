@@ -18,10 +18,12 @@ from src.Model.ImageFusion import create_fused_model
 
 def create_moving_model():
     """
-    This function initializes all the attributes in the MovingDictContainer model 
-    required for the operation of the main window. This should be called before the 
+    This function initializes all the attributes in the 
+    MovingDictContainer model required for the operation of the main
+    window. This should be called before the 
     main window's components are constructed, but after the initial
-    values of the MovingDictContainer instance are set (i.e. dataset and filepaths).
+    values of the MovingDictContainer instance are set (i.e. dataset 
+    and filepaths).
     """
     ##############################
     #  LOAD PATIENT INFORMATION  #
@@ -109,13 +111,14 @@ def create_moving_model():
     # Set RTDOSE attributes
     if moving_dict_container.has_modality("rtdose"):
         dicom_tree_rtdose = DicomTree(filepaths['rtdose'])
-        moving_dict_container.set("dict_dicom_tree_rtdose", dicom_tree_rtdose.dict)
+        moving_dict_container.set(
+            "dict_dicom_tree_rtdose", dicom_tree_rtdose.dict)
 
         moving_dict_container.set("dose_pixluts", get_dose_pixluts(dataset))
 
         moving_dict_container.set("selected_doses", [])
         # This will be overwritten if an RTPLAN is present.
-        moving_dict_container.set("rx_dose_in_cgray", 1) 
+        moving_dict_container.set("rx_dose_in_cgray", 1)
 
     # Set RTPLAN attributes
     if moving_dict_container.has_modality("rtplan"):
@@ -123,11 +126,12 @@ def create_moving_model():
         moving_dict_container.set("rx_dose_in_cgray", rx_dose_in_cgray)
 
         dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
-        moving_dict_container.set("dict_dicom_tree_rtplan", 
-                                    dicom_tree_rtplan.dict)
+        moving_dict_container.set("dict_dicom_tree_rtplan",
+                                  dicom_tree_rtplan.dict)
 
 
 def read_images_for_fusion():
+    """Reads images for fusion"""
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
 
@@ -136,9 +140,9 @@ def read_images_for_fusion():
 
     for i in range(amount):
         try:
-             orig_fusion_list.append(patient_dict_container.filepaths[i])
+            orig_fusion_list.append(patient_dict_container.filepaths[i])
         except KeyError:
-             continue
+            continue
 
     orig_image = sitk.ReadImage(orig_fusion_list)
 
