@@ -10,13 +10,13 @@ from src.Controller.PathHandler import resource_path
 
 class ActionHandler:
     """
-    This class is responsible for initializing all of the actions that will
-    be used by the MainPage and its components. There exists a 1-to-1
-    relationship between this class and the MainPage. This class has access
-    to the main page's attributes and components, however this access should
-    only be used to provide functionality to the actions defined below. The
-    instance of this class can be given to the main page's components in
-    order to trigger actions.
+    This class is responsible for initializing all of the actions that
+    will be used by the MainPage and its components. There exists a
+    1-to-1 relationship between this class and the MainPage. This class
+    has access to the main page's attributes and components, however
+    this access should only be used to provide functionality to the
+    actions defined below. The instance of this class can be given to
+    the main page's components in order to trigger actions.
     """
 
     def __init__(self, main_page):
@@ -254,11 +254,11 @@ class ActionHandler:
             action_windowing_item.setText(text)
             windowing_actions.append(action_windowing_item)
 
-        # For reasons beyond me, the actions have to be set as a child of
-        # the windowing menu *and* later be added to the menu as well. You
-        # can't do one or the other, otherwise the menu won't populate. Feel
-        # free to try fix (or at least explain why the action has to be set
-        # as the windowing menu's child twice)
+        # For reasons beyond me, the actions have to be set as a child
+        # of the windowing menu *and* later be added to the menu as
+        # well. You can't do one or the other, otherwise the menu won't
+        # populate. Feel free to try fix (or at least explain why the
+        # action has to be set as the windowing menu's child twice)
         for item in windowing_actions:
             self.menu_windowing.addAction(item)
 
@@ -283,8 +283,8 @@ class ActionHandler:
     def windowing_handler(self, state, text):
         """
         Function triggered when a window is selected from the menu.
-        :param state: Variable not used. Present to be able to use a lambda
-        function.
+        :param state: Variable not used. Present to be able to use a
+            lambda function.
         :param text: The name of the window selected.
         """
         # Get the values for window and level from the dict
@@ -295,8 +295,8 @@ class ActionHandler:
         window = windowing_limits[0]
         level = windowing_limits[1]
 
-        # Update the dictionary of pixmaps with the update window and level
-        # values
+        # Update the dictionary of pixmaps with the update window and
+        # level values
         pixel_values = self.patient_dict_container.get("pixel_values")
         pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
         pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
@@ -322,8 +322,8 @@ class ActionHandler:
 
     def anonymization_handler(self):
         """
-        Function triggered when the Anonymization button is pressed from the
-        menu.
+        Function triggered when the Anonymization button is pressed from
+        the menu.
         """
 
         save_reply = QtWidgets.QMessageBox.information(
@@ -357,7 +357,8 @@ class ActionHandler:
 
     def transect_handler(self):
         """
-        Function triggered when the Transect button is pressed from the menu.
+        Function triggered when the Transect button is pressed from the
+        menu.
         """
         if self.is_four_view:
             view = self.__main_page.dicom_axial_view.view

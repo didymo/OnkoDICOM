@@ -256,7 +256,8 @@ class PyradiProgressBar(QtWidgets.QWidget):
         # and reaches 25
         if value == 0:
             self.label.setText("Generating nrrd file")
-        # The segmentation masks are generated between the range 25 and 50
+        # The segmentation masks are generated between the range 25 and
+        # 50
         elif value == 25:
             self.label.setText("Generating segmentation masks")
         # Above 50, pyradiomics analysis is carried out over each
@@ -266,7 +267,8 @@ class PyradiProgressBar(QtWidgets.QWidget):
         # Set the percentage value
         self.progress_bar.setValue(value)
 
-        # When the percentage reaches 100, send a signal to close progress bar
+        # When the percentage reaches 100, send a signal to close
+        # progress bar
         if value == 100:
             completion = QMessageBox.information(
                 self, "Complete", "Task has been completed successfully"

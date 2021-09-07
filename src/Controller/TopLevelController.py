@@ -88,8 +88,8 @@ class Controller:
             self.main_window.update_image_fusion_ui()
             
 
-        # Once the MainWindow has finished loading (which takes some time)
-        # close all the other open windows.
+        # Once the MainWindow has finished loading (which takes some
+        # time), close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.main_window.show()
