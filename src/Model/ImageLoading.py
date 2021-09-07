@@ -112,7 +112,7 @@ def get_datasets(filepath_list):
                     # TODO: change when other SRs are generated
                     #  (radiomics). Read from SR description to
                     #  determine SR type
-                    if allowed_class["name"] is "sr":
+                    if allowed_class["name"] == "sr":
                         if read_file.SeriesDescription == "CLINICAL-DATA":
                             slice_name = "sr-cd"
                         else:
