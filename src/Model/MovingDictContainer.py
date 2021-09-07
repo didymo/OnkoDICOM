@@ -22,42 +22,47 @@ class MovingDictContainer(metaclass=Singleton):
 
     def __init__(self):
         # Initialize base requirements
-        self.path = None                # The path of the loaded directory.
-        self.dataset = None             # Dictionary of PyDicom dataset objects.
+        self.path = None        # The path of the loaded directory.
+        self.dataset = None     # Dictionary of PyDicom dataset objects.
         self.filepaths = None           # Dictionary of filepaths.
 
-        self.additional_data = None     # Any additional values that are required (e.g. rois, raw_dvh, raw_contour, etc)
+        # Any additional values that are required (e.g. rois, raw_dvh,
+        # raw_contour, etc)
+        self.additional_data = None
 
     def set_initial_values(self, path, dataset, filepaths, **kwargs):
         """
         Used to initialize the data on the creation of a new patient.
         :param path: The path of the loaded directory.
-        :param dataset: Dictionary where keys are slice number/RT modality and values are PyDicom dataset objects.
-        :param filepaths: Dictionary where keys are slice number/RT modality and values are filepaths.
-        :param kwargs: Any additional values that are required (e.g. rois, raw_dvh, raw_contour, etc)
+        :param dataset: Dictionary where keys are slice number/RT
+            modality and values are PyDicom dataset objects.
+        :param filepaths: Dictionary where keys are slice number/RT
+            modality and values are filepaths.
+        :param kwargs: Any additional values that are required
+            (e.g. rois, raw_dvh, raw_contour, etc)
         """
         self.path = path
         self.dataset = dataset
         self.filepaths = filepaths
         self.additional_data = kwargs
 
-
     def clear(self):
         """
-        Clears the data in order to prepare for a new patient to be opened.
+        Clears the data in order to prepare for a new patient to be
+        opened.
         """
         self.path = None
         self.dataset = None
         self.filepaths = None
         self.additional_data = None
 
-
     def is_empty(self):
         """
         :return: True if class is empty
         """
         if self.path is not None or self.dataset is not None \
-                or self.filepaths is not None or self.additional_data is not None:
+                or self.filepaths is not None \
+                or self.additional_data is not None:
             return False
 
         return True
@@ -84,7 +89,8 @@ class MovingDictContainer(metaclass=Singleton):
     def has_modality(self, dicom_type):
         """
         Example usage: dicom_data.has_modality("rtss")
-        :param dicom_type: A string containing a DICOM class name as defined in ImageLoading.allowed_classes
+        :param dicom_type: A string containing a DICOM class name as
+            defined in ImageLoading.allowed_classes
         :return: True if dataset contains provided DICOM type.
         """
         return dicom_type in self.dataset

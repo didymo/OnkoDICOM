@@ -7,16 +7,17 @@ Format for allowed_classes:
     "requires" : [SOPClassUID, ..]
 }
 
-Intention of this dictionary is that as SOP Classes are made compatible with
-OnkoDICOM, they should be defined here. This refactors the
-ProgressBar.Extended.get_datasets(..) method with the purpose of making it
-more future-proof than it's current state. As it stands, every time a new
-SOP Class is made compatible with OnkoDICOM, a new if/else branch needs to
-be added to compensate. With this new function, new SOP Classes should be
-added to the allowed_classes dictionary and the get_datasets() function
-should not need to be added to. (Of course realistically this is not the
-case, however this alternative function promotes scalability and durability
-of the process). """
+Intention of this dictionary is that as SOP Classes are made compatible
+with OnkoDICOM, they should be defined here. This refactors the
+ProgressBar.Extended.get_datasets(..) method with the purpose of making
+it more future-proof than it's current state. As it stands, every time a
+new SOP Class is made compatible with OnkoDICOM, a new if/else branch
+needs to be added to compensate. With this new function, new SOP Classes
+should be added to the allowed_classes dictionary and the get_datasets()
+function should not need to be added to. (Of course realistically this is
+not the case, however this alternative function promotes scalability and
+durability of the process).
+"""
 import collections
 import math
 import re
@@ -77,20 +78,19 @@ class NotAllowedClassError(Exception):
 def get_datasets(filepath_list):
     """
     This function generates two dictionaries: the dictionary of PyDicom
-    datasets, and the dictionary of filepaths. These two dictionaries are
-    used in the PatientDictContainer model as the class attributes:
+    datasets, and the dictionary of filepaths. These two dictionaries
+    are used in the PatientDictContainer model as the class attributes:
     'dataset' and 'filepaths' The keys of both dictionaries are the
-    dataset's slice number/RT modality. The values of the read_data_dict are
-    PyDicom Dataset objects, and the values of the file_names_dict are
-    filepaths pointing to the location of the .dcm file on the user's
-    computer.
+    dataset's slice number/RT modality. The values of the read_data_dict
+    are PyDicom Dataset objects, and the values of the file_names_dict
+    are filepaths pointing to the location of the .dcm file on the
+    user's computer.
     :param filepath_list: List of all files to be searched.
     :return: Tuple (read_data_dict, file_names_dict)
     """
     read_data_dict = {}
     file_names_dict = {}
-    
-    
+
     slice_count = 0
     for file in natural_sort(filepath_list):
         try:
@@ -119,18 +119,19 @@ def get_datasets(filepath_list):
 
 def img_stack_displacement(orientation, position):
     """
-    Calculate the projection of the image position patient along the axis
-    perpendicular to the images themselves, i.e. along the stack axis.
-    Intended use is for the sorting key to sort a stack of image datasets so
-    that they are in order, regardless of whether the images are axial,
-    coronal, or sagittal, and independent from the order in which the images
-    were read in.
+    Calculate the projection of the image position patient along the
+    axis perpendicular to the images themselves, i.e. along the stack
+    axis. Intended use is for the sorting key to sort a stack of image
+    datasets so that they are in order, regardless of whether the images
+    are axial, coronal, or sagittal, and independent from the order in
+    which the images were read in.
 
     :param orientation: List of strings with six elements, the image
         orientation patient value from the dataset.
-    :param position: List of strings with three elements, the image position
-        value from the dataset.
-    :return: Float of the image position patient along the image stack axis.
+    :param position: List of strings with three elements, the image
+    position value from the dataset.
+    :return: Float of the image position patient along the image stack
+        axis.
     """
     ds_orient_x = orientation[0:3]
     ds_orient_y = orientation[3:6]
@@ -145,9 +146,10 @@ def img_stack_displacement(orientation, position):
 
 def get_dict_sort_on_displacement(item):
     """
-    :param item: dictionary key, value item with value of a PyDicom dataset
-    :return: Float of the projection of the image position patient on the axis
-        through the image stack
+    :param item: dictionary key, value item with value of a PyDicom
+        dataset
+    :return: Float of the projection of the image position patient on
+        the axis through the image stack
     """
     img_dataset = item[1]
     orientation = img_dataset.ImageOrientationPatient
@@ -159,8 +161,9 @@ def get_dict_sort_on_displacement(item):
 
 def image_stack_sort(read_data_dict, file_names_dict):
     """
-    Sort the read_data_dict and file_names_dict by order of displacement along
-    the image stack axis. For axial images this is by the Z coordinate.
+    Sort the read_data_dict and file_names_dict by order of displacement
+    along the image stack axis. For axial images this is by the Z
+    coordinate.
     :return: Tuple of sorted dictionaries
     """
     new_image_dict = {key: value for (key, value)
@@ -198,10 +201,11 @@ def image_stack_sort(read_data_dict, file_names_dict):
 
 def is_dataset_dicom_rt(read_data_dict):
     """
-    Tests if a read_data_dict produced by get_datasets(..) is a DICOM-RT set.
+    Tests if a read_data_dict produced by get_datasets(..) is a DICOM-RT
+    set.
     :param read_data_dict: Dictionary of DICOM dataset objects.
-    :return:  True if read_data_dict can be considered a complete DICOM-RT
-    object.
+    :return:  True if read_data_dict can be considered a complete
+        DICOM-RT object.
     """
     class_names = []
 
@@ -247,17 +251,17 @@ def get_roi_info(dataset_rtss):
 
 def get_thickness_dict(dataset_rtss, read_data_dict):
     """
-    Calculates and returns thicknesses for all ROIs in the RTSTRUCT that only
-    contain one contour.
+    Calculates and returns thicknesses for all ROIs in the RTSTRUCT that
+    only contain one contour.
     The process used to calculate thickness is courtesy of @sjswerdloff
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param read_data_dict:
-    :return: Dictionary of ROI thicknesses where the key is the ROI number
-    and the value is the thickness.
+    :return: Dictionary of ROI thicknesses where the key is the ROI
+        number and the value is the thickness.
     """
-    # Generate a dict where keys are ROI numbers for structures with only
-    # one contour. Value of each key is the SOPInstanceUID of the CT slice
-    # the contour is positioned on.
+    # Generate a dict where keys are ROI numbers for structures with
+    # only one contour. Value of each key is the SOPInstanceUID of the
+    # CT slice the contour is positioned on.
     single_contour_rois = {}
     for contour in dataset_rtss.ROIContourSequence:
         try:
@@ -271,8 +275,8 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
 
     dict_thickness = {}
     for roi_number, sop_instance_uid in single_contour_rois.items():
-        # Get the slice numbers the slices before and after the slice the
-        # ROI is positioned on.
+        # Get the slice numbers the slices before and after the slice
+        # the ROI is positioned on.
         slice_key = None
         for key, ds in read_data_dict.items():
             if ds.SOPInstanceUID == sop_instance_uid:
@@ -289,10 +293,12 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
             displacement = position_after - position_before
 
         except KeyError:
-            # If the image slice is either at the top or bottom of the set,
-            # use the length of the displacement to the adjacent slice as the
-            # thickness.
-            if slice_key == 1:  # If the image slice is at the bottom of set.
+            # If the image slice is either at the top or bottom of the
+            # set, use the length of the displacement to the adjacent
+            # slice as the thickness.
+
+            # If the image slice is at the bottom of set.
+            if slice_key == 1:
                 position_current = np.array(
                     read_data_dict[slice_key].ImagePositionPatient)
                 position_after = np.array(
@@ -323,10 +329,10 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness,
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
     :param rois: Dictionary of ROI information.
-    :param dict_thickness: Dictionary where the keys are ROI numbers and the
-        values are thicknesses of the ROI.
-    :param interrupt_flag: A threading.Event() object that tells the function
-        to stop calculation.
+    :param dict_thickness: Dictionary where the keys are ROI numbers and
+        the values are thicknesses of the ROI.
+    :param interrupt_flag: A threading.Event() object that tells the
+        function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
     :return: Dictionary of all the DVHs of all the ROIs of the patient.
     """
@@ -429,7 +435,8 @@ def converge_to_0_dvh(raw_dvh):
 def get_raw_contour_data(dataset_rtss):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
-    :return: Tuple (dict_roi, dict_numpoints) raw contour data of the ROIs.
+    :return: Tuple (dict_roi, dict_numpoints) raw contour data of the
+        ROIs.
     """
     dict_id = {}
     for i, elem in enumerate(dataset_rtss.StructureSetROISequence):
@@ -520,13 +527,16 @@ def get_pixluts(read_data_dict):
 def get_image_uid_list(dataset):
     """
     Extract the SOPInstanceUIDs from every image dataset
-    :param dataset: A dictionary of datasets of all the DICOM files of the patient
-    :return: uid_list, a list of SOPInstanceUIDs of all image slices of the patient
+    :param dataset: A dictionary of datasets of all the DICOM files of
+        the patient
+    :return: uid_list, a list of SOPInstanceUIDs of all image slices of
+        the patient
     """
     non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
     uid_list = []
 
-    # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE, RTPLAN)
+    # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE,
+    # RTPLAN)
     for key in dataset:
         if key not in non_img_list:
             uid_list.append(dataset[key].SOPInstanceUID)

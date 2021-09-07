@@ -55,9 +55,11 @@ def create_moving_model():
 
     # Check to see if the imageWindowing.csv file exists
     if os.path.exists(resource_path('data/csv/imageWindowing.csv')):
-        # If it exists, read data from file into the self.dict_windowing variable
+        # If it exists, read data from file into the self.dict_windowing
+        # variable
         dict_windowing = {}
-        with open(resource_path('data/csv/imageWindowing.csv'), "r") as fileInput:
+        with open(resource_path('data/csv/imageWindowing.csv'), "r") \
+                as fileInput:
             next(fileInput)
             dict_windowing["Normal"] = [window, level]
             for row in fileInput:
@@ -65,10 +67,12 @@ def create_moving_model():
                 items = [item for item in row.split(',')]
                 dict_windowing[items[0]] = [int(items[2]), int(items[3])]
     else:
-        # If csv does not exist, initialize dictionary with default values
+        # If csv does not exist, initialize dictionary with default
+        # values
         dict_windowing = {"Normal": [window, level], "Lung": [1600, -300],
                           "Bone": [1400, 700], "Brain": [160, 950],
-                          "Soft Tissue": [400, 800], "Head and Neck": [275, 900]}
+                          "Soft Tissue": [400, 800],
+                          "Head and Neck": [275, 900]}
 
     moving_dict_container.set("dict_windowing_moving", dict_windowing)
 

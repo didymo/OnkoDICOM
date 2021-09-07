@@ -19,14 +19,16 @@ from platipy.imaging.visualisation.utils import generate_comparison_colormix, \
 # Utility Functions
 def point2str(point, precision=1):
     """
-    Format a point for printing, based on specified precision with trailing 
-    zeros. Uniform printing for vector-like data (tuple, numpy array, list).
+    Format a point for printing, based on specified precision with
+    trailing zeros. Uniform printing for vector-like data (tuple, numpy
+    array, list).
 
     Args:
         point (vector-like): nD point with floating point coordinates.
         precision (int): Number of digits after the decimal point.
     Return:
-        String represntation of the given point "xx.xxx yy.yyy zz.zzz...".
+        String represntation of the given point "xx.xxx yy.yyy
+        zz.zzz...".
     """
     return ' '.join(f'{c:.{precision}f}' for c in point)
 
@@ -37,8 +39,8 @@ def uniform_random_points(bounds, num_points):
     Dimension is based on the number of pairs in the bounds input.
 
     Args:
-        bounds (list(tuple-like)): list where each tuple defines the coordinate
-        bounds.
+        bounds (list(tuple-like)): list where each tuple defines the
+        coordinate bounds.
         num_points (int): number of points to generate.
 
     Returns:
@@ -46,9 +48,8 @@ def uniform_random_points(bounds, num_points):
         within the given bounds.
     """
     internal_bounds = [sorted(b) for b in bounds]
-    # Generate rows for each of the coordinates according to the given bounds,
-    # stack into an array,
-    # and split into a list of points.
+    # Generate rows for each of the coordinates according to the given
+    # bounds, stack into an array and split into a list of points.
     mat = np.vstack([np.random.uniform(b[0], b[1], num_points)
                      for b in internal_bounds])
 
@@ -57,10 +58,10 @@ def uniform_random_points(bounds, num_points):
 
 def target_registration_errors(tx, point_list, reference_point_list):
     """
-    Distances between points transformed by the given transformation and their
-    location in another coordinate system. When the points are only used
-    to evaluate registration accuracy (not used in the registration)
-    this is the target registration error (TRE).
+    Distances between points transformed by the given transformation and
+    their location in another coordinate system. When the points are
+    only used to evaluate registration accuracy (not used in the
+    registration) this is the target registration error (TRE).
     """
     return [np.linalg.norm(np.array(tx.TransformPoint(p)) - np.array(p_ref))
             for p, p_ref in zip(point_list, reference_point_list)]
@@ -68,8 +69,8 @@ def target_registration_errors(tx, point_list, reference_point_list):
 
 def print_transformation_differences(tx1, tx2):
     """
-    Check whether two transformations are "equivalent" in an arbitrary spatial
-    region either 3D or 2D, [x=(-10,10), y=(-100,100), z=(-1000,1000)].
+    Check whether two transformations are "equivalent" in an arbitrary
+    spatial region either 3D or 2D, [x=(-10,10), y=(-100,100), z=(-1000,1000)].
     This is just a sanity check, as we are just looking at the effect of the
     transformations on a random set of points in the region.
     """
@@ -89,16 +90,18 @@ def print_transformation_differences(tx1, tx2):
           f':\tminDifference: {min(differences):.2f} maxDifference: '
           f'{max(differences):.2f}')
 
+
 def convert_composite_to_affine_transform(composite_transform):
     """
-    Converts the sitk.CompositeTransform Object into a sitk.AffineTransform 
-    Object. This currently assumes that only Euler3DTransform and 
-    Versor3DRigidTransform are in the stack of the sitk.CompositeTransform 
-    Object. Purpose is to reduce the amount of information down to one matrix.
+    Converts the sitk.CompositeTransform Object into a
+    sitk.AffineTransform Object. This currently assumes that only
+    Euler3DTransform and Versor3DRigidTransform are in the stack of the
+    sitk.CompositeTransform Object. Purpose is to reduce the amount of
+    information down to one matrix.
 
     Args:
-        composite_transform (sitk.CompositeTransform): sitk Object containing
-        transforms in a stack-like heap.
+        composite_transform (sitk.CompositeTransform): sitk Object
+        containing transforms in a stack-like heap.
     Return:
         combined_affine (sitk.AffineTransform): combined_affine
 
@@ -134,6 +137,7 @@ def convert_composite_to_affine_transform(composite_transform):
 
     return combined_affine
 
+
 def check_affine_conversion(composite_transform, combined_affine):
     """
     Checks the conversion from composite transformation to the
@@ -141,9 +145,9 @@ def check_affine_conversion(composite_transform, combined_affine):
     shows how much the transformation matrix
     differs between the two.
     Args:
-        composite_transform (sitk.CompositeTransform): sitk Object containing
-        transforms in a stack-like heap.
-        combined_affined (sitk.AffineTransform): sitk Object containing
+        composite_transform (sitk.CompositeTransform): sitk Object
+        containing transforms in a stack-like heap.
+        combined_affine (sitk.AffineTransform): sitk Object containing
         transforms in a stack-like heap.
 
     """
@@ -166,11 +170,12 @@ def check_affine_conversion(composite_transform, combined_affine):
     print('combined_affine')
     print(combined_affine)
 
+
 def convert_combined_affine_to_matrix(combined_affine):
     """
     Conversion of the 3x3 transform matrix from the AffineTransform 
-    object(keeping in mind it is a RIGID) to a 4x4 transformation matrix.
-    Where last row is (0, 0, 0, 1).
+    object(keeping in mind it is a RIGID) to a 4x4 transformation
+    matrix where last row is (0, 0, 0, 1).
     """
     A = np.array(combined_affine.GetMatrix()).reshape(3, 3)
     c = np.array(combined_affine.GetCenter())
@@ -298,6 +303,7 @@ def write_transform_to_dcm(affine_matrix):
     filepath = os.path.join(patient_dict_container.path, 'transform.dcm')
 
     spatial_registration.save_as(filepath)
+
 
 def create_fused_model(old_images, new_image):
     """
