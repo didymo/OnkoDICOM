@@ -142,8 +142,6 @@ class MovingImageLoader(ImageLoader):
                 patient_dict_container.set("raw_dvh", raw_dvh)
                 patient_dict_container.set("dvh_x_y", dvh_x_y)
                 patient_dict_container.set("dvh_outdated", False)
-        else:
-            self.load_temp_rtss(path, progress_callback, interrupt_flag)
 
         progress_callback.emit(("Loading Moving Model", 85))
         create_moving_model()
@@ -152,45 +150,3 @@ class MovingImageLoader(ImageLoader):
             return False
 
         return True
-
-    def load_temp_rtss(self, path, progress_callback, interrupt_flag):
-        """
-        Generate a temporary rtss and load its data into
-        PatientDictContainer
-        :param path: str. The common root folder of all DICOM files.
-        :param progress_callback: A signal that receives the current
-        progress of the loading.
-        :param interrupt_flag: A threading.Event() object that tells the
-        function to stop loading.
-        """
-        progress_callback.emit(("Generating temporary rtss...", 20))
-        patient_dict_container = MovingDictContainer()
-        rtss_path = Path(path).joinpath('rtss.dcm')
-        uid_list = ImageLoading.get_image_uid_list(
-            patient_dict_container.dataset)
-        rtss = create_initial_rtss_from_ct(
-            patient_dict_container.dataset[0], rtss_path, uid_list)
-
-        if interrupt_flag.is_set():  # Stop loading.
-            print("stopped")
-            return False
-
-        progress_callback.emit(("Loading temporary rtss...", 50))
-        # Set ROIs
-        rois = ImageLoading.get_roi_info(rtss)
-        patient_dict_container.set("rois", rois)
-
-        # Set pixluts
-        dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
-        patient_dict_container.set("pixluts", dict_pixluts)
-
-        # Add RT Struct file path and dataset to patient dict container
-        patient_dict_container.filepaths['rtss'] = rtss_path
-        patient_dict_container.dataset['rtss'] = rtss
-
-        # Set some patient dict container attributes
-        patient_dict_container.set("file_rtss", rtss_path)
-        patient_dict_container.set("dataset_rtss", rtss)
-        ordered_dict = DicomTree(None).dataset_to_dict(rtss)
-        patient_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
-        patient_dict_container.set("selected_rois", [])
