@@ -16,10 +16,9 @@ class ImageFusionAxialView(DicomView):
         (only metadata in the four view need to be formatted)
         """
         self.metadata_formatted = metadata_formatted
-        self.slice_view = 'axial'
         super(ImageFusionAxialView, self).__init__(roi_color,
                                                    iso_color, cut_line_color)
-
+        self.slice_view = 'axial'
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
         self.label_image_id = QtWidgets.QLabel()

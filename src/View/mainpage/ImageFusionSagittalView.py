@@ -3,10 +3,11 @@ from src.View.mainpage.ImageFusionAxialView import ImageFusionAxialView
 
 class ImageFusionSagittalView(ImageFusionAxialView):
     def __init__(self, roi_color=None, iso_color=None, cut_line_color=None):
-        self.slice_view = 'sagittal'
+        
         super(ImageFusionSagittalView, self).__init__(roi_color, 
                                                     iso_color, 
                                                     cut_line_color)
+        self.slice_view = 'sagittal'
         self.update_view()
 
     def roi_display(self):

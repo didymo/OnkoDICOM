@@ -1,13 +1,8 @@
 import threading
-import platform
 
-from pathlib import Path
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtCore import QThreadPool
-from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QMessageBox
-
-from src.View.ImageLoader import ImageLoader
-from src.Controller.PathHandler import resource_path
+from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout
 
 from src.Model.Worker import Worker
 
@@ -18,6 +13,9 @@ class ProgressWindow(QDialog):
 
     # Signal that emits when exceptions are raised
     signal_error = QtCore.Signal(Exception)
+
+    # Signal that emits when calc dvh is advised
+    signal_advise_calc_dvh = QtCore.Signal(bool)
 
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)
@@ -55,16 +53,6 @@ class ProgressWindow(QDialog):
 
         self.threadpool.start(worker)
         self.exec_()
-
-    def start_load_moving_image(self, selected_files):
-        image_loader = ImageLoader("moving", selected_files, None, self)
-        worker = Worker(image_loader.load,
-                        self.interrupt_flag, progress_callback=True)
-        worker.signals.result.connect(self.on_finish)
-        worker.signals.error.connect(self.on_error)
-        worker.signals.progress.connect(self.update_progress)
-
-        self.threadpool.start(worker)
 
     def on_finish(self, result):
         """

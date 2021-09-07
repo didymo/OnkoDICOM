@@ -6,33 +6,36 @@ from PySide6 import QtCore
 from pydicom import dcmread
 
 from src.Model import ImageLoading
-from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
+from src.Model.MovingModel import create_moving_model
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.GetPatientInfo import DicomTree
 
+from src.View.ImageLoader import ImageLoader
 
-class ImageLoader(QtCore.QObject):
+
+class MovingImageLoader(ImageLoader):
     """
-    This class is responsible for initializing and creating all the values required to create an instance of
-    the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
+    This class is responsible for initializing and creating all the values 
+    required to create an instance of the PatientDictContainer, that is 
+    used to store all the DICOM-related data used to create the patient window.
     """
 
     signal_request_calc_dvh = QtCore.Signal()
 
-    def __init__(self, selected_files, existing_rtss_path, parent_window,
-                 *args, **kwargs):
-        super(ImageLoader, self).__init__(*args, **kwargs)
-        self.selected_files = selected_files
-        self.parent_window = parent_window
-        self.existing_rtss_path = existing_rtss_path
-        self.calc_dvh = False
-        self.advised_calc_dvh = False
+    def __init__(self, *args, **kwargs):
+        super(MovingImageLoader, self).__init__(*args, **kwargs)
 
     def load(self, interrupt_flag, progress_callback):
         """
-        :param interrupt_flag: A threading.Event() object that tells the function to stop loading.
-        :param progress_callback: A signal that receives the current progress of the loading.
-        :return: PatientDictContainer object containing all values related to the loaded DICOM files.
+        :param interrupt_flag: A threading.Event() object that tells the 
+        function to stop loading.
+
+        :param progress_callback: A signal that receives the current 
+        progress of the loading.
+
+        :return: PatientDictContainer object containing all values related 
+        to the loaded DICOM files.
         """
         progress_callback.emit(("Creating datasets...", 0))
         try:
@@ -44,7 +47,7 @@ class ImageLoader(QtCore.QObject):
             raise ImageLoading.NotAllowedClassError
 
         # Populate the initial values in the PatientDictContainer singleton.
-        patient_dict_container = PatientDictContainer()
+        patient_dict_container = MovingDictContainer()
         patient_dict_container.clear()
         patient_dict_container.set_initial_values(
             path,
@@ -53,11 +56,6 @@ class ImageLoader(QtCore.QObject):
             existing_file_rtss=self.existing_rtss_path
         )
 
-        # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
-        # interrupt flag has been set, in which case it will interrupt this method after the currently processing
-        # function has finished running. It's not very pretty, and the thread will still run some functions for, in some
-        # cases, up to a couple seconds after the close button on the Progress Window has been clicked, however it's
-        # the best solution I could come up with. If you have a cleaner alternative, please make your contribution.
         if interrupt_flag.is_set():
             print("stopped")
             return False
@@ -81,8 +79,8 @@ class ImageLoader(QtCore.QObject):
                 return False
 
             progress_callback.emit(("Getting contour data...", 30))
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(
-                dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = \
+                ImageLoading.get_raw_contour_data(dataset_rtss)
 
             # Determine which ROIs are one slice thick
             dict_thickness = ImageLoading.get_thickness_dict(
@@ -108,9 +106,11 @@ class ImageLoader(QtCore.QObject):
             if 'rtdose' in file_names_dict and self.calc_dvh:
                 dataset_rtdose = dcmread(file_names_dict['rtdose'])
 
-                # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which
-                # ends up making multiprocessing on these platforms more expensive than linear calculation. As such,
-                # multiprocessing is only available on Linux until a better solution is found.
+                # Spawn-based platforms (i.e Windows and MacOS) have a large
+                # overhead when creating a new process, which ends up making
+                # multiprocessing on these platforms more expensive than linear
+                # calculation. As such, multiprocessing is only available on
+                # Linux until a better solution is found.
                 fork_safe_platforms = ['Linux']
                 if platform.system() in fork_safe_platforms:
                     progress_callback.emit(("Calculating DVHs...", 60))
@@ -145,6 +145,12 @@ class ImageLoader(QtCore.QObject):
         else:
             self.load_temp_rtss(path, progress_callback, interrupt_flag)
 
+        progress_callback.emit(("Loading Moving Model", 85))
+        create_moving_model()
+        if interrupt_flag.is_set():  # Stop loading.
+            progress_callback.emit(("Stopping", 85))
+            return False
+
         return True
 
     def load_temp_rtss(self, path, progress_callback, interrupt_flag):
@@ -158,7 +164,7 @@ class ImageLoader(QtCore.QObject):
         function to stop loading.
         """
         progress_callback.emit(("Generating temporary rtss...", 20))
-        patient_dict_container = PatientDictContainer()
+        patient_dict_container = MovingDictContainer()
         rtss_path = Path(path).joinpath('rtss.dcm')
         uid_list = ImageLoading.get_image_uid_list(
             patient_dict_container.dataset)
@@ -188,7 +194,3 @@ class ImageLoader(QtCore.QObject):
         ordered_dict = DicomTree(None).dataset_to_dict(rtss)
         patient_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
         patient_dict_container.set("selected_rois", [])
-
-    def update_calc_dvh(self, advice):
-        self.advised_calc_dvh = True
-        self.calc_dvh = advice
