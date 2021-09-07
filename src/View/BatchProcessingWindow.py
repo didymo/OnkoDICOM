@@ -118,8 +118,7 @@ class UIBatchProcessingWindow(object):
         # == Bottom widgets
         # Info text
         info_text = "Batch Processing will be performed on datasets in the "
-        info_text += "selected directory. Click 'Refresh' to reload datasets "
-        info_text += "in the directory."
+        info_text += "selected directory."
         self.info_label = QtWidgets.QLabel(info_text)
         self.info_label.setFont(label_font)
 
@@ -153,10 +152,6 @@ class UIBatchProcessingWindow(object):
         self.layout.addLayout(self.directory_layout)
 
         # Add middle widgets (patient count, tabs)
-        self.patient_label = \
-            QtWidgets.QLabel("No patients in the selected directory")
-        self.patient_label.setFont(label_font)
-        self.middle_layout.addWidget(self.patient_label)
         self.middle_layout.addWidget(self.tab_widget)
         self.layout.addLayout(self.middle_layout)
 
