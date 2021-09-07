@@ -14,14 +14,10 @@ from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
 from src.Controller.PathHandler import resource_path
 
-###Testing###
 from src.View.ImageFusionWindow import UIImageFusionWindow
 from src.Model.MovingModel import read_images_for_fusion
 from src.Model.MovingDictContainer import MovingDictContainer
 
-
-
-import matplotlib.pyplot as plt
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
     update_directory = QtCore.Signal(str)

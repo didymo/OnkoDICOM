@@ -62,7 +62,8 @@ class UIMainWindow:
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path(
+            "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
@@ -78,7 +79,8 @@ class UIMainWindow:
         self.menubar = MenuBar(self.action_handler)
         self.main_window_instance.setMenuBar(self.menubar)
         self.toolbar = Toolbar(self.action_handler)
-        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.addToolBar(
+            QtCore.Qt.TopToolBarArea, self.toolbar)
         self.main_window_instance.setWindowTitle("OnkoDICOM")
 
     def setup_central_widget(self):
@@ -106,7 +108,8 @@ class UIMainWindow:
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
-            self.isodoses_tab.request_update_isodoses.connect(self.update_views)
+            self.isodoses_tab.request_update_isodoses.connect(
+                self.update_views)
             self.isodoses_tab.request_update_ui.connect(
                 self.structures_tab.structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
@@ -119,9 +122,12 @@ class UIMainWindow:
         # Create a Dicom View containing single-slice and 3-slice views
         self.dicom_view = DicomStackedWidget(self.format_data)
 
-        roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
-        iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
-        self.dicom_single_view = DicomAxialView(roi_color=roi_color_dict, iso_color=iso_color_dict)
+        roi_color_dict = self.structures_tab.color_dict if hasattr(
+            self, 'structures_tab') else None
+        iso_color_dict = self.isodoses_tab.color_dict if hasattr(
+            self, 'isodoses_tab') else None
+        self.dicom_single_view = DicomAxialView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.dicom_axial_view = DicomAxialView(roi_color=roi_color_dict, iso_color=iso_color_dict,
                                                metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
         self.dicom_sagittal_view = DicomSagittalView(roi_color=roi_color_dict, iso_color=iso_color_dict,
@@ -179,9 +185,11 @@ class UIMainWindow:
         # the data display or the data form depending on what exists.
         reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(patient_dict_container.path + reg):
-            self.call_class.display_cd_form(self.right_panel, patient_dict_container.path)
+            self.call_class.display_cd_form(
+                self.right_panel, patient_dict_container.path)
         else:
-            self.call_class.display_cd_dat(self.right_panel, patient_dict_container.path)
+            self.call_class.display_cd_dat(
+                self.right_panel, patient_dict_container.path)
 
         splitter.addWidget(self.left_panel)
         splitter.addWidget(self.right_panel)
@@ -218,7 +226,7 @@ class UIMainWindow:
         :param update_3d_window: a boolean to mark if 3d model
         needs to be updated
         """
-        
+
         self.dicom_single_view.update_view()
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
@@ -237,17 +245,17 @@ class UIMainWindow:
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or \
-            self.dicom_axial_view.vertical_view is None or\
-            self.dicom_coronal_view.horizontal_view is None or \
-            self.dicom_coronal_view.vertical_view is None or \
-            self.dicom_sagittal_view.horizontal_view is None or \
-            self.dicom_sagittal_view.vertical_view is None:
-                self.dicom_axial_view.set_views(self.dicom_coronal_view, 
-                                                self.dicom_sagittal_view)
-                self.dicom_coronal_view.set_views(self.dicom_axial_view, 
-                                                self.dicom_sagittal_view)
-                self.dicom_sagittal_view.set_views(self.dicom_axial_view, 
-                                                self.dicom_coronal_view)
+                self.dicom_axial_view.vertical_view is None or\
+                self.dicom_coronal_view.horizontal_view is None or \
+                self.dicom_coronal_view.vertical_view is None or \
+                self.dicom_sagittal_view.horizontal_view is None or \
+                self.dicom_sagittal_view.vertical_view is None:
+            self.dicom_axial_view.set_views(self.dicom_coronal_view,
+                                            self.dicom_sagittal_view)
+            self.dicom_coronal_view.set_views(self.dicom_axial_view,
+                                              self.dicom_sagittal_view)
+            self.dicom_sagittal_view.set_views(self.dicom_axial_view,
+                                               self.dicom_coronal_view)
         else:
             self.dicom_axial_view.set_views(None, None)
             self.dicom_coronal_view.set_views(None, None)
@@ -298,7 +306,8 @@ class UIMainWindow:
 
         if moving_dict_container.has_modality("rtss"):
             self.structures_tab = StructureTab()
-            self.structures_tab.request_update_structures.connect(self.update_views)
+            self.structures_tab.request_update_structures.connect(
+                self.update_views)
             self.left_panel.addTab(self.structures_tab, "Structures")
         elif hasattr(self, 'structures_tab'):
             del self.structures_tab
@@ -310,17 +319,17 @@ class UIMainWindow:
             cut_line_color=True)
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=True)
-        
+
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
-        self.image_fusion_view_axial.update_view(zoom_change = True, 
-                                                cut_line_color=True)
-        self.image_fusion_view_sagittal.update_view(zoom_change=True, 
-                                                cut_line_color=True)
-        self.image_fusion_view_coronal.update_view(zoom_change=True, 
-                                                cut_line_color=True)
+        self.image_fusion_view_axial.update_view(zoom_change=True,
+                                                 cut_line_color=True)
+        self.image_fusion_view_sagittal.update_view(zoom_change=True,
+                                                    cut_line_color=True)
+        self.image_fusion_view_coronal.update_view(zoom_change=True,
+                                                   cut_line_color=True)
 
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
@@ -333,11 +342,13 @@ class UIMainWindow:
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
-        self.image_fusion_four_views.setLayout(self.image_fusion_four_views_layout)
-        
-        self.image_fusion_single_view = ImageFusionAxialView(metadata_formatted=False, 
-                                                            cut_line_color=True)
-        
+        self.image_fusion_four_views.setLayout(
+            self.image_fusion_four_views_layout)
+
+        self.image_fusion_single_view \
+            = ImageFusionAxialView(metadata_formatted=False,
+                                   cut_line_color=True)
+
         self.image_fusion_view.addWidget(self.image_fusion_four_views)
         self.image_fusion_view.addWidget(self.image_fusion_single_view)
         self.image_fusion_view.setCurrentWidget(self.image_fusion_four_views)

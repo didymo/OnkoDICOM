@@ -19,8 +19,8 @@ from platipy.imaging.visualisation.utils import generate_comparison_colormix, \
 # Utility Functions
 def point2str(point, precision=1):
     """
-    Format a point for printing, based on specified precision with trailing zeros.
-    Uniform printing for vector-like data (tuple, numpy array, list).
+    Format a point for printing, based on specified precision with trailing 
+    zeros. Uniform printing for vector-like data (tuple, numpy array, list).
 
     Args:
         point (vector-like): nD point with floating point coordinates.
@@ -91,10 +91,10 @@ def print_transformation_differences(tx1, tx2):
 
 def convert_composite_to_affine_transform(composite_transform):
     """
-    Converts the sitk.CompositeTransform Object into a sitk.AffineTransform Object.
-    This currently assumes that only Euler3DTransform and Versor3DRigidTransform
-    are in the stack of the sitk.CompositeTransform Object. Purpose is to reduce
-    the amount of information down to one matrix.
+    Converts the sitk.CompositeTransform Object into a sitk.AffineTransform 
+    Object. This currently assumes that only Euler3DTransform and 
+    Versor3DRigidTransform are in the stack of the sitk.CompositeTransform 
+    Object. Purpose is to reduce the amount of information down to one matrix.
 
     Args:
         composite_transform (sitk.CompositeTransform): sitk Object containing
@@ -135,6 +135,18 @@ def convert_composite_to_affine_transform(composite_transform):
     return combined_affine
 
 def check_affine_conversion(composite_transform, combined_affine):
+    """
+    Checks the conversion from composite transformation to the
+    combined affine transformation. Print statements
+    shows how much the transformation matrix
+    differs between the two.
+    Args:
+        composite_transform (sitk.CompositeTransform): sitk Object containing
+        transforms in a stack-like heap.
+        combined_affined (sitk.AffineTransform): sitk Object containing
+        transforms in a stack-like heap.
+
+    """
     print('Apply the two transformations to the same point cloud:')
     print('\t', end='')
     print_transformation_differences(composite_transform, combined_affine)
@@ -155,6 +167,11 @@ def check_affine_conversion(composite_transform, combined_affine):
     print(combined_affine)
 
 def convert_combined_affine_to_matrix(combined_affine):
+    """
+    Conversion of the 3x3 transform matrix from the AffineTransform 
+    object(keeping in mind it is a RIGID) to a 4x4 transformation matrix.
+    Where last row is (0, 0, 0, 1).
+    """
     A = np.array(combined_affine.GetMatrix()).reshape(3, 3)
     c = np.array(combined_affine.GetCenter())
     t = np.array(combined_affine.GetTranslation())
@@ -166,7 +183,14 @@ def convert_combined_affine_to_matrix(combined_affine):
 
 
 def write_transform_to_dcm(affine_matrix):
-
+    """
+    Function to write data of the top(moving) image respective
+    to the base(fixed) image.
+    
+    This function will require future refacotring when the transform 
+    DICOM file becomes in use, as this function only assumes there is 
+    one RIGID matrix to be saved.
+    """
     patient_dict_container = PatientDictContainer()
     patient_path = patient_dict_container.path
 
@@ -276,7 +300,9 @@ def write_transform_to_dcm(affine_matrix):
     spatial_registration.save_as(filepath)
 
 def create_fused_model(old_images, new_image):
-
+    """
+    Creates the image necessary to display for image fusion.
+    """
     fused_image = register_images(old_images, new_image)
 
     # Throw Transform Object into function to write dcm file
@@ -316,6 +342,15 @@ def create_fused_model(old_images, new_image):
 
 # Can be expanded to peform all of platipy's registrations
 def register_images(image_1, image_2):
+    """
+    Registers the moving and fixed image.
+    Args:
+        image_1 (Image Matrix)
+        image_2 (Image Matrix)
+    Return:
+        img_ct (Array)
+        tfm (sitk.CompositeTransform)
+    """
     img_ct, tfm = linear_registration(
         image_1,
         image_2,
