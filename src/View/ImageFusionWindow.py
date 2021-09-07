@@ -412,9 +412,6 @@ class UIImageFusionWindow(object):
         else:
             header = ""
 
-        if len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
-            self.open_patient_window_confirm_button.setDisabled(False)
-
         # Check if same patient
         if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
             patient_header = "Cannot proceed with different patient."
