@@ -66,7 +66,6 @@ def test_import_clinical_data():
     assert row_num == 0
 
 
-
 def test_save_clinical_data():
     """
     Test for saving clinical data to a DICOM SR file.
