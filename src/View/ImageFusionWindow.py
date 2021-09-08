@@ -3,7 +3,8 @@ import threading
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtCore import QThreadPool, Qt
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
+from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, \
+    QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
 
 from src.Model import DICOMDirectorySearch
