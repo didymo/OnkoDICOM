@@ -321,14 +321,14 @@ class UIMainWindow:
         """
         # Instance of Moving Model
         moving_dict_container = MovingDictContainer()
-
         if moving_dict_container.has_modality("rtss"):
-            self.structures_tab = StructureTab()
-            self.structures_tab.request_update_structures.connect(
-                self.update_views)
-            self.left_panel.addTab(self.structures_tab, "Structures")
-        elif hasattr(self, 'structures_tab'):
-            del self.structures_tab
+            if not hasattr(self, 'structures_tab'):
+                self.structures_tab = StructureTab(True)
+                self.structures_tab.request_update_structures.connect(
+                    self.update_views)
+                self.left_panel.addTab(self.structures_tab, "Structures")
+            # else:
+            # TODO: Display both ROIs in the same tab
 
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
