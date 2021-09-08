@@ -195,7 +195,7 @@ class BatchProcessingController:
                         # Update the patient dict container
                         PatientDictContainer().set("rtss_modified", False)
 
-                    progress_callback.emit(("Completed ISO2ROI .. ", 90))
+                    progress_callback.emit(("Completed ISO2ROI .. ", 100))
 
             # Perform SUV2ROI on patient
             if "suv2roi" in self.processes:
@@ -210,9 +210,11 @@ class BatchProcessingController:
                                               self.dvh_output_path)
                 process.start()
 
-                progress_callback.emit(("Completed DVH2CSV", 90))
+                progress_callback.emit(("Completed DVH2CSV", 100))
 
+            # Perform PyRad2CSV on patient
             if "pyrad2csv" in self.processes:
+                # Get current files
                 cur_patient_files = self.get_patient_files(patient)
                 process = BatchProcessPyRadCSV(progress_callback,
                                                interrupt_flag,
@@ -221,8 +223,7 @@ class BatchProcessingController:
 
                 process.start()
 
-                progress_callback.emit(("Completed PyRad2CSV", 90))
-
+                progress_callback.emit(("Completed PyRad2CSV", 100))
 
         PatientDictContainer().clear()
 

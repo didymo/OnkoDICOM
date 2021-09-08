@@ -82,25 +82,51 @@ class BatchProcessPyRadCSV(BatchProcess):
 
         self.progress_callback.emit(("Converting dicom to nrrd..", 25))
 
+        # Convert dicom files to nrrd for pyradiomics processing
         self.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped DVH2CSV")
+            self.patient_dict_container.clear()
+            return False
 
         # Location of folder where converted masks saved
         mask_folder_path = patient_nrrd_folder_path + 'structures'
 
         self.progress_callback.emit(("Converting ROIs to nrrd..", 45))
 
+        # Convert ROIs to nrrd
         self.convert_rois_to_nrrd(patient_path, rtss_path, mask_folder_path)
+
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped DVH2CSV")
+            self.patient_dict_container.clear()
+            return False
 
         self.progress_callback.emit(("Running pyradiomics..", 70))
 
+        # Run pyradiomics, convert to dataframe
         radiomics_df = self.get_radiomics_df(
             patient_path, patient_id, patient_nrrd_file_path, mask_folder_path)
 
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped DVH2CSV")
+            self.patient_dict_container.clear()
+            return False
+
         self.progress_callback.emit(("Converting to CSV..", 90))
 
+        # Convert the dataframe to CSV file
         self.convert_df_to_csv(radiomics_df, output_csv_path)
 
-    def convert_to_nrrd(self, path, nrrd_output_path):
+    @staticmethod
+    def convert_to_nrrd(path, nrrd_output_path):
         """
         Convert dicom files to nrrd.
         :param path:            Path to patient directory (str)
@@ -121,7 +147,8 @@ class BatchProcessPyRadCSV(BatchProcess):
         os.system(cmd_for_nrrd)
         os.system(cmd_del_nul)
 
-    def convert_rois_to_nrrd(self, path, rtss_path, mask_folder_path):
+    @staticmethod
+    def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
         """
         Generate an nrrd file for each region of interest using Plastimatch.
 
@@ -142,7 +169,8 @@ class BatchProcessPyRadCSV(BatchProcess):
         os.system(cmd_for_segmask)
         os.system(cmd_del_nul)
 
-    def get_radiomics_df(self, path, patient_hash, nrrd_file_path,
+    @staticmethod
+    def get_radiomics_df(path, patient_hash, nrrd_file_path,
                          mask_folder_path):
         """
         Run pyradiomics and return pandas dataframe with all the computed data.
@@ -197,8 +225,12 @@ class BatchProcessPyRadCSV(BatchProcess):
 
         return radiomics_df
 
-    def convert_df_to_csv(self, radiomics_df, csv_path):
-        """ Export dataframe as a csv file. """
+    @staticmethod
+    def convert_df_to_csv(radiomics_df, csv_path):
+        """ Export dataframe as a csv file.
+            :param radiomics_df: dataframe containing radiomics data.
+            :param csv_path: output folder path. 
+        """
 
         # If folder does not exist
         if not os.path.exists(csv_path):
@@ -214,6 +246,9 @@ class BatchProcessPyRadCSV(BatchProcess):
 
     @staticmethod
     def clean_patient_id(patient_id):
+        """
+
+        """
         invalid_characters = '/\:*?"<>|'
 
         filename = ''
