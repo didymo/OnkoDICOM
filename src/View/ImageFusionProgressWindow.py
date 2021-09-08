@@ -11,11 +11,12 @@ class ImageFusionProgressWindow(ProgressWindow):
 
     def __init__(self, *args,
                  kwargs=QtCore.Qt.WindowTitleHint |
-                        QtCore.Qt.WindowCloseButtonHint):
+                 QtCore.Qt.WindowCloseButtonHint):
         super(ImageFusionProgressWindow, self).__init__(*args, kwargs)
 
     def start_loading(self, selected_files, existing_rtss_path=None):
-        image_loader = MovingImageLoader(selected_files, existing_rtss_path, self)
+        image_loader = MovingImageLoader(
+            selected_files, existing_rtss_path, self)
         image_loader.signal_request_calc_dvh.connect(
             self.prompt_calc_dvh)
 
@@ -25,8 +26,8 @@ class ImageFusionProgressWindow(ProgressWindow):
     def prompt_calc_dvh(self):
         """
         Windows displays buttons in a different order from Linux. A check for
-        platform is performed to ensure consistency of button positioning across
-        platforms.
+        platform is performed to ensure consistency of button positioning 
+        across platforms.
         """
         message = "RTSTRUCT and RTDOSE datasets identified. Would you like to "
         message += "calculate DVHs? (This may take up to several minutes on "

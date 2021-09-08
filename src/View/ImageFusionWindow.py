@@ -420,10 +420,13 @@ class UIImageFusionWindow(object):
                 patient_header)
         
         # Check if multiple studies are selected
-        if len(selected_studies_names) > 1:
+        if len(selected_studies_names) == 1 &\
+             len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
+             self.open_patient_window_confirm_button.setDisabled(False)
+        elif len(selected_studies_names) > 1:
             header = "Only one study can be opened."
             self.open_patient_window_confirm_button.setDisabled(True)
-    
+            
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
