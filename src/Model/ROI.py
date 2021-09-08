@@ -11,6 +11,9 @@ from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.constants import DEFAULT_WINDOW_SIZE
+
+from src.Model.Transform import inv_linear_transform
 
 
 def rename_roi(rtss, roi_id, new_name):
@@ -594,8 +597,8 @@ def transform_rois_contours(axial_rois_contours):
     """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
-    slice_ids = dict((v, k) for k, v in PatientDictContainer().get(
-        "dict_uid").items())
+    slice_ids = dict((v, k) for k, v
+                     in PatientDictContainer().get("dict_uid").items())
     for name in axial_rois_contours.keys():
         coronal_rois_contours[name] = {}
         sagittal_rois_contours[name] = {}
@@ -604,20 +607,20 @@ def transform_rois_contours(axial_rois_contours):
             for contour in contours:
                 for i in range(len(contour)):
                     if contour[i][1] in coronal_rois_contours[name]:
-                        coronal_rois_contours[name][contour[i][1]][0].\
-                            append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0]\
+                            .append([contour[i][0], slice_ids[slice_id]])
                     else:
                         coronal_rois_contours[name][contour[i][1]] = [[]]
-                        coronal_rois_contours[name][contour[i][1]][0].\
-                            append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0]\
+                            .append([contour[i][0], slice_ids[slice_id]])
 
                     if contour[i][0] in sagittal_rois_contours[name]:
-                        sagittal_rois_contours[name][contour[i][0]][0].\
-                            append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0]\
+                            .append([contour[i][1], slice_ids[slice_id]])
                     else:
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
-                        sagittal_rois_contours[name][contour[i][0]][0].\
-                            append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0]\
+                            .append([contour[i][1], slice_ids[slice_id]])
     return coronal_rois_contours, sagittal_rois_contours
 
 
@@ -636,36 +639,53 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
     # Possible process for this is:
     # 1. Calculate the areas of each contour on the slice
     # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-    # 2. Compare each contour to the largest contour by area to
-    # determine if it is contained entirely within the largest contour.
+    # 2. Compare each contour to the largest contour by area to determine if
+    # it is contained entirely within the largest contour.
     # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
-    # 3. If the polygon is contained, use
-    # QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole"
-    # polygon from the largest polygon, and then remove the polygon from
-    # the list of polygons to be displayed. This process should provide
-    # fast and reliable results, however it should be noted that this
-    # method may fall apart in a situation where there are multiple
-    # "large" polygons, each with their own hole in it. An appropriate
-    # solution to that may be to compare every contour against one
-    # another and determine which ones have holes encompassed entirely
+    # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to
+    # subtract the smaller "hole" polygon from the largest polygon, and then
+    # remove the polygon from the list of polygons to be displayed. This
+    # process should provide fast and reliable results, however it should be
+    # noted that this method may fall apart in a situation where there are
+    # multiple "large" polygons, each with their own hole in it. An
+    # appropriate solution to that may be to compare every contour against
+    # one another and determine which ones have holes encompassed entirely
     # by them, and then subtract each hole from the larger polygon and
-    # delete the smaller holes. This second solution would definitely
-    # lead to more accurate representation of contours, but could
-    # possibly be too slow to be viable.
+    # delete the smaller holes. This second solution would definitely lead
+    # to more accurate representation of contours, but could possibly be too
+    # slow to be viable.
 
     if curr_slice not in dict_rois_contours[curr_roi]:
         return []
 
     list_polygons = []
     pixel_list = dict_rois_contours[curr_roi][curr_slice]
-    for i in range(len(pixel_list)):
-        list_qpoints = []
-        contour = pixel_list[i]
-        for point in contour:
-            curr_qpoint = QtCore.QPoint(point[0], point[1] * pixmap_aspect)
-            list_qpoints.append(curr_qpoint)
-        curr_polygon = QtGui.QPolygonF(list_qpoints)
-        list_polygons.append(curr_polygon)
+    dataset = PatientDictContainer().dataset[0]
+    different_sizes = (dataset['Rows'].value != DEFAULT_WINDOW_SIZE)
+
+    if different_sizes:
+        for i in range(len(pixel_list)):
+            list_qpoints = []
+            contour = pixel_list[i]
+            for point in contour:
+                x_t, y_t = inv_linear_transform(
+                    point[0], point[1],
+                    dataset['Rows'].value, dataset['Columns'].value)
+                for x in x_t:
+                    for y in y_t:
+                        curr_qpoint = QtCore.QPoint(x, y * pixmap_aspect)
+                        list_qpoints.append(curr_qpoint)
+            curr_polygon = QtGui.QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
+    else:
+        for i in range(len(pixel_list)):
+            list_qpoints = []
+            contour = pixel_list[i]
+            for point in contour:
+                curr_qpoint = QtCore.QPoint(point[0], point[1] * pixmap_aspect)
+                list_qpoints.append(curr_qpoint)
+            curr_polygon = QtGui.QPolygonF(list_qpoints)
+            list_polygons.append(curr_polygon)
     return list_polygons
 
 
@@ -861,8 +881,8 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
         index += 1
 
     # Remove old values out of the original sequences
-    rm_indices = [old_duplicated_roi_indexes[name] for
-                  name in duplicated_names]
+    rm_indices = [old_duplicated_roi_indexes[name]
+                  for name in duplicated_names]
     for index in sorted(rm_indices, reverse=True):
         # Remove the old value out of the original structure set
         # sequence
