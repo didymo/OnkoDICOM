@@ -42,7 +42,7 @@ class BatchProcessPyRadCSV(BatchProcess):
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
-        self.required_classes = ('rtss', 'rtdose')
+        self.required_classes = 'rtss'.split()
         self.ready = self.load_images(patient_files, self.required_classes)
         self.output_path = output_path
 
@@ -69,7 +69,6 @@ class BatchProcessPyRadCSV(BatchProcess):
         patient_nrrd_file_path = patient_nrrd_folder_path + file_name
 
         output_csv_path = self.output_path + '/CSV/'
-        #output_csv_patient_path = patient_path + '/CSV/'
 
         # If folder does not exist
         if not os.path.exists(patient_nrrd_folder_path):
@@ -81,17 +80,25 @@ class BatchProcessPyRadCSV(BatchProcess):
             # Create folder
             os.makedirs(output_csv_path)
 
+        self.progress_callback.emit(("Converting dicom to nrrd..", 25))
+
         self.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+
         # Location of folder where converted masks saved
         mask_folder_path = patient_nrrd_folder_path + 'structures'
 
+        self.progress_callback.emit(("Converting ROIs to nrrd..", 45))
+
         self.convert_rois_to_nrrd(patient_path, rtss_path, mask_folder_path)
+
+        self.progress_callback.emit(("Running pyradiomics..", 70))
 
         radiomics_df = self.get_radiomics_df(
             patient_path, patient_id, patient_nrrd_file_path, mask_folder_path)
 
-        self.convert_df_to_csv(radiomics_df, self.clean_patient_id(patient_id),
-                               output_csv_path)
+        self.progress_callback.emit(("Converting to CSV..", 90))
+
+        self.convert_df_to_csv(radiomics_df, output_csv_path)
 
     def convert_to_nrrd(self, path, nrrd_output_path):
         """
@@ -122,7 +129,6 @@ class BatchProcessPyRadCSV(BatchProcess):
         :param rtss_path:           Path to RT-Struct file (str)
         :param mask_folder_path:    Folder to which the segmentation masks
                                     will be saved(str)
-        :param callback:            Function to update progress bar
         """
         path = '"' + path + '"'
         mask_folder_path = '"' + mask_folder_path + '"'
@@ -146,7 +152,6 @@ class BatchProcessPyRadCSV(BatchProcess):
                                     identifiers
         :param nrrd_file_path:      Path to folder with converted nrrd file
         :param mask_folder_path:    Path to ROI nrrd files
-        :param callback:            Function to update progress bar
         :return:                    Pandas dataframe
         """
 
@@ -192,7 +197,7 @@ class BatchProcessPyRadCSV(BatchProcess):
 
         return radiomics_df
 
-    def convert_df_to_csv(self, radiomics_df, patient_hash, csv_path):
+    def convert_df_to_csv(self, radiomics_df, csv_path):
         """ Export dataframe as a csv file. """
 
         # If folder does not exist
