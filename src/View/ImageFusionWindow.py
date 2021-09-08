@@ -274,7 +274,8 @@ class UIImageFusionWindow(object):
             "OpenPatientWindowInstance",
             "Please select below the image set you wish to overlay:"))
         self.open_patient_directory_result_label.\
-            setText("The selected imageset(s) above will be co-registered with the current imageset.")
+            setText("The selected imageset(s) above will be \
+                co-registered with the current imageset.")
         self.open_patient_window_stop_button.setText(_translate(
             "OpenPatientWindowInstance", "Stop Search"))
         self.open_patient_window_close_button.setText(_translate(
