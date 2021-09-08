@@ -213,7 +213,16 @@ class BatchProcessingController:
                 progress_callback.emit(("Completed DVH2CSV", 90))
 
             if "pyrad2csv" in self.processes:
-               pass
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessPyRadCSV(progress_callback,
+                                               interrupt_flag,
+                                               cur_patient_files,
+                                               self.pyrad_output_path)
+
+                process.start()
+
+                progress_callback.emit(("Completed PyRad2CSV", 90))
+
 
         PatientDictContainer().clear()
 

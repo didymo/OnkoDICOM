@@ -1,5 +1,5 @@
-import os
-from src.Model import ImageLoading
+import os, platform
+from radiomics import featureextractor
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 import pandas as pd
@@ -50,19 +50,174 @@ class BatchProcessPyRadCSV(BatchProcess):
         """
         Goes through the steps of the PyRadCSV conversion.
         """
-        
+        # Stop loading
+        if self.interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped DVH2CSV")
+            self.patient_dict_container.clear()
+            return False
 
+        if not self.ready:
+            return False
 
+        rtss_path = self.patient_dict_container.filepaths.get('rtss')
+        patient_id = self.patient_dict_container.dataset.get('rtss').PatientID
+        patient_id = self.clean_patient_id(patient_id)
+        patient_path = self.patient_dict_container.path
+        file_name = self.clean_patient_id(patient_id) + '.nrrd'
+        patient_nrrd_folder_path = patient_path + '/nrrd/'
+        patient_nrrd_file_path = patient_nrrd_folder_path + file_name
 
+        output_csv_path = self.output_path + '/CSV/'
+        #output_csv_patient_path = patient_path + '/CSV/'
 
+        # If folder does not exist
+        if not os.path.exists(patient_nrrd_folder_path):
+            # Create folder
+            os.makedirs(patient_nrrd_folder_path)
 
+            # If folder does not exist
+        if not os.path.exists(output_csv_path):
+            # Create folder
+            os.makedirs(output_csv_path)
 
+        self.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+        # Location of folder where converted masks saved
+        mask_folder_path = patient_nrrd_folder_path + 'structures'
 
+        self.convert_rois_to_nrrd(patient_path, rtss_path, mask_folder_path)
 
+        radiomics_df = self.get_radiomics_df(
+            patient_path, patient_id, patient_nrrd_file_path, mask_folder_path)
 
+        self.convert_df_to_csv(radiomics_df, self.clean_patient_id(patient_id),
+                               output_csv_path)
 
+    def convert_to_nrrd(self, path, nrrd_output_path):
+        """
+        Convert dicom files to nrrd.
+        :param path:            Path to patient directory (str)
+        :param nrrd_file_path:  Path to nrrd folder (str)
+        """
+        path = '"' + path + '"'
+        nrrd_file_path = '"' + nrrd_output_path + '"'
 
+        # Command to convert dicom files to nrrd
+        # Writes the result from the processing into a temporary file
+        # rather than the terminal
+        cmd_for_nrrd = 'plastimatch convert --input ' + path + \
+            ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
 
+        # Command to delete the temporary file generated before
+        cmd_del_nul = 'rm ' + path + '/NUL'
+
+        os.system(cmd_for_nrrd)
+        os.system(cmd_del_nul)
+
+    def convert_rois_to_nrrd(self, path, rtss_path, mask_folder_path):
+        """
+        Generate an nrrd file for each region of interest using Plastimatch.
+
+        :param path:                Path to patient directory (str)
+        :param rtss_path:           Path to RT-Struct file (str)
+        :param mask_folder_path:    Folder to which the segmentation masks
+                                    will be saved(str)
+        :param callback:            Function to update progress bar
+        """
+        path = '"' + path + '"'
+        mask_folder_path = '"' + mask_folder_path + '"'
+        rtss_path = '"' + rtss_path + '"'
+        # Command for generating an nrrd file for each region of interest
+        cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + \
+            ' --output-prefix ' + mask_folder_path + \
+            ' --prefix-format nrrd --referenced-ct ' + path + ' 1>' + \
+            path + '/NUL'
+        cmd_del_nul = 'rm ' + path + '/NUL'
+        os.system(cmd_for_segmask)
+        os.system(cmd_del_nul)
+
+    def get_radiomics_df(self, path, patient_hash, nrrd_file_path,
+                         mask_folder_path):
+        """
+        Run pyradiomics and return pandas dataframe with all the computed data.
+
+        :param path:                Path to patient directory (str)
+        :param patient_hash:        Patient hash ID generated from their
+                                    identifiers
+        :param nrrd_file_path:      Path to folder with converted nrrd file
+        :param mask_folder_path:    Path to ROI nrrd files
+        :param callback:            Function to update progress bar
+        :return:                    Pandas dataframe
+        """
+
+        # Initialize feature extractor using default pyradiomics settings
+        extractor = featureextractor.RadiomicsFeatureExtractor()
+
+        # Contains the features for all the ROI
+        all_features = []
+        # CSV headers
+        radiomics_headers = []
+        feature_vector = ''
+
+        for file in os.listdir(mask_folder_path):
+            # Contains features for current ROI
+            roi_features = []
+            roi_features.append(patient_hash)
+            roi_features.append(path)
+            # Full path of ROI nrrd file
+            mask_name = mask_folder_path + '/' + file
+            # Name of ROI
+            image_id = file.split('.')[0]
+            feature_vector = extractor.execute(nrrd_file_path, mask_name)
+            roi_features.append(image_id)
+
+            # Add first order features to list
+            for feature_name in feature_vector.keys():
+                roi_features.append(feature_vector[feature_name])
+
+            all_features.append(roi_features)
+
+        radiomics_headers.append('Hash ID')
+        radiomics_headers.append('Directory Path')
+        radiomics_headers.append('ROI')
+
+        # Extract column/feature names
+        for feature_name in feature_vector.keys():
+            radiomics_headers.append(feature_name)
+
+        # Convert into dataframe
+        radiomics_df = pd.DataFrame(all_features, columns=radiomics_headers)
+
+        radiomics_df.set_index('Hash ID', inplace=True)
+
+        return radiomics_df
+
+    def convert_df_to_csv(self, radiomics_df, patient_hash, csv_path):
+        """ Export dataframe as a csv file. """
+
+        # If folder does not exist
+        if not os.path.exists(csv_path):
+            # Create folder
+            os.makedirs(csv_path)
+
+        target_path = csv_path + "Pyradiomics_.csv"
+
+        create_header = not os.path.isfile(target_path)
+
+        # Export dataframe as csv
+        radiomics_df.to_csv(target_path, mode='a', header=create_header)
+
+    @staticmethod
+    def clean_patient_id(patient_id):
+        invalid_characters = '/\:*?"<>|'
+
+        filename = ''
+
+        for c in patient_id:
+            if c not in invalid_characters:
+                filename += c
+
+        return filename
 
 
 
