@@ -145,7 +145,13 @@ class BatchProcessPyRadCSV(BatchProcess):
         cmd_del_nul = 'rm ' + path + '/NUL'
 
         os.system(cmd_for_nrrd)
-        os.system(cmd_del_nul)
+
+        if os.path.exists(path + '/NUL'):
+            if platform.system() != "Windows":
+                os.system(cmd_del_nul)
+            else:
+                cmd_del_nul = 'del ' + path + '/NUL'
+                os.system(cmd_del_nul)
 
     @staticmethod
     def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
@@ -167,7 +173,13 @@ class BatchProcessPyRadCSV(BatchProcess):
             path + '/NUL'
         cmd_del_nul = 'rm ' + path + '/NUL'
         os.system(cmd_for_segmask)
-        os.system(cmd_del_nul)
+
+        if os.path.exists(path + '/NUL'):
+            if platform.system() != "Windows":
+                os.system(cmd_del_nul)
+            else:
+                cmd_del_nul = 'del ' + path + '/NUL'
+                os.system(cmd_del_nul)
 
     @staticmethod
     def get_radiomics_df(path, patient_hash, nrrd_file_path,
@@ -229,7 +241,7 @@ class BatchProcessPyRadCSV(BatchProcess):
     def convert_df_to_csv(radiomics_df, csv_path):
         """ Export dataframe as a csv file.
             :param radiomics_df: dataframe containing radiomics data.
-            :param csv_path: output folder path. 
+            :param csv_path: output folder path.
         """
 
         # If folder does not exist
@@ -247,7 +259,9 @@ class BatchProcessPyRadCSV(BatchProcess):
     @staticmethod
     def clean_patient_id(patient_id):
         """
-
+        Removes characters that cannot be used as part of file names.
+        :param patient_id: patients ID
+        return: cleaned up patient_id
         """
         invalid_characters = '/\:*?"<>|'
 
