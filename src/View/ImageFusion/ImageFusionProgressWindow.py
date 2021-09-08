@@ -3,7 +3,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.View.ProgressWindow import ProgressWindow
-from src.View.MovingImageLoader import MovingImageLoader
+from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Controller.PathHandler import resource_path
 
 

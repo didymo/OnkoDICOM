@@ -9,7 +9,8 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, \
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
-from src.View.ImageFusionProgressWindow import ImageFusionProgressWindow
+from src.View.ImageFusion.ImageFusionProgressWindow \
+    import ImageFusionProgressWindow
 from src.View.resources_open_patient_rc import *
 
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -266,8 +267,8 @@ class UIImageFusionWindow(object):
             "Choose an image to merge with:"))
         self.open_patient_directory_input_box.setPlaceholderText(
             _translate("OpenPatientWindowInstance",
-                       "Enter DICOM Files Path (For example, \
-                           C:\path\\to\your\DICOM\Files)"))
+                       "Enter DICOM Files Path (For example, "
+                       "C:\path\\to\your\DICOM\Files)"))
         self.open_patient_directory_choose_button.setText(_translate(
             "OpenPatientWindowInstance",
             "Choose"))
@@ -275,8 +276,8 @@ class UIImageFusionWindow(object):
             "OpenPatientWindowInstance",
             "Please select below the image set you wish to overlay:"))
         self.open_patient_directory_result_label.\
-            setText("The selected imageset(s) above will be \
-                co-registered with the current imageset.")
+            setText("The selected imageset(s) above will be "
+                    "co-registered with the current imageset.")
         self.open_patient_window_stop_button.setText(_translate(
             "OpenPatientWindowInstance", "Stop Search"))
         self.open_patient_window_close_button.setText(_translate(
@@ -415,7 +416,8 @@ class UIImageFusionWindow(object):
             header = ""
 
         # Check if same patient
-        if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
+        if selected_patient.dicom_object.patient_id.strip() != \
+                self.patient_id.strip():
             patient_header = "Cannot proceed with different patient."
             self.open_patient_window_confirm_button.setDisabled(True)
             self.open_patient_window_patients_tree.setHeaderLabel(

@@ -1,5 +1,4 @@
 from shutil import which
-from pathlib import Path
 import os
 
 from PySide6 import QtCore, QtWidgets, QtGui
@@ -14,7 +13,7 @@ from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
 from src.Controller.PathHandler import resource_path
 
-from src.View.ImageFusionWindow import UIImageFusionWindow
+from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
 from src.Model.MovingModel import read_images_for_fusion
 from src.Model.MovingDictContainer import MovingDictContainer
 

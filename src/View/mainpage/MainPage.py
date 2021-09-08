@@ -21,9 +21,10 @@ from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 
-from src.View.mainpage.ImageFusionAxialView import ImageFusionAxialView
-from src.View.mainpage.ImageFusionSagittalView import ImageFusionSagittalView
-from src.View.mainpage.ImageFusionCoronalView import ImageFusionCoronalView
+from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
+from src.View.ImageFusion.ImageFusionSagittalView import \
+    ImageFusionSagittalView
+from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
 from src.Model.MovingDictContainer import MovingDictContainer
 
 from src.Controller.PathHandler import resource_path
@@ -32,16 +33,21 @@ from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 class UIMainWindow:
     """
-    The central class responsible for initializing most of the values stored in the PatientDictContainer model and
-    defining the visual layout of the main window of OnkoDICOM.
-    No class has access to the attributes belonging to this class, except for the class's ActionHandler, which is used
-    to trigger actions within the main window. Components of this class (i.e. QWidget child classes such as
-    StructureTab, DicomView, DicomTree, etc.) should not be able to reference this class, and rather should exist
-    independently and only be able to communicate with the PatientDictContainer model. If a component needs to
-    communicate with another component, that should be accomplished by emitting signals within that components, and
-    having the slots for those signals within this class (as demonstrated by the update_views() method of this class).
-    If a class needs to trigger one of the actions defined in the ActionHandler, then the instance of the ActionHandler
-    itself can safely be passed into the class.
+    The central class responsible for initializing most of the values stored
+    in the PatientDictContainer model and defining the visual layout of the
+    main window of OnkoDICOM. No class has access to the attributes
+    belonging to this class, except for the class's ActionHandler, which is
+    used to trigger actions within the main window. Components of this class
+    (i.e. QWidget child classes such as StructureTab, DicomView, DicomTree,
+    etc.) should not be able to reference this class, and rather should
+    exist independently and only be able to communicate with the
+    PatientDictContainer model. If a component needs to communicate with
+    another component, that should be accomplished by emitting signals
+    within that components, and having the slots for those signals within
+    this class (as demonstrated by the update_views() method of this class).
+    If a class needs to trigger one of the actions defined in the
+    ActionHandler, then the instance of the ActionHandler itself can safely
+    be passed into the class.
     """
     pyradi_trigger = QtCore.Signal(str, dict, str)
 
@@ -92,7 +98,8 @@ class UIMainWindow:
 
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
-        # Left panel contains stuctures tab, isodoses tab, and structure information
+        # Left panel contains stuctures tab, isodoses tab,
+        # and structure information
         self.left_panel = QtWidgets.QTabWidget()
         self.left_panel.setMinimumWidth(300)
         self.left_panel.setMaximumWidth(500)
@@ -116,7 +123,8 @@ class UIMainWindow:
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
 
-        # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
+        # Right panel contains the different tabs of DICOM view, DVH,
+        # clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
 
         # Create a Dicom View containing single-slice and 3-slice views
@@ -128,12 +136,15 @@ class UIMainWindow:
             self, 'isodoses_tab') else None
         self.dicom_single_view = DicomAxialView(
             roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_axial_view = DicomAxialView(roi_color=roi_color_dict, iso_color=iso_color_dict,
-                                               metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
-        self.dicom_sagittal_view = DicomSagittalView(roi_color=roi_color_dict, iso_color=iso_color_dict,
-                                                     cut_line_color=QtGui.QColor(0, 255, 0))
-        self.dicom_coronal_view = DicomCoronalView(roi_color=roi_color_dict, iso_color=iso_color_dict,
-                                                   cut_line_color=QtGui.QColor(0, 0, 255))
+        self.dicom_axial_view = DicomAxialView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
+        self.dicom_sagittal_view = DicomSagittalView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            cut_line_color=QtGui.QColor(0, 255, 0))
+        self.dicom_coronal_view = DicomCoronalView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            cut_line_color=QtGui.QColor(0, 0, 255))
         self.three_dimension_view = DicomView3D()
 
         # Rescale the size of the scenes inside the 3-slice views
@@ -172,17 +183,22 @@ class UIMainWindow:
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
-        # Create Clinical Data tab
-        # TODO refactor the entire Clinical Data form/display class
-        # As they currently stand, they are given the right tab widget, and make direct modifications to the tab.
-        # This class should be refactored in the same way as the rest of the main window's components, i.e. the Clinical
-        # Data should be a child of QWidget that can exist independently of OnkoDICOM. This class would differ from most
-        # other main window components in that rather than interacting with the PatientDictContainer as its model, it
-        # would use the patient's ClinicalData csv file as the model (which means that the QWidget would theoretically
-        # easily exist outside OnkoDICOM).
-        # There are two classes: one for displaying the clinical data, and another for modifying the clinical data.
-        # The check below determines whether there already exists a clinical data csv for the patient, and loads either
-        # the data display or the data form depending on what exists.
+        # Create Clinical Data tab TODO refactor the entire Clinical Data
+        #  form/display class As they currently stand, they are given the
+        #  right tab widget, and make direct modifications to the tab. This
+        #  class should be refactored in the same way as the rest of the
+        #  main window's components, i.e. the Clinical Data should be a
+        #  child of QWidget that can exist independently of OnkoDICOM. This
+        #  class would differ from most other main window components in that
+        #  rather than interacting with the PatientDictContainer as its
+        #  model, it would use the patient's ClinicalData csv file as the
+        #  model (which means that the QWidget would theoretically easily
+        #  exist outside OnkoDICOM).
+        # There are two classes: one for displaying the clinical data,
+        # and another for modifying the clinical data. The check below
+        # determines whether there already exists a clinical data csv for
+        # the patient, and loads either the data display or the data form
+        # depending on what exists.
         reg = '/CSV/ClinicalData*[.csv]'
         if not glob.glob(patient_dict_container.path + reg):
             self.call_class.display_cd_form(
@@ -218,10 +234,12 @@ class UIMainWindow:
 
     def update_views(self, update_3d_window=False):
         """
-        This function is a slot for signals to request the updating of the DICOM View and DVH tabs in order to reflect
-        changes made by other components of the main window (for example, when a structure in the structures tab is
-        selected, this method needs to be called in order for the DICOM view window to be updated to show the new
-        region of interest.
+        This function is a slot for signals to request the updating of the
+        DICOM View and DVH tabs in order to reflect changes made by other
+        components of the main window (for example, when a structure in the
+        structures tab is selected, this method needs to be called in order
+        for the DICOM view window to be updated to show the new region of
+        interest.
 
         :param update_3d_window: a boolean to mark if 3d model
         needs to be updated
@@ -245,7 +263,7 @@ class UIMainWindow:
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or \
-                self.dicom_axial_view.vertical_view is None or\
+                self.dicom_axial_view.vertical_view is None or \
                 self.dicom_coronal_view.horizontal_view is None or \
                 self.dicom_coronal_view.vertical_view is None or \
                 self.dicom_sagittal_view.horizontal_view is None or \
@@ -263,8 +281,8 @@ class UIMainWindow:
 
     def zoom_in(self, is_four_view):
         """
-        This function calls the zooming in function on the four view's views or the single view depending on what view
-        is showing on screen.
+        This function calls the zooming in function on the four view's views
+        or the single view depending on what view is showing on screen.
         is_four_view: Whether the four view is showing
         """
         if is_four_view:
@@ -276,8 +294,8 @@ class UIMainWindow:
 
     def zoom_out(self, is_four_view):
         """
-        This function calls the zooming out function on the four view's views or the single view depending on what view
-        is showing on screen.
+        This function calls the zooming out function on the four view's
+        views or the single view depending on what view is showing on screen.
         is_four_view: Whether the four view is showing
         """
         if is_four_view:
@@ -289,8 +307,8 @@ class UIMainWindow:
 
     def format_data(self, size):
         """
-        This function is used to update the meta data's font size and margin based on the height and width of the
-        viewports.
+        This function is used to update the meta data's font size and margin
+        based on the height and width of the viewports.
         size: The size of the DicomStackedWidget
         """
         self.dicom_axial_view.format_metadata(size)
@@ -314,8 +332,8 @@ class UIMainWindow:
 
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
-                                        metadata_formatted=False, 
-                                        cut_line_color=True)
+            metadata_formatted=False,
+            cut_line_color=True)
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
             cut_line_color=True)
         self.image_fusion_view_coronal = ImageFusionCoronalView(
