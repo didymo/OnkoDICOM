@@ -3,31 +3,31 @@ from pathlib import Path
 from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.View.ProgressWindow import ProgressWindow
-from src.View.ImageLoader import ImageLoader
+from src.View.MovingImageLoader import MovingImageLoader
 from src.Controller.PathHandler import resource_path
 
 
-class OpenPatientProgressWindow(ProgressWindow):
+class ImageFusionProgressWindow(ProgressWindow):
 
     def __init__(self, *args,
                  kwargs=QtCore.Qt.WindowTitleHint |
-                        QtCore.Qt.WindowCloseButtonHint):
-        super(OpenPatientProgressWindow, self).__init__(*args, kwargs)
+                 QtCore.Qt.WindowCloseButtonHint):
+        super(ImageFusionProgressWindow, self).__init__(*args, kwargs)
 
     def start_loading(self, selected_files, existing_rtss_path=None):
-        image_loader = ImageLoader(selected_files, existing_rtss_path, self)
+        image_loader = MovingImageLoader(
+            selected_files, existing_rtss_path, self)
         image_loader.signal_request_calc_dvh.connect(
             self.prompt_calc_dvh)
 
         # Start loading the selected files on separate thread
         self.start(image_loader.load)
 
-
     def prompt_calc_dvh(self):
         """
         Windows displays buttons in a different order from Linux. A check for
-        platform is performed to ensure consistency of button positioning across
-        platforms.
+        platform is performed to ensure consistency of button positioning 
+        across platforms.
         """
         message = "RTSTRUCT and RTDOSE datasets identified. Would you like to "
         message += "calculate DVHs? (This may take up to several minutes on "

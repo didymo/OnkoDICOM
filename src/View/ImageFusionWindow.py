@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox
 
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
-from src.View.ProgressWindow import ProgressWindow
+from src.View.ImageFusionProgressWindow import ImageFusionProgressWindow
 from src.View.resources_open_patient_rc import *
 
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -393,28 +393,25 @@ class UIImageFusionWindow(object):
             self.last_patient = selected_patient
 
         # Get the types of all selected leaves
-        self.selected_series_types = set()
-
+        selected_series_types = set()
+        selected_studies_names = set()
         for checked_item in self.get_checked_leaves():
+            selected_studies_names.add(checked_item.parent().text(0))
             series_type = checked_item.dicom_object.get_series_type()
             if type(series_type) == str:
-                self.selected_series_types.add(series_type)
+                selected_series_types.add(series_type)
             else:
-                self.selected_series_types.update(series_type)
+                selected_series_types.update(series_type)
 
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
-        if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) == 0:
+        if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTDOSE' in self.selected_series_types:
+        elif 'RTDOSE' in selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
             self.open_patient_window_confirm_button.setDisabled(True)
         else:
             header = ""
-        self.open_patient_window_patients_tree.setHeaderLabel(header)
-
-        if len(list({'CT', 'MR', 'PT'} & self.selected_series_types)) != 0:
-            self.open_patient_window_confirm_button.setDisabled(False)
 
         # Check if same patient
         if selected_patient.dicom_object.patient_id.strip() != self.patient_id.strip():
@@ -422,6 +419,17 @@ class UIImageFusionWindow(object):
             self.open_patient_window_confirm_button.setDisabled(True)
             self.open_patient_window_patients_tree.setHeaderLabel(
                 patient_header)
+        
+        # Check if multiple studies are selected
+        if len(selected_studies_names) == 1 &\
+             len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
+             self.open_patient_window_confirm_button.setDisabled(False)
+        elif len(selected_studies_names) > 1:
+            header = "Only one study can be opened."
+            self.open_patient_window_confirm_button.setDisabled(True)
+            
+        # Set the tree header
+        self.open_patient_window_patients_tree.setHeaderLabel(header)
 
     def confirm_button_clicked(self):
         """
@@ -431,12 +439,10 @@ class UIImageFusionWindow(object):
         for item in self.get_checked_leaves():
             selected_files += item.dicom_object.get_files()
 
-        self.progress_window = ProgressWindow(
-            self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window = ImageFusionProgressWindow(self)
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
-        self.progress_window.start_load_moving_image(selected_files)
-        self.progress_window.exec_()
+        self.progress_window.start_loading(selected_files)
 
     def on_loaded(self, results):
         """

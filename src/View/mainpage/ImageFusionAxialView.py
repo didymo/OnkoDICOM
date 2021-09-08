@@ -1,9 +1,6 @@
 from PySide6 import QtWidgets, QtCore, QtGui
-from skimage import measure
 
 from src.View.mainpage.DicomView import DicomView
-from src.Model.Isodose import get_dose_grid
-from src.Controller.PathHandler import resource_path
 
 
 class ImageFusionAxialView(DicomView):
@@ -15,8 +12,8 @@ class ImageFusionAxialView(DicomView):
         metadata_formatted: whether the metadata needs to be formatted 
         (only metadata in the four view need to be formatted)
         """
-        self.metadata_formatted = metadata_formatted
         self.slice_view = 'axial'
+        self.metadata_formatted = metadata_formatted
         super(ImageFusionAxialView, self).__init__(roi_color,
                                                    iso_color, cut_line_color)
 
@@ -263,66 +260,3 @@ class ImageFusionAxialView(DicomView):
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
-
-    def isodose_display(self):
-        """
-        Display isodoses on the DICOM Image.
-        """
-        slider_id = self.slider.value()
-        curr_slice_uid = self.patient_dict_container.get("dict_uid")[slider_id]
-        z = self.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
-        dataset_rtdose = self.patient_dict_container.dataset['rtdose']
-        grid = get_dose_grid(dataset_rtdose, float(z))
-
-        if not (grid == []):
-            # sort selected_doses in ascending order so that the high dose isodose washes
-            # paint over the lower dose isodose washes
-            for sd in sorted(self.patient_dict_container.get("selected_doses")):
-                dose_level = sd * self.patient_dict_container.get("rx_dose_in_cgray") / \
-                    (dataset_rtdose.DoseGridScaling * 10000)
-                contours = measure.find_contours(grid, dose_level)
-
-                polygons = self.calc_dose_polygon(
-                    self.patient_dict_container.get("dose_pixluts")[curr_slice_uid], contours)
-
-                brush_color = self.iso_color[sd]
-                with open(resource_path('data/line&fill_configuration'), 'r') as stream:
-                    elements = stream.readlines()
-                    if len(elements) > 0:
-                        iso_line = int(elements[2].replace('\n', ''))
-                        iso_opacity = int(elements[3].replace('\n', ''))
-                        line_width = float(elements[4].replace('\n', ''))
-                    else:
-                        iso_line = 2
-                        iso_opacity = 5
-                        line_width = 2.0
-                    stream.close()
-                iso_opacity = int((iso_opacity / 100) * 255)
-                brush_color.setAlpha(iso_opacity)
-                pen_color = QtGui.QColor(
-                    brush_color.red(), brush_color.green(), brush_color.blue())
-                pen = self.get_qpen(pen_color, iso_line, line_width)
-                for i in range(len(polygons)):
-                    self.scene.addPolygon(
-                        polygons[i], pen, QtGui.QBrush(brush_color))
-
-    def calc_dose_polygon(self, dose_pixluts, contours):
-        """
-        Calculate a list of polygons to display for a given isodose.
-        :param dose_pixluts:
-         lookup table (LUT) to get the image pixel values
-        :param contours:
-          trace outline of the isodose to be displayed
-        :return: List of polygons of type QPolygonF.
-        """
-        list_polygons = []
-        for contour in contours:
-            list_qpoints = []
-            for point in contour[::2]:
-                curr_qpoint = QtCore.QPoint(
-                    dose_pixluts[0][int(point[1])], dose_pixluts[1][int(point[0])])
-                list_qpoints.append(curr_qpoint)
-            curr_polygon = QtGui.QPolygonF(list_qpoints)
-            list_polygons.append(curr_polygon)
-
-        return list_polygons

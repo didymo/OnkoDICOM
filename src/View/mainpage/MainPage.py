@@ -314,7 +314,8 @@ class UIMainWindow:
 
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
-            metadata_formatted=True, cut_line_color=True)
+                                        metadata_formatted=False, 
+                                        cut_line_color=True)
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
             cut_line_color=True)
         self.image_fusion_view_coronal = ImageFusionCoronalView(
