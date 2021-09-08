@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When the pyradiomics button is pressed
     run_pyradiomics = QtCore.Signal(str, dict, str)
     # When the image fusion button is pressed
-    image_fusion_signal = QtCore.Signal(str)
+    image_fusion_signal = QtCore.Signal()
 
     # Initialising the main window and setting up the UI
     def __init__(self):
@@ -137,9 +137,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             self.open_patient_window.emit()
 
     def open_image_fusion(self):
-        patient_dict_container = PatientDictContainer()
-        filepath = patient_dict_container.path
-        self.image_fusion_signal.emit(os.path.dirname(filepath))
+        # patient_dict_container = PatientDictContainer()
+        self.image_fusion_signal.emit()
 
     def update_image_fusion_ui(self):
         mvd = MovingDictContainer()

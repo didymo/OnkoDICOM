@@ -374,3 +374,4 @@ class UIMainWindow:
 
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
+        self.right_panel.setCurrentWidget(self.image_fusion_view)

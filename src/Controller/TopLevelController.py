@@ -113,7 +113,7 @@ class Controller:
         """
         self.pyradi_progressbar.close()
 
-    def show_image_fusion_select_window(self, path):
+    def show_image_fusion_select_window(self):
         # only initialize image fusion window
         if not isinstance(self.image_fusion_window, ImageFusionWindow):
             self.image_fusion_window = ImageFusionWindow(
