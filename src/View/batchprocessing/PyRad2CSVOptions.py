@@ -51,8 +51,8 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
         self.main_layout.addLayout(self.directory_layout)
         self.setLayout(self.main_layout)
 
-    def set_csv_output_location(self, path, enable=True,
-                                change_if_modified=False):
+    def set_pyrad_output_location(self, path, enable=True,
+                                  change_if_modified=False):
         """
         Set the location for the resulting PyRad2CSV .csv file.
         ----------
@@ -68,7 +68,7 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
             self.directory_input.setText(path)
             self.directory_input.setEnabled(enable)
 
-    def get_csv_output_location(self):
+    def get_pyrad_output_location(self):
         """
         Get the location of the desired output directory.
         """
@@ -91,5 +91,5 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
             path = expanduser("~")
 
         # Update file path
-        self.set_csv_output_location(path, change_if_modified=True)
+        self.set_pyrad_output_location(path, change_if_modified=True)
 

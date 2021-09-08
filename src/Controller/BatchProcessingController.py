@@ -1,6 +1,8 @@
 from src.View.ProgressWindow import ProgressWindow
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRadCSV
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import DICOMDirectorySearch
@@ -21,6 +23,7 @@ class BatchProcessingController:
         """
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
+        self.pyrad_output_path = file_paths.get('pyrad_output_path')
         self.processes = processes
         self.dicom_structure = None
         self.patient_files_loaded = False
@@ -208,6 +211,9 @@ class BatchProcessingController:
                 process.start()
 
                 progress_callback.emit(("Completed DVH2CSV", 90))
+
+            if "pyrad2csv" in self.processes:
+               pass
 
         PatientDictContainer().clear()
 
