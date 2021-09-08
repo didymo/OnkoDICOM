@@ -116,7 +116,8 @@ class Controller:
     def show_image_fusion_select_window(self, path):
         # only initialize image fusion window
         if not isinstance(self.image_fusion_window, ImageFusionWindow):
-            self.image_fusion_window = ImageFusionWindow(path)
+            self.image_fusion_window = ImageFusionWindow(
+                self.default_directory)
             self.image_fusion_window.go_next_window.connect(
                 self.show_main_window)
 
