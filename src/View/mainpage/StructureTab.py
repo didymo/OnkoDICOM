@@ -152,11 +152,14 @@ class StructureTab(QtWidgets.QWidget):
         layout_roi_buttons.addWidget(self.button_roi_draw)
         layout_roi_buttons.addWidget(self.button_roi_delete)
 
-    def update_ui(self):
+    def update_ui(self, moving=False):
         """
         Update the UI of Structure Tab when a new patient is opened
         """
-        self.patient_dict_container = PatientDictContainer()
+        if moving:
+            self.patient_dict_container = MovingDictContainer()
+        else:
+            self.patient_dict_container = PatientDictContainer()
         self.rois = self.patient_dict_container.get("rois")
         self.color_dict = self.init_color_roi()
         self.patient_dict_container.set("roi_color_dict", self.color_dict)

@@ -324,16 +324,9 @@ class UIMainWindow:
         patient_dict_container = PatientDictContainer()
         if moving_dict_container.has_modality("rtss"):
             if len(self.structures_tab.rois.items()) == 0:
-                self.left_panel.removeTab(0)
-                self.structures_tab = StructureTab(True)
-                self.structures_tab.request_update_structures.connect(
-                    self.update_views)
-                self.left_panel.addTab(self.structures_tab, "Structures")
+                self.structures_tab.update_ui(moving=True)
             # else:
                 # TODO: Display both ROIs in the same tab
-            if patient_dict_container.has_modality("rtdose"):
-                self.left_panel.removeTab(0)
-                self.left_panel.addTab(self.isodoses_tab, "Isodoses")
 
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
