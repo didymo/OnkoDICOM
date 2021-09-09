@@ -135,21 +135,43 @@ class Study:
         """
         self.study_uid = study_uid
         self.study_description = None
-        self.series = {}
+        self.image_series = {}
+        self.rtstruct = {}
+        self.rtplan = {}
+        self.rtdose = {}
 
     def add_series(self, series):
         """
-        Adds a Series object to the patient's dictionary of series.
+        Adds a Series object to one of the patient's series dictionaries.
         :param series: A Series object.
         """
-        self.series[series.series_uid] = series
+        series_type = series.get_series_type()
+        if series_type == "RTSTRUCT":
+            if series.referenced_image_series_uid in self.rtstruct:
+                self.rtstruct[series.referenced_image_series_uid].append(
+                    series)
+            else:
+                self.rtstruct[series.referenced_image_series_uid] = [
+                    series]
+        elif series_type == "RTPLAN":
+            if series.referenced_rtss_uid in self.rtplan:
+                self.rtplan[series.referenced_rtss_uid].append(series)
+            else:
+                self.rtplan[series.referenced_rtss_uid] = [series]
+        elif series_type == "RTDOSE":
+            if series.refenced_rtplan_uid in self.rtdose:
+                self.rtdose[series.refenced_rtplan_uid].append(series)
+            else:
+                self.rtdose[series.refenced_rtplan_uid] = [series]
+        else:
+            self.image_series[series.series_uid] = series
 
     def has_series(self, series_uid):
         """
         :param series_uid: A SeriesInstanceUID to check.
         :return: True if series contains series_uid.
         """
-        return series_uid in self.series
+        return series_uid in self.image_series
 
     def get_series(self, series_uid):
         """
@@ -157,7 +179,7 @@ class Study:
         :return: Series object if series found.
         """
         if self.has_series(series_uid):
-            return self.series[series_uid]
+            return self.image_series[series_uid]
         return None
 
     def get_files(self):
@@ -166,7 +188,7 @@ class Study:
         hierarchy.
         """
         filepaths = []
-        for series_uid, series in self.series.items():
+        for series_uid, series in self.image_series.items():
             filepaths += (series.get_files())
 
         return filepaths
@@ -188,7 +210,7 @@ class Study:
                       "1.2.840.10008.5.1.4.1.1.481.5"]      # RT Plan
 
         contained_classes = []
-        for series_uid, series in self.series.items():
+        for series_uid, series in self.image_series.items():
             for image_uid, image in series.images.items():
                 if image.class_id not in contained_classes:
                     contained_classes.append(image.class_id)
@@ -203,11 +225,81 @@ class Study:
         widget_item.setFlags(widget_item.flags()
                              | Qt.ItemIsAutoTristate
                              | Qt.ItemIsUserCheckable)
+        image_series_widgets = {}
+        rtstruct_widgets = {}
+        rtplan_widgets = {}
+        for image_uid, image in self.image_series.items():
+            image_series_widgets[image_uid] = image.get_widget_item()
+            widget_item.addChild(image_series_widgets[image_uid])
 
-        # Add all children of this object as children of the widget item.
-        for series_uid, series in self.series.items():
-            widget_item.addChild(series.get_widget_item())
+        for image_uid, rtstructs in self.rtstruct.items():
+            for rtstruct in rtstructs:
+                rtstruct_widgets[rtstruct.series_uid] = rtstruct.get_widget_item()
+                if image_uid != "" and image_uid in image_series_widgets:
+                    image_series_widgets[image_uid].addChild(rtstruct_widgets[rtstruct.series_uid])
+                else:
+                    widget_item.addChild(rtstruct_widgets[rtstruct.series_uid])
 
+        for rtstruct_uid, rtplans in self.rtplan.items():
+            for rtplan in rtplans:
+                rtplan_widgets[rtplan.series_uid] = rtplan.get_widget_item()
+                if rtstruct_uid != "" and rtstruct_uid in rtstruct_widgets:
+                    rtstruct_widgets[rtstruct_uid].addChild(rtplan_widgets[rtplan.series_uid])
+                else:
+                    found_image_series = False
+                    if rtplan.frame_of_reference_uid != "":
+                        for image_uid, image in self.image_series.items():
+                            if rtplan.frame_of_reference_uid == image.frame_of_reference_uid:
+                                temp_rtss = self.get_empty_widget("RTSTRUCT")
+                                temp_rtss.addChild(rtplan_widgets[rtplan.series_uid])
+                                image_series_widgets[image_uid].addChild(temp_rtss)
+                                found_image_series = True
+                                break
+                    if not found_image_series:
+                        widget_item.addChild(rtplan_widgets[rtplan.series_uid])
+
+        for rtplan_uid, rtdoses in self.rtdose.items():
+            for rtdose in rtdoses:
+                rtdose_widget = rtdose.get_widget_item()
+                if rtplan_uid != "" and rtplan_uid in rtplan_widgets:
+                    rtplan_widgets[rtplan_uid].addChild(rtdose_widget)
+                else:
+                    found_rtstruct = False
+                    if rtdose.referenced_rtss_uid != "" or rtdose.frame_of_reference_uid != "":
+                        for image_uid, rtstructs in self.rtstruct.items():
+                            for rtstruct in rtstructs:
+                                if (rtdose.referenced_rtss_uid != "" and rtdose.referenced_rtss_uid == rtstruct.series_uid) or \
+                                        (rtdose.frame_of_reference_uid != "" and rtdose.frame_of_reference_uid == rtstruct.frame_of_reference_uid):
+                                    temp_rtplan = self.get_empty_widget("RTPLAN")
+                                    temp_rtplan.addChild(rtdose_widget)
+                                    rtstruct_widgets[rtstruct.series_uid].addChild(temp_rtplan)
+                                    found_rtstruct = True
+                                    break
+
+                    if not found_rtstruct:
+                        found_series = False
+                        if rtdose.frame_of_reference_uid != "":
+                            for image_uid, image in self.image_series.items():
+                                if rtdose.frame_of_reference_uid == image.frame_of_reference_uid:
+                                    temp_rtplan = self.get_empty_widget("RTPLAN")
+                                    temp_rtplan.addChild(rtdose_widget)
+                                    temp_rtss = self.get_empty_widget("RTSTRUCT")
+                                    temp_rtss.addChild(temp_rtplan)
+                                    image_series_widgets[image_uid].addChild(temp_rtss)
+                                    found_series = True
+                                    break
+
+                        if not found_series:
+                            widget_item.addChild(rtdose_widget)
+
+        return widget_item
+
+    def get_empty_widget(self, name):
+        widget_item = DICOMWidgetItem("No" + name + " was found.", self)
+        widget_item.setFlags(widget_item.flags()
+                             | Qt.ItemIsAutoTristate
+                             | Qt.ItemIsUserCheckable)
+        widget_item.setCheckState(0, Qt.Unchecked)
         return widget_item
 
 
@@ -221,6 +313,7 @@ class Series:
         self.series_uid = series_uid
         self.series_description = None
         self.images = {}
+        self.frame_of_reference_uid = ""
 
     def add_image(self, image):
         """
@@ -279,7 +372,9 @@ class Series:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(widget_item.flags()
+                             | Qt.ItemIsAutoTristate
+                             | Qt.ItemIsUserCheckable)
         widget_item.setCheckState(0, Qt.Unchecked)
         return widget_item
 
