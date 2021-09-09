@@ -234,47 +234,61 @@ class Study:
 
         for image_uid, rtstructs in self.rtstruct.items():
             for rtstruct in rtstructs:
-                rtstruct_widgets[rtstruct.series_uid] = rtstruct.get_widget_item()
+                rtstruct_widgets[rtstruct.get_instance_uid()] = rtstruct.get_widget_item()
                 if image_uid != "" and image_uid in image_series_widgets:
-                    image_series_widgets[image_uid].addChild(rtstruct_widgets[rtstruct.series_uid])
+                    image_series_widgets[image_uid].addChild(rtstruct_widgets[rtstruct.get_instance_uid()])
                 else:
-                    widget_item.addChild(rtstruct_widgets[rtstruct.series_uid])
+                    widget_item.addChild(rtstruct_widgets[rtstruct.get_instance_uid()])
 
         for rtstruct_uid, rtplans in self.rtplan.items():
             for rtplan in rtplans:
-                rtplan_widgets[rtplan.series_uid] = rtplan.get_widget_item()
-                if rtstruct_uid != "" and rtstruct_uid in rtstruct_widgets:
-                    rtstruct_widgets[rtstruct_uid].addChild(rtplan_widgets[rtplan.series_uid])
-                else:
+                rtplan_widgets[rtplan.get_instance_uid()] = rtplan.get_widget_item()
+                found_rtss = False
+                for image_uid, rtstructs in self.rtstruct.items():
+                    for rtstruct in rtstructs:
+                        for id, image in rtstruct.images.items():
+                            if rtstruct_uid == id:
+                                rtstruct_widgets[rtstruct_uid].addChild(rtplan_widgets[rtplan.get_instance_uid()])
+                                found_rtss = True
+                                break
+                if not found_rtss:
                     found_image_series = False
                     if rtplan.frame_of_reference_uid != "":
                         for image_uid, image in self.image_series.items():
                             if rtplan.frame_of_reference_uid == image.frame_of_reference_uid:
                                 temp_rtss = self.get_empty_widget("RTSTRUCT")
-                                temp_rtss.addChild(rtplan_widgets[rtplan.series_uid])
+                                temp_rtss.addChild(rtplan_widgets[rtplan.get_instance_uid()])
                                 image_series_widgets[image_uid].addChild(temp_rtss)
                                 found_image_series = True
                                 break
                     if not found_image_series:
-                        widget_item.addChild(rtplan_widgets[rtplan.series_uid])
+                        widget_item.addChild(rtplan_widgets[rtplan.get_instance_uid()])
 
         for rtplan_uid, rtdoses in self.rtdose.items():
             for rtdose in rtdoses:
                 rtdose_widget = rtdose.get_widget_item()
-                if rtplan_uid != "" and rtplan_uid in rtplan_widgets:
-                    rtplan_widgets[rtplan_uid].addChild(rtdose_widget)
-                else:
+                found_rtplan = False
+                for rtstruct_uid, rtplans in self.rtplan.items():
+                    for rtplan in rtplans:
+                        for id, image in rtplan.images.items():
+                            if rtplan_uid == id:
+                                rtplan_widgets[rtplan_uid].addChild(rtdose_widget)
+                                found_rtplan = True
+                                break
+
+                if not found_rtplan:
                     found_rtstruct = False
                     if rtdose.referenced_rtss_uid != "" or rtdose.frame_of_reference_uid != "":
                         for image_uid, rtstructs in self.rtstruct.items():
                             for rtstruct in rtstructs:
-                                if (rtdose.referenced_rtss_uid != "" and rtdose.referenced_rtss_uid == rtstruct.series_uid) or \
-                                        (rtdose.frame_of_reference_uid != "" and rtdose.frame_of_reference_uid == rtstruct.frame_of_reference_uid):
-                                    temp_rtplan = self.get_empty_widget("RTPLAN")
-                                    temp_rtplan.addChild(rtdose_widget)
-                                    rtstruct_widgets[rtstruct.series_uid].addChild(temp_rtplan)
-                                    found_rtstruct = True
-                                    break
+                                for id, image in rtstruct.images.items():
+                                    if (rtdose.referenced_rtss_uid != "" and rtdose.referenced_rtss_uid == id) or \
+                                            (rtdose.frame_of_reference_uid != "" and rtdose.frame_of_reference_uid == rtstruct.frame_of_reference_uid):
+                                        temp_rtplan = self.get_empty_widget("RTPLAN")
+                                        temp_rtplan.addChild(rtdose_widget)
+                                        rtstruct_widgets[rtstruct.series_uid].addChild(temp_rtplan)
+                                        found_rtstruct = True
+                                        break
 
                     if not found_rtstruct:
                         found_series = False
@@ -295,7 +309,7 @@ class Study:
         return widget_item
 
     def get_empty_widget(self, name):
-        widget_item = DICOMWidgetItem("No" + name + " was found.", self)
+        widget_item = DICOMWidgetItem("No matched " + name + " was found.", self)
         widget_item.setFlags(widget_item.flags()
                              | Qt.ItemIsAutoTristate
                              | Qt.ItemIsUserCheckable)
@@ -314,6 +328,11 @@ class Series:
         self.series_description = None
         self.images = {}
         self.frame_of_reference_uid = ""
+
+    def get_instance_uid(self):
+        if len(self.images) == 1:
+            for id, image in self.images.items():
+                return id
 
     def add_image(self, image):
         """

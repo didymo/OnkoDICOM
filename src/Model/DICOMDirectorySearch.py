@@ -97,19 +97,17 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                             existing_study = existing_patient.get_study(
                                 dicom_file.StudyInstanceUID)
                             if not existing_study.has_series(
-                                    dicom_file.SOPInstanceUID):
+                                    dicom_file.SeriesInstanceUID):
                                 new_series = get_series(dicom_file, new_image)
 
                                 existing_study.add_series(new_series)
                             else:
                                 existing_series = existing_study.get_series(
-                                    dicom_file.SOPInstanceUID)
+                                    dicom_file.SeriesInstanceUID)
                                 if not existing_series.has_image(
                                         dicom_file.SOPInstanceUID):
-                                    if len(existing_series.images) == 0:
-                                        existing_series.series_description\
-                                            = dicom_file.get(
-                                            "SeriesDescription")
+                                    existing_series.series_description = \
+                                        dicom_file.get("SeriesDescription")
                                     existing_series.add_image(new_image)
 
     return dicom_structure
