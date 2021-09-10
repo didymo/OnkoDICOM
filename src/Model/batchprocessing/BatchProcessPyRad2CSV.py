@@ -45,6 +45,7 @@ class BatchProcessPyRadCSV(BatchProcess):
         self.required_classes = 'rtss'.split()
         self.ready = self.load_images(patient_files, self.required_classes)
         self.output_path = output_path
+        self.filename = "Pyradiomics_.csv"
 
     def start(self):
         """
@@ -237,8 +238,7 @@ class BatchProcessPyRadCSV(BatchProcess):
 
         return radiomics_df
 
-    @staticmethod
-    def convert_df_to_csv(radiomics_df, csv_path):
+    def convert_df_to_csv(self, radiomics_df, csv_path):
         """ Export dataframe as a csv file.
             :param radiomics_df: dataframe containing radiomics data.
             :param csv_path: output folder path.
@@ -249,7 +249,7 @@ class BatchProcessPyRadCSV(BatchProcess):
             # Create folder
             os.makedirs(csv_path)
 
-        target_path = csv_path + "Pyradiomics_.csv"
+        target_path = csv_path + self.filename
 
         create_header = not os.path.isfile(target_path)
 
@@ -273,6 +273,10 @@ class BatchProcessPyRadCSV(BatchProcess):
 
         return filename
 
-
+    def set_filename(self, name):
+        if name != '':
+            self.filename = name
+        else:
+            self.filename = "Pyradiomics_.csv"
 
 
