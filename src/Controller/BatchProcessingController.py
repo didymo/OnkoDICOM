@@ -37,6 +37,8 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.progress_window.signal_error.connect(
             self.error_loading_patient_files)
+        self.progress_window.signal_loaded.connect(
+            self.completed_loading_patient_files)
 
         # Flag set if patients are loaded
         self.patient_files_loaded = False
@@ -89,12 +91,10 @@ class BatchProcessingController:
                     (message, max_num if max_num < num else num)
                 )
 
-        dicom_structure = DICOMDirectorySearch.get_dicom_structure(
+        self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
                                                 self.batch_path,
                                                 interrupt_flag,
                                                 Callback)
-
-        self.completed_loading_patient_files(dicom_structure)
 
     def error_loading_patient_files(self):
         """
@@ -104,13 +104,12 @@ class BatchProcessingController:
               "is correct and try again. ")
         self.progress_window.close()
 
-    def completed_loading_patient_files(self, dicom_structure):
+    def completed_loading_patient_files(self):
         """
         Called when completed loading the patient files.
         :param dicom_structure: DicomStructure object
         """
         self.patient_files_loaded = True
-        self.dicom_structure = dicom_structure
         self.progress_window.close()
 
     @staticmethod
