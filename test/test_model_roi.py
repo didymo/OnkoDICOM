@@ -195,18 +195,18 @@ def test_roi_to_geometry(test_object):
                                len(dict_rois_contours[roi_name][slice_id][i]) <= 1
 
 
-def test_roi_intersection(test_object):
+def test_roi_manipulation(test_object):
     dict_rois_contours = get_roi_contour_pixel(
         test_object.patient_dict_container.get("raw_contour"),
-        ['LUNG_R', 'LIVER'],
+        ['LUNG_R', 'HEART'],
         test_object.patient_dict_container.get("pixluts"))
+
     lung_r_geometry = roi_to_geometry(dict_rois_contours['LUNG_R'])
-    liver_geometry = roi_to_geometry(dict_rois_contours['LIVER'])
-    uid_list = ImageLoading.get_image_uid_list(
-        test_object.patient_dict_container.dataset)
-    result_geometry = manipulate_rois(lung_r_geometry, liver_geometry, "INTERSECTION")
-    result_contours = geometry_to_roi(result_geometry)
-    assert len(result_contours.keys()) == 1
+    heart_geometry = roi_to_geometry(dict_rois_contours['HEART'])
+
+    union_result = manipulate_rois(lung_r_geometry, heart_geometry, "UNION")
+    result_contours = geometry_to_roi(union_result)
+    assert len(result_contours.keys()) == len(dict_rois_contours['LUNG_R'].keys())
 
 
 def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
