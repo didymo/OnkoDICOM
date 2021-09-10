@@ -248,6 +248,10 @@ class BatchProcessingController:
 
     @classmethod
     def create_timestamp(cls):
+        """
+        Create a unique timestamp as a string.
+        returns string
+        """
         cur_time = datetime.datetime.now()
         year = cur_time.year
         month = cur_time.month
