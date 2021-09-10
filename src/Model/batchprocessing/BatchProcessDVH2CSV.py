@@ -45,6 +45,7 @@ class BatchProcessDVH2CSV(BatchProcess):
         self.required_classes = ('rtss', 'rtdose')
         self.ready = self.load_images(patient_files, self.required_classes)
         self.output_path = output_path
+        self.filename = "DVHs_.csv"
 
     def start(self):
         """
@@ -109,7 +110,7 @@ class BatchProcessDVH2CSV(BatchProcess):
             os.mkdir(path + '/CSV')
 
         # Save the DVH to a CSV file
-        self.dvh2csv(raw_dvh, path + "/CSV/", 'DVHs', patient_id)
+        self.dvh2csv(raw_dvh, path + "/CSV/", self.filename, patient_id)
 
     def dvh2csv(self, dict_dvh, path, csv_name, patient_id):
         """
@@ -164,3 +165,9 @@ class BatchProcessDVH2CSV(BatchProcess):
         pddf_csv.set_index('Patient ID', inplace=True)
         # Convert and export pandas dataframe to CSV file
         pddf_csv.to_csv(tar_path, mode='a', header=create_header)
+
+    def set_filename(self, name):
+        if name != '':
+            self.filename = name
+        else:
+            self.filename = "DVHs_.csv"

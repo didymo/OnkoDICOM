@@ -1,3 +1,4 @@
+import datetime
 from src.View.ProgressWindow import ProgressWindow
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
@@ -28,6 +29,7 @@ class BatchProcessingController:
         self.dicom_structure = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
+        self.timestamp = self.create_timestamp()
 
     def start_processing(self):
         """
@@ -208,6 +210,7 @@ class BatchProcessingController:
                                               interrupt_flag,
                                               cur_patient_files,
                                               self.dvh_output_path)
+                process.set_filename('DVHs_' + self.timestamp + '.csv')
                 process.start()
 
                 progress_callback.emit(("Completed DVH2CSV", 100))
@@ -220,7 +223,7 @@ class BatchProcessingController:
                                                interrupt_flag,
                                                cur_patient_files,
                                                self.pyrad_output_path)
-
+                process.set_filename('Pyradiomics_' + self.timestamp + '.csv')
                 process.start()
 
                 progress_callback.emit(("Completed PyRad2CSV", 100))
@@ -242,3 +245,18 @@ class BatchProcessingController:
         print("Error performing batch processing.")
         self.progress_window.close()
         return
+
+    @classmethod
+    def create_timestamp(cls):
+        cur_time = datetime.datetime.now()
+        year = cur_time.year
+        month = cur_time.month
+        day = cur_time.day
+        hour = cur_time.hour
+        min = cur_time.minute
+        sec = cur_time.second
+
+        time_stamp = str(year) + str(month) + str(day) + str(hour) + \
+                     str(min) + str(sec)
+
+        return time_stamp
