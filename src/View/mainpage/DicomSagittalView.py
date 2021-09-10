@@ -4,7 +4,9 @@ from src.View.mainpage.DicomView import DicomView
 class DicomSagittalView(DicomView):
     def __init__(self, roi_color=None, iso_color=None, cut_line_color=None):
         self.slice_view = 'sagittal'
-        super(DicomSagittalView, self).__init__(roi_color, iso_color, cut_line_color)
+        super(DicomSagittalView, self).__init__(roi_color, 
+                                                iso_color, 
+                                                cut_line_color)
         self.update_view()
 
     def roi_display(self):
@@ -17,7 +19,8 @@ class DicomSagittalView(DicomView):
 
         for roi in selected_rois:
             roi_name = rois[roi]['name']
-            polygons = self.patient_dict_container.get("dict_polygons_sagittal")[roi_name][slider_id]
+            polygons = self.patient_dict_container.get(
+                "dict_polygons_sagittal")[roi_name][slider_id]
             super().draw_roi_polygons(roi, polygons)
 
     def isodose_display(self):

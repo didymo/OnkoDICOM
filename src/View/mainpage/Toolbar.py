@@ -48,6 +48,8 @@ class Toolbar(QToolBar):
         self.addAction(self.action_handler.action_four_views)
         self.addAction(self.action_handler.action_show_cut_lines)
         self.addSeparator()
+        self.addAction(self.action_handler.action_image_fusion)
+        self.addSeparator()
         self.addAction(self.action_handler.action_add_ons)
         self.addWidget(spacer)
         self.addWidget(self.button_export)

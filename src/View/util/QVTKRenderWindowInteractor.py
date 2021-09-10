@@ -78,7 +78,7 @@ Changes by Chen Jintao, Aug. 2021
 try:
     import vtkmodules.qt
 
-    PyQtImpl = vtkmodules.qt.PyQtImpl
+    PyQtImpl = "PySide6"
 except ImportError:
     pass
 
@@ -121,7 +121,6 @@ if PyQtImpl is None:
                 except ImportError:
                     try:
                         import PySide
-
                         PyQtImpl = "PySide"
                     except ImportError:
                         raise ImportError("Cannot load either PyQt or PySide")
@@ -482,7 +481,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             self._Iren.LeftButtonPressEvent()
         elif self._ActiveButton == Qt.RightButton:
             self._Iren.RightButtonPressEvent()
-        elif self._ActiveButton == Qt.MidButton:
+        elif self._ActiveButton == Qt.MiddleButton:
             self._Iren.MiddleButtonPressEvent()
 
     def mouseReleaseEvent(self, ev):
@@ -494,7 +493,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
             self._Iren.LeftButtonReleaseEvent()
         elif self._ActiveButton == Qt.RightButton:
             self._Iren.RightButtonReleaseEvent()
-        elif self._ActiveButton == Qt.MidButton:
+        elif self._ActiveButton == Qt.MiddleButton:
             self._Iren.MiddleButtonReleaseEvent()
 
     def mouseMoveEvent(self, ev):
