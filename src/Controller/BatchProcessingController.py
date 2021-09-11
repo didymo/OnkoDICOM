@@ -1,6 +1,9 @@
+import datetime
 from src.View.ProgressWindow import ProgressWindow
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRadCSV
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import DICOMDirectorySearch
@@ -21,10 +24,12 @@ class BatchProcessingController:
         """
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
+        self.pyrad_output_path = file_paths.get('pyrad_output_path')
         self.processes = processes
         self.dicom_structure = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
+        self.timestamp = self.create_timestamp()
 
     def start_processing(self):
         """
@@ -34,6 +39,8 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.progress_window.signal_error.connect(
             self.error_loading_patient_files)
+        self.progress_window.signal_loaded.connect(
+            self.completed_loading_patient_files)
 
         # Flag set if patients are loaded
         self.patient_files_loaded = False
@@ -86,12 +93,10 @@ class BatchProcessingController:
                     (message, max_num if max_num < num else num)
                 )
 
-        dicom_structure = DICOMDirectorySearch.get_dicom_structure(
+        self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
                                                 self.batch_path,
                                                 interrupt_flag,
                                                 Callback)
-
-        self.completed_loading_patient_files(dicom_structure)
 
     def error_loading_patient_files(self):
         """
@@ -101,13 +106,12 @@ class BatchProcessingController:
               "is correct and try again. ")
         self.progress_window.close()
 
-    def completed_loading_patient_files(self, dicom_structure):
+    def completed_loading_patient_files(self):
         """
         Called when completed loading the patient files.
         :param dicom_structure: DicomStructure object
         """
         self.patient_files_loaded = True
-        self.dicom_structure = dicom_structure
         self.progress_window.close()
 
     @staticmethod
@@ -192,7 +196,7 @@ class BatchProcessingController:
                         # Update the patient dict container
                         PatientDictContainer().set("rtss_modified", False)
 
-                    progress_callback.emit(("Completed ISO2ROI .. ", 90))
+                    progress_callback.emit(("Completed ISO2ROI .. ", 100))
 
             # Perform SUV2ROI on patient
             if "suv2roi" in self.processes:
@@ -205,9 +209,23 @@ class BatchProcessingController:
                                               interrupt_flag,
                                               cur_patient_files,
                                               self.dvh_output_path)
+                process.set_filename('DVHs_' + self.timestamp + '.csv')
                 process.start()
 
-                progress_callback.emit(("Completed DVH2CSV", 90))
+                progress_callback.emit(("Completed DVH2CSV", 100))
+
+            # Perform PyRad2CSV on patient
+            if "pyrad2csv" in self.processes:
+                # Get current files
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessPyRadCSV(progress_callback,
+                                               interrupt_flag,
+                                               cur_patient_files,
+                                               self.pyrad_output_path)
+                process.set_filename('Pyradiomics_' + self.timestamp + '.csv')
+                process.start()
+
+                progress_callback.emit(("Completed PyRad2CSV", 100))
 
         PatientDictContainer().clear()
 
@@ -226,3 +244,22 @@ class BatchProcessingController:
         print("Error performing batch processing.")
         self.progress_window.close()
         return
+
+    @classmethod
+    def create_timestamp(cls):
+        """
+        Create a unique timestamp as a string.
+        returns string
+        """
+        cur_time = datetime.datetime.now()
+        year = cur_time.year
+        month = cur_time.month
+        day = cur_time.day
+        hour = cur_time.hour
+        min = cur_time.minute
+        sec = cur_time.second
+
+        time_stamp = str(year) + str(month) + str(day) + str(hour) + \
+                     str(min) + str(sec)
+
+        return time_stamp

@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -109,17 +110,18 @@ class UIBatchProcessingWindow(object):
         self.iso2roi_tab = ISO2ROIOptions()
         self.suv2roi_tab = QtWidgets.QLabel("Coming soon")
         self.dvh2csv_tab = DVH2CSVOptions()
+        self.pyrad2csv_tab = PyRad2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
+        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
 
         # == Bottom widgets
         # Info text
         info_text = "Batch Processing will be performed on datasets in the "
-        info_text += "selected directory. Click 'Refresh' to reload datasets "
-        info_text += "in the directory."
+        info_text += "selected directory."
         self.info_label = QtWidgets.QLabel(info_text)
         self.info_label.setFont(label_font)
 
@@ -153,10 +155,6 @@ class UIBatchProcessingWindow(object):
         self.layout.addLayout(self.directory_layout)
 
         # Add middle widgets (patient count, tabs)
-        self.patient_label = \
-            QtWidgets.QLabel("No patients in the selected directory")
-        self.patient_label.setFont(label_font)
-        self.middle_layout.addWidget(self.patient_label)
         self.middle_layout.addWidget(self.tab_widget)
         self.layout.addLayout(self.middle_layout)
 
@@ -202,13 +200,14 @@ class UIBatchProcessingWindow(object):
         When the line edit box is changed, update related fields.
         """
         self.file_path = self.directory_input.text()
-        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False,)
+        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
+        self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
 
     def confirm_button_clicked(self):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi', 'dvh2csv']
+        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv']
         selected_processes = []
 
         # Get the selected processes
@@ -221,7 +220,8 @@ class UIBatchProcessingWindow(object):
 
         file_directories = {
             "batch_path": self.file_path,
-            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location()
+            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location(),
+            "pyrad_output_path": self.pyrad2csv_tab.get_pyrad_output_location()
         }
 
         # Create batch processing controller, enable the processing
