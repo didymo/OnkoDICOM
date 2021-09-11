@@ -1,4 +1,6 @@
+from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow.Drawing import *
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
@@ -91,3 +93,29 @@ class ROIDrawOption:
 
         self.draw_window.set_selected_roi_name(roi_name)
         self.draw_window.show()
+
+
+class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
+    signal_roi_transferred = QtCore.Signal(tuple)
+
+    def __init__(self, patient_A_rois, patient_B_rois):
+        super(ROITransferOptionUI, self).__init__()
+        self.setup_ui(self, patient_A_rois, patient_B_rois, self.signal_roi_transferred)
+
+
+class ROITransferOption:
+
+    def __init__(self, roi_transferred_function):
+        super(ROITransferOption, self).__init__()
+        self.roi_transferred_function = roi_transferred_function
+
+    def show_roi_transfer_options(self):
+        patient_dict_container = PatientDictContainer()
+        moving_dict_container = MovingDictContainer()
+        patient_A_rois = patient_dict_container.get("rois")
+        patient_B_rois = moving_dict_container.get("rois")
+        self.roi_transfer_option_pop_up_window = ROITransferOptionUI(patient_A_rois, patient_B_rois)
+        self.roi_transfer_option_pop_up_window.signal_roi_transferred.connect(
+            self.roi_transferred_function
+        )
+        self.roi_transfer_option_pop_up_window.show()

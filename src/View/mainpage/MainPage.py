@@ -8,6 +8,7 @@ from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -326,7 +327,7 @@ class UIMainWindow:
             if len(self.structures_tab.rois.items()) == 0:
                 self.structures_tab.update_ui(moving=True)
             # else:
-                # TODO: Display both ROIs in the same tab
+            # TODO: Display both ROIs in the same tab
 
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
@@ -336,6 +337,7 @@ class UIMainWindow:
             cut_line_color=True)
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=True)
+        self.image_fusion_roi_transfer_option_view = ROITransferOptionView()
 
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -359,6 +361,11 @@ class UIMainWindow:
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
+
+        self.image_fusion_four_views_layout.addWidget(
+            self.image_fusion_roi_transfer_option_view, 1, 1
+        )
+
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
 
