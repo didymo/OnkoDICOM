@@ -2,7 +2,7 @@ import glob
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -20,24 +20,39 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
+
+from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
+from src.View.ImageFusion.ImageFusionSagittalView import \
+    ImageFusionSagittalView
+from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
+from src.Model.MovingDictContainer import MovingDictContainer
+
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
 
 
 class UIMainWindow:
     """
-    The central class responsible for initializing most of the values stored in the PatientDictContainer model and
-    defining the visual layout of the main window of OnkoDICOM.
-    No class has access to the attributes belonging to this class, except for the class's ActionHandler, which is used
-    to trigger actions within the main window. Components of this class (i.e. QWidget child classes such as
-    StructureTab, DicomView, DicomTree, etc.) should not be able to reference this class, and rather should exist
-    independently and only be able to communicate with the PatientDictContainer model. If a component needs to
-    communicate with another component, that should be accomplished by emitting signals within that components, and
-    having the slots for those signals within this class (as demonstrated by the update_views() method of this class).
-    If a class needs to trigger one of the actions defined in the ActionHandler, then the instance of the ActionHandler
-    itself can safely be passed into the class.
+    The central class responsible for initializing most of the values stored
+    in the PatientDictContainer model and defining the visual layout of the
+    main window of OnkoDICOM. No class has access to the attributes
+    belonging to this class, except for the class's ActionHandler, which is
+    used to trigger actions within the main window. Components of this class
+    (i.e. QWidget child classes such as StructureTab, DicomView, DicomTree,
+    etc.) should not be able to reference this class, and rather should
+    exist independently and only be able to communicate with the
+    PatientDictContainer model. If a component needs to communicate with
+    another component, that should be accomplished by emitting signals
+    within that components, and having the slots for those signals within
+    this class (as demonstrated by the update_views() method of this class).
+    If a class needs to trigger one of the actions defined in the
+    ActionHandler, then the instance of the ActionHandler itself can safely
+    be passed into the class.
     """
     pyradi_trigger = QtCore.Signal(str, dict, str)
+
+    # Connect to GUIController
+    image_fusion_main_window = QtCore.Signal()
 
     def setup_ui(self, main_window_instance):
         self.main_window_instance = main_window_instance
@@ -53,7 +68,8 @@ class UIMainWindow:
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Normal, QIcon.Off)
+        window_icon.addPixmap(QPixmap(resource_path(
+            "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
@@ -69,7 +85,8 @@ class UIMainWindow:
         self.menubar = MenuBar(self.action_handler)
         self.main_window_instance.setMenuBar(self.menubar)
         self.toolbar = Toolbar(self.action_handler)
-        self.main_window_instance.addToolBar(QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.main_window_instance.addToolBar(
+            QtCore.Qt.TopToolBarArea, self.toolbar)
         self.main_window_instance.setWindowTitle("OnkoDICOM")
 
     def setup_central_widget(self):
@@ -81,7 +98,8 @@ class UIMainWindow:
 
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
-        # Left panel contains stuctures tab, isodoses tab, and structure information
+        # Left panel contains stuctures tab, isodoses tab,
+        # and structure information
         self.left_panel = QtWidgets.QTabWidget()
         self.left_panel.setMinimumWidth(300)
         self.left_panel.setMaximumWidth(500)
@@ -97,28 +115,36 @@ class UIMainWindow:
 
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
-            self.isodoses_tab.request_update_isodoses.connect(self.update_views)
+            self.isodoses_tab.request_update_isodoses.connect(
+                self.update_views)
             self.isodoses_tab.request_update_ui.connect(
                 self.structures_tab.structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
 
-        # Right panel contains the different tabs of DICOM view, DVH, clinical data, DICOM tree
+        # Right panel contains the different tabs of DICOM view, DVH,
+        # clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
 
         # Create a Dicom View containing single-slice and 3-slice views
         self.dicom_view = DicomStackedWidget(self.format_data)
 
-        roi_color_dict = self.structures_tab.color_dict if hasattr(self, 'structures_tab') else None
-        iso_color_dict = self.isodoses_tab.color_dict if hasattr(self, 'isodoses_tab') else None
-        self.dicom_single_view = DicomAxialView(roi_color=roi_color_dict, iso_color=iso_color_dict)
-        self.dicom_axial_view = DicomAxialView(roi_color=roi_color_dict, iso_color=iso_color_dict,
-                                               metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
-        self.dicom_sagittal_view = DicomSagittalView(roi_color=roi_color_dict, iso_color=iso_color_dict,
-                                                     cut_line_color=QtGui.QColor(0, 255, 0))
-        self.dicom_coronal_view = DicomCoronalView(roi_color=roi_color_dict, iso_color=iso_color_dict,
-                                                   cut_line_color=QtGui.QColor(0, 0, 255))
+        roi_color_dict = self.structures_tab.color_dict if hasattr(
+            self, 'structures_tab') else None
+        iso_color_dict = self.isodoses_tab.color_dict if hasattr(
+            self, 'isodoses_tab') else None
+        self.dicom_single_view = DicomAxialView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict)
+        self.dicom_axial_view = DicomAxialView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
+        self.dicom_sagittal_view = DicomSagittalView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            cut_line_color=QtGui.QColor(0, 255, 0))
+        self.dicom_coronal_view = DicomCoronalView(
+            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            cut_line_color=QtGui.QColor(0, 0, 255))
         self.three_dimension_view = DicomView3D()
 
         # Rescale the size of the scenes inside the 3-slice views
@@ -188,30 +214,46 @@ class UIMainWindow:
 
     def update_views(self, update_3d_window=False):
         """
-        This function is a slot for signals to request the updating of the DICOM View and DVH tabs in order to reflect
-        changes made by other components of the main window (for example, when a structure in the structures tab is
-        selected, this method needs to be called in order for the DICOM view window to be updated to show the new
-        region of interest.
+        This function is a slot for signals to request the updating of the
+        DICOM View and DVH tabs in order to reflect changes made by other
+        components of the main window (for example, when a structure in the
+        structures tab is selected, this method needs to be called in order
+        for the DICOM view window to be updated to show the new region of
+        interest.
 
         :param update_3d_window: a boolean to mark if 3d model
         needs to be updated
         """
+
         self.dicom_single_view.update_view()
         self.dicom_axial_view.update_view()
         self.dicom_coronal_view.update_view()
         self.dicom_sagittal_view.update_view()
+
         if update_3d_window:
             self.three_dimension_view.update_view()
+
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
 
+        if hasattr(self, 'image_fusion_view'):
+            self.image_fusion_view_axial.update_view(cut_line_color=True)
+            self.image_fusion_view_coronal.update_view(cut_line_color=True)
+            self.image_fusion_view_sagittal.update_view(cut_line_color=True)
+
     def toggle_cut_lines(self):
-        if self.dicom_axial_view.horizontal_view is None or self.dicom_axial_view.vertical_view is None or\
-                self.dicom_coronal_view.horizontal_view is None or self.dicom_coronal_view.vertical_view is None or \
-                self.dicom_sagittal_view.horizontal_view is None or self.dicom_sagittal_view.vertical_view is None:
-            self.dicom_axial_view.set_views(self.dicom_coronal_view, self.dicom_sagittal_view)
-            self.dicom_coronal_view.set_views(self.dicom_axial_view, self.dicom_sagittal_view)
-            self.dicom_sagittal_view.set_views(self.dicom_axial_view, self.dicom_coronal_view)
+        if self.dicom_axial_view.horizontal_view is None or \
+                self.dicom_axial_view.vertical_view is None or \
+                self.dicom_coronal_view.horizontal_view is None or \
+                self.dicom_coronal_view.vertical_view is None or \
+                self.dicom_sagittal_view.horizontal_view is None or \
+                self.dicom_sagittal_view.vertical_view is None:
+            self.dicom_axial_view.set_views(self.dicom_coronal_view,
+                                            self.dicom_sagittal_view)
+            self.dicom_coronal_view.set_views(self.dicom_axial_view,
+                                              self.dicom_sagittal_view)
+            self.dicom_sagittal_view.set_views(self.dicom_axial_view,
+                                               self.dicom_coronal_view)
         else:
             self.dicom_axial_view.set_views(None, None)
             self.dicom_coronal_view.set_views(None, None)
@@ -219,8 +261,8 @@ class UIMainWindow:
 
     def zoom_in(self, is_four_view):
         """
-        This function calls the zooming in function on the four view's views or the single view depending on what view
-        is showing on screen.
+        This function calls the zooming in function on the four view's views
+        or the single view depending on what view is showing on screen.
         is_four_view: Whether the four view is showing
         """
         if is_four_view:
@@ -232,8 +274,8 @@ class UIMainWindow:
 
     def zoom_out(self, is_four_view):
         """
-        This function calls the zooming out function on the four view's views or the single view depending on what view
-        is showing on screen.
+        This function calls the zooming out function on the four view's
+        views or the single view depending on what view is showing on screen.
         is_four_view: Whether the four view is showing
         """
         if is_four_view:
@@ -245,8 +287,69 @@ class UIMainWindow:
 
     def format_data(self, size):
         """
-        This function is used to update the meta data's font size and margin based on the height and width of the
-        viewports.
+        This function is used to update the meta data's font size and margin
+        based on the height and width of the viewports.
         size: The size of the DicomStackedWidget
         """
         self.dicom_axial_view.format_metadata(size)
+
+    def create_image_fusion_tab(self):
+        """
+        This function is used to create the tab for image fusion.
+        Function checks if the moving dict container contains rtss to
+        load rtss. Views are created and stacked into three window view.
+        """
+        # Instance of Moving Model
+        moving_dict_container = MovingDictContainer()
+        patient_dict_container = PatientDictContainer()
+        if moving_dict_container.has_modality("rtss"):
+            if len(self.structures_tab.rois.items()) == 0:
+                self.structures_tab.update_ui(moving=True)
+            # else:
+                # TODO: Display both ROIs in the same tab
+
+        self.image_fusion_view = QStackedWidget()
+        self.image_fusion_view_axial = ImageFusionAxialView(
+            metadata_formatted=False,
+            cut_line_color=True)
+        self.image_fusion_view_sagittal = ImageFusionSagittalView(
+            cut_line_color=True)
+        self.image_fusion_view_coronal = ImageFusionCoronalView(
+            cut_line_color=True)
+
+        # Rescale the size of the scenes inside the 3-slice views
+        self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
+        self.image_fusion_view_axial.update_view(zoom_change=True,
+                                                 cut_line_color=True)
+        self.image_fusion_view_sagittal.update_view(zoom_change=True,
+                                                    cut_line_color=True)
+        self.image_fusion_view_coronal.update_view(zoom_change=True,
+                                                   cut_line_color=True)
+
+        self.image_fusion_four_views = QWidget()
+        self.image_fusion_four_views_layout = QGridLayout()
+        for i in range(2):
+            self.image_fusion_four_views_layout.setColumnStretch(i, 1)
+            self.image_fusion_four_views_layout.setRowStretch(i, 1)
+        self.image_fusion_four_views_layout.addWidget(
+            self.image_fusion_view_axial, 0, 0)
+        self.image_fusion_four_views_layout.addWidget(
+            self.image_fusion_view_sagittal, 0, 1)
+        self.image_fusion_four_views_layout.addWidget(
+            self.image_fusion_view_coronal, 1, 0)
+        self.image_fusion_four_views.setLayout(
+            self.image_fusion_four_views_layout)
+
+        self.image_fusion_single_view \
+            = ImageFusionAxialView(metadata_formatted=False,
+                                   cut_line_color=True)
+
+        self.image_fusion_view.addWidget(self.image_fusion_four_views)
+        self.image_fusion_view.addWidget(self.image_fusion_single_view)
+        self.image_fusion_view.setCurrentWidget(self.image_fusion_four_views)
+
+        # Add Image Fusion Tab
+        self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
+        self.right_panel.setCurrentWidget(self.image_fusion_view)
