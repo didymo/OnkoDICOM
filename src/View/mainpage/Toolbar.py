@@ -50,6 +50,8 @@ class Toolbar(QToolBar):
         if self.action_handler.pet_opened:
             self.addAction(self.action_handler.action_suv2roi)
         self.addSeparator()
+        self.addAction(self.action_handler.action_image_fusion)
+        self.addSeparator()
         self.addAction(self.action_handler.action_add_ons)
         self.addWidget(spacer)
         self.addWidget(self.button_export)
