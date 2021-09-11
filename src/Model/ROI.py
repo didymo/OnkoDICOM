@@ -656,11 +656,6 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
     # to more accurate representation of contours, but could possibly be too
     # slow to be viable.
 
-    # Scaling factor for x and y pixels - for if the ROIs come from
-    # images less than the DICOM View size of 512x512.
-    x_scale = 512 / img_size[0]
-    y_scale = 512 / img_size[1]
-
     if curr_slice not in dict_rois_contours[curr_roi]:
         return []
 
