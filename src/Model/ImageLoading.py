@@ -63,6 +63,11 @@ allowed_classes = {
     "1.2.840.10008.5.1.4.1.1.128": {
         "name": "pet",
         "sliceable": True
+    },
+    # Comprehensive SR
+    "1.2.840.10008.5.1.4.1.1.88.33": {
+        "name": "sr",
+        "sliceable": False
     }
 }
 
@@ -104,7 +109,13 @@ def get_datasets(filepath_list):
                     slice_name = slice_count
                     slice_count += 1
                 else:
-                    slice_name = allowed_class["name"]
+                    # TODO: change when other SRs are generated
+                    #  (radiomics). Read from SR description to
+                    #  determine SR type
+                    if allowed_class["name"] is "sr":
+                        slice_name = "sr-cd"
+                    else:
+                        slice_name = allowed_class["name"]
 
                 read_data_dict[slice_name] = read_file
                 file_names_dict[slice_name] = file
@@ -514,7 +525,7 @@ def get_pixluts(read_data_dict):
     :return: Dictionary of pixluts for the transformation from 3D to 2D.
     """
     dict_pixluts = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
+    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage', 'sr-cd']
     for ds in read_data_dict:
         if ds not in non_img_type:
             img_ds = read_data_dict[ds]
@@ -532,7 +543,7 @@ def get_image_uid_list(dataset):
     :return: uid_list, a list of SOPInstanceUIDs of all image slices of
         the patient
     """
-    non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
+    non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage', 'sr-cd']
     uid_list = []
 
     # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE,
