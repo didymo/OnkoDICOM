@@ -16,6 +16,9 @@ class ProgressWindow(QDialog):
     # Signal that emits when exceptions are raised
     signal_error = QtCore.Signal(Exception)
 
+    # Signal that emits when calc dvh is advised
+    signal_advise_calc_dvh = QtCore.Signal(bool)
+
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)
 
@@ -78,8 +81,8 @@ class ProgressWindow(QDialog):
     def update_progress(self, progress_update):
         """
         Function responsible for updating the bar percentage and the label.
-        :param progress_update: A tuple containing update text and update
-        percentages
+        :param progress_update: A tuple containing update text and
+        update percentage
         """
         self.text_field.setText(progress_update[0])
         self.progress_bar.setValue(progress_update[1])

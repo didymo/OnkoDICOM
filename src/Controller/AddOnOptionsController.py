@@ -1,4 +1,5 @@
-# This file handles all the processes done within the Add-On Options button
+# This file handles all the processes done within the Add-On Options
+# button
 
 import csv
 import webbrowser
@@ -44,9 +45,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.window = window
         self.setup_ui(self, roi_line, roi_opacity, iso_line,
                       iso_opacity, line_width)
-        # this data is used to create the tree view of functionalities on
-        # the left of the window each entry will be used as a button to
-        # change the view on the right accordingly
+        # This data is used to create the tree view of functionalities
+        # on the left of the window. Each entry will be used as a button
+        # to change the view on the right accordingly.
         data = [
             {
                 "level": 0,
@@ -103,17 +104,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "short_name": "Default directory",
             }
         ]
-        # create a model for the tree view of options and attach the data
+        # create a model for the tree view of options and attach the
+        # data
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
         self.import_data(data)
         self.treeList.expandAll()
-        # fill the corresponding tables with the corresponding data from the
-        # csv files
+        # fill the corresponding tables with the corresponding data from
+        # the csv files
         self.fill_tables()
         self.treeList.setEditTriggers(
             QtWidgets.QTreeView.NoEditTriggers
-        )  # make the tree entries not editable
+        )  # make the tree entries uneditable
         # Functionalities of the Apply and Cancel button
         self.cancel_button.clicked.connect(
             self.close
@@ -158,8 +160,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             else:
                 webbrowser.open_new("http://" + item.text())
 
-    # The right click menus for each table (First one is explained and the
-    # same logic applies for all windowing
+    # The right click menus for each table (First one is explained and
+    # the same logic applies for all windowing
     @Slot(QtCore.QPoint)
     def onCustomContextMenuRequestedWindow(self, pos):
         # gets the position of the right click for the windowing table
@@ -181,17 +183,17 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         if action == delete_row_action:
             self.table_view.removeRow(c)
         if action == modify_row_action:
-            # open an input dialog as a pop up with the current values to be
-            # modified
+            # open an input dialog as a pop up with the current values
+            # to be modified
             dialog = Dialog_Windowing(
                 self.table_view.item(c, 0).text(),
                 self.table_view.item(c, 1).text(),
                 self.table_view.item(c, 2).text(),
                 self.table_view.item(c, 3).text(),
             )
-            # If Okay is pressed then display the new entries in the table
-            # They will only be saved if Apply is pressed before exiting
-            # Add-On Options
+            # If Okay is pressed then display the new entries in the
+            # table. They will only be saved if Apply is pressed before
+            # exiting Add-On Options.
             if dialog.exec():
                 new_data = dialog.getInputs()
                 self.table_view.setItem(c, 0, QTableWidgetItem(new_data[0]))
@@ -317,8 +319,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             parent.appendRow([QtGui.QStandardItem(value["short_name"])])
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
-    # If APPLY is clicked, save the contents of each option and table into
-    # their corresponding files
+    # If APPLY is clicked, save the contents of each option and table
+    # into their corresponding files
 
     def accepting(self):
         # starting save
@@ -449,14 +451,14 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if i >= self.table_organ.rowCount():
-                    self.table_organ.setRowCount(self.table_organ.rowCount() + 1)
+                    self.table_organ.setRowCount(
+                        self.table_organ.rowCount() + 1)
                 self.table_organ.setItem(i, 0, items[0])
                 self.table_organ.setItem(i, 1, items[1])
                 self.table_organ.setItem(i, 2, items[2])
                 if len(items) > 3:
                     self.table_organ.setItem(i, 3, items[3])
                 i += 1
-
 
         # volume name table
         with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
@@ -467,7 +469,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if i >= self.table_volume.rowCount():
-                    self.table_volume.setRowCount(self.table_volume.rowCount() + 1)
+                    self.table_volume.setRowCount(
+                        self.table_volume.rowCount() + 1)
                 self.table_volume.setItem(i, 0, items[0])
                 self.table_volume.setItem(i, 1, items[1])
                 i += 1
@@ -505,16 +508,17 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 ]
                 if len(items) >= 2:
                     if i >= self.table_ids.rowCount():
-                        self.table_ids.setRowCount(self.table_ids.rowCount() + 1)
+                        self.table_ids.setRowCount(
+                            self.table_ids.rowCount() + 1)
                     self.table_ids.setItem(i, 0, items[0])
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
 
-    # The following function show a pop up window to add a new entry in the
-    # corresponding table
+    # The following function shows a pop up window to add a new entry in
+    # the corresponding table
 
-    # This function shows an Input dialog pop up to insert a new windowing
-    # entry
+    # This function shows an Input dialog pop up to insert a new
+    # windowing entry
     def new_windowing(self):
         dialog = Dialog_Windowing("", "", "", "")
         c = self.table_view.rowCount()
@@ -566,21 +570,21 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         rows = sorted(set(index.row() for index in
                           self.table_roi.selectedIndexes()))
         if rows:
-            # Remove selected rows. Variable i is needed as, for example
-            # if row 0 and 1 are to be removed, row 0 will be removed
-            # first, making row 1 now row 0. Therefore, to remove row
-            # '1', we need to remove row 1 minus the amount of rows that
-            # have already been removed.
+            # Remove selected rows. Variable i is needed as, for
+            # example, if row 0 and 1 are to be removed, row 0 will be
+            # removed first, making row 1 now row 0. Therefore, to
+            # remove row '1', we need to remove row 1 minus the amount
+            # of rows that have already been removed.
             i = 0
             for row in rows:
                 self.table_roi.removeRow(row - i)
                 i += 1
         else:
             QMessageBox.warning(self, "No Isodose Selected",
-                                      "No isodose levels have been selected.")
+                                "No isodose levels have been selected.")
 
-    # the following function lets you import a csv of organ names into the
-    # table if the csv is in the given format
+    # the following function lets you import a csv of organ names into
+    # the table if the csv is in the given format
     def import_organs(self):
         self.check_change = False
         path = QFileDialog.getOpenFileName(

@@ -2,6 +2,7 @@ import os
 
 from pathlib import Path
 from skimage import measure
+
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.GetPatientInfo import DicomTree
@@ -195,7 +196,8 @@ class ISO2ROI:
                 # Create the ROI(s)
                 for array in single_array:
                     rtss = ROI.create_roi(dataset_rtss, item,
-                                          array, dataset, "DOSE_REGION")
+                                          [{'coords': array, 'ds': dataset}],
+                                          "DOSE_REGION")
 
                     # Save the updated rtss
                     patient_dict_container.set("dataset_rtss", rtss)
