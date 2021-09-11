@@ -363,6 +363,8 @@ class StructureTab(QtWidgets.QWidget):
         aspect = self.patient_dict_container.get("pixmap_aspect")
         roi_name = rois[roi_id]['name']
 
+        image_size = self.patient_dict_container.dataset[0].pixel_array.shape
+
         if state:
             new_dict_polygons_axial[roi_name] = {}
             new_dict_polygons_coronal[roi_name] = {}
@@ -401,6 +403,7 @@ class StructureTab(QtWidgets.QWidget):
                                             new_dict_polygons_coronal)
             self.patient_dict_container.set("dict_polygons_sagittal",
                                             new_dict_polygons_sagittal)
+
         else:
             new_dict_polygons_axial.pop(roi_name, None)
             new_dict_polygons_coronal.pop(roi_name, None)
