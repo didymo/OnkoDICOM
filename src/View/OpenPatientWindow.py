@@ -123,6 +123,7 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_patient_open_actions_horizontal_box.setObjectName(
             "OpenPatientWindowPatientOpenActionsHorizontalBox")
         self.open_patient_window_patient_open_actions_horizontal_box.addStretch(1)
+
         # Add a button to go back/exit from the application
         self.open_patient_window_exit_button = QPushButton()
         self.open_patient_window_exit_button.setObjectName("OpenPatientWindowExitButton")
