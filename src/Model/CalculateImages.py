@@ -17,10 +17,17 @@ def convert_raw_data(ds):
     # Do the conversion to every slice (except RTSS, RTDOSE, RTPLAN)
     for key in ds:
         if key not in non_img_list:
-            # dataset of current slice
-            np_tmp = ds[key]
-            np_tmp.convert_pixel_data()
-            np_pixels.append(np_tmp._pixel_array)
+            if isinstance(key, str):
+                if key[0:3] != 'sr-':
+                    # dataset of current slice
+                    np_tmp = ds[key]
+                    np_tmp.convert_pixel_data()
+                    np_pixels.append(np_tmp._pixel_array)
+            else:
+                # dataset of current slice
+                np_tmp = ds[key]
+                np_tmp.convert_pixel_data()
+                np_pixels.append(np_tmp._pixel_array)
 
     return np_pixels
 
