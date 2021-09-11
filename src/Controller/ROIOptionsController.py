@@ -112,8 +112,9 @@ class ROITransferOption:
     def show_roi_transfer_options(self):
         patient_dict_container = PatientDictContainer()
         moving_dict_container = MovingDictContainer()
-        patient_A_rois = patient_dict_container.get("rois")
-        patient_B_rois = moving_dict_container.get("rois")
+        patient_A_rois = patient_dict_container.get("rois") if patient_dict_container.get("rois") is not None else {}
+        patient_B_rois = moving_dict_container.get("rois") if moving_dict_container.get("rois") is not None else {}
+
         self.roi_transfer_option_pop_up_window = ROITransferOptionUI(patient_A_rois, patient_B_rois)
         self.roi_transfer_option_pop_up_window.signal_roi_transferred.connect(
             self.roi_transferred_function
