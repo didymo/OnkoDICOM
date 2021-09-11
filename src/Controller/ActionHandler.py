@@ -1,19 +1,22 @@
+import os
+
 from PySide6 import QtGui, QtWidgets, QtCore
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.Controller.PathHandler import resource_path
 from src.View.ProgressWindow import ProgressWindow
 
 class ActionHandler:
     """
-    This class is responsible for initializing all of the actions that will
-    be used by the MainPage and its components. There exists a 1-to-1
-    relationship between this class and the MainPage. This class has access
-    to the main page's attributes and components, however this access should
-    only be used to provide functionality to the actions defined below. The
-    instance of this class can be given to the main page's components in
-    order to trigger actions.
+    This class is responsible for initializing all of the actions that
+    will be used by the MainPage and its components. There exists a
+    1-to-1 relationship between this class and the MainPage. This class
+    has access to the main page's attributes and components, however
+    this access should only be used to provide functionality to the
+    actions defined below. The instance of this class can be given to
+    the main page's components in order to trigger actions.
     """
 
     def __init__(self, main_page):
@@ -142,7 +145,8 @@ class ActionHandler:
         # Switch to Single View Action
         self.icon_one_view = QtGui.QIcon()
         self.icon_one_view.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/axial_view_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/axial_view_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -155,7 +159,8 @@ class ActionHandler:
         # Switch to 4 Views Action
         self.icon_four_views = QtGui.QIcon()
         self.icon_four_views.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/four_views_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/four_views_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -168,7 +173,8 @@ class ActionHandler:
         # Show cut lines
         self.icon_cut_lines = QtGui.QIcon()
         self.icon_cut_lines.addPixmap(
-            QtGui.QPixmap(resource_path("res/images/btn-icons/cut_line_purple_icon.png")),
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/cut_line_purple_icon.png")),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -220,6 +226,19 @@ class ActionHandler:
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
 
+        # Image Fusion Action
+        self.icon_image_fusion = QtGui.QIcon()
+        self.icon_image_fusion.addPixmap(
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/image_fusion_purple_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.action_image_fusion = QtGui.QAction()
+        self.action_image_fusion.setIcon(self.icon_image_fusion)
+        self.action_image_fusion.setIconVisibleInMenu(True)
+        self.action_image_fusion.setText("Image Fusion")
+        
         # Create variables for SUV2ROI - object and progress window
         self.suv2roi = SUV2ROI()
         self.progress_window = \
@@ -256,11 +275,11 @@ class ActionHandler:
             action_windowing_item.setText(text)
             windowing_actions.append(action_windowing_item)
 
-        # For reasons beyond me, the actions have to be set as a child of
-        # the windowing menu *and* later be added to the menu as well. You
-        # can't do one or the other, otherwise the menu won't populate. Feel
-        # free to try fix (or at least explain why the action has to be set
-        # as the windowing menu's child twice)
+        # For reasons beyond me, the actions have to be set as a child
+        # of the windowing menu *and* later be added to the menu as
+        # well. You can't do one or the other, otherwise the menu won't
+        # populate. Feel free to try fix (or at least explain why the
+        # action has to be set as the windowing menu's child twice)
         for item in windowing_actions:
             self.menu_windowing.addAction(item)
 
@@ -285,8 +304,8 @@ class ActionHandler:
     def windowing_handler(self, state, text):
         """
         Function triggered when a window is selected from the menu.
-        :param state: Variable not used. Present to be able to use a lambda
-        function.
+        :param state: Variable not used. Present to be able to use a
+            lambda function.
         :param text: The name of the window selected.
         """
         # Get the values for window and level from the dict
@@ -297,11 +316,12 @@ class ActionHandler:
         window = windowing_limits[0]
         level = windowing_limits[1]
 
-        # Update the dictionary of pixmaps with the update window and level
-        # values
+        # Update the dictionary of pixmaps with the update window and
+        # level values
         pixel_values = self.patient_dict_container.get("pixel_values")
         pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
-        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = get_pixmaps(pixel_values, window, level, pixmap_aspect)
+        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
+                    get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -309,12 +329,22 @@ class ActionHandler:
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
 
+        if hasattr(self, 'image_fusion_view'):
+            fusion_values = self.moving_dict_container.get("pixel_values")
+            fusion_aspect = self.moving_dict_container.get("pixmap_aspect")
+            fusion_axial, fusion_coronal, fusion_sagittal = \
+                get_pixmaps(fusion_values, window, level, fusion_aspect)
+            self.moving_dict_container.set("pixmaps_axial", fusion_axial)
+            self.moving_dict_container.set("pixmaps_coronal", fusion_coronal)
+            self.moving_dict_container.set("pixmaps_sagittal", fusion_sagittal)
+
         self.__main_page.update_views(update_3d_window=True)
+
 
     def anonymization_handler(self):
         """
-        Function triggered when the Anonymization button is pressed from the
-        menu.
+        Function triggered when the Anonymization button is pressed from
+        the menu.
         """
 
         save_reply = QtWidgets.QMessageBox.information(
@@ -348,7 +378,8 @@ class ActionHandler:
 
     def transect_handler(self):
         """
-        Function triggered when the Transect button is pressed from the menu.
+        Function triggered when the Transect button is pressed from the
+        menu.
         """
         if self.is_four_view:
             view = self.__main_page.dicom_axial_view.view
@@ -399,12 +430,14 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.is_four_view = False
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_single_view)
+        self.__main_page.dicom_view.setCurrentWidget(
+            self.__main_page.dicom_single_view)
         self.__main_page.dicom_single_view.update_view()
 
     def four_views_handler(self):
         self.is_four_view = True
-        self.__main_page.dicom_view.setCurrentWidget(self.__main_page.dicom_four_views)
+        self.__main_page.dicom_view.setCurrentWidget(
+            self.__main_page.dicom_four_views)
         self.__main_page.dicom_axial_view.update_view()
 
     def cut_lines_handler(self):
@@ -428,3 +461,5 @@ class ActionHandler:
 
     def action_exit_handler(self):
         QtCore.QCoreApplication.exit(0)
+
+
