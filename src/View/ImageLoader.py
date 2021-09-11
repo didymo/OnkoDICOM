@@ -37,8 +37,10 @@ class ImageLoader(QtCore.QObject):
         """
         progress_callback.emit(("Creating datasets...", 0))
         try:
-            path = os.path.dirname(os.path.commonprefix(self.selected_files))  # Gets the common root folder.
-            read_data_dict, file_names_dict = ImageLoading.get_datasets(self.selected_files)
+            # Gets the common root folder.
+            path = os.path.dirname(os.path.commonprefix(self.selected_files))
+            read_data_dict, file_names_dict = ImageLoading.get_datasets(
+                self.selected_files)
         except ImageLoading.NotAllowedClassError:
             raise ImageLoading.NotAllowedClassError
 
@@ -72,10 +74,12 @@ class ImageLoader(QtCore.QObject):
                 return False
 
             progress_callback.emit(("Getting contour data...", 30))
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(
+                dataset_rtss)
 
             # Determine which ROIs are one slice thick
-            dict_thickness = ImageLoading.get_thickness_dict(dataset_rtss, read_data_dict)
+            dict_thickness = ImageLoading.get_thickness_dict(
+                dataset_rtss, read_data_dict)
 
             if interrupt_flag.is_set():  # Stop loading.
                 print("stopped")
@@ -149,7 +153,7 @@ class ImageLoader(QtCore.QObject):
             self.load_temp_rtss(path, progress_callback, interrupt_flag)
 
         return True
-        
+
     def load_temp_rtss(self, path, progress_callback, interrupt_flag):
         """
         Generate a temporary rtss and load its data into

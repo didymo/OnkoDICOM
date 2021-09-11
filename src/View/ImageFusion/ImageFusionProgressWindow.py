@@ -3,35 +3,35 @@ from pathlib import Path
 from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.View.ProgressWindow import ProgressWindow
-from src.View.ImageLoader import ImageLoader
+from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Controller.PathHandler import resource_path
 
 
-class OpenPatientProgressWindow(ProgressWindow):
+class ImageFusionProgressWindow(ProgressWindow):
 
     def __init__(self, *args,
                  kwargs=QtCore.Qt.WindowTitleHint |
-                        QtCore.Qt.WindowCloseButtonHint):
-        super(OpenPatientProgressWindow, self).__init__(*args, kwargs)
+                 QtCore.Qt.WindowCloseButtonHint):
+        super(ImageFusionProgressWindow, self).__init__(*args, kwargs)
 
     def start_loading(self, selected_files, existing_rtss_path=None):
-        image_loader = ImageLoader(selected_files, existing_rtss_path, self)
+        image_loader = MovingImageLoader(
+            selected_files, existing_rtss_path, self)
         image_loader.signal_request_calc_dvh.connect(
             self.prompt_calc_dvh)
 
         # Start loading the selected files on separate thread
         self.start(image_loader.load)
 
-
     def prompt_calc_dvh(self):
         """
         Windows displays buttons in a different order from Linux. A check for
-        platform is performed to ensure consistency of button positioning across
-        platforms.
+        platform is performed to ensure consistency of button positioning 
+        across platforms.
         """
-        message = "DVHs not present in RT DOSE or do not correspond to ROIs. "
-        message += "Would you like to calculate DVHs? (This may take up to "
-        message += "several minutes on some systems.)"
+        message = "RTSTRUCT and RTDOSE datasets identified. Would you like to "
+        message += "calculate DVHs? (This may take up to several minutes on "
+        message += "some systems.)"
         if platform.system() == "Linux":
             choice = QMessageBox.question(self, "Calculate DVHs?", message,
                                           QMessageBox.Yes | QMessageBox.No)
