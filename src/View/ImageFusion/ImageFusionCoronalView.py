@@ -9,10 +9,11 @@ class ImageFusionCoronalView(DicomView):
                  cut_line_color=None):
         self.slice_view = 'coronal'
         super(ImageFusionCoronalView, self).__init__(roi_color,
-                                                     iso_color, cut_line_color)
+                                                     iso_color, 
+                                                     cut_line_color)
         self.update_view()
 
-    def image_display(self, color=False):
+    def image_display(self):
         """
         Update the image to be displayed on the DICOM View.
         """

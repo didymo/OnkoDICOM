@@ -15,7 +15,8 @@ class ImageFusionAxialView(DicomView):
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
         super(ImageFusionAxialView, self).__init__(roi_color,
-                                                   iso_color, cut_line_color)
+                                                   iso_color, 
+                                                   cut_line_color)
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
@@ -167,7 +168,7 @@ class ImageFusionAxialView(DicomView):
                 stylesheet = "QLabel { color : white; }"
             self.format_metadata_labels(stylesheet)
 
-    def image_display(self, color=False):
+    def image_display(self):
         """
         Update the image to be displayed on the DICOM View.
         """

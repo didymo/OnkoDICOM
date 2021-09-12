@@ -19,7 +19,7 @@ class ImageFusionSagittalView(DicomView):
 
         self.update_view()
 
-    def image_display(self, color=False):
+    def image_display(self):
         """
         Update the image to be displayed on the DICOM View.
         """

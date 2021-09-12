@@ -257,9 +257,10 @@ class UIMainWindow:
             self.dvh_tab.update_plot()
 
         if hasattr(self, 'image_fusion_view'):
-            self.image_fusion_view_axial.update_view()
-            self.image_fusion_view_coronal.update_view()
-            self.image_fusion_view_sagittal.update_view()
+            if self.image_fusion_view_axial is not None:
+                self.image_fusion_view_axial.update_view()
+                self.image_fusion_view_coronal.update_view()
+                self.image_fusion_view_sagittal.update_view()
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or \
@@ -281,8 +282,6 @@ class UIMainWindow:
 
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view is not None:
-                # Debug statement - will need to be removed
-                print('Image Fusion Images are Present')
                 if self.image_fusion_view_axial.horizontal_view is None or \
                     self.image_fusion_view_axial.vertical_view is None or \
                     self.image_fusion_view_coronal.horizontal_view is None or \
@@ -318,7 +317,7 @@ class UIMainWindow:
             self.dicom_single_view.zoom_in()
 
         if image_reg_single:
-            self.image_fusion_view_axial.zoom_in()
+            self.image_fusion_single_view.zoom_in()
 
         if image_reg_four:
             self.image_fusion_view_axial.zoom_in()
@@ -339,7 +338,7 @@ class UIMainWindow:
             self.dicom_single_view.zoom_out()
         
         if image_reg_single:
-            self.image_fusion_view_axial.zoom_out()
+            self.image_fusion_single_view.zoom_out()
 
         if image_reg_four:
             self.image_fusion_view_axial.zoom_out()
@@ -360,7 +359,7 @@ class UIMainWindow:
         Function checks if the moving dict container contains rtss to
         load rtss. Views are created and stacked into three window view.
         """
-        # Set a flag for zooming
+        # Set a flag for Zooming
         self.action_handler.has_image_registration_four = True
 
         # Instance of Moving Model
@@ -372,14 +371,17 @@ class UIMainWindow:
             # else:
                 # TODO: Display both ROIs in the same tab
 
+        self.image_fusion_single_view \
+            = ImageFusionAxialView()
+
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
             metadata_formatted=False,
-            cut_line_color=True)
+            cut_line_color=QtGui.QColor(255, 0, 0))
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
-            cut_line_color=True)
+            cut_line_color=QtGui.QColor(0, 255, 0))
         self.image_fusion_view_coronal = ImageFusionCoronalView(
-            cut_line_color=True)
+            cut_line_color=QtGui.QColor(0, 0, 255))
 
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -402,10 +404,6 @@ class UIMainWindow:
             self.image_fusion_view_coronal, 1, 0)
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
-
-        self.image_fusion_single_view \
-            = ImageFusionAxialView(metadata_formatted=False,
-                                   cut_line_color=True)
 
         self.image_fusion_view.addWidget(self.image_fusion_four_views)
         self.image_fusion_view.addWidget(self.image_fusion_single_view)
