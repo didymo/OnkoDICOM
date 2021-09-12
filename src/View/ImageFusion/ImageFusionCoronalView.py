@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets, QtGui
-from src.View.mainpage.DicomView import DicomView
+from src.View.mainpage.DicomView import DicomView, GraphicsScene
 
 
 class ImageFusionCoronalView(DicomView):
@@ -21,29 +21,8 @@ class ImageFusionCoronalView(DicomView):
         image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addItem(label)
-
-    def value_changed(self):
-        self.update_view(cut_line_color=True)
-
-    def update_view(self, zoom_change=False, cut_line_color=False):
-        """
-        Update the view of the DICOM Image.
-        :param zoom_change: Boolean indicating whether the user wants 
-        to change the zoom. False by default.
-        """
-        if(cut_line_color):
-            self.image_display(color=cut_line_color)
-        else:
-            self.image_display()
-
-        if zoom_change:
-            self.view.setTransform(
-                QtGui.QTransform().scale(self.zoom, self.zoom))
-
-        self.view.setScene(self.scene)
-
+        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
+        
     def roi_display(self):
         """
         Display ROI structures on the DICOM Image.

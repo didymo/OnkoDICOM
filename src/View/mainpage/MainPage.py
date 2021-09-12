@@ -257,9 +257,9 @@ class UIMainWindow:
             self.dvh_tab.update_plot()
 
         if hasattr(self, 'image_fusion_view'):
-            self.image_fusion_view_axial.update_view(cut_line_color=True)
-            self.image_fusion_view_coronal.update_view(cut_line_color=True)
-            self.image_fusion_view_sagittal.update_view(cut_line_color=True)
+            self.image_fusion_view_axial.update_view()
+            self.image_fusion_view_coronal.update_view()
+            self.image_fusion_view_sagittal.update_view()
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or \
@@ -280,26 +280,29 @@ class UIMainWindow:
             self.dicom_sagittal_view.set_views(None, None)
 
         if hasattr(self, 'image_fusion_view'):
-            if self.image_fusion_view_axial.horizontal_view is None or \
-                self.image_fusion_view_axial.vertical_view is None or \
-                self.image_fusion_view_coronal.horizontal_view is None or \
-                self.image_fusion_view_coronal.vertical_view is None or \
-                self.image_fusion_view_sagittal.horizontal_view is None or \
-                self.image_fusion_view_sagittal.vertical_view is None:
-                self.image_fusion_view_axial.set_views(
-                    self.image_fusion_view_coronal,
-                    self.image_fusion_view_sagittal)
-                self.image_fusion_view_coronal.set_views(
-                    self.image_fusion_view_axial,
-                    self.image_fusion_view_sagittal)
+            if self.image_fusion_view is not None:
+                # Debug statement - will need to be removed
+                print('Image Fusion Images are Present')
+                if self.image_fusion_view_axial.horizontal_view is None or \
+                    self.image_fusion_view_axial.vertical_view is None or \
+                    self.image_fusion_view_coronal.horizontal_view is None or \
+                    self.image_fusion_view_coronal.vertical_view is None or \
+                    self.image_fusion_view_sagittal.horizontal_view is None or \
+                    self.image_fusion_view_sagittal.vertical_view is None:
+                    self.image_fusion_view_axial.set_views(
+                        self.image_fusion_view_coronal,
+                        self.image_fusion_view_sagittal)
+                    self.image_fusion_view_coronal.set_views(
+                        self.image_fusion_view_axial,
+                        self.image_fusion_view_sagittal)
 
-                self.image_fusion_view_sagittal.set_views(
-                    self.image_fusion_view_axial,
-                    self.image_fusion_view_coronal)
-            else:
-                self.image_fusion_view_axial.set_views(None, None)
-                self.image_fusion_view_coronal.set_views(None, None)
-                self.image_fusion_view_sagittal.set_views(None, None)
+                    self.image_fusion_view_sagittal.set_views(
+                        self.image_fusion_view_axial,
+                        self.image_fusion_view_coronal)
+                else:
+                    self.image_fusion_view_axial.set_views(None, None)
+                    self.image_fusion_view_coronal.set_views(None, None)
+                    self.image_fusion_view_sagittal.set_views(None, None)
 
     def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
@@ -382,12 +385,9 @@ class UIMainWindow:
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
-        self.image_fusion_view_axial.update_view(zoom_change=True,
-                                                 cut_line_color=True)
-        self.image_fusion_view_sagittal.update_view(zoom_change=True,
-                                                    cut_line_color=True)
-        self.image_fusion_view_coronal.update_view(zoom_change=True,
-                                                   cut_line_color=True)
+        self.image_fusion_view_axial.update_view(zoom_change=True)
+        self.image_fusion_view_sagittal.update_view(zoom_change=True)
+        self.image_fusion_view_coronal.update_view(zoom_change=True)
 
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
