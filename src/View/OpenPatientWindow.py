@@ -297,14 +297,15 @@ class UIOpenPatientWindow(object):
 
         # Get the types of all selected leaves & Get the names of all selected studies
         selected_series_types = set()
-        selected_studies_names = set()
-        for checked_item in self.get_checked_leaves():
-            selected_studies_names.add(checked_item.parent().text(0))
+        for checked_item in self.get_checked_nodes():
             series_type = checked_item.dicom_object.get_series_type()
             if type(series_type) == str:
                 selected_series_types.add(series_type)
             else:
                 selected_series_types.update(series_type)
+
+        self.existing_rtss_path = None
+        self.check_selected_items_referencing(self.get_checked_nodes())
 
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
         if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
@@ -320,37 +321,15 @@ class UIOpenPatientWindow(object):
         if len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
 
-        # Check if multiple studies are selected
-        if len(selected_studies_names) > 1:
-            header = "Only one study can be opened."
-            self.open_patient_window_confirm_button.setDisabled(True)
-
-        # If RTSTRUCT exists but not selected, save existing RTSTRUCT file path
-        self.existing_rtss_path = self.get_existing_rtss_path(selected_series_types)
-
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
-
-    def get_existing_rtss_path(self, selected_series_types):
-        """
-        Find and return the path of an existing RTSTRUCT file.
-        Return None if not found.
-        """
-        if 'RTSTRUCT' not in selected_series_types and \
-                len(selected_series_types) > 0:
-            selected_study = self.get_checked_leaves()[0].parent()
-            for i in range(0, selected_study.childCount()):
-                if selected_study.child(i).dicom_object.get_series_type() == \
-                        'RTSTRUCT':
-                    return selected_study.child(i).dicom_object.get_files()[0]
-        return None
 
     def confirm_button_clicked(self):
         """
         Begins loading of the selected files.
         """
         selected_files = []
-        for item in self.get_checked_leaves():
+        for item in self.get_checked_nodes():
             selected_files += item.dicom_object.get_files()
 
         self.progress_window = OpenPatientProgressWindow(self)
@@ -380,24 +359,76 @@ class UIOpenPatientWindow(object):
                               "Selected files cannot be opened as they contain unsupported DICOM classes.")
             self.progress_window.close()
 
-    def get_checked_leaves(self):
+    def get_checked_nodes(self):
         """
-        :return: A list of all QTreeWidgetItems in the QTreeWidget that are both leaves and checked.
+        :return: A list of all QTreeWidgetItems in the QTreeWidget that are
+        checked.
         """
         checked_items = []
 
         def recurse(parent_item: QTreeWidgetItem):
             for i in range(parent_item.childCount()):
                 child = parent_item.child(i)
+                if child.checkState(0) == Qt.Checked:
+                    checked_items.append(child)
                 grand_children = child.childCount()
                 if grand_children > 0:
                     recurse(child)
-                else:
-                    if child.checkState(0) == Qt.Checked:
-                        checked_items.append(child)
 
         recurse(self.open_patient_window_patients_tree.invisibleRootItem())
         return checked_items
+
+    def check_selected_items_referencing(self, items):
+        """
+        :param items: List of selected DICOMWidgetItems.
+        :return: True if the selected items belong to the same tree branch.
+        """
+        series = {
+            "IMAGE": None,
+            "RTSTRUCT": None,
+            "RTPLAN": None,
+            "RTDOSE": None
+        }
+
+        for item in items:
+            series_type = item.dicom_object.get_series_type()
+            if series_type in series:
+                series[series_type] = item
+            else:
+                series["IMAGE"] = item
+        # Check if the RTSTRUCT, RTPLAN, and RTDOSE are a child item of the
+        # image series
+        if series["IMAGE"] != None:
+            if series["RTSTRUCT"] != None:
+                if series["RTSTRUCT"].parent() != series["IMAGE"]:
+                    return False
+            else:  # Get the existing_rtss_path if the RTSTRUCT wasn't selected
+                self.existing_rtss_path = series["IMAGE"].child(0).\
+                    dicom_object.get_files()
+
+            if series["RTPLAN"] != None:
+                if series["RTPLAN"].parent().parent() != series["IMAGE"]:
+                    return False
+            if series["RTDOSE"] != None:
+                if series["RTDOSE"].parent().parent().parent() != series["IMAGE"]:
+                    return False
+
+        # Check if the RTPLAN and RTDOSE are child items of the RTSTRUCT
+        if series["RTSTRUCT"] != None:
+            if series["RTPLAN"] != None:
+                if series["RTPLAN"].parent() != series["RTSTRUCT"]:
+                    return False
+            if series["RTDOSE"] != None:
+                if series["RTDOSE"].parent().parent() != series["RTSTRUCT"]:
+                    return False
+
+        # Check if the RTDOSE is a child item of the RTPLAN
+        if series["RTPLAN"] != None:
+            if series["RTDOSE"] != None:
+                if series["RTDOSE"].parent() != series["RTPLAN"]:
+                    return False
+
+        return True
 
 
 # This is to allow for dropping a directory into the input text.
