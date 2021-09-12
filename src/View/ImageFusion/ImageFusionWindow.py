@@ -405,14 +405,6 @@ class UIImageFusionWindow(object):
             else:
                 selected_series_types.update(series_type)
 
-        # Check if multiple studies are selected
-        if len(selected_studies_names) == 1 & \
-            len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
-            self.open_patient_window_confirm_button.setDisabled(False)
-        elif len(selected_studies_names) > 1:
-            header = "Only one study can be opened."
-            self.open_patient_window_confirm_button.setDisabled(True)
-
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
         if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
@@ -425,6 +417,15 @@ class UIImageFusionWindow(object):
             self.open_patient_window_confirm_button.setDisabled(True)
         else:
             header = ""
+
+        # Check if multiple studies are selected
+        if len(selected_studies_names) == 1 & \
+            len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
+            self.open_patient_window_confirm_button.setDisabled(False)
+        elif len(selected_studies_names) > 1 & \
+            len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
+            header = "Only one study can be opened."
+            self.open_patient_window_confirm_button.setDisabled(True)
 
         # Check if same patient
         if selected_patient.dicom_object.patient_id.strip() != \
