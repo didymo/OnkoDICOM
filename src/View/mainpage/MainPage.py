@@ -279,6 +279,28 @@ class UIMainWindow:
             self.dicom_coronal_view.set_views(None, None)
             self.dicom_sagittal_view.set_views(None, None)
 
+        if hasattr(self, 'image_fusion_view'):
+            if self.image_fusion_view_axial.horizontal_view is None or \
+                self.image_fusion_view_axial.vertical_view is None or \
+                self.image_fusion_view_coronal.horizontal_view is None or \
+                self.image_fusion_view_coronal.vertical_view is None or \
+                self.image_fusion_view_sagittal.horizontal_view is None or \
+                self.image_fusion_view_sagittal.vertical_view is None:
+                self.image_fusion_view_axial.set_views(
+                    self.image_fusion_view_coronal,
+                    self.image_fusion_view_sagittal)
+                self.image_fusion_view_coronal.set_views(
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal)
+
+                self.image_fusion_view_sagittal.set_views(
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_coronal)
+            else:
+                self.image_fusion_view_axial.set_views(None, None)
+                self.image_fusion_view_coronal.set_views(None, None)
+                self.image_fusion_view_sagittal.set_views(None, None)
+
     def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming in function on the four view's views
@@ -291,6 +313,9 @@ class UIMainWindow:
             self.dicom_sagittal_view.zoom_in()
         else:
             self.dicom_single_view.zoom_in()
+
+        if image_reg_single:
+            self.image_fusion_view_axial.zoom_in()
 
         if image_reg_four:
             self.image_fusion_view_axial.zoom_in()
@@ -310,6 +335,9 @@ class UIMainWindow:
         else:
             self.dicom_single_view.zoom_out()
         
+        if image_reg_single:
+            self.image_fusion_view_axial.zoom_out()
+
         if image_reg_four:
             self.image_fusion_view_axial.zoom_out()
             self.image_fusion_view_coronal.zoom_out()
