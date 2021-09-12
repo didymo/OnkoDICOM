@@ -9,8 +9,9 @@ from src.Model.DICOMStructure import DICOMStructure, Patient, Study, \
 
 def get_dicom_structure(path, interrupt_flag, progress_callback):
     """
-    Searches the given directory and creates a Patient>Study>Series>Image
-    structure based on the DICOM files in the directory and subdirectories.
+    Searches the given directory and creates a
+    Patient>Study>Series>Image structure based on the DICOM files in the
+    directory and subdirectories.
 
     :param path: The root directory to search from.
     :param interrupt_flag: A threading.Event() flag to indicate whether
@@ -36,9 +37,9 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                 return
 
             # The progress is updated first because the total files
-            # represents ALL files inside the selected directory, not just
-            # the DICOM files. Otherwise, most files would be skipped and
-            # the progress would be inaccurate.
+            # represent ALL files inside the selected directory, not
+            # just the DICOM files. Otherwise, most files would be
+            # skipped and the progress would be inaccurate.
             files_searched += 1
             progress_callback.emit("%s" % files_searched)
 
@@ -122,7 +123,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                     existing_series.series_description = \
                                         dicom_file.get("SeriesDescription")
                                     existing_series.add_image(new_image)
-
+                                    
     return dicom_structure
 
 

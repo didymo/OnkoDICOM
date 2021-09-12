@@ -15,32 +15,20 @@ Keyword arguments for DICOM-RT:
 from src.Model.Singleton import Singleton
 
 
-class PatientDictContainer(metaclass=Singleton):
+class MovingDictContainer(metaclass=Singleton):
     """
-    This Singleton class represents the model component of OnkoDICOM. It
-    contains all data relating to the DICOM datasets loaded by the user
-    into the program. Initially, the object will contain the initial
-    values set below, and as different UI components are initialized and
-    the user performs certain actions during runtime, new data will be
-    added and old data will be updated. When the user chooses to open
-    and work on a new dataset, this object will be completed cleaned in
-    order to ensure that no unused data persists within the program's
-    memory.
-
-    When a class needs to access the instance of this class, it can
-    simply call the class' constructor and it will return the only
-    instance of this class.
-    Example usage: patient_dict_container = PatientDictContainer()
+    Testing for ImageFusion
     """
 
     def __init__(self):
         # Initialize base requirements
-        self.path = None  # The path of the loaded directory.
-        self.dataset = None  # Dictionary of PyDicom dataset objects.
-        self.filepaths = None  # Dictionary of filepaths.
+        self.path = None        # The path of the loaded directory.
+        self.dataset = None     # Dictionary of PyDicom dataset objects.
+        self.filepaths = None           # Dictionary of filepaths.
 
-        self.additional_data = None  # Any additional values that are required
-        # (e.g. rois, raw_dvh, raw_contour, etc)
+        # Any additional values that are required (e.g. rois, raw_dvh,
+        # raw_contour, etc)
+        self.additional_data = None
 
     def set_initial_values(self, path, dataset, filepaths, **kwargs):
         """
@@ -53,7 +41,6 @@ class PatientDictContainer(metaclass=Singleton):
         :param kwargs: Any additional values that are required
             (e.g. rois, raw_dvh, raw_contour, etc)
         """
-        
         self.path = path
         self.dataset = dataset
         self.filepaths = filepaths
@@ -101,7 +88,7 @@ class PatientDictContainer(metaclass=Singleton):
 
     def has_modality(self, dicom_type):
         """
-        Example usage: dicom_data.has_modality("rtdose")
+        Example usage: dicom_data.has_modality("rtss")
         :param dicom_type: A string containing a DICOM class name as
             defined in ImageLoading.allowed_classes
         :return: True if dataset contains provided DICOM type.

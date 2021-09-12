@@ -18,10 +18,11 @@ from src.Model.Transform import inv_linear_transform
 
 def rename_roi(rtss, roi_id, new_name):
     """
-    Renames the given Region of Interest. Creates a csv file storing all the
-    renamed ROIs for the given RTSTRUCT file.
+    Renames the given Region of Interest. Creates a csv file storing all
+        the renamed ROIs for the given RTSTRUCT file.
     :param rtss: The RTSTRUCT file.
-    :param roi_id: ID the structure produced by ImageLoading.get_rois(..)
+    :param roi_id: ID the structure produced by
+        ImageLoading.get_rois(..)
     :param new_name: The structure's new name
     """
     for sequence in rtss.StructureSetROISequence:
@@ -82,7 +83,8 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
         :return: rtss, with added ROI
     """
 
-    # Creating a new ROIContourSequence, ContourSequence, ContourImageSequence
+    # Creating a new ROIContourSequence, ContourSequence,
+    # ContourImageSequence
     contour_sequence = Sequence([Dataset()])
     contour_image_sequence = Sequence([Dataset()])
 
@@ -113,8 +115,9 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
 
         # Contour Sequence
         for contour_image in contour_image_sequence:
+            # CT Image Storage
             contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
-                                  referenced_sop_class_uid)  # CT Image Storage
+                                  referenced_sop_class_uid)
             contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI",
                                   referenced_sop_instance_uid)
 
@@ -278,8 +281,9 @@ def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
     original_roi_observation_sequence = rtss.RTROIObservationsSequence
 
     for ROI_observations in rt_roi_observations_sequence:
-        # TODO: Check to make sure that there aren't multiple observations
-        #  per ROI, e.g. increment from existing Observation Numbers?
+        # TODO: Check to make sure that there aren't multiple
+        #  observations per ROI, e.g. increment from existing
+        #  Observation Numbers?
         ROI_observations.add_new(Tag("ObservationNumber"), 'IS',
                                  roi_number)
         ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS',
@@ -315,8 +319,8 @@ def get_raw_contour_data(rtss):
     """
     Get raw contour data of ROI in RT Structure Set
     :param rtss: RTSS dataset
-    :return: dict_roi, a dictionary of ROI contours; dict_num_points, number of
-    points of contours.
+    :return: dict_roi, a dictionary of ROI contours; dict_num_points,
+        number of points of contours.
     """
     # Retrieve a dictionary of roi_name & ROINumber pairs
     dict_id = {}
@@ -350,7 +354,8 @@ def calculate_matrix(img_ds):
     """
     Calculate the transformation matrix of a DICOM(image) dataset.
     :param img_ds: DICOM(image) dataset
-    :return: pair of numpy arrays that represents the transformation matrix
+    :return: pair of numpy arrays that represents the transformation
+        matrix
     """
     # Physical distance (in mm) between the center of each image pixel,
     # specified by a numeric pair
@@ -505,12 +510,12 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
 def pixel_to_rcs(pixlut, x, y):
     """
     :param pixlut: Transformation matrix
-    :param x: Pixel X value (greater than 0, less than the slice's Columns
-    data element)
-    :param y: Pixel Y value (greater than 0, less than the slice's Rows data
-    element)
-    :return: The pixel coordinate converted to an RCS point as set by the
-    image slice.
+    :param x: Pixel X value (greater than 0, less than the slice's
+        Columns data element)
+    :param y: Pixel Y value (greater than 0, less than the slice's Rows
+        data element)
+    :return: The pixel coordinate converted to an RCS point as set by
+        the image slice.
     """
 
     np_x = np.array(pixlut[0])
@@ -544,7 +549,8 @@ def get_contour_pixel(
     dict_pixels = {}
     pixlut = dict_pixluts[curr_slice]
     for roi in roi_selected:
-        # Using this type of dict to handle multiple contours within one slice
+        # Using this type of dict to handle multiple contours within one
+        # slice
         dict_pixels_of_roi = collections.defaultdict(list)
         raw_contours = dict_raw_contour_data[roi]
         number_of_contours = len(raw_contours[curr_slice])
@@ -560,8 +566,8 @@ def get_contour_pixel(
 
 def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
     """
-    Get pixels of contours of all rois at one time. (Alternative method for
-    calculating ROIs.
+    Get pixels of contours of all rois at one time. (Alternative method
+    for calculating ROIs.
     :param dict_raw_contour_data: a dictionary of all raw contour data
     :param roi_list: a list of all existing ROIs
     :param dict_pixluts: a dictionary of transformation matrices
@@ -584,7 +590,8 @@ def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
 
 def transform_rois_contours(axial_rois_contours):
     """
-       Transform the axial ROI contours into coronal and sagittal contours
+       Transform the axial ROI contours into coronal and sagittal
+       contours
        :param axial_rois_contours: the dictionary of axial ROI contours
        :return: Tuple of coronal and sagittal ROI contours
     """
@@ -620,7 +627,8 @@ def transform_rois_contours(axial_rois_contours):
 def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
                      pixmap_aspect=1):
     """
-    Calculate a list of polygons to display for a given ROI and a given slice.
+    Calculate a list of polygons to display for a given ROI and a given
+    slice.
     :param curr_roi: the ROI structure
     :param curr_slice: the current slice
     :param dict_rois_contours: the dictionary of ROI contours
@@ -691,7 +699,9 @@ def ordered_list_rois(rois):
 def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
                                 filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
-    """Pre-populate an RT Structure Set based on a single CT (or MR) and a
+
+    """
+    Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
     Name, and Description, which are set to "OnkoDICOM" plus the StudyID
     from the CT, and must add Structure Set ROI Sequence, ROI Contour
@@ -715,6 +725,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     ValueError
         [description]
     """
+
     if img_ds is None:
         raise ValueError("No CT data to initialize RT SS")
 
@@ -787,9 +798,9 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_ss.PositionReferenceIndicator = ""
 
     # Structure Set module
-    # Best to modify the Structure Set Label with something more interesting
-    # in the application. and populate the Name and Description from the
-    # application also.
+    # Best to modify the Structure Set Label with something more
+    # interesting in the application. and populate the Name and
+    # Description from the application also.
     rt_ss.StructureSetLabel = "OnkoDICOM rtss"
     rt_ss.StructureSetName = rt_ss.StructureSetLabel
     rt_ss.StructureSetDescription = "OnkoDICOM rtss of " + rt_ss.StudyID
@@ -873,7 +884,8 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
     rm_indices = [old_duplicated_roi_indexes[name]
                   for name in duplicated_names]
     for index in sorted(rm_indices, reverse=True):
-        # Remove the old value out of the original structure set sequence
+        # Remove the old value out of the original structure set
+        # sequence
         original_structure_set.pop(index)
         # Remove the old value out of the original contour sequence
         original_roi_contour.pop(index)

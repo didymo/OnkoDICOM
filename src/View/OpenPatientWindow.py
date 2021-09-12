@@ -352,7 +352,6 @@ class UIOpenPatientWindow(object):
         self.progress_window = OpenPatientProgressWindow(self)
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
-
         self.progress_window.start_loading(selected_files,
                                            self.existing_rtss_path)
 
