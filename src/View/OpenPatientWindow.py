@@ -270,11 +270,12 @@ class UIOpenPatientWindow(object):
 
     def tree_item_clicked(self, item, _):
         """
-            Executes when a tree item is checked or unchecked.
-            If a different patient is checked, uncheck the previous patient.
-            Inform user about missing DICOM files.
+        Executes when a tree item is checked or unchecked.
+        If a different patient is checked, uncheck the previous patient.
+        Inform user about missing DICOM files.
         """
-        # If patient is only selected, but not checked, set it to "focus" to coincide with stylesheet
+        # If patient is only selected, but not checked, set it to "focus" to
+        # coincide with stylesheet
         if item.checkState(0) == Qt.CheckState.Unchecked:
             self.open_patient_window_patients_tree.setCurrentItem(item)
         else:  # Otherwise don't "focus", then set patient as selected
@@ -282,38 +283,55 @@ class UIOpenPatientWindow(object):
             item.setSelected(True)
 
         selected_patient = item
-        # If the item is not top-level, bubble up to see which top-level item this item belongs to
-        if self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(item) == -1:
-            while self.open_patient_window_patients_tree.invisibleRootItem().indexOfChild(selected_patient) == -1:
+        # If the item is not top-level, bubble up to see which top-level item
+        # this item belongs to
+        if self.open_patient_window_patients_tree.invisibleRootItem(). \
+                indexOfChild(item) == -1:
+            while self.open_patient_window_patients_tree.invisibleRootItem(). \
+                    indexOfChild(selected_patient) == -1:
                 selected_patient = selected_patient.parent()
 
         # Uncheck previous patient if a different patient is selected
-        if item.checkState(0) == Qt.CheckState.Checked and self.last_patient != selected_patient:
+        if item.checkState(0) == Qt.CheckState.Checked and self.last_patient \
+                != selected_patient:
             if self.last_patient is not None:
-                last_patient_checked_items = self.get_checked_nodes(self.last_patient)
+                last_patient_checked_items = self.get_checked_nodes(
+                    self.last_patient)
                 for checked_item in last_patient_checked_items:
                     checked_item.setCheckState(0, Qt.Unchecked)
             self.last_patient = selected_patient
 
-        # Get the types of all selected leaves & Get the names of all selected studies
-        checked_nodes = self.get_checked_nodes(self.open_patient_window_patients_tree.invisibleRootItem())
-        selected_series_types = [checked_node.dicom_object.get_series_type() for checked_node in checked_nodes]
+        # Get the types of all selected leaves & Get the names of all selected
+        # studies
+        checked_nodes = self.get_checked_nodes(
+            self.open_patient_window_patients_tree.invisibleRootItem())
+        selected_series_types = [checked_node.dicom_object.get_series_type()
+                                 for checked_node in checked_nodes]
 
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
+        total_selected_image_series = selected_series_types.count('CT') + \
+                                      selected_series_types.count('MR') + \
+                                      selected_series_types.count('PT')
+
         proceed = True
-        if not (('CT' in selected_series_types and selected_series_types.count('CT') == 1) or
-                ('MR' in selected_series_types and selected_series_types.count('MR') == 1) or
-                ('PT' in selected_series_types and selected_series_types.count('PT') == 1)):
-            header = "One and only one image series must be selected."
+        if not ('CT' in selected_series_types or
+                'MR' in selected_series_types or
+                'PT' in selected_series_types):
+            header = "Cannot proceed without an image."
+            proceed = False
+        elif total_selected_image_series != 1:
+            header = "Cannot proceed with more than 1 selected image."
             proceed = False
         elif not self.check_selected_items_referencing(checked_nodes):
             # Check that selected items properly reference each other
             header = "Selected series do not reference each other."
             proceed = False
         elif 'RTSTRUCT' not in selected_series_types:
-            header = "DVH and Radiomics calculations are not available without a RTSTRUCT file."
+            header = "DVH and Radiomics calculations are not available " \
+                     "without a RTSTRUCT file."
         elif 'RTDOSE' not in selected_series_types:
-            header = "DVH calculations are not available without a RTDOSE file."
+            header = "DVH calculations are not available without a RTDOSE " \
+                     "file."
         else:
             header = ""
 
@@ -327,7 +345,8 @@ class UIOpenPatientWindow(object):
         Begins loading of the selected files.
         """
         selected_files = []
-        for item in self.get_checked_nodes(self.open_patient_window_patients_tree.invisibleRootItem()):
+        for item in self.get_checked_nodes(
+                self.open_patient_window_patients_tree.invisibleRootItem()):
             selected_files += item.dicom_object.get_files()
 
         self.progress_window = OpenPatientProgressWindow(self)
@@ -382,7 +401,6 @@ class UIOpenPatientWindow(object):
     def check_selected_items_referencing(self, items):
         """
         Check if selected tree items properly reference each other.
-        Save an existing rtss path if it is not selected.
         :param items: List of selected DICOMWidgetItems.
         :return: True if the selected items belong to the same tree branch.
         """
@@ -406,14 +424,15 @@ class UIOpenPatientWindow(object):
                 if series["RTSTRUCT"].parent() != series["IMAGE"]:
                     return False
             else:  # Get the existing_rtss_path if the RTSTRUCT wasn't selected
-                self.existing_rtss_path = series["IMAGE"].child(0).\
-                    dicom_object.get_files()[0] if series["IMAGE"].child(0) else None
+                self.existing_rtss_path = \
+                    self.get_existing_rtss_path(series["IMAGE"])
 
             if series["RTPLAN"]:
                 if series["RTPLAN"].parent().parent() != series["IMAGE"]:
                     return False
             if series["RTDOSE"]:
-                if series["RTDOSE"].parent().parent().parent() != series["IMAGE"]:
+                if series["RTDOSE"].parent().parent().parent() != \
+                        series["IMAGE"]:
                     return False
 
         # Check if the RTPLAN and RTDOSE are child items of the RTSTRUCT
@@ -433,6 +452,13 @@ class UIOpenPatientWindow(object):
 
         return True
 
+    def get_existing_rtss_path(self, image_series):
+        """
+        Save an existing rtss path if it is not selected.
+        :return: the filepath of the existing rtss
+        """
+        return image_series.child(0).dicom_object.get_files()[0] \
+            if image_series.child(0) else None
 
 # This is to allow for dropping a directory into the input text.
 class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
