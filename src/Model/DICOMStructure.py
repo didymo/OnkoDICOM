@@ -1,5 +1,4 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QFont
 
 from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
@@ -116,7 +115,7 @@ class Patient:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(widget_item.flags())
 
         # Add all children of this object as children of the widget item.
         for study_uid, study in self.studies.items():
@@ -222,8 +221,7 @@ class Study:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         self.widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        self.widget_item.setFlags(self.widget_item.flags()
-                                  | Qt.ItemIsUserCheckable)
+        self.widget_item.setFlags(self.widget_item.flags())
 
         # Add child widgets of Study following the hierarchy of objects
         # 1. Image series, 2. RTSTRUCT, 3. RTPLAN, 4. RTDOSE
@@ -347,10 +345,7 @@ class Study:
         """
         widget_item = DICOMWidgetItem("No matched " + modality + " was found.",
                                       None)
-        widget_item.setFlags(widget_item.flags() | Qt.NoItemFlags)
-        widget_item.setDisabled(True)
-        widget_item.setFont(0, QFont("", italic=True))
-        widget_item.setCheckState(0, Qt.Unchecked)
+        widget_item.setFlags(widget_item.flags())
         return widget_item
 
 
