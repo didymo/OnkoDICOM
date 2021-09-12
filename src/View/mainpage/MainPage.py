@@ -279,7 +279,7 @@ class UIMainWindow:
             self.dicom_coronal_view.set_views(None, None)
             self.dicom_sagittal_view.set_views(None, None)
 
-    def zoom_in(self, is_four_view):
+    def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming in function on the four view's views
         or the single view depending on what view is showing on screen.
@@ -292,7 +292,12 @@ class UIMainWindow:
         else:
             self.dicom_single_view.zoom_in()
 
-    def zoom_out(self, is_four_view):
+        if image_reg_four:
+            self.image_fusion_view_axial.zoom_in()
+            self.image_fusion_view_coronal.zoom_in()
+            self.image_fusion_view_sagittal.zoom_in()
+
+    def zoom_out(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming out function on the four view's
         views or the single view depending on what view is showing on screen.
@@ -304,6 +309,11 @@ class UIMainWindow:
             self.dicom_sagittal_view.zoom_out()
         else:
             self.dicom_single_view.zoom_out()
+        
+        if image_reg_four:
+            self.image_fusion_view_axial.zoom_out()
+            self.image_fusion_view_coronal.zoom_out()
+            self.image_fusion_view_sagittal.zoom_out()
 
     def format_data(self, size):
         """
@@ -319,9 +329,12 @@ class UIMainWindow:
         Function checks if the moving dict container contains rtss to
         load rtss. Views are created and stacked into three window view.
         """
+        # Set a flag for zooming
+        self.action_handler.has_image_registration_four = True
+
         # Instance of Moving Model
         moving_dict_container = MovingDictContainer()
-        patient_dict_container = PatientDictContainer()
+        
         if moving_dict_container.has_modality("rtss"):
             if len(self.structures_tab.rois.items()) == 0:
                 self.structures_tab.update_ui(moving=True)

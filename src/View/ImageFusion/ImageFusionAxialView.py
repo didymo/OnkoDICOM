@@ -171,16 +171,9 @@ class ImageFusionAxialView(DicomView):
         """
         Update the image to be displayed on the DICOM View.
         """
-        if(color):
-            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
-            slider_id = self.slider.value()
-            image = pixmaps[slider_id]
-
-        else:
-            pixmaps = self.patient_dict_container.get(
-                "pixmaps_"+self.slice_view)
-            slider_id = self.slider.value()
-            image = pixmaps[slider_id]
+        pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+        slider_id = self.slider.value()
+        image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
@@ -260,3 +253,4 @@ class ImageFusionAxialView(DicomView):
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
+            

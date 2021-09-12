@@ -23,6 +23,8 @@ class ActionHandler:
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
         self.is_four_view = False
+        self.has_image_registration_single = False
+        self.has_image_registration_four = False
 
         ##############################
         # Init all actions and icons #
@@ -275,10 +277,14 @@ class ActionHandler:
                 "No changes to the RTSTRUCT file detected.")
 
     def zoom_out_handler(self):
-        self.__main_page.zoom_out(self.is_four_view)
+        self.__main_page.zoom_out(self.is_four_view, 
+                                self.has_image_registration_single,
+                                self.has_image_registration_four)
 
     def zoom_in_handler(self):
-        self.__main_page.zoom_in(self.is_four_view)
+        self.__main_page.zoom_in(self.is_four_view, 
+                                self.has_image_registration_single,
+                                self.has_image_registration_four)
 
     def windowing_handler(self, state, text):
         """

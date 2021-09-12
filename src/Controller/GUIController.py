@@ -180,6 +180,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         # Close 3d vtk widget
         self.three_dimension_view.close()
 
+        # Add comment here to see if opening a new patient sets
+        # action handler to false
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
 
