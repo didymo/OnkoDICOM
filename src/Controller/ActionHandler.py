@@ -391,15 +391,30 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.is_four_view = False
+        self.has_image_registration_four = False
+        self.has_image_registration_single = True
         self.__main_page.dicom_view.setCurrentWidget(
             self.__main_page.dicom_single_view)
         self.__main_page.dicom_single_view.update_view()
 
+        if hasattr(self.__main_page,'image_fusion_view'):
+            self.__main_page.image_fusion_view.setCurrentWidget(
+                self.__main_page.image_fusion_single_view)
+            self.__main_page.image_fusion_single_view.update_view()
+
     def four_views_handler(self):
         self.is_four_view = True
+        self.has_image_registration_four = True
+        self.has_image_registration_single = False
         self.__main_page.dicom_view.setCurrentWidget(
             self.__main_page.dicom_four_views)
         self.__main_page.dicom_axial_view.update_view()
+
+        if hasattr(self.__main_page,'image_fusion_view'):
+            self.__main_page.image_fusion_view.setCurrentWidget(
+                self.__main_page.image_fusion_four_views)
+            self.__main_page.image_fusion_view_axial.update_view()
+
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()
