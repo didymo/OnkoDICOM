@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QFont
 
 from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
@@ -115,9 +116,7 @@ class Patient:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags()
-                             | Qt.ItemIsAutoTristate
-                             | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
         for study_uid, study in self.studies.items():
@@ -224,7 +223,6 @@ class Study:
         """
         self.widget_item = DICOMWidgetItem(self.output_as_text(), self)
         self.widget_item.setFlags(self.widget_item.flags()
-                                  | Qt.ItemIsAutoTristate
                                   | Qt.ItemIsUserCheckable)
 
         # Add child widgets of Study following the hierarchy of objects
@@ -348,10 +346,10 @@ class Study:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem("No matched " + modality + " was found.",
-                                      self)
-        widget_item.setFlags(widget_item.flags()
-                             | Qt.ItemIsAutoTristate
-                             | Qt.ItemIsUserCheckable)
+                                      None)
+        widget_item.setFlags(widget_item.flags() | Qt.NoItemFlags)
+        widget_item.setDisabled(True)
+        widget_item.setFont(0, QFont("", italic=True))
         widget_item.setCheckState(0, Qt.Unchecked)
         return widget_item
 
@@ -476,9 +474,7 @@ class Series:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags()
-                             | Qt.ItemIsAutoTristate
-                             | Qt.ItemIsUserCheckable)
+        widget_item.setFlags(widget_item.flags() | Qt.ItemIsUserCheckable)
         widget_item.setCheckState(0, Qt.Unchecked)
         return widget_item
 
