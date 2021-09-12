@@ -1,6 +1,6 @@
-from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore
 
-from src.View.mainpage.DicomView import DicomView
+from src.View.mainpage.DicomView import DicomView, GraphicsScene
 
 
 class ImageFusionAxialView(DicomView):
@@ -15,7 +15,8 @@ class ImageFusionAxialView(DicomView):
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
         super(ImageFusionAxialView, self).__init__(roi_color,
-                                                   iso_color, cut_line_color)
+                                                   iso_color, 
+                                                   cut_line_color)
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
@@ -167,44 +168,26 @@ class ImageFusionAxialView(DicomView):
                 stylesheet = "QLabel { color : white; }"
             self.format_metadata_labels(stylesheet)
 
-    def image_display(self, color=False):
+    def image_display(self):
         """
         Update the image to be displayed on the DICOM View.
         """
-        if(color):
-            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
-            slider_id = self.slider.value()
-            image = pixmaps[slider_id]
-
-        else:
-            pixmaps = self.patient_dict_container.get(
-                "pixmaps_"+self.slice_view)
-            slider_id = self.slider.value()
-            image = pixmaps[slider_id]
+        pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+        slider_id = self.slider.value()
+        image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = QtWidgets.QGraphicsScene()
-        self.scene.addItem(label)
+        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
 
-    def value_changed(self):
-        self.update_view(cut_line_color=True)
 
-    def update_view(self, zoom_change=False, cut_line_color=False):
+    def update_view(self, zoom_change=False):
         """
         Update the view of the DICOM Image.
         :param zoom_change: Boolean indicating whether the user wants 
         to change the zoom. False by default.
         """
-        if(cut_line_color):
-            self.image_display(color=cut_line_color)
-        else:
-            self.image_display()
-
-        if zoom_change:
-            self.view.setTransform(
-                QtGui.QTransform().scale(self.zoom, self.zoom))
-
-        self.view.setScene(self.scene)
+        super().update_view(zoom_change)
+        self.update_metadata()
 
     def update_metadata(self):
         """
@@ -260,3 +243,4 @@ class ImageFusionAxialView(DicomView):
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
+            

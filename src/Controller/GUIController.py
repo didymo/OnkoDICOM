@@ -185,6 +185,20 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         # Close 3d vtk widget
         self.three_dimension_view.close()
 
+        # Explicity destroy objects - the purpose of this is to clear
+        # any image fusion tabs that have been used previously.
+        # Try-catch in the event user has not prompted image-fusion.
+        try:
+            del self.image_fusion_view_coronal
+            del self.image_fusion_view_sagittal
+            del self.image_fusion_view_axial
+            del self.image_fusion_four_views_layout
+            del self.image_fusion_four_views
+            del self.image_fusion_single_view
+            del self.image_fusion_view
+        except:
+            pass
+        
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
 
