@@ -20,7 +20,6 @@ import platform
 
 
 class UIImageFusionWindow(object):
-
     image_fusion_info_initialized = QtCore.Signal(object)
 
     def __init__(self):
@@ -118,7 +117,7 @@ class UIImageFusionWindow(object):
         self.open_patient_window_stop_button.setObjectName(
             "OpenPatientWindowStopButton")
         self.open_patient_window_stop_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, 
+            QSizePolicy(QSizePolicy.MinimumExpanding,
                         QSizePolicy.MinimumExpanding))
         self.open_patient_window_stop_button.resize(
             self.open_patient_window_stop_button.sizeHint().width(),
@@ -145,7 +144,7 @@ class UIImageFusionWindow(object):
         self.open_patient_window_patients_tree.setObjectName(
             "OpenPatientWindowPatientsTree")
         self.open_patient_window_patients_tree.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, 
+            QSizePolicy(QSizePolicy.MinimumExpanding,
                         QSizePolicy.MinimumExpanding))
         self.open_patient_window_patients_tree.resize(
             self.open_patient_window_patients_tree.sizeHint().width(),
@@ -169,16 +168,16 @@ class UIImageFusionWindow(object):
         # Create a horizontal box to hold the Cancel and Open button
         self.open_patient_window_patient_open_actions_horizontal_box = \
             QHBoxLayout()
-        self.open_patient_window_patient_open_actions_horizontal_box.\
+        self.open_patient_window_patient_open_actions_horizontal_box. \
             setObjectName("OpenPatientWindowPatientOpenActionsHorizontalBox")
-        self.open_patient_window_patient_open_actions_horizontal_box.\
+        self.open_patient_window_patient_open_actions_horizontal_box. \
             addStretch(1)
         # Add a button to go back/close from the application
         self.open_patient_window_close_button = QPushButton()
         self.open_patient_window_close_button.setObjectName(
             "OpenPatientWindowcloseButton")
         self.open_patient_window_close_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, 
+            QSizePolicy(QSizePolicy.MinimumExpanding,
                         QSizePolicy.MinimumExpanding))
         self.open_patient_window_close_button.resize(
             self.open_patient_window_stop_button.sizeHint().width(),
@@ -189,7 +188,7 @@ class UIImageFusionWindow(object):
             self.close_button_clicked)
         self.open_patient_window_close_button.setProperty(
             "QPushButtonClass", "fail-button")
-        self.open_patient_window_patient_open_actions_horizontal_box.\
+        self.open_patient_window_patient_open_actions_horizontal_box. \
             addWidget(self.open_patient_window_close_button)
 
         # Add a button to confirm opening of the patient
@@ -197,7 +196,7 @@ class UIImageFusionWindow(object):
         self.open_patient_window_confirm_button.setObjectName(
             "OpenPatientWindowConfirmButton")
         self.open_patient_window_confirm_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, 
+            QSizePolicy(QSizePolicy.MinimumExpanding,
                         QSizePolicy.MinimumExpanding))
         self.open_patient_window_confirm_button.resize(
             self.open_patient_window_confirm_button.sizeHint().width(),
@@ -210,7 +209,7 @@ class UIImageFusionWindow(object):
             self.confirm_button_clicked)
         self.open_patient_window_confirm_button.setProperty(
             "QPushButtonClass", "success-button")
-        self.open_patient_window_patient_open_actions_horizontal_box.\
+        self.open_patient_window_patient_open_actions_horizontal_box. \
             addWidget(
             self.open_patient_window_confirm_button)
 
@@ -260,8 +259,8 @@ class UIImageFusionWindow(object):
         """Translates UI"""
         _translate = QtCore.QCoreApplication.translate
         open_image_fusion_select_instance.setWindowTitle(
-            _translate("OpenPatientWindowInstance", 
-                        "OnkoDICOM - Select Patient"))
+            _translate("OpenPatientWindowInstance",
+                       "OnkoDICOM - Select Patient"))
         self.open_patient_directory_prompt.setText(_translate(
             "OpenPatientWindowInstance",
             "Choose an image to merge with:"))
@@ -275,7 +274,7 @@ class UIImageFusionWindow(object):
         self.open_patient_directory_appear_prompt.setText(_translate(
             "OpenPatientWindowInstance",
             "Please select below the image set you wish to overlay:"))
-        self.open_patient_directory_result_label.\
+        self.open_patient_directory_result_label. \
             setText("The selected imageset(s) above will be "
                     "co-registered with the current imageset.")
         self.open_patient_window_stop_button.setText(_translate(
@@ -284,6 +283,12 @@ class UIImageFusionWindow(object):
             "OpenPatientWindowInstance", "Close"))
         self.open_patient_window_confirm_button.setText(_translate(
             "OpenPatientWindowInstance", "Confirm"))
+
+    def update_new_patient(self):
+        self.patient_dict_container = PatientDictContainer()
+        self.patient = self.patient_dict_container.get("basic_info")
+        self.patient_id = self.patient['id']
+        self.clear_checked_leaves()
 
     def close_button_clicked(self):
         """Closes the window."""
@@ -380,15 +385,15 @@ class UIImageFusionWindow(object):
         selected_patient = item
         # If the item is not top-level, bubble up to see which top-level
         # item this item belongs to
-        if self.open_patient_window_patients_tree.invisibleRootItem().\
-            indexOfChild(item) == -1:
-            while self.open_patient_window_patients_tree.invisibleRootItem().\
-                indexOfChild(selected_patient) == -1:
+        if self.open_patient_window_patients_tree.invisibleRootItem(). \
+                indexOfChild(item) == -1:
+            while self.open_patient_window_patients_tree.invisibleRootItem(). \
+                    indexOfChild(selected_patient) == -1:
                 selected_patient = selected_patient.parent()
 
         # Uncheck previous patient if a different patient is selected
         if item.checkState(0) == Qt.CheckState.Checked and \
-            self.last_patient != selected_patient:
+                self.last_patient != selected_patient:
             if self.last_patient is not None:
                 self.last_patient.setCheckState(0, Qt.CheckState.Unchecked)
                 self.last_patient.setSelected(False)
@@ -407,7 +412,7 @@ class UIImageFusionWindow(object):
 
         # Check if multiple studies are selected
         if len(selected_studies_names) == 1 & \
-            len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
+                len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
         elif len(selected_studies_names) > 1:
             header = "Only one study can be opened."
@@ -431,7 +436,10 @@ class UIImageFusionWindow(object):
                 self.patient_id.strip():
             header = "Cannot proceed with different patient."
             self.open_patient_window_confirm_button.setDisabled(True)
-            
+        if len(selected_studies_names) == 0:
+            header = "No image set selected"
+            self.open_patient_window_confirm_button.setDisabled(True)
+
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
@@ -493,10 +501,27 @@ class UIImageFusionWindow(object):
         recurse(self.open_patient_window_patients_tree.invisibleRootItem())
         return checked_items
 
+    def clear_checked_leaves(self):
+        """
+        Resets all leaves to their unchecked state
+        """
+        def recurse(parent_item: QTreeWidgetItem):
+            for i in range(parent_item.childCount()):
+                child = parent_item.child(i)
+                grand_children = child.childCount()
+                if grand_children > 0:
+                    recurse(child)
+                else:
+                    if child.checkState(0) == Qt.Checked:
+                        child.setCheckState(0, Qt.CheckState.Unchecked)
+                        child.setSelected(False)
+
+        recurse(self.open_patient_window_patients_tree.invisibleRootItem())
+        self.open_patient_window_patients_tree.collapseAll()
+
 
 # This is to allow for dropping a directory into the input text.
 class UIImageFusionWindowDragAndDropEvent(QLineEdit):
-
     parent_window = None
 
     def __init__(self, ui_image_fusion_window_instance):

@@ -1,6 +1,6 @@
+from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
-
-import os
+from PySide6.QtWidgets import QStackedWidget
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -23,6 +23,8 @@ class ActionHandler:
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
         self.is_four_view = False
+        self.has_image_registration_single = False
+        self.has_image_registration_four = False
 
         ##############################
         # Init all actions and icons #
@@ -275,10 +277,14 @@ class ActionHandler:
                 "No changes to the RTSTRUCT file detected.")
 
     def zoom_out_handler(self):
-        self.__main_page.zoom_out(self.is_four_view)
+        self.__main_page.zoom_out(self.is_four_view, 
+                                self.has_image_registration_single,
+                                self.has_image_registration_four)
 
     def zoom_in_handler(self):
-        self.__main_page.zoom_in(self.is_four_view)
+        self.__main_page.zoom_in(self.is_four_view, 
+                                self.has_image_registration_single,
+                                self.has_image_registration_four)
 
     def windowing_handler(self, state, text):
         """
@@ -385,15 +391,36 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.is_four_view = False
+        
         self.__main_page.dicom_view.setCurrentWidget(
             self.__main_page.dicom_single_view)
         self.__main_page.dicom_single_view.update_view()
 
+        if hasattr(self.__main_page,'image_fusion_view'):
+            self.has_image_registration_four = False
+            self.has_image_registration_single = True
+            if isinstance ( self.__main_page.image_fusion_single_view, 
+                            ImageFusionAxialView):
+                self.__main_page.image_fusion_view.setCurrentWidget(
+                    self.__main_page.image_fusion_single_view)
+                self.__main_page.image_fusion_single_view.update_view()
+
     def four_views_handler(self):
         self.is_four_view = True
+    
         self.__main_page.dicom_view.setCurrentWidget(
             self.__main_page.dicom_four_views)
         self.__main_page.dicom_axial_view.update_view()
+
+        if hasattr(self.__main_page,'image_fusion_view'):
+            self.has_image_registration_four = True
+            self.has_image_registration_single = False
+            if isinstance ( self.__main_page.image_fusion_view, 
+                            QStackedWidget):
+                self.__main_page.image_fusion_view.setCurrentWidget(
+                    self.__main_page.image_fusion_four_views)
+                self.__main_page.image_fusion_view_axial.update_view()
+
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()
