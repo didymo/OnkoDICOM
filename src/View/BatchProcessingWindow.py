@@ -6,6 +6,8 @@ from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
+from src.View.batchprocessing.ROINameCleaningOptions import \
+    ROINameCleaningOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -111,12 +113,15 @@ class UIBatchProcessingWindow(object):
         self.suv2roi_tab = QtWidgets.QLabel("Coming soon")
         self.dvh2csv_tab = DVH2CSVOptions()
         self.pyrad2csv_tab = PyRad2CSVOptions()
+        self.batchnamecleaning_tab = ROINameCleaningOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
         self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
+        self.tab_widget.addTab(self.batchnamecleaning_tab,
+                               "Batch ROI Name Cleaning")
 
         # == Bottom widgets
         # Info text
@@ -207,7 +212,8 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv']
+        processes = ['iso2roi', 'suv2roi',
+                     'dvh2csv', 'pyrad2csv', 'roinamecleaning']
         selected_processes = []
 
         # Get the selected processes
