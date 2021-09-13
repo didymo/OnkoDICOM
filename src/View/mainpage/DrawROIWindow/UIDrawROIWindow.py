@@ -8,16 +8,15 @@ from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
     QMessageBox, QComboBox
 from alphashape import alphashape
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, Polygon
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
-from src.View.mainpage.DrawROIWindow.SaveROIProgressWindow import \
-    SaveROIProgressWindow
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
@@ -713,19 +712,18 @@ class UIDrawROIWindow:
                     and self.ds is not None \
                     and len(self.drawingROI.target_pixel_coords) != 0:
 
-                pixel_hull = self.calculate_concave_hull_of_points(
+                pixel_hull_list = self.calculate_concave_hull_of_points(
                     self.drawingROI.target_pixel_coords)
-                if pixel_hull is not None:
-                    self.drawn_roi_list[image_slice_number] = {
-                        'coords': pixel_hull,
-                        'ds': self.ds,
-                        'drawingROI': self.drawingROI
-                    }
-                    self.slice_changed = False
-                    return True
-                else:
-                    self.display_multipolygon_warning(image_slice_number)
-                    return False
+                coord_list = []
+                for pixel_hull in pixel_hull_list:
+                    coord_list.append(pixel_hull)
+                self.drawn_roi_list[image_slice_number] = {
+                    'coords': coord_list,
+                    'ds': self.ds,
+                    'drawingROI': self.drawingROI
+                }
+                self.slice_changed = False
+                return True
         else:
             return True
 
@@ -824,41 +822,20 @@ class UIDrawROIWindow:
         """
             Function triggered when saving ROI list
         """
-        roi_list = []
-        if self.drawn_roi_list == {}:
+        roi_list = ROI.convert_hull_list_to_contours_data(
+            self.drawn_roi_list, self.patient_dict_container)
+        if len(roi_list) == 0:
             QMessageBox.about(self.draw_roi_window_instance, "No ROI Detected",
                               "Please ensure you have drawn your ROI first.")
             return
-        for slice_id, slice_info in self.drawn_roi_list.items():
-            pixel_hull = slice_info['coords']
-            if pixel_hull is not None:
-                hull = self.convert_hull_to_rcs(pixel_hull,
-                                                slice_id)
-                # Convert the polygon's pixel points to RCS locations.
-
-                single_array = []
-                for sublist in hull:
-                    for item in sublist:
-                        single_array.append(item)
-                roi_list.append({
-                    'ds': slice_info['ds'],
-                    'coords': single_array
-                })
-            else:
-                self.display_multipolygon_warning(slice_id)
-                return
 
         # The list of points will need to be converted into a
         # single-dimensional array, as RTSTRUCT contour data is stored in
         # such a way. i.e. [x, y, z, x, y, z, x, y, z, ..., ...] Create a
         # popup window that modifies the RTSTRUCT and tells the user that
         # processing is happening.
-        progress_window = SaveROIProgressWindow(self,
-                                                QtCore.Qt.WindowTitleHint)
-        progress_window.signal_roi_saved.connect(self.roi_saved)
-        progress_window.start_saving(self.dataset_rtss, self.ROI_name,
-                                     roi_list)
-        progress_window.show()
+        connectSaveROIProgress(
+            self, roi_list, self.dataset_rtss, self.ROI_name, self.roi_saved)
 
     def roi_saved(self, new_rtss):
         """
@@ -872,8 +849,9 @@ class UIDrawROIWindow:
     def calculate_concave_hull_of_points(self, pixel_coords):
         """
         Return the alpha shape of the highlighted pixels using the alpha
-        entered by the user. :param pixel_coords: the coordinates of the
-        contour pixels :return: List of points ordered to form a polygon.
+        entered by the user.
+        :param pixel_coords: the coordinates of the contour pixels
+        :return: List of lists of points ordered to form polygon(s).
         """
         # Get all the pixels in the drawing window's list of highlighted
         # pixels, excluding the removed pixels.
@@ -883,42 +861,24 @@ class UIDrawROIWindow:
         # alpha = 0.95 * alphashape.optimizealpha(points)
         alpha = float(self.input_alpha_value.text())
         hull = alphashape(target_pixel_coords, alpha)
-        if isinstance(hull, MultiPolygon):
-            return None
 
-        hull_xy = hull.exterior.coords.xy
+        # Convert hull to points
+        def hull_to_points(hull):
+            hull_xy = hull.exterior.coords.xy
 
-        points = []
-        for i in range(len(hull_xy[0])):
-            points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
-        return points
+            points = []
+            for i in range(len(hull_xy[0])):
+                points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
 
-    def convert_hull_to_rcs(self, hull_pts, slider_id):
-        """
-        Converts all the pixel coordinates in the given polygon to RCS
-        coordinates based off the CT image's matrix. :param hull_pts: List
-        of pixel coordinates ordered to form a polygon. :param slider_id: id
-        of the slide to convert to rcs (z coordinate) :return: List of RCS
-        coordinates ordered to form a polygon
+            return points
 
-        """
-        dataset = self.patient_dict_container.dataset[slider_id]
-        pixlut = self.patient_dict_container.get("pixluts")[
-            dataset.SOPInstanceUID]
-        z_coord = dataset.SliceLocation
-        points = []
-
-        # Convert the pixels to an RCS location and move them to a list of
-        # points.
-        for i, item in enumerate(hull_pts):
-            points.append(ROI.pixel_to_rcs(pixlut, item[0], item[1]))
-
-        contour_data = []
-        for p in points:
-            coords = (p[0], p[1], z_coord)
-            contour_data.append(coords)
-
-        return contour_data
+        polygon_list = []
+        if isinstance(hull, Polygon):
+            polygon_list.append(hull_to_points(hull))
+        elif isinstance(hull, MultiPolygon):
+            for polygon in hull:
+                polygon_list.append(hull_to_points(polygon))
+        return polygon_list
 
     def onPreviewClicked(self):
         """
@@ -926,12 +886,9 @@ class UIDrawROIWindow:
         """
         if hasattr(self, 'drawingROI') and self.drawingROI and len(
                 self.drawingROI.target_pixel_coords) > 0:
-            list_of_points = self.calculate_concave_hull_of_points(
+            polygon_list = self.calculate_concave_hull_of_points(
                 self.drawingROI.target_pixel_coords)
-            if list_of_points is not None:
-                self.drawingROI.draw_contour_preview(list_of_points)
-            else:
-                self.display_multipolygon_warning(self.current_slice)
+            self.drawingROI.draw_contour_preview(polygon_list)
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
                               "Please ensure you have drawn your ROI first.")
@@ -1091,21 +1048,6 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
             True)
         self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
-
-    def display_multipolygon_warning(self, slice_id):
-        """
-        function to display multipolygon warning
-        :param slice_id: the slice id where
-        multipolygon exists
-        """
-        warning_text = "Selected points in slice " + str(slice_id + 1) + \
-                       "will generate multiple contours, which is not " \
-                       "currently supported. If the region you are drawing " \
-                       "is not meant to generate multiple contours, please " \
-                       "adjust your selected alpha value. "
-
-        QMessageBox.about(self.draw_roi_window_instance,
-                          "Multipolygon detected", warning_text)
 
     def closeWindow(self):
         """
