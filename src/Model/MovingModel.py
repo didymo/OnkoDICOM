@@ -13,7 +13,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.Controller.PathHandler import resource_path
 
-from src.Model.ImageFusion import create_fused_model
+from src.Model.ImageFusion import create_fused_model, get_fused_window
 
 
 def create_moving_model():
@@ -134,10 +134,13 @@ def create_moving_model():
                                   dicom_tree_rtplan.dict)
 
 
-def read_images_for_fusion():
+def read_images_for_fusion(level=0, window=0):
     """Reads images for fusion"""
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
+    if level == 0 or window == 0:
+        level = patient_dict_container.get("level")
+        window = patient_dict_container.get("window")
 
     amount = len(patient_dict_container.filepaths)
     orig_fusion_list = []
@@ -149,6 +152,7 @@ def read_images_for_fusion():
             continue
 
     orig_image = sitk.ReadImage(orig_fusion_list)
+    patient_dict_container.set("sitk_original", orig_image)
 
     amount = len(moving_dict_container.filepaths)
     new_fusion_list = []
@@ -161,8 +165,9 @@ def read_images_for_fusion():
 
     new_image = sitk.ReadImage(new_fusion_list)
 
+    create_fused_model(orig_image, new_image)
     color_axial, color_sagittal, color_coronal = \
-        create_fused_model(orig_image, new_image)
+        get_fused_window(level, window)
 
     patient_dict_container.set("color_axial", color_axial)
     patient_dict_container.set("color_sagittal", color_sagittal)
