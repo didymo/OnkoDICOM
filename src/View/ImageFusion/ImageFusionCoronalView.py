@@ -9,7 +9,7 @@ class ImageFusionCoronalView(DicomView):
                  cut_line_color=None):
         self.slice_view = 'coronal'
         super(ImageFusionCoronalView, self).__init__(roi_color,
-                                                     iso_color, 
+                                                     iso_color,
                                                      cut_line_color)
         self.update_view()
 
@@ -22,8 +22,9 @@ class ImageFusionCoronalView(DicomView):
         image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
-        
+        self.scene = GraphicsScene(
+            label, self.horizontal_view, self.vertical_view)
+
     def roi_display(self):
         """
         Display ROI structures on the DICOM Image.

@@ -28,7 +28,8 @@ class ImageFusionSagittalView(DicomView):
         image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
+        self.scene = GraphicsScene(
+            label, self.horizontal_view, self.vertical_view)
 
     def roi_display(self):
         """

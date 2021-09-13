@@ -15,7 +15,7 @@ class ImageFusionAxialView(DicomView):
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
         super(ImageFusionAxialView, self).__init__(roi_color,
-                                                   iso_color, 
+                                                   iso_color,
                                                    cut_line_color)
 
         # Init metadata widgets
@@ -177,8 +177,8 @@ class ImageFusionAxialView(DicomView):
         image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
-
+        self.scene = GraphicsScene(
+            label, self.horizontal_view, self.vertical_view)
 
     def update_view(self, zoom_change=False):
         """
@@ -243,4 +243,3 @@ class ImageFusionAxialView(DicomView):
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
-            
