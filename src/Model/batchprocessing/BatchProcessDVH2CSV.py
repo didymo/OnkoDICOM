@@ -123,7 +123,7 @@ class BatchProcessDVH2CSV(BatchProcess):
         :param patient_id: Patient Identifier
         """
         # full path of the target csv file
-        tar_path = path + csv_name + '.csv'
+        tar_path = path + csv_name
 
         create_header = not os.path.isfile(tar_path)
 
