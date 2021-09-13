@@ -115,7 +115,6 @@ class Patient:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags())
 
         # Add all children of this object as children of the widget item.
         for study_uid, study in self.studies.items():
@@ -221,7 +220,6 @@ class Study:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         self.widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        self.widget_item.setFlags(self.widget_item.flags())
 
         # Add child widgets of Study following the hierarchy of objects
         # 1. Image series, 2. RTSTRUCT, 3. RTPLAN, 4. RTDOSE
@@ -265,26 +263,21 @@ class Study:
         self.rtplan_widgets[rtplan_instance_uid] = rtplan.get_widget_item()
 
         # Check if the referenced RTSTRUCT exists
-        if ref_rtstruct_instance_uid != "":
+        if ref_rtstruct_instance_uid:
             for series_uid, rtstruct in self.rtstructs.items():
                 rtstruct_instance_uid = rtstruct.get_instance_uid()
-
-                if ref_rtstruct_instance_uid == \
-                        rtstruct_instance_uid:
+                if ref_rtstruct_instance_uid == rtstruct_instance_uid:
                     self.rtstruct_widgets[rtstruct_instance_uid].\
                         addChild(self.rtplan_widgets[rtplan_instance_uid])
                     return
 
         # Check if there is an image series with the same FrameOfReferenceUID
-        if rtplan.frame_of_reference_uid != "":
+        if rtplan.frame_of_reference_uid:
             for series_uid, image_series in self.image_series.items():
-                if rtplan.frame_of_reference_uid == \
-                        image_series.frame_of_reference_uid:
+                if rtplan.frame_of_reference_uid == image_series.frame_of_reference_uid:
                     empty_rtss = self.get_empty_widget("RTSTRUCT")
-                    empty_rtss.addChild(
-                        self.rtplan_widgets[rtplan_instance_uid])
-                    self.image_series_widgets[series_uid].addChild(
-                        empty_rtss)
+                    empty_rtss.addChild(self.rtplan_widgets[rtplan_instance_uid])
+                    self.image_series_widgets[series_uid].addChild(empty_rtss)
                     return
 
         # Add the RTPLAN to the Study widget
@@ -300,8 +293,7 @@ class Study:
         for series_uid, rtplan in self.rtplans.items():
             rtplan_instance_uid = rtplan.get_instance_uid()
             if ref_rtplan_instance_uid == rtplan_instance_uid:
-                self.rtplan_widgets[rtplan_instance_uid].addChild(
-                    rtdose_widget)
+                self.rtplan_widgets[rtplan_instance_uid].addChild(rtdose_widget)
                 return
 
         # Check if the referenced RTSTRUCT exists in the dataset or there is an
@@ -310,7 +302,7 @@ class Study:
                 rtdose.frame_of_reference_uid != "":
             for series_uid, rtstruct in self.rtstructs.items():
                 rtstruct_instance_uid = rtstruct.get_instance_uid()
-                if (ref_rtstruct_instance_uid != "" and
+                if (ref_rtstruct_instance_uid and
                     ref_rtstruct_instance_uid == rtstruct_instance_uid) or \
                         (rtdose.frame_of_reference_uid != "" and
                          rtdose.frame_of_reference_uid ==
@@ -345,7 +337,6 @@ class Study:
         """
         widget_item = DICOMWidgetItem("No matched " + modality + " was found.",
                                       None)
-        widget_item.setFlags(widget_item.flags())
         return widget_item
 
 

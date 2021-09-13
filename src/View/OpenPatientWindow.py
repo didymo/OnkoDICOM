@@ -386,7 +386,7 @@ class UIOpenPatientWindow(object):
         def recurse(parent_item: QTreeWidgetItem):
             for i in range(parent_item.childCount()):
                 child = parent_item.child(i)
-                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and\
+                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and \
                         child.checkState(0) == Qt.Checked:
                     checked_items.append(child)
                 grand_children = child.childCount()
@@ -416,38 +416,33 @@ class UIOpenPatientWindow(object):
                 series[series_type] = item
             else:
                 series["IMAGE"] = item
+
         # Check if the RTSTRUCT, RTPLAN, and RTDOSE are a child item of the
         # image series
         if series["IMAGE"]:
-            if series["RTSTRUCT"]:
-                if series["RTSTRUCT"].parent() != series["IMAGE"]:
-                    return False
+            if series["RTSTRUCT"] and series["RTSTRUCT"].parent() != series["IMAGE"]:
+                return False
             else:  # Get the existing_rtss_path if the RTSTRUCT wasn't selected
-                self.existing_rtss_path = \
-                    self.get_existing_rtss_path(series["IMAGE"])
+                self.existing_rtss_path = self.get_existing_rtss_path(series["IMAGE"])
 
-            if series["RTPLAN"]:
-                if series["RTPLAN"].parent().parent() != series["IMAGE"]:
-                    return False
-            if series["RTDOSE"]:
-                if series["RTDOSE"].parent().parent().parent() != \
-                        series["IMAGE"]:
-                    return False
+            if series["RTPLAN"] and series["RTPLAN"].parent().parent() != series["IMAGE"]:
+                return False
+
+            if series["RTDOSE"] and \
+                    series["RTDOSE"].parent().parent().parent() != series["IMAGE"]:
+                return False
 
         # Check if the RTPLAN and RTDOSE are child items of the RTSTRUCT
         if series["RTSTRUCT"]:
-            if series["RTPLAN"]:
-                if series["RTPLAN"].parent() != series["RTSTRUCT"]:
-                    return False
-            if series["RTDOSE"]:
-                if series["RTDOSE"].parent().parent() != series["RTSTRUCT"]:
-                    return False
+            if series["RTPLAN"] and series["RTPLAN"].parent() != series["RTSTRUCT"]:
+                return False
+            if series["RTDOSE"] and series["RTDOSE"].parent().parent() != series["RTSTRUCT"]:
+                return False
 
         # Check if the RTDOSE is a child item of the RTPLAN
-        if series["RTPLAN"]:
-            if series["RTDOSE"]:
-                if series["RTDOSE"].parent() != series["RTPLAN"]:
-                    return False
+        if series["RTPLAN"] and series["RTDOSE"] and \
+                series["RTDOSE"].parent() != series["RTPLAN"]:
+            return False
 
         return True
 
@@ -458,6 +453,7 @@ class UIOpenPatientWindow(object):
         """
         return image_series.child(0).dicom_object.get_files()[0] \
             if image_series.child(0) else None
+
 
 # This is to allow for dropping a directory into the input text.
 class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
