@@ -452,8 +452,8 @@ class UIOpenPatientWindow(object):
         :return: the filepath of the existing rtss
         """
         for i in range(image_series.childCount()):
-            if int(image_series.child(i).flags()) & int(Qt.ItemIsUserCheckable):
-                return image_series.child(0).dicom_object.get_files()[0]
+            if image_series.child(i).dicom_object:
+                return image_series.child(i).dicom_object.get_files()[0]
         return None
 
 
