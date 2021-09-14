@@ -451,8 +451,10 @@ class UIOpenPatientWindow(object):
         Save an existing rtss path if it is not selected.
         :return: the filepath of the existing rtss
         """
-        return image_series.child(0).dicom_object.get_files()[0] \
-            if image_series.child(0) else None
+        for i in range(image_series.childCount()):
+            if int(image_series.child(i).flags()) & int(Qt.ItemIsUserCheckable):
+                return image_series.child(0).dicom_object.get_files()[0]
+        return None
 
 
 # This is to allow for dropping a directory into the input text.
