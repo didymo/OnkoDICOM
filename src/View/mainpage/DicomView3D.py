@@ -64,7 +64,7 @@ class DicomView3D(QtWidgets.QWidget):
         three_dimension_np_array = three_dimension_np_array.astype(np.int16)
         three_dimension_np_array = (three_dimension_np_array -
                                     (self.patient_dict_container.get("level"))) / \
-                                   self.patient_dict_container.get("window") * 255
+            self.patient_dict_container.get("window") * 255
         three_dimension_np_array[three_dimension_np_array < 0] = 0
         three_dimension_np_array[three_dimension_np_array > 255] = 255
         three_dimension_np_array = three_dimension_np_array.astype(np.int8)
