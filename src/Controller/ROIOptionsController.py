@@ -141,9 +141,9 @@ class ROIManipulateOption:
 class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
     signal_roi_transferred = QtCore.Signal(tuple)
 
-    def __init__(self, patient_A_rois, patient_B_rois):
+    def __init__(self, fixed_image_rois, moving_image_rois):
         super(ROITransferOptionUI, self).__init__()
-        self.setup_ui(self, patient_A_rois, patient_B_rois, self.signal_roi_transferred)
+        self.setup_ui(self, fixed_image_rois, moving_image_rois, self.signal_roi_transferred)
 
 
 class ROITransferOption:
@@ -155,10 +155,10 @@ class ROITransferOption:
     def show_roi_transfer_options(self):
         patient_dict_container = PatientDictContainer()
         moving_dict_container = MovingDictContainer()
-        patient_A_rois = patient_dict_container.get("rois") if patient_dict_container.get("rois") is not None else {}
-        patient_B_rois = moving_dict_container.get("rois") if moving_dict_container.get("rois") is not None else {}
+        fixed_image_rois = patient_dict_container.get("rois") if patient_dict_container.get("rois") is not None else {}
+        moving_image_rois = moving_dict_container.get("rois") if moving_dict_container.get("rois") is not None else {}
 
-        self.roi_transfer_option_pop_up_window = ROITransferOptionUI(patient_A_rois, patient_B_rois)
+        self.roi_transfer_option_pop_up_window = ROITransferOptionUI(fixed_image_rois, moving_image_rois)
         self.roi_transfer_option_pop_up_window.signal_roi_transferred.connect(
             self.roi_transferred_function
         )

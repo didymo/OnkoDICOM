@@ -4,6 +4,7 @@ import random
 from copy import deepcopy
 from pathlib import Path
 import pydicom
+from alphashape import alphashape
 from pydicom.uid import generate_uid
 from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
@@ -514,6 +515,7 @@ def convert_hull_list_to_contours_data(rois_to_save, patient_dict_container):
         return []
     for slice_id, slice_info in rois_to_save.items():
         pixel_hull_list = slice_info['coords']
+        print(pixel_hull_list)
         for pixel_hull in pixel_hull_list:
             single_array = convert_hull_to_single_array_of_rcs(
                 patient_dict_container,
@@ -670,19 +672,19 @@ def transform_rois_contours(axial_rois_contours):
             for contour in contours:
                 for i in range(len(contour)):
                     if contour[i][1] in coronal_rois_contours[name]:
-                        coronal_rois_contours[name][contour[i][1]][0]\
+                        coronal_rois_contours[name][contour[i][1]][0] \
                             .append([contour[i][0], slice_ids[slice_id]])
                     else:
                         coronal_rois_contours[name][contour[i][1]] = [[]]
-                        coronal_rois_contours[name][contour[i][1]][0]\
+                        coronal_rois_contours[name][contour[i][1]][0] \
                             .append([contour[i][0], slice_ids[slice_id]])
 
                     if contour[i][0] in sagittal_rois_contours[name]:
-                        sagittal_rois_contours[name][contour[i][0]][0]\
+                        sagittal_rois_contours[name][contour[i][0]][0] \
                             .append([contour[i][1], slice_ids[slice_id]])
                     else:
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
-                        sagittal_rois_contours[name][contour[i][0]][0]\
+                        sagittal_rois_contours[name][contour[i][0]][0] \
                             .append([contour[i][1], slice_ids[slice_id]])
     return coronal_rois_contours, sagittal_rois_contours
 
@@ -752,6 +754,40 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
     return list_polygons
 
 
+def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
+    """
+        Return the alpha shape of the highlighted pixels using the alpha
+        entered by the user.
+        :param pixel_coords: the coordinates of the contour pixels
+        :return: List of lists of points ordered to form polygon(s).
+        """
+    # Get all the pixels in the drawing window's list of highlighted
+    # pixels, excluding the removed pixels.
+    target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in
+                           pixel_coords]
+    # Calculate the concave hull of the points.
+    # alpha = 0.95 * alphashape.optimizealpha(points)
+    hull = alphashape(target_pixel_coords, alpha)
+
+    # Convert hull to points
+    def hull_to_points(hull):
+        hull_xy = hull.exterior.coords.xy
+
+        points = []
+        for i in range(len(hull_xy[0])):
+            points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
+
+        return points
+
+    polygon_list = []
+    if isinstance(hull, Polygon):
+        polygon_list.append(hull_to_points(hull))
+    elif isinstance(hull, MultiPolygon):
+        for polygon in hull:
+            polygon_list.append(hull_to_points(polygon))
+    return polygon_list
+
+
 def ordered_list_rois(rois):
     res = []
     for roi_id, value in rois.items():
@@ -762,7 +798,6 @@ def ordered_list_rois(rois):
 def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
                                 filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
-
     """
     Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
@@ -997,7 +1032,8 @@ def roi_to_geometry(dict_rois_contours):
 
     for slice_uid, contour_sequence in dict_rois_contours.items():
         # convert contour data to polygon omitting data with less than 3 points
-        polygon_list = [Polygon(contour_data) for contour_data in contour_sequence if len(contour_data) >= 3]
+        polygon_list = [Polygon(contour_data) for contour_data in
+                        contour_sequence if len(contour_data) >= 3]
         result_geometry = make_valid(MultiPolygon(polygon_list))
         dict_geometry[slice_uid] = result_geometry
 
@@ -1026,7 +1062,8 @@ def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
         first_geometry = first_geometry_dict.get(slice_uid, Polygon())
         second_geometry = second_geometry_dict.get(slice_uid, Polygon())
         try:
-            result_geometry_dict[slice_uid] = geometry_manipulation[operation](first_geometry, second_geometry)
+            result_geometry_dict[slice_uid] = geometry_manipulation[operation](
+                first_geometry, second_geometry)
         except KeyError:
             raise Exception("Invalid operation string")
     return result_geometry_dict
@@ -1065,8 +1102,10 @@ def rind_roi(geometry_dict, millimetres):
         orig_geometry = geometry_dict.get(slice_uid)
         new_geometry = new_roi_dict.get(slice_uid)
         # Create 2 polygons with one nested inside the other
-        polygon_list = list([orig_geometry] if orig_geometry.geom_type == 'Polygon' else orig_geometry) + \
-                       list([new_geometry] if new_geometry.geom_type == 'Polygon' else new_geometry)
+        polygon_list = list([
+                                orig_geometry] if orig_geometry.geom_type == 'Polygon' else orig_geometry) + \
+                       list([
+                                new_geometry] if new_geometry.geom_type == 'Polygon' else new_geometry)
         result_geometry = GeometryCollection(polygon_list)
         result_geometry_dict[slice_uid] = result_geometry
 
@@ -1083,16 +1122,19 @@ def geometry_to_roi(geometry_dict):
     for slice_id, geometry in geometry_dict.items():
         contour_sequence = []
         if geometry.geom_type == 'Polygon' and not geometry.is_empty:
-            contour_data = [list(map(int, coord)) for coord in geometry.exterior.coords]
+            contour_data = [list(map(int, coord)) for coord in
+                            geometry.exterior.coords]
             contour_sequence.append(contour_data)
         elif geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
             for sub_geometry in geometry:
                 contour_data = []
                 if sub_geometry.geom_type == 'Polygon' and not sub_geometry.is_empty:
-                    contour_data = [list(map(int, coord)) for coord in sub_geometry.exterior.coords]
+                    contour_data = [list(map(int, coord)) for coord in
+                                    sub_geometry.exterior.coords]
                 # It is possible for MultiPolygon to be inside GeometryCollection
                 elif sub_geometry.geom_type == 'MultiPolygon':
-                    contour_data = [list(map(int, coord)) for polygon in sub_geometry
+                    contour_data = [list(map(int, coord)) for polygon in
+                                    sub_geometry
                                     for coord in polygon.exterior.coords]
                 if contour_data:
                     contour_sequence.append(contour_data)

@@ -310,7 +310,7 @@ def create_fused_model(old_images, new_image):
     Creates the image necessary to display for image fusion.
     """
     fused_image = register_images(old_images, new_image)
-
+    tfm = fused_image[1]
     # Throw Transform Object into function to write dcm file
     combined_affine = convert_composite_to_affine_transform(fused_image[1])
     # test = check_affine_conversion(fused_image[1], combined_affine)
@@ -343,7 +343,7 @@ def create_fused_model(old_images, new_image):
         color_coronal[i] = \
             get_fused_pixmap(old_images, fused_image[0], asp, i, "coronal")
 
-    return color_axial, color_sagittal, color_coronal
+    return color_axial, color_sagittal, color_coronal, tfm
 
 
 # Can be expanded to peform all of platipy's registrations

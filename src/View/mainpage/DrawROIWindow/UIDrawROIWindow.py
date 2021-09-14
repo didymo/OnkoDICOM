@@ -14,6 +14,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
@@ -712,8 +713,8 @@ class UIDrawROIWindow:
                     and self.ds is not None \
                     and len(self.drawingROI.target_pixel_coords) != 0:
 
-                pixel_hull_list = self.calculate_concave_hull_of_points(
-                    self.drawingROI.target_pixel_coords)
+                pixel_hull_list = calculate_concave_hull_of_points(
+                    self.drawingROI.target_pixel_coords, float(self.input_alpha_value.text()))
                 coord_list = []
                 for pixel_hull in pixel_hull_list:
                     coord_list.append(pixel_hull)
@@ -886,8 +887,8 @@ class UIDrawROIWindow:
         """
         if hasattr(self, 'drawingROI') and self.drawingROI and len(
                 self.drawingROI.target_pixel_coords) > 0:
-            polygon_list = self.calculate_concave_hull_of_points(
-                self.drawingROI.target_pixel_coords)
+            polygon_list = calculate_concave_hull_of_points(
+                self.drawingROI.target_pixel_coords, float(self.input_alpha_value.text()))
             self.drawingROI.draw_contour_preview(polygon_list)
         else:
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",

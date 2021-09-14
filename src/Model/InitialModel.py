@@ -1,13 +1,15 @@
 import os
+
 import pydicom
+
+from src.Controller.PathHandler import resource_path
+from src.Model import ImageLoading
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
     dict_instance_uid
 from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
-from src.Model import ImageLoading
-from src.Controller.PathHandler import resource_path
 
 
 def create_initial_model():
@@ -142,3 +144,14 @@ def create_initial_model():
         dicom_tree_rtplan = DicomTree(filepaths['rtplan'])
         patient_dict_container.set("dict_dicom_tree_rtplan",
                                    dicom_tree_rtplan.dict)
+
+    rtss = patient_dict_container.get("dataset_rtss")
+
+    amount = len(patient_dict_container.filepaths)
+    orig_fusion_list = []
+
+    for i in range(amount):
+        try:
+            orig_fusion_list.append(patient_dict_container.filepaths[i])
+        except KeyError:
+            continue

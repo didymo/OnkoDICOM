@@ -417,9 +417,6 @@ class UIImageFusionWindow(object):
         if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
             header = "Cannot proceed without an image file."
             self.open_patient_window_confirm_button.setDisabled(True)
-        elif 'RTSTRUCT' in selected_series_types:
-            header = "Cannot load new RTSTRUCT."
-            self.open_patient_window_confirm_button.setDisabled(True)
         elif 'RTDOSE' in selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
             self.open_patient_window_confirm_button.setDisabled(True)
