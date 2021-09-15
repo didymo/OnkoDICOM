@@ -48,7 +48,7 @@ class ImageFusionAxialView(DicomView):
             QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         # Set all labels to white
-        stylesheet = "QLabel { color : white; }"
+        stylesheet = "QLabel { color : white; font-size: 10px;}"
         self.format_metadata_labels(stylesheet)
 
         # Create a widget to contain the two top-left labels
