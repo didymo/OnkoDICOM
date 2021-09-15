@@ -2,12 +2,14 @@ import csv
 import os
 import pytest
 
+from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
-from pathlib import Path
+from PySide6.QtWidgets import QTableWidgetItem
 from src.Model import DICOMStructuredReport
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.mainpage.ClinicalDataView import ClinicalDataView
 
 
 def find_DICOM_files(file_path):
@@ -65,7 +67,9 @@ class TestClinicalDataView:
 
 @pytest.fixture(scope="module")
 def test_object():
-    """Function to pass a shared TestIso2Roi object to each test."""
+    """
+    Function to pass a shared TestClinicalDataView object to each test.
+    """
     test = TestClinicalDataView()
     return test
 
@@ -74,7 +78,7 @@ def test_import_clinical_data(test_object):
     """
     Unit Test for importing clinical data from a CSV.
     :param test_object: test_object function, for accessing the shared
-                        TestIso2Roi object.
+                        TestClinicalDataView object.
     """
     # Set patient ID
     patient_id = '123456789'
@@ -111,7 +115,7 @@ def test_save_clinical_data(test_object):
     """
     Test for saving clinical data to a DICOM SR file.
     :param test_object: test_object function, for accessing the shared
-                        TestIso2Roi object.
+                        TestClinicalDataView object.
     """
     text = ','.join(test_object.data[0])
 
@@ -130,7 +134,7 @@ def test_import_from_sr(test_object):
     """
     Test for importing clinical data from a DICOM SR file.
     :param test_object: test_object function, for accessing the shared
-                        TestIso2Roi object.
+                        TestClinicalDataView object.
     """
     # Open clinical data file
     clinical_data = dcmread(test_object.file_path)
@@ -149,3 +153,29 @@ def test_import_from_sr(test_object):
     # Delete the created DICOM SR
     os.remove(test_object.file_path)
     assert not os.path.exists(test_object.file_path)
+
+
+def test_populate_table(test_object):
+    """
+    Test to create the Clinical Data View and populate the table.
+    :param test_object: test_object function, for accessing the shared
+                        TestClinicalDataView object.
+    """
+    # Create Clinical Data View object
+    cd_view = ClinicalDataView()
+
+    # Create table headers
+    headers = ["ID", "FirstName", "LastName"]
+
+    # Populate table
+    for i, value in enumerate(headers):
+        attrib = QTableWidgetItem(value)
+        data = QTableWidgetItem(test_object.data[0][i])
+        cd_view.table_cd.insertRow(i)
+        cd_view.table_cd.setItem(i, 0, attrib)
+        cd_view.table_cd.setItem(i, 1, data)
+
+    # Assert data exists in table
+    for i, value in enumerate(headers):
+        assert cd_view.table_cd.item(i, 0).text() == value
+        assert cd_view.table_cd.item(i, 1).text() == test_object.data[0][i]
