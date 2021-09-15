@@ -366,7 +366,7 @@ class UIOpenPatientWindow(object):
         self.progress_window.signal_loaded.connect(self.on_loaded)
         self.progress_window.signal_error.connect(self.on_loading_error)
         self.progress_window.start_loading(selected_files,
-                                           self.existing_rtss_path)
+                                           self.existing_rtss)
 
     def on_loaded(self, results):
         """
@@ -435,8 +435,8 @@ class UIOpenPatientWindow(object):
         if series["IMAGE"]:
             if series["RTSTRUCT"] and series["RTSTRUCT"].parent() != series["IMAGE"]:
                 return False
-            else:  # Get the existing_rtss_path if the RTSTRUCT wasn't selected
-                self.existing_rtss_path = self.get_existing_rtss_path(series["IMAGE"])
+            else:  # Get the existing_rtss if the RTSTRUCT wasn't selected
+                self.existing_rtss = self.get_existing_rtss(series["IMAGE"])
 
             if series["RTPLAN"] and series["RTPLAN"].parent().parent() != series["IMAGE"]:
                 return False
@@ -459,15 +459,16 @@ class UIOpenPatientWindow(object):
 
         return True
 
-    def get_existing_rtss_path(self, image_series):
+    def get_existing_rtss(self, image_series):
         """
-        Save an existing rtss path if it is not selected.
-        :return: the filepath of the existing rtss
+        Save existing rtss(s) if it is not selected.
+        :return: Dictionary of the existing rtss(s)
         """
+        existing_rtss = []
         for i in range(image_series.childCount()):
             if image_series.child(i).dicom_object:
-                return image_series.child(i).dicom_object.get_files()[0]
-        return None
+                existing_rtss.append(image_series.child(i))
+        return existing_rtss
 
 
 # This is to allow for dropping a directory into the input text.

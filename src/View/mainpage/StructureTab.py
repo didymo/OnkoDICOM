@@ -13,6 +13,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, \
     calc_roi_polygon, transform_rois_contours, merge_rtss
 from src.View.mainpage.StructureWidget import StructureWidget
+from src.View.util.SelectRTSSPopUp import SelectRTSSPopUp
 from src.Controller.PathHandler import resource_path
 
 
@@ -406,18 +407,38 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_coronal.pop(roi_name, None)
             new_dict_polygons_sagittal.pop(roi_name, None)
 
+    def get_existing_rtss_directory(self, rtss):
+        print(rtss)
+        self.existing_rtss_directory = str(Path(
+            rtss.dicom_object.get_files()[0]))
+
+    def on_rtss_selected(self, selected_rtss):
+        print(selected_rtss)
+        self.patient_dict_container.get("existing_rtss_files").clear()
+        self.patient_dict_container.get("existing_rtss_files").append(selected_rtss)
+        self.save_new_rtss()
+
+    def display_select_rtss_window(self):
+        self.select_rtss_window = SelectRTSSPopUp(
+            self.patient_dict_container.get("existing_rtss_files"))
+        self.select_rtss_window.signal_rtss_selected.connect(
+            self.on_rtss_selected)
+        self.select_rtss_window.show()
+
     def save_new_rtss(self, event=None, auto=False):
         """
-        Save the current RTSS stored in patient dictionary to the file system.
+        Save the current RTSS stored in patient dictionary to the file syste m.
         :param event: Not used but will be passed as an argument from
         modified_indicator_widget on mouseReleaseEvent
         :param auto: Used for auto save without user confirmation
         """
-        if self.patient_dict_container.get("existing_file_rtss") is not None:
-            existing_rtss_directory = str(Path(self.patient_dict_container.get(
-                "existing_file_rtss")))
+        if len(self.patient_dict_container.get("existing_rtss_files")) == 1:
+            self.get_existing_rtss_directory(self.patient_dict_container.get("existing_rtss_files")[0])
+        elif len(self.patient_dict_container.get("existing_rtss_files")) > 1:
+            self.display_select_rtss_window()
+            return
         else:
-            existing_rtss_directory = None
+            self.existing_rtss_directory = None
         rtss_directory = str(
             Path(self.patient_dict_container.get("file_rtss")))
 
@@ -435,12 +456,13 @@ class StructureTab(QtWidgets.QWidget):
                                                   QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
-            if existing_rtss_directory is None:
+            if self.existing_rtss_directory is None:
                 self.patient_dict_container.get("dataset_rtss").save_as(
                     rtss_directory)
             else:
                 new_rtss = self.patient_dict_container.get("dataset_rtss")
-                old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
+                old_rtss = pydicom.dcmread(self.existing_rtss_directory,
+                                           force=True)
                 old_roi_names = \
                     set(value["name"] for value in
                         ImageLoading.get_roi_info(old_rtss).values())
@@ -456,7 +478,7 @@ class StructureTab(QtWidgets.QWidget):
                     return
 
                 merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
-                merged_rtss.save_as(existing_rtss_directory)
+                merged_rtss.save_as(self.existing_rtss_directory)
 
             if not auto:
                 QtWidgets.QMessageBox.about(self.parentWidget(),

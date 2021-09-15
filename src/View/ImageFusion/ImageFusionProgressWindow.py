@@ -14,9 +14,9 @@ class ImageFusionProgressWindow(ProgressWindow):
                  QtCore.Qt.WindowCloseButtonHint):
         super(ImageFusionProgressWindow, self).__init__(*args, kwargs)
 
-    def start_loading(self, selected_files, existing_rtss_path=None):
+    def start_loading(self, selected_files, existing_rtss=None):
         image_loader = MovingImageLoader(
-            selected_files, existing_rtss_path, self)
+            selected_files, existing_rtss, self)
         image_loader.signal_request_calc_dvh.connect(
             self.prompt_calc_dvh)
 
