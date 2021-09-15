@@ -135,7 +135,14 @@ def create_moving_model():
 
 
 def read_images_for_fusion(level=0, window=0):
-    """Reads images for fusion"""
+    """
+    Performs initial image fusion, this is by converting the old and
+    new images for transformations, then creating the fusion object,
+    then using the fusion object to generate a comparison color map and
+    storing the color map
+    :param level: the level (midpoint) of windowing
+    :param window: the window (range) of windowing
+    """
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
     if level == 0 or window == 0:
