@@ -237,9 +237,10 @@ class UIMainWindow:
             self.dvh_tab.update_plot()
 
         if hasattr(self, 'image_fusion_view'):
-            self.image_fusion_view_axial.update_view(cut_line_color=True)
-            self.image_fusion_view_coronal.update_view(cut_line_color=True)
-            self.image_fusion_view_sagittal.update_view(cut_line_color=True)
+            if self.image_fusion_view_axial is not None:
+                self.image_fusion_view_axial.update_view()
+                self.image_fusion_view_coronal.update_view()
+                self.image_fusion_view_sagittal.update_view()
 
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or \
@@ -259,7 +260,30 @@ class UIMainWindow:
             self.dicom_coronal_view.set_views(None, None)
             self.dicom_sagittal_view.set_views(None, None)
 
-    def zoom_in(self, is_four_view):
+        if hasattr(self, 'image_fusion_view'):
+            if self.image_fusion_view is not None:
+                if self.image_fusion_view_axial.horizontal_view is None or \
+                    self.image_fusion_view_axial.vertical_view is None or \
+                    self.image_fusion_view_coronal.horizontal_view is None or \
+                    self.image_fusion_view_coronal.vertical_view is None or \
+                    self.image_fusion_view_sagittal.horizontal_view is None or \
+                    self.image_fusion_view_sagittal.vertical_view is None:
+                    self.image_fusion_view_axial.set_views(
+                        self.image_fusion_view_coronal,
+                        self.image_fusion_view_sagittal)
+                    self.image_fusion_view_coronal.set_views(
+                        self.image_fusion_view_axial,
+                        self.image_fusion_view_sagittal)
+
+                    self.image_fusion_view_sagittal.set_views(
+                        self.image_fusion_view_axial,
+                        self.image_fusion_view_coronal)
+                else:
+                    self.image_fusion_view_axial.set_views(None, None)
+                    self.image_fusion_view_coronal.set_views(None, None)
+                    self.image_fusion_view_sagittal.set_views(None, None)
+
+    def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming in function on the four view's views
         or the single view depending on what view is showing on screen.
@@ -272,7 +296,15 @@ class UIMainWindow:
         else:
             self.dicom_single_view.zoom_in()
 
-    def zoom_out(self, is_four_view):
+        if image_reg_single:
+            self.image_fusion_single_view.zoom_in()
+
+        if image_reg_four:
+            self.image_fusion_view_axial.zoom_in()
+            self.image_fusion_view_coronal.zoom_in()
+            self.image_fusion_view_sagittal.zoom_in()
+
+    def zoom_out(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming out function on the four view's
         views or the single view depending on what view is showing on screen.
@@ -284,6 +316,14 @@ class UIMainWindow:
             self.dicom_sagittal_view.zoom_out()
         else:
             self.dicom_single_view.zoom_out()
+        
+        if image_reg_single:
+            self.image_fusion_single_view.zoom_out()
+
+        if image_reg_four:
+            self.image_fusion_view_axial.zoom_out()
+            self.image_fusion_view_coronal.zoom_out()
+            self.image_fusion_view_sagittal.zoom_out()
 
     def format_data(self, size):
         """
@@ -299,34 +339,37 @@ class UIMainWindow:
         Function checks if the moving dict container contains rtss to
         load rtss. Views are created and stacked into three window view.
         """
+        # Set a flag for Zooming
+        self.action_handler.has_image_registration_four = True
+
         # Instance of Moving Model
         moving_dict_container = MovingDictContainer()
-        patient_dict_container = PatientDictContainer()
+        
         if moving_dict_container.has_modality("rtss"):
             if len(self.structures_tab.rois.items()) == 0:
                 self.structures_tab.update_ui(moving=True)
             # else:
                 # TODO: Display both ROIs in the same tab
 
+        self.image_fusion_single_view \
+            = ImageFusionAxialView()
+
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
             metadata_formatted=False,
-            cut_line_color=True)
+            cut_line_color=QtGui.QColor(255, 0, 0))
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
-            cut_line_color=True)
+            cut_line_color=QtGui.QColor(0, 255, 0))
         self.image_fusion_view_coronal = ImageFusionCoronalView(
-            cut_line_color=True)
+            cut_line_color=QtGui.QColor(0, 0, 255))
 
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
-        self.image_fusion_view_axial.update_view(zoom_change=True,
-                                                 cut_line_color=True)
-        self.image_fusion_view_sagittal.update_view(zoom_change=True,
-                                                    cut_line_color=True)
-        self.image_fusion_view_coronal.update_view(zoom_change=True,
-                                                   cut_line_color=True)
+        self.image_fusion_view_axial.update_view(zoom_change=True)
+        self.image_fusion_view_sagittal.update_view(zoom_change=True)
+        self.image_fusion_view_coronal.update_view(zoom_change=True)
 
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
@@ -341,10 +384,6 @@ class UIMainWindow:
             self.image_fusion_view_coronal, 1, 0)
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
-
-        self.image_fusion_single_view \
-            = ImageFusionAxialView(metadata_formatted=False,
-                                   cut_line_color=True)
 
         self.image_fusion_view.addWidget(self.image_fusion_four_views)
         self.image_fusion_view.addWidget(self.image_fusion_single_view)
