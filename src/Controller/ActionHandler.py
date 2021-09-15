@@ -1,6 +1,6 @@
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
-from PySide6.QtWidgets import QStackedWidget
+from PySide6.QtWidgets import QStackedWidget, QDialog, QMessageBox
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -317,11 +317,21 @@ class ActionHandler:
         self.patient_dict_container.set("level", level)
 
         if hasattr(self.__main_page, 'image_fusion_view'):
-            fusion_axial, fusion_coronal, fusion_sagittal = \
-                get_fused_window(level, window)
-            self.patient_dict_container.set("color_axial", fusion_axial)
-            self.patient_dict_container.set("color_coronal", fusion_coronal)
-            self.patient_dict_container.set("color_sagittal", fusion_sagittal)
+            confirm_fuse_window = QMessageBox.information(
+                self.__main_page, "Image Fusion Windowing Confirmation",
+                "Do you want to perform windowing on the Image Fusion Window? "
+                "This process may take a couple of minutes.",
+                QMessageBox.Yes,
+                QMessageBox.No)
+            if confirm_fuse_window == QMessageBox.Yes:
+                fusion_axial, fusion_coronal, fusion_sagittal = \
+                    get_fused_window(level, window)
+                self.patient_dict_container.set(
+                    "color_axial", fusion_axial)
+                self.patient_dict_container.set(
+                    "color_coronal", fusion_coronal)
+                self.patient_dict_container.set(
+                    "color_sagittal", fusion_sagittal)
 
         self.__main_page.update_views(update_3d_window=True)
 
