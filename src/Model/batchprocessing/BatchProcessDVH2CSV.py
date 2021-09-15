@@ -1,7 +1,8 @@
 import os
+from src.Model import CalculateDVHs
 from src.Model import ImageLoading
-from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess
+from src.Model.PatientDictContainer import PatientDictContainer
 import pandas as pd
 
 
@@ -49,7 +50,7 @@ class BatchProcessDVH2CSV(BatchProcess):
 
     def start(self):
         """
-        Goes through the steps of the ISO2ROI conversion.
+        Goes through the steps of the DVH2CSV conversion.
         :return: True if successful, False if not.
         """
         # Stop loading
@@ -110,7 +111,11 @@ class BatchProcessDVH2CSV(BatchProcess):
             os.mkdir(path + '/CSV')
 
         # Save the DVH to a CSV file
+        self.progress_callback.emit(("Exporting DVH to RT Dose...", 95))
         self.dvh2csv(raw_dvh, path + "/CSV/", self.filename, patient_id)
+
+        # Save the DVH to the RT Dose
+        CalculateDVHs.dvh2rtdose(raw_dvh)
 
     def dvh2csv(self, dict_dvh, path, csv_name, patient_id):
         """
