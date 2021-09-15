@@ -14,7 +14,8 @@ class DicomAxialView(DicomView):
         """
         self.metadata_formatted = metadata_formatted
         self.slice_view = 'axial'
-        super(DicomAxialView, self).__init__(roi_color, iso_color, cut_line_color)
+        super(DicomAxialView, self).__init__(
+            roi_color, iso_color, cut_line_color)
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
@@ -33,12 +34,17 @@ class DicomAxialView(DicomView):
         Create and place metadata on the view widget.
         """
         # Position of the labels on the DICOM view.
-        self.label_image_id.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
-        self.label_image_pos.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.label_image_id.setAlignment(
+            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.label_image_pos.setAlignment(
+            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.label_wl.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
-        self.label_image_size.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
-        self.label_zoom.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
-        self.label_patient_pos.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+        self.label_image_size.setAlignment(
+            QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        self.label_zoom.setAlignment(
+            QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        self.label_patient_pos.setAlignment(
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         # Set all labels to white
         stylesheet = "QLabel { color : white; }"
@@ -53,13 +59,16 @@ class DicomAxialView(DicomView):
         # Create a widget to contain the two top-left labels
         top_left_widget = QtWidgets.QWidget()
         top_left = QtWidgets.QVBoxLayout(top_left_widget)
-        top_left.addWidget(self.label_image_id, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
-        top_left.addWidget(self.label_image_pos, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        top_left.addWidget(self.label_image_id,
+                           QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        top_left.addWidget(self.label_image_pos,
+                           QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
         # Create a widget to contain the top-right label
         top_right_widget = QtWidgets.QWidget()
         top_right = QtWidgets.QVBoxLayout(top_right_widget)
-        top_right.addWidget(self.label_wl, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        top_right.addWidget(
+            self.label_wl, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
         # Create a widget to contain the two top widgets
         top_widget = QtWidgets.QWidget()
@@ -72,19 +81,24 @@ class DicomAxialView(DicomView):
             top.setSpacing(0)
         else:
             top_widget.setFixedHeight(100)
-        top.addWidget(top_left_widget, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
-        top.addWidget(top_right_widget, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+        top.addWidget(top_left_widget, QtCore.Qt.AlignLeft |
+                      QtCore.Qt.AlignLeft)
+        top.addWidget(top_right_widget, QtCore.Qt.AlignRight |
+                      QtCore.Qt.AlignRight)
 
         # Create a widget to contain the two bottom-left labels
         bottom_left_widget = QtWidgets.QWidget()
         bottom_left = QtWidgets.QVBoxLayout(bottom_left_widget)
-        bottom_left.addWidget(self.label_image_size, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
-        bottom_left.addWidget(self.label_zoom, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        bottom_left.addWidget(self.label_image_size,
+                              QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        bottom_left.addWidget(
+            self.label_zoom, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
         # Create a widget to contain the bottom-right label
         bottom_right_widget = QtWidgets.QWidget()
         bottom_right = QtWidgets.QVBoxLayout(bottom_right_widget)
-        bottom_right.addWidget(self.label_patient_pos, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        bottom_right.addWidget(self.label_patient_pos,
+                               QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
         # Create a widget to contain the two bottom widgets
         bottom_widget = QtWidgets.QWidget()
@@ -97,13 +111,17 @@ class DicomAxialView(DicomView):
             bottom.setSpacing(0)
         else:
             bottom_widget.setFixedHeight(100)
-        bottom.addWidget(bottom_left_widget, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
-        bottom.addWidget(bottom_right_widget, QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+        bottom.addWidget(bottom_left_widget,
+                         QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+        bottom.addWidget(bottom_right_widget,
+                         QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         # Add the bottom and top widgets to the view
-        self.metadata_layout.addWidget(top_widget, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.metadata_layout.addWidget(
+            top_widget, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.metadata_layout.addStretch()
-        self.metadata_layout.addWidget(bottom_widget, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        self.metadata_layout.addWidget(
+            bottom_widget, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
     def format_metadata_labels(self, stylesheet):
         """
@@ -187,11 +205,14 @@ class DicomAxialView(DicomView):
                 "Patient Position: %s" % (str(patient_pos)))
 
         # Update labels
-        self.label_image_id.setText("Image: %s / %s" % (str(self.current_slice_number), str(total_slices)))
+        self.label_image_id.setText(
+            "Image: %s / %s" % (str(self.current_slice_number), str(total_slices)))
         self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
         self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
-        self.label_image_size.setText("Image Size: %sx%spx" % (str(row_img), str(col_img)))
-        self.label_zoom.setText("Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
+        self.label_image_size.setText(
+            "Image Size: %sx%spx" % (str(row_img), str(col_img)))
+        self.label_zoom.setText(
+            "Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
 
     def roi_display(self):
         """
@@ -208,7 +229,8 @@ class DicomAxialView(DicomView):
 
         for roi in selected_rois:
             roi_name = rois[roi]['name']
-            polygons = self.patient_dict_container.get("dict_polygons_axial")[roi_name][curr_slice]
+            polygons = self.patient_dict_container.get("dict_polygons_axial")[
+                roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
 
     def isodose_display(self):
@@ -226,7 +248,7 @@ class DicomAxialView(DicomView):
             # paint over the lower dose isodose washes
             for sd in sorted(self.patient_dict_container.get("selected_doses")):
                 dose_level = sd * self.patient_dict_container.get("rx_dose_in_cgray") / \
-                             (dataset_rtdose.DoseGridScaling * 10000)
+                    (dataset_rtdose.DoseGridScaling * 10000)
                 contours = measure.find_contours(grid, dose_level)
 
                 polygons = self.calc_dose_polygon(
@@ -246,10 +268,12 @@ class DicomAxialView(DicomView):
                     stream.close()
                 iso_opacity = int((iso_opacity / 100) * 255)
                 brush_color.setAlpha(iso_opacity)
-                pen_color = QtGui.QColor(brush_color.red(), brush_color.green(), brush_color.blue())
+                pen_color = QtGui.QColor(
+                    brush_color.red(), brush_color.green(), brush_color.blue())
                 pen = self.get_qpen(pen_color, iso_line, line_width)
                 for i in range(len(polygons)):
-                    self.scene.addPolygon(polygons[i], pen, QtGui.QBrush(brush_color))
+                    self.scene.addPolygon(
+                        polygons[i], pen, QtGui.QBrush(brush_color))
 
     def calc_dose_polygon(self, dose_pixluts, contours):
         """
@@ -266,7 +290,8 @@ class DicomAxialView(DicomView):
             # Slicing controls how many points considered for visualization
             # Essentially affects sharpness of edges, fewer points equals "smoother" edges
             for point in contour[::2]:
-                curr_qpoint = QtCore.QPoint(dose_pixluts[0][int(point[1])], dose_pixluts[1][int(point[0])])
+                curr_qpoint = QtCore.QPoint(
+                    dose_pixluts[0][int(point[1])], dose_pixluts[1][int(point[0])])
                 list_qpoints.append(curr_qpoint)
             curr_polygon = QtGui.QPolygonF(list_qpoints)
             list_polygons.append(curr_polygon)
