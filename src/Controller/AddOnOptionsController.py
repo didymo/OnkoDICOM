@@ -129,6 +129,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.apply_button.clicked.connect(self.accepting)
         # Connecting the functionalities of the view dependant buttons
         self.add_new_window.clicked.connect(self.new_windowing)
+        self.delete_window.clicked.connect(self.remove_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
         self.add_new_roi.clicked.connect(self.new_isodose)
@@ -539,6 +540,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self.table_view.setItem(c, 1, QTableWidgetItem(new_data[1]))
             self.table_view.setItem(c, 2, QTableWidgetItem(new_data[2]))
             self.table_view.setItem(c, 3, QTableWidgetItem(new_data[3]))
+
+    def remove_windowing(self):
+        rows = sorted(set(index.row() for index in
+                          self.table_view.selectedIndexes()))
+        if rows:
+            i = 0
+            for row in rows:
+                self.table_view.removeRow(row - i)
+                i += 1
+        else:
+            QMessageBox.warning(self, "No window Selected",
+                                "No windowing have been selected.")
 
     # This function shows an input dialog for a new standard organ name
     def new_organ(self):
