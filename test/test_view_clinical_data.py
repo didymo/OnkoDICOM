@@ -1,5 +1,6 @@
 import csv
 import os
+import pytest
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -30,19 +31,59 @@ def find_DICOM_files(file_path):
     return dicom_files
 
 
-def test_import_clinical_data():
+class TestClinicalDataView:
+    """
+    Class to set up variables required for testing the Clinical Data
+    view.
+    """
+    __test__ = False
+
+    def __init__(self):
+        # Load test DICOM files
+        desired_path = Path.cwd().joinpath('test', 'testdata')
+
+        # list of DICOM test files
+        selected_files = find_DICOM_files(desired_path)
+        # file path of DICOM files
+        self.file_path = os.path.dirname(os.path.commonprefix(selected_files))
+        read_data_dict, file_names_dict = \
+            ImageLoading.get_datasets(selected_files)
+
+        # Create patient dict container object
+        self.patient_dict_container = PatientDictContainer()
+        self.patient_dict_container.clear()
+        self.patient_dict_container.set_initial_values(self.file_path,
+                                                       read_data_dict,
+                                                       file_names_dict)
+
+        self.file_path = self.patient_dict_container.path
+        self.file_path = Path(self.file_path).joinpath("Clinical-Data-SR.dcm")
+
+        # Test data to write
+        self.data = [['123456789', 'Jim', 'Jimson']]
+
+
+@pytest.fixture(scope="module")
+def test_object():
+    """Function to pass a shared TestIso2Roi object to each test."""
+    test = TestClinicalDataView()
+    return test
+
+
+def test_import_clinical_data(test_object):
     """
     Unit Test for importing clinical data from a CSV.
+    :param test_object: test_object function, for accessing the shared
+                        TestIso2Roi object.
     """
     # Set patient ID
     patient_id = '123456789'
 
     # Create temporary CSV
     file_path = Path.cwd().joinpath('test', 'testdata', 'ClinicalData.csv')
-    data = [['123456789', 'Jim', 'Jimson']]
     with open(file_path, "w") as csvFile:  # inserting the hash values
         writer = csv.writer(csvFile)
-        for row in data:
+        for row in test_object.data:
             writer.writerow(row)
         csvFile.close()
 
@@ -66,35 +107,45 @@ def test_import_clinical_data():
     assert row_num == 0
 
 
-def test_save_clinical_data():
+def test_save_clinical_data(test_object):
     """
     Test for saving clinical data to a DICOM SR file.
+    :param test_object: test_object function, for accessing the shared
+                        TestIso2Roi object.
     """
+    text = ','.join(test_object.data[0])
+
     # Get test data files
-    # Load test DICOM files
-    desired_path = Path.cwd().joinpath('test', 'testdata')
-
-    # list of DICOM test files
-    selected_files = find_DICOM_files(desired_path)
-    # file path of DICOM files
-    file_path = os.path.dirname(os.path.commonprefix(selected_files))
-    read_data_dict, file_names_dict = \
-        ImageLoading.get_datasets(selected_files)
-
-    # Create patient dict container object
-    patient_dict_container = PatientDictContainer()
-    patient_dict_container.clear()
-    patient_dict_container.set_initial_values(file_path, read_data_dict,
-                                              file_names_dict)
-
-    file_path = patient_dict_container.path
-    file_path = Path(file_path).joinpath("Clinical-Data-SR.dcm")
-    ds = patient_dict_container.dataset[0]
-    dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, "text")
-    dicom_sr.save_as(file_path)
+    ds = test_object.patient_dict_container.dataset[0]
+    dicom_sr = DICOMStructuredReport.generate_dicom_sr(test_object.file_path,
+                                                       ds, text,
+                                                       "CLINICAL-DATA")
+    dicom_sr.save_as(test_object.file_path)
 
     # Assert that the new SR exists
-    assert os.path.isfile(file_path)
+    assert os.path.isfile(test_object.file_path)
+
+
+def test_import_from_sr(test_object):
+    """
+    Test for importing clinical data from a DICOM SR file.
+    :param test_object: test_object function, for accessing the shared
+                        TestIso2Roi object.
+    """
+    # Open clinical data file
+    clinical_data = dcmread(test_object.file_path)
+    assert clinical_data
+
+    # Get text from clinical data dataset
+    text = clinical_data.ContentSequence[0].TextValue
+    assert text
+
+    # Split text
+    data = text.split(",")
+    assert data[0] == test_object.data[0][0]
+    assert data[1] == test_object.data[0][1]
+    assert data[2] == test_object.data[0][2]
 
     # Delete the created DICOM SR
-    os.remove(file_path)
+    os.remove(test_object.file_path)
+    assert not os.path.exists(test_object.file_path)
