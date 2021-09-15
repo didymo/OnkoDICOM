@@ -264,6 +264,10 @@ class UIOpenPatientWindow(object):
 
         for patient_item in dicom_structure.get_tree_items_list():
             self.open_patient_window_patients_tree.addTopLevelItem(patient_item)
+            patient_item.setExpanded(True)
+            for i in range(patient_item.childCount()):
+                study = patient_item.child(i)
+                study.setExpanded(True)
 
         if len(dicom_structure.patients) == 0:
             QMessageBox.about(self, "No files found", "Selected directory contains no DICOM files.")
@@ -277,6 +281,7 @@ class UIOpenPatientWindow(object):
         # If patient is only selected, but not checked, set it to "focus" to
         # coincide with stylesheet
         if item.checkState(0) == Qt.CheckState.Unchecked:
+            self.display_a_tree_branch(item)
             self.open_patient_window_patients_tree.setCurrentItem(item)
         else:  # Otherwise don't "focus", then set patient as selected
             self.open_patient_window_patients_tree.setCurrentItem(None)
@@ -339,6 +344,14 @@ class UIOpenPatientWindow(object):
 
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
+
+    def display_a_tree_branch(self, root_node: QTreeWidgetItem):
+        root_node.setExpanded(not root_node.isExpanded())
+        if root_node.childCount() > 0:
+            for i in range(root_node.childCount()):
+                self.display_a_tree_branch(root_node.child(i))
+        else:
+            return
 
     def confirm_button_clicked(self):
         """
