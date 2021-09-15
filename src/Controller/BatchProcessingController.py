@@ -1,5 +1,7 @@
 import datetime
 from src.View.ProgressWindow import ProgressWindow
+from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
+    BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
@@ -25,6 +27,8 @@ class BatchProcessingController:
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
         self.pyrad_output_path = file_paths.get('pyrad_output_path')
+        self.clinical_data_input_path =\
+            file_paths.get('clinical_data_input_path')
         self.processes = processes
         self.dicom_structure = None
         self.patient_files_loaded = False
@@ -226,6 +230,20 @@ class BatchProcessingController:
                 process.start()
 
                 progress_callback.emit(("Completed PyRad2CSV", 100))
+
+            # Perform batch ROI Name Cleaning on patient
+            # TODO
+            if "roinamecleaning" in self.processes:
+                continue
+
+            # Perform CSV2ClinicalDataSR on patient
+            if "csv2clinicaldatasr" in self.processes:
+                # Get current files
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessCSV2ClinicalDataSR(
+                    progress_callback, interrupt_flag,
+                    cur_patient_files, self.clinical_data_input_path)
+                process.start()
 
         PatientDictContainer().clear()
 
