@@ -633,6 +633,7 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
     :param curr_slice: the current slice
     :param dict_rois_contours: the dictionary of ROI contours
     :param pixmap_aspect: the scaling ratio
+    :param img_size: the size of the image that the ROI is linked to
     :return: List of polygons of type QPolygonF.
     """
     # TODO Implement support for showing "holes" in contours.
@@ -686,6 +687,7 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
                 list_qpoints.append(curr_qpoint)
             curr_polygon = QtGui.QPolygonF(list_qpoints)
             list_polygons.append(curr_polygon)
+
     return list_polygons
 
 

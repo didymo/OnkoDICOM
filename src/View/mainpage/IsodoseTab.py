@@ -38,6 +38,10 @@ class IsodoseTab(QtWidgets.QWidget):
         self.isodose_tab_layout.addStretch()
         self.isodose_tab_layout.addLayout(self.iso2roi_layout)
 
+        # Add button to tab
+        self.isodose_tab_layout.addStretch()
+        self.isodose_tab_layout.addLayout(self.iso2roi_layout)
+
         self.setLayout(self.isodose_tab_layout)
         self.progress_window = ProgressWindow(
             self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
