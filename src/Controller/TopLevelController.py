@@ -120,6 +120,8 @@ class Controller:
                 self.default_directory)
             self.image_fusion_window.go_next_window.connect(
                 self.show_main_window)
+        else:
+            self.image_fusion_window.update_ui()
 
         self.image_fusion_window.show()
 
