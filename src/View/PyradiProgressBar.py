@@ -5,6 +5,7 @@
 
 import csv
 import os
+import shutil
 
 import pandas as pd
 from pathlib import Path
@@ -82,7 +83,12 @@ class PyradiExtended(QtCore.QThread):
         self.convert_df_to_csv(radiomics_df, patient_hash,
                                csv_path, self.my_callback)
 
+        # Export radiomics to SR
         self.export_to_sr(csv_path, patient_hash)
+
+        # Delete CSV file and NRRD folder
+        shutil.rmtree(nrrd_folder_path)
+        os.remove(csv_path + 'Pyradiomics_' + patient_hash + '.csv')
 
     def my_callback(self, percent, roi_name):
         """
