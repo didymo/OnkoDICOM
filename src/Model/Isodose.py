@@ -50,10 +50,18 @@ def get_dose_pixluts(dict_ds):
     dose_data = calculate_matrix(dict_ds['rtdose'])
     for ds in dict_ds:
         if ds not in non_img_type:
-            img_ds = dict_ds[ds]
-            pixlut = calculate_matrix(img_ds)
-            dose_pixlut = get_dose_pixels(pixlut, dose_data, img_ds)
-            dict_dose_pixluts[img_ds.SOPInstanceUID] = dose_pixlut
+                if isinstance(ds, str):
+                    if ds[0:3] != 'sr-':
+                        img_ds = dict_ds[ds]
+                        pixlut = calculate_matrix(img_ds)
+                        dose_pixlut = get_dose_pixels(pixlut, dose_data, img_ds)
+                        dict_dose_pixluts[img_ds.SOPInstanceUID] = dose_pixlut
+                else:
+                    img_ds = dict_ds[ds]
+                    pixlut = calculate_matrix(img_ds)
+                    dose_pixlut = get_dose_pixels(pixlut, dose_data, img_ds)
+                    dict_dose_pixluts[img_ds.SOPInstanceUID] = dose_pixlut
+
     return dict_dose_pixluts
 
 
