@@ -108,6 +108,7 @@ class UIBatchProcessingWindow(object):
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
+        self.tab_widget.tabBar().setObjectName("batch-tabs")
         self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Tabs
@@ -124,9 +125,9 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
         self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab,
-                               "Batch ROI Name Cleaning")
+                               "ROI Name Cleaning")
         self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
-                                "Batch CSV2ClinicalData-SR")
+                               "CSV2ClinicalData-SR")
 
         # == Bottom widgets
         # Info text

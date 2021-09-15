@@ -265,6 +265,9 @@ QTabBar::tab {
     height: 36px;
     width: 100%;
 }
+QTabBar#batch-tabs::tab {
+    width:150%;
+}
 QTabBar::tab:hover {
     background-color: #b299e6;
     border-bottom: 3px solid #9370DB;
