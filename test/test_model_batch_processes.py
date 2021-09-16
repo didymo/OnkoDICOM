@@ -1,7 +1,10 @@
-import pytest
+import pytest, os
 from pathlib import Path
 
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRadCSV
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from PySide6.QtWidgets import QApplication
@@ -16,6 +19,7 @@ class TestObject:
                                                 self.DummyProgressWindow,
                                                 self.DummyProgressWindow)
         self.iso_levels = self.get_iso_levels()
+        self.timestamp = BatchProcessingController.create_timestamp()
         self.application = QApplication()
 
     def get_patients(self):
@@ -92,7 +96,60 @@ def test_batch_iso2roi(test_object):
         assert len(difference) > 0
 
 
+def test_batch_dvh2csv(test_object):
+    """ Test asserts creation of .csv as result of dvh2csv conversion """
 
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessDVH2CSV(test_object.DummyProgressWindow,
+                                      test_object.DummyProgressWindow,
+                                      cur_patient_files,
+                                      test_object.batch_dir)
+
+        # Target filename
+        filename = 'DVHs_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))
+
+
+def test_batch_pyrad2csv(test_object):
+    """ Test asserts creation of .csv as result of pyrad2csv conversion """
+
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessPyRadCSV(test_object.DummyProgressWindow,
+                                       test_object.DummyProgressWindow,
+                                       cur_patient_files,
+                                       test_object.batch_dir)
+
+        # Target filename
+        filename = 'Pyradiomics_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))
 
 
 

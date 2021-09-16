@@ -3,6 +3,7 @@ from radiomics import featureextractor
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 import pandas as pd
+from pathlib import Path
 
 
 class BatchProcessPyRadCSV(BatchProcess):
@@ -69,7 +70,7 @@ class BatchProcessPyRadCSV(BatchProcess):
         patient_nrrd_folder_path = patient_path + '/nrrd/'
         patient_nrrd_file_path = patient_nrrd_folder_path + file_name
 
-        output_csv_path = self.output_path + '/CSV/'
+        output_csv_path = Path.joinpath(self.output_path, 'CSV')
 
         # If folder does not exist
         if not os.path.exists(patient_nrrd_folder_path):
@@ -249,7 +250,7 @@ class BatchProcessPyRadCSV(BatchProcess):
             # Create folder
             os.makedirs(csv_path)
 
-        target_path = csv_path + self.filename
+        target_path = Path.joinpath(csv_path, self.filename)
 
         create_header = not os.path.isfile(target_path)
 
