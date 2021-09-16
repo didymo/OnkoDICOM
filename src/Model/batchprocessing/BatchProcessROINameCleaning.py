@@ -77,7 +77,10 @@ class BatchProcessROINameCleaning(BatchProcess):
                     self.rename(dataset, old_name, new_name)
                 # Delete
                 elif roi[1] == 2:
-                    self.delete()
+                    name = roi[0]
+                    rtss = dcmread(dataset)
+                    rtss = ROI.delete_roi(rtss, name)
+                    rtss.save_as(dataset)
 
     def rename(self, dataset, old_name, new_name):
         """
@@ -101,12 +104,7 @@ class BatchProcessROINameCleaning(BatchProcess):
             return
 
         # Change name of ROI to new name
-        ROI.rename_roi(rtss, roi_id, new_name)
+        rtss = ROI.rename_roi(rtss, roi_id, new_name)
 
         # Save dataset
         rtss.save_as(dataset)
-
-    def delete(self):
-        """
-        Delete an ROI from an RTSS.
-        """
