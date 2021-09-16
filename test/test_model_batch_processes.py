@@ -1,13 +1,14 @@
-import pytest, os
+import os
+import pytest
 from pathlib import Path
-
+from pydicom import dcmread
+from PySide6.QtWidgets import QApplication
+from src.Controller.BatchProcessingController import BatchProcessingController
+from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
     BatchProcessPyRadCSV
-from src.Controller.BatchProcessingController import BatchProcessingController
-from src.Model import DICOMDirectorySearch
-from PySide6.QtWidgets import QApplication
 
 
 class TestObject:
@@ -67,11 +68,11 @@ def test_object():
 
 
 def test_batch_iso2roi(test_object):
-    """ Test asserts that at least 1 new roi is created from iso2roi """
-
+    """
+    Test that at least 1 new ROI is created from ISO2ROI.
+    """
     # Loop through patient datasets
     for patient in test_object.get_patients():
-
         # Get the files for the patient
         cur_patient_files = BatchProcessingController.get_patient_files(
             patient)
@@ -84,7 +85,7 @@ def test_batch_iso2roi(test_object):
         process.start()
 
         # Get rtss
-        rtss = process.patient_dict_container.get('dataset_rtss')
+        rtss = process.patient_dict_container.dataset['rtss']
 
         # Get ROIS from rtss
         rois = []
@@ -123,7 +124,12 @@ def test_batch_dvh2csv(test_object):
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
 
+        # Assert that there is DVH data in the RT Dose
+        rtdose = process.patient_dict_container.dataset['rtdose']
+        assert len(rtdose.DVHSequence) > 0
 
+
+@pytest.mark.skip()
 def test_batch_pyrad2csv(test_object):
     """ Test asserts creation of .csv as result of pyrad2csv conversion """
 
@@ -150,10 +156,3 @@ def test_batch_pyrad2csv(test_object):
         # Assert the resulting .csv file exists
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
-
-
-
-
-
-
-
