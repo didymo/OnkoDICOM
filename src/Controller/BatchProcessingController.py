@@ -9,6 +9,9 @@ from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import DICOMDirectorySearch
+import threading
+from src.Model.Worker import Worker
+from PySide6.QtCore import QThreadPool
 
 
 class BatchProcessingController:
@@ -16,7 +19,7 @@ class BatchProcessingController:
     This class is the controller for batch processing. It starts and
     ends processes, and controls the progress window.
     """
-    def __init__(self, file_paths, processes):
+    def __init__(self):
         """
         Class initialiser function.
         :param file_paths: dict containing paths needed for inputs and
@@ -24,44 +27,46 @@ class BatchProcessingController:
         :param processes: list of processes to be done to the patients
                           selected.
         """
+        self.batch_path = ""
+        self.dvh_output_path = ""
+        self.pyrad_output_path = ""
+        self.clinical_data_input_path = ""
+        self.processes = []
+        self.dicom_structure = None
+        self.patient_files_loaded = False
+        self.progress_window = ProgressWindow(None)
+        self.timestamp = ""
+
+        # threadpool for file loading
+        self.threadpool = QThreadPool()
+        self.interrupt_flag = threading.Event()
+
+    def set_file_paths(self, file_paths):
+        """
+        Sets all the required paths
+        :param file_paths: dict of directories
+        """
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
         self.pyrad_output_path = file_paths.get('pyrad_output_path')
         self.clinical_data_input_path =\
             file_paths.get('clinical_data_input_path')
+
+    def set_processes(self, processes):
+        """
+        Sets the selected processes
+        :param processes: list of selected processes
+        """
         self.processes = processes
-        self.dicom_structure = None
-        self.patient_files_loaded = False
-        self.progress_window = ProgressWindow(None)
-        self.timestamp = self.create_timestamp()
 
     def start_processing(self):
         """
         Starts the batch process.
         """
-        # Create progress window and connect signals
+        # Create new instance of ProgressWindow
         self.progress_window = ProgressWindow(None)
-        self.progress_window.signal_error.connect(
-            self.error_loading_patient_files)
-        self.progress_window.signal_loaded.connect(
-            self.completed_loading_patient_files)
 
-        # Flag set if patients are loaded
-        self.patient_files_loaded = False
-
-        # Start loading in the patient files
-        self.progress_window.start(self.load_patient_files)
-
-        # Wait while patient files are being loaded.
-        while not self.dicom_structure:
-            if self.patient_files_loaded:
-                print("Error when loading files. Check that the directory is "
-                      "correct and try again.")
-                self.progress_window.close()
-            else:
-                pass
-
-        self.progress_window = ProgressWindow(None)
+        # Connect callbacks
         self.progress_window.signal_error.connect(
             self.error_processing)
         self.progress_window.signal_loaded.connect(
@@ -70,53 +75,40 @@ class BatchProcessingController:
         # Start performing processes on patient files
         self.progress_window.start(self.perform_processes)
 
-    def load_patient_files(self, interrupt_flag, progress_callback):
+    def load_patient_files(self, path, progress_callback,
+                           search_complete_callback):
         """
         Load the patient files from directory.
-        :param interrupt_flag: interrupt flag
-        :param progress_callback: callback for progress
         """
+        # Set the interrup flag
+        self.interrupt_flag.set()
 
-        # Nested function to work with progress callback from
-        # DICOMDirectorySearch
-        class Callback:
-            @staticmethod
-            def emit(message):
-                """
-                Method to catch the callback from get_dicom_structure()
-                :message: str returned from get_dicom_structure()
+        # Release the current thread, and create new threadpool
+        self.threadpool.releaseThread()
+        self.threadpool = QThreadPool()
 
-                Get the number from the returned string.
-                Each % is for every 100 files counted
-                Clamp the number to 100
-                """
-                max_num = 99
-                message += " Files Loaded"
-                num = int(message.split(' ')[0]) / 100
-                progress_callback.emit(
-                    (message, max_num if max_num < num else num)
-                )
+        # Clear the interrupt flag
+        self.interrupt_flag.clear()
 
-        self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
-                                                self.batch_path,
-                                                interrupt_flag,
-                                                Callback)
+        # Create new worker
+        worker = Worker(DICOMDirectorySearch.get_dicom_structure,
+                        path,
+                        self.interrupt_flag,
+                        progress_callback=True)
 
-    def error_loading_patient_files(self):
+        # Connect callbacks
+        worker.signals.result.connect(search_complete_callback)
+        worker.signals.progress.connect(progress_callback)
+
+        # Start the worker
+        self.threadpool.start(worker)
+
+    def set_dicom_structure(self, dicom_structure):
         """
-        Called when an error occurred whilst loading files
+        Function used to set dicom_structure
+        :param dicom_structure: DICOMStructure
         """
-        print("Error when loading files. Check that the directory "
-              "is correct and try again. ")
-        self.progress_window.close()
-
-    def completed_loading_patient_files(self):
-        """
-        Called when completed loading the patient files.
-        :param dicom_structure: DicomStructure object
-        """
-        self.patient_files_loaded = True
-        self.progress_window.close()
+        self.dicom_structure = dicom_structure
 
     @staticmethod
     def get_patient_files(patient):
@@ -152,6 +144,7 @@ class BatchProcessingController:
         """
         patient_count = len(self.dicom_structure.patients)
         cur_patient_num = 0
+        self.timestamp = self.create_timestamp()
 
         # Loop through each patient
         for patient in self.dicom_structure.patients.values():
