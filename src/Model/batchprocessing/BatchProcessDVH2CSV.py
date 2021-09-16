@@ -4,6 +4,7 @@ from src.Model import ImageLoading
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import pandas as pd
+from pathlib import Path
 
 
 class BatchProcessDVH2CSV(BatchProcess):
@@ -101,18 +102,18 @@ class BatchProcessDVH2CSV(BatchProcess):
         self.progress_callback.emit(("Exporting DVH to CSV...", 90))
 
         # Get path to save to
-        path = self.output_path
+        path = Path.joinpath(self.output_path, 'CSV')
 
         # Get patient ID
         patient_id = self.patient_dict_container.dataset['rtss'].PatientID
 
         # Make CSV directory if it doesn't exist
-        if not os.path.isdir(path + '/CSV'):
-            os.mkdir(path + '/CSV')
+        if not os.path.isdir(path):
+            os.mkdir(path)
 
         # Save the DVH to a CSV file
         self.progress_callback.emit(("Exporting DVH to RT Dose...", 95))
-        self.dvh2csv(raw_dvh, path + "/CSV/", self.filename, patient_id)
+        self.dvh2csv(raw_dvh, path, self.filename, patient_id)
 
         # Save the DVH to the RT Dose
         CalculateDVHs.dvh2rtdose(raw_dvh)
@@ -128,7 +129,7 @@ class BatchProcessDVH2CSV(BatchProcess):
         :param patient_id: Patient Identifier
         """
         # full path of the target csv file
-        tar_path = path + csv_name
+        tar_path = Path.joinpath(path, csv_name)
 
         create_header = not os.path.isfile(tar_path)
 
