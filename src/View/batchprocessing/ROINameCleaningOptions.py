@@ -5,6 +5,68 @@ from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import resource_path
 
 
+class ROINameCleaningOptionComboBox(QtWidgets.QComboBox):
+    """
+    This class inherits QComboBox to create a custom widget for the Name
+    Cleaning ROI table that includes two options - modify and delete.
+    """
+
+    def __init__(self):
+        QtWidgets.QComboBox.__init__(self)
+        self.addItem("Modify")
+        self.addItem("Delete")
+
+
+class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
+    """
+    This class inherits QComboBox to create a custom widget for the Name
+    Cleaning ROI table that includes a list of standard organ names.
+    """
+
+    def __init__(self, organs):
+        """
+        Initialises the object, setting the combo box options to be a
+        list of the standard organ names.
+        :param organs: a list of standard organ names.
+        """
+        QtWidgets.QComboBox.__init__(self)
+
+        # Populate combo box options
+        for organ in organs:
+            self.addItem(organ)
+
+    @QtCore.Slot(int)
+    def change_enabled(self, index):
+        """
+        A slot for changing whether this combo box is enabled or
+        disabled depending on whether "Modify" or "Delete" has been
+        selected for the associated ROI.
+        """
+        print(index)
+        if index == 0:
+            self.setEnabled(True)
+        elif index == 1:
+            self.setEnabled(False)
+
+
+class ROINameCleaningLineEdit(QtWidgets.QLineEdit):
+    """
+    This class inherits QLineEdit to create a custom widget for the Name
+    Cleaning ROI table that allows it to be enabled or disabled when the
+    QComboBox in the same row changes.
+
+    Currently unused.
+    """
+
+    @QtCore.Slot(int)
+    def change_enabled(self, index):
+        print(index)
+        if index == 0:
+            self.setEnabled(True)
+        elif index == 1:
+            self.setEnabled(False)
+
+
 class ROINameCleaningOptions(QtWidgets.QWidget):
     """
     ROI Name Cleaning options for batch processing.
@@ -30,7 +92,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.organ_names = []
         self.volume_prefixes = []
 
+        self.get_standard_names()
         self.create_table_view()
+        self.populate_table()
         self.setLayout(self.main_layout)
 
     def get_standard_names(self):
@@ -93,4 +157,29 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         have been loaded.
         """
         # Read in all ROIs, see if they have standard names
-        print("")
+
+        # Populate table
+        self.table_roi.setRowCount(0)
+
+        # Loop through each row
+        # Temporary file input, for demonstration purposes
+        file_input = [
+            'llungs', 'rlungs', 'mouth', 'isodose100', 'petsuv1'
+        ]
+
+        # Loop through each ROI
+        for i, value in enumerate(file_input):
+            # Create QComboBox and QLineEdit
+            combo_box = ROINameCleaningOptionComboBox()
+            combo_box.setStyleSheet(self.stylesheet)
+            organ_combo_box = ROINameCleaningOrganComboBox(self.organ_names)
+            organ_combo_box.setStyleSheet(self.stylesheet)
+            combo_box.currentIndexChanged.connect(
+                organ_combo_box.change_enabled)
+
+            # Add row to table
+            self.table_roi.insertRow(i)
+            self.table_roi.setRowHeight(i, 50)
+            self.table_roi.setItem(i, 0, QtWidgets.QTableWidgetItem(value))
+            self.table_roi.setCellWidget(i, 1, combo_box)
+            self.table_roi.setCellWidget(i, 2, organ_combo_box)
