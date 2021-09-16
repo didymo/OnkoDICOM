@@ -28,10 +28,6 @@ QCheckBox::indicator:unchecked {
     image: url(./res/images/widget-icons/checkbox_unchecked.png);
 }
 
-QCheckBox::indicator:unchecked:hover {
-    image: url(./res/images/widget-icons/checkbox_unchecked_hover.png);
-}
-
 QCheckBox::indicator:unchecked:pressed {
     image: url(./res/images/widget-icons/checkbox_unchecked_pressed.png);
 }
