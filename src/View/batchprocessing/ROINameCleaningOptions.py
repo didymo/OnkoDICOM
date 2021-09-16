@@ -42,7 +42,6 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         disabled depending on whether "Modify" or "Delete" has been
         selected for the associated ROI.
         """
-        print(index)
         if index == 0:
             self.setEnabled(True)
         elif index == 1:
