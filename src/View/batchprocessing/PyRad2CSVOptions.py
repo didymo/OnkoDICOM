@@ -26,8 +26,8 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
-        label = QtWidgets.QLabel(
-            "Please choose the location for the resulting CSV file:")
+        label = QtWidgets.QLabel("Please choose the file location.")
+
         label.setStyleSheet(self.stylesheet)
 
         self.directory_layout = QtWidgets.QFormLayout()

@@ -100,6 +100,11 @@ class UIBatchProcessingWindow(object):
         self.directory_input.textChanged.connect(self.line_edit_changed)
         self.directory_input.setStyleSheet(self.stylesheet)
 
+        # Label to display file search status
+        self.search_progress_label = QtWidgets.QLabel("No directory is "
+                                                  "currently selected.")
+        self.search_progress_label.setFont(label_font)
+
         # Browse button
         self.browse_button = QtWidgets.QPushButton("Change")
         self.browse_button.setObjectName("NormalButton")
@@ -144,16 +149,17 @@ class UIBatchProcessingWindow(object):
         self.back_button.setProperty("QPushButtonClass", "fail-button")
 
         # Begin button
-        self.confirm_button = QtWidgets.QPushButton("Begin")
-        self.confirm_button.setObjectName("BeginButton")
-        self.confirm_button.setMaximumWidth(100)
-        self.confirm_button.setStyleSheet(self.stylesheet)
-        self.confirm_button.setProperty("QPushButtonClass", "success-button")
+        self.begin_button = QtWidgets.QPushButton("Begin")
+        self.begin_button.setObjectName("BeginButton")
+        self.begin_button.setMaximumWidth(100)
+        self.begin_button.setStyleSheet(self.stylesheet)
+        self.begin_button.setProperty("QPushButtonClass", "success-button")
+        self.begin_button.setEnabled(False)
 
         # == Set layout
         # Create layouts
         self.layout = QtWidgets.QVBoxLayout()
-        self.directory_layout = QtWidgets.QHBoxLayout()
+        self.directory_layout = QtWidgets.QGridLayout()
         self.middle_layout = QtWidgets.QVBoxLayout()
         self.bottom_layout = QtWidgets.QGridLayout()
 
@@ -162,7 +168,8 @@ class UIBatchProcessingWindow(object):
 
         # Add directory widgets
         self.directory_layout.addWidget(self.directory_input)
-        self.directory_layout.addWidget(self.browse_button)
+        self.directory_layout.addWidget(self.browse_button, 0, 1)
+        self.directory_layout.addWidget(self.search_progress_label, 1, 0)
         self.layout.addLayout(self.directory_layout)
 
         # Add middle widgets (patient count, tabs)
@@ -172,17 +179,20 @@ class UIBatchProcessingWindow(object):
         # Add bottom widgets (buttons)
         self.bottom_layout.addWidget(self.info_label, 0, 0, 2, 4)
         self.bottom_layout.addWidget(self.back_button, 2, 2, 1, 1)
-        self.bottom_layout.addWidget(self.confirm_button, 2, 3, 1, 1)
+        self.bottom_layout.addWidget(self.begin_button, 2, 3, 1, 1)
         self.layout.addLayout(self.bottom_layout)
 
         # Connect buttons to functions
         self.browse_button.clicked.connect(self.show_file_browser)
-        self.confirm_button.clicked.connect(self.confirm_button_clicked)
+        self.begin_button.clicked.connect(self.confirm_button_clicked)
         self.back_button.clicked.connect(
             lambda: QtCore.QCoreApplication.exit(0))
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)
+
+        # Create batch processing controller, enable the processing
+        self.batch_processing_controller = BatchProcessingController()
 
     def show_file_browser(self):
         """
@@ -208,11 +218,45 @@ class UIBatchProcessingWindow(object):
 
     def line_edit_changed(self):
         """
-        When the line edit box is changed, update related fields.
+        When the line edit box is changed, update related fields,
+        start searching the directory.
         """
         self.file_path = self.directory_input.text()
         self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
         self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
+
+        self.begin_button.setEnabled(False)
+
+        self.batch_processing_controller.set_dicom_structure(None)
+
+        self.batch_processing_controller.load_patient_files(
+            self.file_path,
+            self.search_progress,
+            self.search_completed)
+
+    def search_progress(self, progress_update):
+        """
+        Changed the progress label
+        :param progress_update: current progress of file search
+        """
+        self.search_progress_label.setText("Loading selected directory... ( "
+                                           "%s files searched)" %
+                                           progress_update)
+
+    def search_completed(self, dicom_structure):
+        """
+        Called when patient files are loaded
+        :param dicom_structure: DICOMStructure
+        """
+        if dicom_structure:
+            self.batch_processing_controller.set_dicom_structure(
+                dicom_structure)
+            self.begin_button.setEnabled(True)
+            self.search_progress_label.setText("%s patients found." % \
+                                               len(dicom_structure.patients))
+        else:
+            self.search_progress_label.setText("No patients were found.")
+            self.batch_processing_controller.set_dicom_structure(None)
 
     def confirm_button_clicked(self):
         """
@@ -240,7 +284,9 @@ class UIBatchProcessingWindow(object):
                 self.csv2clinicaldatasr_tab.get_csv_input_location()
         }
 
-        # Create batch processing controller, enable the processing
-        batch_processing_controller =\
-            BatchProcessingController(file_directories, selected_processes)
-        batch_processing_controller.start_processing()
+        # setup the batch processing controller
+        self.batch_processing_controller.set_file_paths(file_directories)
+        self.batch_processing_controller.set_processes(selected_processes)
+
+        # enable processing
+        self.batch_processing_controller.start_processing()
