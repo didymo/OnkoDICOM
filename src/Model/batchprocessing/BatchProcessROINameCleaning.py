@@ -1,4 +1,5 @@
 from pydicom import dcmread
+from src.Model import ROI
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -61,7 +62,6 @@ class BatchProcessROINameCleaning(BatchProcess):
                 self.patient_dict_container.clear()
                 return False
 
-            rtss = dcmread(dataset)
             roi_step = len(self.roi_options[dataset]) / step
             progress += roi_step
             self.progress_callback.emit(("Cleaning ROIs...", progress))
@@ -72,15 +72,39 @@ class BatchProcessROINameCleaning(BatchProcess):
                     continue
                 # Rename
                 elif roi[1] == 1:
-                    self.rename()
+                    old_name = roi[0]
+                    new_name = roi[2]
+                    self.rename(dataset, old_name, new_name)
                 # Delete
                 elif roi[1] == 2:
                     self.delete()
 
-    def rename(self):
+    def rename(self, dataset, old_name, new_name):
         """
         Rename an ROI in an RTSS.
+        :param dataset: file path of the RT Struct to work on.
+        :param old_name: old ROI name to change.
+        :param new_name: name to change the ROI to.
         """
+        # Load dataset
+        rtss = dcmread(dataset)
+
+        # Find ROI with old name
+        roi_id = None
+        for sequence in rtss.StructureSetROISequence:
+            if sequence.ROIName == old_name:
+                roi_id = sequence.ROINumber
+                break
+
+        # Return if not found
+        if not roi_id:
+            return
+
+        # Change name of ROI to new name
+        ROI.rename_roi(rtss, roi_id, new_name)
+
+        # Save dataset
+        rtss.save_as(dataset)
 
     def delete(self):
         """
