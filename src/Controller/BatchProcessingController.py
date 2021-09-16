@@ -4,6 +4,8 @@ from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
     BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessROINameCleaning import \
+    BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
     BatchProcessPyRadCSV
 from src.Model.DICOMStructure import Image, Series
@@ -33,6 +35,7 @@ class BatchProcessingController:
         self.clinical_data_input_path = ""
         self.processes = []
         self.dicom_structure = None
+        self.name_cleaning_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -109,6 +112,14 @@ class BatchProcessingController:
         :param dicom_structure: DICOMStructure
         """
         self.dicom_structure = dicom_structure
+
+    def set_name_cleaning_options(self, options):
+        """
+        Set name cleaning options for batch ROI name cleaning.
+        :param options: Dictionary of datasets, ROIs, and options for
+                        cleaning the ROIs.
+        """
+        self.name_cleaning_options = options
 
     @staticmethod
     def get_patient_files(patient):
@@ -225,9 +236,13 @@ class BatchProcessingController:
                 progress_callback.emit(("Completed PyRad2CSV", 100))
 
             # Perform batch ROI Name Cleaning on patient
-            # TODO
             if "roinamecleaning" in self.processes:
-                continue
+                if self.name_cleaning_options:
+                    # Get ROIs, dataset locations, options
+                    process = BatchProcessROINameCleaning(progress_callback,
+                                                          interrupt_flag,
+                                                          self.name_cleaning_options)
+                    process.start()
 
             # Perform CSV2ClinicalDataSR on patient
             if "csv2clinicaldatasr" in self.processes:

@@ -252,8 +252,11 @@ class UIBatchProcessingWindow(object):
             self.batch_processing_controller.set_dicom_structure(
                 dicom_structure)
             self.begin_button.setEnabled(True)
-            self.search_progress_label.setText("%s patients found." % \
+            self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
+
+            # Update the batch name cleaning table
+            self.batchnamecleaning_tab.populate_table(dicom_structure)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -284,9 +287,29 @@ class UIBatchProcessingWindow(object):
                 self.csv2clinicaldatasr_tab.get_csv_input_location()
         }
 
-        # setup the batch processing controller
+        # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
 
-        # enable processing
+        # Set batch ROI name options if selected
+        if 'roinamecleaning' in selected_processes:
+            # Get ROIs, datasets, options
+            name_cleaning_options = {}
+            roi_name_table = self.batchnamecleaning_tab.table_roi
+            for i in range(roi_name_table.rowCount()):
+                roi_name = roi_name_table.item(i, 0).text()
+                option = roi_name_table.cellWidget(i, 1).currentIndex()
+                new_name = roi_name_table.cellWidget(i, 2).currentText()
+                dataset = roi_name_table.item(i, 3).text()
+
+                if dataset not in name_cleaning_options.keys():
+                    name_cleaning_options[dataset] = []
+
+                name_cleaning_options[dataset].append(
+                    [roi_name, option, new_name])
+
+            self.batch_processing_controller.set_name_cleaning_options(
+                name_cleaning_options)
+
+        # Enable processing
         self.batch_processing_controller.start_processing()
