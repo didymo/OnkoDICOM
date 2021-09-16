@@ -3,6 +3,10 @@ import multiprocessing
 import numpy as np
 import pandas as pd
 from dicompylercore import dvhcalc
+from pydicom.dataset import Dataset
+from pydicom.sequence import Sequence
+from pydicom.tag import Tag
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
 def get_roi_info(ds_rtss):
@@ -182,3 +186,49 @@ def dvh2csv(dict_dvh, path, csv_name, patient_id):
     pddf_csv.set_index('Patient ID', inplace=True)
     # Convert and export pandas dataframe to CSV file
     pddf_csv.to_csv(tar_path)
+
+
+def dvh2rtdose(dict_dvh):
+    """
+    Export dvh data to RT DOSE file.
+    :param dict_dvh: A dictionary of DVH {ROINumber: DVH}
+    :param patient_id: Patient Identifier
+    """
+    # Create DVH sequence
+    dvh_sequence = Sequence([])
+
+    # Add DVHs to the sequence
+    for ds in dict_dvh:
+        # Create new DVH dataset
+        new_ds = Dataset()
+
+        # Add attributes
+        new_ds.add_new(Tag("DVHType"), "CS", dict_dvh[ds].dvh_type.upper())
+        new_ds.add_new(Tag("DoseUnits"), "CS", dict_dvh[ds].dose_units.upper())
+        new_ds.add_new(Tag("DoseType"), "CS", "PHYSICAL")
+        new_ds.add_new(Tag("DVHDoseScaling"), "DS", "1.0")
+        new_ds.add_new(Tag("DVHVolumeUnits"), "CS", dict_dvh[ds].volume_units.upper())
+        new_ds.add_new(Tag("DVHNumberOfBins"), "IS", len(dict_dvh[ds].bins))
+
+        # Calculate and add DVH data
+        dvh_data = []
+        for i in range(len(dict_dvh[ds].counts)):
+            dvh_data.append(str(dict_dvh[ds].bins[1]))
+            dvh_data.append(str(dict_dvh[ds].counts[i]))
+        new_ds.add_new(Tag("DVHData"), "DS", dvh_data)
+
+        # Reference ROI sequence dataset/sequence
+        referenced_roi_sequence = Dataset()
+        referenced_roi_sequence.add_new(Tag("DVHROIContributionType"), "CS", "INCLUDED")
+        referenced_roi_sequence.add_new(Tag("ReferencedROINumber"), "IS", ds)
+        new_ds.add_new(Tag("DVHReferencedROISequence"), "SQ", Sequence([referenced_roi_sequence]))
+
+        # Add new DVH dataset to DVH sequences
+        dvh_sequence.append(new_ds)
+
+    # Save new RT DOSE
+    patient_dict_container = PatientDictContainer()
+    patient_dict_container.dataset['rtdose'].DVHSequence = dvh_sequence
+
+    path = patient_dict_container.filepaths['rtdose']
+    patient_dict_container.dataset['rtdose'].save_as(path)
