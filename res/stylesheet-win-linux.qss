@@ -37,7 +37,7 @@ QCheckBox::indicator:checked {
 }
 
 QCheckBox::indicator:checked:hover {
-    image: url(./res/images/widget-icons/checkbox_checked_hover.png);
+    image: url(./res/images/widget-icons/checkbox_checked.png);
 }
 
 QCheckBox::indicator:checked:pressed {
