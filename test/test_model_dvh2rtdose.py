@@ -96,7 +96,7 @@ def test_dvh_to_rtdose(test_object):
     test_object.dvh_data.pop("diff")
     dvh2rtdose(test_object.dvh_data)
 
-    # Assert file has been modified, and DVHs are the same length
-    assert dvh_length == len(test_object.patient_dict_container
+    # Assert file has been modified, and the amount of DVHs have increased
+    assert dvh_length >= len(test_object.patient_dict_container
                              .dataset['rtdose'].DVHSequence)
     assert last_modified < rt_dose.stat().st_mtime
