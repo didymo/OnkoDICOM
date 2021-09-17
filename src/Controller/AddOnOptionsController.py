@@ -410,7 +410,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             new_clinical_data_csv_dir = \
                 self.clinical_data_csv_dir_options.\
                 clinical_data_csv_dir_input_box.text()
-            configuration.update_clinical_data_csv_dir(new_clinical_data_csv_dir)
+            configuration.update_clinical_data_csv_dir(
+                new_clinical_data_csv_dir)
         except SqlError:
             configuration.set_up_config_db()
             QMessageBox.critical(

@@ -88,14 +88,13 @@ class ClinicalDataView(QtWidgets.QWidget):
                 key, value = row.split(":")
                 self.data_dict[key] = value
         except KeyError:
-            print("No DICOM SR containing clinical data in dataset.")
-
             # See if data has been imported
             if self.data_dict:
                 pass
             else:
                 return
 
+        # Populate table with loaded values
         for i, key in enumerate(self.data_dict):
             attrib = QtWidgets.QTableWidgetItem(key)
             value = QtWidgets.QTableWidgetItem(self.data_dict[key])
@@ -203,7 +202,6 @@ class ClinicalDataView(QtWidgets.QWidget):
         """
         # Only save if there is at least one row in the table
         if self.table_cd.rowCount() <= 0:
-            print("Not saving.")
             return
 
         # Create string from clinical data dictionary
@@ -219,4 +217,3 @@ class ClinicalDataView(QtWidgets.QWidget):
         dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text,
                                                            "CLINICAL-DATA")
         dicom_sr.save_as(file_path)
-        print("Saved")

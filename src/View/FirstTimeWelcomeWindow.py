@@ -157,7 +157,6 @@ class UIFirstTimeWelcomeWindow(object):
             self.clinical_data_input_widget)
         self.window_vertical_layout_box.addStretch(1)
 
-
         # Create a horizontal box to hold the Skip and Confirm button
         self.first_time_window_configure_actions_horizontal_box = QHBoxLayout()
         self.first_time_window_configure_actions_horizontal_box.setObjectName(

@@ -64,9 +64,7 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
 
     # Copy tags from CT/MR image
     for tag in top_level_tags_to_copy:
-        print("Tag ", tag)
         if tag in img_ds:
-            print("value of tag in image: ", img_ds[tag])
             dicom_sr[tag] = deepcopy(img_ds[tag])
 
     dicom_sr.AccessionNumber = ""
@@ -118,7 +116,8 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
     dicom_sr.ReferencedDateTime = ""
 
     dicom_sr.MeasuredValueSequence = Sequence()
-    og_frame_of_reference_UID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
+    og_frame_of_reference_UID = \
+        deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
     dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID
 
     # == Content Sequence
