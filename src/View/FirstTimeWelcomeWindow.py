@@ -236,10 +236,13 @@ class UIFirstTimeWelcomeWindow(object):
         """
         self.filepath = self.first_time_welcome_input_box.text()
         self.csv_path = self.clinical_data_csv_input_box.text()
-        if self.filepath == "":
-            QMessageBox.about(self, "Unable to proceed", "No directory selected.")
-        elif not os.path.exists(self.filepath):
-            QMessageBox.about(self, "Unable to proceed", "Directory does not exist")
+        if self.filepath == "" and self.csv_path == "":
+            QMessageBox.about(self, "Unable to proceed",
+                              "No directories selected.")
+        elif not os.path.exists(self.filepath) or not \
+                os.path.exists(self.csv_path):
+            QMessageBox.about(self, "Unable to proceed",
+                              "Directories do not exist")
         else:
             config = Configuration()
             try:
