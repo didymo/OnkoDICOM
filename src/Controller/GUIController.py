@@ -89,6 +89,11 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
             self.filepath = directory_in
             self.open_patient_directory_input_box.setText(directory_in)
             self.scan_directory_for_patient()
+
+    def update_ui(self):
+        patient = self.patient_dict_container.get("basic_info")
+        if self.patient_id != patient['id']:
+            self.update_new_patient()
         
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
@@ -180,6 +185,20 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         # Close 3d vtk widget
         self.three_dimension_view.close()
 
+        # Explicity destroy objects - the purpose of this is to clear
+        # any image fusion tabs that have been used previously.
+        # Try-catch in the event user has not prompted image-fusion.
+        try:
+            del self.image_fusion_view_coronal
+            del self.image_fusion_view_sagittal
+            del self.image_fusion_view_axial
+            del self.image_fusion_four_views_layout
+            del self.image_fusion_four_views
+            del self.image_fusion_single_view
+            del self.image_fusion_view
+        except:
+            pass
+        
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
 
