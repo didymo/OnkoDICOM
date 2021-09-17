@@ -21,7 +21,6 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
     Returns:
         tuple: Returns a list of masks and a list of structure names
     """
-    print(struct_name_sequence)
     if spacing_override:
         current_spacing = list(dicom_image.GetSpacing())
         new_spacing = tuple(
@@ -34,7 +33,6 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
         dicom_image.SetSpacing(new_spacing)
 
     struct_point_sequence = dicom_struct.ROIContourSequence
-    struct_point_sequence = dicom_struct.ROIContourSequence
     all_name_sequence = [
         "_".join(i.ROIName.split()) for i in
         dicom_struct.StructureSetROISequence
@@ -45,7 +43,6 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
         if roi_name in struct_name_sequence:
             roi_indexes[roi_name] = index
 
-    print(struct_name_sequence)
 
     struct_list = []
     final_struct_name_sequence = []
@@ -72,13 +69,13 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
                 "Contour sequence empty for this structure, skipping.")
             continue
 
-        if (
-                not struct_point_sequence[struct_index].ContourSequence[
-                        0].ContourGeometricType
-                    == "CLOSED_PLANAR"
-        ):
-            logger.debug("This is not a closed planar structure, skipping.")
-            continue
+        # if (
+        #         not struct_point_sequence[struct_index].ContourSequence[
+        #                 0].ContourGeometricType
+        #             == "CLOSED_PLANAR"
+        # ):
+        #     logger.debug("This is not a closed planar structure, skipping.")
+        #     continue
 
         for sl in range(
                 len(struct_point_sequence[struct_index].ContourSequence)):
@@ -128,5 +125,4 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
         struct_list.append(sitk.Cast(struct_image, sitk.sitkUInt8))
         final_struct_name_sequence.append(struct_name)
 
-    print(final_struct_name_sequence)
     return struct_list, final_struct_name_sequence

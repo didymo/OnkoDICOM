@@ -26,6 +26,7 @@ class StructureTab(QtWidgets.QWidget):
             self.patient_dict_container = MovingDictContainer()
         else:
             self.patient_dict_container = PatientDictContainer()
+
         self.rois = self.patient_dict_container.get("rois")
         self.color_dict = self.init_color_roi()
         self.patient_dict_container.set("roi_color_dict", self.color_dict)

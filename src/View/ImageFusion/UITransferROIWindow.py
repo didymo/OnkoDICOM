@@ -1,5 +1,8 @@
 import platform
+import traceback
+from pathlib import Path
 
+import pydicom
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import Qt, QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QPushButton, \
@@ -12,13 +15,13 @@ from rt_utils import RTStructBuilder
 from rt_utils.image_helper import find_mask_contours
 
 from src.Controller.PathHandler import resource_path
-from src.Model import ROI
+from src.Model import ROI, ImageLoading
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
 import SimpleITK as sitk
 import numpy as np
 
-from src.Model.ROI import get_roi_contour_pixel
+from src.Model.ROI import get_roi_contour_pixel, merge_rtss
 from src.Model.ROITransfer import transform_point_set_from_dicom_struct
 from src.View.util.SaveROIs import connectSaveROIProgress
 
@@ -319,42 +322,45 @@ class UITransferROIWindow:
         self.patient_B_rois_to_A_list_widget.clear()
 
     def save_clicked(self):
-        rtss = self.patient_dict_container.get("dataset_rtss")
+        try:
+            rtss = self.patient_dict_container.get("dataset_rtss")
 
-        # get sitk for fixed and moving images
-        dicom_image = self.read_dicom_image_to_sitk(
-            self.patient_dict_container.filepaths)
-        # get array of roi indexes from sitk images
-        rois_images_fixed = transform_point_set_from_dicom_struct(dicom_image,
-                                                                  rtss,
-                                                                  self.fixed_to_moving_rois.keys(),
-                                                                  spacing_override=None)
-        print(rois_images_fixed)
+            # get sitk for fixed and moving images
+            dicom_image = self.read_dicom_image_to_sitk(
+                self.patient_dict_container.filepaths)
+            # get array of roi indexes from sitk images
+            rois_images_fixed = transform_point_set_from_dicom_struct(dicom_image,
+                                                                      rtss,
+                                                                      self.fixed_to_moving_rois.keys(),
+                                                                      spacing_override=None)
+            print(rois_images_fixed)
 
-        moving_rtss = self.moving_dict_container.get("dataset_rtss")
-        raw_contours = self.moving_dict_container.get("raw_contours")
-        moving_dicom_image = self.read_dicom_image_to_sitk(
-            self.moving_dict_container.filepaths)
-        # get array of roi indexes from sitk images
-        rois_images_moving = transform_point_set_from_dicom_struct(
-            moving_dicom_image,
-            moving_rtss,
-            self.moving_to_fixed_rois.keys(),
-            spacing_override=None)
-        print(rois_images_moving)
-        tfm = self.moving_dict_container.get("tfm")
-        # TODO: HANDLE CASE WHEN ONE OF TWO DICTS ARE EMPTY
-        # transform roi from b to a first
-        self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
-                           rois_images_moving, self.patient_dict_container)
+            moving_rtss = self.moving_dict_container.get("dataset_rtss")
+            raw_contours = self.moving_dict_container.get("raw_contours")
+            moving_dicom_image = self.read_dicom_image_to_sitk(
+                self.moving_dict_container.filepaths)
+            # get array of roi indexes from sitk images
+            if moving_rtss:
+                rois_images_moving = transform_point_set_from_dicom_struct(
+                    moving_dicom_image,
+                    moving_rtss,
+                    self.moving_to_fixed_rois.keys(),
+                    spacing_override=None)
+            else:
+                return
+            print(rois_images_moving)
+            tfm = self.moving_dict_container.get("tfm")
+            # TODO: HANDLE CASE WHEN ONE OF TWO DICTS ARE EMPTY
+            # transform roi from b to a first
+            self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
+                               rois_images_moving, self.patient_dict_container)
 
-        # transform roi from a to b
-        self.transfer_rois(self.fixed_to_moving_rois, tfm.GetInverse(),
-                           moving_dicom_image,
-                           rois_images_fixed, self.moving_dict_container)
-
-        print("UITransferROIWindow.py line 281 method save_clicked")
-        print((self.fixed_to_moving_rois, self.moving_to_fixed_rois))
+            # transform roi from a to b
+            self.transfer_rois(self.fixed_to_moving_rois, tfm.GetInverse(),
+                               moving_dicom_image,
+                               rois_images_fixed, self.moving_dict_container)
+        except Exception as e:
+            traceback.print_exc()
         QMessageBox.about(self.transfer_roi_window_instance, "Saved",
                           "ROIs are successfully transferred!")
         self.closeWindow()
@@ -370,7 +376,6 @@ class UITransferROIWindow:
                         reference_image=reference_image, is_structure=True)
                     contour = sitk.GetArrayViewFromImage(new_contour)
                     contours = np.transpose(contour.nonzero())
-                    print(contours)
                     self.save_roi(contours, new_roi_name,
                                   patient_dict_container)
 
@@ -399,9 +404,10 @@ class UITransferROIWindow:
             rois_to_save, patient_dict_container)
 
         if len(roi_list) > 0:
-            print("saving ", roi_name)
-            ROI.create_roi(patient_dict_container.dataset.get('rtss'),
-                           roi_name, roi_list)
+            print("Saving ", roi_name)
+            rtss = ROI.create_roi(patient_dict_container.dataset.get('rtss'),
+                                  roi_name, roi_list)
+            self.signal_roi_transferred.emit((rtss, {"draw": None}))
 
     def closeWindow(self):
         """

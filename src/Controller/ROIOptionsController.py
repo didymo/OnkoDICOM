@@ -148,9 +148,9 @@ class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
 
 class ROITransferOption:
 
-    def __init__(self, roi_transferred_function):
+    def __init__(self, structure_modified_function):
         super(ROITransferOption, self).__init__()
-        self.roi_transferred_function = roi_transferred_function
+        self.structure_modified_function = structure_modified_function
 
     def show_roi_transfer_options(self):
         patient_dict_container = PatientDictContainer()
@@ -160,6 +160,6 @@ class ROITransferOption:
 
         self.roi_transfer_option_pop_up_window = ROITransferOptionUI(fixed_image_rois, moving_image_rois)
         self.roi_transfer_option_pop_up_window.signal_roi_transferred.connect(
-            self.roi_transferred_function
+            self.structure_modified_function
         )
         self.roi_transfer_option_pop_up_window.show()
