@@ -10,7 +10,8 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 
 def find_DICOM_files(file_path):
-    """Function to find DICOM files in a given folder.
+    """
+    Function to find DICOM files in a given folder.
     :param file_path: File path of folder to search.
     :return: List of file paths of DICOM files in given folder.
     """
@@ -58,7 +59,9 @@ class TestDvh2RtDose:
 
 @pytest.fixture(scope="module")
 def test_object():
-    """Function to pass a shared TestIso2Roi object to each test."""
+    """
+    Function to pass a shared TestDvh2RtDose object to each test.
+    """
     test = TestDvh2RtDose()
     return test
 
@@ -97,4 +100,3 @@ def test_dvh_to_rtdose(test_object):
     assert dvh_length == len(test_object.patient_dict_container
                              .dataset['rtdose'].DVHSequence)
     assert last_modified < rt_dose.stat().st_mtime
-

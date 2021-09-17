@@ -223,7 +223,8 @@ def dvh2rtdose(dict_dvh):
         new_ds.add_new(Tag("DoseUnits"), "CS", dict_dvh[ds].dose_units.upper())
         new_ds.add_new(Tag("DoseType"), "CS", "PHYSICAL")
         new_ds.add_new(Tag("DVHDoseScaling"), "DS", "1.0")
-        new_ds.add_new(Tag("DVHVolumeUnits"), "CS", dict_dvh[ds].volume_units.upper())
+        new_ds.add_new(Tag("DVHVolumeUnits"), "CS",
+                       dict_dvh[ds].volume_units.upper())
         new_ds.add_new(Tag("DVHNumberOfBins"), "IS", len(dict_dvh[ds].bins))
 
         # Calculate and add DVH data
@@ -235,9 +236,11 @@ def dvh2rtdose(dict_dvh):
 
         # Reference ROI sequence dataset/sequence
         referenced_roi_sequence = Dataset()
-        referenced_roi_sequence.add_new(Tag("DVHROIContributionType"), "CS", "INCLUDED")
+        referenced_roi_sequence.add_new(Tag("DVHROIContributionType"), "CS",
+                                        "INCLUDED")
         referenced_roi_sequence.add_new(Tag("ReferencedROINumber"), "IS", ds)
-        new_ds.add_new(Tag("DVHReferencedROISequence"), "SQ", Sequence([referenced_roi_sequence]))
+        new_ds.add_new(Tag("DVHReferencedROISequence"), "SQ",
+                       Sequence([referenced_roi_sequence]))
 
         # Add new DVH dataset to DVH sequences
         dvh_sequence.append(new_ds)
@@ -275,8 +278,7 @@ def rtdose2dvh():
     # If there are a different amount of ROIs to DVH sequences
     if rois != dvhs:
         # Size of ROI and DVH sequence is different.
-        # alert user, ask for recalculate.
-        print("Different number of ROIs and DVHs")
+        # alert user, ask to recalculate.
         dvh_seq["diff"] = True
 
     # Try to get the DVHs for each ROI
@@ -286,6 +288,6 @@ def rtdose2dvh():
             dvh = DVH.from_dicom_dvh(rt_dose, item.ROINumber, name=name)
             dvh_seq[item.ROINumber] = dvh
         except AttributeError as e:
-            print(e)
+            pass
 
     return dvh_seq

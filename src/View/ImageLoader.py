@@ -70,26 +70,23 @@ class ImageLoader(QtCore.QObject):
             rois = ImageLoading.get_roi_info(dataset_rtss)
 
             if interrupt_flag.is_set():  # Stop loading.
-                print("stopped")
                 return False
 
             progress_callback.emit(("Getting contour data...", 30))
-            dict_raw_contour_data, dict_numpoints = ImageLoading.get_raw_contour_data(
-                dataset_rtss)
+            dict_raw_contour_data, dict_numpoints = \
+                ImageLoading.get_raw_contour_data(dataset_rtss)
 
             # Determine which ROIs are one slice thick
             dict_thickness = ImageLoading.get_thickness_dict(
                 dataset_rtss, read_data_dict)
 
             if interrupt_flag.is_set():  # Stop loading.
-                print("stopped")
                 return False
 
             progress_callback.emit(("Getting pixel LUTs...", 50))
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
 
             if interrupt_flag.is_set():  # Stop loading.
-                print("stopped")
                 return False
 
             # Add RTSS values to PatientDictContainer
@@ -109,35 +106,47 @@ class ImageLoader(QtCore.QObject):
                 except KeyError:
                     pass
 
-                self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
+                self.parent_window.signal_advise_calc_dvh.connect(
+                    self.update_calc_dvh)
                 self.signal_request_calc_dvh.emit()
 
                 while not self.advised_calc_dvh:
                     pass
 
+                # Calculate DVHs
                 if self.calc_dvh:
                     dataset_rtdose = dcmread(file_names_dict['rtdose'])
 
-                    # Spawn-based platforms (i.e Windows and MacOS) have a large overhead when creating a new process, which
-                    # ends up making multiprocessing on these platforms more expensive than linear calculation. As such,
-                    # multiprocessing is only available on Linux until a better solution is found.
+                    # Spawn-based platforms (i.e Windows and MacOS) have
+                    # a large overhead when creating a new process, which
+                    # ends up making multiprocessing on these platforms more
+                    # expensive than linear calculation. As such,
+                    # multiprocessing is only available on Linux until a better
+                    # solution is found.
                     fork_safe_platforms = ['Linux']
                     if platform.system() in fork_safe_platforms:
                         progress_callback.emit(("Calculating DVHs...", 60))
-                        raw_dvh = ImageLoading.multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness)
+                        raw_dvh = \
+                            ImageLoading.multi_calc_dvh(dataset_rtss,
+                                                        dataset_rtdose, rois,
+                                                        dict_thickness)
                     else:
-                        progress_callback.emit(("Calculating DVHs... (This may take a while)", 60))
-                        raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag)
+                        progress_callback.emit(
+                            ("Calculating DVHs... (This may take a while)",
+                             60))
+                        raw_dvh = \
+                            ImageLoading.calc_dvhs(dataset_rtss,
+                                                   dataset_rtdose, rois,
+                                                   dict_thickness,
+                                                   interrupt_flag)
 
                     if interrupt_flag.is_set():  # Stop loading.
-                        print("stopped")
                         return False
 
                     progress_callback.emit(("Converging to zero...", 80))
                     dvh_x_y = ImageLoading.converge_to_0_dvh(raw_dvh)
 
                     if interrupt_flag.is_set():  # Stop loading.
-                        print("stopped")
                         return False
 
                     # Add DVH values to PatientDictContainer
