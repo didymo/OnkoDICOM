@@ -256,9 +256,10 @@ class DVHTab(QtWidgets.QWidget):
                 path + "/CSV/",
                 'DVH_' + basic_info['id'],
                 basic_info['id'])
-        QtWidgets.QMessageBox.information(self, "Message",
-                                          "The DVH Data was saved successfully in your directory!",
-                                          QtWidgets.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(
+            self, "Message",
+            "The DVH Data was saved successfully in your directory!",
+            QtWidgets.QMessageBox.Ok)
 
     def export_rtdose(self):
         """
