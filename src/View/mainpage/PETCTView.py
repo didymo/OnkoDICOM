@@ -5,6 +5,7 @@ from skimage import measure
 
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.ROI import get_contour_pixel
 
 from src.Controller.PathHandler import resource_path
@@ -18,12 +19,12 @@ class PetCtView(QtWidgets.QWidget):
                  format_metadata=True):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
+        self.moving_dict_container = MovingDictContainer()
         self.iso_color = iso_color
         self.zoom = 1
         self.current_slice_number = None
         self.slice_view = slice_view
-        self.overlay_view=slice_view
-        #ss
+        self.overlay_view = slice_view
 
         if self.slice_view == "axial":
             self.display_metadata = True
@@ -55,8 +56,6 @@ class PetCtView(QtWidgets.QWidget):
         self.sagittal_button = QRadioButton("Sagittal")
         self.sagittal_button.setChecked(False)
 
-
-
         # Set layout
         self.dicom_view_layout.addWidget(self.view)
 
@@ -67,7 +66,6 @@ class PetCtView(QtWidgets.QWidget):
         self.pet_ct_view_layout.addLayout(self.radio_button_layout,
                                           QtCore.Qt.AlignBottom
                                           | QtCore.Qt.AlignCenter)
-
 
         # self.coronal_button.setAlignment(QtCore.Qt.AlignLeft)
         # self.axial_button.setAlignment(QtCore.Qt.AlignCenter)
@@ -80,7 +78,6 @@ class PetCtView(QtWidgets.QWidget):
             self.sagittal_button)
 
         self.setLayout(self.pet_ct_view_layout)
-
 
         # Init metadata widgets
         if self.display_metadata:
@@ -99,7 +96,7 @@ class PetCtView(QtWidgets.QWidget):
         Create a slider for the DICOM Image View.
         """
         pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
-        overaly_pixmaps= self.patient_dict_container.get("pixmaps_" + self.overlay_view)
+        overlay_pixmaps = self.patient_dict_container.get("pixmaps_" + self.overlay_view)
 
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
@@ -107,8 +104,6 @@ class PetCtView(QtWidgets.QWidget):
         self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.slider.setTickInterval(1)
         self.slider.valueChanged.connect(self.value_changed)
-
-
 
     def init_alpha_slider(self):
         #alpha slider
@@ -126,7 +121,7 @@ class PetCtView(QtWidgets.QWidget):
         self.slider.setTickInterval(1)
         self.slider.valueChanged.connect(self.value_changed)
 
-    def mask_image_multiply(self,mask, image):
+    def mask_image_multiply(self, mask, image):
         components_per_pixel = image.GetNumberOfComponentsPerPixel()
         if components_per_pixel == 1:
             return mask * image
@@ -135,7 +130,7 @@ class PetCtView(QtWidgets.QWidget):
                 [mask * sitk.VectorIndexSelectionCast(image, channel) for
                  channel in range(components_per_pixel)])
 
-    def alpha_blend(image1, image2, alpha=0.5, mask1=None, mask2=None):
+    def alpha_blend(self, image1, image2, alpha=0.5, mask1=None, mask2=None):
         '''
         Alaph blend two images, pixels can be scalars or vectors.
         The region that is alpha blended is controled by the given masks.
@@ -162,13 +157,13 @@ class PetCtView(QtWidgets.QWidget):
 
         intersection_mask = mask1 * mask2
 
-        intersection_image = mask_image_multiply(alpha * intersection_mask,
+        intersection_image = self.mask_image_multiply(alpha * intersection_mask,
                                                  img1) + \
-                             mask_image_multiply(
+                             self.mask_image_multiply(
                                  (1 - alpha) * intersection_mask, img2)
-        return intersection_image + mask_image_multiply(
+        return intersection_image + self.mask_image_multiply(
             mask2 - intersection_mask, img2) + \
-               mask_image_multiply(mask1 - intersection_mask, img1)
+               self.mask_image_multiply(mask1 - intersection_mask, img1)
 
     def init_view(self):
         """
@@ -309,6 +304,15 @@ class PetCtView(QtWidgets.QWidget):
         pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
+        # Load moving image
+        if not self.moving_dict_container.is_empty() and self.moving_dict_container.has_attribute("sitk_moving"):
+            image = self.patient_dict_container.get("sitk_original")[slider_id]
+            moving_image = self.moving_dict_container.get("sitk_moving")[slider_id]
+            alpha = float(self.alpha_slider.value()/100)
+            print(alpha)
+            image = self.alpha_blend(image, moving_image, alpha)
+        # write function based on alpha slider
+        # convert to image to display
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
         self.scene.addItem(label)

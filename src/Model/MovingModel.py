@@ -171,6 +171,7 @@ def read_images_for_fusion(level=0, window=0):
             continue
 
     new_image = sitk.ReadImage(new_fusion_list)
+    moving_dict_container.set("sitk_moving", new_image)
 
     create_fused_model(orig_image, new_image)
     color_axial, color_sagittal, color_coronal = \
