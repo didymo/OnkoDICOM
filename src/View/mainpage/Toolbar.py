@@ -47,8 +47,6 @@ class Toolbar(QToolBar):
         self.addAction(self.action_handler.action_one_view)
         self.addAction(self.action_handler.action_four_views)
         self.addAction(self.action_handler.action_show_cut_lines)
-        if self.action_handler.pet_opened:
-            self.addAction(self.action_handler.action_suv2roi)
         self.addSeparator()
         self.addAction(self.action_handler.action_image_fusion)
         self.addSeparator()

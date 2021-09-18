@@ -1,8 +1,7 @@
-import os
-
+from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
 from PySide6.QtWidgets import QStackedWidget, QDialog, QMessageBox
-from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
+
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -28,7 +27,6 @@ class ActionHandler:
         self.is_four_view = False
         self.has_image_registration_single = False
         self.has_image_registration_four = False
-        self.pet_opened = False
 
         ##############################
         # Init all actions and icons #
