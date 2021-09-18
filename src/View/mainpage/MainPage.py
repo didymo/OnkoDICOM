@@ -20,6 +20,7 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
+from src.View.mainpage.PETCTView import PetCtView
 
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from src.View.ImageFusion.ImageFusionSagittalView import \
@@ -172,6 +173,10 @@ class UIMainWindow:
 
         # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
+
+        #add PETVT View to right panel as a tab
+        self.petctTab = PetCtView()
+        self.right_panel.addTab(self.petctTab, "PETCT View")
 
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtdose"):
