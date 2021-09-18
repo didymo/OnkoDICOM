@@ -196,11 +196,10 @@ def test_merge_rtss(qtbot, test_object):
     # Set ROIs
     rois = ImageLoading.get_roi_info(new_rtss)
     patient_dict_container.set("rois", rois)
-
+    patient_dict_container.set("file_rtss", rtss_path)
     patient_dict_container.set("existing_file_rtss",
                                patient_dict_container.get("file_rtss"))
     patient_dict_container.set("dataset_rtss", new_rtss)
-    patient_dict_container.set("file_rtss", rtss_path)
 
     # Merge the old and new rtss
     structure_tab = StructureTab()
@@ -217,7 +216,6 @@ def test_merge_rtss(qtbot, test_object):
 
     structure_tab.save_new_rtss(auto=True)
 
-    merged_rtss = pydicom.read_file(patient_dict_container.get(
-        "existing_file_rtss"))
+    merged_rtss = pydicom.read_file(patient_dict_container.get("file_rtss"))
     merged_rois = ImageLoading.get_roi_info(merged_rtss)
     assert (len(test_object.rois) + 1 == len(merged_rois))

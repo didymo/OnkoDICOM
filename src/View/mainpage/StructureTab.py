@@ -407,11 +407,6 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_coronal.pop(roi_name, None)
             new_dict_polygons_sagittal.pop(roi_name, None)
 
-    def get_existing_rtss_directory(self, rtss):
-        """ Get the existing rtss dictionary from a DICOMWidgetItem """
-        self.existing_rtss_directory = str(
-            Path(rtss.dicom_object.get_files()[0]))
-
     def on_rtss_selected(self, selected_rtss):
         """
         Function to run after a rtss is selected from SelectRTSSPopUp
@@ -439,14 +434,19 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_widget on mouseReleaseEvent
         :param auto: Used for auto save without user confirmation
         """
-        if len(self.patient_dict_container.get("existing_rtss_files")) == 1:
-            self.get_existing_rtss_directory(
-                self.patient_dict_container.get("existing_rtss_files")[0])
-        elif len(self.patient_dict_container.get("existing_rtss_files")) > 1:
+        existing_rtss_files = self.patient_dict_container.get(
+            "existing_rtss_files")
+        if isinstance(existing_rtss_files, str):
+            self.existing_rtss_directory = existing_rtss_files
+        if len(existing_rtss_files) == 1:
+            self.existing_rtss_directory = str(Path(
+                existing_rtss_files[0].get_files()[0]))
+        elif len(existing_rtss_files) > 1:
             self.display_select_rtss_window()
             return
         else:
             self.existing_rtss_directory = None
+
         rtss_directory = str(
             Path(self.patient_dict_container.get("file_rtss")))
 

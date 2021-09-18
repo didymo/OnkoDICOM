@@ -6,7 +6,7 @@ from PySide6 import QtCore, QtGui
 from PySide6.QtWidgets import QDialog, QLabel, QWidget, QPushButton, \
     QHBoxLayout, QVBoxLayout, QCheckBox, QScrollArea, QButtonGroup
 
-from src.Model.DICOMWidgetItem import DICOMWidgetItem
+from src.Model.DICOMStructure import Series
 from src.Controller.PathHandler import resource_path
 
 """
@@ -16,7 +16,7 @@ of RTSSs attached to the selected image set to proceed.
 
 
 class SelectRTSSPopUp(QDialog):
-    signal_rtss_selected = QtCore.Signal(DICOMWidgetItem)
+    signal_rtss_selected = QtCore.Signal(Series)
 
     def __init__(self, existing_rtss):
         QDialog.__init__(self)
@@ -38,9 +38,9 @@ class SelectRTSSPopUp(QDialog):
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Multiple RTSTRUCTs attached to the "
-                                       "selected image sethave been "
+                                       "selected image set have been "
                                        "identified."
-                                       "\nPlease select ONE "
+                                       "\nPlease select 1 "
                                        "RTSTRUCTs to continue!")
 
         # Create scrolling area widget to contain the content.
@@ -63,11 +63,11 @@ class SelectRTSSPopUp(QDialog):
         for i in range(len(existing_rtss)):
             checkbox = QCheckBox()
             checkbox.rtss = existing_rtss[i]
-            rtss = dcmread(checkbox.rtss.dicom_object.get_files()[0])
+            rtss = dcmread(checkbox.rtss.get_files()[0])
             checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
             checkbox.setText("Series: %s (%s, %s %s)" % (
-                checkbox.rtss.dicom_object.series_description,
-                checkbox.rtss.dicom_object.get_series_type(),
+                checkbox.rtss.series_description,
+                checkbox.rtss.get_series_type(),
                 len(rtss.StructureSetROISequence),
                 "ROIs" if len(rtss.StructureSetROISequence) > 1 else "ROI"
             ))

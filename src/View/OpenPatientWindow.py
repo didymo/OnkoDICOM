@@ -480,7 +480,7 @@ class UIOpenPatientWindow(object):
         existing_rtss = []
         for i in range(image_series.childCount()):
             if image_series.child(i).dicom_object:
-                existing_rtss.append(image_series.child(i))
+                existing_rtss.append(image_series.child(i).dicom_object)
         return existing_rtss
 
 
