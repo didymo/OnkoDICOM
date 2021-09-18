@@ -119,7 +119,6 @@ class Patient:
         # Add all children of this object as children of the widget item.
         for study_uid, study in self.studies.items():
             widget_item.addChild(study.get_widget_item())
-
         return widget_item
 
 
@@ -237,6 +236,7 @@ class Study:
     def get_image_series_widget(self, series_uid, image_series):
         """ Add a DICOMWidgetItem of an image series """
         self.image_series_widgets[series_uid] = image_series.get_widget_item()
+        self.image_series_widgets[series_uid].setWhatsThis(0, "IMAGE")
         self.widget_item.addChild(self.image_series_widgets[series_uid])
 
     def get_rtstruct_widget(self, rtstruct):
@@ -245,7 +245,6 @@ class Study:
         rtstruct_instance_uid = rtstruct.get_instance_uid()
         self.rtstruct_widgets[rtstruct_instance_uid] = \
             rtstruct.get_widget_item()
-
         # Check if the referenced image series exists in the dataset
         if ref_image_series_uid != "" and \
                 ref_image_series_uid in self.image_series_widgets:

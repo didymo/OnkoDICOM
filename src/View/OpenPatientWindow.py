@@ -264,7 +264,8 @@ class UIOpenPatientWindow(object):
 
         for patient_item in dicom_structure.get_tree_items_list():
             self.open_patient_window_patients_tree.addTopLevelItem(patient_item)
-            patient_item.setExpanded(True)
+            patient_item.setExpanded(True)  # Display all studies
+            # Display all image sets
             for i in range(patient_item.childCount()):
                 study = patient_item.child(i)
                 study.setExpanded(True)
@@ -279,9 +280,11 @@ class UIOpenPatientWindow(object):
         Inform user about missing DICOM files.
         """
         # If patient is only selected, but not checked, set it to "focus" to
-        # coincide with stylesheet
+        # coincide with stylesheet. And if the selected item is an image set,
+        # display its child branches.
         if item.checkState(0) == Qt.CheckState.Unchecked:
-            self.display_a_tree_branch(item)
+            if item.whatsThis(0) == "IMAGE":
+                self.display_a_tree_branch(item)
             self.open_patient_window_patients_tree.setCurrentItem(item)
         else:  # Otherwise don't "focus", then set patient as selected
             self.open_patient_window_patients_tree.setCurrentItem(None)
@@ -406,7 +409,6 @@ class UIOpenPatientWindow(object):
                 if grand_children > 0:
                     recurse(child)
 
-        # recurse(self.open_patient_window_patients_tree.invisibleRootItem())
         recurse(root)
         return checked_items
 
@@ -416,12 +418,17 @@ class UIOpenPatientWindow(object):
         :param items: List of selected DICOMWidgetItems.
         :return: True if the selected items belong to the same tree branch.
         """
+        # Dictionary of series of different file types
         series = {
             "IMAGE": None,
             "RTSTRUCT": None,
             "RTPLAN": None,
             "RTDOSE": None
         }
+
+        # Initialize the list of existing rtss.
+        # This list is only populated if no RTSTRUCT was selected by the user.
+        self.existing_rtss = []
 
         for item in items:
             series_type = item.dicom_object.get_series_type()
@@ -433,23 +440,29 @@ class UIOpenPatientWindow(object):
         # Check if the RTSTRUCT, RTPLAN, and RTDOSE are a child item of the
         # image series
         if series["IMAGE"]:
-            if series["RTSTRUCT"] and series["RTSTRUCT"].parent() != series["IMAGE"]:
+            if series["RTSTRUCT"] and series["RTSTRUCT"].parent() != \
+                    series["IMAGE"]:
                 return False
-            else:  # Get the existing_rtss if the RTSTRUCT wasn't selected
+            if not series["RTSTRUCT"]:
+                # Get the existing_rtss if the RTSTRUCT wasn't selected
                 self.existing_rtss = self.get_existing_rtss(series["IMAGE"])
 
-            if series["RTPLAN"] and series["RTPLAN"].parent().parent() != series["IMAGE"]:
+            if series["RTPLAN"] and \
+                    series["RTPLAN"].parent().parent() != series["IMAGE"]:
                 return False
 
             if series["RTDOSE"] and \
-                    series["RTDOSE"].parent().parent().parent() != series["IMAGE"]:
+                    series["RTDOSE"].parent().parent().parent() != \
+                    series["IMAGE"]:
                 return False
 
         # Check if the RTPLAN and RTDOSE are child items of the RTSTRUCT
         if series["RTSTRUCT"]:
-            if series["RTPLAN"] and series["RTPLAN"].parent() != series["RTSTRUCT"]:
+            if series["RTPLAN"] and series["RTPLAN"].parent() != \
+                    series["RTSTRUCT"]:
                 return False
-            if series["RTDOSE"] and series["RTDOSE"].parent().parent() != series["RTSTRUCT"]:
+            if series["RTDOSE"] and \
+                    series["RTDOSE"].parent().parent() != series["RTSTRUCT"]:
                 return False
 
         # Check if the RTDOSE is a child item of the RTPLAN

@@ -1,14 +1,17 @@
 import platform
 
+from pydicom import dcmread
+
 from PySide6 import QtCore, QtGui
-from PySide6.QtWidgets import QDialog, QLabel, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QScrollArea, QButtonGroup
+from PySide6.QtWidgets import QDialog, QLabel, QWidget, QPushButton, \
+    QHBoxLayout, QVBoxLayout, QCheckBox, QScrollArea, QButtonGroup
 
 from src.Model.DICOMWidgetItem import DICOMWidgetItem
 from src.Controller.PathHandler import resource_path
 
 """
 This Class handles the RTSS Pop Up when users need to select a RTSS from a list
-of RTSSs to proceed.       
+of RTSSs attached to the selected image set to proceed.       
 """
 
 
@@ -47,36 +50,48 @@ class SelectRTSSPopUp(QDialog):
         self.scroll_area_content = QWidget(self.scroll_area)
         self.scroll_area.ensureWidgetVisible(self.scroll_area_content)
 
-        # Create layout for checkboxes and colour squares
+        # Create layout for checkboxes
         self.layout_content = QVBoxLayout(self.scroll_area_content)
-        self.layout_content.setContentsMargins(0, 0, 0, 0)
+        self.layout_content.setContentsMargins(5, 5, 5, 5)
         self.layout_content.setSpacing(0)
-        self.layout_content.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+        self.layout_content.setAlignment(QtCore.Qt.AlignTop
+                                         | QtCore.Qt.AlignTop)
+
+        # Add all the attached RTSSs as checkboxes
         self.checkbox_group = QButtonGroup()
         self.checkbox_group.setExclusive(True)
         for i in range(len(existing_rtss)):
             checkbox = QCheckBox()
             checkbox.rtss = existing_rtss[i]
+            rtss = dcmread(checkbox.rtss.dicom_object.get_files()[0])
             checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
-            checkbox.setText(checkbox.rtss.text(0))
+            checkbox.setText("Series: %s (%s, %s %s)" % (
+                checkbox.rtss.dicom_object.series_description,
+                checkbox.rtss.dicom_object.get_series_type(),
+                len(rtss.StructureSetROISequence),
+                "ROIs" if len(rtss.StructureSetROISequence) > 1 else "ROI"
+            ))
             self.checkbox_group.addButton(checkbox)
             self.layout_content.addWidget(checkbox)
         self.checkbox_group.buttonClicked.connect(self.on_checkbox_clicked)
 
-        self.button_area = QWidget()
+        # Create a cancel button
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.on_cancel_clicked)
 
+        # Create a continue button
         self.continue_button = QPushButton("Continue Process")
-        self.continue_button.clicked.connect(self.on_continue_clicked)
         self.continue_button.setDisabled(True)
+        self.continue_button.clicked.connect(self.on_continue_clicked)
 
+        # Create a widget to contain cancel and continue buttons
+        self.button_area = QWidget()
         self.button_layout = QHBoxLayout()
         self.button_layout.addWidget(self.cancel_button)
         self.button_layout.addWidget(self.continue_button)
         self.button_area.setLayout(self.button_layout)
 
+        # Add all components to a vertical layout
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.explanation_text)
         self.layout.addWidget(self.scroll_area)
