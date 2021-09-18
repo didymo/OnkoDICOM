@@ -356,7 +356,7 @@ class UITransferROIWindow:
         self.save_button.setDisabled(True)
 
     def transfer_list_is_empty(self):
-        return len(self.fixed_to_moving_rois) == 0 and len(self.moving_to_fixed_rois)
+        return len(self.fixed_to_moving_rois) == 0 and len(self.moving_to_fixed_rois) == 0
 
     def save_clicked(self):
         try:

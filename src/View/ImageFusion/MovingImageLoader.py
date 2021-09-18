@@ -142,7 +142,7 @@ class MovingImageLoader(ImageLoader):
                 moving_dict_container.set("raw_dvh", raw_dvh)
                 moving_dict_container.set("dvh_x_y", dvh_x_y)
                 moving_dict_container.set("dvh_outdated", False)
-                create_moving_model()
+            create_moving_model()
         else:
             create_moving_model()
             self.load_temp_rtss(path, progress_callback, interrupt_flag)
