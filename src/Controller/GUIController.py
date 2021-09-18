@@ -14,7 +14,7 @@ from src.View.mainpage.MainPage import UIMainWindow
 from src.Controller.PathHandler import resource_path
 
 from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
-from src.Model.MovingModel import read_images_for_fusion
+from src.Model.MovingModel import read_images_for_fusion, create_moving_model
 from src.Model.MovingDictContainer import MovingDictContainer
 
 

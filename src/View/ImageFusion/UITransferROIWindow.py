@@ -1,9 +1,10 @@
 import platform
 import traceback
 from pathlib import Path
+from random import randint, seed
 
 import pydicom
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtGui import Qt, QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QPushButton, \
     QCheckBox, QHBoxLayout, QWidgetItem, \
@@ -16,25 +17,24 @@ from rt_utils.image_helper import find_mask_contours
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI, ImageLoading
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
 import SimpleITK as sitk
 import numpy as np
 
-from src.Model.ROI import get_roi_contour_pixel, merge_rtss
+from src.Model.ROI import get_roi_contour_pixel, merge_rtss, ordered_list_rois
 from src.Model.ROITransfer import transform_point_set_from_dicom_struct
 from src.View.util.SaveROIs import connectSaveROIProgress
 
 
 class UITransferROIWindow:
 
-    def setup_ui(self, transfer_roi_window_instance,
-                 fixed_image_rois, moving_image_rois, signal_roi_transferred):
+    def setup_ui(self, transfer_roi_window_instance):
         self.patient_dict_container = PatientDictContainer()
         self.moving_dict_container = MovingDictContainer()
-        self.fixed_image_initial_rois = fixed_image_rois
-        self.moving_image_initial_rois = moving_image_rois
-        self.signal_roi_transferred = signal_roi_transferred
+        self.fixed_image_initial_rois = self.patient_dict_container.get("rois")
+        self.moving_image_initial_rois = self.moving_dict_container.get("rois")
         self.transfer_roi_window_instance = transfer_roi_window_instance
         self.fixed_to_moving_rois = {}
         self.moving_to_fixed_rois = {}
@@ -49,9 +49,9 @@ class UITransferROIWindow:
         self.add_suffix_checkbox.setText(
             _translate("AddSuffixCheckBox", "Add Suffix"))
         self.patient_A_label.setText(
-            _translate("PatientAROILabel", "Patient A ROIs"))
+            _translate("PatientAROILabel", "First Image Set ROIs"))
         self.patient_B_label.setText(
-            _translate("PatientBROILabel", "Patient B ROIs"))
+            _translate("PatientBROILabel", "Second Image Set ROIs"))
         self.transfer_all_rois_to_patient_B_button.setText(
             _translate("ROITransferToBButton", "")
         )
@@ -178,6 +178,7 @@ class UITransferROIWindow:
         self.reset_button.clicked.connect(self.reset_clicked)
         self.save_button = QPushButton()
         self.save_button.setObjectName("SaveButton")
+        self.save_button.setDisabled(True)
         self.save_button.clicked.connect(self.save_clicked)
 
         self.reset_and_save_buttons_layout.setAlignment(Qt.AlignRight)
@@ -198,13 +199,15 @@ class UITransferROIWindow:
     def init_patient_B_rois_to_A_layout(self):
         # Create scrolling area widget to contain the content.
         self.patient_B_rois_to_A_list_widget = QListWidget(self)
-        self.transfer_roi_window_grid_layout.addWidget(
-            self.patient_B_rois_to_A_list_widget, 2, 0)
+        self.transfer_roi_window_grid_layout.addWidget(self.patient_B_rois_to_A_list_widget, 2, 0)
+        self.patient_B_rois_to_A_list_widget.itemDoubleClicked.connect(
+            self.patient_B_to_A_rois_double_clicked)
 
     def init_patient_A_rois_to_B_layout(self):
         self.patient_A_rois_to_B_list_widget = QListWidget(self)
-        self.transfer_roi_window_grid_layout.addWidget(
-            self.patient_A_rois_to_B_list_widget, 1, 2)
+        self.transfer_roi_window_grid_layout.addWidget(self.patient_A_rois_to_B_list_widget, 1, 2)
+        self.patient_A_rois_to_B_list_widget.itemDoubleClicked.connect(
+            self.patient_A_to_B_rois_double_clicked)
 
     def init_patient_A_initial_roi_list(self):
         self.patient_A_initial_rois_list_widget = QListWidget(self)
@@ -232,6 +235,32 @@ class UITransferROIWindow:
             self.patient_B_initial_rois_list_widget.addItem(roi_label)
         self.transfer_roi_window_grid_layout.addWidget(
             self.patient_B_initial_rois_list_widget, 2, 2)
+
+    def patient_A_to_B_rois_double_clicked(self, item):
+        roi_to_remove = item.data(Qt.UserRole)
+        to_delete_value = roi_to_remove['name']
+        self.fixed_to_moving_rois.pop(to_delete_value)
+        self.patient_A_rois_to_B_list_widget.clear()
+        for key, value in self.fixed_to_moving_rois.items():
+            roi_label = QListWidgetItem(value)
+            roi_label.setForeground(Qt.red)
+            roi_label.setData(Qt.UserRole, {'name': key})
+            self.patient_A_rois_to_B_list_widget.addItem(roi_label)
+        if self.transfer_list_is_empty():
+            self.save_button.setDisabled(True)
+
+    def patient_B_to_A_rois_double_clicked(self, item):
+        roi_to_remove = item.data(Qt.UserRole)
+        to_delete_value = roi_to_remove['name']
+        self.moving_to_fixed_rois.pop(to_delete_value)
+        self.patient_B_rois_to_A_list_widget.clear()
+        for key, value in self.moving_to_fixed_rois.items():
+            roi_label = QListWidgetItem(value)
+            roi_label.setForeground(Qt.red)
+            roi_label.setData(Qt.UserRole, {'name': key})
+            self.patient_B_rois_to_A_list_widget.addItem(roi_label)
+        if self.transfer_list_is_empty():
+            self.save_button.setDisabled(True)
 
     def patient_A_initial_roi_double_clicked(self, item):
         roi_to_add = item.data(Qt.UserRole)
@@ -271,6 +300,7 @@ class UITransferROIWindow:
         roi_label = QListWidgetItem(transferred_roi_name)
         roi_label.setForeground(Qt.red)
         self.patient_A_rois_to_B_list_widget.addItem(roi_label)
+        self.save_button.setDisabled(False)
 
     def patient_B_initial_roi_double_clicked(self, item):
         roi_to_add = item.data(Qt.UserRole)
@@ -314,12 +344,17 @@ class UITransferROIWindow:
         roi_label = QListWidgetItem(transferred_roi_name)
         roi_label.setForeground(Qt.red)
         self.patient_B_rois_to_A_list_widget.addItem(roi_label)
+        self.save_button.setDisabled(False)
 
     def reset_clicked(self):
         self.fixed_to_moving_rois.clear()
         self.moving_to_fixed_rois.clear()
         self.patient_A_rois_to_B_list_widget.clear()
         self.patient_B_rois_to_A_list_widget.clear()
+        self.save_button.setDisabled(True)
+
+    def transfer_list_is_empty(self):
+        return len(self.fixed_to_moving_rois) == 0 and len(self.moving_to_fixed_rois)
 
     def save_clicked(self):
         try:
@@ -333,10 +368,7 @@ class UITransferROIWindow:
                                                                       rtss,
                                                                       self.fixed_to_moving_rois.keys(),
                                                                       spacing_override=None)
-            print(rois_images_fixed)
-
             moving_rtss = self.moving_dict_container.get("dataset_rtss")
-            raw_contours = self.moving_dict_container.get("raw_contours")
             moving_dicom_image = self.read_dicom_image_to_sitk(
                 self.moving_dict_container.filepaths)
             # get array of roi indexes from sitk images
@@ -347,8 +379,7 @@ class UITransferROIWindow:
                     self.moving_to_fixed_rois.keys(),
                     spacing_override=None)
             else:
-                return
-            print(rois_images_moving)
+                rois_images_moving = ([], [])
             tfm = self.moving_dict_container.get("tfm")
             # TODO: HANDLE CASE WHEN ONE OF TWO DICTS ARE EMPTY
             # transform roi from b to a first
@@ -359,11 +390,112 @@ class UITransferROIWindow:
             self.transfer_rois(self.fixed_to_moving_rois, tfm.GetInverse(),
                                moving_dicom_image,
                                rois_images_fixed, self.moving_dict_container)
+
+            if len(self.fixed_to_moving_rois) > 0:
+                # TODO: merge update-moving-dict-structure with
+                # update patient_dict_structure
+                self.update_moving_dict_structure()
+                self.save_roi_to_rtss(self.moving_dict_container)
+            if len(self.moving_to_fixed_rois) > 0:
+                self.update_patient_dict_structure()
+                self.save_roi_to_rtss(self.patient_dict_container)
         except Exception as e:
             traceback.print_exc()
         QMessageBox.about(self.transfer_roi_window_instance, "Saved",
                           "ROIs are successfully transferred!")
         self.closeWindow()
+
+    def update_patient_dict_structure(self):
+        # TODO: merge update-moving-dict-structure with
+        # update patient_dict_structure
+        self.patient_dict_container.set("rtss_modified", True)
+        self.patient_dict_container.set(
+            "rois", ImageLoading.get_roi_info(self.patient_dict_container.get("dataset_rtss")))
+        self.rois = self.patient_dict_container.get("rois")
+        contour_data = ImageLoading.get_raw_contour_data(self.patient_dict_container.get("dataset_rtss"))
+        self.patient_dict_container.set("raw_contour", contour_data[0])
+        self.patient_dict_container.set("num_points", contour_data[1])
+        pixluts = ImageLoading.get_pixluts(self.patient_dict_container.dataset)
+        self.patient_dict_container.set("pixluts", pixluts)
+        self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(
+            self.patient_dict_container.get("rois")))
+        self.patient_dict_container.set("selected_rois", [])
+        self.patient_dict_container.set("dict_polygons_axial", {})
+        self.patient_dict_container.set("dict_polygons_sagittal", {})
+        self.patient_dict_container.set("dict_polygons_coronal", {})
+        dicom_tree_rtss = DicomTree(None)
+        dicom_tree_rtss.dataset = self.patient_dict_container.get("dataset_rtss")
+        dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
+            dicom_tree_rtss.dataset)
+        self.patient_dict_container.set(
+            "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+        self.color_dict = self.init_color_roi(self.patient_dict_container)
+        self.patient_dict_container.set("roi_color_dict", self.color_dict)
+        if self.patient_dict_container.has_attribute("raw_dvh"):
+            # DVH will be outdated once changes to it are made, and
+            # recalculation will be required.
+            self.patient_dict_container.set("dvh_outdated", True)
+
+    def update_moving_dict_structure(self):
+        # TODO: merge update-moving-dict-structure with
+        # update patient_dict_structure
+        self.moving_dict_container.set("rtss_modified", True)
+        self.moving_dict_container.set(
+            "rois", ImageLoading.get_roi_info(self.moving_dict_container.get("dataset_rtss")))
+        self.rois = self.moving_dict_container.get("rois")
+        contour_data = ImageLoading.get_raw_contour_data(self.moving_dict_container.get("dataset_rtss"))
+        self.moving_dict_container.set("raw_contour", contour_data[0])
+        self.moving_dict_container.set("num_points", contour_data[1])
+        pixluts = ImageLoading.get_pixluts(self.moving_dict_container.dataset)
+        self.moving_dict_container.set("pixluts", pixluts)
+        self.moving_dict_container.set("list_roi_numbers", ordered_list_rois(
+            self.moving_dict_container.get("rois")))
+        self.moving_dict_container.set("selected_rois", [])
+        self.moving_dict_container.set("dict_polygons_axial", {})
+        self.moving_dict_container.set("dict_polygons_sagittal", {})
+        self.moving_dict_container.set("dict_polygons_coronal", {})
+        dicom_tree_rtss = DicomTree(None)
+        dicom_tree_rtss.dataset = self.moving_dict_container.get("dataset_rtss")
+        dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
+            dicom_tree_rtss.dataset)
+        self.moving_dict_container.set(
+            "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+        self.color_dict = self.init_color_roi(self.moving_dict_container)
+        self.moving_dict_container.set("roi_color_dict", self.color_dict)
+        if self.moving_dict_container.has_attribute("raw_dvh"):
+            # DVH will be outdated once changes to it are made, and
+            # recalculation will be required.
+            self.moving_dict_container.set("dvh_outdated", True)
+
+    def init_color_roi(self, patient_dict_container):
+        """
+        Create a dictionary containing the colors for each structure.
+        :return: Dictionary where the key is the ROI number and the value a
+        QColor object.
+        """
+        roi_color = dict()
+        roi_contour_info = patient_dict_container.get(
+            "dict_dicom_tree_rtss")['ROI Contour Sequence']
+
+        if len(roi_contour_info) > 0:
+            for item, roi_dict in roi_contour_info.items():
+                id = item.split()[1]
+                roi_id = patient_dict_container.get(
+                    "list_roi_numbers")[int(id)]
+                if 'ROI Display Color' in roi_contour_info[item]:
+                    RGB_list = roi_contour_info[item]['ROI Display Color'][0]
+                    red = RGB_list[0]
+                    green = RGB_list[1]
+                    blue = RGB_list[2]
+                else:
+                    seed(1)
+                    red = randint(0, 255)
+                    green = randint(0, 255)
+                    blue = randint(0, 255)
+
+                roi_color[roi_id] = QtGui.QColor(red, green, blue)
+
+        return roi_color
 
     def transfer_rois(self, transfer_dict, tfm, reference_image,
                       original_roi_list, patient_dict_container):
@@ -405,9 +537,44 @@ class UITransferROIWindow:
 
         if len(roi_list) > 0:
             print("Saving ", roi_name)
-            rtss = ROI.create_roi(patient_dict_container.dataset.get('rtss'),
-                                  roi_name, roi_list)
-            self.signal_roi_transferred.emit((rtss, {"draw": None}))
+            if isinstance(patient_dict_container, MovingDictContainer):
+                new_rtss = ROI.create_roi(patient_dict_container.get("dataset_rtss"),
+                                          roi_name, roi_list, "ORGAN", "MOVING")
+                self.moving_dict_container.set("dataset_rtss", new_rtss)
+            else:
+                new_rtss = ROI.create_roi(patient_dict_container.get("dataset_rtss"),
+                                          roi_name, roi_list)
+                self.patient_dict_container.set("dataset_rtss", new_rtss)
+
+    def save_roi_to_rtss(self, patient_dict_container):
+        """
+        Save the current RTSS stored in patient dictionary to the file system.
+        :patient_dict_container: either patient or moving patient container
+        :param auto: Used for auto save without user confirmation
+        """
+        if patient_dict_container.get("existing_file_rtss") is not None:
+            existing_rtss_directory = str(Path(patient_dict_container.get(
+                "existing_file_rtss")))
+        else:
+            existing_rtss_directory = None
+        rtss_directory = str(
+            Path(patient_dict_container.get("file_rtss")))
+
+        if existing_rtss_directory is None:
+            patient_dict_container.get("dataset_rtss").save_as(
+                rtss_directory)
+        else:
+            new_rtss = patient_dict_container.get("dataset_rtss")
+            old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
+            old_roi_names = \
+                set(value["name"] for value in
+                    ImageLoading.get_roi_info(old_rtss).values())
+            new_roi_names = \
+                set(value["name"] for value in
+                    patient_dict_container.get("rois").values())
+            duplicated_names = old_roi_names.intersection(new_roi_names)
+            merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
+            merged_rtss.save_as(existing_rtss_directory)
 
     def closeWindow(self):
         """

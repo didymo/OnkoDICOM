@@ -244,7 +244,7 @@ class StructureTab(QtWidgets.QWidget):
         # If this is the first time the RTSS has been modified, create a
         # modified indicator giving the user the option to save their new
         # file.
-        if self.patient_dict_container.get("rtss_modified") is False:
+        if not self.patient_dict_container.get("rtss_modified"):
             self.show_modified_indicator()
 
         # If this is the first change made to the RTSS file, update the
@@ -483,7 +483,8 @@ class StructureTab(QtWidgets.QWidget):
                                             "The RTSTRUCT file has been saved."
                                             )
             self.patient_dict_container.set("rtss_modified", False)
-            self.modified_indicator_widget.setParent(None)
+            if hasattr(self, "modified_indicator_widget"):
+                self.modified_indicator_widget.setParent(None)
 
     def display_confirm_merge(self, duplicated_names):
         confirm_merge = QtWidgets.QMessageBox(parent=self)

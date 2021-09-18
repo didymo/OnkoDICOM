@@ -52,7 +52,6 @@ class UIDeleteROIWindow:
         self.delete_roi_window_instruction.setAlignment(Qt.AlignCenter)
         self.delete_roi_window_instance_vertical_box.addWidget(self.delete_roi_window_instruction)
 
-
         # Create a horizontal box for holding the 2 lists and the move left, move right buttons
         self.delete_roi_window_keep_and_delete_box = QHBoxLayout()
         self.delete_roi_window_keep_and_delete_box.setObjectName("DeleteRoiWindowKeepAndDeleteBox")
@@ -63,12 +62,14 @@ class UIDeleteROIWindow:
         # Create a label for the tree view with the list of ROIs to keep
         self.delete_roi_window_keep_tree_view_label = QLabel()
         self.delete_roi_window_keep_tree_view_label.setObjectName("DeleteRoiWindowKeepTreeViewLabel")
-        self.delete_roi_window_keep_tree_view_label.setProperty("QLabelClass", ["tree-view-label", "tree-view-label-keep-delete"])
+        self.delete_roi_window_keep_tree_view_label.setProperty("QLabelClass",
+                                                                ["tree-view-label", "tree-view-label-keep-delete"])
         self.delete_roi_window_keep_tree_view_label.setAlignment(Qt.AlignCenter)
         self.delete_roi_window_keep_tree_view_label.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
-        self.delete_roi_window_keep_tree_view_label.resize(self.delete_roi_window_keep_tree_view_label.sizeHint().width(),
-                                                      self.delete_roi_window_keep_tree_view_label.sizeHint().height())
+        self.delete_roi_window_keep_tree_view_label.resize(
+            self.delete_roi_window_keep_tree_view_label.sizeHint().width(),
+            self.delete_roi_window_keep_tree_view_label.sizeHint().height())
         self.delete_roi_window_keep_vertical_box.addWidget(self.delete_roi_window_keep_tree_view_label)
         # Create a tree view for containing the list of ROIs to keep
         self.delete_roi_window_keep_tree_view = QTreeWidget()
@@ -89,7 +90,6 @@ class UIDeleteROIWindow:
         self.delete_roi_window_keep_and_delete_box.addWidget(self.delete_roi_window_keep_widget)
         # ================================= KEEP BOX =================================
 
-
         # ================================= MOVE LEFT/RIGHT BOX =================================
         # Create a vertical box for holding the 2 buttons for moving left and right
         self.delete_roi_window_move_left_right_vertical_box = QVBoxLayout()
@@ -100,7 +100,7 @@ class UIDeleteROIWindow:
         self.move_right_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.move_right_button.resize(self.move_right_button.sizeHint().width(),
-                                                    self.move_right_button.sizeHint().height())
+                                      self.move_right_button.sizeHint().height())
         self.move_right_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.move_right_button.clicked.connect(self.move_right_button_onClicked)
         self.move_right_button.setProperty("QPushButtonClass", "fail-button")
@@ -112,7 +112,7 @@ class UIDeleteROIWindow:
         self.move_left_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.move_left_button.resize(self.move_left_button.sizeHint().width(),
-                                      self.move_left_button.sizeHint().height())
+                                     self.move_left_button.sizeHint().height())
         self.move_left_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.move_left_button.clicked.connect(self.move_left_button_onClicked)
         self.move_left_button.setProperty("QPushButtonClass", "success-button")
@@ -125,7 +125,6 @@ class UIDeleteROIWindow:
         self.delete_roi_window_keep_and_delete_box.addWidget(self.delete_roi_window_move_left_right_widget)
         # ================================= MOVE LEFT/RIGHT BOX =================================
 
-
         # ================================= DELETE BOX =================================
         # Create a vertical box for holding the label and the tree view for holding the ROIs that we are deleting
         self.delete_roi_window_delete_vertical_box = QVBoxLayout()
@@ -134,7 +133,7 @@ class UIDeleteROIWindow:
         self.delete_roi_window_delete_tree_view_label = QLabel()
         self.delete_roi_window_delete_tree_view_label.setObjectName("DeleteRoiWindowDeleteTreeViewLabel")
         self.delete_roi_window_delete_tree_view_label.setProperty("QLabelClass",
-                                                                ["tree-view-label", "tree-view-label-keep-delete"])
+                                                                  ["tree-view-label", "tree-view-label-keep-delete"])
         self.delete_roi_window_delete_tree_view_label.setAlignment(Qt.AlignCenter)
         self.delete_roi_window_delete_tree_view_label.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
@@ -168,7 +167,6 @@ class UIDeleteROIWindow:
         self.delete_roi_window_keep_and_delete_widget.setLayout(self.delete_roi_window_keep_and_delete_box)
         self.delete_roi_window_instance_vertical_box.addWidget(self.delete_roi_window_keep_and_delete_widget)
 
-
         # Create a horizontal box to hold 2 action buttons for this window
         self.delete_roi_window_action_buttons_box = QHBoxLayout()
         self.delete_roi_window_action_buttons_box.setObjectName("DeleteRoiWindowActionButtonsBox")
@@ -178,7 +176,7 @@ class UIDeleteROIWindow:
         self.delete_roi_window_cancel_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.delete_roi_window_cancel_button.resize(self.delete_roi_window_cancel_button.sizeHint().width(),
-                                     self.delete_roi_window_cancel_button.sizeHint().height())
+                                                    self.delete_roi_window_cancel_button.sizeHint().height())
         self.delete_roi_window_cancel_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.delete_roi_window_cancel_button.clicked.connect(self.onCancelButtonClicked)
         self.delete_roi_window_cancel_button.setProperty("QPushButtonClass", "fail-button")
@@ -190,7 +188,7 @@ class UIDeleteROIWindow:
         self.delete_roi_window_confirm_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.delete_roi_window_confirm_button.resize(self.delete_roi_window_confirm_button.sizeHint().width(),
-                                                    self.delete_roi_window_confirm_button.sizeHint().height())
+                                                     self.delete_roi_window_confirm_button.sizeHint().height())
         self.delete_roi_window_confirm_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.delete_roi_window_confirm_button.clicked.connect(self.confirm_button_onClicked)
         self.delete_roi_window_confirm_button.setEnabled(False)
@@ -225,9 +223,11 @@ class UIDeleteROIWindow:
         _translate = QtCore.QCoreApplication.translate
         delete_roi_window_instance.setWindowTitle(_translate("DeleteRoiWindowInstance", "OnkoDICOM - Delete ROI(s)"))
         self.delete_roi_window_title.setText(_translate("DeleteRoiWindowTitle", "Delete ROI(s)"))
-        self.delete_roi_window_instruction.setText(_translate("DeleteRoiWindowInstruction", "Move the Regions of Interest to be deleted to the right-hand side or vice versa"))
+        self.delete_roi_window_instruction.setText(_translate("DeleteRoiWindowInstruction",
+                                                              "Move the Regions of Interest to be deleted to the right-hand side or vice versa"))
         self.delete_roi_window_keep_tree_view_label.setText(_translate("DeleteRoiWindowKeepTreeViewLabel", "To Keep"))
-        self.delete_roi_window_delete_tree_view_label.setText(_translate("DeleteRoiWindowDeleteTreeViewLabel", "To Delete"))
+        self.delete_roi_window_delete_tree_view_label.setText(
+            _translate("DeleteRoiWindowDeleteTreeViewLabel", "To Delete"))
         self.move_right_button.setText(_translate("MoveRightButton", "Move Right ->>>"))
         self.move_left_button.setText(_translate("MoveLeftButton", "<<<- Move Left"))
         self.delete_roi_window_cancel_button.setText(_translate("DeleteRoiWindowCancelButton", "Cancel"))
@@ -266,7 +266,8 @@ class UIDeleteROIWindow:
             self.delete_roi_window_confirm_button.setEnabled(True)
 
         # Delete moved items from the left column list
-        self.regions_of_interest_to_keep = [x for x in self.regions_of_interest_to_keep if x not in self.regions_of_interest_to_delete]
+        self.regions_of_interest_to_keep = [x for x in self.regions_of_interest_to_keep if
+                                            x not in self.regions_of_interest_to_delete]
 
         self.delete_roi_window_keep_tree_view.clear()
         for index in self.regions_of_interest_to_keep:
@@ -290,7 +291,8 @@ class UIDeleteROIWindow:
             self.delete_roi_window_keep_tree_view.addTopLevelItem(item)
 
         # Delete moved items from the right column list
-        self.regions_of_interest_to_delete = [x for x in self.regions_of_interest_to_delete if x not in self.regions_of_interest_to_keep]
+        self.regions_of_interest_to_delete = [x for x in self.regions_of_interest_to_delete if
+                                              x not in self.regions_of_interest_to_keep]
 
         self.delete_roi_window_delete_tree_view.clear()
         for index in self.regions_of_interest_to_delete:
@@ -323,7 +325,7 @@ class DeleteROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_deleted = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_deleted = QtCore.Signal(pydicom.Dataset)  # Emits the new dataset
 
     def __init__(self, *args, **kwargs):
         super(DeleteROIProgressWindow, self).__init__(*args, **kwargs)
