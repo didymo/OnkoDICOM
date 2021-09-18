@@ -20,9 +20,11 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def init_cut_lines(self):
         if self.horizontal_view is not None and self.vertical_view is not None:
             try:
-                horizontal_line_y = self.horizontal_view.slider.value() / self.horizontal_view.slider.maximum() \
-                                    * self.height()
-                vertical_line_x = self.vertical_view.slider.value() / self.vertical_view.slider.maximum() * self.width()
+                horizontal_line_y = self.horizontal_view.slider.value()\
+                 / self.horizontal_view.slider.maximum() \
+                    * self.height()
+                vertical_line_x = self.vertical_view.slider.value(
+                ) / self.vertical_view.slider.maximum() * self.width()
             except ZeroDivisionError:
                 horizontal_line_y = 0
                 vertical_line_x = 0
@@ -43,12 +45,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             horizontal_line_y = self.init_height
 
         pen.setColor(self.horizontal_view.cut_lines_color)
-        self.horizontal_line = QtWidgets.QGraphicsLineItem(0, horizontal_line_y, self.init_width, horizontal_line_y)
+        self.horizontal_line = QtWidgets.QGraphicsLineItem(
+            0, horizontal_line_y, self.init_width, horizontal_line_y)
         self.horizontal_line.setPen(pen)
         self.addItem(self.horizontal_line)
 
         pen.setColor(self.vertical_view.cut_lines_color)
-        self.vertical_line = QtWidgets.QGraphicsLineItem(vertical_line_x, 0, vertical_line_x, self.init_height)
+        self.vertical_line = QtWidgets.QGraphicsLineItem(
+            vertical_line_x, 0, vertical_line_x, self.init_height)
         self.vertical_line.setPen(pen)
         self.addItem(self.vertical_line)
 
@@ -57,7 +61,8 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.removeItem(self.vertical_line)
 
     def update_slider(self, vertical_line_x, horizontal_line_y):
-        self.horizontal_view.set_slider_value(horizontal_line_y / self.height())
+        self.horizontal_view.set_slider_value(
+            horizontal_line_y / self.height())
         self.vertical_view.set_slider_value(vertical_line_x / self.width())
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
