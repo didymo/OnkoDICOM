@@ -23,6 +23,7 @@ class PetCtView(QtWidgets.QWidget):
         self.current_slice_number = None
         self.slice_view = slice_view
         self.overlay_view=slice_view
+        #ss
 
         if self.slice_view == "axial":
             self.display_metadata = True
