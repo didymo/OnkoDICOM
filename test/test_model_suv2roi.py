@@ -38,14 +38,14 @@ class TestSuv2Roi:
     """
     Class to set up the OnkoDICOM main window for testing
     SUV2ROI functionality. Assumes there is test data containing PET
-    files, both CTAC and NAC, in /test/testdata/DICOM-PT-TEST/. Tests
-    will all fail without this data.
+    CTAC files, in /test/pt-testdata/. Tests will all fail without
+    this data.
     """
     __test__ = False
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.cwd().joinpath('test', 'testdata')
+        desired_path = Path.cwd().joinpath('test', 'pt-testdata')
 
         # list of DICOM test files
         selected_files = find_dicom_files(desired_path)
@@ -78,6 +78,7 @@ def test_object():
     return test
 
 
+@pytest.mark.skip(reason="No test data")
 def test_select_pet_files(test_object):
     """
     Test for selecting PET files from a DICOM dataset.
@@ -94,6 +95,7 @@ def test_select_pet_files(test_object):
     assert len(test_object.dicom_files["PT NAC"]) == 0
 
 
+@pytest.mark.skip(reason="No test data")
 def test_calculate_suv_values(test_object):
     """
     Test for calculating SUV values from PET pixel data.
@@ -131,6 +133,7 @@ def test_calculate_suv_values(test_object):
         assert numpy.array_equal(suv_values, suv)
 
 
+@pytest.mark.skip(reason="No test data")
 def test_calculate_suv_boundaries(test_object):
     """
     Test for calculating SUV boundaries.
@@ -165,6 +168,7 @@ def test_calculate_suv_boundaries(test_object):
         assert len(manual_contour_data[key][0][1]) >= 0
 
 
+@pytest.mark.skip(reason="No test data")
 def test_generate_roi_from_suv(test_object):
     """
     Test for generating ROIs from SUV data.

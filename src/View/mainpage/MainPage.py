@@ -79,6 +79,15 @@ class UIMainWindow:
         self.setup_central_widget()
         self.setup_actions()
 
+        # Create SUV2ROI object and connect signals
+        self.suv2roi = SUV2ROI()
+        self.suv2roi_progress_window = \
+            ProgressWindow(self.main_window_instance,
+                           QtCore.Qt.WindowTitleHint |
+                           QtCore.Qt.WindowCloseButtonHint)
+        self.suv2roi_progress_window.signal_loaded.connect(
+            self.on_loaded_suv2roi)
+
     def setup_actions(self):
         if hasattr(self, 'toolbar'):
             self.main_window_instance.removeToolBar(self.toolbar)
@@ -421,25 +430,16 @@ class UIMainWindow:
         """
         Performs the SUV2ROI process.
         """
-        # Create SUV2ROI object and connect signals
-        suv2roi = SUV2ROI()
-        self.suv2roi_progress_window = \
-            ProgressWindow(self.main_window_instance,
-                           QtCore.Qt.WindowTitleHint |
-                           QtCore.Qt.WindowCloseButtonHint)
-        self.suv2roi_progress_window.signal_loaded.connect(
-            self.on_loaded_suv2roi)
-
         # Get patient weight - needs to run first as GUI cannot run in
         # threads, like the ProgressBar (thanks, Qt)
         patient_dict_container = PatientDictContainer()
         dataset = patient_dict_container.dataset[0]
-        suv2roi.get_patient_weight(dataset)
-        if suv2roi.patient_weight is None:
+        self.suv2roi.get_patient_weight(dataset)
+        if self.suv2roi.patient_weight is None:
             return
 
         # Start the SUV2ROI process
-        self.suv2roi_progress_window.start(suv2roi.start_conversion)
+        self.suv2roi_progress_window.start(self.suv2roi.start_conversion)
 
     def on_loaded_suv2roi(self):
         """
