@@ -6,6 +6,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
+from src.Model.DICOMStructure import Series
 from src.Model import ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -138,12 +139,10 @@ class StructureTab(QtWidgets.QWidget):
             QtGui.QIcon.On
         )
 
-        # self.button_roi_delete.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
         self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
 
-        # self.button_roi_draw.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.button_roi_draw.setIcon(icon_roi_draw)
         self.button_roi_draw.setText("Draw ROI")
         self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
@@ -429,18 +428,19 @@ class StructureTab(QtWidgets.QWidget):
 
     def save_new_rtss(self, event=None, auto=False):
         """
-        Save the current RTSS stored in patient dictionary to the file syste m.
+        Save the current RTSS stored in patient dictionary to the file system.
         :param event: Not used but will be passed as an argument from
         modified_indicator_widget on mouseReleaseEvent
         :param auto: Used for auto save without user confirmation
         """
         existing_rtss_files = self.patient_dict_container.get(
             "existing_rtss_files")
-        if isinstance(existing_rtss_files, str):
-            self.existing_rtss_directory = existing_rtss_files
         if len(existing_rtss_files) == 1:
-            self.existing_rtss_directory = str(Path(
-                existing_rtss_files[0].get_files()[0]))
+            if isinstance(existing_rtss_files[0], Series):
+                self.existing_rtss_directory = str(Path(
+                    existing_rtss_files[0].get_files()[0]))
+            else:
+                self.existing_rtss_directory = existing_rtss_files[0]
         elif len(existing_rtss_files) > 1:
             self.display_select_rtss_window()
             return

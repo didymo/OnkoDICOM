@@ -273,9 +273,11 @@ class Study:
         # Check if there is an image series with the same FrameOfReferenceUID
         if rtplan.frame_of_reference_uid:
             for series_uid, image_series in self.image_series.items():
-                if rtplan.frame_of_reference_uid == image_series.frame_of_reference_uid:
+                if rtplan.frame_of_reference_uid == \
+                        image_series.frame_of_reference_uid:
                     empty_rtss = self.get_empty_widget("RTSTRUCT")
-                    empty_rtss.addChild(self.rtplan_widgets[rtplan_instance_uid])
+                    empty_rtss.addChild(
+                        self.rtplan_widgets[rtplan_instance_uid])
                     self.image_series_widgets[series_uid].addChild(empty_rtss)
                     return
 
@@ -292,7 +294,8 @@ class Study:
         for series_uid, rtplan in self.rtplans.items():
             rtplan_instance_uid = rtplan.get_instance_uid()
             if ref_rtplan_instance_uid == rtplan_instance_uid:
-                self.rtplan_widgets[rtplan_instance_uid].addChild(rtdose_widget)
+                self.rtplan_widgets[rtplan_instance_uid].addChild(
+                    rtdose_widget)
                 return
 
         # Check if the referenced RTSTRUCT exists in the dataset or there is an

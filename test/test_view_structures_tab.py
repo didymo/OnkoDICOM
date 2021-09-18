@@ -46,16 +46,21 @@ class TestStructureTab:
         desired_path = Path.cwd().joinpath('test', 'testdata')
         selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
         file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
-        read_data_dict, file_names_dict = ImageLoading.get_datasets(selected_files)
+        read_data_dict, file_names_dict = ImageLoading.get_datasets(
+            selected_files)
 
         # Create patient dict container object
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()
-        patient_dict_container.set_initial_values(file_path, read_data_dict, file_names_dict)
+        patient_dict_container.set_initial_values(file_path, read_data_dict,
+                                                  file_names_dict)
 
-        # Set additional attributes in patient dict container (otherwise program will crash and test will fail)
+        # Set additional attributes in patient dict container (otherwise
+        # program will crash and test will fail)
         if "rtss" in file_names_dict:
             self.dataset_rtss = dcmread(file_names_dict['rtss'])
+            patient_dict_container.set("existing_rtss_files",
+                                       [file_names_dict['rtss']])
             self.rois = ImageLoading.get_roi_info(self.dataset_rtss)
             dict_raw_contour_data, dict_numpoints = \
                 ImageLoading.get_raw_contour_data(self.dataset_rtss)
@@ -196,7 +201,6 @@ def test_merge_rtss(qtbot, test_object):
     # Set ROIs
     rois = ImageLoading.get_roi_info(new_rtss)
     patient_dict_container.set("rois", rois)
-    patient_dict_container.set("file_rtss", rtss_path)
     patient_dict_container.set("existing_file_rtss",
                                patient_dict_container.get("file_rtss"))
     patient_dict_container.set("dataset_rtss", new_rtss)
