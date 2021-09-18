@@ -23,7 +23,7 @@ class PetCtView(QtWidgets.QWidget):
         self.current_slice_number = None
         self.slice_view = slice_view
         self.overlay_view=slice_view
-        #ss
+        #s
 
         if self.slice_view == "axial":
             self.display_metadata = True
@@ -93,6 +93,7 @@ class PetCtView(QtWidgets.QWidget):
             self.label_patient_pos = QtWidgets.QLabel()
             self.init_metadata()
         self.update_view()
+
 
     def init_slider(self):
         """
@@ -464,7 +465,10 @@ class PetCtView(QtWidgets.QWidget):
             self.patient_dict_container.get("pixmaps_" + self.slice_view))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
-        patient_pos = dataset['PatientPosition'].value
+        if hasattr(dataset, 'PatientPosition'):
+            patient_pos = dataset['PatientPosition'].value
+            self.label_patient_pos.setText(
+                "Patient Position: %s" % (str(patient_pos)))
         window = self.patient_dict_container.get("window")
         level = self.patient_dict_container.get("level")
         slice_pos = dataset['SliceLocation'].value
@@ -478,8 +482,6 @@ class PetCtView(QtWidgets.QWidget):
             "Image Size: %sx%spx" % (str(row_img), str(col_img)))
         self.label_zoom.setText(
             "Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
-        self.label_patient_pos.setText(
-            "Patient Position: %s" % (str(patient_pos)))
 
     def calc_roi_polygon(self, curr_roi, curr_slice, dict_rois_contours):
         """
