@@ -8,6 +8,7 @@ from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.SUV2ROI import SUV2ROI
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -20,7 +21,7 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
-
+from src.View.ProgressWindow import ProgressWindow
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from src.View.ImageFusion.ImageFusionSagittalView import \
     ImageFusionSagittalView
@@ -137,7 +138,7 @@ class UIMainWindow:
         self.dicom_single_view = DicomAxialView(
             roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.dicom_axial_view = DicomAxialView(
-            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            is_four_view=True, roi_color=roi_color_dict, iso_color=iso_color_dict,
             metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
         self.dicom_sagittal_view = DicomSagittalView(
             roi_color=roi_color_dict, iso_color=iso_color_dict,
@@ -182,6 +183,9 @@ class UIMainWindow:
 
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
+
+        # Connect SUV2ROI signal to handler function
+        self.dicom_single_view.suv2roi_signal.connect(self.perform_suv2roi)
 
         # Create Clinical Data tab TODO refactor the entire Clinical Data
         #  form/display class As they currently stand, they are given the
@@ -412,3 +416,37 @@ class UIMainWindow:
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
+
+    def perform_suv2roi(self):
+        """
+        Performs the SUV2ROI process.
+        """
+        # Create SUV2ROI object and connect signals
+        suv2roi = SUV2ROI()
+        self.suv2roi_progress_window = \
+            ProgressWindow(self.main_window_instance,
+                           QtCore.Qt.WindowTitleHint |
+                           QtCore.Qt.WindowCloseButtonHint)
+        self.suv2roi_progress_window.signal_loaded.connect(
+            self.on_loaded_suv2roi)
+
+        # Get patient weight - needs to run first as GUI cannot run in
+        # threads, like the ProgressBar (thanks, Qt)
+        patient_dict_container = PatientDictContainer()
+        dataset = patient_dict_container.dataset[0]
+        suv2roi.get_patient_weight(dataset)
+        if suv2roi.patient_weight is None:
+            return
+
+        # Start the SUV2ROI process
+        self.suv2roi_progress_window.start(suv2roi.start_conversion)
+
+    def on_loaded_suv2roi(self):
+        """
+        Called when progress bar has finished. Closes the progress
+        window and refreshes the main screen.
+        """
+        patient_dict_container = PatientDictContainer()
+        self.structures_tab.structure_modified((
+            patient_dict_container.get('dataset_rtss'), {"draw": None}))
+        self.suv2roi_progress_window.close()

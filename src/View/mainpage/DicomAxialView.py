@@ -3,19 +3,36 @@ from skimage import measure
 
 from src.View.mainpage.DicomView import DicomView
 from src.Model.Isodose import get_dose_grid
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.PathHandler import resource_path
 
 
 class DicomAxialView(DicomView):
-    def __init__(self, roi_color=None, iso_color=None, metadata_formatted=False, cut_line_color=None):
+
+    suv2roi_signal = QtCore.Signal()
+
+    def __init__(self, roi_color=None, iso_color=None,
+                 metadata_formatted=False, cut_line_color=None,
+                 is_four_view=False):
         """
-        metadata_formatted: whether the metadata needs to be formatted (only metadata
-        in the four view need to be formatted)
+        Initialise the DICOM Axial View.
+        :param roi_color: List of ROI colors.
+        :param iso_color: List of isodose colors.
+        :param metadata_formatted: Whether the metadata needs to be formatted
+                                   (only metadata in the four view need to be
+                                   formatted)
+        :param cut_line_color: The color of the cut line.
+        :param is_four_view: Whether the current object is part of the four
+                             view.
         """
         self.metadata_formatted = metadata_formatted
         self.slice_view = 'axial'
         super(DicomAxialView, self).__init__(
-            roi_color, iso_color, cut_line_color)
+            roi_color=roi_color, iso_color=iso_color,
+            cut_line_color=cut_line_color)
+
+        # Set parent
+        self.is_four_view = is_four_view
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
@@ -25,6 +42,7 @@ class DicomAxialView(DicomView):
         self.label_image_size = QtWidgets.QLabel()
         self.label_zoom = QtWidgets.QLabel()
         self.label_patient_pos = QtWidgets.QLabel()
+        self.button_suv2roi = QtWidgets.QPushButton()
         self.init_metadata()
 
         self.update_view()
@@ -45,6 +63,26 @@ class DicomAxialView(DicomView):
             QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
         self.label_patient_pos.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+
+        # SUV2ROI button (only when PET is opened)
+        patient_dict_container = PatientDictContainer()
+        datasets = patient_dict_container.dataset
+        pet_opened = False
+        for ds in datasets:
+            if datasets[ds].SOPClassUID == "1.2.840.10008.5.1.4.1.1.128":
+                pet_opened = True
+                break
+        if pet_opened:
+            icon_suv2roi = QtGui.QIcon()
+            icon_suv2roi.addPixmap(
+                QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
+                QtGui.QIcon.Normal,
+                QtGui.QIcon.On
+            )
+            self.button_suv2roi.setIcon(icon_suv2roi)
+            self.button_suv2roi.setToolTip("Convert SUVs to ROIs")
+            self.button_suv2roi.setFixedSize(50, 50)
+            self.button_suv2roi.clicked.connect(self.suv2roi_handler)
 
         # Set all labels to white
         stylesheet = "QLabel { color : white; }"
@@ -94,11 +132,21 @@ class DicomAxialView(DicomView):
         bottom_left.addWidget(
             self.label_zoom, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
-        # Create a widget to contain the bottom-right label
+        # Create a widget to contain the two bottom-right labels
         bottom_right_widget = QtWidgets.QWidget()
         bottom_right = QtWidgets.QVBoxLayout(bottom_right_widget)
+        bottom_right.setAlignment(QtCore.Qt.AlignRight)
         bottom_right.addWidget(self.label_patient_pos,
                                QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+
+        # Add the SUV2ROI button if PET opened and in single view
+        if pet_opened and not self.is_four_view:
+            bottom_right_button_layout = \
+                QtWidgets.QHBoxLayout(bottom_right_widget)
+            bottom_right_button_layout.addStretch(1)
+            bottom_right_button_layout.addWidget(
+                self.button_suv2roi)
+            bottom_right.addLayout(bottom_right_button_layout)
 
         # Create a widget to contain the two bottom widgets
         bottom_widget = QtWidgets.QWidget()
@@ -297,3 +345,10 @@ class DicomAxialView(DicomView):
             list_polygons.append(curr_polygon)
 
         return list_polygons
+
+    def suv2roi_handler(self):
+        """
+        Clicked action handler for the SUV2ROI button. Opens a progress
+        window and initiates the SUV2ROI conversion process.
+        """
+        self.suv2roi_signal.emit()

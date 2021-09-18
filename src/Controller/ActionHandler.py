@@ -6,11 +6,10 @@ from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
-from src.Model.SUV2ROI import SUV2ROI
 from src.Controller.PathHandler import resource_path
 from src.Model.MovingModel import read_images_for_fusion
 from src.Model.ImageFusion import get_fused_window
-from src.View.ProgressWindow import ProgressWindow
+
 
 class ActionHandler:
     """
@@ -46,25 +45,6 @@ class ActionHandler:
         self.action_open.setIcon(self.icon_open)
         self.action_open.setText("Open new patient")
         self.action_open.setIconVisibleInMenu(True)
-
-        # SUV2ROI action - only load if dataset contains PET files
-        datasets = self.patient_dict_container.dataset
-        for ds in datasets:
-            if datasets[ds].SOPClassUID == "1.2.840.10008.5.1.4.1.1.128":
-                self.pet_opened = True
-                break
-        if self.pet_opened:
-            self.icon_suv2roi = QtGui.QIcon()
-            self.icon_suv2roi.addPixmap(
-                QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
-                QtGui.QIcon.Normal,
-                QtGui.QIcon.On
-            )
-            self.action_suv2roi = QtGui.QAction()
-            self.action_suv2roi.setIcon(self.icon_suv2roi)
-            self.action_suv2roi.setText("Convert SUV to ROI")
-            self.action_suv2roi.setIconVisibleInMenu(True)
-            self.action_suv2roi.triggered.connect(self.suv2roi_handler)
 
         # Save RTSTRUCT changes action
         self.icon_save_structure = QtGui.QIcon()
@@ -251,14 +231,6 @@ class ActionHandler:
         self.action_image_fusion.setIcon(self.icon_image_fusion)
         self.action_image_fusion.setIconVisibleInMenu(True)
         self.action_image_fusion.setText("Image Fusion")
-        
-        # Create variables for SUV2ROI - object and progress window
-        self.suv2roi = SUV2ROI()
-        self.progress_window = \
-            ProgressWindow(self.__main_page.main_window_instance,
-                           QtCore.Qt.WindowTitleHint |
-                           QtCore.Qt.WindowCloseButtonHint)
-        self.progress_window.signal_loaded.connect(self.on_loaded_suv2roi)
 
     def init_windowing_menu(self):
         self.menu_windowing.setIcon(self.icon_windowing)
@@ -424,30 +396,6 @@ class ActionHandler:
             row_s,
             col_s
         )
-
-    def suv2roi_handler(self):
-        """
-        Clicked action handler for the SUV2ROI button. Opens a progress
-        window and initiates the SUV2ROI conversion process.
-        """
-        # Get patient weight - needs to run first as GUI cannot run in
-        # threads, like the ProgressBar (thanks, Qt)
-        dataset = self.patient_dict_container.dataset[0]
-        self.suv2roi.get_patient_weight(dataset)
-        if self.suv2roi.patient_weight is None:
-            return
-
-        # Start the SUV2ROI process
-        self.progress_window.start(self.suv2roi.start_conversion)
-
-    def on_loaded_suv2roi(self):
-        """
-        Called when progress bar has finished. Closes the progress
-        window and refreshes the main screen.
-        """
-        self.__main_page.structures_tab.structure_modified((
-            self.patient_dict_container.get('dataset_rtss'), {"draw": None}))
-        self.progress_window.close()
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()
