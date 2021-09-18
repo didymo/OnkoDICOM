@@ -404,7 +404,6 @@ class UITransferROIWindow:
     def update_patient_dict_structure(self):
         # TODO: merge update-moving-dict-structure with
         # update patient_dict_structure
-        self.patient_dict_container.set("rtss_modified", True)
         self.patient_dict_container.set(
             "rois", ImageLoading.get_roi_info(self.patient_dict_container.get("dataset_rtss")))
         self.rois = self.patient_dict_container.get("rois")
@@ -435,7 +434,6 @@ class UITransferROIWindow:
     def update_moving_dict_structure(self):
         # TODO: merge update-moving-dict-structure with
         # update patient_dict_structure
-        self.moving_dict_container.set("rtss_modified", True)
         self.moving_dict_container.set(
             "rois", ImageLoading.get_roi_info(self.moving_dict_container.get("dataset_rtss")))
         self.rois = self.moving_dict_container.get("rois")
