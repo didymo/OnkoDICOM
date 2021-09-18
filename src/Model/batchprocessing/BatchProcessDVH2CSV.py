@@ -67,28 +67,42 @@ class BatchProcessDVH2CSV(BatchProcess):
         self.progress_callback.emit(("Checking dataset...", 40))
 
         # Attempt to get DVH data from RT Dose
-        # TODO: implement this once DVH2RTDOSE in main repo
-        #self.progress_callback.emit(("Attempting to get DVH from RT Dose...",
-        #                             50))
+        self.progress_callback.emit(("Attempting to get DVH from RT Dose...",
+                                     50))
+        # Get DVH data
+        raw_dvh = CalculateDVHs.rtdose2dvh()
 
-        # Calculate DVH if not in RT Dose
-        self.progress_callback.emit(("Calculating DVH...", 60))
-        read_data_dict = self.patient_dict_container.dataset
-        dataset_rtss = self.patient_dict_container.dataset['rtss']
-        dataset_rtdose = self.patient_dict_container.dataset['rtdose']
-        rois = self.patient_dict_container.get("rois")
-        try:
-            dict_thickness = ImageLoading.get_thickness_dict(dataset_rtss,
-                                                         read_data_dict)
-            raw_dvh = ImageLoading.calc_dvhs(dataset_rtss,
-                                             dataset_rtdose,
-                                             rois,
-                                            dict_thickness,
-                                             self.interrupt_flag)
-        except TypeError:
-            print("Error when calculating ROI thickness. The dataset may be "
-                  "incomplete. \nSkipping DVH2CSV.")
-            return
+        # If there is DVH data
+        dvh_outdated = True
+        if bool(raw_dvh):
+            incomplete = raw_dvh["diff"]
+            raw_dvh.pop("diff")
+
+            if not incomplete:
+                dvh_outdated = False
+                self.progress_callback.emit(("DVH data in RT Dose.", 80))
+        else:
+            raw_dvh.pop("diff")
+
+        if dvh_outdated:
+            # Calculate DVH if not in RT Dose
+            self.progress_callback.emit(("Calculating DVH...", 60))
+            read_data_dict = self.patient_dict_container.dataset
+            dataset_rtss = self.patient_dict_container.dataset['rtss']
+            dataset_rtdose = self.patient_dict_container.dataset['rtdose']
+            rois = self.patient_dict_container.get("rois")
+            try:
+                dict_thickness = \
+                    ImageLoading.get_thickness_dict(dataset_rtss,
+                                                    read_data_dict)
+                raw_dvh = ImageLoading.calc_dvhs(dataset_rtss, dataset_rtdose,
+                                                 rois, dict_thickness,
+                                                 self.interrupt_flag)
+            except TypeError:
+                print(
+                    "Error when calculating ROI thickness. The dataset may be "
+                    "incomplete. \nSkipping DVH2CSV.")
+                return
 
         # Stop loading
         if self.interrupt_flag.is_set():
