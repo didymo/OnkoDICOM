@@ -14,6 +14,7 @@ from shapely.geometry import Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import make_valid
 
 from src.Model.MovingDictContainer import MovingDictContainer
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 from src.constants import DEFAULT_WINDOW_SIZE
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -522,7 +523,6 @@ def convert_hull_list_to_contours_data(rois_to_save, patient_dict_container):
         return []
     for slice_id, slice_info in rois_to_save.items():
         pixel_hull_list = slice_info['coords']
-        print(pixel_hull_list)
         for pixel_hull in pixel_hull_list:
             single_array = convert_hull_to_single_array_of_rcs(
                 patient_dict_container,
@@ -669,8 +669,7 @@ def transform_rois_contours(axial_rois_contours):
     """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
-    slice_ids = dict((v, k) for k, v
-                     in PatientDictContainer().get("dict_uid").items())
+    slice_ids = get_dict_slice_to_uid(PatientDictContainer())
     for name in axial_rois_contours.keys():
         coronal_rois_contours[name] = {}
         sagittal_rois_contours[name] = {}

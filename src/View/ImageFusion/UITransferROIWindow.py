@@ -3,29 +3,23 @@ import traceback
 from pathlib import Path
 from random import randint, seed
 
+import SimpleITK as sitk
+import numpy as np
 import pydicom
-from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtCore, QtGui
 from PySide6.QtGui import Qt, QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QPushButton, \
-    QCheckBox, QHBoxLayout, QWidgetItem, \
-    QListWidget, QListWidgetItem, QMessageBox
-from platipy.imaging.label.utils import binary_decode_image, \
-    vectorised_transform_index_to_physical_point
+    QCheckBox, QHBoxLayout, QListWidget, QListWidgetItem, QMessageBox
 from platipy.imaging.registration.utils import apply_linear_transform
-from rt_utils import RTStructBuilder
-from rt_utils.image_helper import find_mask_contours
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI, ImageLoading
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
-import SimpleITK as sitk
-import numpy as np
-
-from src.Model.ROI import get_roi_contour_pixel, merge_rtss, ordered_list_rois
+from src.Model.ROI import merge_rtss, ordered_list_rois
 from src.Model.ROITransfer import transform_point_set_from_dicom_struct
-from src.View.util.SaveROIs import connectSaveROIProgress
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 
 
 class UITransferROIWindow:
@@ -515,8 +509,10 @@ class UITransferROIWindow:
 
     def save_roi(self, contours, roi_name, patient_dict_container):
         pixels_coords_dict = {}
+        slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
+        total_slices = len(slice_ids_dict)
         for contour in contours:
-            curr_slice_id = contour[0]
+            curr_slice_id = total_slices - contour[0]
             if curr_slice_id not in pixels_coords_dict:
                 pixels_coords_dict[curr_slice_id] = [
                     tuple([contour[2], contour[1]])]
