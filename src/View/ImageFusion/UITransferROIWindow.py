@@ -299,6 +299,7 @@ class UITransferROIWindow:
         self.fixed_to_moving_rois[roi_to_add['name']] = transferred_roi_name
         roi_label = QListWidgetItem(transferred_roi_name)
         roi_label.setForeground(Qt.red)
+        roi_label.setData(Qt.UserRole, roi_to_add)
         self.patient_A_rois_to_B_list_widget.addItem(roi_label)
         self.save_button.setDisabled(False)
 
@@ -343,6 +344,7 @@ class UITransferROIWindow:
         self.moving_to_fixed_rois[roi_to_add['name']] = transferred_roi_name
         roi_label = QListWidgetItem(transferred_roi_name)
         roi_label.setForeground(Qt.red)
+        roi_label.setData(Qt.UserRole, roi_to_add)
         self.patient_B_rois_to_A_list_widget.addItem(roi_label)
         self.save_button.setDisabled(False)
 
