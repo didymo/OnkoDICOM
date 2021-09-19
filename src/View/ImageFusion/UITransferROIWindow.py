@@ -107,6 +107,10 @@ class UITransferROIWindow:
             "ROITransferToBButton")
         # TODO: Add icon to button
         self.transfer_all_rois_to_patient_B_button.setMaximumWidth(100)
+        transfer_all_rois_to_patient_B_icon = QtGui.QIcon()
+        transfer_all_rois_to_patient_B_icon.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/forward_slide_icon.png')))
+        self.transfer_all_rois_to_patient_B_button.setIcon(transfer_all_rois_to_patient_B_icon)
         self.transfer_all_rois_to_patient_B_button.clicked.connect(
             self.transfer_all_rois_to_patient_B_button_clicked)
         self.transfer_roi_window_grid_layout.addWidget(
@@ -118,6 +122,10 @@ class UITransferROIWindow:
         # TODO: Add icon to button
         self.transfer_all_rois_to_patient_A_button.setText("<<")
         self.transfer_all_rois_to_patient_A_button.setMaximumWidth(100)
+        transfer_all_rois_to_patient_A_icon = QtGui.QIcon()
+        transfer_all_rois_to_patient_A_icon.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/backward_slide_icon.png')))
+        self.transfer_all_rois_to_patient_A_button.setIcon(transfer_all_rois_to_patient_A_icon)
         self.transfer_all_rois_to_patient_A_button.clicked.connect(
             self.transfer_all_rois_to_patient_A_button_clicked)
         self.transfer_roi_window_grid_layout.addWidget(
@@ -436,6 +444,7 @@ class UITransferROIWindow:
         # TODO: optimise this bc it's redundant
         for key in pixels_coords_dict.keys():
             coords = pixels_coords_dict[key]
+            print(coords)
             polygon_list = ROI.calculate_concave_hull_of_points(coords)
             if len(polygon_list) > 0:
                 rois_to_save[key] = {
