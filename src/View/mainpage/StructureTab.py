@@ -22,10 +22,7 @@ class StructureTab(QtWidgets.QWidget):
 
     def __init__(self, moving=False):
         QtWidgets.QWidget.__init__(self)
-        if moving:
-            self.patient_dict_container = MovingDictContainer()
-        else:
-            self.patient_dict_container = PatientDictContainer()
+        self.patient_dict_container = PatientDictContainer()
 
         self.rois = self.patient_dict_container.get("rois")
         self.color_dict = self.init_color_roi()

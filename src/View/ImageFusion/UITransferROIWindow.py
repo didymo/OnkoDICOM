@@ -511,6 +511,8 @@ class UITransferROIWindow:
         total_slices = len(slice_ids_dict)
         for contour in contours:
             curr_slice_id = total_slices - contour[0]
+            if curr_slice_id >= total_slices:
+                curr_slice_id = 0
             if curr_slice_id not in pixels_coords_dict:
                 pixels_coords_dict[curr_slice_id] = [
                     tuple([contour[2], contour[1]])]
