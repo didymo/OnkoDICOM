@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, \
     ROIManipulateOption
 from src.Model import ImageLoading
+from src.Model.CalculateDVHs import dvh2rtdose
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -282,7 +283,7 @@ class StructureTab(QtWidgets.QWidget):
                 # recalculation will be required.
                 self.patient_dict_container.set("dvh_outdated", True)
 
-        if self.patient_dict_container.has_modality("raw_dvh"):
+        if self.patient_dict_container.has_attribute("raw_dvh"):
             # Rename structures in DVH list
             if "rename" in change_description:
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
@@ -292,6 +293,7 @@ class StructureTab(QtWidgets.QWidget):
                         break
 
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
+                dvh2rtdose(new_raw_dvh)
 
             # Remove structures from DVH list - the only visible effect of
             # this section is the exported DVH csv
@@ -304,6 +306,7 @@ class StructureTab(QtWidgets.QWidget):
                 for key in list_of_deleted:
                     new_raw_dvh.pop(key)
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
+                dvh2rtdose(new_raw_dvh)
 
         # Refresh ROIs in DVH tab and DICOM View
         self.request_update_structures.emit()
