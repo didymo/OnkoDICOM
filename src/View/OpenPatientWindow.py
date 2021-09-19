@@ -359,12 +359,18 @@ class UIOpenPatientWindow(object):
         # coincide with stylesheet. And if the selected item is an image set,
         # display its child branches.
         if item.checkState(0) == Qt.CheckState.Unchecked:
-            if item.whatsThis(0) == "IMAGE":
-                self.display_a_tree_branch(item)
             self.open_patient_window_patients_tree.setCurrentItem(item)
         else:  # Otherwise don't "focus", then set patient as selected
             self.open_patient_window_patients_tree.setCurrentItem(None)
             item.setSelected(True)
+
+        # Expand or collapse the tree branch if item is an image series
+        # Only collapse if the selected image series is expanded but unchecked
+        # Otherwise, expand its tree branch to show RT files
+        is_expanded = False \
+            if (item.isExpanded() is True and
+                item.checkState(0) == Qt.CheckState.Unchecked) else True
+        self.display_a_tree_branch(item, is_expanded)
 
         selected_patient = item
         # If the item is not top-level, bubble up to see which top-level item
@@ -424,11 +430,12 @@ class UIOpenPatientWindow(object):
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
-    def display_a_tree_branch(self, root_node: QTreeWidgetItem):
-        root_node.setExpanded(not root_node.isExpanded())
-        if root_node.childCount() > 0:
-            for i in range(root_node.childCount()):
-                self.display_a_tree_branch(root_node.child(i))
+    def display_a_tree_branch(self, node, is_expanded):
+        """ Expand/Close a tree branch """
+        node.setExpanded(is_expanded)
+        if node.childCount() > 0:
+            for i in range(node.childCount()):
+                self.display_a_tree_branch(node.child(i), is_expanded)
         else:
             return
 

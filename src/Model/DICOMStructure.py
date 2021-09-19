@@ -236,7 +236,6 @@ class Study:
     def get_image_series_widget(self, series_uid, image_series):
         """ Add a DICOMWidgetItem of an image series """
         self.image_series_widgets[series_uid] = image_series.get_widget_item()
-        self.image_series_widgets[series_uid].setWhatsThis(0, "IMAGE")
         self.widget_item.addChild(self.image_series_widgets[series_uid])
 
     def get_rtstruct_widget(self, rtstruct):
