@@ -175,12 +175,6 @@ class ActionHandler:
         self.action_show_cut_lines.setText("Show Cut Lines")
         self.action_show_cut_lines.triggered.connect(self.cut_lines_handler)
 
-        # Export Clinical Data Action
-        self.action_clinical_data_export = QtGui.QAction()
-        self.action_clinical_data_export.setText("Export Clinical Data")
-        # TODO self.action_clinical_data_export.triggered.connect(
-        #  clinical data check)
-
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtGui.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
@@ -213,7 +207,6 @@ class ActionHandler:
         )
         self.menu_export = QtWidgets.QMenu()
         self.menu_export.setTitle("Export")
-        self.menu_export.addAction(self.action_clinical_data_export)
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
 

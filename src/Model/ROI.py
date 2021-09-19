@@ -424,11 +424,8 @@ def get_pixluts(dict_ds):
     non_img_type = ["rtdose", "rtplan", "rtss"]
     for ds in dict_ds:
         if ds not in non_img_type:
-            if isinstance(ds, str):
-                if ds[0:3] != 'sr-':
-                    img_ds = dict_ds[ds]
-                    pixlut = calculate_matrix(img_ds)
-                    dict_pixluts[img_ds.SOPInstanceUID] = pixlut
+            if isinstance(ds, str) and ds[0:3] == 'sr-':
+                continue
             else:
                 img_ds = dict_ds[ds]
                 pixlut = calculate_matrix(img_ds)
