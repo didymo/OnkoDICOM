@@ -90,7 +90,11 @@ def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object, init_config):
     # check that Calculate DVH tab must appear
 
     test_object.main_window.show()
-    button_calc_dvh = test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(0).widget()
+
+    button_calc_dvh = \
+        test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(1).layout()
+    button_calc_dvh = button_calc_dvh.itemAt(1).widget()
+    
     assert isinstance(button_calc_dvh, PySide6.QtWidgets.QPushButton) is True
 
 
@@ -103,18 +107,24 @@ def test_dvh_tab_with_dvh_calculated(qtbot, test_object, init_config):
     # check that Calculate DVH tab must appear
 
     test_object.main_window = MainWindow()
-    dvh_plot = test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(0).widget()
+    dvh_plot = \
+        test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(0).widget()
     assert isinstance(dvh_plot, matplotlib.backends.backend_qtagg.FigureCanvasQTAgg) is True
 
-    for roi in test_object.rois:
-        # Simulate checkbox set to True
-        test_object.main_window.structures_tab.structure_checked(True, roi)
-        selected_rois = test_object.main_window.dvh_tab.selected_rois
-        if roi not in selected_rois:
-            assert False
+    calculated_rois = test_object.main_window.dvh_tab.raw_dvh.keys()
 
-        # then simulate checkbox set to False
-        test_object.main_window.structures_tab.structure_checked(False, roi)
-        selected_rois = test_object.main_window.dvh_tab.selected_rois
-        if roi in selected_rois:
-            assert False
+    for roi in test_object.rois:
+        # Only check ROIs that have been calculated
+        if roi in calculated_rois:
+            # Simulate checkbox set to True
+            test_object.main_window.structures_tab.structure_checked(True, roi)
+            selected_rois = test_object.main_window.dvh_tab.selected_rois
+            if roi not in selected_rois:
+                assert False
+
+            # then simulate checkbox set to False
+            test_object.main_window.structures_tab.structure_checked(False,
+                                                                     roi)
+            selected_rois = test_object.main_window.dvh_tab.selected_rois
+            if roi in selected_rois:
+                assert False

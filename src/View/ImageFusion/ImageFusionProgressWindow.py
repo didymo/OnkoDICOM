@@ -13,6 +13,7 @@ class ImageFusionProgressWindow(ProgressWindow):
                  kwargs=QtCore.Qt.WindowTitleHint |
                  QtCore.Qt.WindowCloseButtonHint):
         super(ImageFusionProgressWindow, self).__init__(*args, kwargs)
+        self.setFixedSize(250, 100)
 
     def start_loading(self, selected_files, existing_rtss=None):
         image_loader = MovingImageLoader(
