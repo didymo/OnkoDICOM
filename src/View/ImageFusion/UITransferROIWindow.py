@@ -24,12 +24,15 @@ from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 
 class UITransferROIWindow:
 
-    def setup_ui(self, transfer_roi_window_instance):
+    def setup_ui(self, transfer_roi_window_instance, signal_roi_transferred_to_fixed_container,
+                 signal_roi_transferred_to_moving_container):
         self.patient_dict_container = PatientDictContainer()
         self.moving_dict_container = MovingDictContainer()
         self.fixed_image_initial_rois = self.patient_dict_container.get("rois")
         self.moving_image_initial_rois = self.moving_dict_container.get("rois")
         self.transfer_roi_window_instance = transfer_roi_window_instance
+        self.signal_roi_transferred_to_fixed_container = signal_roi_transferred_to_fixed_container
+        self.signal_roi_transferred_to_moving_container = signal_roi_transferred_to_moving_container
         self.fixed_to_moving_rois = {}
         self.moving_to_fixed_rois = {}
         self.add_suffix = True
@@ -377,119 +380,28 @@ class UITransferROIWindow:
             else:
                 rois_images_moving = ([], [])
             tfm = self.moving_dict_container.get("tfm")
-            # TODO: HANDLE CASE WHEN ONE OF TWO DICTS ARE EMPTY
-            # transform roi from b to a first
+            # transform roi from moving_dict to fixed_dict
             self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
                                rois_images_moving, self.patient_dict_container)
-
-            # transform roi from a to b
+            # transform roi from moving_dict to fixed_dict
             self.transfer_rois(self.fixed_to_moving_rois, tfm.GetInverse(),
                                moving_dicom_image,
                                rois_images_fixed, self.moving_dict_container)
 
+            # emit changed dataset to structure_modified function and auto_save_roi function
             if len(self.fixed_to_moving_rois) > 0:
-                # TODO: merge update-moving-dict-structure with
-                # update patient_dict_structure
-                self.update_moving_dict_structure()
-                self.save_roi_to_rtss(self.moving_dict_container)
+                self.signal_roi_transferred_to_moving_container.emit((
+                    self.moving_dict_container.get("dataset_rtss")
+                    , {"transfer": None}))
             if len(self.moving_to_fixed_rois) > 0:
-                self.update_patient_dict_structure()
-                self.save_roi_to_rtss(self.patient_dict_container)
+                self.signal_roi_transferred_to_fixed_container.emit((
+                    self.patient_dict_container.get("dataset_rtss")
+                    , {"transfer": None}))
         except Exception as e:
             traceback.print_exc()
         QMessageBox.about(self.transfer_roi_window_instance, "Saved",
                           "ROIs are successfully transferred!")
         self.closeWindow()
-
-    def update_patient_dict_structure(self):
-        # TODO: merge update-moving-dict-structure with
-        # update patient_dict_structure
-        self.patient_dict_container.set(
-            "rois", ImageLoading.get_roi_info(self.patient_dict_container.get("dataset_rtss")))
-        self.rois = self.patient_dict_container.get("rois")
-        contour_data = ImageLoading.get_raw_contour_data(self.patient_dict_container.get("dataset_rtss"))
-        self.patient_dict_container.set("raw_contour", contour_data[0])
-        self.patient_dict_container.set("num_points", contour_data[1])
-        pixluts = ImageLoading.get_pixluts(self.patient_dict_container.dataset)
-        self.patient_dict_container.set("pixluts", pixluts)
-        self.patient_dict_container.set("list_roi_numbers", ordered_list_rois(
-            self.patient_dict_container.get("rois")))
-        self.patient_dict_container.set("selected_rois", [])
-        self.patient_dict_container.set("dict_polygons_axial", {})
-        self.patient_dict_container.set("dict_polygons_sagittal", {})
-        self.patient_dict_container.set("dict_polygons_coronal", {})
-        dicom_tree_rtss = DicomTree(None)
-        dicom_tree_rtss.dataset = self.patient_dict_container.get("dataset_rtss")
-        dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
-            dicom_tree_rtss.dataset)
-        self.patient_dict_container.set(
-            "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
-        self.color_dict = self.init_color_roi(self.patient_dict_container)
-        self.patient_dict_container.set("roi_color_dict", self.color_dict)
-        if self.patient_dict_container.has_attribute("raw_dvh"):
-            # DVH will be outdated once changes to it are made, and
-            # recalculation will be required.
-            self.patient_dict_container.set("dvh_outdated", True)
-
-    def update_moving_dict_structure(self):
-        # TODO: merge update-moving-dict-structure with
-        # update patient_dict_structure
-        self.moving_dict_container.set(
-            "rois", ImageLoading.get_roi_info(self.moving_dict_container.get("dataset_rtss")))
-        self.rois = self.moving_dict_container.get("rois")
-        contour_data = ImageLoading.get_raw_contour_data(self.moving_dict_container.get("dataset_rtss"))
-        self.moving_dict_container.set("raw_contour", contour_data[0])
-        self.moving_dict_container.set("num_points", contour_data[1])
-        pixluts = ImageLoading.get_pixluts(self.moving_dict_container.dataset)
-        self.moving_dict_container.set("pixluts", pixluts)
-        self.moving_dict_container.set("list_roi_numbers", ordered_list_rois(
-            self.moving_dict_container.get("rois")))
-        self.moving_dict_container.set("selected_rois", [])
-        self.moving_dict_container.set("dict_polygons_axial", {})
-        self.moving_dict_container.set("dict_polygons_sagittal", {})
-        self.moving_dict_container.set("dict_polygons_coronal", {})
-        dicom_tree_rtss = DicomTree(None)
-        dicom_tree_rtss.dataset = self.moving_dict_container.get("dataset_rtss")
-        dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
-            dicom_tree_rtss.dataset)
-        self.moving_dict_container.set(
-            "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
-        self.color_dict = self.init_color_roi(self.moving_dict_container)
-        self.moving_dict_container.set("roi_color_dict", self.color_dict)
-        if self.moving_dict_container.has_attribute("raw_dvh"):
-            # DVH will be outdated once changes to it are made, and
-            # recalculation will be required.
-            self.moving_dict_container.set("dvh_outdated", True)
-
-    def init_color_roi(self, patient_dict_container):
-        """
-        Create a dictionary containing the colors for each structure.
-        :return: Dictionary where the key is the ROI number and the value a
-        QColor object.
-        """
-        roi_color = dict()
-        roi_contour_info = patient_dict_container.get(
-            "dict_dicom_tree_rtss")['ROI Contour Sequence']
-
-        if len(roi_contour_info) > 0:
-            for item, roi_dict in roi_contour_info.items():
-                id = item.split()[1]
-                roi_id = patient_dict_container.get(
-                    "list_roi_numbers")[int(id)]
-                if 'ROI Display Color' in roi_contour_info[item]:
-                    RGB_list = roi_contour_info[item]['ROI Display Color'][0]
-                    red = RGB_list[0]
-                    green = RGB_list[1]
-                    blue = RGB_list[2]
-                else:
-                    seed(1)
-                    red = randint(0, 255)
-                    green = randint(0, 255)
-                    blue = randint(0, 255)
-
-                roi_color[roi_id] = QtGui.QColor(red, green, blue)
-
-        return roi_color
 
     def transfer_rois(self, transfer_dict, tfm, reference_image,
                       original_roi_list, patient_dict_container):
@@ -502,10 +414,10 @@ class UITransferROIWindow:
                         reference_image=reference_image, is_structure=True)
                     contour = sitk.GetArrayViewFromImage(new_contour)
                     contours = np.transpose(contour.nonzero())
-                    self.save_roi(contours, new_roi_name,
-                                  patient_dict_container)
+                    self.save_roi_to_patient_dict_container(contours, new_roi_name,
+                                                            patient_dict_container)
 
-    def save_roi(self, contours, roi_name, patient_dict_container):
+    def save_roi_to_patient_dict_container(self, contours, roi_name, patient_dict_container):
         pixels_coords_dict = {}
         slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
         total_slices = len(slice_ids_dict)
@@ -537,42 +449,14 @@ class UITransferROIWindow:
             print("Saving ", roi_name)
             if isinstance(patient_dict_container, MovingDictContainer):
                 new_rtss = ROI.create_roi(patient_dict_container.get("dataset_rtss"),
-                                          roi_name, roi_list, "ORGAN", "MOVING")
+                                          roi_name, roi_list, rtss_owner="MOVING")
                 self.moving_dict_container.set("dataset_rtss", new_rtss)
+                self.moving_dict_container.set("rtss_modified", True)
             else:
                 new_rtss = ROI.create_roi(patient_dict_container.get("dataset_rtss"),
                                           roi_name, roi_list)
                 self.patient_dict_container.set("dataset_rtss", new_rtss)
-
-    def save_roi_to_rtss(self, patient_dict_container):
-        """
-        Save the current RTSS stored in patient dictionary to the file system.
-        :patient_dict_container: either patient or moving patient container
-        :param auto: Used for auto save without user confirmation
-        """
-        if patient_dict_container.get("existing_file_rtss") is not None:
-            existing_rtss_directory = str(Path(patient_dict_container.get(
-                "existing_file_rtss")))
-        else:
-            existing_rtss_directory = None
-        rtss_directory = str(
-            Path(patient_dict_container.get("file_rtss")))
-
-        if existing_rtss_directory is None:
-            patient_dict_container.get("dataset_rtss").save_as(
-                rtss_directory)
-        else:
-            new_rtss = patient_dict_container.get("dataset_rtss")
-            old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
-            old_roi_names = \
-                set(value["name"] for value in
-                    ImageLoading.get_roi_info(old_rtss).values())
-            new_roi_names = \
-                set(value["name"] for value in
-                    patient_dict_container.get("rois").values())
-            duplicated_names = old_roi_names.intersection(new_roi_names)
-            merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
-            merged_rtss.save_as(existing_rtss_directory)
+                self.patient_dict_container.set("rtss_modified", True)
 
     def closeWindow(self):
         """

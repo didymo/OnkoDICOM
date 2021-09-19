@@ -23,16 +23,16 @@ class StructureTab(QtWidgets.QWidget):
     def __init__(self, moving=False):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-
+        self.moving_dict_container = MovingDictContainer()
         self.rois = self.patient_dict_container.get("rois")
-        self.color_dict = self.init_color_roi()
+        self.color_dict = self.init_color_roi(self.patient_dict_container)
         self.patient_dict_container.set("roi_color_dict", self.color_dict)
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
-        self.roi_delete_handler = ROIDelOption(self.structure_modified)
-        self.roi_draw_handler = ROIDrawOption(self.structure_modified)
+        self.roi_delete_handler = ROIDelOption(self.fixed_container_structure_modified)
+        self.roi_draw_handler = ROIDrawOption(self.fixed_container_structure_modified)
         self.roi_manipulate_handler = ROIManipulateOption(
-            self.structure_modified)
+            self.fixed_container_structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -68,14 +68,15 @@ class StructureTab(QtWidgets.QWidget):
         self.structure_tab_layout.addWidget(self.roi_buttons)
         self.setLayout(self.structure_tab_layout)
 
-    def init_color_roi(self):
+    def init_color_roi(self, dict_container):
         """
         Create a dictionary containing the colors for each structure.
+        :param: either PatientDictContainer or MovingDictContainer
         :return: Dictionary where the key is the ROI number and the value a
         QColor object.
         """
         roi_color = dict()
-        roi_contour_info = self.patient_dict_container.get(
+        roi_contour_info = dict_container.get(
             "dict_dicom_tree_rtss")['ROI Contour Sequence']
 
         if len(roi_contour_info) > 0:
@@ -85,7 +86,7 @@ class StructureTab(QtWidgets.QWidget):
                 # numbers in the whole code, we get the ROI number 'roi_id'
                 # by using the member 'list_roi_numbers'
                 id = item.split()[1]
-                roi_id = self.patient_dict_container.get(
+                roi_id = dict_container.get(
                     "list_roi_numbers")[int(id)]
                 if 'ROI Display Color' in roi_contour_info[item]:
                     RGB_list = roi_contour_info[item]['ROI Display Color'][0]
@@ -168,12 +169,9 @@ class StructureTab(QtWidgets.QWidget):
         """
         Update the UI of Structure Tab when a new patient is opened
         """
-        if moving:
-            self.patient_dict_container = MovingDictContainer()
-        else:
-            self.patient_dict_container = PatientDictContainer()
+        self.patient_dict_container = PatientDictContainer()
         self.rois = self.patient_dict_container.get("rois")
-        self.color_dict = self.init_color_roi()
+        self.color_dict = self.init_color_roi(self.patient_dict_container)
         self.patient_dict_container.set("roi_color_dict", self.color_dict)
         if hasattr(self, "modified_indicator_widget"):
             self.modified_indicator_widget.setParent(None)
@@ -196,7 +194,7 @@ class StructureTab(QtWidgets.QWidget):
             structure = StructureWidget(roi_id, color, roi_dict['name'], self)
             if roi_id in self.patient_dict_container.get("selected_rois"):
                 structure.checkbox.setChecked(Qt.Checked)
-            structure.structure_renamed.connect(self.structure_modified)
+            structure.structure_renamed.connect(self.fixed_container_structure_modified)
             self.layout_content.addWidget(structure)
             row += 1
 
@@ -217,7 +215,7 @@ class StructureTab(QtWidgets.QWidget):
         self.roi_manipulate_handler.show_roi_manipulate_options(
             self.color_dict)
 
-    def structure_modified(self, changes):
+    def moving_container_structure_modified(self, changes):
         """
         Executes when a structure is renamed/deleted. Displays indicator
         that structure has changed. changes is a tuple of (new_dataset,
@@ -231,7 +229,91 @@ class StructureTab(QtWidgets.QWidget):
             structures have been deleted.
         {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
         Note: Use {"draw": None} after multiple ROIs are generated
-        (E.g., from ISO2ROI functionality) instead of calling this function
+        (E.g., from ISO2ROI functionality), and use {"transfer":None} for
+         ROI Transfer instead of calling this function
+        multiple times. This will trigger auto save.
+        """
+        new_dataset = changes[0]
+        change_description = changes[1]
+
+        # If this is the first change made to the RTSS file, update the
+        # dataset with the new one so that OnkoDICOM starts working off this
+        # dataset rather than the original RTSS file.
+        self.moving_dict_container.set("rtss_modified", True)
+        self.moving_dict_container.set("dataset_rtss", new_dataset)
+
+        # Refresh ROIs in main page
+        self.moving_dict_container.set(
+            "rois", ImageLoading.get_roi_info(new_dataset))
+        self.rois = self.moving_dict_container.get("rois")
+        contour_data = ImageLoading.get_raw_contour_data(new_dataset)
+        self.moving_dict_container.set("raw_contour", contour_data[0])
+        self.moving_dict_container.set("num_points", contour_data[1])
+        pixluts = ImageLoading.get_pixluts(self.moving_dict_container.dataset)
+        self.moving_dict_container.set("pixluts", pixluts)
+        self.moving_dict_container.set("list_roi_numbers", ordered_list_rois(
+            self.moving_dict_container.get("rois")))
+        self.moving_dict_container.set("selected_rois", [])
+        self.moving_dict_container.set("dict_polygons_axial", {})
+        self.moving_dict_container.set("dict_polygons_sagittal", {})
+        self.moving_dict_container.set("dict_polygons_coronal", {})
+
+        if "draw" in change_description or "transfer" in change_description:
+            dicom_tree_rtss = DicomTree(None)
+            dicom_tree_rtss.dataset = new_dataset
+            dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
+                dicom_tree_rtss.dataset)
+            self.moving_dict_container.set(
+                "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
+            self.color_dict = self.init_color_roi(self.moving_dict_container)
+            self.moving_dict_container.set("roi_color_dict", self.color_dict)
+            if self.moving_dict_container.has_attribute("raw_dvh"):
+                # DVH will be outdated once changes to it are made, and
+                # recalculation will be required.
+                self.moving_dict_container.set("dvh_outdated", True)
+
+        if self.moving_dict_container.has_modality("raw_dvh"):
+            # Rename structures in DVH list
+            if "rename" in change_description:
+                new_raw_dvh = self.moving_dict_container.get("raw_dvh")
+                for key, dvh in new_raw_dvh.items():
+                    if dvh.name == change_description["rename"][0]:
+                        dvh.name = change_description["rename"][1]
+                        break
+
+                self.moving_dict_container.set("raw_dvh", new_raw_dvh)
+
+            # Remove structures from DVH list - the only visible effect of
+            # this section is the exported DVH csv
+            if "delete" in change_description:
+                list_of_deleted = []
+                new_raw_dvh = self.moving_dict_container.get("raw_dvh")
+                for key, dvh in new_raw_dvh.items():
+                    if dvh.name in change_description["delete"]:
+                        list_of_deleted.append(key)
+                for key in list_of_deleted:
+                    new_raw_dvh.pop(key)
+                self.moving_dict_container.set("raw_dvh", new_raw_dvh)
+
+        if "transfer" in change_description and change_description["transfer"] is None:
+            self.save_new_rtss_to_moving_image_set(auto=True)
+
+    def fixed_container_structure_modified(self, changes):
+        """
+        Executes when a structure is renamed/deleted. Displays indicator
+        that structure has changed. changes is a tuple of (new_dataset,
+        description_of_changes)
+        description_of_changes follows the format
+        {"type_of_change": value_of_change}.
+        Examples:
+        {"rename": ["TOOTH", "TEETH"]} represents that the TOOTH structure has
+            been renamed to TEETH.
+        {"delete": ["TEETH", "MAXILLA"]} represents that the TEETH and MAXILLA
+            structures have been deleted.
+        {"draw": "AORTA"} represents that a new structure AORTA has been drawn.
+        Note: Use {"draw": None} after multiple ROIs are generated
+        (E.g., from ISO2ROI functionality), and use {"transfer":None} for
+         ROI Transfer instead of calling this function
         multiple times. This will trigger auto save.
         """
 
@@ -266,14 +348,14 @@ class StructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("dict_polygons_sagittal", {})
         self.patient_dict_container.set("dict_polygons_coronal", {})
 
-        if "draw" in change_description:
+        if "draw" in change_description or "transfer" in change_description:
             dicom_tree_rtss = DicomTree(None)
             dicom_tree_rtss.dataset = new_dataset
             dicom_tree_rtss.dict = dicom_tree_rtss.dataset_to_dict(
                 dicom_tree_rtss.dataset)
             self.patient_dict_container.set(
                 "dict_dicom_tree_rtss", dicom_tree_rtss.dict)
-            self.color_dict = self.init_color_roi()
+            self.color_dict = self.init_color_roi(self.patient_dict_container)
             self.patient_dict_container.set("roi_color_dict", self.color_dict)
             if self.patient_dict_container.has_attribute("raw_dvh"):
                 # DVH will be outdated once changes to it are made, and
@@ -310,7 +392,9 @@ class StructureTab(QtWidgets.QWidget):
         self.update_content()
 
         if "draw" in change_description and change_description["draw"] is None:
-            self.save_new_rtss(auto=True)
+            self.save_new_rtss_to_fixed_image_set(auto=True)
+        elif "transfer" in change_description and change_description["transfer"] is None:
+            self.save_new_rtss_to_fixed_image_set(auto=True)
 
     def show_modified_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
@@ -331,7 +415,7 @@ class StructureTab(QtWidgets.QWidget):
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
         # When the widget is clicked, save the rtss
-        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss
+        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss_to_fixed_image_set
 
         # Temporarily remove the ROI modify buttons, add this indicator, then
         # add them back again.
@@ -422,7 +506,7 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_coronal.pop(roi_name, None)
             new_dict_polygons_sagittal.pop(roi_name, None)
 
-    def save_new_rtss(self, event=None, auto=False):
+    def save_new_rtss_to_fixed_image_set(self, event=None, auto=False):
         """
         Save the current RTSS stored in patient dictionary to the file system.
         :param event: Not used but will be passed as an argument from
@@ -482,6 +566,65 @@ class StructureTab(QtWidgets.QWidget):
             self.patient_dict_container.set("rtss_modified", False)
             if hasattr(self, "modified_indicator_widget"):
                 self.modified_indicator_widget.setParent(None)
+
+    def save_new_rtss_to_moving_image_set(self, event=None, auto=False):
+        """
+        Save the current RTSS stored in patient dictionary to the file system.
+        :param event: Not used but will be passed as an argument from
+        modified_indicator_widget on mouseReleaseEvent
+        :param auto: Used for auto save without user confirmation
+        """
+        if self.moving_dict_container.get("existing_file_rtss") is not None:
+            existing_rtss_directory = str(Path(self.moving_dict_container.get(
+                "existing_file_rtss")))
+        else:
+            existing_rtss_directory = None
+        rtss_directory = str(
+            Path(self.moving_dict_container.get("file_rtss")))
+
+        if auto:
+            confirm_save = QtWidgets.QMessageBox.Yes
+        else:
+            confirm_save = \
+                QtWidgets.QMessageBox.information(self, "Confirmation",
+                                                  "Are you sure you want to "
+                                                  "save the modified RTSTRUCT "
+                                                  "file? This will overwrite "
+                                                  "the existing file. This is "
+                                                  "not reversible.",
+                                                  QtWidgets.QMessageBox.Yes,
+                                                  QtWidgets.QMessageBox.No)
+
+        if confirm_save == QtWidgets.QMessageBox.Yes:
+            if existing_rtss_directory is None:
+                self.moving_dict_container.get("dataset_rtss").save_as(
+                    rtss_directory)
+            else:
+                new_rtss = self.moving_dict_container.get("dataset_rtss")
+                old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
+                old_roi_names = \
+                    set(value["name"] for value in
+                        ImageLoading.get_roi_info(old_rtss).values())
+                new_roi_names = \
+                    set(value["name"] for value in
+                        self.moving_dict_container.get("rois").values())
+                duplicated_names = old_roi_names.intersection(new_roi_names)
+
+                # stop if there are conflicting roi names and user do not
+                # wish to proceed.
+                if duplicated_names and not self.display_confirm_merge(
+                        duplicated_names):
+                    return
+
+                merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
+                merged_rtss.save_as(existing_rtss_directory)
+
+            if not auto:
+                QtWidgets.QMessageBox.about(self.parentWidget(),
+                                            "File saved",
+                                            "The RTSTRUCT file has been saved."
+                                            )
+            self.moving_dict_container.set("rtss_modified", False)
 
     def display_confirm_merge(self, duplicated_names):
         confirm_merge = QtWidgets.QMessageBox(parent=self)

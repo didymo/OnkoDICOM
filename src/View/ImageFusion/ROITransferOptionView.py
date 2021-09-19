@@ -5,7 +5,7 @@ from src.Controller.ROIOptionsController import ROITransferOption
 
 
 class ROITransferOptionView(QtWidgets.QWidget):
-    def __init__(self, structure_modified_function):
+    def __init__(self, fixed_dict_structure_modified_function, moving_dict_structure_modified_function):
         """
         Initialize layout
         """
@@ -14,7 +14,8 @@ class ROITransferOptionView(QtWidgets.QWidget):
         # Create the layout
         self.roi_transfer_option_layout = QtWidgets.QHBoxLayout()
 
-        self.roi_transfer_handler = ROITransferOption(structure_modified_function)
+        self.roi_transfer_handler = ROITransferOption(fixed_dict_structure_modified_function,
+                                                      moving_dict_structure_modified_function)
 
         # Create roi transfer option button
         self.roi_transfer_option_button = QPushButton()

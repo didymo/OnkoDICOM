@@ -215,7 +215,7 @@ def test_merge_rtss(qtbot, test_object):
 
     QtCore.QTimer.singleShot(1000, test_message_window)
 
-    structure_tab.save_new_rtss(auto=True)
+    structure_tab.save_new_rtss_to_fixed_image_set(auto=True)
 
     merged_rtss = pydicom.read_file(patient_dict_container.get(
         "existing_file_rtss"))

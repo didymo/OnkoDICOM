@@ -270,7 +270,7 @@ class ActionHandler:
         save the changes to disk.
         """
         if self.patient_dict_container.get("rtss_modified"):
-            self.__main_page.structures_tab.save_new_rtss()
+            self.__main_page.structures_tab.save_new_rtss_to_fixed_image_set()
         else:
             QtWidgets.QMessageBox.information(
                 self.__main_page, "File not saved",

@@ -214,7 +214,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
 
             if confirmation_dialog == QMessageBox.Save:
-                self.structures_tab.save_new_rtss()
+                self.structures_tab.save_new_rtss_to_fixed_image_set()
                 event.accept()
                 self.cleanup()
             elif confirmation_dialog == QMessageBox.Discard:

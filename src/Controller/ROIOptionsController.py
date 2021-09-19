@@ -139,18 +139,28 @@ class ROIManipulateOption:
 
 
 class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
+    signal_roi_transferred_to_fixed_container = QtCore.Signal(tuple)
+    signal_roi_transferred_to_moving_container = QtCore.Signal(tuple)
 
     def __init__(self):
         super(ROITransferOptionUI, self).__init__()
-        self.setup_ui(self)
+        self.setup_ui(self, self.signal_roi_transferred_to_fixed_container,
+                      self.signal_roi_transferred_to_moving_container)
 
 
 class ROITransferOption:
 
-    def __init__(self, structure_modified_function):
+    def __init__(self, fixed_dict_structure_modified_function, moving_dict_structure_modified_function):
         super(ROITransferOption, self).__init__()
-        self.structure_modified_function = structure_modified_function
+        self.fixed_dict_structure_modified_function = fixed_dict_structure_modified_function
+        self.moving_dict_structure_modified_function = moving_dict_structure_modified_function
 
     def show_roi_transfer_options(self):
         self.roi_transfer_option_pop_up_window = ROITransferOptionUI()
+        self.roi_transfer_option_pop_up_window.signal_roi_transferred_to_moving_container.connect(
+            self.moving_dict_structure_modified_function
+        )
+        self.roi_transfer_option_pop_up_window.signal_roi_transferred_to_fixed_container.connect(
+            self.fixed_dict_structure_modified_function
+        )
         self.roi_transfer_option_pop_up_window.show()

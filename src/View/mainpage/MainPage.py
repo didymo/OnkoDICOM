@@ -119,7 +119,7 @@ class UIMainWindow:
             self.isodoses_tab.request_update_isodoses.connect(
                 self.update_views)
             self.isodoses_tab.request_update_ui.connect(
-                self.structures_tab.structure_modified)
+                self.structures_tab.fixed_container_structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
@@ -383,7 +383,9 @@ class UIMainWindow:
             cut_line_color=QtGui.QColor(0, 255, 0))
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255))
-        self.image_fusion_roi_transfer_option_view = ROITransferOptionView(self.structures_tab.structure_modified)
+        self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
+            self.structures_tab.fixed_container_structure_modified,
+            self.structures_tab.moving_container_structure_modified)
 
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
