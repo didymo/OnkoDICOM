@@ -136,6 +136,7 @@ class Study:
         self.rtstructs = {}
         self.rtplans = {}
         self.rtdoses = {}
+        self.sr_files = {}
         self.image_series = {}
 
         # Dictionary contains all series, used to quickly add new series based
@@ -144,6 +145,7 @@ class Study:
             "RTSTRUCT": self.rtstructs,
             "RTPLAN": self.rtplans,
             "RTDOSE": self.rtdoses,
+            "SR": self.sr_files,
             "IMAGE": self.image_series
         }
 
@@ -230,6 +232,8 @@ class Study:
             self.get_rtplan_widget(rtplan)
         for series_uid, rtdose in self.rtdoses.items():
             self.get_rtdose_widgets(rtdose)
+        for series_uid, sr_file in self.sr_files.items():
+            self.get_sr_widgets(sr_file)
 
         return self.widget_item
 
@@ -329,6 +333,21 @@ class Study:
         # Add the RTDOSE to the Study widget
         self.widget_item.addChild(rtdose_widget)
 
+    def get_sr_widgets(self, sr_file):
+        """ Add a DICOMWidgetItem of a SR file """
+        sr_widget = sr_file.get_widget_item()
+
+        # Check if there is an image series with the same FrameOfReferenceUID
+        if sr_file.referenced_frame_of_reference_uid:
+            for series_uid, image_series in self.image_series.items():
+                if sr_file.referenced_frame_of_reference_uid == \
+                        image_series.frame_of_reference_uid:
+                    self.image_series_widgets[series_uid].addChild(sr_widget)
+                    return
+
+        # Add the SR file to the Study widget
+        self.widget_item.addChild(sr_widget)
+
     def get_empty_widget(self, modality):
         """
         Create an empty widget to represent an object that does not present in
@@ -370,6 +389,9 @@ class Series:
         elif dicom_file.Modality == "RTDOSE":
             self.add_referenced_rtstruct(dicom_file)
             self.add_referenced_rtplan(dicom_file)
+        elif dicom_file.Modality == "SR":
+            self.referenced_frame_of_reference_uid = \
+                dicom_file.ReferencedFrameOfReferenceUID
 
     def add_referenced_image_series(self, dicom_file):
         if "ReferencedFrameOfReferenceSequence" in dicom_file:
