@@ -50,21 +50,20 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
             self.setEnabled(False)
 
 
-class ROINameCleaningLineEdit(QtWidgets.QLineEdit):
+class ROINameCleaningPrefixLabel(QtWidgets.QLabel):
     """
-    This class inherits QLineEdit to create a custom widget for the Name
+    This class inherits QLabel to create a custom widget for the Name
     Cleaning ROI table that allows it to be enabled or disabled when the
-    QComboBox in the same row changes.
-
-    Currently unused.
+    QComboBox in the same row changes. This widget displays the new
+    name for an ROI that has a standard prefix in the wrong case.
     """
 
     @QtCore.Slot(int)
     def change_enabled(self, index):
         print(index)
-        if index == 0:
+        if index == 1:
             self.setEnabled(True)
-        elif index == 1:
+        else:
             self.setEnabled(False)
 
 
@@ -107,6 +106,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.organ_names.append(row[0])
+            f.close()
 
         # Get standard volume prefixes
         with open(resource_path('data/csv/volumeName.csv'), 'r') as f:
@@ -114,6 +114,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.volume_prefixes.append(row[1])
+            f.close()
 
     def create_table_view(self):
         """
@@ -161,8 +162,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         :param dicom_structure: DICOM structure object representing all
                                 patients loaded.
         """
-        # List of non-standard ROI names
-
         # Loop through each patient
         rtstructs = []
         for patient in dicom_structure.patients:
@@ -182,24 +181,35 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             return
 
         # Loop through each RT Struct
+        # Structure of rois dictionary:
+        #   key: ROI name
+        #   value: a list of dataset paths containing this ROI
         rois = {}
         for rtss in rtstructs:
             rtstruct = dcmread(rtss)
-            roi_names = []
             # Loop through each ROI in the RT Struct
             for i in range(len(rtstruct.StructureSetROISequence)):
-                # Get the ROI name, determine if it is a standard organ
-                # name or has a standard prefix
+                # Get the ROI name
                 roi_name = rtstruct.StructureSetROISequence[i].ROIName
+
+                # Add ROI name to the dictionary
+                if roi_name not in rois.keys():
+                    rois[roi_name] = []
+
+                # Add dataset to the list if the ROI name is not a
+                # standard organ name and does not have a standard prefix
                 if roi_name not in self.organ_names and \
                         roi_name[0:3] not in self.volume_prefixes:
-                    roi_names.append(roi_name)
-            # Append ROI names to dictionary
-            if len(roi_names):
-                rois[rtss] = roi_names
+                    rois[roi_name].append(rtss)
 
         # Return if no ROIs found
-        if not len(rois):
+        rois_to_process = False
+        for roi in rois:
+            if len(rois[roi]):
+                rois_to_process = True
+                break
+
+        if not rois_to_process:
             self.table_roi.setRowCount(0)
             return
 
@@ -207,25 +217,36 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.table_roi.setRowCount(0)
 
         # Loop through each RTSS
-        for rtss in rois:
+        for roi_name in rois:
             # Loop through each ROI
-            roi_list = rois[rtss]
-            for i in range(len(roi_list)):
+            dataset_list = rois[roi_name]
+            for i in range(len(dataset_list)):
                 # Create QComboBox and QLineEdit
                 combo_box = ROINameCleaningOptionComboBox()
                 combo_box.setStyleSheet(self.stylesheet)
-                organ_combo_box = \
-                    ROINameCleaningOrganComboBox(self.organ_names)
-                organ_combo_box.setStyleSheet(self.stylesheet)
-                organ_combo_box.setEnabled(False)
+
+                # Generate new name as label if the ROI has a standard
+                # prefix but in the wrong case. Generate organ combobox
+                # otherwise
+                if roi_name[0:3].upper() in self.volume_prefixes:
+                    new_name = roi_name[0:3].upper() + roi_name[3:]
+                    name_box = ROINameCleaningPrefixLabel()
+                    name_box.setText(new_name)
+                else:
+                    name_box = \
+                        ROINameCleaningOrganComboBox(self.organ_names)
+
                 combo_box.currentIndexChanged.connect(
-                    organ_combo_box.change_enabled)
+                    name_box.change_enabled)
+                name_box.setEnabled(False)
+                name_box.setStyleSheet(self.stylesheet)
 
                 # Add row to table
                 self.table_roi.insertRow(i)
                 self.table_roi.setRowHeight(i, 50)
-                self.table_roi.setItem(i, 0,
-                                       QtWidgets.QTableWidgetItem(roi_list[i]))
+                self.table_roi.setItem(
+                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
                 self.table_roi.setCellWidget(i, 1, combo_box)
-                self.table_roi.setCellWidget(i, 2, organ_combo_box)
-                self.table_roi.setItem(i, 3, QtWidgets.QTableWidgetItem(rtss))
+                self.table_roi.setCellWidget(i, 2, name_box)
+                self.table_roi.setItem(
+                    i, 3, QtWidgets.QTableWidgetItem(dataset_list[i]))

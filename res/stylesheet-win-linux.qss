@@ -70,6 +70,16 @@ QLabel[QLabelClass~="tree-view-label-keep-delete"] {
     color: #f5f5f5;
 }
 
+ROINameCleaningPrefixLabel {
+    margin: 4px;
+    padding: 0 4px;
+    font-size: 14px;
+    background-color: rgb(244, 245, 245);
+}
+
+ROINameCleaningPrefixLabel:disabled {
+    background-color: #b9b9b9;
+}
 
 QPushButton {
     margin: 4px;
