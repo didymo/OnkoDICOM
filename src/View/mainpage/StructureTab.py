@@ -440,15 +440,15 @@ class StructureTab(QtWidgets.QWidget):
             "existing_rtss_files")
         if len(existing_rtss_files) == 1:
             if isinstance(existing_rtss_files[0], Series):
-                self.existing_rtss_directory = str(Path(
+                existing_rtss_directory = str(Path(
                     existing_rtss_files[0].get_files()[0]))
             else:
-                self.existing_rtss_directory = existing_rtss_files[0]
+                existing_rtss_directory = existing_rtss_files[0]
         elif len(existing_rtss_files) > 1:
             self.display_select_rtss_window()
             return
         else:
-            self.existing_rtss_directory = None
+            existing_rtss_directory = None
 
         rtss_directory = str(
             Path(self.patient_dict_container.get("file_rtss")))
@@ -467,12 +467,12 @@ class StructureTab(QtWidgets.QWidget):
                                                   QtWidgets.QMessageBox.No)
 
         if confirm_save == QtWidgets.QMessageBox.Yes:
-            if self.existing_rtss_directory is None:
+            if existing_rtss_directory is None:
                 self.patient_dict_container.get("dataset_rtss").save_as(
                     rtss_directory)
             else:
                 new_rtss = self.patient_dict_container.get("dataset_rtss")
-                old_rtss = pydicom.dcmread(self.existing_rtss_directory,
+                old_rtss = pydicom.dcmread(existing_rtss_directory,
                                            force=True)
                 old_roi_names = \
                     set(value["name"] for value in
@@ -489,7 +489,7 @@ class StructureTab(QtWidgets.QWidget):
                     return
 
                 merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
-                merged_rtss.save_as(self.existing_rtss_directory)
+                merged_rtss.save_as(existing_rtss_directory)
 
             if not auto:
                 QtWidgets.QMessageBox.about(self.parentWidget(),
