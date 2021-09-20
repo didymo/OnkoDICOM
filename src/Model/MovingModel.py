@@ -173,10 +173,10 @@ def read_images_for_fusion(level=0, window=0):
     new_image = sitk.ReadImage(new_fusion_list)
     moving_dict_container.set("sitk_moving", new_image)
 
-    create_fused_model(orig_image, new_image)
-    color_axial, color_sagittal, color_coronal = \
-        get_fused_window(level, window)
+    #create_fused_model(orig_image, new_image)
+    #color_axial, color_sagittal, color_coronal = \
+    #    get_fused_window(level, window)
 
-    patient_dict_container.set("color_axial", color_axial)
-    patient_dict_container.set("color_sagittal", color_sagittal)
-    patient_dict_container.set("color_coronal", color_coronal)
+    #patient_dict_container.set("color_axial", color_axial)
+    #patient_dict_container.set("color_sagittal", color_sagittal)
+    #patient_dict_container.set("color_coronal", color_coronal)

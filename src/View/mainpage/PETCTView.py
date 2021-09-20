@@ -156,11 +156,12 @@ class PetCtView(QtWidgets.QWidget):
             img2 = sitk.Cast(image2, sitk.sitkFloat32)
 
         intersection_mask = mask1 * mask2
-
+        print("generate intersection")
         intersection_image = self.mask_image_multiply(alpha * intersection_mask,
                                                  img1) + \
                              self.mask_image_multiply(
                                  (1 - alpha) * intersection_mask, img2)
+        print("return image")
         return intersection_image + self.mask_image_multiply(
             mask2 - intersection_mask, img2) + \
                self.mask_image_multiply(mask1 - intersection_mask, img1)
@@ -474,8 +475,9 @@ class PetCtView(QtWidgets.QWidget):
         slice_pos = dataset['SliceLocation'].value
 
         # Update labels
-        self.label_image_id.setText("Image: %s / %s" % (
-        str(self.current_slice_number), str(total_slices)))
+        self.label_image_id.setText(
+            "Image: %s / %s" % (str(self.current_slice_number),
+                                str(total_slices)))
         self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
         self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
         self.label_image_size.setText(
