@@ -310,9 +310,12 @@ class PetCtView(QtWidgets.QWidget):
         if not self.moving_dict_container.is_empty() and self.moving_dict_container.has_attribute("sitk_moving"):
             image = self.patient_dict_container.get("sitk_original")[slider_id]
             moving_image = self.moving_dict_container.get("sitk_moving")[slider_id]
+            #calculate the mask of the two images
+            mask1= sitk.OtsuThreshold(image, 0, 1)
+            mask2 = sitk.OtsuThreshold(moving_image, 0, 1)
             alpha = float(self.alpha_slider.value()/100)
             print(alpha)
-            image = self.alpha_blend(image, moving_image, alpha)
+            image = self.alpha_blend(image, moving_image, alpha,mask1,mask2)
         # write function based on alpha slider
         # convert to image to display
         label = QtWidgets.QGraphicsPixmapItem(image)
