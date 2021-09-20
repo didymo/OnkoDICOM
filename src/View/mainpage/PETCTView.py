@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtWidgets import QRadioButton, QGridLayout, QWidget, \
     QApplication
+from PySide6.QtGui import QPainter
 from skimage import measure
 
 from src.Model.Isodose import get_dose_grid
@@ -98,8 +99,6 @@ class PetCtView(QtWidgets.QWidget):
         Create a slider for the DICOM Image View.
         """
         pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
-        overlay_pixmaps = self.patient_dict_container.get("pixmaps_" + self.overlay_view)
-
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -108,20 +107,12 @@ class PetCtView(QtWidgets.QWidget):
         self.slider.valueChanged.connect(self.value_changed)
 
     def init_alpha_slider(self):
-        #alpha slider
-        pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         self.alpha_slider.setMinimum(0)
-        self.alpha_slider.setMaximum(len(pixmaps) - 1)
-        self.alpha_slider.setValue(int(len(pixmaps) / 2))
+        self.alpha_slider.setMaximum(100)
+        self.alpha_slider.setValue(50)
         self.alpha_slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.alpha_slider.setTickInterval(1)
         self.alpha_slider.valueChanged.connect(self.value_changed)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(len(pixmaps) - 1)
-        self.slider.setValue(int(len(pixmaps) / 2))
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
-        self.slider.setTickInterval(1)
-        self.slider.valueChanged.connect(self.value_changed)
 
     def mask_image_multiply(self, mask, image):
         components_per_pixel = image.GetNumberOfComponentsPerPixel()
@@ -307,13 +298,21 @@ class PetCtView(QtWidgets.QWidget):
         pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
+        color = QtGui.QColor()
+        color.setRgb(90, 250, 175, 200)
         # Load moving image
         if not self.moving_dict_container.is_empty() and self.moving_dict_container.has_attribute("sitk_moving"):
-            image = self.patient_dict_container.get("sitk_original")[slider_id]
-            moving_image = self.moving_dict_container.get("sitk_moving")[slider_id]
+            moving_image = self.moving_dict_container.get("pixmaps_" + self.slice_view)[slider_id]
+            image_conv = image.toImage()
+            mov_conv = moving_image.toImage()
             alpha = float(self.alpha_slider.value()/100)
-            print(alpha)
-            image = self.alpha_blend(image, moving_image, alpha)
+            painter = QPainter()
+            painter.begin(image_conv)
+            painter.setOpacity(alpha)
+            painter.drawImage(0, 0, mov_conv)
+            painter.end()
+            image = QtGui.QPixmap.fromImage(image_conv)
+
         # write function based on alpha slider
         # convert to image to display
         label = QtWidgets.QGraphicsPixmapItem(image)
