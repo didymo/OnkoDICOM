@@ -239,9 +239,10 @@ class BatchProcessingController:
             if "roinamecleaning" in self.processes:
                 if self.name_cleaning_options:
                     # Get ROIs, dataset locations, options
-                    process = BatchProcessROINameCleaning(progress_callback,
-                                                          interrupt_flag,
-                                                          self.name_cleaning_options)
+                    process = \
+                        BatchProcessROINameCleaning(progress_callback,
+                                                    interrupt_flag,
+                                                    self.name_cleaning_options)
                     process.start()
 
             # Perform CSV2ClinicalDataSR on patient

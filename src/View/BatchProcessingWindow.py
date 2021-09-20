@@ -9,7 +9,7 @@ from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
 from src.View.batchprocessing.ROINameCleaningOptions import \
-    ROINameCleaningOptions
+    ROINameCleaningOptions, ROINameCleaningPrefixLabel
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -297,9 +297,18 @@ class UIBatchProcessingWindow(object):
             name_cleaning_options = {}
             roi_name_table = self.batchnamecleaning_tab.table_roi
             for i in range(roi_name_table.rowCount()):
+                # Get current ROI name and what to do with it
                 roi_name = roi_name_table.item(i, 0).text()
                 option = roi_name_table.cellWidget(i, 1).currentIndex()
-                new_name = roi_name_table.cellWidget(i, 2).currentText()
+
+                # Get new name text
+                if isinstance(roi_name_table.cellWidget(i, 2),
+                              ROINameCleaningPrefixLabel):
+                    new_name = roi_name_table.cellWidget(i, 2).text()
+                else:
+                    new_name = roi_name_table.cellWidget(i, 2).currentText()
+
+                # Get the dataset the ROI is in
                 dataset = roi_name_table.item(i, 3).text()
 
                 if dataset not in name_cleaning_options.keys():
@@ -308,6 +317,8 @@ class UIBatchProcessingWindow(object):
                 name_cleaning_options[dataset].append(
                     [roi_name, option, new_name])
 
+            # Set batch name cleaning parameters in the batch processing
+            # controller.
             self.batch_processing_controller.set_name_cleaning_options(
                 name_cleaning_options)
 
