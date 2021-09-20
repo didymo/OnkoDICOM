@@ -249,9 +249,8 @@ class PyradiExtended(QtCore.QThread):
             data = list(csv.reader(stream))
 
         # Write raw CSV data to DICOM SR
-        # TODO: create better implementation of this - requires SR
-        #       files to be more structured, out of the scope of this
-        #       functionality - a job for next year?
+        # TODO: create better implementation of this - requires
+        #       generated SR files to be more structured.
         # Convert CSV data to text
         text = ""
         for line in data:
@@ -262,7 +261,12 @@ class PyradiExtended(QtCore.QThread):
         # Create and save DICOM SR file
         patient_dict_container = PatientDictContainer()
         file_path = patient_dict_container.path
-        file_path = Path(file_path).joinpath("PyRadiomics-SR.dcm")
+        file_path = Path(file_path).joinpath("Pyradiomics-SR.dcm")
         ds = patient_dict_container.dataset[0]
-        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text)
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text,
+                                                           "PYRADIOMICS")
         dicom_sr.save_as(file_path)
+
+        # Update patient dict container
+        patient_dict_container.dataset['sr-pyrad'] = dicom_sr
+        patient_dict_container.filepaths['sr-pyrad'] = file_path
