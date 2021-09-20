@@ -263,9 +263,13 @@ class BatchProcessingController:
 
             # Perform ClinicalData-SR2CSV on patient
             if "clinicaldatasr2csv" in self.processes:
-                # TODO
                 cur_patient_files = self.get_patient_files(patient)
-                continue
+                process = BatchProcessClinicalDataSR2CSV(
+                    progress_callback, interrupt_flag,
+                    cur_patient_files, self.clinical_data_output_path
+                )
+                process.start()
+                progress_callback.emit(("Completed ClinicalData-SR2CSV", 100))
 
         PatientDictContainer().clear()
 

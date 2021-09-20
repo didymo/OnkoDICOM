@@ -47,7 +47,6 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
 
         # Only need one of either ct or pet
         self.ready = False
-        print("Pf")
         print(patient_files)
         for i in range(len(self.required_classes)):
             ready = self.load_images(patient_files, [self.required_classes[i]])
