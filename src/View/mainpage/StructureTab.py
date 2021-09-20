@@ -416,7 +416,7 @@ class StructureTab(QtWidgets.QWidget):
         self.patient_dict_container.get("existing_rtss_files").clear()
         self.patient_dict_container.get("existing_rtss_files").append(
             selected_rtss)
-        self.save_new_rtss()
+        self.save_new_rtss(auto=True)
 
     def display_select_rtss_window(self):
         """
@@ -443,10 +443,12 @@ class StructureTab(QtWidgets.QWidget):
                 existing_rtss_directory = str(Path(
                     existing_rtss_files[0].get_files()[0]))
             else:
+                # This "else" is used by iso2roi gui and structure tab tests to
+                # quickly set existing_rtss_directory
                 existing_rtss_directory = existing_rtss_files[0]
         elif len(existing_rtss_files) > 1:
             self.display_select_rtss_window()
-            return
+            return  # This function will be called again when a RTSS is selected
         else:
             existing_rtss_directory = None
 

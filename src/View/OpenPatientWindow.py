@@ -508,7 +508,8 @@ class UIOpenPatientWindow(object):
             "IMAGE": None,
             "RTSTRUCT": None,
             "RTPLAN": None,
-            "RTDOSE": None
+            "RTDOSE": None,
+            "SR": None
         }
 
         # Initialize the list of existing rtss.
@@ -539,6 +540,9 @@ class UIOpenPatientWindow(object):
             if series["RTDOSE"] and \
                     series["RTDOSE"].parent().parent().parent() != \
                     series["IMAGE"]:
+                return False
+
+            if series["SR"] and series["SR"].parent() != series["IMAGE"]:
                 return False
 
         # Check if the RTPLAN and RTDOSE are child items of the RTSTRUCT
