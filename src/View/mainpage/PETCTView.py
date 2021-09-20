@@ -53,10 +53,13 @@ class PetCtView(QtWidgets.QWidget):
         # radio buttons
         self.coronal_button = QRadioButton("Coronal")
         self.coronal_button.setChecked(False)
+        self.coronal_button.toggled.connect(self.update_axis)
         self.axial_button = QRadioButton("Axial")
         self.axial_button.setChecked(True)
+        self.axial_button.toggled.connect(self.update_axis)
         self.sagittal_button = QRadioButton("Sagittal")
         self.sagittal_button.setChecked(False)
+        self.sagittal_button.toggled.connect(self.update_axis)
 
         # Set layout
         self.dicom_view_layout.addWidget(self.view)
@@ -109,10 +112,21 @@ class PetCtView(QtWidgets.QWidget):
     def init_alpha_slider(self):
         self.alpha_slider.setMinimum(0)
         self.alpha_slider.setMaximum(100)
-        self.alpha_slider.setValue(50)
+        self.alpha_slider.setValue(0)
         self.alpha_slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.alpha_slider.setTickInterval(1)
         self.alpha_slider.valueChanged.connect(self.value_changed)
+
+    def update_axis(self):
+        toggled = self.sender()
+        if toggled.isChecked():
+            self.slice_view = toggled.text().lower()
+            pixmaps = self.patient_dict_container.get(
+                "pixmaps_" + self.slice_view)
+            self.slider.setMaximum(len(pixmaps) - 1)
+            self.slider.setValue(int(len(pixmaps) / 2))
+
+        self.update_view()
 
     def mask_image_multiply(self, mask, image):
         components_per_pixel = image.GetNumberOfComponentsPerPixel()
@@ -287,7 +301,8 @@ class PetCtView(QtWidgets.QWidget):
                 self.roi_display()
             if self.patient_dict_container.get("selected_doses"):
                 self.isodose_display()
-            self.update_metadata()
+            if self.slice_view == "axial":
+                self.update_metadata()
 
         self.view.setScene(self.scene)
 
@@ -302,7 +317,10 @@ class PetCtView(QtWidgets.QWidget):
         color.setRgb(90, 250, 175, 200)
         # Load moving image
         if not self.moving_dict_container.is_empty() and self.moving_dict_container.has_attribute("sitk_moving"):
-            moving_image = self.moving_dict_container.get("pixmaps_" + self.slice_view)[slider_id]
+
+            moving_pixmaps = self.moving_dict_container.get("pixmaps_" + self.slice_view)
+            m = float(len(moving_pixmaps))/len(pixmaps)
+            moving_image = moving_pixmaps[int(m*slider_id)]
             image_conv = image.toImage()
             mov_conv = moving_image.toImage()
             alpha = float(self.alpha_slider.value()/100)
