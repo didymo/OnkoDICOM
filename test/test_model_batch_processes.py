@@ -97,6 +97,9 @@ def test_batch_iso2roi(test_object):
         assert len(difference) > 0
 
 
+# TODO test suv2roi
+
+
 def test_batch_dvh2csv(test_object):
     """ Test asserts creation of .csv as result of dvh2csv conversion """
 
@@ -156,3 +159,9 @@ def test_batch_pyrad2csv(test_object):
         # Assert the resulting .csv file exists
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
+
+# TODO ROI name cleaning
+
+# TODO CSV 2 Clinical Data SR
+
+# TODO Clinical Data SR 2 CSV

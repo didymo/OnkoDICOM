@@ -8,8 +8,8 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 class BatchProcessCSV2ClinicalDataSR(BatchProcess):
     """
-    This class handles batch processing for the DVH2CSV process.
-    Inherits from the BatchProcess class.
+    This class handles batch processing for the CSV2ClinicalData-SR
+    process. Inherits from the BatchProcess class.
     """
     # Allowed classes for CSV2ClinicalDataSR
     allowed_classes = {

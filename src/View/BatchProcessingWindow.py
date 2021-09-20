@@ -3,6 +3,8 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
+    ClinicalDataSR2CSVOptions
 from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
     CSV2ClinicalDataSROptions
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
@@ -123,6 +125,7 @@ class UIBatchProcessingWindow(object):
         self.pyrad2csv_tab = PyRad2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.csv2clinicaldatasr_tab = CSV2ClinicalDataSROptions()
+        self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
@@ -133,6 +136,8 @@ class UIBatchProcessingWindow(object):
                                "ROI Name Cleaning")
         self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
                                "CSV2ClinicalData-SR")
+        self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
+                               "ClinicalData-SR2CSV")
 
         # == Bottom widgets
         # Info text
@@ -267,7 +272,7 @@ class UIBatchProcessingWindow(object):
         """
         processes = ['iso2roi', 'suv2roi',
                      'dvh2csv', 'pyrad2csv', 'roinamecleaning',
-                     'csv2clinicaldatasr']
+                     'csv2clinicaldatasr', 'clinicaldatasr2csv']
         selected_processes = []
 
         # Get the selected processes
@@ -284,7 +289,9 @@ class UIBatchProcessingWindow(object):
             "pyrad_output_path":
                 self.pyrad2csv_tab.get_pyrad_output_location(),
             "clinical_data_input_path":
-                self.csv2clinicaldatasr_tab.get_csv_input_location()
+                self.csv2clinicaldatasr_tab.get_csv_input_location(),
+            "clinical_data_output_path":
+                self.clinicaldatasr2csv_tab.get_csv_output_location()
         }
 
         # Setup the batch processing controller

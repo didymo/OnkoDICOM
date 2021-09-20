@@ -1,5 +1,7 @@
 import datetime
 from src.View.ProgressWindow import ProgressWindow
+from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
+    BatchProcessClinicalDataSR2CSV
 from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
     BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
@@ -33,6 +35,7 @@ class BatchProcessingController:
         self.dvh_output_path = ""
         self.pyrad_output_path = ""
         self.clinical_data_input_path = ""
+        self.clinical_data_output_path = ""
         self.processes = []
         self.dicom_structure = None
         self.name_cleaning_options = None
@@ -52,8 +55,10 @@ class BatchProcessingController:
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
         self.pyrad_output_path = file_paths.get('pyrad_output_path')
-        self.clinical_data_input_path =\
+        self.clinical_data_input_path = \
             file_paths.get('clinical_data_input_path')
+        self.clinical_data_output_path = \
+            file_paths.get('clinical_data_output_path')
 
     def set_processes(self, processes):
         """
@@ -246,7 +251,7 @@ class BatchProcessingController:
                     process.start()
                     progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
-            # Perform CSV2ClinicalDataSR on patient
+            # Perform CSV2ClinicalData-SR on patient
             if "csv2clinicaldatasr" in self.processes:
                 # Get current files
                 cur_patient_files = self.get_patient_files(patient)
@@ -255,6 +260,12 @@ class BatchProcessingController:
                     cur_patient_files, self.clinical_data_input_path)
                 process.start()
                 progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
+
+            # Perform ClinicalData-SR2CSV on patient
+            if "clinicaldatasr2csv" in self.processes:
+                # TODO
+                cur_patient_files = self.get_patient_files(patient)
+                continue
 
         PatientDictContainer().clear()
 
