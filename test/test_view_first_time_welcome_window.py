@@ -47,10 +47,21 @@ def test_first_time_welcome_window(qtbot, tmpdir, init_first_time_window_config)
     QtCore.QTimer.singleShot(1000, test_message_window)
     qtbot.mouseClick(first_time_welcome_window.save_dir_button, QtCore.Qt.LeftButton)
 
+    # Create temp csv
+    csv_path = Path.cwd().joinpath('test', 'testdata', 'temp.csv')
+    with open(csv_path, "w") as file:
+        file.write("test")
+        file.close()
+
     # Test with directory box filled
     qtbot.keyClicks(first_time_welcome_window.first_time_welcome_input_box, str(tmpdir))
+    qtbot.keyClicks(first_time_welcome_window.clinical_data_csv_input_box,
+                    str(csv_path))
     with qtbot.waitSignal(first_time_welcome_window.go_next_window, raising=True):
         qtbot.mouseClick(first_time_welcome_window.save_dir_button, QtCore.Qt.LeftButton)
 
     # Test if the database has been created
     assert os.path.isfile(db_file_path) == True
+
+    # Delete temp csv
+    os.remove(csv_path)
