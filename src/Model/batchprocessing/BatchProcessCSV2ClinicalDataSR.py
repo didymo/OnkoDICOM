@@ -1,9 +1,9 @@
+import csv
 import os
-from src.Model import CalculateDVHs
-from src.Model import ImageLoading
+from pathlib import Path
+from src.Model import DICOMStructuredReport
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
-import pandas as pd
 
 
 class BatchProcessCSV2ClinicalDataSR(BatchProcess):
@@ -17,7 +17,12 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
         "1.2.840.10008.5.1.4.1.1.2": {
             "name": "ct",
             "sliceable": True
-        }
+        },
+        # PET Image
+        "1.2.840.10008.5.1.4.1.1.128": {
+            "name": "pet",
+            "sliceable": True
+        },
     }
 
     def __init__(self, progress_callback, interrupt_flag, patient_files,
@@ -38,8 +43,17 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
-        self.required_classes = ['ct']
-        self.ready = self.load_images(patient_files, self.required_classes)
+        self.required_classes = ['ct', 'pet']
+
+        # Only need one of either ct or pet
+        self.ready = False
+        print("Pf")
+        print(patient_files)
+        for i in range(len(self.required_classes)):
+            ready = self.load_images(patient_files, [self.required_classes[i]])
+            if ready:
+                self.ready = True
+                break
         self.input_path = input_path
 
     def start(self):
@@ -57,13 +71,11 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
         if not self.ready:
             return
 
-        # Check if the dataset is complete
-        # TODO
-        self.progress_callback.emit(("Checking dataset...", 40))
-
         # Import CSV data
-        # TODO
         self.progress_callback.emit(("Importing CSV data...", 60))
+        data_dict = self.import_clinical_data()
+        if data_dict is None:
+            return
 
         # Stop loading
         if self.interrupt_flag.is_set():
@@ -73,11 +85,70 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
             return False
 
         # Save clinical data to an SR
-        # TODO
         self.progress_callback.emit(("Exporting Clinical Data to DICOM-SR...",
                                      90))
+        self.save_clinical_data(data_dict)
 
-        # Get path to save to and generate SR
-        path = self.patient_dict_container.path
+    def import_clinical_data(self):
+        """
+        Attempt to import clinical data from the CSV stored in the
+        program's settings database.
+        """
+        # Clear data dictionary and table
+        data_dict = {}
 
-        # Save SR
+        # Current patient's ID
+        # TODO convert to patient
+        patient_dict_container = PatientDictContainer()
+        patient_id = patient_dict_container.dataset[0].PatientID
+
+        # Check that the clinical data CSV exists, load data if so
+        if self.input_path == "" or self.input_path is None \
+                or not os.path.exists(self.input_path):
+            print("CSV does not exist.")
+            return None
+
+        with open(self.input_path, newline="") as stream:
+            data = list(csv.reader(stream))
+
+        # See if CSV data matches patient ID
+        patient_in_file = False
+        row_num = 0
+        for i, row in enumerate(data):
+            if row[0] == patient_id:
+                patient_in_file = True
+                row_num = i
+                break
+
+        # Return if patient's data not in the CSV file
+        if not patient_in_file:
+            # TODO: convert to logging
+            print("Patient not found in clinical data CSV.")
+            return None
+
+        # Put patient data into dictionary
+        headings = data[0]
+        attribs = data[row_num]
+        for i, heading in enumerate(headings):
+            data_dict[heading] = attribs[i]
+
+        # Return clinical data dictionary
+        return data_dict
+
+    def save_clinical_data(self, data_dict):
+        """
+        Saves clinical data to a DICOM-SR file. Overwrites any existing
+        clinical data SR files in the dataset.
+        """
+        # Create string from clinical data dictionary
+        text = ""
+        for key in data_dict:
+            text += str(key) + ": " + str(data_dict[key]) + "\n"
+
+        # Create and save DICOM SR file
+        file_path = self.patient_dict_container.path
+        file_path = Path(file_path).joinpath("Clinical-Data-SR.dcm")
+        ds = self.patient_dict_container.dataset[0]
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text,
+                                                           "CLINICAL-DATA")
+        dicom_sr.save_as(file_path)

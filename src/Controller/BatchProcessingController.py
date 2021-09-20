@@ -204,7 +204,7 @@ class BatchProcessingController:
                         # Update the patient dict container
                         PatientDictContainer().set("rtss_modified", False)
 
-                    progress_callback.emit(("Completed ISO2ROI .. ", 100))
+                    progress_callback.emit(("Completed ISO2ROI", 100))
 
             # Perform SUV2ROI on patient
             if "suv2roi" in self.processes:
@@ -244,6 +244,7 @@ class BatchProcessingController:
                                                     interrupt_flag,
                                                     self.name_cleaning_options)
                     process.start()
+                    progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
             # Perform CSV2ClinicalDataSR on patient
             if "csv2clinicaldatasr" in self.processes:
@@ -253,6 +254,7 @@ class BatchProcessingController:
                     progress_callback, interrupt_flag,
                     cur_patient_files, self.clinical_data_input_path)
                 process.start()
+                progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
 
         PatientDictContainer().clear()
 
