@@ -391,6 +391,23 @@ class UIOpenPatientWindow(object):
                     checked_item.setCheckState(0, Qt.Unchecked)
             self.last_patient = selected_patient
 
+        # Check selected items and display warning messages
+        self.check_selected_items()
+
+    def display_a_tree_branch(self, node, is_expanded):
+        """ Expand/Close a tree branch """
+        node.setExpanded(is_expanded)
+        if node.childCount() > 0:
+            for i in range(node.childCount()):
+                self.display_a_tree_branch(node.child(i), is_expanded)
+        else:
+            return
+
+    def check_selected_items(self):
+        """
+        Check and display warning messages based on the existence and quantity
+        of image series, RTSTRUCT, RTPLAN, RTDOSE and SR files
+        """
         # Get the types of all selected leaves & Get the names of all selected
         # studies
         checked_nodes = self.get_checked_nodes(
@@ -398,11 +415,12 @@ class UIOpenPatientWindow(object):
         selected_series_types = [checked_node.dicom_object.get_series_type()
                                  for checked_node in checked_nodes]
 
-        # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
+        # Total number of selected image series
         total_selected_image_series = selected_series_types.count('CT') + \
                                       selected_series_types.count('MR') + \
                                       selected_series_types.count('PT')
 
+        # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
         if not ('CT' in selected_series_types or
                 'MR' in selected_series_types or
@@ -429,73 +447,6 @@ class UIOpenPatientWindow(object):
 
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
-
-    def display_a_tree_branch(self, node, is_expanded):
-        """ Expand/Close a tree branch """
-        node.setExpanded(is_expanded)
-        if node.childCount() > 0:
-            for i in range(node.childCount()):
-                self.display_a_tree_branch(node.child(i), is_expanded)
-        else:
-            return
-
-    def confirm_button_clicked(self):
-        """
-        Begins loading of the selected files.
-        """
-        selected_files = []
-        for item in self.get_checked_nodes(
-                self.open_patient_window_patients_tree.invisibleRootItem()):
-            selected_files += item.dicom_object.get_files()
-
-        self.progress_window = OpenPatientProgressWindow(self)
-        self.progress_window.signal_loaded.connect(self.on_loaded)
-        self.progress_window.signal_error.connect(self.on_loading_error)
-        self.progress_window.start_loading(selected_files,
-                                           self.existing_rtss)
-
-    def on_loaded(self, results):
-        """
-        Executes when the progress bar finishes loaded the selected files.
-        """
-        if results[0] is True:  # Will be NoneType if loading was interrupted.
-            self.patient_info_initialized.emit(results[1])  # Emits the progress window.
-
-    def on_loading_error(self, exception):
-        """
-        Error handling for progress window.
-        """
-        if type(exception[1]) == ImageLoading.NotRTSetError:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
-                              "Selected files cannot be opened as they are not"
-                              " a DICOM-RT set.")
-            self.progress_window.close()
-        elif type(exception[1]) == ImageLoading.NotAllowedClassError:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
-                              "Selected files cannot be opened as they contain"
-                              " unsupported DICOM classes.")
-            self.progress_window.close()
-
-    def get_checked_nodes(self, root):
-        """
-        :param root: QTreeWidgetItem as a root.
-        :return: A list of all QTreeWidgetItems in the QTreeWidget that are
-        checked under the root.
-        """
-        checked_items = []
-
-        def recurse(parent_item: QTreeWidgetItem):
-            for i in range(parent_item.childCount()):
-                child = parent_item.child(i)
-                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and \
-                        child.checkState(0) == Qt.Checked:
-                    checked_items.append(child)
-                grand_children = child.childCount()
-                if grand_children > 0:
-                    recurse(child)
-
-        recurse(root)
-        return checked_items
 
     def check_selected_items_referencing(self, items):
         """
@@ -571,6 +522,64 @@ class UIOpenPatientWindow(object):
             if image_series.child(i).dicom_object:
                 existing_rtss.append(image_series.child(i).dicom_object)
         return existing_rtss
+
+    def confirm_button_clicked(self):
+        """
+        Begins loading of the selected files.
+        """
+        selected_files = []
+        for item in self.get_checked_nodes(
+                self.open_patient_window_patients_tree.invisibleRootItem()):
+            selected_files += item.dicom_object.get_files()
+
+        self.progress_window = OpenPatientProgressWindow(self)
+        self.progress_window.signal_loaded.connect(self.on_loaded)
+        self.progress_window.signal_error.connect(self.on_loading_error)
+        self.progress_window.start_loading(selected_files,
+                                           self.existing_rtss)
+
+    def on_loaded(self, results):
+        """
+        Executes when the progress bar finishes loaded the selected files.
+        """
+        if results[0] is True:  # Will be NoneType if loading was interrupted.
+            self.patient_info_initialized.emit(results[1])  # Emits the progress window.
+
+    def on_loading_error(self, exception):
+        """
+        Error handling for progress window.
+        """
+        if type(exception[1]) == ImageLoading.NotRTSetError:
+            QMessageBox.about(self.progress_window, "Unable to open selection",
+                              "Selected files cannot be opened as they are not"
+                              " a DICOM-RT set.")
+            self.progress_window.close()
+        elif type(exception[1]) == ImageLoading.NotAllowedClassError:
+            QMessageBox.about(self.progress_window, "Unable to open selection",
+                              "Selected files cannot be opened as they contain"
+                              " unsupported DICOM classes.")
+            self.progress_window.close()
+
+    def get_checked_nodes(self, root):
+        """
+        :param root: QTreeWidgetItem as a root.
+        :return: A list of all QTreeWidgetItems in the QTreeWidget that are
+        checked under the root.
+        """
+        checked_items = []
+
+        def recurse(parent_item: QTreeWidgetItem):
+            for i in range(parent_item.childCount()):
+                child = parent_item.child(i)
+                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and \
+                        child.checkState(0) == Qt.Checked:
+                    checked_items.append(child)
+                grand_children = child.childCount()
+                if grand_children > 0:
+                    recurse(child)
+
+        recurse(root)
+        return checked_items
 
 
 # This is to allow for dropping a directory into the input text.
