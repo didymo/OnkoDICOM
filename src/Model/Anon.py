@@ -790,11 +790,19 @@ def anonymize(path, datasets, file_paths, rawdvh):
         # x.endswith("Sequence") ]
         for key, dicom_object_as_dataset in new_dict_dataset.items():
             # _workaround_hacks_for_pmp_pseudo(dicom_object_as_dataset)
+            # Leave series description alone for SRs, as OnkoDICOM checks
+            # this tag when determining what is stored in the SR
+            if dicom_object_as_dataset.SOPClassUID.name == "Comprehensive SR Storage":
+                leave_unchanged = ["PatientSex", "PatientWeight",
+                                   "PatientSize", "SeriesDescription"]
+            else:
+                # Leave PatientWeight and PatientSize unmodified per @AAM
+                leave_unchanged = ["PatientSex", "PatientWeight",
+                                   "PatientSize"]
+
             ds_pseudo = pmp_anonymise(
                 dicom_object_as_dataset,
-                # Leave PatientWeight and PatientSize unmodified per @AAM
-                keywords_to_leave_unchanged=["PatientSex", "PatientWeight",
-                                             "PatientSize"],
+                keywords_to_leave_unchanged=leave_unchanged,
                 replacement_strategy=pseudonymise.pseudonymisation_dispatch,
                 identifying_keywords=
                 pseudonymise.get_default_pseudonymisation_keywords(),
@@ -808,9 +816,16 @@ def anonymize(path, datasets, file_paths, rawdvh):
             # influenced (breast, prostate, ovary), "hiding" the gender in
             # the metadata may not really prevent re-identification of the
             # gender/PatientSex
-            ds_pseudo_full_path = create_filename_from_dataset(
-                ds_pseudo, anonymised_patient_full_path
-            )
+
+            # Manually specify new name for comprehensive SR files, as
+            # pymedphys cannot handle them.
+            if ds_pseudo.SOPClassUID.name == "Comprehensive SR Storage":
+                ds_pseudo_full_path = \
+                    anonymised_patient_full_path.joinpath(
+                        ("SR." + ds_pseudo.SOPInstanceUID + ".dcm"))
+            else:
+                ds_pseudo_full_path = create_filename_from_dataset(
+                    ds_pseudo, anonymised_patient_full_path)
             ds_pseudo.save_as(ds_pseudo_full_path)
 
     print("\n\nThe New patient folder path is : ",

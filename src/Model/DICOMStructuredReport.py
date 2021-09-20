@@ -7,7 +7,7 @@ from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 
 
-def generate_dicom_sr(file_path, img_ds, data):
+def generate_dicom_sr(file_path, img_ds, data, series_description):
     """
     Generates DICOM Structured Report files for the given file path.
     :param file_path: the file name and directory to save the DICOM
@@ -15,6 +15,7 @@ def generate_dicom_sr(file_path, img_ds, data):
     :param img_ds: A CT or MR image from the dataset used to pull
                    general information for the DICOM SR.
     :param data: Text data to be written to the DICOM SR file.
+    :param series_description: Description of text data written to SR.
     :return: dicom_sr, a dataset for the new DICOM SR file.
     """
     if img_ds is None:
@@ -63,9 +64,7 @@ def generate_dicom_sr(file_path, img_ds, data):
 
     # Copy tags from CT/MR image
     for tag in top_level_tags_to_copy:
-        print("Tag ", tag)
         if tag in img_ds:
-            print("value of tag in image: ", img_ds[tag])
             dicom_sr[tag] = deepcopy(img_ds[tag])
 
     dicom_sr.AccessionNumber = ""
@@ -74,7 +73,7 @@ def generate_dicom_sr(file_path, img_ds, data):
     dicom_sr.SeriesDate = dicom_date
     dicom_sr.SeriesTime = dicom_time
     dicom_sr.Modality = "SR"
-    dicom_sr.SeriesDescription = "Optional"  #TODO replace with Clinical Data/Pyradiomics
+    dicom_sr.SeriesDescription = series_description
     # Can be empty
     referenced_performed_procedure_step_sequence = Sequence()
     dicom_sr.ReferencedPerformedProcedureStepSequence = \
@@ -117,7 +116,8 @@ def generate_dicom_sr(file_path, img_ds, data):
     dicom_sr.ReferencedDateTime = ""
 
     dicom_sr.MeasuredValueSequence = Sequence()
-    og_frame_of_reference_UID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
+    og_frame_of_reference_UID = \
+        deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
     dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID
 
     # == Content Sequence

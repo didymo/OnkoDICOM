@@ -397,8 +397,12 @@ class MainPageCallClass:
         target_path = anonymize(path, dataset, filepaths, raw_dvh)
         return target_path
 
-    # This function displays the clinical data tab
     def display_clinical_data(self, tab_window):
+        """
+        Display the clinical data tab.
+        :param tab_window: The Tab Window that this tab is to be added
+                           to.
+        """
         self.tab_cd = ClinicalDataView.ClinicalDataView()
         tab_window.addTab(self.tab_cd, "Clinical Data")
 
