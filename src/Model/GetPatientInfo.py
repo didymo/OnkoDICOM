@@ -76,9 +76,13 @@ def dict_instance_uid(dict_ds):
 
     for ds in dict_ds:
         if ds not in non_img_type:
-            index = int(ds)
-            img_ds = dict_ds[ds]
-            res[index] = img_ds.SOPInstanceUID
+            if isinstance(ds, str) and ds[0:3] == 'sr-':
+                continue
+            else:
+                index = int(ds)
+                img_ds = dict_ds[ds]
+                res[index] = img_ds.SOPInstanceUID
+
     return res
 
 

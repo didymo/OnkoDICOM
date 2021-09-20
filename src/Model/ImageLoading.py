@@ -63,6 +63,11 @@ allowed_classes = {
     "1.2.840.10008.5.1.4.1.1.128": {
         "name": "pet",
         "sliceable": True
+    },
+    # Comprehensive SR
+    "1.2.840.10008.5.1.4.1.1.88.33": {
+        "name": "sr",
+        "sliceable": False
     }
 }
 
@@ -92,6 +97,7 @@ def get_datasets(filepath_list):
     file_names_dict = {}
 
     slice_count = 0
+    sr_count = 0
     for file in natural_sort(filepath_list):
         try:
             read_file = dcmread(file)
@@ -104,7 +110,17 @@ def get_datasets(filepath_list):
                     slice_name = slice_count
                     slice_count += 1
                 else:
-                    slice_name = allowed_class["name"]
+                    # TODO: change when other SRs are generated
+                    #  (radiomics). Read from SR description to
+                    #  determine SR type
+                    if allowed_class["name"] == "sr":
+                        if read_file.SeriesDescription == "CLINICAL-DATA":
+                            slice_name = "sr-cd"
+                        else:
+                            slice_name = "sr-other-" + str(sr_count)
+                            sr_count += 1
+                    else:
+                        slice_name = allowed_class["name"]
 
                 read_data_dict[slice_name] = read_file
                 file_names_dict[slice_name] = file
@@ -517,9 +533,12 @@ def get_pixluts(read_data_dict):
     non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
     for ds in read_data_dict:
         if ds not in non_img_type:
-            img_ds = read_data_dict[ds]
-            pixlut = calculate_matrix(img_ds)
-            dict_pixluts[img_ds.SOPInstanceUID] = pixlut
+            if isinstance(ds, str) and ds[0:3] == 'sr-':
+                continue
+            else:
+                img_ds = read_data_dict[ds]
+                pixlut = calculate_matrix(img_ds)
+                dict_pixluts[img_ds.SOPInstanceUID] = pixlut
 
     return dict_pixluts
 
@@ -539,5 +558,10 @@ def get_image_uid_list(dataset):
     # RTPLAN)
     for key in dataset:
         if key not in non_img_list:
-            uid_list.append(dataset[key].SOPInstanceUID)
+            if isinstance(key, str):
+                if key[0:3] != 'sr-':
+                    uid_list.append(dataset[key].SOPInstanceUID)
+            else:
+                uid_list.append(dataset[key].SOPInstanceUID)
+
     return uid_list
