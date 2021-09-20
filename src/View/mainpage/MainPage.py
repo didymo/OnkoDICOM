@@ -185,32 +185,12 @@ class UIMainWindow:
         elif hasattr(self, 'dvh_tab'):
             del self.dvh_tab
 
+        # Add DICOM Tree View tab
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
-        # Create Clinical Data tab TODO refactor the entire Clinical Data
-        #  form/display class As they currently stand, they are given the
-        #  right tab widget, and make direct modifications to the tab. This
-        #  class should be refactored in the same way as the rest of the
-        #  main window's components, i.e. the Clinical Data should be a
-        #  child of QWidget that can exist independently of OnkoDICOM. This
-        #  class would differ from most other main window components in that
-        #  rather than interacting with the PatientDictContainer as its
-        #  model, it would use the patient's ClinicalData csv file as the
-        #  model (which means that the QWidget would theoretically easily
-        #  exist outside OnkoDICOM).
-        # There are two classes: one for displaying the clinical data,
-        # and another for modifying the clinical data. The check below
-        # determines whether there already exists a clinical data csv for
-        # the patient, and loads either the data display or the data form
-        # depending on what exists.
-        reg = '/CSV/ClinicalData*[.csv]'
-        if not glob.glob(patient_dict_container.path + reg):
-            self.call_class.display_cd_form(
-                self.right_panel, patient_dict_container.path)
-        else:
-            self.call_class.display_cd_dat(
-                self.right_panel, patient_dict_container.path)
+        # Add clinical data tab
+        self.call_class.display_clinical_data(self.right_panel)
 
         splitter.addWidget(self.left_panel)
         splitter.addWidget(self.right_panel)

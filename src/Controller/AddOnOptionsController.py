@@ -102,7 +102,13 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "dbID": 521,
                 "parent_ID": 446,
                 "short_name": "Default directory",
-            }
+            },
+            {
+                "level": 1,
+                "dbID": 530,
+                "parent_ID": 446,
+                "short_name": "Clinical Data CSV File",
+            },
         ]
         # create a model for the tree view of options and attach the
         # data
@@ -395,12 +401,17 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             stream.write("\n")
             stream.close()
 
-        # Save the default directory
+        # Save the default directory and clinical data CSV directory
         configuration = Configuration()
         try:
             new_dir = self.change_default_directory. \
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
+            new_clinical_data_csv_dir = \
+                self.clinical_data_csv_dir_options.\
+                clinical_data_csv_dir_input_box.text()
+            configuration.update_clinical_data_csv_dir(
+                new_clinical_data_csv_dir)
         except SqlError:
             configuration.set_up_config_db()
             QMessageBox.critical(
