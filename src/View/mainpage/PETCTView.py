@@ -27,7 +27,6 @@ class PetCtView(QtWidgets.QWidget):
         self.slice_view = slice_view
         self.overlay_view = slice_view
 
-
         if self.slice_view == "axial":
             self.display_metadata = True
         else:
@@ -96,10 +95,9 @@ class PetCtView(QtWidgets.QWidget):
             self.init_metadata()
         self.update_view()
 
-
     def init_slider(self):
         """
-        Create a slider for the DICOM Image View.
+        Create a slider for the PET/CT View.
         """
         pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         self.slider.setMinimum(0)
@@ -110,6 +108,9 @@ class PetCtView(QtWidgets.QWidget):
         self.slider.valueChanged.connect(self.value_changed)
 
     def init_alpha_slider(self):
+        """
+        Creates the alpha slider for PET/CT View
+        """
         self.alpha_slider.setMinimum(0)
         self.alpha_slider.setMaximum(100)
         self.alpha_slider.setValue(0)
@@ -118,6 +119,9 @@ class PetCtView(QtWidgets.QWidget):
         self.alpha_slider.valueChanged.connect(self.value_changed)
 
     def update_axis(self):
+        """
+        Changes the slice view depending on which radio button is toggled
+        """
         toggled = self.sender()
         if toggled.isChecked():
             self.slice_view = toggled.text().lower()
@@ -128,50 +132,50 @@ class PetCtView(QtWidgets.QWidget):
 
         self.update_view()
 
-    def mask_image_multiply(self, mask, image):
-        components_per_pixel = image.GetNumberOfComponentsPerPixel()
-        if components_per_pixel == 1:
-            return mask * image
-        else:
-            return sitk.Compose(
-                [mask * sitk.VectorIndexSelectionCast(image, channel) for
-                 channel in range(components_per_pixel)])
+    # def mask_image_multiply(self, mask, image):
+    #     components_per_pixel = image.GetNumberOfComponentsPerPixel()
+    #     if components_per_pixel == 1:
+    #         return mask * image
+    #     else:
+    #         return sitk.Compose(
+    #             [mask * sitk.VectorIndexSelectionCast(image, channel) for
+    #              channel in range(components_per_pixel)])
 
-    def alpha_blend(self, image1, image2, alpha=0.5, mask1=None, mask2=None):
-        '''
-        Alaph blend two images, pixels can be scalars or vectors.
-        The region that is alpha blended is controled by the given masks.
-        '''
-
-        if not mask1:
-            mask1 = sitk.Image(image1.GetSize(), sitk.sitkFloat32) + 1.0
-            mask1.CopyInformation(image1)
-        else:
-            mask1 = sitk.Cast(mask1, sitk.sitkFloat32)
-        if not mask2:
-            mask2 = sitk.Image(image2.GetSize(), sitk.sitkFloat32) + 1
-            mask2.CopyInformation(image2)
-        else:
-            mask2 = sitk.Cast(mask2, sitk.sitkFloat32)
-
-        components_per_pixel = image1.GetNumberOfComponentsPerPixel()
-        if components_per_pixel > 1:
-            img1 = sitk.Cast(image1, sitk.sitkVectorFloat32)
-            img2 = sitk.Cast(image2, sitk.sitkVectorFloat32)
-        else:
-            img1 = sitk.Cast(image1, sitk.sitkFloat32)
-            img2 = sitk.Cast(image2, sitk.sitkFloat32)
-
-        intersection_mask = mask1 * mask2
-        print("generate intersection")
-        intersection_image = self.mask_image_multiply(alpha * intersection_mask,
-                                                 img1) + \
-                             self.mask_image_multiply(
-                                 (1 - alpha) * intersection_mask, img2)
-        print("return image")
-        return intersection_image + self.mask_image_multiply(
-            mask2 - intersection_mask, img2) + \
-               self.mask_image_multiply(mask1 - intersection_mask, img1)
+    # def alpha_blend(self, image1, image2, alpha=0.5, mask1=None, mask2=None):
+    #     '''
+    #     Alaph blend two images, pixels can be scalars or vectors.
+    #     The region that is alpha blended is controled by the given masks.
+    #     '''
+    #
+    #     if not mask1:
+    #         mask1 = sitk.Image(image1.GetSize(), sitk.sitkFloat32) + 1.0
+    #         mask1.CopyInformation(image1)
+    #     else:
+    #         mask1 = sitk.Cast(mask1, sitk.sitkFloat32)
+    #     if not mask2:
+    #         mask2 = sitk.Image(image2.GetSize(), sitk.sitkFloat32) + 1
+    #         mask2.CopyInformation(image2)
+    #     else:
+    #         mask2 = sitk.Cast(mask2, sitk.sitkFloat32)
+    #
+    #     components_per_pixel = image1.GetNumberOfComponentsPerPixel()
+    #     if components_per_pixel > 1:
+    #         img1 = sitk.Cast(image1, sitk.sitkVectorFloat32)
+    #         img2 = sitk.Cast(image2, sitk.sitkVectorFloat32)
+    #     else:
+    #         img1 = sitk.Cast(image1, sitk.sitkFloat32)
+    #         img2 = sitk.Cast(image2, sitk.sitkFloat32)
+    #
+    #     intersection_mask = mask1 * mask2
+    #     print("generate intersection")
+    #     intersection_image = self.mask_image_multiply(
+    #          alpha * intersection_mask, img1) + \
+    #                          self.mask_image_multiply(
+    #                              (1 - alpha) * intersection_mask, img2)
+    #     print("return image")
+    #     return intersection_image + self.mask_image_multiply(
+    #         mask2 - intersection_mask, img2) + \
+    #            self.mask_image_multiply(mask1 - intersection_mask, img1)
 
     def init_view(self):
         """
@@ -209,11 +213,15 @@ class PetCtView(QtWidgets.QWidget):
         self.label_zoom.setStyleSheet(stylesheet)
         self.label_patient_pos.setStyleSheet(stylesheet)
 
-        # The following layout was originally accomplished using a QGridLayout with QSpaceItems to anchor the labels
-        # to the corners of the DICOM view. This caused a reintroduction of the tedious memory issues that were fixed
-        # with the restructure. The following was rewritten to not use QSpaceItems because they, for reasons unknown,
-        # caused a memory leak resulting in the entire patient dictionary not being cleared from memory correctly,
-        # leaving hundreds of additional megabytes unused in memory each time a new patient was opened.
+        # The following layout was originally accomplished using a
+        # QGridLayout with QSpaceItems to anchor the labels to the corners
+        # of the DICOM view. This caused a reintroduction of the tedious
+        # memory issues that were fixed with the restructure. The following
+        # was rewritten to not use QSpaceItems because they, for reasons
+        # unknown, caused a memory leak resulting in the entire patient
+        # dictionary not being cleared from memory correctly, leaving
+        # hundreds of additional megabytes unused in memory each time a new
+        # patient was opened.
 
         # Create a widget to contain the two top-left labels
         top_left_widget = QtWidgets.QWidget()
@@ -279,8 +287,8 @@ class PetCtView(QtWidgets.QWidget):
         self.metadata_layout.addWidget(top_widget,
                                        QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
         self.metadata_layout.addStretch()
-        self.metadata_layout.addWidget(bottom_widget,
-                                       QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
+        self.metadata_layout.addWidget(
+            bottom_widget, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
     def value_changed(self):
         self.update_view()
@@ -288,7 +296,8 @@ class PetCtView(QtWidgets.QWidget):
     def update_view(self, zoom_change=False):
         """
         Update the view of the DICOM Image.
-        :param zoom_change: Boolean indicating whether the user wants to change the zoom. False by default.
+        :param zoom_change: Boolean indicating whether the user wants to
+        change the zoom. False by default.
         """
         self.image_display()
 
@@ -316,14 +325,15 @@ class PetCtView(QtWidgets.QWidget):
         color = QtGui.QColor()
         color.setRgb(90, 250, 175, 200)
         # Load moving image
-        if not self.moving_dict_container.is_empty() and self.moving_dict_container.has_attribute("sitk_moving"):
-
-            moving_pixmaps = self.moving_dict_container.get("pixmaps_" + self.slice_view)
-            m = float(len(moving_pixmaps))/len(pixmaps)
-            moving_image = moving_pixmaps[int(m*slider_id)]
+        if not self.moving_dict_container.is_empty() \
+                and self.moving_dict_container.has_attribute("sitk_moving"):
+            moving_pixmaps = \
+                self.moving_dict_container.get("pixmaps_" + self.slice_view)
+            m = float(len(moving_pixmaps)) / len(pixmaps)
+            moving_image = moving_pixmaps[int(m * slider_id)]
             image_conv = image.toImage()
             mov_conv = moving_image.toImage()
-            alpha = float(self.alpha_slider.value()/100)
+            alpha = float(self.alpha_slider.value() / 100)
             painter = QPainter()
             painter.begin(image_conv)
             painter.setOpacity(alpha)
@@ -336,9 +346,6 @@ class PetCtView(QtWidgets.QWidget):
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
         self.scene.addItem(label)
-
-        # pixel_values = self.patient_dict_container.get("pixel_values")
-        # ct_image = sitk.GetImageFromArray(np.array(pixel_values), isVector=True)
 
     def roi_display(self):
         """
@@ -390,8 +397,8 @@ class PetCtView(QtWidgets.QWidget):
 
             else:
                 polygons = \
-                self.patient_dict_container.get("dict_polygons")[roi_name][
-                    curr_slice]
+                    self.patient_dict_container.get("dict_polygons")[roi_name][
+                        curr_slice]
 
             color = self.patient_dict_container.get("roi_color_dict")[roi]
             with open(resource_path('data/line&fill_configuration'),
@@ -419,13 +426,14 @@ class PetCtView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         curr_slice_uid = self.patient_dict_container.get("dict_uid")[slider_id]
         z = \
-        self.patient_dict_container.dataset[slider_id].ImagePositionPatient[2]
+            self.patient_dict_container.dataset[
+                slider_id].ImagePositionPatient[2]
         dataset_rtdose = self.patient_dict_container.dataset['rtdose']
         grid = get_dose_grid(dataset_rtdose, float(z))
 
         if not (grid == []):
-            # sort selected_doses in ascending order so that the high dose isodose washes
-            # paint over the lower dose isodose washes
+            # sort selected_doses in ascending order so that the high
+            # dose isodose washes paint over the lower dose isodose washes
             for sd in sorted(
                     self.patient_dict_container.get("selected_doses")):
                 dose_level = sd * self.patient_dict_container.get(
@@ -470,11 +478,13 @@ class PetCtView(QtWidgets.QWidget):
 
         # Set margin for axial view
         if not self.format_metadata:
-            if self.view.size().height() < self.scene.height() * self.zoom and \
+            if self.view.size().height() < self.scene.height() * self.zoom \
+                    and \
                     self.view.size().width() >= self.scene.width() * self.zoom:
                 self.metadata_layout.setSpacing(6)
                 self.metadata_layout.setContentsMargins(0, 0, 11, 0)
-            elif self.view.size().height() < self.scene.height() * self.zoom and \
+            elif self.view.size().height() < self.scene.height() * self.zoom \
+                    and \
                     self.view.size().width() < self.scene.width() * self.zoom:
                 self.metadata_layout.setSpacing(6)
                 self.metadata_layout.setContentsMargins(0, 0, 11, 11)
@@ -509,28 +519,35 @@ class PetCtView(QtWidgets.QWidget):
 
     def calc_roi_polygon(self, curr_roi, curr_slice, dict_rois_contours):
         """
-        Calculate a list of polygons to display for a given ROI and a given slice.
+        Calculate a list of polygons to display for a given ROI and a
+        given slice.
         :param curr_roi:
          the ROI structure
         :param curr_slice:
          the current slice
+        :param dict_rois_contours: A dictionary of contours
         :return: List of polygons of type QPolygonF.
         """
         # TODO Implement support for showing "holes" in contours.
         # Possible process for this is:
         # 1. Calculate the areas of each contour on the slice
         # https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-        # 2. Compare each contour to the largest contour by area to determine if it is contained entirely within the
-        # largest contour.
+        # 2. Compare each contour to the largest contour by area to
+        # determine if it is contained entirely within the largest contour.
         # https://stackoverflow.com/questions/4833802/check-if-polygon-is-inside-a-polygon
-        # 3. If the polygon is contained, use QPolygonF.subtracted(QPolygonF) to subtract the smaller "hole" polygon
-        # from the largest polygon, and then remove the polygon from the list of polygons to be displayed.
-        # This process should provide fast and reliable results, however it should be noted that this method may fall
-        # apart in a situation where there are multiple "large" polygons, each with their own hole in it. An appropriate
-        # solution to that may be to compare every contour against one another and determine which ones have holes
-        # encompassed entirely by them, and then subtract each hole from the larger polygon and delete the smaller
-        # holes. This second solution would definitely lead to more accurate representation of contours, but could
-        # possibly be too slow to be viable.
+        # 3. If the polygon is contained, use QPolygonF.subtracted(
+        # QPolygonF) to subtract the smaller "hole" polygon from the largest
+        # polygon, and then remove the polygon from the list of polygons to
+        # be displayed. This process should provide fast and reliable
+        # results, however it should be noted that this method may fall
+        # apart in a situation where there are multiple "large" polygons,
+        # each with their own hole in it. An appropriate solution to that
+        # may be to compare every contour against one another and determine
+        # which ones have holes encompassed entirely by them, and then
+        # subtract each hole from the larger polygon and delete the smaller
+        # holes. This second solution would definitely lead to more accurate
+        # representation of contours, but could possibly be too slow to be
+        # viable.
 
         list_polygons = []
         pixel_list = dict_rois_contours[curr_roi][curr_slice]
@@ -557,7 +574,8 @@ class PetCtView(QtWidgets.QWidget):
         for contour in contours:
             list_qpoints = []
             # Slicing controls how many points considered for visualization
-            # Essentially effects sharpness of edges, fewer points equals "smoother" edges
+            # Essentially effects sharpness of edges, fewer points
+            # equals "smoother" edges
             for point in contour[::2]:
                 curr_qpoint = QtCore.QPoint(dose_pixluts[0][int(point[1])],
                                             dose_pixluts[1][int(point[0])])
@@ -572,7 +590,8 @@ class PetCtView(QtWidgets.QWidget):
         :param color:
          Color of the region. QColor type.
         :param style:
-         Style of the contour line. NoPen: 0  SolidLine: 1  DashLine: 2  DotLine: 3  DashDotLine: 4  DashDotDotLine: 5
+         Style of the contour line. NoPen: 0  SolidLine: 1  DashLine: 2
+         DotLine: 3  DashDotLine: 4  DashDotDotLine: 5
         :param widthF:
          Width of the contour line.
         :return: QPen object.
