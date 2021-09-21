@@ -67,14 +67,14 @@ class UIMainWindow:
             self.stylesheet_path = "res/stylesheet.qss"
         else:
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
+        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
             "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(stylesheet)
+        self.main_window_instance.setStyleSheet(self.stylesheet)
 
         self.setup_central_widget()
         self.setup_actions()
@@ -426,7 +426,22 @@ class UIMainWindow:
         Called when progress bar has finished. Closes the progress
         window and refreshes the main screen.
         """
-        patient_dict_container = PatientDictContainer()
-        self.structures_tab.structure_modified((
-            patient_dict_container.get('dataset_rtss'), {"draw": None}))
+        if self.suv2roi.suv2roi_status:
+            patient_dict_container = PatientDictContainer()
+            self.structures_tab.structure_modified((
+                patient_dict_container.get('dataset_rtss'), {"draw": None}))
+        else:
+            # Alert user that SUV2ROI failed
+            button_reply = \
+                QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Icon.Warning,
+                    "SUV2ROI Failed",
+                    "The SUV2ROI process has failed.",
+                    QtWidgets.QMessageBox.StandardButton.Ok, self)
+            button_reply.button(
+                QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
+                self.stylesheet)
+            button_reply.exec_()
+
+        # Close progress window
         self.suv2roi_progress_window.close()
