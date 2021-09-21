@@ -424,7 +424,7 @@ class StructureTab(QtWidgets.QWidget):
         selected image set.
         """
         self.select_rtss_window = SelectRTSSPopUp(
-            self.patient_dict_container.get("existing_rtss_files"))
+            self.patient_dict_container.get("existing_rtss_files"), parent=self)
         self.select_rtss_window.signal_rtss_selected.connect(
             self.on_rtss_selected)
         self.select_rtss_window.show()
