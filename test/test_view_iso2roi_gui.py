@@ -59,6 +59,8 @@ class TestIso2RoiGui:
         # (otherwise program will crash and test will fail)
         if "rtss" in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])
+            self.patient_dict_container.set("existing_rtss_files",
+                                            [])
             self.rois = ImageLoading.get_roi_info(dataset_rtss)
             dict_raw_contour_data, dict_numpoints = \
                 ImageLoading.get_raw_contour_data(dataset_rtss)
