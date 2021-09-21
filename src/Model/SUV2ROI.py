@@ -13,6 +13,7 @@ class SUV2ROI:
     def __init__(self):
         self.patient_weight = None
         self.weight_over_dose = None
+        self.suv2roi_status = False
 
     def start_conversion(self, interrupt_flag, progress_callback):
         """
@@ -20,6 +21,7 @@ class SUV2ROI:
         :param interrupt_flag: interrupt flag to stop process.
         :param progress_callback: signal that receives the current
                                   progress of the process.
+        :return: False if unsuccessful, True if successful.
         """
         # Get PET datasets
         progress_callback.emit(("Getting PET Data", 20))
@@ -44,12 +46,13 @@ class SUV2ROI:
         if not contour_data:
             # TODO: convert print to logging
             print("Boundaries could not be calculated.")
-            return
+            return False
 
         # Generate ROIs
         progress_callback.emit(("Generating ROIs", 60))
         self.generate_ROI(contour_data, progress_callback)
         progress_callback.emit(("Reloading Window. Please Wait...", 95))
+        self.suv2roi_status = True
 
     def find_PET_datasets(self):
         """
