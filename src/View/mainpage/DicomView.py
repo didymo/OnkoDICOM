@@ -48,8 +48,10 @@ class DicomView(QtWidgets.QWidget):
         """
         Create a view widget for DICOM image.
         """
-        self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
-        background_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
+        self.view.setRenderHints(
+            QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
+        background_brush = QtGui.QBrush(
+            QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern)
         self.view.setBackgroundBrush(background_brush)
 
     def value_changed(self):
@@ -77,7 +79,8 @@ class DicomView(QtWidgets.QWidget):
             self.isodose_display()
 
         if zoom_change:
-            self.view.setTransform(QtGui.QTransform().scale(self.zoom, self.zoom))
+            self.view.setTransform(
+                QtGui.QTransform().scale(self.zoom, self.zoom))
 
         self.view.setScene(self.scene)
 
@@ -89,7 +92,8 @@ class DicomView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(label, self.horizontal_view, self.vertical_view)
+        self.scene = GraphicsScene(
+            label, self.horizontal_view, self.vertical_view)
 
     def draw_roi_polygons(self, roi_id, polygons, roi_color=None):
         """
@@ -159,4 +163,3 @@ class DicomView(QtWidgets.QWidget):
         """
         self.slider.setValue(value*self.slider.maximum())
         self.update_view()
-

@@ -62,6 +62,9 @@ class Controller:
 
         self.open_patient_window.show()
 
+        # Run check_selected_items() upon open patient window is shown
+        self.open_patient_window.check_selected_items()
+
     def show_main_window(self, progress_window):
         """
         Displays the main patient window after completing the loading.
@@ -120,6 +123,8 @@ class Controller:
                 self.default_directory)
             self.image_fusion_window.go_next_window.connect(
                 self.show_main_window)
+        else:
+            self.image_fusion_window.update_ui()
 
         self.image_fusion_window.show()
 

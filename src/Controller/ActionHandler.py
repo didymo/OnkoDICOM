@@ -1,11 +1,13 @@
+from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
-
-import os
+from PySide6.QtWidgets import QStackedWidget, QDialog, QMessageBox
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Controller.PathHandler import resource_path
+from src.Model.MovingModel import read_images_for_fusion
+from src.Model.ImageFusion import get_fused_window
 
 
 class ActionHandler:
@@ -23,6 +25,8 @@ class ActionHandler:
         self.__main_page = main_page
         self.patient_dict_container = PatientDictContainer()
         self.is_four_view = False
+        self.has_image_registration_single = False
+        self.has_image_registration_four = False
 
         ##############################
         # Init all actions and icons #
@@ -171,12 +175,6 @@ class ActionHandler:
         self.action_show_cut_lines.setText("Show Cut Lines")
         self.action_show_cut_lines.triggered.connect(self.cut_lines_handler)
 
-        # Export Clinical Data Action
-        self.action_clinical_data_export = QtGui.QAction()
-        self.action_clinical_data_export.setText("Export Clinical Data")
-        # TODO self.action_clinical_data_export.triggered.connect(
-        #  clinical data check)
-
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtGui.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
@@ -209,7 +207,6 @@ class ActionHandler:
         )
         self.menu_export = QtWidgets.QMenu()
         self.menu_export.setTitle("Export")
-        self.menu_export.addAction(self.action_clinical_data_export)
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
 
@@ -275,10 +272,14 @@ class ActionHandler:
                 "No changes to the RTSTRUCT file detected.")
 
     def zoom_out_handler(self):
-        self.__main_page.zoom_out(self.is_four_view)
+        self.__main_page.zoom_out(self.is_four_view,
+                                  self.has_image_registration_single,
+                                  self.has_image_registration_four)
 
     def zoom_in_handler(self):
-        self.__main_page.zoom_in(self.is_four_view)
+        self.__main_page.zoom_in(self.is_four_view,
+                                 self.has_image_registration_single,
+                                 self.has_image_registration_four)
 
     def windowing_handler(self, state, text):
         """
@@ -300,7 +301,7 @@ class ActionHandler:
         pixel_values = self.patient_dict_container.get("pixel_values")
         pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
         pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
-                    get_pixmaps(pixel_values, window, level, pixmap_aspect)
+            get_pixmaps(pixel_values, window, level, pixmap_aspect)
 
         self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
         self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
@@ -308,17 +309,24 @@ class ActionHandler:
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
 
-        if hasattr(self, 'image_fusion_view'):
-            fusion_values = self.moving_dict_container.get("pixel_values")
-            fusion_aspect = self.moving_dict_container.get("pixmap_aspect")
-            fusion_axial, fusion_coronal, fusion_sagittal = \
-                get_pixmaps(fusion_values, window, level, fusion_aspect)
-            self.moving_dict_container.set("pixmaps_axial", fusion_axial)
-            self.moving_dict_container.set("pixmaps_coronal", fusion_coronal)
-            self.moving_dict_container.set("pixmaps_sagittal", fusion_sagittal)
+        if hasattr(self.__main_page, 'image_fusion_view'):
+            confirm_fuse_window = QMessageBox.information(
+                self.__main_page, "Image Fusion Windowing Confirmation",
+                "Do you want to perform windowing on the Image Fusion Window? "
+                "This process may take a couple of minutes.",
+                QMessageBox.Yes,
+                QMessageBox.No)
+            if confirm_fuse_window == QMessageBox.Yes:
+                fusion_axial, fusion_coronal, fusion_sagittal = \
+                    get_fused_window(level, window)
+                self.patient_dict_container.set(
+                    "color_axial", fusion_axial)
+                self.patient_dict_container.set(
+                    "color_coronal", fusion_coronal)
+                self.patient_dict_container.set(
+                    "color_sagittal", fusion_sagittal)
 
         self.__main_page.update_views(update_3d_window=True)
-
 
     def anonymization_handler(self):
         """
@@ -385,15 +393,35 @@ class ActionHandler:
 
     def one_view_handler(self):
         self.is_four_view = False
+
         self.__main_page.dicom_view.setCurrentWidget(
             self.__main_page.dicom_single_view)
         self.__main_page.dicom_single_view.update_view()
 
+        if hasattr(self.__main_page, 'image_fusion_view'):
+            self.has_image_registration_four = False
+            self.has_image_registration_single = True
+            if isinstance(self.__main_page.image_fusion_single_view,
+                          ImageFusionAxialView):
+                self.__main_page.image_fusion_view.setCurrentWidget(
+                    self.__main_page.image_fusion_single_view)
+                self.__main_page.image_fusion_single_view.update_view()
+
     def four_views_handler(self):
         self.is_four_view = True
+
         self.__main_page.dicom_view.setCurrentWidget(
             self.__main_page.dicom_four_views)
         self.__main_page.dicom_axial_view.update_view()
+
+        if hasattr(self.__main_page, 'image_fusion_view'):
+            self.has_image_registration_four = True
+            self.has_image_registration_single = False
+            if isinstance(self.__main_page.image_fusion_view,
+                          QStackedWidget):
+                self.__main_page.image_fusion_view.setCurrentWidget(
+                    self.__main_page.image_fusion_four_views)
+                self.__main_page.image_fusion_view_axial.update_view()
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()
@@ -416,5 +444,3 @@ class ActionHandler:
 
     def action_exit_handler(self):
         QtCore.QCoreApplication.exit(0)
-
-

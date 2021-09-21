@@ -7,13 +7,16 @@ from PySide6.QtCore import Qt
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, \
     ROIManipulateOption
+from src.Model.DICOMStructure import Series
 from src.Model import ImageLoading
+from src.Model.CalculateDVHs import dvh2rtdose
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, \
     calc_roi_polygon, transform_rois_contours, merge_rtss
 from src.View.mainpage.StructureWidget import StructureWidget
+from src.View.util.SelectRTSSPopUp import SelectRTSSPopUp
 from src.Controller.PathHandler import resource_path
 
 
@@ -282,7 +285,7 @@ class StructureTab(QtWidgets.QWidget):
                 # recalculation will be required.
                 self.patient_dict_container.set("dvh_outdated", True)
 
-        if self.patient_dict_container.has_modality("raw_dvh"):
+        if self.patient_dict_container.has_attribute("raw_dvh"):
             # Rename structures in DVH list
             if "rename" in change_description:
                 new_raw_dvh = self.patient_dict_container.get("raw_dvh")
@@ -292,6 +295,7 @@ class StructureTab(QtWidgets.QWidget):
                         break
 
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
+                dvh2rtdose(new_raw_dvh)
 
             # Remove structures from DVH list - the only visible effect of
             # this section is the exported DVH csv
@@ -304,6 +308,7 @@ class StructureTab(QtWidgets.QWidget):
                 for key in list_of_deleted:
                     new_raw_dvh.pop(key)
                 self.patient_dict_container.set("raw_dvh", new_raw_dvh)
+                dvh2rtdose(new_raw_dvh)
 
         # Refresh ROIs in DVH tab and DICOM View
         self.request_update_structures.emit()
@@ -424,6 +429,26 @@ class StructureTab(QtWidgets.QWidget):
             new_dict_polygons_coronal.pop(roi_name, None)
             new_dict_polygons_sagittal.pop(roi_name, None)
 
+    def on_rtss_selected(self, selected_rtss):
+        """
+        Function to run after a rtss is selected from SelectRTSSPopUp
+        """
+        self.patient_dict_container.get("existing_rtss_files").clear()
+        self.patient_dict_container.get("existing_rtss_files").append(
+            selected_rtss)
+        self.save_new_rtss(auto=True)
+
+    def display_select_rtss_window(self):
+        """
+        Display a pop up window that contains all RTSSs attached to the
+        selected image set.
+        """
+        self.select_rtss_window = SelectRTSSPopUp(
+            self.patient_dict_container.get("existing_rtss_files"), parent=self)
+        self.select_rtss_window.signal_rtss_selected.connect(
+            self.on_rtss_selected)
+        self.select_rtss_window.show()
+
     def save_new_rtss(self, event=None, auto=False):
         """
         Save the current RTSS stored in patient dictionary to the file system.
@@ -431,11 +456,22 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_widget on mouseReleaseEvent
         :param auto: Used for auto save without user confirmation
         """
-        if self.patient_dict_container.get("existing_file_rtss") is not None:
-            existing_rtss_directory = str(Path(self.patient_dict_container.get(
-                "existing_file_rtss")))
+        existing_rtss_files = self.patient_dict_container.get(
+            "existing_rtss_files")
+        if len(existing_rtss_files) == 1:
+            if isinstance(existing_rtss_files[0], Series):
+                existing_rtss_directory = str(Path(
+                    existing_rtss_files[0].get_files()[0]))
+            else:
+                # This "else" is used by iso2roi gui and structure tab tests to
+                # quickly set existing_rtss_directory
+                existing_rtss_directory = existing_rtss_files[0]
+        elif len(existing_rtss_files) > 1:
+            self.display_select_rtss_window()
+            return  # This function will be called again when a RTSS is selected
         else:
             existing_rtss_directory = None
+
         rtss_directory = str(
             Path(self.patient_dict_container.get("file_rtss")))
 
@@ -458,7 +494,8 @@ class StructureTab(QtWidgets.QWidget):
                     rtss_directory)
             else:
                 new_rtss = self.patient_dict_container.get("dataset_rtss")
-                old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
+                old_rtss = pydicom.dcmread(existing_rtss_directory,
+                                           force=True)
                 old_roi_names = \
                     set(value["name"] for value in
                         ImageLoading.get_roi_info(old_rtss).values())

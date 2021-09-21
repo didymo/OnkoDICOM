@@ -102,7 +102,13 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "dbID": 521,
                 "parent_ID": 446,
                 "short_name": "Default directory",
-            }
+            },
+            {
+                "level": 1,
+                "dbID": 530,
+                "parent_ID": 446,
+                "short_name": "Clinical Data CSV File",
+            },
         ]
         # create a model for the tree view of options and attach the
         # data
@@ -123,6 +129,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.apply_button.clicked.connect(self.accepting)
         # Connecting the functionalities of the view dependant buttons
         self.add_new_window.clicked.connect(self.new_windowing)
+        self.delete_window.clicked.connect(self.remove_windowing)
         self.add_standard_organ_name.clicked.connect(self.new_organ)
         self.add_standard_volume_name.clicked.connect(self.new_volume)
         self.add_new_roi.clicked.connect(self.new_isodose)
@@ -394,12 +401,17 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             stream.write("\n")
             stream.close()
 
-        # Save the default directory
+        # Save the default directory and clinical data CSV directory
         configuration = Configuration()
         try:
             new_dir = self.change_default_directory. \
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
+            new_clinical_data_csv_dir = \
+                self.clinical_data_csv_dir_options.\
+                clinical_data_csv_dir_input_box.text()
+            configuration.update_clinical_data_csv_dir(
+                new_clinical_data_csv_dir)
         except SqlError:
             configuration.set_up_config_db()
             QMessageBox.critical(
@@ -529,6 +541,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self.table_view.setItem(c, 1, QTableWidgetItem(new_data[1]))
             self.table_view.setItem(c, 2, QTableWidgetItem(new_data[2]))
             self.table_view.setItem(c, 3, QTableWidgetItem(new_data[3]))
+
+    def remove_windowing(self):
+        rows = sorted(set(index.row() for index in
+                          self.table_view.selectedIndexes()))
+        if rows:
+            i = 0
+            for row in rows:
+                self.table_view.removeRow(row - i)
+                i += 1
+        else:
+            QMessageBox.warning(self, "No window Selected",
+                                "No windowing have been selected.")
 
     # This function shows an input dialog for a new standard organ name
     def new_organ(self):
