@@ -1,3 +1,4 @@
+import csv
 import os
 import pytest
 from pathlib import Path
@@ -6,6 +7,8 @@ from pydicom.errors import InvalidDicomError
 from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
+from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
+    BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
@@ -65,7 +68,9 @@ class TestObject:
 
 @pytest.fixture(scope="module")
 def test_object():
-    """Function to pass a shared TestIso2Roi object to each test."""
+    """
+    Function to pass a shared TestObject object to each test.
+    """
     test = TestObject()
     return test
 
@@ -73,6 +78,8 @@ def test_object():
 def test_batch_iso2roi(test_object):
     """
     Test that at least 1 new ROI is created from ISO2ROI.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
     """
     # Loop through patient datasets
     for patient in test_object.get_patients():
@@ -104,7 +111,11 @@ def test_batch_iso2roi(test_object):
 
 
 def test_batch_dvh2csv(test_object):
-    """ Test asserts creation of .csv as result of dvh2csv conversion """
+    """
+    Test asserts creation of CSV as result of DVH2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
 
     # Loop through patient datasets
     for patient in test_object.get_patients():
@@ -137,7 +148,11 @@ def test_batch_dvh2csv(test_object):
 
 @pytest.mark.skip()
 def test_batch_pyrad2csv(test_object):
-    """ Test asserts creation of .csv as result of pyrad2csv conversion """
+    """
+    Test asserts creation of CSV as result of PyRad2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
 
     # Loop through patient datasets
     for patient in test_object.get_patients():
@@ -167,12 +182,11 @@ def test_batch_pyrad2csv(test_object):
 def test_batch_roi_name_cleaning(test_object):
     """
     Test asserts an ROI changes name and one is deleted.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
     """
     # Loop through patient datasets
     for patient in test_object.get_patients():
-        cur_patient_files = BatchProcessingController.get_patient_files(
-            patient)
-
         # Get RTSS file path, count number of ROIs
         rtss_path = None
         for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
@@ -221,5 +235,71 @@ def test_batch_roi_name_cleaning(test_object):
 
 
 # TODO CSV 2 Clinical Data SR
+def test_batch_csv2clinicaldatasr(test_object):
+    """
+    Test asserts an SR is created with dummy clinical data. Test deletes
+    SR after running.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Get patient ID for dummy CSV
+    patient_id = None
+    for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
+        if patient_id is not None:
+            break
+        for name in files:
+            try:
+                ds = dcmread(os.path.join(root, name))
+                if hasattr(ds, 'PatientID'):
+                    patient_id = ds.PatientID
+                    break
+            except (InvalidDicomError, FileNotFoundError):
+                pass
+
+    assert patient_id is not None
+
+    # Create dummy CSV
+    csv_path = test_object.batch_dir.joinpath("dummy_cd.csv")
+    data = [['MD5Hash', 'Age', 'Nationality'],
+            [patient_id, '20', 'Australian']]
+
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(data[0])
+        writer.writerow(data[1])
+        f.close()
+
+    # Loop through each patient
+    for patient in test_object.get_patients():
+        # Get current patient files
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create Batch CSV to Clinical Data SR object
+        process = \
+            BatchProcessCSV2ClinicalDataSR(test_object.DummyProgressWindow,
+                                           test_object.DummyProgressWindow,
+                                           cur_patient_files,
+                                           csv_path)
+
+        # Start the process
+        process.start()
+
+    # Assert SR exists
+    sr_path = test_object.batch_dir.joinpath("Clinical-Data-SR.dcm")
+    assert os.path.exists(sr_path)
+
+    # Assert data is correct in SR
+    text_data = "MD5Hash: " + patient_id + "\n"
+    text_data += "Age: 20\nNationality: Australian\n"
+    sr_ds = dcmread(sr_path)
+    assert sr_ds.SeriesDescription == "CLINICAL-DATA"
+    sr_text_data = sr_ds.ContentSequence[0].TextValue
+    assert text_data == sr_text_data
+
+    # Delete dummy CSV and SR
+    os.remove(csv_path)
+    os.remove(sr_path)
+
 
 # TODO Clinical Data SR 2 CSV
