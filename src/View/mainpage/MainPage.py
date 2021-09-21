@@ -175,8 +175,8 @@ class UIMainWindow:
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
         #add PETVT View to right panel as a tab
-        self.petctTab = PetCtView()
-        self.right_panel.addTab(self.petctTab, "PETCT View")
+        self.pet_ct_tab = PetCtView()
+        self.right_panel.addTab(self.pet_ct_tab, "PETCT View")
 
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtdose"):
@@ -240,6 +240,9 @@ class UIMainWindow:
 
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+        if hasattr(self, 'pet_ct_tab'):
+            self.pet_ct_tab.update_view()
 
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view_axial is not None:

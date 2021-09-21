@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtWidgets import QRadioButton, QGridLayout, QWidget, \
     QApplication
+from PySide6.QtGui import QPainter
 from skimage import measure
 
 from src.Model.Isodose import get_dose_grid
@@ -52,10 +53,13 @@ class PetCtView(QtWidgets.QWidget):
         # radio buttons
         self.coronal_button = QRadioButton("Coronal")
         self.coronal_button.setChecked(False)
+        self.coronal_button.toggled.connect(self.update_axis)
         self.axial_button = QRadioButton("Axial")
         self.axial_button.setChecked(True)
+        self.axial_button.toggled.connect(self.update_axis)
         self.sagittal_button = QRadioButton("Sagittal")
         self.sagittal_button.setChecked(False)
+        self.sagittal_button.toggled.connect(self.update_axis)
 
         # Set layout
         self.dicom_view_layout.addWidget(self.view)
@@ -98,8 +102,6 @@ class PetCtView(QtWidgets.QWidget):
         Create a slider for the DICOM Image View.
         """
         pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
-        overlay_pixmaps = self.patient_dict_container.get("pixmaps_" + self.overlay_view)
-
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -109,64 +111,12 @@ class PetCtView(QtWidgets.QWidget):
 
     def init_alpha_slider(self):
         #alpha slider
-        pixmaps = self.patient_dict_container.get("pixmaps_" + self.slice_view)
         self.alpha_slider.setMinimum(0)
-        self.alpha_slider.setMaximum(len(pixmaps) - 1)
-        self.alpha_slider.setValue(int(len(pixmaps) / 2))
+        self.alpha_slider.setMaximum(100)
+        self.alpha_slider.setValue(50)
         self.alpha_slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.alpha_slider.setTickInterval(1)
         self.alpha_slider.valueChanged.connect(self.value_changed)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(len(pixmaps) - 1)
-        self.slider.setValue(int(len(pixmaps) / 2))
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
-        self.slider.setTickInterval(1)
-        self.slider.valueChanged.connect(self.value_changed)
-
-    def mask_image_multiply(self, mask, image):
-        components_per_pixel = image.GetNumberOfComponentsPerPixel()
-        if components_per_pixel == 1:
-            return mask * image
-        else:
-            return sitk.Compose(
-                [mask * sitk.VectorIndexSelectionCast(image, channel) for
-                 channel in range(components_per_pixel)])
-
-    def alpha_blend(self, image1, image2, alpha=0.5, mask1=None, mask2=None):
-        '''
-        Alaph blend two images, pixels can be scalars or vectors.
-        The region that is alpha blended is controled by the given masks.
-        '''
-
-        if not mask1:
-            mask1 = sitk.Image(image1.GetSize(), sitk.sitkFloat32) + 1.0
-            mask1.CopyInformation(image1)
-        else:
-            mask1 = sitk.Cast(mask1, sitk.sitkFloat32)
-        if not mask2:
-            mask2 = sitk.Image(image2.GetSize(), sitk.sitkFloat32) + 1
-            mask2.CopyInformation(image2)
-        else:
-            mask2 = sitk.Cast(mask2, sitk.sitkFloat32)
-
-        components_per_pixel = image1.GetNumberOfComponentsPerPixel()
-        if components_per_pixel > 1:
-            img1 = sitk.Cast(image1, sitk.sitkVectorFloat32)
-            img2 = sitk.Cast(image2, sitk.sitkVectorFloat32)
-        else:
-            img1 = sitk.Cast(image1, sitk.sitkFloat32)
-            img2 = sitk.Cast(image2, sitk.sitkFloat32)
-
-        intersection_mask = mask1 * mask2
-        print("generate intersection")
-        intersection_image = self.mask_image_multiply(alpha * intersection_mask,
-                                                 img1) + \
-                             self.mask_image_multiply(
-                                 (1 - alpha) * intersection_mask, img2)
-        print("return image")
-        return intersection_image + self.mask_image_multiply(
-            mask2 - intersection_mask, img2) + \
-               self.mask_image_multiply(mask1 - intersection_mask, img1)
 
     def init_view(self):
         """
@@ -277,6 +227,17 @@ class PetCtView(QtWidgets.QWidget):
         self.metadata_layout.addWidget(bottom_widget,
                                        QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
+    def update_axis(self):
+        toggled = self.sender()
+        if toggled.isChecked():
+            self.slice_view = toggled.text().lower()
+            pixmaps = self.patient_dict_container.get(
+                "pixmaps_" + self.slice_view)
+            self.slider.setMaximum(len(pixmaps) - 1)
+            self.slider.setValue(int(len(pixmaps) / 2))
+
+        self.update_view()
+
     def value_changed(self):
         self.update_view()
 
@@ -296,7 +257,8 @@ class PetCtView(QtWidgets.QWidget):
                 self.roi_display()
             if self.patient_dict_container.get("selected_doses"):
                 self.isodose_display()
-            self.update_metadata()
+            if self.slice_view == "axial":
+                self.update_metadata()
 
         self.view.setScene(self.scene)
 
@@ -308,18 +270,21 @@ class PetCtView(QtWidgets.QWidget):
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
         # Load moving image
-        if not self.moving_dict_container.is_empty() and self.moving_dict_container.has_attribute("sitk_moving"):
-            image = self.patient_dict_container.get("sitk_original")[slider_id]
-            moving_image = self.moving_dict_container.get("sitk_moving")[slider_id]
-            print("display iamges")
-            #calculate the mask of the two images
-            mask1= sitk.OtsuThreshold(image, 0, 1)
-            mask2 = sitk.OtsuThreshold(moving_image, 0, 1)
-            alpha = float(self.alpha_slider.value()/100)
-            print(alpha)
-            image = self.alpha_blend(image, moving_image, alpha,mask1,mask2)
-        # write function based on alpha slider
-        # convert to image to display
+        if not self.moving_dict_container.is_empty() \
+                and self.moving_dict_container.has_attribute("sitk_moving"):
+            moving_pixmaps = self.moving_dict_container.get(
+                "pixmaps_" + self.slice_view)
+            m = float(len(moving_pixmaps)) / len(pixmaps)
+            moving_image = moving_pixmaps[int(m * slider_id)]
+            image_conv = image.toImage()
+            mov_conv = moving_image.toImage()
+            alpha = float(self.alpha_slider.value() / 100)
+            painter = QPainter()
+            painter.begin(image_conv)
+            painter.setOpacity(alpha)
+            painter.drawImage(0, 0, mov_conv)
+            painter.end()
+            image = QtGui.QPixmap.fromImage(image_conv)
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = QtWidgets.QGraphicsScene()
         self.scene.addItem(label)

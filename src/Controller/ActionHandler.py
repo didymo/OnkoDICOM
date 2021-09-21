@@ -288,6 +288,7 @@ class ActionHandler:
             lambda function.
         :param text: The name of the window selected.
         """
+        moving_dict_container = MovingDictContainer()
         # Get the values for window and level from the dict
         windowing_limits = self.patient_dict_container. \
             get("dict_windowing")[text]
@@ -308,6 +309,18 @@ class ActionHandler:
         self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
+
+        if not moving_dict_container.is_empty():
+            pixel_values = moving_dict_container.get("pixel_values")
+            pixmap_aspect = moving_dict_container.get("pixmap_aspect")
+            pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
+                get_pixmaps(pixel_values, window, level, pixmap_aspect)
+            moving_dict_container.set("pixmaps_axial", pixmaps_axial)
+            moving_dict_container.set("pixmaps_coronal", pixmaps_coronal)
+            moving_dict_container.set("pixmaps_sagittal",
+                                      pixmaps_sagittal)
+            moving_dict_container.set("window", window)
+            moving_dict_container.set("level", level)
 
         if hasattr(self.__main_page, 'image_fusion_view'):
             confirm_fuse_window = QMessageBox.information(
