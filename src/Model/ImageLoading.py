@@ -110,12 +110,13 @@ def get_datasets(filepath_list):
                     slice_name = slice_count
                     slice_count += 1
                 else:
-                    # TODO: change when other SRs are generated
-                    #  (radiomics). Read from SR description to
-                    #  determine SR type
+                    # Read from Series Description to determine what is
+                    # stored in the SR file.
                     if allowed_class["name"] == "sr":
                         if read_file.SeriesDescription == "CLINICAL-DATA":
                             slice_name = "sr-cd"
+                        elif read_file.SeriesDescription == "PYRADIOMICS":
+                            slice_name = "sr-rad"
                         else:
                             slice_name = "sr-other-" + str(sr_count)
                             sr_count += 1
