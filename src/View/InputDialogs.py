@@ -1,9 +1,10 @@
 """This file holds all the user input pop up dialogs used from the software"""
+import platform
 import re
 
 from PySide6 import QtGui
 from PySide6.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, \
-    QDialog, QComboBox, QVBoxLayout, \
+    QDialog, QComboBox, \
     QMessageBox
 from src.Controller.PathHandler import resource_path
 
@@ -252,6 +253,7 @@ class Dialog_Dose(QDialog):
             if buttonReply == QMessageBox.Ok:
                 pass
 
+
 class PatientWeightDialog(QDialog):
     """
     This class creates the user input dialog for requesting the
@@ -270,12 +272,13 @@ class PatientWeightDialog(QDialog):
             "res/images/btn-icons/onkodicom_icon.png"))
         buttonBox = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.patient_weight_prompt = QLabel("Patient Weight:")
         self.patient_weight_entry = QLineEdit()
 
         # Input dialog layout
         entry_layout = QFormLayout(self)
         entry_layout.addRow(QLabel(self.patient_weight_message))
-        entry_layout.addRow(QLabel("Patient Weight:"),
+        entry_layout.addRow(self.patient_weight_prompt,
                             self.patient_weight_entry)
         entry_layout.addWidget(buttonBox)
         buttonBox.accepted.connect(self.accepting)
@@ -300,11 +303,11 @@ class PatientWeightDialog(QDialog):
                 float(self.patient_weight_entry.text())
                 self.accept()
             except ValueError:
-                buttonReply = QMessageBox.warning(
+                button_reply = QMessageBox.warning(
                     self, "Invalid Patient Weight",
                     "Please enter a valid number.",
                     QMessageBox.Ok)
-                if buttonReply == QMessageBox.Ok:
+                if button_reply == QMessageBox.Ok:
                     pass
         # Make sure the patient weight is not blank
         else:

@@ -45,7 +45,7 @@ class TestSuv2Roi:
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.cwd().joinpath('test', 'pt-testdata')
+        desired_path = Path.cwd().joinpath('test', 'pet-testdata')
 
         # list of DICOM test files
         selected_files = find_dicom_files(desired_path)
@@ -57,14 +57,14 @@ class TestSuv2Roi:
         # Create patient dict container object
         self.patient_dict_container = PatientDictContainer()
         self.patient_dict_container.clear()
-        self.patient_dict_container.set_initial_values\
+        self.patient_dict_container.set_initial_values \
             (file_path, read_data_dict, file_names_dict)
 
         # Create variables to be initialised later
         self.dicom_files = None
         self.suv_data = []
 
-        # Create ISO2ROI object
+        # Create SUV2ROI object
         self.suv2roi = SUV2ROI()
         # Set patient weight. Not actual weight, just for testing
         # purposes.
@@ -78,7 +78,7 @@ def test_object():
     return test
 
 
-@pytest.mark.skip(reason="No test data")
+@pytest.mark.skip()
 def test_select_pet_files(test_object):
     """
     Test for selecting PET files from a DICOM dataset.
@@ -95,7 +95,7 @@ def test_select_pet_files(test_object):
     assert len(test_object.dicom_files["PT NAC"]) == 0
 
 
-@pytest.mark.skip(reason="No test data")
+@pytest.mark.skip()
 def test_calculate_suv_values(test_object):
     """
     Test for calculating SUV values from PET pixel data.
@@ -133,7 +133,7 @@ def test_calculate_suv_values(test_object):
         assert numpy.array_equal(suv_values, suv)
 
 
-@pytest.mark.skip(reason="No test data")
+@pytest.mark.skip()
 def test_calculate_suv_boundaries(test_object):
     """
     Test for calculating SUV boundaries.
@@ -168,7 +168,7 @@ def test_calculate_suv_boundaries(test_object):
         assert len(manual_contour_data[key][0][1]) >= 0
 
 
-@pytest.mark.skip(reason="No test data")
+@pytest.mark.skip()
 def test_generate_roi_from_suv(test_object):
     """
     Test for generating ROIs from SUV data.

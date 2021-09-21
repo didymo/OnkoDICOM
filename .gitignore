@@ -21,5 +21,3 @@ Hash_map.csv
 # Ignore compile results
 build/
 dist/
-
-test/testdata/DICOM-PT-TEST/**

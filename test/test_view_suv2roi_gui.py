@@ -53,14 +53,14 @@ class DummyProgressWindow:
 class TestSuv2RoiGui:
     """
     Class that initializes an OnkoDICOM window for testing SUV2ROI GUI.
-    This uses files from the pt-testdata directory.
+    This uses files from the pet-testdata directory.
     """
 
     __test__ = False
 
     def __init__(self):
         # Load test DICOM files
-        desired_path = Path.cwd().joinpath('test', 'pt-testdata')
+        desired_path = Path.cwd().joinpath('test', 'pet-testdata')
 
         # List of DICOM test files
         selected_files = find_DICOM_files(desired_path)
@@ -73,11 +73,13 @@ class TestSuv2RoiGui:
         # Create patient dict container object
         self.patient_dict_container = PatientDictContainer()
         self.patient_dict_container.clear()
-        self.patient_dict_container.set_initial_values\
+        self.patient_dict_container.set_initial_values \
             (file_path, read_data_dict, file_names_dict)
 
         # Set additional attributes in patient dict container
         # (otherwise program will crash and test will fail)
+        self.patient_dict_container.set("existing_rtss_files",
+                                        [])
         if "rtss" in file_names_dict:
             dataset_rtss = dcmread(file_names_dict['rtss'])
             self.rois = ImageLoading.get_roi_info(dataset_rtss)
@@ -113,7 +115,7 @@ def test_object():
     return TestSuv2RoiGui()
 
 
-@pytest.mark.skip(reason="No test data")
+@pytest.mark.skip()
 def test_structures_convert_suv_to_roi_button_pressed(test_object):
     """
     Test will simulate the 'Convert SUVs to ROIs' button being
@@ -137,7 +139,7 @@ def test_structures_convert_suv_to_roi_button_pressed(test_object):
     assert current_structure_count >= test_object.initial_structure_count
 
 
-@pytest.mark.skip(reason="No test data")
+@pytest.mark.skip()
 def test_rois_convert_suv_to_roi_button_pressed(test_object):
     """
     Test will simulate the 'Convert SUVs to ROIs' button being

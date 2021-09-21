@@ -411,7 +411,7 @@ class UIMainWindow:
         Performs the SUV2ROI process.
         """
         # Get patient weight - needs to run first as GUI cannot run in
-        # threads, like the ProgressBar (thanks, Qt)
+        # threads, like the ProgressBar
         patient_dict_container = PatientDictContainer()
         dataset = patient_dict_container.dataset[0]
         self.suv2roi.get_patient_weight(dataset)

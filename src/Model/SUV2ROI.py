@@ -1,16 +1,15 @@
 import numpy
-import os
-from pathlib import Path
 from skimage import measure
 from src.Model import ImageLoading
 from src.Model import ROI
-from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.InputDialogs import PatientWeightDialog
 
 
 class SUV2ROI:
-    """This class is for converting SUV levels to ROIs."""
+    """
+    This class is for converting SUV levels to ROIs.
+    """
     def __init__(self):
         self.patient_weight = None
         self.weight_over_dose = None
@@ -22,16 +21,8 @@ class SUV2ROI:
         :param progress_callback: signal that receives the current
                                   progress of the process.
         """
-        progress_callback.emit(("Validating Datasets", 0))
-
-        # Stop loading
-        if interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped SUV2ROI")
-            return False
-
         # Get PET datasets
-        progress_callback.emit(("Getting PET Data", 40))
+        progress_callback.emit(("Getting PET Data", 20))
         selected_files = self.find_PET_datasets()
 
         # Stop loading
@@ -40,18 +31,8 @@ class SUV2ROI:
             print("Stopped SUV2ROI")
             return False
 
-        if "PT CTAC" in selected_files:
-            if "PT NAC" in selected_files:
-                print("CTAC and NAC data in DICOM Image Set")
-            else:
-                print("CTAC data in DICOM Image Set")
-        elif "PT NAC" in selected_files:
-            print("NAC data in DICOM Image Set")
-        else:
-            print("No PET data in DICOM Image Set")
-
         # Calculate contours
-        progress_callback.emit(("Calculating Boundaries", 50))
+        progress_callback.emit(("Calculating Boundaries", 40))
         contour_data = self.calculate_contours()
 
         # Stop loading
@@ -112,27 +93,23 @@ class SUV2ROI:
                 self.patient_weight = dialog.get_input() * 1000
                 return
             else:
-                print("Patient weight not entered. Stopping!")
                 self.patient_weight = None
                 return
 
     def pet2suv(self, dataset):
         """
         Converts DICOM PET pixel array values to SUV values. Currently
-        only handles PET datasets in Bq/mL that are attentuation and
+        only handles PET datasets in Bq/mL that are attenuation and
         decay corrected.
         :param dataset: the DICOM PET dataset.
         :return: DICOM PET pixel data in SUV.
         """
         # Return if units are not Bq/mL
-        # TODO: accommodate PETs that are not in Bq/mL
         if not dataset.Units == "BQML":
             return None
 
         # Return if CorrectedImage does not contain ATTN and DECY, and
         # decay correction is not START
-        # TODO: accommodate PETs that are not attenuation and decay
-        #       corrected
         if (["ATTN", "DECY"] not in dataset.CorrectedImage) and \
                 (dataset.DecayCorrection != "START"):
             return None
@@ -164,7 +141,7 @@ class SUV2ROI:
 
     def calculate_contours(self):
         """
-        Calculate SUV boundaries for each slice from an SUV value of 3
+        Calculate SUV boundaries for each slice from an SUV value of 1
         all the way to the maximum SUV value in that slice.
         :return: Dictionary where key is SUV ROI name and value is
                  a list containing tuples of slice id and lists of
@@ -245,7 +222,6 @@ class SUV2ROI:
                     del current_rois[key]
                 patient_dict_container.set("rois", current_rois)
 
-            print("\n==Generating ROIs for " + str(item) + "==")
             progress_callback.emit(("Generating ROIs", current_progress))
             current_progress += progress_increment
 
@@ -275,7 +251,6 @@ class SUV2ROI:
                         single_array[j].append(z_coord)
 
                 # Create the ROI(s)
-                print("Generating ROI for slice " + str(slider_id))
                 for array in single_array:
                     rtss = ROI.create_roi(dataset_rtss, item,
                                           [{'coords': array, 'ds': dataset}],

@@ -136,7 +136,7 @@ class DicomAxialView(DicomView):
         bottom_left.addWidget(
             self.label_zoom, QtCore.Qt.AlignBottom | QtCore.Qt.AlignBottom)
 
-        # Create a widget to contain the two bottom-right labels
+        # Create a widget to contain the two bottom-right widgets
         bottom_right_widget = QtWidgets.QWidget()
         bottom_right = QtWidgets.QVBoxLayout(bottom_right_widget)
         bottom_right.setAlignment(QtCore.Qt.AlignRight)
