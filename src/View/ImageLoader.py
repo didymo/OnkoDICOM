@@ -20,12 +20,12 @@ class ImageLoader(QtCore.QObject):
 
     signal_request_calc_dvh = QtCore.Signal()
 
-    def __init__(self, selected_files, existing_rtss_path, parent_window,
+    def __init__(self, selected_files, existing_rtss, parent_window,
                  *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
         self.selected_files = selected_files
         self.parent_window = parent_window
-        self.existing_rtss_path = existing_rtss_path
+        self.existing_rtss = existing_rtss
         self.calc_dvh = False
         self.advised_calc_dvh = False
 
@@ -51,7 +51,7 @@ class ImageLoader(QtCore.QObject):
             path,
             read_data_dict,
             file_names_dict,
-            existing_file_rtss=self.existing_rtss_path
+            existing_rtss_files=self.existing_rtss
         )
 
         # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
