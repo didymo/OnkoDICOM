@@ -1,7 +1,11 @@
+import os
+
+from pathlib import Path
 from skimage import measure
 
 from src.Model import ImageLoading
 from src.Model import ROI
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -25,7 +29,7 @@ class ISO2ROI:
             return False
 
         # Get isodose levels to turn into ROIs
-        isodose_levels = self.get_iso_levels()
+        isodose_levels = self.get_iso_levels('data/csv/isodoseRoi.csv')
 
         # Stop loading
         if interrupt_flag.is_set():
@@ -53,7 +57,7 @@ class ISO2ROI:
         self.generate_roi(boundaries, progress_callback)
         progress_callback.emit(("Reloading Window. Please Wait...", 95))
 
-    def get_iso_levels(self):
+    def get_iso_levels(self, path):
         """
         Opens /data/csv/isodoseRoi.csv to find the isodose levels that
         the user wants turned into ROIs. Creates a
@@ -64,7 +68,7 @@ class ISO2ROI:
         isodose_levels = {}
 
         # Open isodoseRoi.csv
-        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+        with open(path, "r") as fileInput:
             for row in fileInput:
                 items = row.split(',')
                 isodose_levels[items[2]] = [items[1] == 'cGy',
@@ -201,3 +205,60 @@ class ISO2ROI:
                                                ImageLoading.get_roi_info(rtss))
 
         progress_callback.emit(("Writing to RT Structure Set", 85))
+
+    def save_rtss(self):
+        """
+        Saves the RT Struct.
+        """
+        patient_dict_container = PatientDictContainer()
+        rtss_directory = Path(patient_dict_container.get("file_rtss"))
+        patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
+
+    def create_new_rtstruct(self, progress_callback):
+        """
+        Generates a new RTSS and edits the patient dict container. Used
+        for batch processing.
+        """
+        # Get common directory
+        patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.filepaths.values()
+        file_path = Path(os.path.commonpath(file_path))
+
+        # Get new RT Struct file path
+        file_path = str(file_path.joinpath("rtss.dcm"))
+
+        # Create RT Struct file
+        progress_callback.emit(("Generating RT Structure Set", 60))
+        ct_uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
+        ds = ROI.create_initial_rtss_from_ct(
+            patient_dict_container.dataset[0], file_path, ct_uid_list)
+        ds.save_as(file_path)
+
+        # Add RT Struct file path to patient dict container
+        patient_dict_container.filepaths['rtss'] = file_path
+        filepaths = patient_dict_container.filepaths
+
+        # Add RT Struct dataset to patient dict container
+        patient_dict_container.dataset['rtss'] = ds
+        dataset = patient_dict_container.dataset
+
+        # Set some patient dict container attributes
+        patient_dict_container.set("file_rtss", filepaths['rtss'])
+        patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+        dicom_tree_rtss = DicomTree(filepaths['rtss'])
+        patient_dict_container.set("dict_dicom_tree_rtss",
+                                   dicom_tree_rtss.dict)
+
+        dict_pixluts = ImageLoading.get_pixluts(
+            patient_dict_container.dataset)
+        patient_dict_container.set("pixluts", dict_pixluts)
+
+        rois = ImageLoading.get_roi_info(ds)
+        patient_dict_container.set("rois", rois)
+
+        patient_dict_container.set("selected_rois", [])
+        patient_dict_container.set("dict_polygons_axial", {})
+
+        patient_dict_container.set("rtss_modified", True)
