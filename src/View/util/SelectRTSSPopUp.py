@@ -100,7 +100,8 @@ class SelectRTSSPopUp(QDialog):
 
     def on_checkbox_clicked(self, checkbox):
         """
-        function to control selected rtss
+        function to set a rtss as the selected rtss
+        :param checkbox: the selected QCheckbox that contains a rtss
         """
         self.continue_button.setDisabled(False)
         self.selected_rtss = checkbox.rtss
