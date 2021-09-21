@@ -115,7 +115,7 @@ def test_batch_dvh2csv(test_object):
         process = BatchProcessDVH2CSV(test_object.DummyProgressWindow,
                                       test_object.DummyProgressWindow,
                                       cur_patient_files,
-                                      test_object.batch_dir)
+                                      str(test_object.batch_dir))
 
         # Target filename
         filename = 'DVHs_' + test_object.timestamp + '.csv'
