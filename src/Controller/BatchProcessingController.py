@@ -1,15 +1,6 @@
 import datetime
 from src.View.ProgressWindow import ProgressWindow
-from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
-    BatchProcessClinicalDataSR2CSV
-from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
-    BatchProcessCSV2ClinicalDataSR
-from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
-from src.Model.batchprocessing.BatchProcessROINameCleaning import \
-    BatchProcessROINameCleaning
-from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
-    BatchProcessPyRadCSV
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import DICOMDirectorySearch
@@ -32,13 +23,8 @@ class BatchProcessingController:
                           selected.
         """
         self.batch_path = ""
-        self.dvh_output_path = ""
-        self.pyrad_output_path = ""
-        self.clinical_data_input_path = ""
-        self.clinical_data_output_path = ""
         self.processes = []
         self.dicom_structure = None
-        self.name_cleaning_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -53,12 +39,6 @@ class BatchProcessingController:
         :param file_paths: dict of directories
         """
         self.batch_path = file_paths.get('batch_path')
-        self.dvh_output_path = file_paths.get('dvh_output_path')
-        self.pyrad_output_path = file_paths.get('pyrad_output_path')
-        self.clinical_data_input_path = \
-            file_paths.get('clinical_data_input_path')
-        self.clinical_data_output_path = \
-            file_paths.get('clinical_data_output_path')
 
     def set_processes(self, processes):
         """
@@ -118,14 +98,6 @@ class BatchProcessingController:
         """
         self.dicom_structure = dicom_structure
 
-    def set_name_cleaning_options(self, options):
-        """
-        Set name cleaning options for batch ROI name cleaning.
-        :param options: Dictionary of datasets, ROIs, and options for
-                        cleaning the ROIs.
-        """
-        self.name_cleaning_options = options
-
     @staticmethod
     def get_patient_files(patient):
         """
@@ -136,17 +108,26 @@ class BatchProcessingController:
         # Get files in patient
         cur_patient_files = {}
         for study in patient.studies.values():
-            for series in study.series.values():
-                image = list(series.images.values())[0]
-                class_id = image.class_id
-                series_size = len(series.images)
+            # Here down different. What we want is a dictionary of classes where
+            # the keys are the class_id and the value is a list of serieses.
+            # Structure of a series is the same, it's just the Study that has
+            # changed.
 
-                if cur_patient_files.get(class_id):
-                    if len(cur_patient_files.get(class_id).images) \
-                            < series_size:
+            # A series is now a dictionary that contains multiple dictionaries.
+            # Each dictionary contains dictionaries of series_uid:series pairs.
+            for series_type in study.series.values():
+                for series in series_type.values():
+
+                    image = list(series.images.values())[0]
+                    class_id = image.class_id
+                    series_size = len(series.images)
+
+                    if cur_patient_files.get(class_id):
+                        if len(cur_patient_files.get(class_id).images) \
+                                < series_size:
+                            cur_patient_files[class_id] = series
+                    else:
                         cur_patient_files[class_id] = series
-                else:
-                    cur_patient_files[class_id] = series
 
         return cur_patient_files
 
@@ -185,7 +166,8 @@ class BatchProcessingController:
                                               cur_patient_files)
                 success = process.start()
 
-                # Add rtss to patient
+                # Add rtss to patient in case it is needed in future
+                # processes
                 if success:
                     if PatientDictContainer().get("rtss_modified"):
                         # Get new RTSS
@@ -210,66 +192,6 @@ class BatchProcessingController:
                         PatientDictContainer().set("rtss_modified", False)
 
                     progress_callback.emit(("Completed ISO2ROI", 100))
-
-            # Perform SUV2ROI on patient
-            if "suv2roi" in self.processes:
-                pass
-
-            # Perform DVH2CSV on patient
-            if "dvh2csv" in self.processes:
-                cur_patient_files = self.get_patient_files(patient)
-                process = BatchProcessDVH2CSV(progress_callback,
-                                              interrupt_flag,
-                                              cur_patient_files,
-                                              self.dvh_output_path)
-                process.set_filename('DVHs_' + self.timestamp + '.csv')
-                process.start()
-
-                progress_callback.emit(("Completed DVH2CSV", 100))
-
-            # Perform PyRad2CSV on patient
-            if "pyrad2csv" in self.processes:
-                # Get current files
-                cur_patient_files = self.get_patient_files(patient)
-                process = BatchProcessPyRadCSV(progress_callback,
-                                               interrupt_flag,
-                                               cur_patient_files,
-                                               self.pyrad_output_path)
-                process.set_filename('Pyradiomics_' + self.timestamp + '.csv')
-                process.start()
-
-                progress_callback.emit(("Completed PyRad2CSV", 100))
-
-            # Perform batch ROI Name Cleaning on patient
-            if "roinamecleaning" in self.processes:
-                if self.name_cleaning_options:
-                    # Get ROIs, dataset locations, options
-                    process = \
-                        BatchProcessROINameCleaning(progress_callback,
-                                                    interrupt_flag,
-                                                    self.name_cleaning_options)
-                    process.start()
-                    progress_callback.emit(("Completed ROI Name Cleaning", 100))
-
-            # Perform CSV2ClinicalData-SR on patient
-            if "csv2clinicaldatasr" in self.processes:
-                # Get current files
-                cur_patient_files = self.get_patient_files(patient)
-                process = BatchProcessCSV2ClinicalDataSR(
-                    progress_callback, interrupt_flag,
-                    cur_patient_files, self.clinical_data_input_path)
-                process.start()
-                progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
-
-            # Perform ClinicalData-SR2CSV on patient
-            if "clinicaldatasr2csv" in self.processes:
-                cur_patient_files = self.get_patient_files(patient)
-                process = BatchProcessClinicalDataSR2CSV(
-                    progress_callback, interrupt_flag,
-                    cur_patient_files, self.clinical_data_output_path
-                )
-                process.start()
-                progress_callback.emit(("Completed ClinicalData-SR2CSV", 100))
 
         PatientDictContainer().clear()
 

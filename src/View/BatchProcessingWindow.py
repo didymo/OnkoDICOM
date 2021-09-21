@@ -3,15 +3,7 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
-from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
-    ClinicalDataSR2CSVOptions
-from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
-    CSV2ClinicalDataSROptions
-from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
-from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
-from src.View.batchprocessing.ROINameCleaningOptions import \
-    ROINameCleaningOptions, ROINameCleaningPrefixLabel
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -120,24 +112,9 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
-        self.suv2roi_tab = QtWidgets.QLabel("Coming soon")
-        self.dvh2csv_tab = DVH2CSVOptions()
-        self.pyrad2csv_tab = PyRad2CSVOptions()
-        self.batchnamecleaning_tab = ROINameCleaningOptions()
-        self.csv2clinicaldatasr_tab = CSV2ClinicalDataSROptions()
-        self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
-        self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
-        self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
-        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
-        self.tab_widget.addTab(self.batchnamecleaning_tab,
-                               "ROI Name Cleaning")
-        self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
-                               "CSV2ClinicalData-SR")
-        self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
-                               "ClinicalData-SR2CSV")
 
         # == Bottom widgets
         # Info text
@@ -227,8 +204,6 @@ class UIBatchProcessingWindow(object):
         start searching the directory.
         """
         self.file_path = self.directory_input.text()
-        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
-        self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
 
         self.begin_button.setEnabled(False)
 
@@ -259,9 +234,6 @@ class UIBatchProcessingWindow(object):
             self.begin_button.setEnabled(True)
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
-
-            # Update the batch name cleaning table
-            self.batchnamecleaning_tab.populate_table(dicom_structure)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -270,9 +242,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi',
-                     'dvh2csv', 'pyrad2csv', 'roinamecleaning',
-                     'csv2clinicaldatasr', 'clinicaldatasr2csv']
+        processes = ['iso2roi']
         selected_processes = []
 
         # Get the selected processes
@@ -283,51 +253,13 @@ class UIBatchProcessingWindow(object):
         # Save the changed settings
         self.iso2roi_tab.save_isodoses()
 
-        file_directories = {
-            "batch_path": self.file_path,
-            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location(),
-            "pyrad_output_path":
-                self.pyrad2csv_tab.get_pyrad_output_location(),
-            "clinical_data_input_path":
-                self.csv2clinicaldatasr_tab.get_csv_input_location(),
-            "clinical_data_output_path":
-                self.clinicaldatasr2csv_tab.get_csv_output_location()
-        }
+        file_directories = {"batch_path": self.file_path}
 
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
 
-        # Set batch ROI name options if selected
-        if 'roinamecleaning' in selected_processes:
-            # Get ROIs, datasets, options
-            name_cleaning_options = {}
-            roi_name_table = self.batchnamecleaning_tab.table_roi
-            for i in range(roi_name_table.rowCount()):
-                # Get current ROI name and what to do with it
-                roi_name = roi_name_table.item(i, 0).text()
-                option = roi_name_table.cellWidget(i, 1).currentIndex()
-
-                # Get new name text
-                if isinstance(roi_name_table.cellWidget(i, 2),
-                              ROINameCleaningPrefixLabel):
-                    new_name = roi_name_table.cellWidget(i, 2).text()
-                else:
-                    new_name = roi_name_table.cellWidget(i, 2).currentText()
-
-                # Get the dataset the ROI is in
-                dataset = roi_name_table.item(i, 3).text()
-
-                if dataset not in name_cleaning_options.keys():
-                    name_cleaning_options[dataset] = []
-
-                name_cleaning_options[dataset].append(
-                    [roi_name, option, new_name])
-
-            # Set batch name cleaning parameters in the batch processing
-            # controller.
-            self.batch_processing_controller.set_name_cleaning_options(
-                name_cleaning_options)
-
         # Enable processing
+        for patient in self.batch_processing_controller.dicom_structure.patients.values():
+            self.batch_processing_controller.get_patient_files(patient)
         self.batch_processing_controller.start_processing()
