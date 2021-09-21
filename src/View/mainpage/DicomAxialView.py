@@ -75,13 +75,17 @@ class DicomAxialView(DicomView):
         if pet_opened:
             icon_suv2roi = QtGui.QIcon()
             icon_suv2roi.addPixmap(
-                QtGui.QPixmap(resource_path("res/images/btn-icons/save_all_purple_icon.png")), # TODO replace
+                QtGui.QPixmap(
+                    resource_path("res/images/btn-icons/suv2roi.png")),
                 QtGui.QIcon.Normal,
                 QtGui.QIcon.On
             )
+            self.button_suv2roi.setObjectName("SUV2ROI_Button")
             self.button_suv2roi.setIcon(icon_suv2roi)
             self.button_suv2roi.setToolTip("Convert SUVs to ROIs")
             self.button_suv2roi.setFixedSize(50, 50)
+            self.button_suv2roi.setCursor(
+                QtGui.QCursor(QtCore.Qt.PointingHandCursor))
             self.button_suv2roi.clicked.connect(self.suv2roi_handler)
 
         # Set all labels to white
