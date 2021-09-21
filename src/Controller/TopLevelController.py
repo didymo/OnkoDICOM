@@ -62,6 +62,9 @@ class Controller:
 
         self.open_patient_window.show()
 
+        # Run check_selected_items() upon open patient window is shown
+        self.open_patient_window.check_selected_items()
+
     def show_main_window(self, progress_window):
         """
         Displays the main patient window after completing the loading.

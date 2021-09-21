@@ -69,6 +69,10 @@ class DicomTreeView(QtWidgets.QWidget):
             combobox.addItem("Clinical Data SR")
             self.special_files.append("sr-cd")
 
+        if self.patient_dict_container.has_modality("sr-rad"):
+            combobox.addItem("Pyradiomics SR")
+            self.special_files.append("sr-rad")
+
         for i in range(len(self.pixmaps)):
             combobox.addItem("Image Slice " + str(i + 1))
 
@@ -111,6 +115,10 @@ class DicomTreeView(QtWidgets.QWidget):
 
         elif name == "sr-cd":
             dict_tree = self.patient_dict_container.get("dict_dicom_tree_sr_cd")
+
+        elif name == "sr-rad":
+            dict_tree = \
+                self.patient_dict_container.get("dict_dicom_tree_sr_pyrad")
 
         else:
             dict_tree = None
