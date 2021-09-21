@@ -3,13 +3,13 @@ import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
 from src.Model.Configuration import Configuration, SqlError
+from src.View.ImageFusion.ImageFusionAddOnOption import ImageFusionOptions
 
 
 class UIAddOnOptions(object):
     """
     Create all UI components for the Add-On options window.
     """
-
     def __init__(self):
         self.table_view = None
         self.table_organ = None
@@ -27,6 +27,31 @@ class UIAddOnOptions(object):
         self.add_new_roi = None
         self.delete_roi = None
 
+    def add_into_observer(self):
+        self.observer_array = []
+        self.observer_array.append(self.table_view)
+        self.observer_array.append(self.table_organ)
+        self.observer_array.append(self.table_volume)
+        self.observer_array.append(self.table_ids)
+        self.observer_array.append(self.add_new_window)
+        self.observer_array.append(self.delete_window)
+        self.observer_array.append(self.add_standard_organ_name)
+        self.observer_array.append(self.import_organ_csv)
+        self.observer_array.append(self.add_standard_volume_name)
+        self.observer_array.append(self.import_organ_csv)
+        self.observer_array.append(self.add_standard_volume_name)
+        self.observer_array.append(self.note)
+        self.observer_array.append(self.fill_options)
+        self.observer_array.append(self.change_default_directory_frame)
+        self.observer_array.append(self.table_roi)
+        self.observer_array.append(self.add_new_roi)
+        self.observer_array.append(self.delete_roi)
+        self.observer_array.append(self.table_modules)
+        self.observer_array.append(self.image_fusion)
+        print("Appended items into the Observer Array")
+        print("Print the observer array")
+        print(self.observer_array)
+
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
                  iso_opacity, line_width):
         """
@@ -40,7 +65,7 @@ class UIAddOnOptions(object):
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
-        add_on_options.setMinimumSize(766, 600)
+        add_on_options.setMinimumSize(960, 720)
         add_on_options.setStyleSheet(stylesheet)
         add_on_options.setWindowIcon(QtGui.QIcon(
             resource_path("res/images/btn-icons/onkodicom_icon.png")))
@@ -61,11 +86,13 @@ class UIAddOnOptions(object):
             self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
         self.iso2roi_options = RoiFromIsodoseOptions(self)
         self.change_default_directory = ChangeDefaultDirectory(self)
+        self.image_fusion = ImageFusionOptions(self)
 
         self.create_cancel_button()
         self.create_apply_button()
         self.init_tree_list()
         self.set_layout()
+        self.add_into_observer()
 
         add_on_options.setCentralWidget(self.widget)
         QtCore.QMetaObject.connectSlotsByName(add_on_options)
@@ -97,6 +124,8 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
         self.option_layout.addWidget(
             self.change_default_directory_frame, 1, 0, 1, 3)
+        self.option_layout.addWidget(
+            self.image_fusion.auto_image_fusion_frame, 1, 0, 1, 3)
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
@@ -186,143 +215,69 @@ class UIAddOnOptions(object):
         # Commented out lines are for the extra option (ROI by Isodose)
 
         if type == "Image Windowing":
-            self.table_modules.setVisible(False)
+            for item in self.observer_array:
+                item.setVisible(False)
+
             self.table_view.setVisible(True)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
-            self.table_ids.setVisible(False)
             self.add_new_window.setVisible(True)
             self.delete_window.setVisible(True)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-            self.change_default_directory_frame.setVisible(False)
+
         elif type == "Standard Organ Names":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
+            for item in self.observer_array:
+                item.setVisible(False)
+
             self.table_organ.setVisible(True)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
-            self.table_ids.setVisible(False)
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-            self.change_default_directory_frame.setVisible(False)
+
         elif type == "Standard Volume Names":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(True)
-            self.table_roi.setVisible(False)
-            self.table_ids.setVisible(False)
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
+            for item in self.observer_array:
+                item.setVisible(False)
+
+            self.table_organ.setVisible(True)
             self.add_standard_volume_name.setVisible(True)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-            self.change_default_directory_frame.setVisible(False)
 
         elif type == "Create ROIs from Isodoses":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
+            for item in self.observer_array:
+                item.setVisible(False)
+
             self.table_roi.setVisible(True)
-            self.table_ids.setVisible(False)
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
             self.add_new_roi.setVisible(True)
             self.delete_roi.setVisible(True)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-            self.change_default_directory_frame.setVisible(False)
 
         elif type == "Patient ID - Hash ID":
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
+            for item in self.observer_array:
+                item.setVisible(False)
+
             self.table_ids.setVisible(True)
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
             self.note.setVisible(True)
-            self.fill_options.setVisible(False)
-            self.change_default_directory_frame.setVisible(False)
-        elif type == "User Options" or type == "Configuration":
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
+
+        elif type == "User Options" or type == "Configuration" or \
+                type == "Image Fusion":
+
+            for item in self.observer_array:
+                item.setVisible(False)
+
             self.table_modules.setVisible(True)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
-            self.table_ids.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
-            self.change_default_directory_frame.setVisible(False)
+
         elif type == "Line & Fill configuration":
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
-            self.table_ids.setVisible(False)
-            self.note.setVisible(False)
+            for item in self.observer_array:
+                item.setVisible(False)
+
             self.fill_options.setVisible(True)
-            self.change_default_directory_frame.setVisible(False)
+
         elif type == "Default directory":
-            self.add_new_window.setVisible(False)
-            self.delete_window.setVisible(False)
-            self.add_new_roi.setVisible(False)
-            self.delete_roi.setVisible(False)
-            self.add_standard_volume_name.setVisible(False)
-            self.add_standard_organ_name.setVisible(False)
-            self.import_organ_csv.setVisible(False)
-            self.table_modules.setVisible(False)
-            self.table_view.setVisible(False)
-            self.table_organ.setVisible(False)
-            self.table_volume.setVisible(False)
-            self.table_roi.setVisible(False)
-            self.table_ids.setVisible(False)
-            self.note.setVisible(False)
-            self.fill_options.setVisible(False)
+
+            for item in self.observer_array:
+                item.setVisible(False)
             self.change_default_directory_frame.setVisible(True)
+
+        elif type == "Auto-Registration":
+            for item in self.observer_array:
+                if item != self.image_fusion:
+                    item.setVisible(False)
+
+            self.image_fusion.auto_image_fusion_frame.setVisible(True)
 
 
 class WindowingOptions(object):
@@ -836,6 +791,7 @@ class ChangeDefaultDirectory(object):
                 \nConfiguration file recreated with no default directory.
                 \nPlease update your default directory.""")
 
+        # Parent attribute
         self.window.change_default_directory_frame = QtWidgets.QFrame()
         self.window.change_default_directory_frame.setVisible(False)
         self.change_default_directory_vertical_layout = QtWidgets.QVBoxLayout()
@@ -887,8 +843,8 @@ class ChangeDefaultDirectory(object):
 
     def change_button_clicked(self):
         """
-            Executes when the choose button is clicked.
-            Gets filepath from the user and loads all files and subdirectories.
+        Executes when the choose button is clicked.
+        Gets filepath from the user and loads all files and subdirectories.
         """
         # Get folder path from pop up dialog box
 
