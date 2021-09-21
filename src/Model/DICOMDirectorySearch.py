@@ -72,6 +72,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                         new_series = Series(dicom_file.SeriesInstanceUID)
                         new_series.series_description = dicom_file.get(
                             "SeriesDescription")
+                        new_series.add_referenced_objects(dicom_file)
                         new_series.add_image(new_image)
 
                         new_study = Study(dicom_file.StudyInstanceUID)
@@ -89,10 +90,10 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                             dicom_file.PatientID)
                         if not existing_patient.has_study(
                                 dicom_file.StudyInstanceUID):
-                            new_series = Series(
-                                dicom_file.SeriesInstanceUID)
+                            new_series = Series(dicom_file.SeriesInstanceUID)
                             new_series.series_description = dicom_file.get(
                                 "SeriesDescription")
+                            new_series.add_referenced_objects(dicom_file)
                             new_series.add_image(new_image)
 
                             new_study = Study(dicom_file.StudyInstanceUID)
@@ -110,6 +111,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                     dicom_file.SeriesInstanceUID)
                                 new_series.series_description = dicom_file.get(
                                     "SeriesDescription")
+                                new_series.add_referenced_objects(dicom_file)
                                 new_series.add_image(new_image)
 
                                 existing_study.add_series(new_series)
@@ -118,6 +120,8 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                     dicom_file.SeriesInstanceUID)
                                 if not existing_series.has_image(
                                         dicom_file.SOPInstanceUID):
+                                    existing_series.series_description = \
+                                        dicom_file.get("SeriesDescription")
                                     existing_series.add_image(new_image)
                                     
     return dicom_structure
