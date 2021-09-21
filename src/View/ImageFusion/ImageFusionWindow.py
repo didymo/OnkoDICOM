@@ -410,18 +410,20 @@ class UIImageFusionWindow(object):
             else:
                 selected_series_types.update(series_type)
 
+        header = ""
+        self.open_patient_window_confirm_button.setDisabled(True)
         # Check if multiple studies are selected
         if len(selected_studies_names) == 1 & \
                 len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
             self.open_patient_window_confirm_button.setDisabled(False)
-        elif len(selected_studies_names) > 1:
+        elif len(selected_studies_names) <= 1:
             header = "Only one study can be opened."
-            self.open_patient_window_confirm_button.setDisabled(True)
+            self.open_patient_window_confirm_button.setDisabled(False)
 
         # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
-        if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
-            header = "Cannot proceed without an image file."
-            self.open_patient_window_confirm_button.setDisabled(True)
+        # if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
+        #     header = "Cannot proceed without an image file."
+        #     self.open_patient_window_confirm_button.setDisabled(True)
         elif 'RTSTRUCT' in selected_series_types:
             header = "Cannot load new RTSTRUCT."
             self.open_patient_window_confirm_button.setDisabled(True)
@@ -432,13 +434,13 @@ class UIImageFusionWindow(object):
             header = ""
 
         # Check if same patient
-        if selected_patient.dicom_object.patient_id.strip() != \
-                self.patient_id.strip():
-            header = "Cannot proceed with different patient."
-            self.open_patient_window_confirm_button.setDisabled(True)
-        if len(selected_studies_names) == 0:
-            header = "No image set selected"
-            self.open_patient_window_confirm_button.setDisabled(True)
+        # if selected_patient.dicom_object.patient_id.strip() != \
+        #         self.patient_id.strip():
+        #     header = "Cannot proceed with different patient."
+        #     self.open_patient_window_confirm_button.setDisabled(True)
+        # if len(selected_studies_names) == 0:
+        #     header = "No image set selected"
+        #     self.open_patient_window_confirm_button.setDisabled(True)
 
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
