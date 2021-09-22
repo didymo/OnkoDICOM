@@ -220,7 +220,7 @@ class UIMainWindow:
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
         layout_footer.setContentsMargins(0, 0, 0, 0)
 
-        label_footer = QtWidgets.QLabel("@OnkoDICOM 2019-20")
+        label_footer = QtWidgets.QLabel("@OnkoDICOM2021")
         label_footer.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         layout_footer.addWidget(label_footer)
