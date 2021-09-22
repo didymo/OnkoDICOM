@@ -960,12 +960,17 @@ class ClinicalDataCSVDirectoryOptions(object):
                 \nPlease update your default directory.""")
 
         # Clinical data prompt text
-        text = "Change the file that is searched for patient clinical data.\n"
-        text += "\nPlease note that patient clinical data must be stored in a "
-        text += "CSV format.\n\nThe first column of the CSV data must be the "
-        text += "patient's ID.\n\nIf the patient ID in the clinical data CSV "
-        text += "does not match the patient ID in the DICOM dataset, the "
-        text += "clinical data tab will not be populated!"
+        text = "Importing Clinical Data\n\nClinical data can be " \
+               "automatically imported into the DICOM image set. This " \
+               "requires a matching process which is strict (see the User " \
+               "Manual). The three requirements are detailed below:\n\n1. " \
+               "The Patient's Clinical Data must be stored in the Comma " \
+               "Separated Values (CSV) format, which any spreadsheet " \
+               "program can produce, including MS Excel.\n\n2. This CSV " \
+               "file must contain the patient's identifier in the first " \
+               "column, and that first column must be titled \"Patient ID\"." \
+               "\n\n3. The entry in the first CSV column [\"Patient ID\"] " \
+               "must match the patient identifier in the DICOM dataset."
 
         # Create the frame
         self.window.clinical_data_csv_dir_frame = QtWidgets.QFrame()
