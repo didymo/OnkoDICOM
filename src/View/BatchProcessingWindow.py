@@ -260,6 +260,4 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_processes(selected_processes)
 
         # Enable processing
-        for patient in self.batch_processing_controller.dicom_structure.patients.values():
-            self.batch_processing_controller.get_patient_files(patient)
         self.batch_processing_controller.start_processing()

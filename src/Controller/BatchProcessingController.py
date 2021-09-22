@@ -108,13 +108,6 @@ class BatchProcessingController:
         # Get files in patient
         cur_patient_files = {}
         for study in patient.studies.values():
-            # Here down different. What we want is a dictionary of classes where
-            # the keys are the class_id and the value is a list of serieses.
-            # Structure of a series is the same, it's just the Study that has
-            # changed.
-
-            # A series is now a dictionary that contains multiple dictionaries.
-            # Each dictionary contains dictionaries of series_uid:series pairs.
             for series_type in study.series.values():
                 for series in series_type.values():
 

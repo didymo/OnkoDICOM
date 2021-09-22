@@ -158,8 +158,13 @@ def create_initial_model():
 def create_initial_model_batch():
     """
     This function initializes all the attributes in the PatientDictContainer
-    model required for the operation of batch processing. It is a modified
-    version of create_initial_model.
+    required for the operation of batch processing. It is a modified version
+    of create_initial_model. This function only sets RTSS values in the
+    PatientDictContainer if an RTSS exists. If one does not exist it will only
+    be created if needed, whereas the original create_initial_model assumes
+    that one is always created. This function also does not set SR attributes
+    in the PatientDictContainer, as SRs are only needed for SR2CSV functions,
+    which do not require the use of the PatientDictContainer.
     """
     ##############################
     #  LOAD PATIENT INFORMATION  #
