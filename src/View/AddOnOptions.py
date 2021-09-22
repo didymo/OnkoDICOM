@@ -28,6 +28,8 @@ class UIAddOnOptions(object):
         self.delete_roi = None
 
     def add_into_observer(self):
+        # TO DO: Construct Observer Class rather than Array
+        # inherit from such Observer class.
         self.observer_array = []
         self.observer_array.append(self.table_view)
         self.observer_array.append(self.table_organ)
@@ -48,9 +50,6 @@ class UIAddOnOptions(object):
         self.observer_array.append(self.delete_roi)
         self.observer_array.append(self.table_modules)
         self.observer_array.append(self.image_fusion)
-        print("Appended items into the Observer Array")
-        print("Print the observer array")
-        print(self.observer_array)
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
                  iso_opacity, line_width):
