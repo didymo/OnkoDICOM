@@ -18,8 +18,8 @@ of RTSSs attached to the selected image set to proceed.
 class SelectRTSSPopUp(QDialog):
     signal_rtss_selected = QtCore.Signal(Series)
 
-    def __init__(self, existing_rtss):
-        QDialog.__init__(self)
+    def __init__(self, existing_rtss, parent=None):
+        QDialog.__init__(self, parent=parent)
 
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
