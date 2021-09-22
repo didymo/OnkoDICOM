@@ -269,11 +269,16 @@ def rtdose2dvh():
         rois.append(roi.ROINumber)
     rois.sort()
 
-    # Get DVH referenced ROI numbers
+    # Try DVH referenced ROI numbers
     dvhs = []
-    for dvh in rt_dose['DVHSequence']:
-        dvhs.append(dvh.DVHReferencedROISequence[0].ReferencedROINumber)
-    dvhs.sort()
+    try:
+        for dvh in rt_dose['DVHSequence']:
+            dvhs.append(dvh.DVHReferencedROISequence[0].ReferencedROINumber)
+        dvhs.sort()
+    # RTDOSE has no DVHSequence attribute. Return.
+    except KeyError:
+        dvh_seq["diff"] = True
+        return dvh_seq
 
     # If there are a different amount of ROIs to DVH sequences
     if rois != dvhs:
