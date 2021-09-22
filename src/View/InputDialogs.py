@@ -331,7 +331,9 @@ class PatientWeightDialog(QDialog):
         # Make sure the patient weight is a number
         if self.patient_weight_entry.text() != '':
             try:
-                float(self.patient_weight_entry.text())
+                num = float(self.patient_weight_entry.text())
+                if num < 0:
+                    raise ValueError
                 self.accept()
             except ValueError:
                 button_reply = \
