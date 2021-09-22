@@ -1,20 +1,9 @@
-import csv
-import os
 import pytest
 from pathlib import Path
-from pydicom import dcmread
-from pydicom.errors import InvalidDicomError
 from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
-from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
-    BatchProcessCSV2ClinicalDataSR
-from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
-from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
-    BatchProcessPyRadCSV
-from src.Model.batchprocessing.BatchProcessROINameCleaning import \
-    BatchProcessROINameCleaning
 
 
 class TestObject:
