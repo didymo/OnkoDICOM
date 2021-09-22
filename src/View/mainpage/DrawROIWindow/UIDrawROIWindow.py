@@ -62,7 +62,8 @@ class UIDrawROIWindow:
         self.upper_limit = None
         self.lower_limit = None
 
-        self.dicom_view = DicomAxialView()
+        # is_four_view is set to True to stop the SUV2ROI button from appearing
+        self.dicom_view = DicomAxialView(is_four_view=True)
         self.current_slice = self.dicom_view.slider.value()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
