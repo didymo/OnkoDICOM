@@ -53,7 +53,7 @@ class MovingImageLoader(ImageLoader):
             path,
             read_data_dict,
             file_names_dict,
-            existing_file_rtss=self.existing_rtss_path
+            existing_rtss_files=self.existing_rtss
         )
 
         if interrupt_flag.is_set():

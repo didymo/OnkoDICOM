@@ -180,7 +180,7 @@ class UIManipulateROIWindow:
                                      self.margin_line_edit.sizeHint().height())
         self.margin_line_edit.setVisible(False)
         self.margin_line_edit.setValidator(
-            QRegularExpressionValidator(QRegularExpression("^[0-9][.]?[0-9]*$")))
+            QRegularExpressionValidator(QRegularExpression("^[0-9]*[.]?[0-9]*$")))
         self.manipulate_roi_window_input_container_box.addRow(
             self.margin_label, self.margin_line_edit)
 

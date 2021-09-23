@@ -123,11 +123,12 @@ QLabel#FirstTimeWelcomeWindowLabel {
     font-weight: bold;
     font-size: 18pt;
 }
-QLabel#FirstTimeWelcomeWindowSlogan, QLabel#FirstTimeWelcomeWindowPrompt {
+QLabel#FirstTimeWelcomeWindowSlogan, QLabel#FirstTimeWelcomeWindowPrompt,
+ QLabel#ClinicalDataCSVPrompt {
     font-weight: semi-bold;
     font-size: 16px;
 }
-QLabel#FirstTimeWelcomeWindowPrompt {
+QLabel#FirstTimeWelcomeWindowPrompt, QLabel#ClinicalDataCSVPrompt {
     padding: 0 8px;
 }
 

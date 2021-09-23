@@ -307,23 +307,39 @@ def write_transform_to_dcm(affine_matrix):
 
 def create_fused_model(old_images, new_image):
     """
-    Creates the image necessary to display for image fusion.
+    Performs the image fusion and stores fusion information
+    :param old_images: Image set from Primary scan
+    :param new_image: Image set from secondary (moving) scan
     """
+    patient_dict_container = PatientDictContainer()
     fused_image = register_images(old_images, new_image)
-    tfm = fused_image[1]
+    patient_dict_container.set("fused_images", fused_image)
+
     # Throw Transform Object into function to write dcm file
     combined_affine = convert_composite_to_affine_transform(fused_image[1])
     # test = check_affine_conversion(fused_image[1], combined_affine)
     affine_matrix = convert_combined_affine_to_matrix(combined_affine)
     write_transform_to_dcm(affine_matrix)
 
+
+def get_fused_window(level, window):
+    """
+    generates the fused ismages with applied windows
+    :param level: the level (midpoint) of windowing
+    :param window: the window (range) of windowing
+    :return: axial, sagittal and coronal pixmaps with windowing
+    """
+
+    patient_dict_container = PatientDictContainer()
+    old_images = patient_dict_container.get("sitk_original")
+    fused_image = patient_dict_container.get("fused_images")
+    tfm = fused_image[1]
     array = sitk.GetArrayFromImage(old_images).shape
 
     axial_slice_count = array[0]
     coronal_slice_count = array[1]
     sagittal_slice_count = array[1]
 
-    # create colored images
     sp_plane, _, sp_slice = old_images.GetSpacing()
     asp = (1.0 * sp_slice) / sp_plane
 
@@ -331,17 +347,22 @@ def create_fused_model(old_images, new_image):
     color_sagittal = {}
     color_coronal = {}
 
+    windowing = (int(level), int(window))
+
     for i in range(axial_slice_count):
         color_axial[i] = \
-            get_fused_pixmap(old_images, fused_image[0], asp, i, "axial")
+            get_fused_pixmap(old_images, fused_image[0], asp, i, "axial",
+                             windowing)
 
     for i in range(sagittal_slice_count):
         color_sagittal[i] = \
-            get_fused_pixmap(old_images, fused_image[0], asp, i, "sagittal")
+            get_fused_pixmap(old_images, fused_image[0], asp, i, "sagittal",
+                             windowing)
 
     for i in range(coronal_slice_count):
         color_coronal[i] = \
-            get_fused_pixmap(old_images, fused_image[0], asp, i, "coronal")
+            get_fused_pixmap(old_images, fused_image[0], asp, i, "coronal",
+                             windowing)
 
     return color_axial, color_sagittal, color_coronal, tfm
 
@@ -368,22 +389,27 @@ def register_images(image_1, image_2):
     return img_ct, tfm
 
 
-def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
+def get_fused_pixmap(orig_image, fused_image, aspect,
+                     slice_num, view, windowing=(-250, 500)):
     """
     Get a color pixmap.
-    :param sitk image: original 3d image
-    :param sikt image: fused 3d image
+    :param orig_image: original 3d image
+    :param fused_image: fused 3d image
     :param aspect: scaled pixel spacing of first image
+    :param slice_num: number of slices
+    :param view: axial, sagittal or coronal
+    :param windowing: target level and window of the fused image
     :return: color pixmap.
     """
     # Get dimension /could also input dimensions as parameters
     image_array = sitk.GetArrayFromImage(orig_image)
-    if (view == "sagittal"):
+    if view == "sagittal":
         image_slice = return_slice("x", slice_num)
 
         pixel_array_color = \
-            np.array(generate_comparison_colormix([orig_image, fused_image],
-                                                  arr_slice=image_slice))
+            np.array(generate_comparison_colormix(
+                [orig_image, fused_image],
+                arr_slice=image_slice, window=windowing))
 
         # resize dimensions to stop image stretch
         pixel_array_color = np.resize(pixel_array_color, (512, 345, 3))
@@ -407,7 +433,7 @@ def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
 
         pixel_array_color = np.array(generate_comparison_colormix(
             [orig_image, fused_image],
-            arr_slice=image_slice))
+            arr_slice=image_slice, window=windowing))
 
         # resize dimensions to stop image stretch
         pixel_array_color = np.resize(pixel_array_color, (512, 345, 3))
@@ -430,7 +456,7 @@ def get_fused_pixmap(orig_image, fused_image, aspect, slice_num, view):
 
         pixel_array_color = np.array(generate_comparison_colormix(
             [orig_image, fused_image],
-            arr_slice=image_slice))
+            arr_slice=image_slice, window=windowing))
 
         # first adjusts rgb (0,1) scale to greyscale (0,255)
         # then converts type and formats it to color.

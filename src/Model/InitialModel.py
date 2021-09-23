@@ -145,13 +145,13 @@ def create_initial_model():
         patient_dict_container.set("dict_dicom_tree_rtplan",
                                    dicom_tree_rtplan.dict)
 
-    rtss = patient_dict_container.get("dataset_rtss")
+    # Set SR attributes
+    if patient_dict_container.has_modality("sr-cd"):
+        dicom_tree_sr_clinical_data = DicomTree(filepaths['sr-cd'])
+        patient_dict_container.set("dict_dicom_tree_sr_cd",
+                                   dicom_tree_sr_clinical_data.dict)
 
-    amount = len(patient_dict_container.filepaths)
-    orig_fusion_list = []
-
-    for i in range(amount):
-        try:
-            orig_fusion_list.append(patient_dict_container.filepaths[i])
-        except KeyError:
-            continue
+    if patient_dict_container.has_modality("sr-rad"):
+        dicom_tree_sr_pyrad = DicomTree(filepaths['sr-rad'])
+        patient_dict_container.set("dict_dicom_tree_sr_pyrad",
+                                   dicom_tree_sr_pyrad.dict)

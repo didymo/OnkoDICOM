@@ -14,8 +14,8 @@ class OpenPatientProgressWindow(ProgressWindow):
                         QtCore.Qt.WindowCloseButtonHint):
         super(OpenPatientProgressWindow, self).__init__(*args, kwargs)
 
-    def start_loading(self, selected_files, existing_rtss_path=None):
-        image_loader = ImageLoader(selected_files, existing_rtss_path, self)
+    def start_loading(self, selected_files, existing_rtss=None):
+        image_loader = ImageLoader(selected_files, existing_rtss, self)
         image_loader.signal_request_calc_dvh.connect(
             self.prompt_calc_dvh)
 
@@ -29,9 +29,9 @@ class OpenPatientProgressWindow(ProgressWindow):
         platform is performed to ensure consistency of button positioning across
         platforms.
         """
-        message = "RTSTRUCT and RTDOSE datasets identified. Would you like to "
-        message += "calculate DVHs? (This may take up to several minutes on "
-        message += "some systems.)"
+        message = "DVHs not present in RT DOSE or do not correspond to ROIs. "
+        message += "Would you like to calculate DVHs? (This may take up to "
+        message += "several minutes on some systems.)"
         if platform.system() == "Linux":
             choice = QMessageBox.question(self, "Calculate DVHs?", message,
                                           QMessageBox.Yes | QMessageBox.No)
