@@ -1,12 +1,13 @@
 import datetime
-from src.View.ProgressWindow import ProgressWindow
+import threading
+from PySide6.QtCore import QThreadPool
+from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model import DICOMDirectorySearch
-import threading
 from src.Model.Worker import Worker
-from PySide6.QtCore import QThreadPool
+from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
+from src.View.ProgressWindow import ProgressWindow
 
 
 class BatchProcessingController:
@@ -28,6 +29,7 @@ class BatchProcessingController:
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
+        self.batch_summary = {}
 
         # threadpool for file loading
         self.threadpool = QThreadPool()
@@ -183,8 +185,15 @@ class BatchProcessingController:
 
                         # Update the patient dict container
                         PatientDictContainer().set("rtss_modified", False)
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
 
-                    progress_callback.emit(("Completed ISO2ROI", 100))
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]["iso2roi"] = reason
+                progress_callback.emit(("Completed ISO2ROI", 100))
 
         PatientDictContainer().clear()
 
@@ -193,8 +202,12 @@ class BatchProcessingController:
         Runs when batch processing has been completed.
         """
         self.progress_window.update_progress(("Processing complete!", 100))
-        print("Processing completed!")
         self.progress_window.close()
+
+        # Create window to store summary info
+        batch_summary_window = BatchSummaryWindow()
+        batch_summary_window.set_summary_text(self.batch_summary)
+        batch_summary_window.exec_()
 
     def error_processing(self):
         """
