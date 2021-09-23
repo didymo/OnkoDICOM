@@ -1,11 +1,8 @@
 import platform
 import traceback
-from pathlib import Path
-from random import randint, seed
 
 import SimpleITK as sitk
 import numpy as np
-import pydicom
 from PySide6 import QtCore, QtGui
 from PySide6.QtGui import Qt, QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QPushButton, \
@@ -13,12 +10,11 @@ from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QPushButton, \
 from platipy.imaging.registration.utils import apply_linear_transform
 
 from src.Controller.PathHandler import resource_path
-from src.Model import ROI, ImageLoading
-from src.Model.GetPatientInfo import DicomTree
+from src.Model import ROI
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import merge_rtss, ordered_list_rois
 from src.Model.ROITransfer import transform_point_set_from_dicom_struct
+from src.View.ProgressWindow import ProgressWindow
 from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 
 
@@ -36,6 +32,9 @@ class UITransferROIWindow:
         self.fixed_to_moving_rois = {}
         self.moving_to_fixed_rois = {}
         self.add_suffix = True
+        self.progress_window = ProgressWindow(
+            self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window.signal_loaded.connect(self.on_transfer_roi_finished)
         self.init_layout()
 
     def retranslate_ui(self, transfer_roi_window_instance):
@@ -184,7 +183,7 @@ class UITransferROIWindow:
         self.save_button = QPushButton()
         self.save_button.setObjectName("SaveButton")
         self.save_button.setDisabled(True)
-        self.save_button.clicked.connect(self.save_clicked)
+        self.save_button.clicked.connect(self.transfer_roi_clicked)
 
         self.reset_and_save_buttons_layout.setAlignment(Qt.AlignRight)
         self.reset_and_save_buttons_layout.addWidget(self.reset_button)
@@ -363,7 +362,13 @@ class UITransferROIWindow:
     def transfer_list_is_empty(self):
         return len(self.fixed_to_moving_rois) == 0 and len(self.moving_to_fixed_rois) == 0
 
-    def save_clicked(self):
+    def save_clicked(self, interrupt_flag, progress_callback):
+        progress_callback.emit(("Converting images to sitk", 0))
+        # Stop loading
+        if interrupt_flag.is_set():
+            # TODO: convert print to logging
+            print("Stopped ROITransfer")
+            return False
         try:
             rtss = self.patient_dict_container.get("dataset_rtss")
 
@@ -379,6 +384,14 @@ class UITransferROIWindow:
             moving_dicom_image = self.read_dicom_image_to_sitk(
                 self.moving_dict_container.filepaths)
             # get array of roi indexes from sitk images
+
+            progress_callback.emit(("Retrieving ROIs from both image sets", 20))
+            # Stop loading
+            if interrupt_flag.is_set():
+                # TODO: convert print to logging
+                print("Stopped ROITransfer")
+                return False
+
             if moving_rtss:
                 rois_images_moving = transform_point_set_from_dicom_struct(
                     moving_dicom_image,
@@ -388,25 +401,60 @@ class UITransferROIWindow:
             else:
                 rois_images_moving = ([], [])
             tfm = self.moving_dict_container.get("tfm")
+
+            progress_callback.emit(
+                ("Transfering ROIs from moving  to fixed image set", 40))
+            # Stop loading
+            if interrupt_flag.is_set():
+                # TODO: convert print to logging
+                print("Stopped ROITransfer")
+                return False
+
             # transform roi from moving_dict to fixed_dict
             self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
                                rois_images_moving, self.patient_dict_container)
+
+            progress_callback.emit(
+                ("Transfering ROIs from fixed to moving image set", 60))
+            # Stop loading
+            if interrupt_flag.is_set():
+                # TODO: convert print to logging
+                print("Stopped ROITransfer")
+                return False
+
             # transform roi from moving_dict to fixed_dict
             self.transfer_rois(self.fixed_to_moving_rois, tfm.GetInverse(),
                                moving_dicom_image,
                                rois_images_fixed, self.moving_dict_container)
 
-            # emit changed dataset to structure_modified function and auto_save_roi function
-            if len(self.fixed_to_moving_rois) > 0:
-                self.signal_roi_transferred_to_moving_container.emit((
-                    self.moving_dict_container.get("dataset_rtss")
-                    , {"transfer": None}))
-            if len(self.moving_to_fixed_rois) > 0:
-                self.signal_roi_transferred_to_fixed_container.emit((
-                    self.patient_dict_container.get("dataset_rtss")
-                    , {"transfer": None}))
+            progress_callback.emit(
+                ("Saving ROIs to RTSS", 80))
+            # Stop loading
+            if interrupt_flag.is_set():
+                # TODO: convert print to logging
+                print("Stopped ROITransfer")
+                return False
+
         except Exception as e:
             traceback.print_exc()
+        progress_callback.emit(
+            ("Reloading window", 90))
+
+    def transfer_roi_clicked(self):
+        self.progress_window.start(self.save_clicked)
+
+    def on_transfer_roi_finished(self):
+        # emit changed dataset to structure_modified function and
+        # auto_save_roi function
+        if len(self.fixed_to_moving_rois) > 0:
+            self.signal_roi_transferred_to_moving_container.emit((
+                self.moving_dict_container.get("dataset_rtss")
+                , {"transfer": None}))
+        if len(self.moving_to_fixed_rois) > 0:
+            self.signal_roi_transferred_to_fixed_container.emit((
+                self.patient_dict_container.get("dataset_rtss")
+                , {"transfer": None}))
+        self.progress_window.close()
         QMessageBox.about(self.transfer_roi_window_instance, "Saved",
                           "ROIs are successfully transferred!")
         self.closeWindow()
