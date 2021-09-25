@@ -57,6 +57,13 @@ QPushButton:hover { /* +10% saturation */
 QPushButton:pressed { /* -20% saturation */
     background-color: #5c2eb8;
 }
+
+QPushButton#SUV2ROI_Button {
+    background-color: transparent;
+    padding: 0;
+    qproperty-iconSize: 40px;
+}
+
 QPushButton:disabled, QPushButton[QPushButtonClass="success-button"]:disabled,
 QPushButton[QPushButtonClass="fail-button"]:disabled {
     background-color: #b3b3b3;
