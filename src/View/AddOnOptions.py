@@ -968,9 +968,11 @@ class ClinicalDataCSVDirectoryOptions(object):
                "Separated Values (CSV) format, which any spreadsheet " \
                "program can produce, including MS Excel.\n\n2. This CSV " \
                "file must contain the patient's identifier in the first " \
-               "column, and that first column must be titled \"Patient ID\"." \
-               "\n\n3. The entry in the first CSV column [\"Patient ID\"] " \
-               "must match the patient identifier in the DICOM dataset."
+               "column, and that first column must be titled \"Patient_ID\"." \
+               "\n\n3. The entry in the first CSV column [\"Patient_ID\"] " \
+               "must match the patient identifier in the DICOM dataset.\n\n" \
+               "4. The CSV file must contain the ICD10 code in the second " \
+               "column, and that column must be named \"ICD10\"."
 
         # Create the frame
         self.window.clinical_data_csv_dir_frame = QtWidgets.QFrame()
