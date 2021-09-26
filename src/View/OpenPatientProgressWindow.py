@@ -29,7 +29,7 @@ class OpenPatientProgressWindow(ProgressWindow):
         platform is performed to ensure consistency of button positioning across
         platforms.
         """
-        message = "DVHs not present in RT DOSE or do not correspond to ROIs. "
+        message = "DVHs not present in RTDOSE or do not correspond to ROIs. "
         message += "Would you like to calculate DVHs? (This may take up to "
         message += "several minutes on some systems.)"
         if platform.system() == "Linux":
