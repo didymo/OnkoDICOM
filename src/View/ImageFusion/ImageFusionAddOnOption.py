@@ -2,6 +2,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QLayout, QLabel, QSpinBox, \
     QComboBox, QSizePolicy, QDoubleSpinBox, QLineEdit
+from typing import Dict
 
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -30,9 +31,12 @@ class ImageFusionOptions(object):
         self.number_of_iterations = None
         self.default_number = None
 
+        self.dict = {}
+
         self.get_patients_info()
         self.create_view()
         self.setupUi()
+
 
     def get_patients_info(self):
         """
@@ -63,6 +67,11 @@ class ImageFusionOptions(object):
         self.auto_image_fusion_frame.setVisible(visibility)
 
     def setupUi(self):
+
+        # Create a vertical Widget to hold Vertical Layout
+        self.vertical_layout_widget = QWidget()
+        self.vertical_layout = QtWidgets.QVBoxLayout()
+
         # Create a Widget and set layout to a GridLayout
         self.gridLayoutWidget = QWidget()
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
@@ -130,7 +139,7 @@ class ImageFusionOptions(object):
 
         self.default_number_spinBox = QSpinBox(self.gridLayoutWidget)
         self.default_number_spinBox.setRange(-2147483648, 2147483647)
-        self.default_number_spinBox.setValue(-1000)
+        # self.default_number_spinBox.setValue(-1000)
         self.default_number_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                   QSizePolicy.Fixed)
         self.default_number_spinBox.setToolTip(
@@ -144,7 +153,7 @@ class ImageFusionOptions(object):
         self.gridLayout.addWidget(self.interp_order_label, 2, 0)
 
         self.interp_order_spinbox = QSpinBox(self.gridLayoutWidget)
-        self.interp_order_spinbox.setValue(2)
+        # self.interp_order_spinbox.setValue(2)
         self.interp_order_spinbox.setSizePolicy(QSizePolicy.Minimum,
                                                 QSizePolicy.Fixed)
         self.interp_order_spinbox.setToolTip("The final interpolation order. "
@@ -162,7 +171,7 @@ class ImageFusionOptions(object):
         self.metric_comboBox.addItem("mean_squares")
         self.metric_comboBox.addItem("mattes_mi")
         self.metric_comboBox.addItem("joint_hist_mi")
-        self.metric_comboBox.setCurrentIndex(1)
+        # self.metric_comboBox.setCurrentIndex(1)
         self.metric_comboBox.setToolTip("The metric to be optimised during "
                                         "image registration.")
         self.gridLayout.addWidget(self.metric_comboBox, 3, 1)
@@ -177,7 +186,7 @@ class ImageFusionOptions(object):
         self.no_of_iterations_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                     QSizePolicy.Fixed)
         self.no_of_iterations_spinBox.setRange(0, 100)
-        self.no_of_iterations_spinBox.setValue(50)
+        # self.no_of_iterations_spinBox.setValue(50)
         self.no_of_iterations_spinBox.setToolTip("Number of iterations in "
                                                  "each multi-resolution step.")
         self.gridLayout.addWidget(self.no_of_iterations_spinBox, 4, 1)
@@ -191,7 +200,7 @@ class ImageFusionOptions(object):
         self.shrink_factor_qLineEdit = QLineEdit()
         self.shrink_factor_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
                                                    QSizePolicy.Fixed)
-        self.shrink_factor_qLineEdit.setText("[8]")
+        # self.shrink_factor_qLineEdit.setText("[8]")
         self.shrink_factor_qLineEdit.setToolTip("The multi-resolution "
                                                 "downsampling factors. Can be "
                                                 "up to three parameters in an "
@@ -225,7 +234,7 @@ class ImageFusionOptions(object):
         self.reg_method_comboBox.addItem("affine")
         self.reg_method_comboBox.addItem("scaleversor")
         self.reg_method_comboBox.addItem("scaleskewversor")
-        self.reg_method_comboBox.setCurrentIndex(2)
+        # self.reg_method_comboBox.setCurrentIndex(2)
         self.reg_method_comboBox.setToolTip("The linear transformation model "
                                             "to be used for image "
                                             "registration.")
@@ -241,7 +250,7 @@ class ImageFusionOptions(object):
         self.sampling_rate_spinBox.setMinimum(0)
         self.sampling_rate_spinBox.setMaximum(1)
         self.sampling_rate_spinBox.setSingleStep(0.01)
-        self.sampling_rate_spinBox.setValue(0.25)
+        # self.sampling_rate_spinBox.setValue(0.25)
         self.sampling_rate_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                  QSizePolicy.Fixed)
         self.sampling_rate_spinBox.setToolTip("The fraction of voxels sampled "
@@ -257,7 +266,7 @@ class ImageFusionOptions(object):
         self.smooth_sigmas_qLineEdit = QLineEdit()
         self.smooth_sigmas_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
                                                    QSizePolicy.Fixed)
-        self.smooth_sigmas_qLineEdit.setText("[10]")
+        # self.smooth_sigmas_qLineEdit.setText("[10]")
         self.smooth_sigmas_qLineEdit.setToolTip(
             "The multi-resolution smoothing "
             "kernal scale (Gaussian). Can "
@@ -265,41 +274,96 @@ class ImageFusionOptions(object):
             "array. Example [4, 2, 0].")
         self.gridLayout.addWidget(self.smooth_sigmas_qLineEdit, 4, 3)
 
-        # Set layout of frame to the gridlayout widget
-        self.auto_image_fusion_frame.setLayout(self.gridLayout)
+        # Label to hold warning labels.
+        self.warning_label = QLabel()
 
-    def grab_value_from_UI(self):
+        self.vertical_layout.addWidget(self.gridLayoutWidget)
+        self.vertical_layout.addWidget(self.warning_label)
+        # Set layout of frame to the gridlayout widget
+        self.auto_image_fusion_frame.setLayout(self.vertical_layout)
+
+    def get_values_from_UI(self):
 
         #TO DO: Add in checks to ensure values are correct.
 
-        self.reg_method = self.reg_method_comboBox.currentIndex()
-        self.metric = self.metric_comboBox.currentIndex()
-        self.optimiser = self.optimiser_comboBox.currentIndex()
-        self.shrink_factors = self.shrink_factor_qLineEdit.text().split()
-        self.smooth_sigma = self.smooth_sigmas_qLineEdit.text().split()
-        self.sampling_rate = self.sampling_rate_spinBox.value()
-        self.final_interp = self.interp_order_spinbox.value()
-        self.number_of_iterations = self.no_of_iterations_spinBox.value()
-        self.default_number = self.default_number_spinBox.value()
+        self.dict["reg_method"] = self.reg_method_comboBox.currentIndex()
+        self.dict["metric"] = self.metric_comboBox.currentIndex()
+        self.dict["optimiser"] = self.optimiser_comboBox.currentIndex()
+        self.dict["shrink_factors"] = self.shrink_factor_qLineEdit.text().split()
+        self.dict["smooth_sigmas"] = self.smooth_sigmas_qLineEdit.text().split()
+        self.dict["sampling_rate"] = self.sampling_rate_spinBox.value()
+        self.dict["final_interp"] = self.interp_order_spinbox.value()
+        self.dict["number_of_iterations"] = self.no_of_iterations_spinBox.value()
+        self.dict["default_value"] = self.default_number_spinBox.value()
+        print(self.dict)
+        return self.dict
 
-    def get_image_fusion_values(self):
+    def set_value(self, key, value):
+        self.dict[key] = value
 
-        # Assign UI values to variables
-        self.grab_value_from_UI()
+    def set_gridLayout(self):
 
-        # Add the variables to dict
-        dict = {}
-        dict["reg_method"] = self.reg_method
-        dict["metric"] = self.metric
-        dict["optimiser"] = self.optimiser
-        dict["shrink_factors"] = self.shrink_factors
-        dict["smooth sigmas"] = self.smooth_sigma
-        dict["sampling_rate"] = self.sampling_rate
-        dict["final_interp"] = self.final_interp
-        dict["number_of_iterations"] = self.number_of_iterations
-        dict["default_value"] = self.default_number
+        # If-Elif statements for setting the dict
+        # this can only be done in if-else statements.
+        if self.dict["reg_method"] == "translation":
+            self.reg_method_comboBox.setCurrentIndex(0)
+        elif self.dict["reg_method"] == "rigid":
+            self.reg_method_comboBox.setCurrentIndex(1)
+        elif self.dict["reg_method"] == "similarity":
+            self.reg_method_comboBox.setCurrentIndex(2)
+        elif self.dict["reg_method"] == "affine":
+            self.reg_method_comboBox.setCurrentIndex(3)
+        elif self.dict["reg_method"] == "scaleversor":
+            self.reg_method_comboBox.setCurrentIndex(4)
+        elif self.dict["reg_method"] == "scaleskewversor":
+            self.reg_method_comboBox.setCurrentIndex(5)
 
-        print(dict)
+        if self.dict["metric"] == "coorelation":
+            self.metric_comboBox.setCurrentIndex(0)
+        elif self.dict["metric"] == "mean_squares":
+            self.metric_comboBox.setCurrentIndex(1)
+        elif self.dict["metric"] == "mattes_mi":
+            self.metric_comboBox.setCurrentIndex(2)
+        elif self.dict["metric"] == "joint_hist_mi":
+            self.metric_comboBox.setCurrentIndex(3)
 
-        return dict
+        if self.dict["optimiser"] == "lbfgsb":
+            self.optimiser_comboBox.setCurrentIndex(0)
+        elif self.dict["optimiser"] == "gradient_descent":
+            self.optimiser_comboBox.setCurrentIndex(1)
+        elif self.dict["optimiser"] == "gradient_descent_line_search":
+            self.optimiser_comboBox.setCurrentIndex(2)
+
+        self.shrink_factor_qLineEdit.setText(self.dict["shrink_factors"])
+        self.smooth_sigmas_qLineEdit.setText(self.dict["smooth_sigmas"])
+
+        msg = ""
+
+        try:
+            self.sampling_rate_spinBox.setValue(float(self.dict[
+                                                          "sampling_rate"]))
+        except ValueError:
+            msg += 'There was an error setting the Sampling Rate value.\n'
+            self.warning_label.setText(msg)
+
+        try:
+            self.interp_order_spinbox.setValue(int(self.dict["final_interp"]))
+        except ValueError:
+            msg += 'There was an error setting the Final Interp value.\n'
+            self.warning_label.setText(msg)
+
+        try:
+            self.no_of_iterations_spinBox.setValue(int(self.dict[
+                                                   "number_of_iterations"]))
+        except ValueError:
+            msg += 'There was an error setting the Number of iterations ' \
+                   'value.\n'
+            self.warning_label.setText(msg)
+
+        try:
+            self.default_number_spinBox.setValue(int(
+                self.dict["default_value"]))
+        except ValueError:
+            msg += 'There was an error setting the Default Number'
+            self.warning_label.setText(msg)
 

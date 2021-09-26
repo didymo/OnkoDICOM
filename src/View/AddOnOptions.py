@@ -25,6 +25,7 @@ class UIAddOnOptions(object):
         self.fill_options = None
         self.change_default_directory_frame = None
         self.clinical_data_csv_dir_frame = None
+        self.image_fusion_add_on_options =  None
         self.table_roi = None
         self.add_new_roi = None
         self.delete_roi = None

@@ -9,6 +9,7 @@ import os
 from copy import deepcopy
 from pydicom.tag import Tag
 
+from src.Controller.PathHandler import resource_path
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from platipy.imaging.registration.linear import linear_registration
@@ -378,14 +379,41 @@ def register_images(image_1, image_2):
         img_ct (Array)
         tfm (sitk.CompositeTransform)
     """
-    img_ct, tfm = linear_registration(
-        image_1,
-        image_2,
-        shrink_factors=[8],
-        smooth_sigmas=[10],
-        reg_method='rigid',
-        verbose=False
-    )
+
+    # Check to see if the imageWindowing.csv file exists
+    if os.path.exists(resource_path('data/csv/imageFusion.csv')):
+        # If it exists, read data from file into the dictionary
+        # variable
+        dict_fusion = {}
+        with open(resource_path("data/csv/imageFusion.csv"),
+                  "r") as file_input:
+            for row in file_input:
+                items = [
+                    str(item.replace("\n", ""))
+                    for item in row.split(",")
+                ]
+                dict_fusion[items[0]] = items[1]
+
+        print(dict_fusion)
+        img_ct, tfm = linear_registration(
+            image_1,
+            image_2,
+            shrink_factors=[8],
+            smooth_sigmas=[10],
+            reg_method='rigid',
+            verbose=False
+        )
+    else:
+        # If csv does not exist, initialize registration normally
+        img_ct, tfm = linear_registration(
+            image_1,
+            image_2,
+            shrink_factors=[8],
+            smooth_sigmas=[10],
+            reg_method='rigid',
+            verbose=False
+        )
+
     return img_ct, tfm
 
 

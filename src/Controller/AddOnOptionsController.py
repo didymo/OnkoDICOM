@@ -445,14 +445,24 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "Config file error",
                 "Failed to update default directory.\nPlease try again.")
 
+        # Image Fusion
+        with open(resource_path("data/csv/imageFusion.csv"), "w",
+                  newline="") as stream:
+
+            # Save the values for Image Fusion
+            self.image_fusion_add_on_options.get_values_from_UI()
+
+            # Write to CSV
+            writer = csv.writer(stream)
+            for key in self.image_fusion_add_on_options.dict:
+                items = [key, self.image_fusion_add_on_options.dict[key]]
+                writer.writerow(items)
+            stream.close()
+
         QMessageBox.about(
             self,
             "Success",
             "Changes were successfully applied")
-
-        # Save the values for Image Fusion
-        values = \
-            self.image_fusion_add_on_options.get_image_fusion_values()
 
         # Close the Add-On Options Window after saving
         if hasattr(self.window, 'structures_tab'):
@@ -555,6 +565,19 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     self.table_ids.setItem(i, 0, items[0])
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
+
+        # Image Fusion
+        with open(resource_path("data/csv/imageFusion.csv"),
+                  "r") as file_input:
+            for row in file_input:
+                items = [
+                    str(item.replace("\n", ""))
+                    for item in row.split(",")
+                ]
+                self.image_fusion_add_on_options\
+                    .set_value(items[0], items[1])
+        self.image_fusion_add_on_options.set_gridLayout()
+
 
     # The following function shows a pop up window to add a new entry in
     # the corresponding table
