@@ -3,12 +3,17 @@
     and shows a progress bar while doing it.
 """
 
+import csv
 import os
+import shutil
 
 import pandas as pd
+from pathlib import Path
 from PySide6 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
+from src.Model import DICOMStructuredReport
+from src.Model.PatientDictContainer import PatientDictContainer
 
 
 class PyradiExtended(QtCore.QThread):
@@ -77,6 +82,13 @@ class PyradiExtended(QtCore.QThread):
 
         self.convert_df_to_csv(radiomics_df, patient_hash,
                                csv_path, self.my_callback)
+
+        # Export radiomics to SR
+        self.export_to_sr(csv_path, patient_hash)
+
+        # Delete CSV file and NRRD folder
+        shutil.rmtree(nrrd_folder_path)
+        os.remove(csv_path + 'Pyradiomics_' + patient_hash + '.csv')
 
     def my_callback(self, percent, roi_name):
         """
@@ -219,3 +231,42 @@ class PyradiExtended(QtCore.QThread):
                             patient_hash + '.csv')
 
         callback(100, '')
+
+    def export_to_sr(self, csv_path, patient_hash):
+        """
+        Save CSV data into DICOM SR. Reads in CSV data and saves it to
+        a DICOM SR file
+        :param csv_path: the path that the CSV has been saved to.
+        :param patient_hash: the patient's hash as a string.
+        """
+        # Check CSV path exists
+        file_path = csv_path + 'Pyradiomics_' + patient_hash + ".csv"
+        if file_path == "":
+            return
+
+        # Get CSV data
+        with open(file_path, newline="") as stream:
+            data = list(csv.reader(stream))
+
+        # Write raw CSV data to DICOM SR
+        # TODO: create better implementation of this - requires
+        #       generated SR files to be more structured.
+        # Convert CSV data to text
+        text = ""
+        for line in data:
+            for item in line:
+                text += str(item) + ","
+            text += "\n"
+
+        # Create and save DICOM SR file
+        patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.path
+        file_path = Path(file_path).joinpath("Pyradiomics-SR.dcm")
+        ds = patient_dict_container.dataset[0]
+        dicom_sr = DICOMStructuredReport.generate_dicom_sr(file_path, ds, text,
+                                                           "PYRADIOMICS")
+        dicom_sr.save_as(file_path)
+
+        # Update patient dict container
+        patient_dict_container.dataset['sr-pyrad'] = dicom_sr
+        patient_dict_container.filepaths['sr-pyrad'] = file_path

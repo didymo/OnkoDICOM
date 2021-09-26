@@ -23,6 +23,7 @@ class UIAddOnOptions(object):
         self.note = None
         self.fill_options = None
         self.change_default_directory_frame = None
+        self.clinical_data_csv_dir_frame = None
         self.table_roi = None
         self.add_new_roi = None
         self.delete_roi = None
@@ -49,6 +50,7 @@ class UIAddOnOptions(object):
         self.observer_array.append(self.add_new_roi)
         self.observer_array.append(self.delete_roi)
         self.observer_array.append(self.table_modules)
+        self.observer_array.append(self.clinical_data_csv_dir_frame)
         self.observer_array.append(self.image_fusion)
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
@@ -85,6 +87,8 @@ class UIAddOnOptions(object):
             self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
         self.iso2roi_options = RoiFromIsodoseOptions(self)
         self.change_default_directory = ChangeDefaultDirectory(self)
+        self.clinical_data_csv_dir_options = \
+            ClinicalDataCSVDirectoryOptions(self)
         self.image_fusion = ImageFusionOptions(self)
 
         self.create_cancel_button()
@@ -123,6 +127,8 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
         self.option_layout.addWidget(
             self.change_default_directory_frame, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.clinical_data_csv_dir_frame,
+                                     1, 0, 1, 3)
         self.option_layout.addWidget(
             self.image_fusion.auto_image_fusion_frame, 1, 0, 1, 3)
 
@@ -220,7 +226,7 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(True)
             self.add_new_window.setVisible(True)
             self.delete_window.setVisible(True)
-
+            
         elif type == "Standard Organ Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -228,7 +234,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(True)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
-
+            
         elif type == "Standard Volume Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -269,7 +275,14 @@ class UIAddOnOptions(object):
 
             for item in self.observer_array:
                 item.setVisible(False)
+                
             self.change_default_directory_frame.setVisible(True)
+
+        elif type == "Clinical Data CSV File":
+            for item in self.observer_array:
+                item.setVisible(False)
+    
+            self.clinical_data_csv_dir_frame.setVisible(True)
 
         elif type == "Auto-Registration":
             for item in self.observer_array:
@@ -852,6 +865,113 @@ class ChangeDefaultDirectory(object):
         if len(self.default_directory) > 0:
             self.change_default_directory_input_box.setText(
                 self.default_directory)
+
+
+class ClinicalDataCSVDirectoryOptions(object):
+    """
+    The UI for changing the CSV file that clinical data is imported
+    from.
+    """
+
+    def __init__(self, window_options):
+        """
+        Create the components for the UI of t he clinical data CSV
+        option.
+        :param window_options: the options window object.
+        """
+        self.window = window_options
+        self.create_change_clinical_data_csv_frame()
+
+    def create_change_clinical_data_csv_frame(self):
+        config = Configuration()
+        csv_dir = None
+
+        # Try get the clinical data CSV directory
+        try:
+            csv_dir = config.get_clinical_data_csv_dir()
+        except SqlError:
+            config.set_up_config_db()
+            QtWidgets.QMessageBox.critical(
+                self.window, "Config file error",
+                """Failed to access configuration file.
+                \nConfiguration file recreated with no default directory.
+                \nPlease update your default directory.""")
+
+        # Clinical data prompt text
+        text = "Change the file that is searched for patient clinical data.\n"
+        text += "\nPlease note that patient clinical data must be stored in a "
+        text += "CSV format.\n\nThe first column of the CSV data must be the "
+        text += "patient's ID.\n\nIf the patient ID in the clinical data CSV "
+        text += "does not match the patient ID in the DICOM dataset, the "
+        text += "clinical data tab will not be populated!"
+
+        # Create the frame
+        self.window.clinical_data_csv_dir_frame = QtWidgets.QFrame()
+        self.window.clinical_data_csv_dir_frame.setVisible(False)
+
+        # Create the layout
+        self.clinical_data_csv_layout = QtWidgets.QVBoxLayout()
+        self.change_clinical_data_csv_dir_prompt = QtWidgets.QLabel()
+        self.change_clinical_data_csv_dir_prompt.setAlignment(
+            QtCore.Qt.AlignJustify)
+        self.change_clinical_data_csv_dir_prompt.setVisible(True)
+        self.change_clinical_data_csv_dir_prompt.setMaximumWidth(
+            self.window.clinical_data_csv_dir_frame.width() - 10)
+        self.change_clinical_data_csv_dir_prompt.setText(text)
+        self.change_clinical_data_csv_dir_prompt.setWordWrap(True)
+        self.clinical_data_csv_layout.addWidget(
+            self.change_clinical_data_csv_dir_prompt)
+
+        # Create a horizontal box to hold the input box for the
+        # directory and the choose button
+        self.clinical_data_csv_dir_input_layout = QtWidgets.QHBoxLayout()
+
+        # Create a textbox to contain the path to the directory that
+        # contains the DICOM files
+        self.clinical_data_csv_dir_input_box = \
+            UIChangeDefaultDirDragAndDropEvent(self)
+        self.clinical_data_csv_dir_input_box.setCursorPosition(0)
+        self.clinical_data_csv_dir_input_box.setText(csv_dir)
+        self.clinical_data_csv_dir_input_layout.addWidget(
+            self.clinical_data_csv_dir_input_box)
+
+        # Create a choose button to open the file dialog
+        self.clinical_data_csv_dir_button = QtWidgets.QPushButton()
+        self.clinical_data_csv_dir_button.setText("Change")
+        self.clinical_data_csv_dir_button.resize(
+            self.clinical_data_csv_dir_button.sizeHint().width(),
+            self.clinical_data_csv_dir_input_box.height())
+        self.clinical_data_csv_dir_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.clinical_data_csv_dir_button.clicked.connect(
+            self.change_clinical_data_csv_button_clicked)
+        self.clinical_data_csv_dir_input_layout.addWidget(
+            self.clinical_data_csv_dir_button)
+
+        # Create a widget to hold the input fields
+        self.clinical_data_csv_dir_input_widget = QtWidgets.QWidget()
+        self.clinical_data_csv_dir_input_widget.setLayout(
+            self.clinical_data_csv_dir_input_layout)
+        self.clinical_data_csv_layout.addWidget(
+            self.clinical_data_csv_dir_input_widget)
+        self.clinical_data_csv_layout.addStretch(1)
+
+        # Set the frame's layout
+        self.window.clinical_data_csv_dir_frame.setLayout(
+            self.clinical_data_csv_layout)
+
+    def change_clinical_data_csv_button_clicked(self):
+        """
+        Executes when the choose button is clicked.
+        Gets filepath from the user and loads all files and
+        subdirectories.
+        """
+        # Get folder path from pop up dialog box
+        path = QtWidgets.QFileDialog.getOpenFileName(
+            None, "Open Clinical Data File", "", "CSV data files (*.csv)"
+        )[0]
+        if len(path) > 0:
+            self.clinical_data_csv_dir_input_box.setText(path)
 
 
 class UIChangeDefaultDirDragAndDropEvent(QtWidgets.QLineEdit):

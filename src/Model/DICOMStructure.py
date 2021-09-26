@@ -115,14 +115,10 @@ class Patient:
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
         widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags()
-                             | Qt.ItemIsAutoTristate
-                             | Qt.ItemIsUserCheckable)
 
         # Add all children of this object as children of the widget item.
         for study_uid, study in self.studies.items():
             widget_item.addChild(study.get_widget_item())
-
         return widget_item
 
 
@@ -135,30 +131,54 @@ class Study:
         """
         self.study_uid = study_uid
         self.study_description = None
-        self.series = {}
+
+        # Dictionaries of series of images based on their modalities
+        self.rtstructs = {}
+        self.rtplans = {}
+        self.rtdoses = {}
+        self.sr_files = {}
+        self.image_series = {}
+
+        # Dictionary contains all series, used to quickly add new series based
+        # on modality
+        self.series = {
+            "RTSTRUCT": self.rtstructs,
+            "RTPLAN": self.rtplans,
+            "RTDOSE": self.rtdoses,
+            "SR": self.sr_files,
+            "IMAGE": self.image_series
+        }
+
+        self.widget_item = None  # Study widget
+        self.image_series_widgets = {}  # Dictionary of image series widgets
+        self.rtstruct_widgets = {}  # Dictionary of RTSTRUCT widgets
+        self.rtplan_widgets = {}  # Dictionary of RTPLAN widgets
 
     def add_series(self, series):
         """
-        Adds a Series object to the patient's dictionary of series.
+        Adds a Series object to one of the patient's series dictionaries.
         :param series: A Series object.
         """
-        self.series[series.series_uid] = series
+        series_type = series.get_series_type()
+        if series_type in self.series:
+            self.series[series_type][series.series_uid] = series
+        else:
+            self.series["IMAGE"][series.series_uid] = series
 
     def has_series(self, series_uid):
         """
         :param series_uid: A SeriesInstanceUID to check.
-        :return: True if series contains series_uid.
+        :return: True if image series contains series_uid.
         """
-        return series_uid in self.series
+        return series_uid in self.image_series
 
     def get_series(self, series_uid):
         """
         :param series_uid: SeriesID to check.
         :return: Series object if series found.
         """
-        if self.has_series(series_uid):
-            return self.series[series_uid]
-        return None
+        return self.image_series[series_uid] \
+            if self.has_series(series_uid) else None
 
     def get_files(self):
         """
@@ -166,9 +186,9 @@ class Study:
         hierarchy.
         """
         filepaths = []
-        for series_uid, series in self.series.items():
-            filepaths += (series.get_files())
-
+        for series_type, series in self.series.items():
+            for series_uid, image_series in series.items():
+                filepaths += (image_series.get_files())
         return filepaths
 
     def output_as_text(self):
@@ -188,10 +208,11 @@ class Study:
                       "1.2.840.10008.5.1.4.1.1.481.5"]      # RT Plan
 
         contained_classes = []
-        for series_uid, series in self.series.items():
-            for image_uid, image in series.images.items():
-                if image.class_id not in contained_classes:
-                    contained_classes.append(image.class_id)
+        for series_type, series in self.series.items():
+            for series_uid, image_series in series.items():
+                for image_uid, image in image_series.images.items():
+                    if image.class_id not in contained_classes:
+                        contained_classes.append(image.class_id)
 
         return sorted(rt_classes) == sorted(contained_classes)
 
@@ -199,15 +220,143 @@ class Study:
         """
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
-        widget_item = DICOMWidgetItem(self.output_as_text(), self)
-        widget_item.setFlags(widget_item.flags()
-                             | Qt.ItemIsAutoTristate
-                             | Qt.ItemIsUserCheckable)
+        self.widget_item = DICOMWidgetItem(self.output_as_text(), self)
 
-        # Add all children of this object as children of the widget item.
-        for series_uid, series in self.series.items():
-            widget_item.addChild(series.get_widget_item())
+        # Add child widgets of Study following the hierarchy of objects
+        # 1. Image series, 2. RTSTRUCT, 3. RTPLAN, 4. RTDOSE
+        for series_uid, image_series in self.image_series.items():
+            self.get_image_series_widget(series_uid, image_series)
+        for series_uid, rtstruct in self.rtstructs.items():
+            self.get_rtstruct_widget(rtstruct)
+        for series_uid, rtplan in self.rtplans.items():
+            self.get_rtplan_widget(rtplan)
+        for series_uid, rtdose in self.rtdoses.items():
+            self.get_rtdose_widgets(rtdose)
+        for series_uid, sr_file in self.sr_files.items():
+            self.get_sr_widgets(sr_file)
 
+        return self.widget_item
+
+    def get_image_series_widget(self, series_uid, image_series):
+        """ Add a DICOMWidgetItem of an image series """
+        self.image_series_widgets[series_uid] = image_series.get_widget_item()
+        self.widget_item.addChild(self.image_series_widgets[series_uid])
+
+    def get_rtstruct_widget(self, rtstruct):
+        """ Add a DICOMWidgetItem of a RTSTRUCT """
+        ref_image_series_uid = rtstruct.ref_image_series_uid
+        rtstruct_instance_uid = rtstruct.get_instance_uid()
+        self.rtstruct_widgets[rtstruct_instance_uid] = \
+            rtstruct.get_widget_item()
+        # Check if the referenced image series exists in the dataset
+        if ref_image_series_uid != "" and \
+                ref_image_series_uid in self.image_series_widgets:
+            self.image_series_widgets[ref_image_series_uid]. \
+                addChild(self.rtstruct_widgets[rtstruct_instance_uid])
+            return
+
+        # Add the RTSTRUCT to the Study widget
+        self.widget_item.addChild(self.rtstruct_widgets[rtstruct_instance_uid])
+
+    def get_rtplan_widget(self, rtplan):
+        """ Add a DICOMWidgetItem of a RTPLAN """
+        ref_rtstruct_instance_uid = rtplan.ref_rtstruct_instance_uid
+        rtplan_instance_uid = rtplan.get_instance_uid()
+        self.rtplan_widgets[rtplan_instance_uid] = rtplan.get_widget_item()
+
+        # Check if the referenced RTSTRUCT exists
+        if ref_rtstruct_instance_uid:
+            for series_uid, rtstruct in self.rtstructs.items():
+                rtstruct_instance_uid = rtstruct.get_instance_uid()
+                if ref_rtstruct_instance_uid == rtstruct_instance_uid:
+                    self.rtstruct_widgets[rtstruct_instance_uid].\
+                        addChild(self.rtplan_widgets[rtplan_instance_uid])
+                    return
+
+        # Check if there is an image series with the same FrameOfReferenceUID
+        if rtplan.frame_of_reference_uid:
+            for series_uid, image_series in self.image_series.items():
+                if rtplan.frame_of_reference_uid == \
+                        image_series.frame_of_reference_uid:
+                    empty_rtss = self.get_empty_widget("RTSTRUCT")
+                    empty_rtss.addChild(
+                        self.rtplan_widgets[rtplan_instance_uid])
+                    self.image_series_widgets[series_uid].addChild(empty_rtss)
+                    return
+
+        # Add the RTPLAN to the Study widget
+        self.widget_item.addChild(self.rtplan_widgets[rtplan_instance_uid])
+
+    def get_rtdose_widgets(self, rtdose):
+        """ Add a DICOMWidgetItem of a RTDOSE """
+        ref_rtstruct_instance_uid = rtdose.ref_rtstruct_instance_uid
+        ref_rtplan_instance_uid = rtdose.ref_rtplan_instance_uid
+        rtdose_widget = rtdose.get_widget_item()
+
+        # Check if the referenced RTPLAN exists in the dataset
+        for series_uid, rtplan in self.rtplans.items():
+            rtplan_instance_uid = rtplan.get_instance_uid()
+            if ref_rtplan_instance_uid == rtplan_instance_uid:
+                self.rtplan_widgets[rtplan_instance_uid].addChild(
+                    rtdose_widget)
+                return
+
+        # Check if the referenced RTSTRUCT exists in the dataset or there is an
+        # RTSTRUCT with the same FrameOfReferenceUID
+        if ref_rtstruct_instance_uid != "" or \
+                rtdose.frame_of_reference_uid != "":
+            for series_uid, rtstruct in self.rtstructs.items():
+                rtstruct_instance_uid = rtstruct.get_instance_uid()
+                if (ref_rtstruct_instance_uid and
+                    ref_rtstruct_instance_uid == rtstruct_instance_uid) or \
+                        (rtdose.frame_of_reference_uid != "" and
+                         rtdose.frame_of_reference_uid ==
+                         rtstruct.frame_of_reference_uid):
+                    empty_rtplan = self.get_empty_widget("RTPLAN")
+                    empty_rtplan.addChild(rtdose_widget)
+                    self.rtstruct_widgets[rtstruct_instance_uid]. \
+                        addChild(empty_rtplan)
+                    return
+
+        # Check if there is an image series with the same FrameOfReferenceUID
+        if rtdose.frame_of_reference_uid != "":
+            for series_uid, image_series in self.image_series.items():
+                if rtdose.frame_of_reference_uid == \
+                        image_series.frame_of_reference_uid:
+                    empty_rtplan = self.get_empty_widget("RTPLAN")
+                    empty_rtplan.addChild(rtdose_widget)
+                    empty_rtss = self.get_empty_widget("RTSTRUCT")
+                    empty_rtss.addChild(empty_rtplan)
+                    self.image_series_widgets[series_uid].addChild(empty_rtss)
+                    return
+
+        # Add the RTDOSE to the Study widget
+        self.widget_item.addChild(rtdose_widget)
+
+    def get_sr_widgets(self, sr_file):
+        """ Add a DICOMWidgetItem of a SR file """
+        sr_widget = sr_file.get_widget_item()
+
+        # Check if there is an image series with the same FrameOfReferenceUID
+        if sr_file.referenced_frame_of_reference_uid:
+            for series_uid, image_series in self.image_series.items():
+                if sr_file.referenced_frame_of_reference_uid == \
+                        image_series.frame_of_reference_uid:
+                    self.image_series_widgets[series_uid].addChild(sr_widget)
+                    return
+
+        # Add the SR file to the Study widget
+        self.widget_item.addChild(sr_widget)
+
+    def get_empty_widget(self, modality):
+        """
+        Create an empty widget to represent an object that does not present in
+        the dataset
+        :param modality: modality of the empty object
+        :return: DICOMWidgetItem to be used in a QTreeWidget.
+        """
+        widget_item = DICOMWidgetItem("No matched " + modality + " was found.",
+                                      None)
         return widget_item
 
 
@@ -221,6 +370,7 @@ class Series:
         self.series_uid = series_uid
         self.series_description = None
         self.images = {}
+        self.frame_of_reference_uid = ""
 
     def add_image(self, image):
         """
@@ -228,6 +378,50 @@ class Series:
         :param image:  An Image object.
         """
         self.images[image.image_uid] = image
+
+    def add_referenced_objects(self, dicom_file):
+        if "FrameOfReferenceUID" in dicom_file:
+            self.frame_of_reference_uid = dicom_file.FrameOfReferenceUID
+        if dicom_file.Modality == "RTSTRUCT":
+            self.add_referenced_image_series(dicom_file)
+        elif dicom_file.Modality == "RTPLAN":
+            self.add_referenced_rtstruct(dicom_file)
+        elif dicom_file.Modality == "RTDOSE":
+            self.add_referenced_rtstruct(dicom_file)
+            self.add_referenced_rtplan(dicom_file)
+        elif dicom_file.Modality == "SR":
+            self.referenced_frame_of_reference_uid = \
+                dicom_file.ReferencedFrameOfReferenceUID
+
+    def add_referenced_image_series(self, dicom_file):
+        if "ReferencedFrameOfReferenceSequence" in dicom_file:
+            ref_frame = dicom_file.ReferencedFrameOfReferenceSequence
+            if "RTReferencedStudySequence" in ref_frame[0]:
+                ref_study = ref_frame[0].RTReferencedStudySequence[0]
+                if "RTReferencedSeriesSequence" in ref_study:
+                    if "SeriesInstanceUID" in \
+                            ref_study.RTReferencedSeriesSequence[0]:
+                        ref_series = ref_study.RTReferencedSeriesSequence[0]
+                        self.ref_image_series_uid = \
+                            ref_series.SeriesInstanceUID
+        else:
+            self.ref_image_series_uid = ''
+
+    def add_referenced_rtstruct(self, dicom_file):
+        if "ReferencedStructureSetSequence" in dicom_file:
+            self.ref_rtstruct_instance_uid = \
+                dicom_file.ReferencedStructureSetSequence[
+                    0].ReferencedSOPInstanceUID
+        else:
+            self.ref_rtstruct_instance_uid = ''
+
+    def add_referenced_rtplan(self, dicom_file):
+        if "ReferencedRTPlanSequence" in dicom_file:
+            self.ref_rtplan_instance_uid = \
+                dicom_file.ReferencedRTPlanSequence[
+                    0].ReferencedSOPInstanceUID
+        else:
+            self.ref_rtplan_instance_uid = ''
 
     def has_image(self, image_uid):
         """
@@ -273,6 +467,16 @@ class Series:
             if image.modality not in series_types:
                 series_types.append(image.modality)
         return series_types if len(series_types) > 1 else series_types[0]
+
+    def get_instance_uid(self):
+        """
+        :return: List of string or single string containing instance uid of all
+        images in the series.
+        """
+        instance_uid = []
+        for image_instance_uid, image in self.images.items():
+            instance_uid.append(image_instance_uid)
+        return instance_uid if len(instance_uid) > 1 else instance_uid[0]
 
     def get_widget_item(self):
         """
