@@ -449,7 +449,11 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             self,
             "Success",
             "Changes were successfully applied")
-        
+
+        # Save the values for Image Fusion
+        values = \
+            self.image_fusion_add_on_options.get_image_fusion_values()
+
         # Close the Add-On Options Window after saving
         if hasattr(self.window, 'structures_tab'):
             self.window.structures_tab.init_standard_names()
@@ -668,8 +672,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
 # The class that will be called by the main page to access the Add-On
 # Options controller
-
-
 class AddOptions:
     def __init__(self, window):
         self.window = window

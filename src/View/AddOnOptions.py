@@ -10,6 +10,7 @@ class UIAddOnOptions(object):
     """
     Create all UI components for the Add-On options window.
     """
+
     def __init__(self):
         self.table_view = None
         self.table_organ = None
@@ -51,7 +52,7 @@ class UIAddOnOptions(object):
         self.observer_array.append(self.delete_roi)
         self.observer_array.append(self.table_modules)
         self.observer_array.append(self.clinical_data_csv_dir_frame)
-        self.observer_array.append(self.image_fusion)
+        self.observer_array.append(self.image_fusion_add_on_options)
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
                  iso_opacity, line_width):
@@ -89,7 +90,7 @@ class UIAddOnOptions(object):
         self.change_default_directory = ChangeDefaultDirectory(self)
         self.clinical_data_csv_dir_options = \
             ClinicalDataCSVDirectoryOptions(self)
-        self.image_fusion = ImageFusionOptions(self)
+        self.image_fusion_add_on_options = ImageFusionOptions(self)
 
         self.create_cancel_button()
         self.create_apply_button()
@@ -130,7 +131,8 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.clinical_data_csv_dir_frame,
                                      1, 0, 1, 3)
         self.option_layout.addWidget(
-            self.image_fusion.auto_image_fusion_frame, 1, 0, 1, 3)
+            self.image_fusion_add_on_options \
+                .auto_image_fusion_frame, 1, 0, 1, 3)
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
@@ -226,7 +228,7 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(True)
             self.add_new_window.setVisible(True)
             self.delete_window.setVisible(True)
-            
+
         elif type == "Standard Organ Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -234,7 +236,7 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(True)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
-            
+
         elif type == "Standard Volume Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -275,21 +277,22 @@ class UIAddOnOptions(object):
 
             for item in self.observer_array:
                 item.setVisible(False)
-                
+
             self.change_default_directory_frame.setVisible(True)
 
         elif type == "Clinical Data CSV File":
             for item in self.observer_array:
                 item.setVisible(False)
-    
+
             self.clinical_data_csv_dir_frame.setVisible(True)
 
         elif type == "Auto-Registration":
             for item in self.observer_array:
-                if item != self.image_fusion:
+                if item != self.image_fusion_add_on_options:
                     item.setVisible(False)
 
-            self.image_fusion.auto_image_fusion_frame.setVisible(True)
+            self.image_fusion_add_on_options.auto_image_fusion_frame \
+                .setVisible(True)
 
 
 class WindowingOptions(object):
