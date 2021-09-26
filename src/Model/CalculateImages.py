@@ -24,15 +24,12 @@ def convert_raw_data(ds, rescaled=True, is_pt=0):
                 # dataset of current slice
                 np_tmp = ds[key]
                 np_tmp.convert_pixel_data()
-                data_arr = np_tmp._pixel_array
-                slope = 1
-                intercept = 0
                 if not rescaled:
+                    data_arr = np_tmp._pixel_array
                     slope, intercept = get_rescale(np_tmp, is_pt)
-                data_arr = (data_arr*slope + intercept)
-                np_pixels.append(data_arr)
-                ds[key]._pixel_array = data_arr
-
+                    data_arr = (data_arr*slope + intercept)
+                    ds[key]._pixel_array = data_arr
+                np_pixels.append(np_tmp._pixel_array)
     return np_pixels
 
 
