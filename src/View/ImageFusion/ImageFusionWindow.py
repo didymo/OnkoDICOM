@@ -22,9 +22,6 @@ import platform
 class UIImageFusionWindow(object):
     image_fusion_info_initialized = QtCore.Signal(object)
 
-    def __init__(self):
-        super().__init__()
-
     def setup_ui(self, open_image_fusion_select_instance):
         """Sets up a UI"""
         if platform.system() == 'Darwin':
@@ -251,10 +248,6 @@ class UIImageFusionWindow(object):
         QtCore.QMetaObject.connectSlotsByName(
             open_image_fusion_select_instance)
 
-        self.patient_dict_container = PatientDictContainer()
-        self.patient = self.patient_dict_container.get("basic_info")
-        self.patient_id = self.patient['id']
-
     def retranslate_ui(self, open_image_fusion_select_instance):
         """Translates UI"""
         _translate = QtCore.QCoreApplication.translate
@@ -284,11 +277,11 @@ class UIImageFusionWindow(object):
         self.open_patient_window_confirm_button.setText(_translate(
             "OpenPatientWindowInstance", "Confirm"))
 
-    def update_new_patient(self):
+    def update_patient(self):
+        self.clear_checked_leaves()
         self.patient_dict_container = PatientDictContainer()
         self.patient = self.patient_dict_container.get("basic_info")
         self.patient_id = self.patient['id']
-        self.clear_checked_leaves()
 
     def close_button_clicked(self):
         """Closes the window."""
