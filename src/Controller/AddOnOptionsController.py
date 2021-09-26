@@ -112,18 +112,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "parent_ID": 446,
                 "short_name": "Clinical Data CSV File",
             },
-                "level": 0,
+            {
+                "level":0,
                 "dbID": 600,
                 "parent_ID": 6,
-                "short_name": "Image Fusion"
+                "short_name": "Image Fusion",
             },
             {
                 "level": 1,
                 "dbID": 601,
                 "parent_ID": 600,
                 "short_name": "Auto-Registration",
-            }
-
+            },
         ]
         # create a model for the tree view of options and attach the
         # data
