@@ -2,7 +2,7 @@ import glob
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget, QRadioButton
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -220,7 +220,7 @@ class UIMainWindow:
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
         layout_footer.setContentsMargins(0, 0, 0, 0)
 
-        label_footer = QtWidgets.QLabel("@OnkoDICOM 2019-20")
+        label_footer = QtWidgets.QLabel("@OnkoDICOM2021")
         label_footer.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         layout_footer.addWidget(label_footer)
@@ -384,12 +384,6 @@ class UIMainWindow:
         self.image_fusion_view_sagittal.update_view(zoom_change=True)
         self.image_fusion_view_coronal.update_view(zoom_change=True)
 
-        # Radio Buttons
-        self.auto_radio_button = QRadioButton("Automatic")
-        self.auto_radio_button.setChecked(True)
-        self.manual_radio_button = QRadioButton("Manual")
-        self.manual_radio_button.setChecked(False)
-
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
         for i in range(2):
@@ -401,12 +395,6 @@ class UIMainWindow:
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
-
-        self.image_fusion_four_views_layout.addWidget(
-            self.auto_radio_button, 2, 0, QtCore.Qt.AlignCenter)
-        self.image_fusion_four_views_layout.addWidget(
-            self.manual_radio_button, 2, 1, QtCore.Qt.AlignCenter)
-
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
 
@@ -443,12 +431,23 @@ class UIMainWindow:
             self.structures_tab.structure_modified((
                 patient_dict_container.get('dataset_rtss'), {"draw": None}))
         else:
-            # Alert user that SUV2ROI failed
+            # Alert user that SUV2ROI failed and for what reason
+            #if self.suv2roi.failure_reason == "UNIT":
+            #    failure_reason = \
+            #        "PET units are not Bq/mL. OnkoDICOM can currently only\n" \
+            #        "perform SUV2ROI on PET images stored in these units."
+            if self.suv2roi.failure_reason == "UNIT":
+                failure_reason = \
+                    "PET is not decay corrected. OnkoDICOM can currently " \
+                    "only\nperform SUV2ROI on PET images that are decay " \
+                    "corrected."
+            else:
+                failure_reason = "The SUV2ROI process has failed."
             button_reply = \
                 QtWidgets.QMessageBox(
                     QtWidgets.QMessageBox.Icon.Warning,
                     "SUV2ROI Failed",
-                    "The SUV2ROI process has failed.",
+                    failure_reason,
                     QtWidgets.QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
