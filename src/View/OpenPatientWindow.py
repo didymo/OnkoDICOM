@@ -146,7 +146,7 @@ class UIOpenPatientWindow(object):
             self.tree_item_clicked)
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_window_patients_tree)
-        self.last_patient = None
+
 
 
         # Create a label to show what would happen if they select the patient
@@ -334,7 +334,8 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_stop_button.setVisible(False)
         self.open_patient_window_patients_tree.clear()
 
-        if dicom_structure is None:  # dicom_structure will be None if function was interrupted.
+        # dicom_structure will be None if function was interrupted.
+        if dicom_structure is None:
             return
 
         for patient_item in dicom_structure.get_tree_items_list():
