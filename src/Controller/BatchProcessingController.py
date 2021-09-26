@@ -3,6 +3,7 @@ import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -194,6 +195,49 @@ class BatchProcessingController:
                     self.batch_summary[patient] = {}
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
+
+            # Perform SUV2ROI on patient
+            if 'suv2roi' in self.processes:
+                # Get patient files
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessSUV2ROI(progress_callback,
+                                              interrupt_flag,
+                                              cur_patient_files)
+                success = process.start()
+
+                # Add rtss to patient in case it is needed in future
+                # processes
+                if success:
+                    if PatientDictContainer().get("rtss_modified"):
+                        # Get new RTSS
+                        rtss = PatientDictContainer().dataset['rtss']
+
+                        # Create a series and image from the RTSS
+                        rtss_series = Series(rtss.SeriesInstanceUID)
+                        rtss_series.series_description = rtss.get(
+                            "SeriesDescription")
+                        rtss_image = Image(
+                            PatientDictContainer().filepaths['rtss'],
+                            rtss.SOPInstanceUID,
+                            rtss.SOPClassUID,
+                            rtss.Modality)
+                        rtss_series.add_image(rtss_image)
+
+                        # Add the new study to the patient
+                        patient.studies[rtss.StudyInstanceUID].add_series(
+                            rtss_series)
+
+                        # Update the patient dict container
+                        PatientDictContainer().set("rtss_modified", False)
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]["suv2roi"] = reason
+                progress_callback.emit(("Completed SUV2ROI", 100))
 
         PatientDictContainer().clear()
 

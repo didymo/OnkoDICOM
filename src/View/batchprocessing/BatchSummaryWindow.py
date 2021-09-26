@@ -38,6 +38,9 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         self.scroll_area.setStyleSheet(self.stylesheet)
         self.ok_button.setStyleSheet(self.stylesheet)
 
+        # Make QLabel wrap text
+        self.summary_label.setWordWrap(True)
+
         # Set scroll area properties
         self.scroll_area.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAsNeeded)
@@ -49,7 +52,6 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         # Create layout
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.scroll_area)
-        #self.layout.addWidget(self.summary_label)
         self.layout.addStretch(1)
         self.layout.addWidget(self.ok_button)
 
@@ -72,16 +74,31 @@ class BatchSummaryWindow(QtWidgets.QDialog):
             summary_text += "Patient ID: " + patient.patient_id + "\n"
             patient_summary = batch_summary[patient]
             for process in patient_summary.keys():
+
+                print(patient_summary[process])
+                # Success
                 if patient_summary[process] == "SUCCESS":
                     summary_text += "Completed " + process.upper()
+                # Skipped due to missing files
                 elif patient_summary[process] == "SKIP":
-                    summary_text += process + " skipped as one or more " \
-                                              "required files missing"
+                    summary_text += process.upper() \
+                        + " skipped as one or more required files missing"
+                # Process interrupted
+                elif patient_summary[process] == "INTERRUPT":
+                    summary_text += process.upper() \
+                        + " skipped as it was interrupted."
+                # SUV2ROI requirement not met
+                elif patient_summary[process][0:4] == "SUV_":
+                    summary_text += process.upper() \
+                        + " skipped as PET files did not meet requirement: "
+                    # Not in Bq/mL
+                    if patient_summary[process][4:] == "UNIT":
+                        summary_text += "PET units were not in Bq/mL."
+                    # Not decay corrected
+                    elif patient_summary[process][4:] == "DECY":
+                        summary_text += "PET files were not decay corrected."
                 summary_text += "\n"
             summary_text += "\n"
-
-        for i in range(0, 50):
-            summary_text += "wordswordswords\n\n"
 
         # Set summary text
         self.summary_label.setText(summary_text)

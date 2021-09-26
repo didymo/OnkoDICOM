@@ -3,6 +3,8 @@ from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from src.Model import ImageLoading
+from src.Model import ROI
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -30,7 +32,7 @@ class BatchProcess:
         self.required_classes = []
         self.patient_files = patient_files
         self.ready = False
-        self.summary = []
+        self.summary = ""
 
     def is_ready(self):
         """
@@ -148,3 +150,62 @@ class BatchProcess:
         sorted_read_data_dict, sorted_file_names_dict = \
             ImageLoading.image_stack_sort(read_data_dict, file_names_dict)
         return sorted_read_data_dict, sorted_file_names_dict
+
+    @classmethod
+    def create_new_rtstruct(cls, progress_callback):
+        """
+        Generates a new RTSS and edits the patient dict container. Used
+        for batch processing.
+        """
+        # Get common directory
+        patient_dict_container = PatientDictContainer()
+        file_path = patient_dict_container.filepaths.values()
+        file_path = Path(os.path.commonpath(file_path))
+
+        # Get new RT Struct file path
+        file_path = str(file_path.joinpath("rtss.dcm"))
+
+        # Create RT Struct file
+        progress_callback.emit(("Generating RT Structure Set", 60))
+        ct_uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
+        ds = ROI.create_initial_rtss_from_ct(
+            patient_dict_container.dataset[0], file_path, ct_uid_list)
+        ds.save_as(file_path)
+
+        # Add RT Struct file path to patient dict container
+        patient_dict_container.filepaths['rtss'] = file_path
+        filepaths = patient_dict_container.filepaths
+
+        # Add RT Struct dataset to patient dict container
+        patient_dict_container.dataset['rtss'] = ds
+        dataset = patient_dict_container.dataset
+
+        # Set some patient dict container attributes
+        patient_dict_container.set("file_rtss", filepaths['rtss'])
+        patient_dict_container.set("dataset_rtss", dataset['rtss'])
+
+        dicom_tree_rtss = DicomTree(filepaths['rtss'])
+        patient_dict_container.set("dict_dicom_tree_rtss",
+                                   dicom_tree_rtss.dict)
+
+        dict_pixluts = ImageLoading.get_pixluts(
+            patient_dict_container.dataset)
+        patient_dict_container.set("pixluts", dict_pixluts)
+
+        rois = ImageLoading.get_roi_info(ds)
+        patient_dict_container.set("rois", rois)
+
+        patient_dict_container.set("selected_rois", [])
+        patient_dict_container.set("dict_polygons_axial", {})
+
+        patient_dict_container.set("rtss_modified", True)
+
+    @classmethod
+    def save_rtss(cls):
+        """
+        Saves the RT Struct.
+        """
+        patient_dict_container = PatientDictContainer()
+        rtss_directory = Path(patient_dict_container.get("file_rtss"))
+        patient_dict_container.get("dataset_rtss").save_as(rtss_directory)
