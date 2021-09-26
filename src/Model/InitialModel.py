@@ -27,6 +27,10 @@ def create_initial_model():
     filepaths = patient_dict_container.filepaths
     patient_dict_container.set("rtss_modified", False)
 
+    is_pt = 0
+    if dataset[0].Modality == "CT":
+        is_pt = 1024
+
     if 'WindowWidth' in dataset[0]:
         if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
             window = int(dataset[0].WindowWidth)
@@ -37,9 +41,9 @@ def create_initial_model():
 
     if 'WindowCenter' in dataset[0]:
         if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
-            level = int(dataset[0].WindowCenter)
+            level = int(dataset[0].WindowCenter) - window/2 + is_pt
         elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            level = int(dataset[0].WindowCenter[1])
+            level = int(dataset[0].WindowCenter[1]) - window/2 + is_pt
     else:
         level = int(800)
 
@@ -68,7 +72,12 @@ def create_initial_model():
 
     patient_dict_container.set("dict_windowing", dict_windowing)
 
-    pixel_values = convert_raw_data(dataset)
+    if not patient_dict_container.has_attribute("scaled"):
+        patient_dict_container.set("scaled", True)
+        pixel_values = convert_raw_data(dataset, False, is_pt)
+    else:
+        pixel_values = convert_raw_data(dataset, True)
+
     # Calculate the ratio between x axis and y axis of 3 views
     pixmap_aspect = {}
     pixel_spacing = dataset[0].PixelSpacing

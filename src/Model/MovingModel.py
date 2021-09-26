@@ -34,7 +34,11 @@ def create_moving_model():
     filepaths = moving_dict_container.filepaths
     moving_dict_container.set("rtss_modified_moving", False)
 
-    if ('WindowWidth' in dataset[0]):
+    is_pt = 0
+    if dataset[0].Modality == "CT":
+        is_pt = 1024
+
+    if 'WindowWidth' in dataset[0]:
         if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
             window = int(dataset[0].WindowWidth)
         elif isinstance(dataset[0].WindowWidth, pydicom.multival.MultiValue):
@@ -42,11 +46,11 @@ def create_moving_model():
     else:
         window = int(400)
 
-    if ('WindowCenter' in dataset[0]):
+    if 'WindowCenter' in dataset[0]:
         if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
-            level = int(dataset[0].WindowCenter)
+            level = int(dataset[0].WindowCenter) - window/2 + is_pt
         elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            level = int(dataset[0].WindowCenter[1])
+            level = int(dataset[0].WindowCenter[1]) - window/2 + is_pt
     else:
         level = int(800)
 
@@ -76,7 +80,16 @@ def create_moving_model():
 
     moving_dict_container.set("dict_windowing_moving", dict_windowing)
 
-    pixel_values = convert_raw_data(dataset)
+    slope = 1
+    intercept = 0
+
+    if not moving_dict_container.has_attribute("scaled"):
+        moving_dict_container.set("scaled", True)
+        pixel_values = convert_raw_data(dataset, False, is_pt)
+    else:
+        pixel_values = convert_raw_data(dataset, True)
+
+    pixel_values = convert_raw_data(dataset, slope, intercept)
     # Calculate the ratio between x axis and y axis of 3 views
     pixmap_aspect = {}
     pixel_spacing = dataset[0].PixelSpacing

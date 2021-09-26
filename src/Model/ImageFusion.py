@@ -347,7 +347,7 @@ def get_fused_window(level, window):
     color_sagittal = {}
     color_coronal = {}
 
-    windowing = (int(level), int(window))
+    windowing = (int(level-1024), int(window))
 
     for i in range(axial_slice_count):
         color_axial[i] = \
