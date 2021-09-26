@@ -1,4 +1,5 @@
 import threading
+import pydicom
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtCore import QThreadPool, Qt
@@ -283,6 +284,9 @@ class UIImageFusionWindow(object):
         self.patient = self.patient_dict_container.get("basic_info")
         self.patient_id = self.patient['id']
 
+        dataset = self.patient_dict_container.dataset[0]
+        self.patient_current_image_series_uid = dataset.get("SeriesInstanceUID")
+
     def close_button_clicked(self):
         """Closes the window."""
         self.close()
@@ -440,6 +444,8 @@ class UIImageFusionWindow(object):
             self.open_patient_window_patients_tree.invisibleRootItem())
         selected_series_types = [checked_node.dicom_object.get_series_type()
                                  for checked_node in checked_nodes]
+        selected_series_id = [checked_node.dicom_object.series_uid
+                              for checked_node in checked_nodes]
 
         # Total number of selected image series
         total_selected_image_series = selected_series_types.count('CT') + \
@@ -469,6 +475,9 @@ class UIImageFusionWindow(object):
         elif selected_patient.dicom_object.patient_id.strip() != \
                 self.patient_id:
             header = "Cannot proceed with different patient."
+            proceed = False
+        elif self.patient_current_image_series_uid in selected_series_id:
+            header = "Cannot fuse with the same series."
             proceed = False
         else:
             header = ""
