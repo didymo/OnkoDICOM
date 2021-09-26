@@ -20,7 +20,9 @@ from src.Controller.PathHandler import resource_path
 class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     def __init__(self, window):  # initialization function
+
         super(AddOnOptions, self).__init__()
+
         # read configuration file for line and fill options
         with open(resource_path("data/line&fill_configuration"), "r") \
                 as stream:
@@ -41,8 +43,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 iso_opacity = 5
                 line_width = 2.0
             stream.close()
-        # initialise the UI
+        # initialise the UI - does it actually?
         self.window = window
+
         self.setup_ui(self, roi_line, roi_opacity, iso_line,
                       iso_opacity, line_width)
         # This data is used to create the tree view of functionalities
@@ -51,44 +54,44 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         data = [
             {
                 "level": 0,
-                "dbID": 442,
+                "dbID": 100,
                 "parent_ID": 6,
                 "short_name": "User Options"
             },
             {
                 "level": 1,
-                "dbID": 522,
-                "parent_ID": 442,
+                "dbID": 101,
+                "parent_ID": 100,
                 "short_name": "Image Windowing",
             },
             {
                 "level": 1,
-                "dbID": 556,
-                "parent_ID": 442,
+                "dbID": 102,
+                "parent_ID": 100,
                 "short_name": "Standard Organ Names",
             },
             {
                 "level": 1,
-                "dbID": 527,
-                "parent_ID": 442,
+                "dbID": 103,
+                "parent_ID": 100,
                 "short_name": "Standard Volume Names",
             },
             {
                 'level': 1,
-                'dbID': 528,
-                'parent_ID': 442,
+                'dbID': 104,
+                'parent_ID': 100,
                 'short_name': 'Create ROIs from Isodoses'
             },
             {
                 "level": 1,
-                "dbID": 520,
-                "parent_ID": 442,
+                "dbID": 105,
+                "parent_ID": 100,
                 "short_name": "Patient ID - Hash ID",
             },
             {
                 "level": 1,
-                "dbID": 523,
-                "parent_ID": 442,
+                "dbID": 106,
+                "parent_ID": 100,
                 "short_name": "Line & Fill configuration",
             },
             {
@@ -109,11 +112,25 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "parent_ID": 446,
                 "short_name": "Clinical Data CSV File",
             },
+                "level": 0,
+                "dbID": 600,
+                "parent_ID": 6,
+                "short_name": "Image Fusion"
+            },
+            {
+                "level": 1,
+                "dbID": 601,
+                "parent_ID": 600,
+                "short_name": "Auto-Registration",
+            }
+
         ]
         # create a model for the tree view of options and attach the
         # data
         self.model = QtGui.QStandardItemModel()
         self.treeList.setModel(self.model)
+
+        # Add customised data to
         self.import_data(data)
         self.treeList.expandAll()
         # fill the corresponding tables with the corresponding data from
@@ -121,7 +138,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         self.fill_tables()
         self.treeList.setEditTriggers(
             QtWidgets.QTreeView.NoEditTriggers
-        )  # make the tree entries uneditable
+        )
+        # make the tree entries uneditable
+
         # Functionalities of the Apply and Cancel button
         self.cancel_button.clicked.connect(
             self.close
@@ -307,6 +326,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     # to the given data
 
     def import_data(self, data, root=None):
+        """
+        Takes in the custom data array.
+        Sets the root node as an invisible item.
+        Begins to add items from the customised array to an array
+        that allows the user to view the TreeList.
+        """
         self.model.setRowCount(0)
         if root is None:
             root = self.model.invisibleRootItem()
@@ -326,10 +351,11 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             parent.appendRow([QtGui.QStandardItem(value["short_name"])])
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
-    # If APPLY is clicked, save the contents of each option and table
-    # into their corresponding files
-
     def accepting(self):
+        """
+        If APPLY is clicked, save the contents of each option and table
+        into their corresponding files.
+        """
         # starting save
         # Saving the Windowing options
         with open(resource_path("data/csv/imageWindowing.csv"), "w",
