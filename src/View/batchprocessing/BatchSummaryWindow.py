@@ -75,13 +75,10 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 if patient_summary[process] == "SUCCESS":
                     summary_text += "Completed " + process.upper()
                 elif patient_summary[process] == "SKIP":
-                    summary_text += process + " skipped as one or more " \
-                                              "required files missing"
+                    summary_text += process.upper\
+                        + " skipped as one or more required files missing"
                 summary_text += "\n"
             summary_text += "\n"
-
-        for i in range(0, 50):
-            summary_text += "wordswordswords\n\n"
 
         # Set summary text
         self.summary_label.setText(summary_text)

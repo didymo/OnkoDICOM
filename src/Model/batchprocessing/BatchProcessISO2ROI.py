@@ -66,7 +66,7 @@ class BatchProcessISO2ROI(BatchProcess):
             return False
 
         if not self.ready:
-            self.summary.append("SKIP")
+            self.summary = "SKIP"
             return False
 
         # Update progress

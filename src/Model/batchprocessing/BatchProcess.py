@@ -30,7 +30,7 @@ class BatchProcess:
         self.required_classes = []
         self.patient_files = patient_files
         self.ready = False
-        self.summary = []
+        self.summary = ""
 
     def is_ready(self):
         """
