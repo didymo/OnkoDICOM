@@ -1,5 +1,4 @@
 import threading
-import pydicom
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtCore import QThreadPool, Qt
@@ -449,7 +448,8 @@ class UIImageFusionWindow(object):
         Displays a tree branch
         Parameters:
             node : root node the tree
-            is_expanded (): flag of the tree branch
+            is_expanded (boolean): flag for checking if a particular
+            node/leaf is expanded.
         """
         node.setExpanded(is_expanded)
         if node.childCount() > 0:
