@@ -96,14 +96,14 @@ class ISO2ROIOptions(QtWidgets.QWidget):
             QtCore.Qt.AlignLeft)
 
         roi_from_isodose_header = self.table_roi.horizontalHeader()
-        roi_from_isodose_header.setSectionResizeMode(0,
-                                                     QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(1,
-                                                     QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(2,
-                                                     QtWidgets.QHeaderView.Stretch)
-        roi_from_isodose_header.setSectionResizeMode(3,
-                                                     QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(
+            2, QtWidgets.QHeaderView.Stretch)
+        roi_from_isodose_header.setSectionResizeMode(
+            3, QtWidgets.QHeaderView.Stretch)
 
         # Removing the ability to edit tables with immediate click
         self.table_roi.setEditTriggers(

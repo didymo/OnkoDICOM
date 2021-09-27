@@ -19,10 +19,6 @@ class BatchProcessingController:
     def __init__(self):
         """
         Class initialiser function.
-        :param file_paths: dict containing paths needed for inputs and
-        outputs during the batch processing
-        :param processes: list of processes to be done to the patients
-                          selected.
         """
         self.batch_path = ""
         self.processes = []
@@ -32,7 +28,7 @@ class BatchProcessingController:
         self.timestamp = ""
         self.batch_summary = {}
 
-        # threadpool for file loading
+        # Threadpool for file loading
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
 

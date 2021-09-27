@@ -1,4 +1,5 @@
-import threading, platform
+import platform
+import threading
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtGui import QIcon, QPixmap
@@ -53,8 +54,6 @@ class ProgressWindow(QDialog):
 
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
-
-
 
     def start(self, funct):
         """
