@@ -78,7 +78,7 @@ class Controller:
                 self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
 
-            # This is actually being used in GUIController
+            # Connect the signal from GUIController
             self.main_window.image_fusion_signal.connect(
                 self.show_image_fusion_select_window)
         else:
@@ -127,4 +127,3 @@ class Controller:
             self.image_fusion_window.update_ui()
 
         self.image_fusion_window.show()
-
