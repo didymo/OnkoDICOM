@@ -60,8 +60,9 @@ class BatchProcess:
         for key, value in patient_files.items():
             # If the item is an allowed class
             if key in cls.allowed_classes:
-                # Add item's files to the files list
-                files.extend(value.get_files())
+                for i in range(len(value)):
+                    # Add item's files to the files list
+                    files.extend(value[i].get_files())
 
                 # Get the modality name
                 modality_name = cls.allowed_classes.get(key).get('name')
@@ -85,8 +86,9 @@ class BatchProcess:
             # Convert paths to a common file system representation
             for i, file in enumerate(files):
                 files[i] = Path(file).as_posix()
-            path = os.path.dirname(os.path.commonprefix(files))
             read_data_dict, file_names_dict = cls.get_datasets(files)
+            path = os.path.dirname(
+                os.path.commonprefix(list(file_names_dict.values())))
         # Otherwise raise an exception (OnkoDICOM does not support the
         # selected file type)
         except ImageLoading.NotAllowedClassError:
@@ -126,23 +128,65 @@ class BatchProcess:
 
         slice_count = 0
         # For each file in the file path list
+        rtss_found = False
         for file in ImageLoading.natural_sort(file_path_list):
             # Try to open it
             try:
                 read_file = dcmread(file)
             except InvalidDicomError:
-                pass
-            else:
-                # Update relevant data
-                if read_file.SOPClassUID in cls.allowed_classes:
-                    allowed_class = cls.allowed_classes[read_file.SOPClassUID]
-                    if allowed_class["sliceable"]:
-                        slice_name = slice_count
-                        slice_count += 1
-                    else:
-                        slice_name = allowed_class["name"]
-                    read_data_dict[slice_name] = read_file
-                    file_names_dict[slice_name] = file
+                continue
+
+            # Update relevant data
+            if read_file.SOPClassUID in cls.allowed_classes:
+                allowed_class = cls.allowed_classes[read_file.SOPClassUID]
+                if allowed_class["sliceable"]:
+                    slice_name = slice_count
+                    slice_count += 1
+                else:
+                    slice_name = allowed_class["name"]
+
+                # Here we need to compare DICOM files to get the correct
+                # RTSS for the required image, i.e., the RTSS that
+                # references the images we want. Once we have found the
+                # right RTSS we skip over any other ones.
+                if slice_name == 'rtss' and rtss_found:
+                    continue
+
+                # Check to see if we have found the right RTSS
+                if slice_name == 'rtss' \
+                        and "ReferencedFrameOfReferenceSequence" in read_file:
+                    ref_frame = read_file.ReferencedFrameOfReferenceSequence
+                    if "RTReferencedStudySequence" in ref_frame[0]:
+                        ref_study = ref_frame[0].RTReferencedStudySequence[0]
+                        if "RTReferencedSeriesSequence" in ref_study:
+                            if "SeriesInstanceUID" in \
+                                    ref_study.RTReferencedSeriesSequence[0]:
+                                ref_series = \
+                                    ref_study.RTReferencedSeriesSequence[0]
+                                ref_image_series_uid = \
+                                    ref_series.SeriesInstanceUID
+                                if ref_image_series_uid \
+                                        == read_data_dict[0].SeriesInstanceUID:
+                                    rtss_found = True
+
+                # Continue if we have found an RTSS but it is not
+                # the right one
+                if slice_name == 'rtss' and not rtss_found:
+                    continue
+
+                # Skip this file if it does not match files already in the
+                # dataset, and if this file is an image.
+                # TODO: allow selection of which set of images (CT, PET,
+                #       etc.) to open (by description). Currently only
+                #       opens first set of each found + matching RTSS
+                if len(read_data_dict) > 0 \
+                        and isinstance(slice_name, int) \
+                        and read_file.SeriesInstanceUID \
+                        != read_data_dict[0].SeriesInstanceUID:
+                    continue
+
+                read_data_dict[slice_name] = read_file
+                file_names_dict[slice_name] = file
 
         # Get and return read data dict and file names dict
         sorted_read_data_dict, sorted_file_names_dict = \
