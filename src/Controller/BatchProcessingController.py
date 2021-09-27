@@ -23,6 +23,7 @@ class BatchProcessingController:
         self.batch_path = ""
         self.processes = []
         self.dicom_structure = None
+        self.suv2roi_weights = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -45,6 +46,14 @@ class BatchProcessingController:
         :param processes: list of selected processes
         """
         self.processes = processes
+
+    def set_suv2roi_weights(self, suv2roi_weights):
+        """
+        Function used to set suv2roi_weights.
+        :param suv2roi_weights: Dictionary of patient IDs and patient weight
+                                in grams.
+        """
+        self.suv2roi_weights = suv2roi_weights
 
     def start_processing(self):
         """
@@ -196,7 +205,14 @@ class BatchProcessingController:
             if 'suv2roi' in self.processes:
                 # Get patient files
                 cur_patient_files = self.get_patient_files(patient)
-                patient_weight = None  # TODO remove
+
+                # Get patient weight
+                if patient.patient_id in self.suv2roi_weights.keys():
+                    patient_weight = self.suv2roi_weights[patient.patient_id] \
+                        * 1000
+                else:
+                    patient_weight = None
+
                 process = BatchProcessSUV2ROI(progress_callback,
                                               interrupt_flag,
                                               cur_patient_files,

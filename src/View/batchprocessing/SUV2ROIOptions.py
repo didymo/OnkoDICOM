@@ -133,3 +133,33 @@ class SUV2ROIOptions(QtWidgets.QWidget):
                 i, 0, QtWidgets.QTableWidgetItem(patient_id))
             self.table_pet_weight.setCellWidget(i, 1, patient_id_edit)
             i += 1
+
+    def get_patient_weights(self):
+        """
+        Returns a dictionary of patient IDs and patient weights.
+        :return: patient_weights, a dictionary of patient ID and patient
+                 weight key-value pairs.
+        """
+        # Create dictionary
+        patient_weights = {}
+
+        # Loop through table
+        for i in range(self.table_pet_weight.rowCount()):
+            # Get patient ID and weight
+            patient_id = self.table_pet_weight.item(i, 0).text()
+            weight = self.table_pet_weight.cellWidget(i, 1).text()
+
+            # Make sure weight is not empty and is a valid (> 0) number
+            if weight != '':
+                try:
+                    num = float(weight)
+                    if num < 0:
+                        raise ValueError
+                except ValueError:
+                    num = None
+            else:
+                num = None
+
+            patient_weights[patient_id] = num
+
+        return patient_weights

@@ -250,6 +250,7 @@ class UIBatchProcessingWindow(object):
         """
         processes = ['iso2roi', 'suv2roi']
         selected_processes = []
+        suv2roi_weights = self.suv2roi_tab.get_patient_weights()
 
         # Get the selected processes
         for i in range(self.tab_widget.count()):
@@ -264,6 +265,7 @@ class UIBatchProcessingWindow(object):
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
+        self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
 
         # Enable processing
         self.batch_processing_controller.start_processing()
