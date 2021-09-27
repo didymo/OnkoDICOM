@@ -102,7 +102,6 @@ class Controller:
         self.open_patient_window.close()
         self.image_fusion_window.close()
 
-
     def show_batch_window(self):
         # Only initialise the batch processing window once
         if not isinstance(self.batch_window, BatchWindow):

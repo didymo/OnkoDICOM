@@ -1,13 +1,14 @@
 import datetime
-from src.View.ProgressWindow import ProgressWindow
+import threading
+from PySide6.QtCore import QThreadPool
+from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model import DICOMDirectorySearch
-import threading
 from src.Model.Worker import Worker
-from PySide6.QtCore import QThreadPool
+from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
+from src.View.ProgressWindow import ProgressWindow
 
 
 class BatchProcessingController:
@@ -18,10 +19,6 @@ class BatchProcessingController:
     def __init__(self):
         """
         Class initialiser function.
-        :param file_paths: dict containing paths needed for inputs and
-        outputs during the batch processing
-        :param processes: list of processes to be done to the patients
-                          selected.
         """
         self.batch_path = ""
         self.dvh_output_path = ""
@@ -30,8 +27,9 @@ class BatchProcessingController:
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
+        self.batch_summary = {}
 
-        # threadpool for file loading
+        # Threadpool for file loading
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
 
@@ -186,8 +184,15 @@ class BatchProcessingController:
 
                         # Update the patient dict container
                         PatientDictContainer().set("rtss_modified", False)
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
 
-                    progress_callback.emit(("Completed ISO2ROI", 100))
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]["iso2roi"] = reason
+                progress_callback.emit(("Completed ISO2ROI", 100))
 
             # Perform DVH2CSV on patient
             if "dvh2csv" in self.processes:
@@ -207,8 +212,12 @@ class BatchProcessingController:
         Runs when batch processing has been completed.
         """
         self.progress_window.update_progress(("Processing complete!", 100))
-        print("Processing completed!")
         self.progress_window.close()
+
+        # Create window to store summary info
+        batch_summary_window = BatchSummaryWindow()
+        batch_summary_window.set_summary_text(self.batch_summary)
+        batch_summary_window.exec_()
 
     def error_processing(self):
         """

@@ -218,6 +218,7 @@ class ISO2ROI:
         """
         Generates a new RTSS and edits the patient dict container. Used
         for batch processing.
+        :param progress_callback: Signal to update loading progress.
         """
         # Get common directory
         patient_dict_container = PatientDictContainer()
