@@ -24,6 +24,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         # Create widgets
         self.summary_label = QtWidgets.QLabel()
         self.scroll_area = QtWidgets.QScrollArea()
+        self.export_button = QtWidgets.QPushButton("Export to Text File")
         self.ok_button = QtWidgets.QPushButton("Continue")
 
         # Get stylesheet
@@ -36,6 +37,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         # Set stylesheet
         self.summary_label.setStyleSheet(self.stylesheet)
         self.scroll_area.setStyleSheet(self.stylesheet)
+        self.export_button.setStyleSheet(self.stylesheet)
         self.ok_button.setStyleSheet(self.stylesheet)
 
         # Set scroll area properties
@@ -50,9 +52,11 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.scroll_area)
         self.layout.addStretch(1)
+        self.layout.addWidget(self.export_button)
         self.layout.addWidget(self.ok_button)
 
-        # Connect ok button to function
+        # Connect buttons to functions
+        self.export_button.clicked.connect(self.export_button_clicked)
         self.ok_button.clicked.connect(self.ok_button_clicked)
 
         # Set layout of window
@@ -89,8 +93,23 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 summary_text += "\n"
             summary_text += "\n"
 
+        summary_text += "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
         # Set summary text
         self.summary_label.setText(summary_text)
+
+    def export_button_clicked(self):
+        """
+        Function to handle the export button being clicked. Opens a file
+        save dialog and saves the summary text to this text file.
+        """
+        file_path = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save As...", '', 'Text Files (*.txt)')
+
+        if file_path:
+            text = self.summary_label.text()
+            f = open(file_path[0], "w")
+            f.write(text)
+            f.close()
 
     def ok_button_clicked(self):
         """
