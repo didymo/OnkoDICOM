@@ -93,7 +93,6 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 summary_text += "\n"
             summary_text += "\n"
 
-        summary_text += "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
         # Set summary text
         self.summary_label.setText(summary_text)
 
