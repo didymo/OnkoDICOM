@@ -496,20 +496,6 @@ class UIOpenPatientWindow(object):
             if series["SR"] and series["SR"].parent() != series["IMAGE"]:
                 return False
 
-        # Check if the RTPLAN and RTDOSE are child items of the RTSTRUCT
-        if series["RTSTRUCT"]:
-            if series["RTPLAN"] and series["RTPLAN"].parent() != \
-                    series["RTSTRUCT"]:
-                return False
-            if series["RTDOSE"] and \
-                    series["RTDOSE"].parent().parent() != series["RTSTRUCT"]:
-                return False
-
-        # Check if the RTDOSE is a child item of the RTPLAN
-        if series["RTPLAN"] and series["RTDOSE"] and \
-                series["RTDOSE"].parent() != series["RTPLAN"]:
-            return False
-
         return True
 
     def get_existing_rtss(self, image_series):
