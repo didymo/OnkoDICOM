@@ -9,6 +9,8 @@ import os
 from copy import deepcopy
 from pydicom.tag import Tag
 
+from src.constants import CT_RESCALE_INTERCEPT
+
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from platipy.imaging.registration.linear import linear_registration
@@ -347,7 +349,7 @@ def get_fused_window(level, window):
     color_sagittal = {}
     color_coronal = {}
 
-    windowing = (int(level-1024), int(window))
+    windowing = (int(level-CT_RESCALE_INTERCEPT), int(window))
 
     for i in range(axial_slice_count):
         color_axial[i] = \
