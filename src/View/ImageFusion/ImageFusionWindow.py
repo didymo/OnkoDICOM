@@ -279,13 +279,32 @@ class UIImageFusionWindow(object):
             "OpenPatientWindowInstance", "Confirm"))
 
     def update_patient(self):
-        # self.clear_checked_leaves()
+        self.clear_checked_leaves()
         self.patient_dict_container = PatientDictContainer()
         self.patient = self.patient_dict_container.get("basic_info")
         self.patient_id = self.patient['id']
 
         dataset = self.patient_dict_container.dataset[0]
-        self.patient_current_image_series_uid = dataset.get("SeriesInstanceUID")
+        self.patient_current_image_series_uid = \
+            dataset.get("SeriesInstanceUID")
+
+    def clear_checked_leaves(self):
+        """
+        Resets all leaves to their unchecked state
+        """
+        def recurse(parent_item: QTreeWidgetItem):
+            for i in range(parent_item.childCount()):
+                child = parent_item.child(i)
+                grand_children = child.childCount()
+                if grand_children > 0:
+                    recurse(child)
+                else:
+                    if child.checkState(0) == Qt.Checked:
+                        child.setCheckState(0, Qt.CheckState.Unchecked)
+                        child.setSelected(False)
+
+        recurse(self.open_patient_window_patients_tree.invisibleRootItem())
+        self.open_patient_window_patients_tree.collapseAll()
 
     def close_button_clicked(self):
         """Closes the window."""
@@ -365,7 +384,8 @@ class UIImageFusionWindow(object):
             return
 
         for patient_item in dicom_structure.get_tree_items_list():
-            self.open_patient_window_patients_tree.addTopLevelItem(patient_item)
+            self.open_patient_window_patients_tree.addTopLevelItem(
+                patient_item)
             patient_item.setExpanded(True)  # Display all studies
             # Display all image sets
             for i in range(patient_item.childCount()):
@@ -422,7 +442,15 @@ class UIImageFusionWindow(object):
         self.check_selected_items(selected_patient)
 
     def display_a_tree_branch(self, node, is_expanded):
-        """ Expand/Close a tree branch """
+        # TO DO:
+        # Could Team 23 please update the defintion of this docstring as
+        # well as same function presented in OpenPatientWindow.
+        """
+        Displays a tree branch
+        Parameters:
+            node : root node the tree
+            is_expanded (): flag of the tree branch
+        """
         node.setExpanded(is_expanded)
         if node.childCount() > 0:
             for i in range(node.childCount()):
@@ -533,12 +561,14 @@ class UIImageFusionWindow(object):
         Error handling for progress window.
         """
         if type(exception[1]) == ImageLoading.NotRTSetError:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
+            QMessageBox.about(self.progress_window,
+                              "Unable to open selection",
                               "Selected files cannot be opened as they are not"
                               " a DICOM-RT set.")
             self.progress_window.close()
         elif type(exception[1]) == ImageLoading.NotAllowedClassError:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
+            QMessageBox.about(self.progress_window,
+                              "Unable to open selection",
                               "Selected files cannot be opened as they contain"
                               " unsupported DICOM classes.")
             self.progress_window.close()

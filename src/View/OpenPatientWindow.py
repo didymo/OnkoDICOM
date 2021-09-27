@@ -147,8 +147,6 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_window_patients_tree)
 
-
-
         # Create a label to show what would happen if they select the patient
         self.open_patient_directory_result_label = QtWidgets.QLabel()
         self.open_patient_directory_result_label.setObjectName(
