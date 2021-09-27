@@ -1,5 +1,6 @@
 import platform
-from PySide6 import QtGui, QtWidgets
+from pydicom import dcmread
+from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
 
 
@@ -40,4 +41,95 @@ class SUV2ROIOptions(QtWidgets.QWidget):
         self.info_label.setWordWrap(True)
 
         self.main_layout.addWidget(self.info_label)
+        self.create_table_view()
         self.setLayout(self.main_layout)
+
+    def create_table_view(self):
+        """
+        Create a table to display all of the datasets containing PET images
+        without a patient weight and give the user the ability to set the
+        patient weight for these datasets.
+        """
+        # Create table
+        self.table_pet_weight = QtWidgets.QTableWidget(self)
+        self.table_pet_weight.setStyleSheet(
+            "background-color: rgb(255, 255, 255);")
+        self.table_pet_weight.setColumnCount(2)
+        self.table_pet_weight.verticalHeader().hide()
+        # Note - "New Name" is only enabled if the option "Rename" is
+        # selected.
+        self.table_pet_weight.setHorizontalHeaderLabels(
+            [" Patient ID ", " Weight "])
+
+        self.table_pet_weight.horizontalHeaderItem(0).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.table_pet_weight.horizontalHeaderItem(1).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+
+        pet_weight_header = self.table_pet_weight.horizontalHeader()
+        pet_weight_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        pet_weight_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+
+        # Removing the ability to edit tables with immediate click
+        self.table_pet_weight.setEditTriggers(
+            QtWidgets.QTreeView.NoEditTriggers |
+            QtWidgets.QTreeView.NoEditTriggers)
+
+        # Add table to the main layout
+        self.main_layout.addWidget(self.table_pet_weight)
+
+    def populate_table(self, dicom_structure):
+        """
+        Populates the table with patient IDs and line edits once datasets
+        have been loaded. Called when datasets have finished loading.
+        :param dicom_structure: DICOM structure object representing all
+                                patients loaded.
+        """
+        # Loop through each patient, get every RTSTRUCT
+        pet_image_list = []
+        for patient in dicom_structure.patients:
+            studies = dicom_structure.patients[patient].studies
+            for study in studies:
+                image_serieses = studies[study].image_series
+                for image_series in image_serieses:
+                    images = image_serieses[image_series].images
+                    for image in images:
+                        if images[image].class_id == \
+                                '1.2.840.10008.5.1.4.1.1.128':
+                            pet_image_list.append(images[image].path)
+                            break
+
+        # Return if no RT Structs found
+        if not len(pet_image_list):
+            self.table_pet_weight.setRowCount(0)
+            return
+
+        # Loop through each PET image, try to get the patient weight
+        patient_ids = []
+        for pet_image in pet_image_list:
+            pet_data = dcmread(pet_image)
+            if not hasattr(pet_data, 'PatientWeight'):
+                patient_ids.append(pet_data.PatientID)
+
+        # Return if all patients have weights, or no patients found
+        if not len(patient_ids):
+            self.table_pet_weight.setRowCount(0)
+            return
+
+        # Populate table
+        self.table_pet_weight.setRowCount(0)
+
+        # Loop through each patient ID
+        i = 0
+        for patient_id in list(set(patient_ids)):
+            # Create line edit
+            patient_id_edit = QtWidgets.QLineEdit()
+            patient_id_edit.setStyleSheet(self.stylesheet)
+
+            # Add row to table
+            self.table_pet_weight.insertRow(i)
+            self.table_pet_weight.setRowHeight(i, 50)
+            self.table_pet_weight.setItem(
+                i, 0, QtWidgets.QTableWidgetItem(patient_id))
+            self.table_pet_weight.setCellWidget(i, 1, patient_id_edit)
+            i += 1
