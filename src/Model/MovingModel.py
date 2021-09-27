@@ -2,6 +2,8 @@ import os
 import SimpleITK as sitk
 import pydicom
 
+from src.constants import CT_RESCALE_INTERCEPT
+
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
     dict_instance_uid
@@ -34,9 +36,10 @@ def create_moving_model():
     filepaths = moving_dict_container.filepaths
     moving_dict_container.set("rtss_modified_moving", False)
 
-    is_pt = 0
+    # Determine if dataset is CT for aditional rescaling
+    is_ct = False
     if dataset[0].Modality == "CT":
-        is_pt = 1024
+        is_ct = True
 
     if 'WindowWidth' in dataset[0]:
         if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
@@ -48,9 +51,11 @@ def create_moving_model():
 
     if 'WindowCenter' in dataset[0]:
         if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
-            level = int(dataset[0].WindowCenter) - window/2 + is_pt
+            level = int(dataset[0].WindowCenter) - window/2
         elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):
-            level = int(dataset[0].WindowCenter[1]) - window/2 + is_pt
+            level = int(dataset[0].WindowCenter[1]) - window/2
+        if is_ct:
+            level += CT_RESCALE_INTERCEPT
     else:
         level = int(800)
 
@@ -80,16 +85,12 @@ def create_moving_model():
 
     moving_dict_container.set("dict_windowing_moving", dict_windowing)
 
-    slope = 1
-    intercept = 0
-
     if not moving_dict_container.has_attribute("scaled"):
         moving_dict_container.set("scaled", True)
-        pixel_values = convert_raw_data(dataset, False, is_pt)
+        pixel_values = convert_raw_data(dataset, False, is_ct)
     else:
         pixel_values = convert_raw_data(dataset, True)
 
-    pixel_values = convert_raw_data(dataset, slope, intercept)
     # Calculate the ratio between x axis and y axis of 3 views
     pixmap_aspect = {}
     pixel_spacing = dataset[0].PixelSpacing
