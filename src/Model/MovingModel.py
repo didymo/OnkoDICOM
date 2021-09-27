@@ -34,7 +34,7 @@ def create_moving_model():
     filepaths = moving_dict_container.filepaths
     moving_dict_container.set("rtss_modified_moving", False)
 
-    if ('WindowWidth' in dataset[0]):
+    if 'WindowWidth' in dataset[0]:
         if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
             window = int(dataset[0].WindowWidth)
         elif isinstance(dataset[0].WindowWidth, pydicom.multival.MultiValue):
@@ -42,7 +42,7 @@ def create_moving_model():
     else:
         window = int(400)
 
-    if ('WindowCenter' in dataset[0]):
+    if 'WindowCenter' in dataset[0]:
         if isinstance(dataset[0].WindowCenter, pydicom.valuerep.DSfloat):
             level = int(dataset[0].WindowCenter)
         elif isinstance(dataset[0].WindowCenter, pydicom.multival.MultiValue):

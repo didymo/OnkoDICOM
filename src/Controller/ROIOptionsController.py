@@ -1,5 +1,3 @@
-from src.Model.MovingDictContainer import MovingDictContainer
-from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
@@ -150,17 +148,20 @@ class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
 
 class ROITransferOption:
 
-    def __init__(self, fixed_dict_structure_modified_function, moving_dict_structure_modified_function):
+    def __init__(self, fixed_dict_structure_modified_function,
+                 moving_dict_structure_modified_function):
         super(ROITransferOption, self).__init__()
-        self.fixed_dict_structure_modified_function = fixed_dict_structure_modified_function
-        self.moving_dict_structure_modified_function = moving_dict_structure_modified_function
+        self.fixed_dict_structure_modified_function = \
+            fixed_dict_structure_modified_function
+        self.moving_dict_structure_modified_function = \
+            moving_dict_structure_modified_function
 
     def show_roi_transfer_options(self):
         self.roi_transfer_option_pop_up_window = ROITransferOptionUI()
-        self.roi_transfer_option_pop_up_window.signal_roi_transferred_to_moving_container.connect(
-            self.moving_dict_structure_modified_function
-        )
-        self.roi_transfer_option_pop_up_window.signal_roi_transferred_to_fixed_container.connect(
-            self.fixed_dict_structure_modified_function
-        )
+        self.roi_transfer_option_pop_up_window. \
+            signal_roi_transferred_to_moving_container\
+            .connect(self.moving_dict_structure_modified_function)
+        self.roi_transfer_option_pop_up_window. \
+            signal_roi_transferred_to_fixed_container\
+            .connect(self.fixed_dict_structure_modified_function)
         self.roi_transfer_option_pop_up_window.show()
