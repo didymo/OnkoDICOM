@@ -103,6 +103,10 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                     # Not decay corrected
                     elif patient_summary[process][4:] == "DECY":
                         summary_text += "PET files were not decay corrected."
+                    # No patient weight
+                    elif patient_summary[process][4:] == "WEIGHT":
+                        summary_text += "Patient weight could not be found " \
+                                        "or not provided."
                 summary_text += "\n"
             summary_text += "\n"
 

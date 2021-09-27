@@ -24,7 +24,8 @@ class BatchProcessSUV2ROI(BatchProcess):
         }
     }
 
-    def __init__(self, progress_callback, interrupt_flag, patient_files):
+    def __init__(self, progress_callback, interrupt_flag, patient_files,
+                 patient_weight):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -32,6 +33,7 @@ class BatchProcessSUV2ROI(BatchProcess):
         :param interrupt_flag: A threading.Event() object that tells the
                                function to stop loading.
         :param patient_files: List of patient files.
+        :param patient_weight: Weight of the patient in grams.
         """
         # Call the parent class
         super(BatchProcessSUV2ROI, self).__init__(progress_callback,
@@ -42,6 +44,7 @@ class BatchProcessSUV2ROI(BatchProcess):
         self.patient_dict_container = PatientDictContainer()
         self.required_classes = ['pet']
         self.ready = self.load_images(patient_files, self.required_classes)
+        self.patient_weight = patient_weight
 
     def start(self):
         """
@@ -81,6 +84,7 @@ class BatchProcessSUV2ROI(BatchProcess):
 
         # Create SUV2ROI object
         suv2roi = SUV2ROI()
+        suv2roi.set_patient_weight(self.patient_weight)
         self.progress_callback.emit(("Performing SUV2ROI... ", 50))
 
         # Stop loading
@@ -118,7 +122,7 @@ class BatchProcessSUV2ROI(BatchProcess):
 
         # Generate ROIs
         self.progress_callback.emit(("Generating ROIs...", 80))
-        suv2roi.generate_roi(contour_data, self.progress_callback)
+        suv2roi.generate_ROI(contour_data, self.progress_callback)
 
         # Save new RTSS
         self.progress_callback.emit(("Saving RT Struct...", 90))

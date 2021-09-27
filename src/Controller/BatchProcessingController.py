@@ -196,9 +196,11 @@ class BatchProcessingController:
             if 'suv2roi' in self.processes:
                 # Get patient files
                 cur_patient_files = self.get_patient_files(patient)
+                patient_weight = None  # TODO remove
                 process = BatchProcessSUV2ROI(progress_callback,
                                               interrupt_flag,
-                                              cur_patient_files)
+                                              cur_patient_files,
+                                              patient_weight)
                 success = process.start()
 
                 # Add rtss to patient in case it is needed in future
