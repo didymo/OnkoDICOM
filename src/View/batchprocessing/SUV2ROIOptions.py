@@ -105,14 +105,17 @@ class SUV2ROIOptions(QtWidgets.QWidget):
             return
 
         # Loop through each PET image, try to get the patient weight
-        patient_ids = []
+        patient_ids = {}
         for pet_image in pet_image_list:
             pet_data = dcmread(pet_image)
-            if not hasattr(pet_data, 'PatientWeight'):
-                patient_ids.append(pet_data.PatientID)
+            if pet_data.PatientID not in patient_ids:
+                if not hasattr(pet_data, 'PatientWeight'):
+                    patient_ids[pet_data.PatientID] = None
+                else:
+                    patient_ids[pet_data.PatientID] = pet_data.PatientWeight
 
         # Return if all patients have weights, or no patients found
-        if not len(patient_ids):
+        if not len(patient_ids.keys()):
             self.table_pet_weight.setRowCount(0)
             return
 
@@ -121,17 +124,24 @@ class SUV2ROIOptions(QtWidgets.QWidget):
 
         # Loop through each patient ID
         i = 0
-        for patient_id in list(set(patient_ids)):
-            # Create line edit
-            patient_id_edit = QtWidgets.QLineEdit()
-            patient_id_edit.setStyleSheet(self.stylesheet)
+        for patient_id in patient_ids.keys():
+            patient_weight_widget = None
+            if patient_ids[patient_id] is None:
+                # Create line edit
+                patient_weight_widget = QtWidgets.QLineEdit()
+                patient_weight_widget.setStyleSheet(self.stylesheet)
+            else:
+                # Create label
+                patient_weight_widget = \
+                    QtWidgets.QLabel(patient_ids[patient_id])
+                patient_weight_widget.setStyleSheet(self.stylesheet)
 
             # Add row to table
             self.table_pet_weight.insertRow(i)
             self.table_pet_weight.setRowHeight(i, 50)
             self.table_pet_weight.setItem(
                 i, 0, QtWidgets.QTableWidgetItem(patient_id))
-            self.table_pet_weight.setCellWidget(i, 1, patient_id_edit)
+            self.table_pet_weight.setCellWidget(i, 1, patient_weight_widget)
             i += 1
 
     def get_patient_weights(self):
