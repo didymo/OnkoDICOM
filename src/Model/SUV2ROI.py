@@ -14,6 +14,7 @@ class SUV2ROI:
         self.patient_weight = None
         self.weight_over_dose = None
         self.suv2roi_status = False
+        self.failure_reason = None
 
     def start_conversion(self, interrupt_flag, progress_callback):
         """
@@ -40,7 +41,7 @@ class SUV2ROI:
         # Stop loading
         if interrupt_flag.is_set():
             # TODO: convert print to logging
-            print("Stopped ISO2ROI")
+            print("Stopped SUV2ROI")
             return False
 
         if not contour_data:
@@ -109,12 +110,14 @@ class SUV2ROI:
         """
         # Return if units are not Bq/mL
         if not dataset.Units == "BQML":
+            self.failure_reason = "UNIT"
             return None
 
-        # Return if CorrectedImage does not contain ATTN and DECY, and
+        # Return if CorrectedImage does not contain DECY, and
         # decay correction is not START
-        if (["ATTN", "DECY"] not in dataset.CorrectedImage) and \
+        if (["DECY"] not in dataset.CorrectedImage) and \
                 (dataset.DecayCorrection != "START"):
+            self.failure_reason = "DECY"
             return None
 
         # Get radiopharmaceutical information
@@ -164,7 +167,7 @@ class SUV2ROI:
             temp_ds = patient_dict_container.dataset[slider_id]
             suv_data = self.pet2suv(temp_ds)
 
-            # Return if patient weight does not exist
+            # Return None if PET 2 SUV failed
             if suv_data is None:
                 return None
 

@@ -84,16 +84,20 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.image_fusion_info_initialized.connect(self.open_patient)
-
+        self.update_patient()
         if directory_in is not None:
             self.filepath = directory_in
             self.open_patient_directory_input_box.setText(directory_in)
             self.scan_directory_for_patient()
 
     def update_ui(self):
-        patient = self.patient_dict_container.get("basic_info")
+        # Instantiate a local new PatientDictContainer
+        patient_dict_container = PatientDictContainer()
+        patient = patient_dict_container.get("basic_info")
+
+        # Compare local patient with previous instance of ImageFusion
         if self.patient_id != patient['id']:
-            self.update_new_patient()
+            self.update_patient()
         
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
@@ -122,6 +126,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         create_initial_model()
         self.setup_central_widget()
         self.setup_actions()
+
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
 
@@ -142,7 +147,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             self.open_patient_window.emit()
 
     def open_image_fusion(self):
-        # patient_dict_container = PatientDictContainer()
         self.image_fusion_signal.emit()
 
     def update_image_fusion_ui(self):
