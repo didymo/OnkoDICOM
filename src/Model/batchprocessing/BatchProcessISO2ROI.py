@@ -63,6 +63,7 @@ class BatchProcessISO2ROI(BatchProcess):
             # TODO: convert print to logging
             print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
+            self.summary = "INTERRUPT"
             return False
 
         if not self.ready:
@@ -80,6 +81,7 @@ class BatchProcessISO2ROI(BatchProcess):
             # TODO: convert print to logging
             print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
+            self.summary = "INTERRUPT"
             return False
 
         # Check if the dataset is complete
@@ -96,6 +98,7 @@ class BatchProcessISO2ROI(BatchProcess):
             # TODO: convert print to logging
             print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
+            self.summary = "INTERRUPT"
             return False
 
         if not dataset_complete:
@@ -115,6 +118,7 @@ class BatchProcessISO2ROI(BatchProcess):
             # TODO: convert print to logging
             print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
+            self.summary = "INTERRUPT"
             return False
 
         # Calculate boundaries
@@ -124,6 +128,7 @@ class BatchProcessISO2ROI(BatchProcess):
         # Return if boundaries could not be calculated
         if not boundaries:
             print("Boundaries could not be calculated.")
+            self.summary = "ISO_NO_RX_DOSE"
             return False
 
         # Generate ROIs
