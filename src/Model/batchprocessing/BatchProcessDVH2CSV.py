@@ -58,16 +58,18 @@ class BatchProcessDVH2CSV(BatchProcess):
             # TODO: convert print to logging
             print("Stopped DVH2CSV")
             self.patient_dict_container.clear()
+            self.summary = "INTERRUPT"
             return False
 
         if not self.ready:
-            return
+            self.summary = "SKIP"
+            return False
 
         # Check if the dataset is complete
         self.progress_callback.emit(("Checking dataset...", 40))
 
         # Attempt to get DVH data from RT Dose
-        self.progress_callback.emit(("Attempting to get DVH from RT Dose...",
+        self.progress_callback.emit(("Attempting to get DVH from RTDOSE...",
                                      50))
         # Get DVH data
         raw_dvh = CalculateDVHs.rtdose2dvh()
@@ -99,16 +101,15 @@ class BatchProcessDVH2CSV(BatchProcess):
                                                  rois, dict_thickness,
                                                  self.interrupt_flag)
             except TypeError:
-                print(
-                    "Error when calculating ROI thickness. The dataset may be "
-                    "incomplete. \nSkipping DVH2CSV.")
-                return
+                self.summary = "DVH_TYPE_ERROR"
+                return False
 
         # Stop loading
         if self.interrupt_flag.is_set():
             # TODO: convert print to logging
             print("Stopped DVH2CSV")
             self.patient_dict_container.clear()
+            self.summary = "INTERRUPT"
             return False
 
         # Export DVH to CSV
@@ -130,6 +131,8 @@ class BatchProcessDVH2CSV(BatchProcess):
 
         # Save the DVH to the RT Dose
         CalculateDVHs.dvh2rtdose(raw_dvh)
+
+        return True
 
     def dvh2csv(self, dict_dvh, path, csv_name, patient_id):
         """

@@ -80,7 +80,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                     summary_text += "Completed " + process.upper()
                 # Skipped due to missing files
                 elif patient_summary[process] == "SKIP":
-                    summary_text += process.upper\
+                    summary_text += process.upper \
                         + " skipped as one or more required files missing"
                 # Process interrupted
                 elif patient_summary[process] == "INTERRUPT":
@@ -90,6 +90,11 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
+                # DVH2CSV could not calculate
+                elif patient_summary[process] == "DVH_TYPE_ERROR":
+                    summary_text += process.upper() \
+                        + " could not be calculated. The dataset may be " \
+                          "incomplete."
                 summary_text += "\n"
             summary_text += "\n"
 

@@ -202,7 +202,17 @@ class BatchProcessingController:
                                               cur_patient_files,
                                               self.dvh_output_path)
                 process.set_filename('DVHs_' + self.timestamp + '.csv')
-                process.start()
+                success = process.start()
+
+                if success:
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]['dvh2csv'] = reason
                 progress_callback.emit(("Completed DVH2CSV", 100))
 
         PatientDictContainer().clear()
