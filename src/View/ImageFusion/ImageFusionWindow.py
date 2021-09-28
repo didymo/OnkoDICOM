@@ -7,13 +7,13 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, \
     QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
 
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model import ImageLoading
 from src.Model import DICOMDirectorySearch
 from src.Model.Worker import Worker
 from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
 from src.View.resources_open_patient_rc import *
-
-from src.Model.PatientDictContainer import PatientDictContainer
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -21,9 +21,6 @@ import platform
 
 class UIImageFusionWindow(object):
     image_fusion_info_initialized = QtCore.Signal(object)
-
-    def __init__(self):
-        super().__init__()
 
     def setup_ui(self, open_image_fusion_select_instance):
         """Sets up a UI"""
@@ -152,7 +149,7 @@ class UIImageFusionWindow(object):
         self.open_patient_window_patients_tree.setHeaderHidden(False)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
         self.open_patient_window_patients_tree.itemChanged.connect(
-            self.tree_item_changed)
+            self.tree_item_clicked)
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_window_patients_tree)
         self.last_patient = None
@@ -251,10 +248,6 @@ class UIImageFusionWindow(object):
         QtCore.QMetaObject.connectSlotsByName(
             open_image_fusion_select_instance)
 
-        self.patient_dict_container = PatientDictContainer()
-        self.patient = self.patient_dict_container.get("basic_info")
-        self.patient_id = self.patient['id']
-
     def retranslate_ui(self, open_image_fusion_select_instance):
         """Translates UI"""
         _translate = QtCore.QCoreApplication.translate
@@ -284,19 +277,41 @@ class UIImageFusionWindow(object):
         self.open_patient_window_confirm_button.setText(_translate(
             "OpenPatientWindowInstance", "Confirm"))
 
-    def update_new_patient(self):
+    def update_patient(self):
+        self.clear_checked_leaves()
         self.patient_dict_container = PatientDictContainer()
         self.patient = self.patient_dict_container.get("basic_info")
         self.patient_id = self.patient['id']
-        self.clear_checked_leaves()
+
+        dataset = self.patient_dict_container.dataset[0]
+        self.patient_current_image_series_uid = \
+            dataset.get("SeriesInstanceUID")
+
+    def clear_checked_leaves(self):
+        """
+        Resets all leaves to their unchecked state
+        """
+        def recurse(parent_item: QTreeWidgetItem):
+            for i in range(parent_item.childCount()):
+                child = parent_item.child(i)
+                grand_children = child.childCount()
+                if grand_children > 0:
+                    recurse(child)
+                else:
+                    if child.checkState(0) == Qt.Checked:
+                        child.setCheckState(0, Qt.CheckState.Unchecked)
+                        child.setSelected(False)
+
+        recurse(self.open_patient_window_patients_tree.invisibleRootItem())
+        self.open_patient_window_patients_tree.collapseAll()
 
     def close_button_clicked(self):
         """Closes the window."""
         self.close()
 
     def scan_directory_for_patient(self):
-        """Scans for patients in directory"""
         # Reset tree view header and last patient
+        self.open_patient_window_confirm_button.setDisabled(True)
         self.open_patient_window_patients_tree.setHeaderLabels([""])
         self.last_patient = None
         self.filepath = self.open_patient_directory_input_box.text()
@@ -316,8 +331,8 @@ class UIImageFusionWindow(object):
             # Reveals the Stop Search button for the duration of the search
             self.open_patient_window_stop_button.setVisible(True)
 
-            # The interrupt flag is then un-set if a previous search
-            # has been stopped.
+            # The interrupt flag is then un-set if a previous search has been
+            # stopped.
             self.interrupt_flag.clear()
 
             # Then, create a new thread that will load the selected folder
@@ -350,41 +365,62 @@ class UIImageFusionWindow(object):
         """
         self.open_patient_window_patients_tree.clear()
         self.open_patient_window_patients_tree.addTopLevelItem(
-            QTreeWidgetItem(
-                ["Loading selected directory... (%s files searched)" %
-                 progress_update]))
+            QTreeWidgetItem(["Loading selected directory... "
+                             "(%s files searched)" % progress_update]))
 
     def on_search_complete(self, dicom_structure):
         """
         Executes once the directory search is complete.
-        :param dicom_structure: DICOMStructure object constructed by the 
+        :param dicom_structure: DICOMStructure object constructed by the
         directory search.
         """
         self.open_patient_directory_choose_button.setEnabled(True)
         self.open_patient_window_stop_button.setVisible(False)
         self.open_patient_window_patients_tree.clear()
 
-        if dicom_structure is None:  # dicom_structure will be None if
-            # function was interrupted.
+        # dicom_structure will be None if function was interrupted.
+        if dicom_structure is None:
             return
 
         for patient_item in dicom_structure.get_tree_items_list():
             self.open_patient_window_patients_tree.addTopLevelItem(
                 patient_item)
+            patient_item.setExpanded(True)  # Display all studies
+            # Display all image sets
+            for i in range(patient_item.childCount()):
+                study = patient_item.child(i)
+                study.setExpanded(True)
 
         if len(dicom_structure.patients) == 0:
             QMessageBox.about(self, "No files found",
                               "Selected directory contains no DICOM files.")
 
-    def tree_item_changed(self, item, _):
+    def tree_item_clicked(self, item, _):
         """
         Executes when a tree item is checked or unchecked.
         If a different patient is checked, uncheck the previous patient.
         Inform user about missing DICOM files.
         """
+        # If patient is only selected, but not checked, set it to "focus" to
+        # coincide with stylesheet. And if the selected item is an image set,
+        # display its child branches.
+        if item.checkState(0) == Qt.CheckState.Unchecked:
+            self.open_patient_window_patients_tree.setCurrentItem(item)
+        else:  # Otherwise don't "focus", then set patient as selected
+            self.open_patient_window_patients_tree.setCurrentItem(None)
+            item.setSelected(True)
+
+        # Expand or collapse the tree branch if item is an image series
+        # Only collapse if the selected image series is expanded but unchecked
+        # Otherwise, expand its tree branch to show RT files
+        is_expanded = False \
+            if (item.isExpanded() is True and
+                item.checkState(0) == Qt.CheckState.Unchecked) else True
+        self.display_a_tree_branch(item, is_expanded)
+
         selected_patient = item
-        # If the item is not top-level, bubble up to see which top-level
-        # item this item belongs to
+        # If the item is not top-level, bubble up to see which top-level item
+        # this item belongs to
         if self.open_patient_window_patients_tree.invisibleRootItem(). \
                 indexOfChild(item) == -1:
             while self.open_patient_window_patients_tree.invisibleRootItem(). \
@@ -392,65 +428,120 @@ class UIImageFusionWindow(object):
                 selected_patient = selected_patient.parent()
 
         # Uncheck previous patient if a different patient is selected
-        if item.checkState(0) == Qt.CheckState.Checked and \
-                self.last_patient != selected_patient:
+        if item.checkState(0) == Qt.CheckState.Checked and self.last_patient \
+                != selected_patient:
             if self.last_patient is not None:
-                self.last_patient.setCheckState(0, Qt.CheckState.Unchecked)
-                self.last_patient.setSelected(False)
+                last_patient_checked_items = self.get_checked_nodes(
+                    self.last_patient)
+                for checked_item in last_patient_checked_items:
+                    checked_item.setCheckState(0, Qt.Unchecked)
             self.last_patient = selected_patient
 
-        # Get the types of all selected leaves
-        selected_series_types = set()
-        selected_studies_names = set()
-        for checked_item in self.get_checked_leaves():
-            selected_studies_names.add(checked_item.parent().text(0))
-            series_type = checked_item.dicom_object.get_series_type()
-            if type(series_type) == str:
-                selected_series_types.add(series_type)
-            else:
-                selected_series_types.update(series_type)
+        # Check selected items and display warning messages
+        self.check_selected_items(selected_patient)
 
-        header = ""
-        self.open_patient_window_confirm_button.setDisabled(True)
-        # Check if multiple studies are selected
-        if len(selected_studies_names) == 1 & \
-                len(list({'CT', 'MR', 'PT'} & selected_series_types)) != 0:
-            self.open_patient_window_confirm_button.setDisabled(False)
-        elif len(selected_studies_names) <= 1:
-            header = "Only one study can be opened."
-            self.open_patient_window_confirm_button.setDisabled(False)
+    def display_a_tree_branch(self, node, is_expanded):
+        # TO DO:
+        # Could Team 23 please update the defintion of this docstring as
+        # well as same function presented in OpenPatientWindow.
+        """
+        Displays a tree branch
+        Parameters:
+            node : root node the tree
+            is_expanded (boolean): flag for checking if a particular
+            node/leaf is expanded.
+        """
+        node.setExpanded(is_expanded)
+        if node.childCount() > 0:
+            for i in range(node.childCount()):
+                self.display_a_tree_branch(node.child(i), is_expanded)
+        else:
+            return
 
-        # Check the existence of IMAGE, RTSTRUCT and RTDOSE files
-        # if len(list({'CT', 'MR', 'PT'} & selected_series_types)) == 0:
-        #     header = "Cannot proceed without an image file."
-        #     self.open_patient_window_confirm_button.setDisabled(True)
+    def check_selected_items(self, selected_patient):
+        """
+        Check and display warning messages based on the existence and quantity
+        of image series, RTSTRUCT, RTPLAN, RTDOSE and SR files
+
+        Parameters:
+            selected_patient (DICOMStructure): DICOM Object of patient
+        """
+        # Get the types of all selected leaves & Get the names of all selected
+        # studies
+        checked_nodes = self.get_checked_nodes(
+            self.open_patient_window_patients_tree.invisibleRootItem())
+        selected_series_types = [checked_node.dicom_object.get_series_type()
+                                 for checked_node in checked_nodes]
+        selected_series_id = [checked_node.dicom_object.series_uid
+                              for checked_node in checked_nodes]
+
+        # Total number of selected image series
+        total_selected_image_series = selected_series_types.count('CT') + \
+                                      selected_series_types.count('MR') + \
+                                      selected_series_types.count('PT')
+
+        # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
+        proceed = True
+
+        if total_selected_image_series > 1:
+            header = "Cannot proceed with more than 1 image selected."
+            proceed = False
+        elif total_selected_image_series < 1:
+            header = "Cannot proceed with no image selected"
+            proceed = False
+        elif not ('CT' in selected_series_types or
+                  'MR' in selected_series_types or
+                  'PT' in selected_series_types):
+            header = "Cannot proceed without an image."
+            proceed = False
         elif 'RTSTRUCT' in selected_series_types:
             header = "Cannot load new RTSTRUCT."
-            self.open_patient_window_confirm_button.setDisabled(True)
+            proceed = False
         elif 'RTDOSE' in selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
-            self.open_patient_window_confirm_button.setDisabled(True)
+            proceed = False
+        elif selected_patient.dicom_object.patient_id.strip() != \
+                self.patient_id:
+            header = "Cannot proceed with different patient."
+            proceed = False
+        elif self.patient_current_image_series_uid in selected_series_id:
+            header = "Cannot fuse with the same series."
+            proceed = False
         else:
             header = ""
-
-        # Check if same patient
-        # if selected_patient.dicom_object.patient_id.strip() != \
-        #         self.patient_id.strip():
-        #     header = "Cannot proceed with different patient."
-        #     self.open_patient_window_confirm_button.setDisabled(True)
-        # if len(selected_studies_names) == 0:
-        #     header = "No image set selected"
-        #     self.open_patient_window_confirm_button.setDisabled(True)
+        self.open_patient_window_confirm_button.setDisabled(not proceed)
 
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
+
+    def get_checked_nodes(self, root):
+        """
+        :param root: QTreeWidgetItem as a root.
+        :return: A list of all QTreeWidgetItems in the QTreeWidget that are
+        checked under the root.
+        """
+        checked_items = []
+
+        def recurse(parent_item: QTreeWidgetItem):
+            for i in range(parent_item.childCount()):
+                child = parent_item.child(i)
+                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and \
+                        child.checkState(0) == Qt.Checked:
+                    checked_items.append(child)
+                grand_children = child.childCount()
+                if grand_children > 0:
+                    recurse(child)
+
+        recurse(root)
+        return checked_items
 
     def confirm_button_clicked(self):
         """
         Begins loading of the selected files.
         """
         selected_files = []
-        for item in self.get_checked_leaves():
+        for item in self.get_checked_nodes(
+                self.open_patient_window_patients_tree.invisibleRootItem()):
             selected_files += item.dicom_object.get_files()
 
         self.progress_window = ImageFusionProgressWindow(self)
@@ -463,63 +554,24 @@ class UIImageFusionWindow(object):
         Executes when the progress bar finishes loaded the selected files.
         """
         if results[0] is True:  # Will be NoneType if loading was interrupted.
-            # Emits the progress window.
             self.image_fusion_info_initialized.emit(results[1])
 
-    def on_loading_error(self, error_code):
+    def on_loading_error(self, exception):
         """
         Error handling for progress window.
         """
-        if error_code == 0:
-            QMessageBox.about(
-                self.progress_window, "Unable to open selection",
-                "Selected files cannot be opened as they are not a "
-                "DICOM-RT set.")
+        if type(exception[1]) == ImageLoading.NotRTSetError:
+            QMessageBox.about(self.progress_window,
+                              "Unable to open selection",
+                              "Selected files cannot be opened as they are not"
+                              " a DICOM-RT set.")
             self.progress_window.close()
-        elif error_code == 1:
-            QMessageBox.about(
-                self.progress_window, "Unable to open selection",
-                "Selected files cannot be opened as they contain "
-                "unsupported DICOM classes.")
+        elif type(exception[1]) == ImageLoading.NotAllowedClassError:
+            QMessageBox.about(self.progress_window,
+                              "Unable to open selection",
+                              "Selected files cannot be opened as they contain"
+                              " unsupported DICOM classes.")
             self.progress_window.close()
-
-    def get_checked_leaves(self):
-        """
-        :return: A list of all QTreeWidgetItems in the QTreeWidget that are
-        both leaves and checked.
-        """
-        checked_items = []
-
-        def recurse(parent_item: QTreeWidgetItem):
-            for i in range(parent_item.childCount()):
-                child = parent_item.child(i)
-                grand_children = child.childCount()
-                if grand_children > 0:
-                    recurse(child)
-                else:
-                    if child.checkState(0) == Qt.Checked:
-                        checked_items.append(child)
-
-        recurse(self.open_patient_window_patients_tree.invisibleRootItem())
-        return checked_items
-
-    def clear_checked_leaves(self):
-        """
-        Resets all leaves to their unchecked state
-        """
-        def recurse(parent_item: QTreeWidgetItem):
-            for i in range(parent_item.childCount()):
-                child = parent_item.child(i)
-                grand_children = child.childCount()
-                if grand_children > 0:
-                    recurse(child)
-                else:
-                    if child.checkState(0) == Qt.Checked:
-                        child.setCheckState(0, Qt.CheckState.Unchecked)
-                        child.setSelected(False)
-
-        recurse(self.open_patient_window_patients_tree.invisibleRootItem())
-        self.open_patient_window_patients_tree.collapseAll()
 
 
 # This is to allow for dropping a directory into the input text.

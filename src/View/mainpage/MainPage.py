@@ -8,6 +8,7 @@ from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.SUV2ROI import SUV2ROI
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -21,6 +22,7 @@ from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 from src.View.mainpage.PETCTView import PetCtView
+from src.View.ProgressWindow import ProgressWindow
 
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from src.View.ImageFusion.ImageFusionSagittalView import \
@@ -67,17 +69,26 @@ class UIMainWindow:
             self.stylesheet_path = "res/stylesheet.qss"
         else:
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
+        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
             "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(stylesheet)
+        self.main_window_instance.setStyleSheet(self.stylesheet)
 
         self.setup_central_widget()
         self.setup_actions()
+
+        # Create SUV2ROI object and connect signals
+        self.suv2roi = SUV2ROI()
+        self.suv2roi_progress_window = \
+            ProgressWindow(self.main_window_instance,
+                           QtCore.Qt.WindowTitleHint |
+                           QtCore.Qt.WindowCloseButtonHint)
+        self.suv2roi_progress_window.signal_loaded.connect(
+            self.on_loaded_suv2roi)
 
     def setup_actions(self):
         if hasattr(self, 'toolbar'):
@@ -138,7 +149,7 @@ class UIMainWindow:
         self.dicom_single_view = DicomAxialView(
             roi_color=roi_color_dict, iso_color=iso_color_dict)
         self.dicom_axial_view = DicomAxialView(
-            roi_color=roi_color_dict, iso_color=iso_color_dict,
+            is_four_view=True, roi_color=roi_color_dict, iso_color=iso_color_dict,
             metadata_formatted=True, cut_line_color=QtGui.QColor(255, 0, 0))
         self.dicom_sagittal_view = DicomSagittalView(
             roi_color=roi_color_dict, iso_color=iso_color_dict,
@@ -189,6 +200,9 @@ class UIMainWindow:
         self.dicom_tree = DicomTreeView()
         self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
+        # Connect SUV2ROI signal to handler function
+        self.dicom_single_view.suv2roi_signal.connect(self.perform_suv2roi)
+
         # Add clinical data tab
         self.call_class.display_clinical_data(self.right_panel)
 
@@ -212,7 +226,7 @@ class UIMainWindow:
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
         layout_footer.setContentsMargins(0, 0, 0, 0)
 
-        label_footer = QtWidgets.QLabel("@OnkoDICOM 2019-20")
+        label_footer = QtWidgets.QLabel("@OnkoDICOM2021")
         label_footer.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         layout_footer.addWidget(label_footer)
@@ -246,6 +260,7 @@ class UIMainWindow:
 
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view_axial is not None:
+                self.image_fusion_single_view.update_view()
                 self.image_fusion_view_axial.update_view()
                 self.image_fusion_view_coronal.update_view()
                 self.image_fusion_view_sagittal.update_view()
@@ -400,3 +415,54 @@ class UIMainWindow:
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
+
+    def perform_suv2roi(self):
+        """
+        Performs the SUV2ROI process.
+        """
+        # Get patient weight - needs to run first as GUI cannot run in
+        # threads, like the ProgressBar
+        patient_dict_container = PatientDictContainer()
+        dataset = patient_dict_container.dataset[0]
+        self.suv2roi.get_patient_weight(dataset)
+        if self.suv2roi.patient_weight is None:
+            return
+
+        # Start the SUV2ROI process
+        self.suv2roi_progress_window.start(self.suv2roi.start_conversion)
+
+    def on_loaded_suv2roi(self):
+        """
+        Called when progress bar has finished. Closes the progress
+        window and refreshes the main screen.
+        """
+        if self.suv2roi.suv2roi_status:
+            patient_dict_container = PatientDictContainer()
+            self.structures_tab.structure_modified((
+                patient_dict_container.get('dataset_rtss'), {"draw": None}))
+        else:
+            # Alert user that SUV2ROI failed and for what reason
+            #if self.suv2roi.failure_reason == "UNIT":
+            #    failure_reason = \
+            #        "PET units are not Bq/mL. OnkoDICOM can currently only\n" \
+            #        "perform SUV2ROI on PET images stored in these units."
+            if self.suv2roi.failure_reason == "UNIT":
+                failure_reason = \
+                    "PET is not decay corrected. OnkoDICOM can currently " \
+                    "only\nperform SUV2ROI on PET images that are decay " \
+                    "corrected."
+            else:
+                failure_reason = "The SUV2ROI process has failed."
+            button_reply = \
+                QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Icon.Warning,
+                    "SUV2ROI Failed",
+                    failure_reason,
+                    QtWidgets.QMessageBox.StandardButton.Ok, self)
+            button_reply.button(
+                QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
+                self.stylesheet)
+            button_reply.exec_()
+
+        # Close progress window
+        self.suv2roi_progress_window.close()
