@@ -2,13 +2,16 @@ import numpy as np
 from PySide6 import QtGui, QtCore
 
 import src.constants as constant
+import pydicom
 
 
-def convert_raw_data(ds):
+def convert_raw_data(ds, rescaled=True, is_ct=0):
     """
     Convert the raw pixel data to readable pixel data in every image dataset
-
     :param ds: A dictionary of datasets of all the DICOM files of the patient
+    :param rescaled: A boolean to determine if the data has already
+    been rescaled
+    :param is_ct: Boolean to determine if data is CT for rescaling
     :return: np_pixels, a list of pixel arrays of all slices of the patient
     """
     non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
@@ -23,9 +26,46 @@ def convert_raw_data(ds):
                 # dataset of current slice
                 np_tmp = ds[key]
                 np_tmp.convert_pixel_data()
+                if not rescaled:
+                    # Perform the rescale
+                    data_arr = np_tmp._pixel_array
+                    slope, intercept = get_rescale(np_tmp, is_ct)
+                    data_arr = (data_arr*slope + intercept)
+                    # Store the rescaled data
+                    ds[key]._pixel_array = data_arr
                 np_pixels.append(np_tmp._pixel_array)
-
     return np_pixels
+
+
+def get_rescale(np_tmp, is_ct):
+    """
+    For an image, grabs the rescale slope and rescale intercept
+    :param np_tmp: an image
+    :param is_ct: boolean to determine if axis rescale is necessary for
+    CT images
+    :return: the slope and y-intercept of the rescaling
+    """
+    slope = 1
+    intercept = 0
+    if 'RescaleSlope' in np_tmp:
+        if isinstance(np_tmp.RescaleSlope, pydicom.valuerep.DSfloat):
+            slope = np_tmp.RescaleSlope
+        elif isinstance(np_tmp.RescaleSlope,
+                        pydicom.multival.MultiValue):
+            slope = np_tmp.RescaleSlope[1]
+
+    if 'RescaleIntercept' in np_tmp:
+        if isinstance(np_tmp.RescaleIntercept,
+                      pydicom.valuerep.DSfloat):
+            intercept = int(np_tmp.RescaleIntercept)
+        elif isinstance(np_tmp.RescaleIntercept,
+                        pydicom.multival.MultiValue):
+            intercept = int(np_tmp.RescaleIntercept[1])
+
+    if is_ct:
+        intercept += constant.CT_RESCALE_INTERCEPT
+
+    return slope, intercept
 
 
 def get_img(pixel_array):
