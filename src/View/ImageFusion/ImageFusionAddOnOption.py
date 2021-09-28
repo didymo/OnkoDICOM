@@ -319,18 +319,14 @@ class ImageFusionOptions(object):
 
         # Shrink_factors is stored as a list in JSON convert the list into
         # a string.
-        shrink_factor_list_json = ''.join(str(e) for e in self.dict[
+        shrink_factor_list_json = ', '.join(str(e) for e in self.dict[
             "shrink_factors"])
-        print('Shrink Factor List')
-        print(shrink_factor_list_json)
         self.shrink_factor_qLineEdit.setText(shrink_factor_list_json)
 
         # Since smooth_sigma is stored as a list in JSON convert the list
         # into a string.
-        smooth_sigma_list_json = ''.join(str(e) for e in self.dict[
+        smooth_sigma_list_json = ', '.join(str(e) for e in self.dict[
             "smooth_sigmas"])
-        print('Smooth Sigma List')
-        print(smooth_sigma_list_json)
         self.smooth_sigmas_qLineEdit.setText(smooth_sigma_list_json)
 
         msg = ""
@@ -367,17 +363,32 @@ class ImageFusionOptions(object):
 
         # TO DO: Add in checks to ensure values are correct.
 
-        self.dict["reg_method"] = self.reg_method_comboBox.currentIndex()
-        self.dict["metric"] = self.metric_comboBox.currentIndex()
-        self.dict["optimiser"] = self.optimiser_comboBox.currentIndex()
-        self.dict[
-            "shrink_factors"] = self.shrink_factor_qLineEdit.text().split()
-        self.dict[
-            "smooth_sigmas"] = self.smooth_sigmas_qLineEdit.text().split()
+        self.dict["reg_method"] = str(self.reg_method_comboBox.currentText())
+        self.dict["metric"] = str(self.metric_comboBox.currentText())
+        self.dict["optimiser"] = str(self.optimiser_comboBox.currentText())
+
+        a_string = self.shrink_factor_qLineEdit.text().split(", ")
+        a_int = list(map(int, a_string))
+        self.dict["shrink_factors"] = a_int
+
+        a_string = self.smooth_sigmas_qLineEdit.text().split(", ")
+        a_int = list(map(int, a_string))
+        self.dict["smooth_sigmas"] = a_int
+
         self.dict["sampling_rate"] = self.sampling_rate_spinBox.value()
         self.dict["final_interp"] = self.interp_order_spinbox.value()
         self.dict[
             "number_of_iterations"] = self.no_of_iterations_spinBox.value()
         self.dict["default_value"] = self.default_number_spinBox.value()
-        print(self.dict)
+
         return self.dict
+
+    def check_parameter(self):
+        len_smooth_sigmas = len(self.dict["smooth_sigmas"])
+        len_shrink_factor = len(self.dict["shrink_factors"])
+        print('Check length of parameters')
+        print(len_smooth_sigmas)
+        print(len_shrink_factor)
+        if len_smooth_sigmas != len_shrink_factor:
+            print('Raise an error')
+            raise ValueError

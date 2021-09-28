@@ -114,7 +114,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "short_name": "Clinical Data CSV File",
             },
             {
-                "level":0,
+                "level": 0,
                 "dbID": 600,
                 "parent_ID": 6,
                 "short_name": "Image Fusion",
@@ -435,8 +435,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
             new_clinical_data_csv_dir = \
-                self.clinical_data_csv_dir_options.\
-                clinical_data_csv_dir_input_box.text()
+                self.clinical_data_csv_dir_options. \
+                    clinical_data_csv_dir_input_box.text()
             configuration.update_clinical_data_csv_dir(
                 new_clinical_data_csv_dir)
         except SqlError:
@@ -447,10 +447,21 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "Failed to update default directory.\nPlease try again.")
 
         # Image Fusion
-        with open(resource_path("data/json/imageFusion.json"), "w",
-                  newline="") as outfile:
+        try:
+            json_file = open(resource_path("data/json/imageFusion.json"),
+                             "w", newline="")
+            self.image_fusion_add_on_options.check_parameter()
+
             json.dump(self.image_fusion_add_on_options.get_values_from_UI(),
-                      outfile)
+                      json_file)
+        except ValueError:
+            QMessageBox.critical(
+                self,
+                "Image Fusion Error",
+                "The number of parameters for 'Smooth_Sigmas' and "
+                "'Shrink_Factors' do not match.\nPlease try again.")
+        finally:
+            json_file.close()
 
         QMessageBox.about(
             self,
@@ -479,7 +490,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if i >= self.table_view.rowCount():
-                    self.table_view.setRowCount(self.table_view.rowCount() + 1)
+                    self.table_view.setRowCount(
+                        self.table_view.rowCount() + 1)
                 self.table_view.setItem(i, 0, items[0])
                 self.table_view.setItem(i, 1, items[1])
                 self.table_view.setItem(i, 2, items[2])
@@ -506,7 +518,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
+        with open(resource_path("data/csv/volumeName.csv"),
+                  "r") as file_input:
             i = 0
             for row in file_input:
                 items = [
@@ -563,12 +576,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         with open(resource_path("data/json/imageFusion.json"),
                   "r") as file_input:
             data = json.load(file_input)
-
             for key in data:
                 self.image_fusion_add_on_options.set_value(key, data[key])
-
-        # Debug statement
-        print(self.image_fusion_add_on_options.dict)
         self.image_fusion_add_on_options.set_gridLayout()
 
     # The following function shows a pop up window to add a new entry in

@@ -1,1 +1,1 @@
-{"reg_method": 2, "metric": 1, "optimiser": 1, "shrink_factors": ["8"], "smooth_sigmas": ["4"], "sampling_rate": 0.25, "final_interp": 2, "number_of_iterations": 50, "default_value": -1000}
+{"reg_method": "translation", "metric": "mean_squares", "optimiser": "gradient_descent", "shrink_factors": [8], "smooth_sigmas": [4, 2], "sampling_rate": 0.25, "final_interp": 2, "number_of_iterations": 50, "default_value": -1000}

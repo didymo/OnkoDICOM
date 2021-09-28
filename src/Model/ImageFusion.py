@@ -1,5 +1,6 @@
 from PySide6 import QtCore, QtGui
 
+import json
 import numpy as np
 import SimpleITK as sitk
 import datetime
@@ -381,26 +382,40 @@ def register_images(image_1, image_2):
     """
 
     # Check to see if the imageWindowing.csv file exists
-    if os.path.exists(resource_path('data/csv/imageFusion.csv')):
+    if os.path.exists(resource_path('data/json/imageFusion.json')):
         # If it exists, read data from file into the dictionary
-        # variable
-        dict_fusion = {}
-        with open(resource_path("data/csv/imageFusion.csv"),
+        with open(resource_path("data/json/imageFusion.json"),
                   "r") as file_input:
-            for row in file_input:
-                items = [
-                    str(item.replace("\n", ""))
-                    for item in row.split(",")
-                ]
-                dict_fusion[items[0]] = items[1]
+            dict_fusion = json.load(file_input)
 
-        print(dict_fusion)
+        # # Convert the list of char to list of int for SITK function
+        # print('Shrink Factors in Image Fusion Model')
+        # print('Before conversion')
+        # print(dict_fusion["shrink_factors"])
+        # dict_fusion["shrink_factors"] = list(
+        #     map(int, dict_fusion["shrink_factors"]))
+        # print('After conversion')
+        # print(dict_fusion["shrink_factors"])
+        #
+        # # Convert the list of char to list of int for SITK function
+        # print('Smooth Sigmas in Image Fusion Model')
+        # print(dict_fusion["smooth_sigmas"])
+        # dict_fusion["smooth_sigmas"] = list(
+        #     map(int, dict_fusion["smooth_sigmas"]))
+        # print(dict_fusion["smooth_sigmas"])
+
         img_ct, tfm = linear_registration(
             image_1,
             image_2,
-            shrink_factors=[8],
-            smooth_sigmas=[10],
-            reg_method='rigid',
+            reg_method=dict_fusion["reg_method"],
+            metric=dict_fusion["metric"],
+            optimiser=dict_fusion["optimiser"],
+            shrink_factors=dict_fusion["shrink_factors"],
+            smooth_sigmas=dict_fusion["smooth_sigmas"],
+            sampling_rate=dict_fusion["sampling_rate"],
+            final_interp=dict_fusion["final_interp"],
+            number_of_iterations=dict_fusion["number_of_iterations"],
+            default_value=dict_fusion["default_value"],
             verbose=False
         )
     else:
