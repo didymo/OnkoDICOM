@@ -121,17 +121,21 @@ def test_add_to_roi():
     image_ds.SOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
     image_ds.SOPInstanceUID = "1.2.3.4.5.6.7.8.9"
     patient_dict_container = PatientDictContainer()
-    # container has to be initialised with kwargs content for the get/set to not fail for lack of an
-    # "additional_parameters" dict.
-    patient_dict_container.set_initial_values(None, None, None, blah="blah", rois={})
+    # container has to be initialised with kwargs content
+    # for the get/set to not fail for lack of an "additional_parameters" dict.
+    patient_dict_container.set_initial_values(None, None, None,
+                                              blah="blah", rois={})
     if patient_dict_container.get("rois") is not None:
         print("rois are present in patient dict container")
     updated_rtss = create_roi(rt_ss, roi_name,
                               [{'coords': roi_coordinates, 'ds': image_ds}])
     # clearly the above is an opportunity to factor out to a fixture or similar
-    rtss_with_added_roi = add_to_roi(updated_rtss, roi_name, roi_coordinates, image_ds)
-    first_contour = rtss_with_added_roi.ROIContourSequence[0].ContourSequence[0]
-    second_contour = rtss_with_added_roi.ROIContourSequence[0].ContourSequence[1]
+    rtss_with_added_roi = add_to_roi(updated_rtss, roi_name,
+                                     roi_coordinates, image_ds)
+    first_contour = rtss_with_added_roi.ROIContourSequence[0].\
+        ContourSequence[0]
+    second_contour = rtss_with_added_roi.ROIContourSequence[0].\
+        ContourSequence[1]
     assert (
         second_contour
         .ContourImageSequence[0]
@@ -155,14 +159,16 @@ def test_create_roi():
     rt_ss.RTROIObservationsSequence = []
 
     roi_name = "NewTestROI"
-    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]  # a closed right triangle
+    # a closed right triangle
+    roi_coordinates = [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
     image_ds = dataset.Dataset()
     image_ds.SOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
     image_ds.SOPInstanceUID = "1.2.3.4.5.6.7.8.9"
     patient_dict_container = PatientDictContainer()
-    # container has to be initialised with kwargs content for the get/set to not fail for lack of an
-    # "additional_parameters" dict.
-    patient_dict_container.set_initial_values(None, None, None, blah="blah", rois={})
+    # container has to be initialised with kwargs content
+    # for the get/set to not fail for lack of an "additional_parameters" dict.
+    patient_dict_container.set_initial_values(None, None, None,
+                                              blah="blah", rois={})
     if patient_dict_container.get("rois") is not None:
         print("rois are present in patient dict container")
     updated_rtss = create_roi(rt_ss, roi_name,
@@ -179,20 +185,29 @@ def test_create_roi():
 
 
 def test_roi_to_geometry(test_object):
-    roi_names = [roi['name'] for roi in test_object.patient_dict_container.get("rois").values()
+    roi_names = [roi['name']
+                 for roi in test_object.
+                     patient_dict_container.get("rois").values()
                  if 'ISO' not in roi['name']]
-    dict_rois_contours = get_roi_contour_pixel(test_object.patient_dict_container.get("raw_contour"),
-                                               roi_names, test_object.patient_dict_container.get("pixluts"))
+    dict_rois_contours = get_roi_contour_pixel(test_object.
+                                               patient_dict_container.
+                                               get("raw_contour"),
+                                               roi_names,
+                                               test_object.
+                                               patient_dict_container.
+                                               get("pixluts"))
     for roi_name in roi_names:
         roi_geometry = roi_to_geometry(dict_rois_contours[roi_name])
         for slice_id, geometry in roi_geometry.items():
             if geometry.geom_type == "Polygon":
-                assert len(geometry.exterior.coords) - len(dict_rois_contours[roi_name][slice_id][0]) <= 1
+                assert len(geometry.exterior.coords) - \
+                       len(dict_rois_contours[roi_name][slice_id][0]) <= 1
             else:
                 for i in range(len(geometry)):
                     if geometry.geom_type == "Polygon":
                         assert len(geometry[i].exterior.coords) - \
-                               len(dict_rois_contours[roi_name][slice_id][i]) <= 1
+                               len(dict_rois_contours[roi_name][slice_id][i]) \
+                               <= 1
 
 
 def test_roi_manipulation(test_object):
@@ -206,7 +221,8 @@ def test_roi_manipulation(test_object):
 
     union_result = manipulate_rois(lung_r_geometry, heart_geometry, "UNION")
     result_contours = geometry_to_roi(union_result)
-    assert len(result_contours.keys()) == len(dict_rois_contours['LUNG_R'].keys())
+    assert len(result_contours.keys()) == \
+           len(dict_rois_contours['LUNG_R'].keys())
 
 
 def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):

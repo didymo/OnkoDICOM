@@ -44,8 +44,10 @@ class UIManipulateROIWindow:
         self.new_ROI_contours = None
         self.manipulate_roi_window_instance = manipulate_roi_window_instance
 
-        self.dicom_view = DicomAxialView(metadata_formatted=True)
-        self.dicom_preview = DicomAxialView(metadata_formatted=True)
+        self.dicom_view = DicomAxialView(metadata_formatted=True,
+                                         is_four_view=True)
+        self.dicom_preview = DicomAxialView(metadata_formatted=True,
+                                            is_four_view=True)
         self.dicom_view.slider.valueChanged.connect(
             self.dicom_view_slider_value_changed)
         self.dicom_preview.slider.valueChanged.connect(
@@ -357,9 +359,15 @@ class UIManipulateROIWindow:
             self.manipulate_roi_window_instance)
 
     def dicom_view_slider_value_changed(self):
+        """
+        Display selected ROIs in dropbox when moving to another image slice
+        """
         self.display_selected_roi()
 
     def dicom_preview_slider_value_changed(self):
+        """
+        Display generated ROI when moving to another image slice
+        """
         self.draw_roi()
 
     def onCancelButtonClicked(self):
@@ -551,6 +559,7 @@ class UIManipulateROIWindow:
             self.update_selected_rois()
 
     def roi_saved(self, new_rtss):
+        """ Create a new ROI in Structure Tab and notify user """
         new_roi_name = self.new_roi_name_line_edit.text()
         self.signal_roi_manipulated.emit((new_rtss, {"draw": new_roi_name}))
         QMessageBox.about(self.manipulate_roi_window_instance, "Saved",

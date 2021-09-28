@@ -1,6 +1,7 @@
 import collections
 import datetime
 import random
+import logging
 from copy import deepcopy
 from pathlib import Path
 import pydicom
@@ -19,6 +20,9 @@ from src.constants import DEFAULT_WINDOW_SIZE
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Transform import inv_linear_transform
+
+# Disable INFO logging of shapely
+logging.getLogger('shapely.geos').setLevel(logging.CRITICAL)
 
 
 def rename_roi(rtss, roi_id, new_name):
@@ -522,6 +526,14 @@ def calculate_pixels_sagittal(pixlut, contour, prone=False, feetfirst=False):
 
 
 def convert_hull_list_to_contours_data(rois_to_save, patient_dict_container):
+    """
+    Convert list of border coordinates from each slice
+    into valid contour data to be saved in rtss
+    :param rois_to_save: dictionary of hull coordinates for each slice
+    :param patient_dict_container: Dictionary container for
+    base image or moving image
+    :return: list of contour data
+    """
     roi_list = []
     if rois_to_save == {}:
         return []
@@ -539,9 +551,17 @@ def convert_hull_list_to_contours_data(rois_to_save, patient_dict_container):
     return roi_list
 
 
-def convert_hull_to_single_array_of_rcs(patient_dict_container, contour_data,
+def convert_hull_to_single_array_of_rcs(patient_dict_container, pixel_hull,
                                         slider_id):
-    hull = convert_hull_to_rcs(patient_dict_container, contour_data, slider_id)
+    """
+    Convert border coordinate to contour data for one slice
+    :param patient_dict_container: Dictionary container for
+    base image or moving image
+    :param pixel_hull: dictionary of hull coordinates for each slice
+    :param slider_id: UID of image slice
+    :return: list of contour data
+    """
+    hull = convert_hull_to_rcs(patient_dict_container, pixel_hull, slider_id)
 
     # Convert the polygon's pixel points to RCS locations.
     single_array = []
@@ -1035,15 +1055,17 @@ def renumber_roi_number(sequence):
 def roi_to_geometry(dict_rois_contours):
     """
     Convert ROI contour data in each image slice to a geometry object
-    :param dict_rois_contours: A dictionary with key-value pair {slice-uid: contour sequence}
+    :param dict_rois_contours: A dictionary with key-value pair
+    {slice-uid: contour sequence}
     :return: A dictionary with key-value pair {slice-uid: Geometry object}
     """
     dict_geometry = {}
 
     for slice_uid, contour_sequence in dict_rois_contours.items():
         # convert contour data to polygon omitting data with less than 3 points
-        polygon_list = [Polygon(contour_data) for contour_data in
-                        contour_sequence if len(contour_data) >= 3]
+        polygon_list = [Polygon(contour_data)
+                        for contour_data in contour_sequence
+                        if len(contour_data) >= 3]
         result_geometry = make_valid(MultiPolygon(polygon_list))
         dict_geometry[slice_uid] = result_geometry
 
@@ -1072,8 +1094,9 @@ def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
         first_geometry = first_geometry_dict.get(slice_uid, Polygon())
         second_geometry = second_geometry_dict.get(slice_uid, Polygon())
         try:
-            result_geometry_dict[slice_uid] = geometry_manipulation[operation](
-                first_geometry, second_geometry)
+            result_geometry_dict[slice_uid] = \
+                geometry_manipulation[operation](first_geometry,
+                                                 second_geometry)
         except KeyError:
             raise Exception("Invalid operation string")
     return result_geometry_dict
@@ -1083,7 +1106,8 @@ def scale_roi(geometry_dict, millimetres):
     """
     Scale the ROI using millimetres as the unit of measurement
     :param geometry_dict: The geometry dictionary of the ROI
-    :param millimetres: int, positive means expansion, negative means contraction
+    :param millimetres: int,
+    positive means expansion, negative means contraction
     :return: A dictionary with key-value pair {slice-uid: Geometry Object}
     """
     pixel_spacing = PatientDictContainer().dataset[0].PixelSpacing[0]
@@ -1102,7 +1126,8 @@ def rind_roi(geometry_dict, millimetres):
     """
     Create Inner/Outer Rind for ROI
     :param geometry_dict: The geometry dictionary of the ROI
-    :param millimetres: int, positive means outer rind, negative means inner rind
+    :param millimetres: int, positive means outer rind,
+    negative means inner rind
     :return: A dictionary with key-value pair {slice-uid: Geometry Object}
     """
     new_roi_dict = scale_roi(geometry_dict, millimetres)
@@ -1112,10 +1137,12 @@ def rind_roi(geometry_dict, millimetres):
         orig_geometry = geometry_dict.get(slice_uid)
         new_geometry = new_roi_dict.get(slice_uid)
         # Create 2 polygons with one nested inside the other
-        polygon_list = list([
-                                orig_geometry] if orig_geometry.geom_type == 'Polygon' else orig_geometry) + \
-                       list([
-                                new_geometry] if new_geometry.geom_type == 'Polygon' else new_geometry)
+        polygon_list = list([orig_geometry]
+                            if orig_geometry.geom_type == 'Polygon'
+                            else orig_geometry) + \
+                       list([new_geometry]
+                            if new_geometry.geom_type == 'Polygon'
+                            else new_geometry)
         result_geometry = GeometryCollection(polygon_list)
         result_geometry_dict[slice_uid] = result_geometry
 
@@ -1132,19 +1159,21 @@ def geometry_to_roi(geometry_dict):
     for slice_id, geometry in geometry_dict.items():
         contour_sequence = []
         if geometry.geom_type == 'Polygon' and not geometry.is_empty:
-            contour_data = [list(map(int, coord)) for coord in
-                            geometry.exterior.coords]
+            contour_data = [list(map(int, coord))
+                            for coord in geometry.exterior.coords]
             contour_sequence.append(contour_data)
         elif geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
             for sub_geometry in geometry:
                 contour_data = []
-                if sub_geometry.geom_type == 'Polygon' and not sub_geometry.is_empty:
-                    contour_data = [list(map(int, coord)) for coord in
-                                    sub_geometry.exterior.coords]
-                # It is possible for MultiPolygon to be inside GeometryCollection
+                if sub_geometry.geom_type == 'Polygon' \
+                        and not sub_geometry.is_empty:
+                    contour_data = [list(map(int, coord))
+                                    for coord in sub_geometry.exterior.coords]
+                # It is possible for MultiPolygon to be inside
+                # GeometryCollection
                 elif sub_geometry.geom_type == 'MultiPolygon':
-                    contour_data = [list(map(int, coord)) for polygon in
-                                    sub_geometry
+                    contour_data = [list(map(int, coord))
+                                    for polygon in sub_geometry
                                     for coord in polygon.exterior.coords]
                 if contour_data:
                     contour_sequence.append(contour_data)
