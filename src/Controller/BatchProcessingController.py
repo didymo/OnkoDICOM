@@ -114,14 +114,11 @@ class BatchProcessingController:
 
                     image = list(series.images.values())[0]
                     class_id = image.class_id
-                    series_size = len(series.images)
 
-                    if cur_patient_files.get(class_id):
-                        if len(cur_patient_files.get(class_id).images) \
-                                < series_size:
-                            cur_patient_files[class_id] = series
-                    else:
-                        cur_patient_files[class_id] = series
+                    if class_id not in cur_patient_files:
+                        cur_patient_files[class_id] = []
+
+                    cur_patient_files[class_id].append(series)
 
         return cur_patient_files
 

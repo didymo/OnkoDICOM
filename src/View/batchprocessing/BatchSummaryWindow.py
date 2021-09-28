@@ -80,7 +80,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                     summary_text += "Completed " + process.upper()
                 # Skipped due to missing files
                 elif patient_summary[process] == "SKIP":
-                    summary_text += process.upper \
+                    summary_text += process.upper() \
                         + " skipped as one or more required files missing"
                 # Process interrupted
                 elif patient_summary[process] == "INTERRUPT":
