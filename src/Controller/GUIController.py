@@ -1,5 +1,4 @@
 from shutil import which
-import os
 
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
@@ -16,6 +15,9 @@ from src.Controller.PathHandler import resource_path
 from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
 from src.Model.MovingModel import read_images_for_fusion
 from src.Model.MovingDictContainer import MovingDictContainer
+
+from src.View.PTCTFusion.OpenPTCTPatientWindow import UIOpenPTCTPatientWindow
+from src.Model.PTCTDictContainer import PTCTDictContainer
 
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
@@ -103,6 +105,22 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
         self.go_next_window.emit(progress_window)
 
 
+class OpenPTCTPatientWindow(QtWidgets.QMainWindow, UIOpenPTCTPatientWindow):
+    go_next_window = QtCore.Signal(object)
+
+    def __init__(self, directory_in):
+        QtWidgets.QMainWindow.__init__(self)
+        self.setup_ui(self)
+        self.patient_info_initialized.connect(self.open_patient)
+        if directory_in is not None:
+            self.filepath = directory_in
+            self.open_patient_directory_input_box.setText(directory_in)
+            self.scan_directory_for_patient()
+
+    def open_patient(self, progress_window):
+        self.go_next_window.emit(progress_window)
+
+
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.Signal()
@@ -110,6 +128,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     run_pyradiomics = QtCore.Signal(str, dict, str)
     # When the image fusion button is pressed
     image_fusion_signal = QtCore.Signal()
+    # When pt/ct button is pressed
+    pt_ct_signal = QtCore.Signal()
 
     # Initialising the main window and setting up the UI
     def __init__(self):
@@ -121,6 +141,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
+        self.pet_ct_tab.load_pt_ct_signal.connect(self.initialise_pt_ct)
 
     def update_ui(self):
         create_initial_model()
@@ -132,6 +153,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
+
+    def initialise_pt_ct(self):
+        self.pt_ct_signal.emit()
+
+    def load_pt_ct_tab(self):
+        if not self.pet_ct_tab.initialised:
+            self.pet_ct_tab.load_pet_ct()
+            self.right_panel.setCurrentWidget(self.pet_ct_tab)
 
     def open_new_patient(self):
         """
@@ -153,7 +182,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         mvd = MovingDictContainer()
         if not mvd.is_empty():
             read_images_for_fusion()
-            # self.create_image_fusion_tab()
+            self.create_image_fusion_tab()
 
     def pyradiomics_handler(self, path, filepaths, hashed_path):
         """
@@ -205,6 +234,9 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
+
+        pt_ct_dict_container = PTCTDictContainer()
+        pt_ct_dict_container.clear()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()

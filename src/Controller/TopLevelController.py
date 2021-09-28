@@ -1,7 +1,8 @@
 from PySide6 import QtWidgets
 
 from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
-    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow, ImageFusionWindow
+    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow, ImageFusionWindow, \
+    OpenPTCTPatientWindow
 
 
 class Controller:
@@ -17,6 +18,7 @@ class Controller:
         self.default_directory = default_directory
 
         self.image_fusion_window = QtWidgets.QMainWindow()
+        self.pt_ct_window = QtWidgets.QMainWindow()
         # the executable icon
 
     def show_first_time_welcome(self):
@@ -77,6 +79,7 @@ class Controller:
             self.main_window.open_patient_window.connect(
                 self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
+            self.main_window.pt_ct_signal.connect(self.show_pt_ct_select_window)
 
             # Connect the signal from GUIController
             self.main_window.image_fusion_signal.connect(
@@ -89,7 +92,10 @@ class Controller:
                 ("Registering Images...\nThis may take a few minutes.", 
                 90))
             self.main_window.update_image_fusion_ui()
-            
+
+        if isinstance(self.pt_ct_window, OpenPTCTPatientWindow):
+            progress_window.update_progress(("Loading Viewer", 90))
+            self.main_window.load_pt_ct_tab()
 
         # Once the MainWindow has finished loading (which takes some
         # time), close all the other open windows.
@@ -98,6 +104,7 @@ class Controller:
         self.main_window.show()
         self.open_patient_window.close()
         self.image_fusion_window.close()
+        self.pt_ct_window.close()
 
 
     def show_pyradi_progress(self, path, filepaths, target_path):
@@ -127,3 +134,8 @@ class Controller:
             self.image_fusion_window.update_ui()
 
         self.image_fusion_window.show()
+
+    def show_pt_ct_select_window(self):
+        self.pt_ct_window = OpenPTCTPatientWindow(self.default_directory)
+        self.pt_ct_window.go_next_window.connect(self.show_main_window)
+        self.pt_ct_window.show()

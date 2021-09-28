@@ -1,4 +1,3 @@
-import glob
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
@@ -21,7 +20,7 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
-from src.View.mainpage.PETCTView import PetCtView
+from src.View.PTCTFusion.PETCTView import PetCtView
 from src.View.ProgressWindow import ProgressWindow
 
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
@@ -256,7 +255,8 @@ class UIMainWindow:
             self.dvh_tab.update_plot()
 
         if hasattr(self, 'pet_ct_tab'):
-            self.pet_ct_tab.update_view()
+            if self.pet_ct_tab.initialised:
+                self.pet_ct_tab.update_view()
 
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view_axial is not None:

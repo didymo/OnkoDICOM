@@ -5,7 +5,7 @@ import src.constants as constant
 import pydicom
 
 
-def convert_raw_data(ds, rescaled=True, is_ct=0):
+def convert_raw_data(ds, rescaled=True, is_ct=False):
     """
     Convert the raw pixel data to readable pixel data in every image dataset
     :param ds: A dictionary of datasets of all the DICOM files of the patient
