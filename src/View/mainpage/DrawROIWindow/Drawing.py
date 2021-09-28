@@ -51,7 +51,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.pixel_array = None
         self.pen = QtGui.QPen(QtGui.QColor("yellow"))
         self.pen.setStyle(QtCore.Qt.DashDotDotLine)
-        # This will contain the new pixel coordinates specifed by the min
+        # This will contain the new pixel coordinates specified by the min
         # and max pixel density
         self.target_pixel_coords = target_pixel_coords
         self.according_color_dict = {}
