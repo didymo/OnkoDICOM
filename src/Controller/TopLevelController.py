@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 
 from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
-    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow
+    MainWindow, PyradiProgressBar, FirstTimeWelcomeWindow, ImageFusionWindow
 
 
 class Controller:
@@ -15,6 +15,8 @@ class Controller:
         self.pyradi_progressbar = QtWidgets.QWidget()
         # This will contain a filepath of a folder that is dragged onto
         self.default_directory = default_directory
+
+        self.image_fusion_window = QtWidgets.QMainWindow()
         # the executable icon
 
     def show_first_time_welcome(self):
@@ -60,6 +62,9 @@ class Controller:
 
         self.open_patient_window.show()
 
+        # Run check_selected_items() upon open patient window is shown
+        self.open_patient_window.check_selected_items()
+
     def show_main_window(self, progress_window):
         """
         Displays the main patient window after completing the loading.
@@ -72,15 +77,28 @@ class Controller:
             self.main_window.open_patient_window.connect(
                 self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
+
+            # Connect the signal from GUIController
+            self.main_window.image_fusion_signal.connect(
+                self.show_image_fusion_select_window)
         else:
             self.main_window.update_ui()
 
-        # Once the MainWindow has finished loading (which takes some time)
-        # close all the other open windows.
+        if isinstance(self.image_fusion_window, ImageFusionWindow):
+            progress_window.update_progress(
+                ("Registering Images...\nThis may take a few minutes.", 
+                90))
+            self.main_window.update_image_fusion_ui()
+            
+
+        # Once the MainWindow has finished loading (which takes some
+        # time), close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
         self.main_window.show()
         self.open_patient_window.close()
+        self.image_fusion_window.close()
+
 
     def show_pyradi_progress(self, path, filepaths, target_path):
         """
@@ -97,3 +115,15 @@ class Controller:
         Close pyradiomics progress bar
         """
         self.pyradi_progressbar.close()
+
+    def show_image_fusion_select_window(self):
+        # only initialize image fusion window
+        if not isinstance(self.image_fusion_window, ImageFusionWindow):
+            self.image_fusion_window = ImageFusionWindow(
+                self.default_directory)
+            self.image_fusion_window.go_next_window.connect(
+                self.show_main_window)
+        else:
+            self.image_fusion_window.update_ui()
+
+        self.image_fusion_window.show()

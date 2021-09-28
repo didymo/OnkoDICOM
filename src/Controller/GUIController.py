@@ -1,4 +1,5 @@
 from shutil import which
+import os
 
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
@@ -11,6 +12,10 @@ from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
 from src.Controller.PathHandler import resource_path
+
+from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
+from src.Model.MovingModel import read_images_for_fusion
+from src.Model.MovingDictContainer import MovingDictContainer
 
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
@@ -72,11 +77,39 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
         self.go_next_window.emit(progress_window)
 
 
+class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
+    go_next_window = QtCore.Signal(object)
+
+    def __init__(self, directory_in):
+        QtWidgets.QMainWindow.__init__(self)
+        self.setup_ui(self)
+        self.image_fusion_info_initialized.connect(self.open_patient)
+        self.update_patient()
+        if directory_in is not None:
+            self.filepath = directory_in
+            self.open_patient_directory_input_box.setText(directory_in)
+            self.scan_directory_for_patient()
+
+    def update_ui(self):
+        # Instantiate a local new PatientDictContainer
+        patient_dict_container = PatientDictContainer()
+        patient = patient_dict_container.get("basic_info")
+
+        # Compare local patient with previous instance of ImageFusion
+        if self.patient_id != patient['id']:
+            self.update_patient()
+        
+    def open_patient(self, progress_window):
+        self.go_next_window.emit(progress_window)
+
+
 class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.Signal()
     # When the pyradiomics button is pressed
     run_pyradiomics = QtCore.Signal(str, dict, str)
+    # When the image fusion button is pressed
+    image_fusion_signal = QtCore.Signal()
 
     # Initialising the main window and setting up the UI
     def __init__(self):
@@ -85,14 +118,20 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.setup_ui(self)
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
+        self.action_handler.action_image_fusion.triggered.connect(
+            self.open_image_fusion)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
 
     def update_ui(self):
         create_initial_model()
         self.setup_central_widget()
         self.setup_actions()
+
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)
+
+        self.action_handler.action_image_fusion.triggered.connect(
+            self.open_image_fusion)
 
     def open_new_patient(self):
         """
@@ -106,6 +145,15 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         if confirmation_dialog == QMessageBox.Yes:
             self.open_patient_window.emit()
+
+    def open_image_fusion(self):
+        self.image_fusion_signal.emit()
+
+    def update_image_fusion_ui(self):
+        mvd = MovingDictContainer()
+        if not mvd.is_empty():
+            read_images_for_fusion()
+            self.create_image_fusion_tab()
 
     def pyradiomics_handler(self, path, filepaths, hashed_path):
         """
@@ -140,6 +188,23 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container.clear()
         # Close 3d vtk widget
         self.three_dimension_view.close()
+
+        # Explicity destroy objects - the purpose of this is to clear
+        # any image fusion tabs that have been used previously.
+        # Try-catch in the event user has not prompted image-fusion.
+        try:
+            del self.image_fusion_view_coronal
+            del self.image_fusion_view_sagittal
+            del self.image_fusion_view_axial
+            del self.image_fusion_four_views_layout
+            del self.image_fusion_four_views
+            del self.image_fusion_single_view
+            del self.image_fusion_view
+        except:
+            pass
+        
+        moving_dict_container = MovingDictContainer()
+        moving_dict_container.clear()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()
@@ -208,7 +273,8 @@ class PyradiProgressBar(QtWidgets.QWidget):
         # and reaches 25
         if value == 0:
             self.label.setText("Generating nrrd file")
-        # The segmentation masks are generated between the range 25 and 50
+        # The segmentation masks are generated between the range 25 and
+        # 50
         elif value == 25:
             self.label.setText("Generating segmentation masks")
         # Above 50, pyradiomics analysis is carried out over each
@@ -218,7 +284,8 @@ class PyradiProgressBar(QtWidgets.QWidget):
         # Set the percentage value
         self.progress_bar.setValue(value)
 
-        # When the percentage reaches 100, send a signal to close progress bar
+        # When the percentage reaches 100, send a signal to close
+        # progress bar
         if value == 100:
             completion = QMessageBox.information(
                 self, "Complete", "Task has been completed successfully"

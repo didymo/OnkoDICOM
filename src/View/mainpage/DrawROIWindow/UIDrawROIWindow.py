@@ -2,8 +2,8 @@ import platform
 
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import Qt, QSize, QRegularExpression
+from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
     QMessageBox, QComboBox
@@ -62,7 +62,8 @@ class UIDrawROIWindow:
         self.upper_limit = None
         self.lower_limit = None
 
-        self.dicom_view = DicomAxialView()
+        # is_four_view is set to True to stop the SUV2ROI button from appearing
+        self.dicom_view = DicomAxialView(is_four_view=True)
         self.current_slice = self.dicom_view.slider.value()
         self.dicom_view.slider.valueChanged.connect(self.slider_value_changed)
         self.init_layout()
@@ -401,6 +402,9 @@ class UIDrawROIWindow:
         self.input_alpha_value.resize(
             self.input_alpha_value.sizeHint().width(),
             self.input_alpha_value.sizeHint().height())
+        self.input_alpha_value.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
         self.draw_roi_window_input_container_box. \
             addRow(self.label_alpha_value, self.input_alpha_value)
 
@@ -416,6 +420,9 @@ class UIDrawROIWindow:
         self.internal_hole_max_line_edit.resize(
             self.internal_hole_max_line_edit.sizeHint().width(),
             self.internal_hole_max_line_edit.sizeHint().height())
+        self.internal_hole_max_line_edit.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
         self.draw_roi_window_input_container_box.addRow(
             self.internal_hole_max_label, self.internal_hole_max_line_edit)
 
@@ -430,6 +437,9 @@ class UIDrawROIWindow:
         self.isthmus_width_max_line_edit.resize(
             self.isthmus_width_max_line_edit.sizeHint().width(),
             self.isthmus_width_max_line_edit.sizeHint().height())
+        self.isthmus_width_max_line_edit.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
         self.draw_roi_window_input_container_box.addRow(
             self.isthmus_width_max_label, self.isthmus_width_max_line_edit)
 
@@ -444,6 +454,9 @@ class UIDrawROIWindow:
         self.min_pixel_density_line_edit.resize(
             self.min_pixel_density_line_edit.sizeHint().width(),
             self.min_pixel_density_line_edit.sizeHint().height())
+        self.min_pixel_density_line_edit.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
         self.draw_roi_window_input_container_box.addRow(
             self.min_pixel_density_label, self.min_pixel_density_line_edit)
 
@@ -458,6 +471,9 @@ class UIDrawROIWindow:
         self.max_pixel_density_line_edit.resize(
             self.max_pixel_density_line_edit.sizeHint().width(),
             self.max_pixel_density_line_edit.sizeHint().height())
+        self.max_pixel_density_line_edit.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
         self.draw_roi_window_input_container_box.addRow(
             self.max_pixel_density_label, self.max_pixel_density_line_edit)
 

@@ -100,13 +100,25 @@ class RoiManipulateOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
     signal_roi_manipulated = QtCore.Signal(tuple)
 
     def __init__(self, rois, dataset_rtss, roi_color):
+        """
+        :param rois: dictionary of ROI info
+        :param dataset_rtss: RTSS pydicom dataset
+        :param roi_color: dictionary of QColor for each ROI
+        """
         super(RoiManipulateOptions, self).__init__()
         self.roi_color = roi_color
-        self.setup_ui(self, rois, dataset_rtss, roi_color, self.signal_roi_manipulated)
+        self.setup_ui(self, rois, dataset_rtss, roi_color,
+                      self.signal_roi_manipulated)
 
     def update_ui(self, rois, dataset_rtss, roi_color):
+        """
+        :param rois: dictionary of ROI info
+        :param dataset_rtss: RTSS pydicom dataset
+        :param roi_color: dictionary of QColor for each ROI
+        """
         self.roi_color = roi_color
-        self.setup_ui(self, rois, dataset_rtss, self.roi_color, self.signal_roi_manipulated)
+        self.setup_ui(self, rois, dataset_rtss, self.roi_color,
+                      self.signal_roi_manipulated)
 
 
 class ROIManipulateOption:
@@ -116,15 +128,23 @@ class ROIManipulateOption:
     """
 
     def __init__(self, structure_modified_function):
+        """
+        :param structure_modified_function: Function to modify list of ROIs on
+        Structure Tab
+        """
         super(ROIManipulateOption, self).__init__()
         self.structure_modified_function = structure_modified_function
 
     def show_roi_manipulate_options(self, roi_color):
+        """
+        Display ROI manipulate window
+        """
         patient_dict_container = PatientDictContainer()
         rois = patient_dict_container.get("rois")
         dataset_rtss = patient_dict_container.get("dataset_rtss")
         if not hasattr(self, "manipulate_window"):
-            self.manipulate_window = RoiManipulateOptions(rois, dataset_rtss, roi_color)
+            self.manipulate_window = RoiManipulateOptions(rois, dataset_rtss,
+                                                          roi_color)
             self.manipulate_window.signal_roi_manipulated.connect(
                 self.structure_modified_function)
         else:
