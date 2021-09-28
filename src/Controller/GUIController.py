@@ -154,11 +154,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
 
+        self.pet_ct_tab.load_pt_ct_signal.connect(self.initialise_pt_ct)
+
     def initialise_pt_ct(self):
         self.pt_ct_signal.emit()
 
     def load_pt_ct_tab(self):
-        if not self.pet_ct_tab.initialised:
+        pcd = PTCTDictContainer()
+        if not self.pet_ct_tab.initialised or not pcd.is_empty():
             self.pet_ct_tab.load_pet_ct()
             self.right_panel.setCurrentWidget(self.pet_ct_tab)
 
@@ -237,6 +240,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         pt_ct_dict_container = PTCTDictContainer()
         pt_ct_dict_container.clear()
+        self.pet_ct_tab.initialised = False
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()

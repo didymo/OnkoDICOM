@@ -269,7 +269,7 @@ class UIOpenPTCTPatientWindow(object):
             _translate("OpenPatientWindowInstance", "Confirm"))
 
     def exit_button_clicked(self):
-        QCoreApplication.exit(0)
+        self.close()
 
     def scan_directory_for_patient(self):
         # Reset tree view header and last patient
@@ -423,24 +423,22 @@ class UIOpenPTCTPatientWindow(object):
         selected_series_types = [checked_node.dicom_object.get_series_type()
                                  for checked_node in checked_nodes]
 
-        # Total number of selected image series
-        total_selected_image_series = selected_series_types.count('CT') + \
-                                      selected_series_types.count('MR') + \
-                                      selected_series_types.count('PT')
-
         # Check the existence of IMAGE files
         proceed = True
-        if selected_series_types.count('CT') != 1:
-            header = "Cannot proceed without a CT image."
+        header = ""
+        if selected_series_types.count('CT') > 1:
+            header = "Too many CT images selected"
             proceed = False
-        elif selected_series_types.count('PT') != 1:
-            header = "Cannot proceed without a PT image."
+        elif selected_series_types.count('CT') < 1:
+            header = "CT image not selected."
             proceed = False
-        elif not self.check_selected_items_referencing(checked_nodes):
-            # Check that selected items properly reference each other
-            header = "Selected images do not reference each other."
+        if selected_series_types.count('PT') > 1:
+            header = "Too many PT images selected"
             proceed = False
-        elif 'RTSTRUCT' in selected_series_types:
+        elif selected_series_types.count('PT') < 1:
+            header = "PT image not selected."
+            proceed = False
+        if 'RTSTRUCT' in selected_series_types:
             header = "Cannot proceed with RTSTRUCT file"
             proceed = False
         elif 'RTDOSE' in selected_series_types:
@@ -452,9 +450,10 @@ class UIOpenPTCTPatientWindow(object):
         elif 'SR' in selected_series_types:
             header = "Cannot proceed with an SR file"
             proceed = False
-
-        else:
-            header = ""
+        if not self.check_selected_items_referencing(checked_nodes):
+            # Check that selected items properly reference each other
+            header = "Selected images do not reference each other."
+            proceed = False
 
         self.open_patient_window_confirm_button.setDisabled(not proceed)
 
