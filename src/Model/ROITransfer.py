@@ -13,11 +13,15 @@ from skimage.draw import polygon
 def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
                                           struct_name_sequence,
                                           spacing_override=None):
-    """Converts a set of points from a DICOM RTSTRUCT into a mask array
+    """Converts a set of points from a DICOM RTSTRUCT into a mask array.
+    This function is modified from the function
+    platipy.dicom.io.transform_point_set_from_dicom_struct to align with
+    the specific usage of OnkoDICOM.
 
     Args:
         dicom_image (sitk.Image): The reference image
         dicom_struct (pydicom.Dataset): The DICOM RTSTRUCT
+        struct_name_sequence: the name of ROIs to be transformed
         spacing_override (list): The spacing to override. Defaults to None
 
     Returns:
@@ -69,14 +73,6 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
             logger.debug(
                 "Contour sequence empty for this structure, skipping.")
             continue
-
-        # if (
-        #         not struct_point_sequence[struct_index].ContourSequence[
-        #                 0].ContourGeometricType
-        #             == "CLOSED_PLANAR"
-        # ):
-        #     logger.debug("This is not a closed planar structure, skipping.")
-        #     continue
 
         for sl in range(
                 len(struct_point_sequence[struct_index].ContourSequence)):
