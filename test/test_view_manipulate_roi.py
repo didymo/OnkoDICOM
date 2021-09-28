@@ -1,16 +1,11 @@
 import os
 
-import pydicom
 import pytest
 from pathlib import Path
-from PySide6 import QtWidgets, QtCore
 
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.ROI import get_contour_pixel, calc_roi_polygon, \
-    create_initial_rtss_from_ct, create_roi
 from src.Model import ImageLoading
-from src.View.mainpage.StructureTab import StructureTab
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -45,8 +40,10 @@ class TestManipulateROI:
     def __init__(self):
         # Load test DICOM files
         desired_path = Path.cwd().joinpath('test', 'testdata')
-        selected_files = find_DICOM_files(desired_path)  # list of DICOM test files
-        file_path = os.path.dirname(os.path.commonprefix(selected_files))  # file path of DICOM files
+        # list of DICOM test files
+        selected_files = find_DICOM_files(desired_path)
+        # file path of DICOM files
+        file_path = os.path.dirname(os.path.commonprefix(selected_files))
         read_data_dict, file_names_dict = ImageLoading.get_datasets(
             selected_files)
 

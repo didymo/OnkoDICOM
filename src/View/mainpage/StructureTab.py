@@ -146,7 +146,8 @@ class StructureTab(QtWidgets.QWidget):
 
         icon_roi_manipulate = QtGui.QIcon()
         icon_roi_manipulate.addPixmap(
-            QtGui.QPixmap(resource_path('res/images/btn-icons/manipulate_icon.png')),
+            QtGui.QPixmap(
+                resource_path('res/images/btn-icons/manipulate_icon.png')),
             QtGui.QIcon.Normal,
             QtGui.QIcon.On
         )
@@ -219,6 +220,7 @@ class StructureTab(QtWidgets.QWidget):
         self.roi_draw_handler.show_roi_draw_options()
 
     def roi_manipulate_clicked(self):
+        """ Open ROI Manipulate Window """
         self.roi_manipulate_handler.show_roi_manipulate_options(
             self.color_dict)
 
@@ -470,7 +472,8 @@ class StructureTab(QtWidgets.QWidget):
                 existing_rtss_directory = existing_rtss_files[0]
         elif len(existing_rtss_files) > 1:
             self.display_select_rtss_window()
-            return  # This function will be called again when a RTSS is selected
+            # This function will be called again when a RTSS is selected
+            return
         else:
             existing_rtss_directory = None
 
