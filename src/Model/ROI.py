@@ -21,6 +21,13 @@ from src.Model.Transform import inv_linear_transform
 # Disable INFO logging of shapely
 logging.getLogger('shapely.geos').setLevel(logging.CRITICAL)
 
+# Dictionary of lambda functions for ROI Manipulation
+geometry_manipulation = {
+    'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
+    'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
+    'DIFFERENCE': lambda geom_1, geom_2: geom_1.difference(geom_2)
+}
+
 
 def rename_roi(rtss, roi_id, new_name):
     """
@@ -1029,13 +1036,6 @@ def roi_to_geometry(dict_rois_contours):
         dict_geometry[slice_uid] = result_geometry
 
     return dict_geometry
-
-
-geometry_manipulation = {
-    'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
-    'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
-    'DIFFERENCE': lambda geom_1, geom_2: geom_1.difference(geom_2)
-}
 
 
 def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
