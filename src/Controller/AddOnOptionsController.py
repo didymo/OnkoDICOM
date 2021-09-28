@@ -357,6 +357,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
         If APPLY is clicked, save the contents of each option and table
         into their corresponding files.
         """
+        save_flag = True
+
         # starting save
         # Saving the Windowing options
         with open(resource_path("data/csv/imageWindowing.csv"), "w",
@@ -445,39 +447,41 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self,
                 "Config file error",
                 "Failed to update default directory.\nPlease try again.")
+            save_flag = False
 
         # Image Fusion
         try:
+            image_fusion_add_on_options_values = \
+                self.image_fusion_add_on_options.get_values_from_UI()
+            self.image_fusion_add_on_options.check_parameter()
             json_file = open(resource_path("data/json/imageFusion.json"),
                              "w", newline="")
-            self.image_fusion_add_on_options.check_parameter()
-
-            json.dump(self.image_fusion_add_on_options.get_values_from_UI(),
-                      json_file)
+            json.dump(image_fusion_add_on_options_values, json_file)
         except ValueError:
             QMessageBox.critical(
                 self,
                 "Image Fusion Error",
                 "The number of parameters for 'Smooth_Sigmas' and "
                 "'Shrink_Factors' do not match.\nPlease try again.")
-        finally:
+            save_flag = False
+        else:
             json_file.close()
 
-        QMessageBox.about(
-            self,
-            "Success",
-            "Changes were successfully applied")
+        if save_flag:
+            QMessageBox.about(
+                self,
+                "Success",
+                "Changes were successfully applied")
 
-        # Close the Add-On Options Window after saving
-        if hasattr(self.window, 'structures_tab'):
-            self.window.structures_tab.init_standard_names()
-            self.window.structures_tab.update_content()
+            # Close the Add-On Options Window after saving
+            if hasattr(self.window, 'structures_tab'):
+                self.window.structures_tab.init_standard_names()
+                self.window.structures_tab.update_content()
 
-        self.close()
+            self.close()
 
     # This function populates the tables with the last known entries
     # based on the corresponding files
-
     def fill_tables(self):
         # Fill the Windowing table
         with open(resource_path("data/csv/imageWindowing.csv"),

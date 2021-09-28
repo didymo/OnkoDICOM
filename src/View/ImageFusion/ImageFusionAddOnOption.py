@@ -56,6 +56,14 @@ class ImageFusionOptions(object):
             self.moving_image = dict_tree["Study Description"][0]
 
     def set_value(self, key, value):
+        """
+        Stores values into a dictionary to the corresponding key.
+        Parameters
+        ----------
+        key (Any):
+
+        value (Any):
+        """
         self.dict[key] = value
 
     def create_view(self):
@@ -65,10 +73,20 @@ class ImageFusionOptions(object):
         self.auto_image_fusion_frame.setVisible(False)
 
     def setVisible(self, visibility):
+        """
+        Custom setVisible function that will set the visibility of the GUI.
+
+        Parameters
+        ----------
+        visibility (boolean): flag for setting the GUI to visible
+
+        """
         self.auto_image_fusion_frame.setVisible(visibility)
 
     def setupUi(self):
-
+        """
+        Constructs the GUI and sets the limit of each input field.
+        """
         # Create a vertical Widget to hold Vertical Layout
         self.vertical_layout_widget = QWidget()
         self.vertical_layout = QtWidgets.QVBoxLayout()
@@ -285,7 +303,9 @@ class ImageFusionOptions(object):
         self.auto_image_fusion_frame.setLayout(self.vertical_layout)
 
     def set_gridLayout(self):
-
+        """
+        Set the UI based on the values taken from the JSON
+        """
         # If-Elif statements for setting the dict
         # this can only be done in if-else statements.
         if self.dict["reg_method"] == "translation":
@@ -360,9 +380,10 @@ class ImageFusionOptions(object):
             self.warning_label.setText(msg)
 
     def get_values_from_UI(self):
-
-        # TO DO: Add in checks to ensure values are correct.
-
+        """
+        Sets values from the GUI to the dict that will be used to store the
+        relevant parameters to imageFusion.json.
+        """
         self.dict["reg_method"] = str(self.reg_method_comboBox.currentText())
         self.dict["metric"] = str(self.metric_comboBox.currentText())
         self.dict["optimiser"] = str(self.optimiser_comboBox.currentText())
@@ -384,11 +405,17 @@ class ImageFusionOptions(object):
         return self.dict
 
     def check_parameter(self):
+        """
+        Check the values of the smooth sigma and shrink factors of that are
+        parameters used for images fusion.
+        Returns
+        -------
+
+        """
+        # Check if the smooth sigma and shrink factor values match in terms
+        # of lengths. Otherwise, SITK.Execute() cannot perform with lengths
+        # that do not match.
         len_smooth_sigmas = len(self.dict["smooth_sigmas"])
         len_shrink_factor = len(self.dict["shrink_factors"])
-        print('Check length of parameters')
-        print(len_smooth_sigmas)
-        print(len_shrink_factor)
         if len_smooth_sigmas != len_shrink_factor:
-            print('Raise an error')
             raise ValueError
