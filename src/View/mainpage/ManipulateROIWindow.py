@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, 
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
-from src.View.util.SaveROIs import connectSaveROIProgress
+from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path

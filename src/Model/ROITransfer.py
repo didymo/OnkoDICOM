@@ -9,7 +9,9 @@ from loguru import logger
 from platipy.dicom.io.rtstruct_to_nifti import fix_missing_data
 from skimage.draw import polygon
 
-def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name_sequence,
+
+def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
+                                          struct_name_sequence,
                                           spacing_override=None):
     """Converts a set of points from a DICOM RTSTRUCT into a mask array
 
@@ -42,7 +44,6 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
     for index, roi_name in enumerate(all_name_sequence):
         if roi_name in struct_name_sequence:
             roi_indexes[roi_name] = index
-
 
     struct_list = []
     final_struct_name_sequence = []
@@ -106,7 +107,8 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct, struct_name
 
             if z_index >= dicom_image.GetSize()[2]:
                 logger.debug(
-                    "Warning: Slice index greater than image size. Skipping slice.")
+                    "Warning: Slice index greater than image size. Skipping "
+                    "slice.")
                 logger.debug("Structure:   {0}".format(struct_name))
                 logger.debug("Slice index: {0}".format(z_index))
                 continue

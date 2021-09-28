@@ -14,3 +14,11 @@ def connectSaveROIProgress(window, roi_list, rtss, new_roi_name,
     progress_window.signal_roi_saved.connect(roi_saved_signal)
     progress_window.start_saving(rtss, new_roi_name, roi_list)
     progress_window.show()
+
+
+def check_interrupt_flag(interrupt_flag):
+    if interrupt_flag.is_set():
+        # TODO: convert print to logging
+        print("Stopped ROITransfer")
+        return False
+    return True
