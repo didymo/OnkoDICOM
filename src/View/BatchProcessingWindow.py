@@ -3,6 +3,8 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
+    ClinicalDataSR2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 
 
@@ -112,9 +114,12 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
+                               "ClinicalData-SR2CSV")
 
         # == Bottom widgets
         # Info text
@@ -242,7 +247,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi']
+        processes = ['iso2roi', 'clinicaldatasr2csv']
         selected_processes = []
 
         # Get the selected processes
@@ -253,7 +258,11 @@ class UIBatchProcessingWindow(object):
         # Save the changed settings
         self.iso2roi_tab.save_isodoses()
 
-        file_directories = {"batch_path": self.file_path}
+        file_directories = {
+            "batch_path": self.file_path,
+            'clinical_data_output_path':
+                self.clinicaldatasr2csv_tab.get_csv_output_location()
+        }
 
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)

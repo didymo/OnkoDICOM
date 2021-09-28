@@ -81,7 +81,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 # Skipped due to missing files
                 elif patient_summary[process] == "SKIP":
                     summary_text += process.upper() \
-                        + " skipped as one or more required files missing"
+                        + " skipped as one or more required files missing."
                 # Process interrupted
                 elif patient_summary[process] == "INTERRUPT":
                     summary_text += process.upper() \
@@ -90,10 +90,14 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
+                elif patient_summary[process] == "CD_NO_SR":
+                    summary_text += process.upper() \
+                        + " skipped as no SR with clinical data was found."
                 summary_text += "\n"
             summary_text += "\n"
 
         # Set summary text
+        self.summary_label.setWordWrap(True)
         self.summary_label.setText(summary_text)
 
     def export_button_clicked(self):
