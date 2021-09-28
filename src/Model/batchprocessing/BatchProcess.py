@@ -152,9 +152,11 @@ class BatchProcess:
                 if slice_name == 'rtss' and rtss_found:
                     continue
 
-                # Check to see if we have found the right RTSS
+                # Check to see if we have found the right RTSS - only if
+                # we have at least one image in the read_data_dict.
                 if slice_name == 'rtss' \
-                        and "ReferencedFrameOfReferenceSequence" in read_file:
+                        and "ReferencedFrameOfReferenceSequence" in read_file \
+                        and 0 in list(read_data_dict.keys()):
                     ref_frame = read_file.ReferencedFrameOfReferenceSequence
                     if "RTReferencedStudySequence" in ref_frame[0]:
                         ref_study = ref_frame[0].RTReferencedStudySequence[0]
@@ -168,6 +170,22 @@ class BatchProcess:
                                 if ref_image_series_uid \
                                         == read_data_dict[0].SeriesInstanceUID:
                                     rtss_found = True
+
+                # Add RTSS if there is an RTDOSE
+                elif slice_name == 'rtss' \
+                        and 'rtdose' in list(read_data_dict.keys()):
+                    rtss_found = True
+                    read_data_dict['rtss'] = read_file
+                    file_names_dict['rtss'] = file
+                    continue
+
+                # Add RTSS if there are no images (should never be the case,
+                # but can't hurt to account for it).
+                elif slice_name == 'rtss' and len(read_data_dict) == 0:
+                    rtss_found = True
+                    read_data_dict['rtss'] = read_file
+                    file_names_dict['rtss'] = file
+                    continue
 
                 # Continue if we have found an RTSS but it is not
                 # the right one
