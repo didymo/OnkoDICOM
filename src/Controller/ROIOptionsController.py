@@ -174,6 +174,12 @@ class ROITransferOption:
             moving_dict_structure_modified_function
 
     def show_roi_transfer_options(self):
+        """
+
+        function to display ROI Transfer window when
+        ROI Transfer button is clicked.
+
+        """
         self.roi_transfer_option_pop_up_window = ROITransferOptionUI()
         self.roi_transfer_option_pop_up_window. \
             signal_roi_transferred_to_moving_container\

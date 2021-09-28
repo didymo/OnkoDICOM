@@ -789,6 +789,7 @@ def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
         Return the alpha shape of the highlighted pixels using the alpha
         entered by the user.
         :param pixel_coords: the coordinates of the contour pixels
+        :alpha: alpha value to generate hull
         :return: List of lists of points ordered to form polygon(s).
         """
     # Get all the pixels in the drawing window's list of highlighted
@@ -819,6 +820,16 @@ def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
 
 
 def ordered_list_rois(rois):
+    """
+    Generate list of rois in alphabetical order
+    Parameters
+    ----------
+    rois: list of rois
+
+    Returns
+    -------
+    list of rois sorted in alphabetical order
+    """
     res = []
     for roi_id, value in rois.items():
         res.append(roi_id)

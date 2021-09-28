@@ -15,7 +15,8 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROITransfer import transform_point_set_from_dicom_struct
 from src.View.ProgressWindow import ProgressWindow
-from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid, \
+    read_dicom_image_to_sitk
 from src.View.util.ProgressWindowHelper import check_interrupt_flag
 
 
@@ -69,6 +70,9 @@ class UITransferROIWindow:
         )
 
     def init_layout(self):
+        """
+        Initialize the layout for the Transfer ROI Window.
+        """
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
         else:
@@ -108,11 +112,14 @@ class UITransferROIWindow:
             self.transfer_roi_window_instance)
 
     def init_transfer_arrow_buttons(self):
+        """
+        Initialize the layout for arrow buttons
+
+        """
         self.transfer_all_rois_to_patient_B_button = QPushButton()
         self.transfer_all_rois_to_patient_B_button.setObjectName(
             "ROITransferToBButton")
         # TODO: Add icon to button
-        self.transfer_all_rois_to_patient_B_button.setMaximumWidth(100)
         transfer_all_rois_to_patient_B_icon = QtGui.QIcon()
         transfer_all_rois_to_patient_B_icon.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/forward_slide_icon.png')))
@@ -126,8 +133,6 @@ class UITransferROIWindow:
         self.transfer_all_rois_to_patient_A_button = QPushButton()
         self.transfer_all_rois_to_patient_A_button.setObjectName(
             "ROITransferToAButton")
-        # TODO: Add icon to button
-        self.transfer_all_rois_to_patient_A_button.setText("<<")
         self.transfer_all_rois_to_patient_A_button.setMaximumWidth(100)
         transfer_all_rois_to_patient_A_icon = QtGui.QIcon()
         transfer_all_rois_to_patient_A_icon.addPixmap(QtGui.QPixmap(
@@ -140,6 +145,9 @@ class UITransferROIWindow:
             self.transfer_all_rois_to_patient_A_button, 2, 1)
 
     def transfer_all_rois_to_patient_B_button_clicked(self):
+        """
+        This function is triggered when the right arrow button is clicked.
+        """
         self.fixed_to_moving_rois.clear()
         self.patient_A_rois_to_B_list_widget.clear()
 
@@ -148,6 +156,9 @@ class UITransferROIWindow:
                 self.patient_A_initial_rois_list_widget.item(i))
 
     def transfer_all_rois_to_patient_A_button_clicked(self):
+        """
+        This function is triggered when the left arrow button is clicked.
+        """
         self.moving_to_fixed_rois.clear()
         self.patient_B_rois_to_A_list_widget.clear()
 
@@ -156,6 +167,9 @@ class UITransferROIWindow:
                 self.patient_B_initial_rois_list_widget.item(i))
 
     def init_add_suffix_checkbox(self):
+        """
+        Initialize the layout for add suffix checkbox
+        """
         self.add_suffix_checkbox = QCheckBox()
         self.add_suffix_checkbox.setObjectName("AddSuffixCheckBox")
         self.add_suffix_checkbox.setChecked(self.add_suffix)
@@ -165,6 +179,9 @@ class UITransferROIWindow:
             self.add_suffix_checkbox, 3, 0)
 
     def init_patient_labels(self):
+        """
+        Initialize the layout for two patient labels
+        """
         self.patient_A_label = QLabel()
         self.patient_A_label.setObjectName("PatientAROILabel")
         self.patient_A_label.setMinimumHeight(50)
@@ -187,6 +204,9 @@ class UITransferROIWindow:
                                                        2)
 
     def init_save_and_reset_button_layout(self):
+        """
+        Initialize the layout for save and reset buttons
+        """
         self.reset_and_save_buttons_layout = QHBoxLayout()
         self.reset_button = QPushButton()
         self.reset_button.setObjectName("ResetButton")
@@ -209,9 +229,15 @@ class UITransferROIWindow:
             self.reset_and_save_button_central_widget, 3, 2)
 
     def add_suffix_checkbox_clicked(self):
+        """
+        This function is triggered when the add suffix checkbox is clicked
+        """
         self.add_suffix = self.add_suffix_checkbox.isChecked()
 
     def init_patient_B_rois_to_A_layout(self):
+        """
+        Initialize the layout for transfer rois from B to A container
+        """
         # Create scrolling area widget to contain the content.
         self.patient_B_rois_to_A_list_widget = QListWidget(self)
         self.transfer_roi_window_grid_layout \
@@ -220,6 +246,9 @@ class UITransferROIWindow:
             self.patient_B_to_A_rois_double_clicked)
 
     def init_patient_A_rois_to_B_layout(self):
+        """
+        Initialize the layout for transfer rois from A to B container
+        """
         self.patient_A_rois_to_B_list_widget = QListWidget(self)
         self.transfer_roi_window_grid_layout \
             .addWidget(self.patient_A_rois_to_B_list_widget, 1, 2)
@@ -227,6 +256,9 @@ class UITransferROIWindow:
             self.patient_A_to_B_rois_double_clicked)
 
     def init_patient_A_initial_roi_list(self):
+        """
+        Initialize the layout for patient A's roi list
+        """
         self.patient_A_initial_rois_list_widget = QListWidget(self)
         self.patient_A_initial_rois_list_widget.itemDoubleClicked.connect(
             self.patient_A_initial_roi_double_clicked)
@@ -240,6 +272,9 @@ class UITransferROIWindow:
             self.patient_A_initial_rois_list_widget, 1, 0)
 
     def init_patient_B_initial_roi_list(self):
+        """
+        Initialize the layout for patient B's roi list
+        """
         self.patient_B_initial_rois_list_widget = QListWidget(self)
         self.patient_B_initial_rois_list_widget.itemDoubleClicked.connect(
             self.patient_B_initial_roi_double_clicked)
@@ -254,6 +289,10 @@ class UITransferROIWindow:
             self.patient_B_initial_rois_list_widget, 2, 2)
 
     def patient_A_to_B_rois_double_clicked(self, item):
+        """
+        This function is triggered when a roi in "A to B" list is
+        double-clicked.
+        """
         roi_to_remove = item.data(Qt.UserRole)
         to_delete_value = roi_to_remove['name']
         self.fixed_to_moving_rois.pop(to_delete_value)
@@ -267,6 +306,10 @@ class UITransferROIWindow:
             self.save_button.setDisabled(True)
 
     def patient_B_to_A_rois_double_clicked(self, item):
+        """
+        This function is triggered when a roi in "B to A" list is
+        double-clicked.
+        """
         roi_to_remove = item.data(Qt.UserRole)
         to_delete_value = roi_to_remove['name']
         self.moving_to_fixed_rois.pop(to_delete_value)
@@ -280,6 +323,10 @@ class UITransferROIWindow:
             self.save_button.setDisabled(True)
 
     def patient_A_initial_roi_double_clicked(self, item):
+        """
+        This function is triggered when a roi in patient A's roi list is
+        double-clicked.
+        """
         roi_to_add = item.data(Qt.UserRole)
         transferred_roi_name = roi_to_add['name']
 
@@ -323,6 +370,10 @@ class UITransferROIWindow:
         self.save_button.setDisabled(False)
 
     def patient_B_initial_roi_double_clicked(self, item):
+        """
+        This function is triggered when a roi in patient B's roi list is
+        double-clicked.
+        """
         roi_to_add = item.data(Qt.UserRole)
         transferred_roi_name = roi_to_add['name']
 
@@ -370,6 +421,9 @@ class UITransferROIWindow:
         self.save_button.setDisabled(False)
 
     def reset_clicked(self):
+        """
+        This function is triggered when reset button is clicked.
+        """
         self.fixed_to_moving_rois.clear()
         self.moving_to_fixed_rois.clear()
         self.patient_A_rois_to_B_list_widget.clear()
@@ -377,34 +431,51 @@ class UITransferROIWindow:
         self.save_button.setDisabled(True)
 
     def transfer_list_is_empty(self):
+        """
+        This function is to check if the transfer list is empty
+        """
         return len(self.fixed_to_moving_rois) == 0 \
                and len(self.moving_to_fixed_rois) == 0
 
     def save_clicked(self, interrupt_flag, progress_callback):
+        """
+        This function is triggered when the save button is clicked. It contains
+        all steps in the ROI transferring process.
+
+        :param interrupt_flag: interrupt flag to stop process
+        :param progress_callback: signal that receives the current
+                                  progress of the loading.
+        """
         progress_callback.emit(("Converting images to sitk", 0))
-        # Stop loading
+
+        # check if interrupt flag is set
         if not check_interrupt_flag(interrupt_flag):
             return False
 
         rtss = self.patient_dict_container.get("dataset_rtss")
 
-        # get sitk for fixed and moving images
-        dicom_image = self.read_dicom_image_to_sitk(
+        # get sitk for the fixed image
+        dicom_image = read_dicom_image_to_sitk(
             self.patient_dict_container.filepaths)
+
         # get array of roi indexes from sitk images
         rois_images_fixed = \
             transform_point_set_from_dicom_struct(dicom_image, rtss,
                                                   self.fixed_to_moving_rois
                                                   .keys(),
                                                   spacing_override=None)
-        moving_rtss = self.moving_dict_container.get("dataset_rtss")
-        moving_dicom_image = self.read_dicom_image_to_sitk(
-            self.moving_dict_container.filepaths)
-        # get array of roi indexes from sitk images
 
+        moving_rtss = self.moving_dict_container.get("dataset_rtss")
+
+        # get sitk for the moving image
+        moving_dicom_image = read_dicom_image_to_sitk(
+            self.moving_dict_container.filepaths)
+
+        # get array of roi indexes from sitk images
         progress_callback \
             .emit(("Retrieving ROIs from both image sets", 20))
-        # Stop loading
+
+        # check if interrupt flag is set
         if not check_interrupt_flag(interrupt_flag):
             return False
 
@@ -420,7 +491,8 @@ class UITransferROIWindow:
 
         progress_callback.emit(
             ("Transfering ROIs from moving  to fixed image set", 40))
-        # Stop loading
+
+        # check if interrupt flag is set
         if not check_interrupt_flag(interrupt_flag):
             return False
 
@@ -441,20 +513,34 @@ class UITransferROIWindow:
 
         progress_callback.emit(
             ("Saving ROIs to RTSS", 80))
+
+        # check if interrupt flag is set
         if not check_interrupt_flag(interrupt_flag):
             return False
         progress_callback.emit(("Reloading window", 90))
 
     def transfer_roi_clicked(self):
+        """
+        telling progress window to start ROI transfer
+        """
         self.progress_window.start(self.save_clicked)
 
     def on_transfer_roi_error(self, exception):
+        """
+        This function is triggered when there is an error in the
+        ROI transferring process.
+
+        :param exception: exception thrown
+        """
         QMessageBox.about(self.progress_window,
                           "Unable to transfer ROIs",
                           "Please check your image set and ROI data.")
         self.progress_window.close()
 
     def on_transfer_roi_finished(self):
+        """
+        This function is triggered when ROI transferring process is finished.
+        """
         # emit changed dataset to structure_modified function and
         # auto_save_roi function
         if len(self.fixed_to_moving_rois) > 0:
@@ -472,6 +558,17 @@ class UITransferROIWindow:
 
     def transfer_rois(self, transfer_dict, tfm, reference_image,
                       original_roi_list, patient_dict_container):
+        """
+        Converting (transferring) ROIs from one image set to another and save
+        the transferred rois to rtss.
+        :param transfer_dict: dictionary of rois to be transfer.
+        key is original roi names, value is the name after transferred.
+        :param original_roi_list: tuple of sitk rois from the base image.
+        :param tfm: the tfm that contains information for transferring rois
+        :param reference_image: the reference (base) image
+        :param patient_dict_container: container of the transfer image set.
+
+        """
         for roi_name, new_roi_name in transfer_dict.items():
             for index, name in enumerate(original_roi_list[1]):
                 if name == roi_name:
@@ -489,6 +586,14 @@ class UITransferROIWindow:
 
     def save_roi_to_patient_dict_container(self, contours, roi_name,
                                            patient_dict_container):
+        """
+        Save the transferred ROI to the corresponding rtss.
+
+        :param contours: np array of coordinates of the ROI to be saved.
+        :param roi_name: name of the ROI to be saved
+        :param patient_dict_container: container of the transfer image set.
+
+        """
         pixels_coords_dict = {}
         slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
         total_slices = len(slice_ids_dict)
@@ -535,15 +640,3 @@ class UITransferROIWindow:
         function to close transfer roi window
         """
         self.close()
-
-    def read_dicom_image_to_sitk(self, filepaths):
-        amount = len(filepaths)
-        orig_fusion_list = []
-
-        for i in range(amount):
-            try:
-                orig_fusion_list.append(filepaths[i])
-            except KeyError:
-                continue
-
-        return sitk.ReadImage(orig_fusion_list)
