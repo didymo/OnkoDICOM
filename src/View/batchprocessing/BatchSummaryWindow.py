@@ -90,6 +90,11 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
+                # CSV2ClinicalDataSR patient not in CSV
+                elif patient_summary[process] == "CSV_NO_PATIENT":
+                    summary_text += process.upper() \
+                        + " skipped as the patient was not found in the CSV."
+                # ClinicalDataSR2CSV no SR found for patient
                 elif patient_summary[process] == "CD_NO_SR":
                     summary_text += process.upper() \
                         + " skipped as no SR with clinical data was found."

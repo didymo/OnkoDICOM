@@ -1,8 +1,14 @@
+import csv
+import os
 import pytest
 from pathlib import Path
+from pydicom import dcmread
+from pydicom.errors import InvalidDicomError
 from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
+from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
+    BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 
 
@@ -94,3 +100,70 @@ def test_batch_iso2roi(test_object):
         # Assert rtss contains new rois
         difference = set(test_object.iso_levels) - set(rois)
         assert len(difference) > 0
+
+
+def test_batch_csv2clinicaldatasr(test_object):
+    """
+    Test asserts an SR is created with dummy clinical data. Test deletes
+    SR after running.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Get patient ID for dummy CSV
+    patient_id = None
+    for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
+        if patient_id is not None:
+            break
+        for name in files:
+            try:
+                ds = dcmread(os.path.join(root, name))
+                if hasattr(ds, 'PatientID'):
+                    patient_id = ds.PatientID
+                    break
+            except (InvalidDicomError, FileNotFoundError):
+                pass
+
+    assert patient_id is not None
+
+    # Create dummy CSV
+    csv_path = test_object.batch_dir.joinpath("dummy_cd.csv")
+    data = [['MD5Hash', 'Age', 'Nationality'],
+            [patient_id, '20', 'Australian']]
+
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(data[0])
+        writer.writerow(data[1])
+        f.close()
+
+    # Loop through each patient
+    for patient in test_object.get_patients():
+        # Get current patient files
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create Batch CSV to Clinical Data SR object
+        process = \
+            BatchProcessCSV2ClinicalDataSR(test_object.DummyProgressWindow,
+                                           test_object.DummyProgressWindow,
+                                           cur_patient_files,
+                                           csv_path)
+
+        # Start the process
+        process.start()
+
+    # Assert SR exists
+    sr_path = test_object.batch_dir.joinpath("Clinical-Data-SR.dcm")
+    assert os.path.exists(sr_path)
+
+    # Assert data is correct in SR
+    text_data = "MD5Hash: " + patient_id + "\n"
+    text_data += "Age: 20\nNationality: Australian\n"
+    sr_ds = dcmread(sr_path)
+    assert sr_ds.SeriesDescription == "CLINICAL-DATA"
+    sr_text_data = sr_ds.ContentSequence[0].TextValue
+    assert text_data == sr_text_data
+
+    # Delete dummy CSV and SR
+    os.remove(csv_path)
+    os.remove(sr_path)

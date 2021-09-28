@@ -4,6 +4,8 @@ from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
+from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
+    BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -22,6 +24,7 @@ class BatchProcessingController:
         Class initialiser function.
         """
         self.batch_path = ""
+        self.clinical_data_input_path = ""
         self.clinical_data_output_path = ""
         self.processes = []
         self.dicom_structure = None
@@ -40,6 +43,8 @@ class BatchProcessingController:
         :param file_paths: dict of directories
         """
         self.batch_path = file_paths.get('batch_path')
+        self.clinical_data_input_path = \
+            file_paths.get('clinical_data_input_path')
         self.clinical_data_output_path = \
             file_paths.get('clinical_data_output_path')
 
@@ -193,7 +198,27 @@ class BatchProcessingController:
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
 
-            # Perform ClinicalDataSR2CSV on patient
+            # Perform CSV2ClinicalData-SR on patient
+            if 'csv2clinicaldatasr' in self.processes:
+                # Get current files
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessCSV2ClinicalDataSR(
+                    progress_callback, interrupt_flag,
+                    cur_patient_files, self.clinical_data_input_path)
+                success = process.start()
+
+                # Update summary
+                if success:
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]["csv2clinicaldatasr"] = reason
+                progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
+
+            # Perform ClinicalData-SR2CSV on patient
             if 'clinicaldatasr2csv' in self.processes:
                 cur_patient_files = self.get_patient_files(patient)
                 process = BatchProcessClinicalDataSR2CSV(

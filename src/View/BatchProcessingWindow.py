@@ -5,6 +5,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
     ClinicalDataSR2CSVOptions
+from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
+    CSV2ClinicalDataSROptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 
 
@@ -114,10 +116,13 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.csv2clinicaldatasr_tab = CSV2ClinicalDataSROptions()
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
+                               "CSV2ClinicalData-SR")
         self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
                                "ClinicalData-SR2CSV")
 
@@ -247,7 +252,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'clinicaldatasr2csv']
+        processes = ['iso2roi', 'csv2clinicaldatasr', 'clinicaldatasr2csv']
         selected_processes = []
 
         # Get the selected processes
@@ -260,6 +265,8 @@ class UIBatchProcessingWindow(object):
 
         file_directories = {
             "batch_path": self.file_path,
+            'clinical_data_input_path':
+                self.csv2clinicaldatasr_tab.get_csv_input_location(),
             'clinical_data_output_path':
                 self.clinicaldatasr2csv_tab.get_csv_output_location()
         }
