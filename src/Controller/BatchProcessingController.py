@@ -205,8 +205,11 @@ class BatchProcessingController:
 
                 # Get patient weight
                 if patient.patient_id in self.suv2roi_weights.keys():
-                    patient_weight = self.suv2roi_weights[patient.patient_id] \
-                        * 1000
+                    if self.suv2roi_weights[patient.patient_id] is None:
+                        patient_weight = None
+                    else:
+                        patient_weight = \
+                            self.suv2roi_weights[patient.patient_id] * 1000
                 else:
                     patient_weight = None
 
