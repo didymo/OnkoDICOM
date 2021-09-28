@@ -127,6 +127,13 @@ class BatchProcess:
         """
         read_data_dict = {}
         file_names_dict = {}
+        rt_structs = {}
+
+        # For getting the correct PET files in a dataset that contains
+        # multiple image sets
+        ctac_count = 0
+        pt_nac = {}
+        nac_count = 0
 
         slice_count = 0
         # For each file in the file path list
@@ -147,33 +154,26 @@ class BatchProcess:
                 else:
                     slice_name = allowed_class["name"]
 
-                # Here we need to compare DICOM files to get the correct
-                # RTSS for the required image, i.e., the RTSS that
-                # references the images we want. Once we have found the
-                # right RTSS we skip over any other ones.
-                if slice_name == 'rtss' and rtss_found:
-                    continue
+                # Here we keep track of what PET images we have found,
+                # as if we have 2 sets and one is CTAC, we want to use the
+                # one that is CTAC.
+                if read_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.128':
+                    if 'CorrectedImage' in read_file:
+                        # If it is a CTAC, add it straight into the
+                        # dictionaries
+                        if "ATTN" in read_file.CorrectedImage:
+                            read_data_dict[ctac_count] = read_file
+                            file_names_dict[ctac_count] = file
+                            ctac_count += 1
+                            continue
+                        # If it is a NAC, store it in case we need it
+                        else:
+                            pt_nac[file] = read_file
+                            nac_count += 1
+                            continue
 
-                # Check to see if we have found the right RTSS
-                if slice_name == 'rtss' \
-                        and "ReferencedFrameOfReferenceSequence" in read_file:
-                    ref_frame = read_file.ReferencedFrameOfReferenceSequence
-                    if "RTReferencedStudySequence" in ref_frame[0]:
-                        ref_study = ref_frame[0].RTReferencedStudySequence[0]
-                        if "RTReferencedSeriesSequence" in ref_study:
-                            if "SeriesInstanceUID" in \
-                                    ref_study.RTReferencedSeriesSequence[0]:
-                                ref_series = \
-                                    ref_study.RTReferencedSeriesSequence[0]
-                                ref_image_series_uid = \
-                                    ref_series.SeriesInstanceUID
-                                if ref_image_series_uid \
-                                        == read_data_dict[0].SeriesInstanceUID:
-                                    rtss_found = True
-
-                # Continue if we have found an RTSS but it is not
-                # the right one
-                if slice_name == 'rtss' and not rtss_found:
+                if slice_name == 'rtss':
+                    rt_structs[file] = read_file
                     continue
 
                 # Skip this file if it does not match files already in the
@@ -189,6 +189,43 @@ class BatchProcess:
 
                 read_data_dict[slice_name] = read_file
                 file_names_dict[slice_name] = file
+
+        # If we have PET NAC files and no PET CTAC files,
+        # add them to the data dictionaries
+        if nac_count > 0 and ctac_count == 0:
+            for i, path in enumerate(pt_nac):
+                read_data_dict[i] = pt_nac[path]
+                file_names_dict[i] = path
+
+        # Here we need to compare DICOM files to get the correct
+        # RTSS for the selected images, i.e., the RTSS that
+        # references the images we have. Once we have found the
+        # right RTSS we break.
+        for rtss in rt_structs:
+            # Try get the referenced series instance UID from the
+            # rtss. It is an optional tag and therefore may not
+            # exist.
+            ref_image_series_uid = None
+            try:
+                ref_frame = rt_structs[rtss].ReferencedFrameOfReferenceSequence
+                ref_study = ref_frame[0].RTReferencedStudySequence[0]
+                ref_series = ref_study.RTReferencedSeriesSequence[0]
+                ref_image_series_uid = ref_series.SeriesInstanceUID
+            except AttributeError:
+                continue
+
+            # If we have no images
+            if len(read_data_dict) <= 0:
+                read_data_dict['rtss'] = rt_structs[rtss]
+                file_names_dict['rtss'] = rtss
+                break
+            # If we have images
+            else:
+                if ref_image_series_uid \
+                        == read_data_dict[0].SeriesInstanceUID:
+                    read_data_dict['rtss'] = rt_structs[rtss]
+                    file_names_dict['rtss'] = rtss
+                    break
 
         # Get and return read data dict and file names dict
         sorted_read_data_dict, sorted_file_names_dict = \
