@@ -251,6 +251,7 @@ class UIMainWindow:
 
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view_axial is not None:
+                self.image_fusion_single_view.update_view()
                 self.image_fusion_view_axial.update_view()
                 self.image_fusion_view_coronal.update_view()
                 self.image_fusion_view_sagittal.update_view()
