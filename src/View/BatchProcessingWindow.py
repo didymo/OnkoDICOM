@@ -4,6 +4,7 @@ from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.Pyrad2PyradSR import Pyrad2PyradSROptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -112,9 +113,11 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.pyrad2pyradSR_tab = Pyrad2PyradSROptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.pyrad2pyradSR_tab, "Pyrad2Pyrad-SR")
 
         # == Bottom widgets
         # Info text
