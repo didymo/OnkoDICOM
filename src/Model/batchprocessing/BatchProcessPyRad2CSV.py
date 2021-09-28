@@ -99,6 +99,8 @@ class BatchProcessPyRad2CSV(BatchProcess):
 
         # Location of folder where converted masks saved
         mask_folder_path = patient_nrrd_folder_path + 'structures'
+        if not os.path.exists(mask_folder_path):
+            os.makedirs(mask_folder_path)
 
         self.progress_callback.emit(("Converting ROIs to nrrd..", 45))
 
@@ -125,6 +127,10 @@ class BatchProcessPyRad2CSV(BatchProcess):
             print("Stopped DVH2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
+            return False
+
+        if radiomics_df is None:
+            self.summary = "PYRAD_NO_DF"
             return False
 
         # Convert the dataframe to CSV file
@@ -208,6 +214,10 @@ class BatchProcessPyRad2CSV(BatchProcess):
         # CSV headers
         radiomics_headers = []
         feature_vector = ''
+
+        # If RTSS selected has no ROIS
+        if not os.listdir(mask_folder_path):
+            return None
 
         for file in os.listdir(mask_folder_path):
             # Contains features for current ROI
