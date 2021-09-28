@@ -2,7 +2,6 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QLayout, QLabel, QSpinBox, \
     QComboBox, QSizePolicy, QDoubleSpinBox, QLineEdit
-from typing import Dict
 
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -37,7 +36,6 @@ class ImageFusionOptions(object):
         self.create_view()
         self.setupUi()
 
-
     def get_patients_info(self):
         """
         Retrieve the patient's study description of the fixed image
@@ -56,6 +54,9 @@ class ImageFusionOptions(object):
             dicom_tree_slice = DicomTree(filename)
             dict_tree = dicom_tree_slice.dict
             self.moving_image = dict_tree["Study Description"][0]
+
+    def set_value(self, key, value):
+        self.dict[key] = value
 
     def create_view(self):
         """
@@ -253,8 +254,9 @@ class ImageFusionOptions(object):
         # self.sampling_rate_spinBox.setValue(0.25)
         self.sampling_rate_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                  QSizePolicy.Fixed)
-        self.sampling_rate_spinBox.setToolTip("The fraction of voxels sampled "
-                                              "during each iteration.")
+        self.sampling_rate_spinBox.setToolTip(
+            "The fraction of voxels sampled "
+            "during each iteration.")
         self.gridLayout.addWidget(self.sampling_rate_spinBox, 3, 3)
 
         # Smooth Sigmas
@@ -281,25 +283,6 @@ class ImageFusionOptions(object):
         self.vertical_layout.addWidget(self.warning_label)
         # Set layout of frame to the gridlayout widget
         self.auto_image_fusion_frame.setLayout(self.vertical_layout)
-
-    def get_values_from_UI(self):
-
-        #TO DO: Add in checks to ensure values are correct.
-
-        self.dict["reg_method"] = self.reg_method_comboBox.currentIndex()
-        self.dict["metric"] = self.metric_comboBox.currentIndex()
-        self.dict["optimiser"] = self.optimiser_comboBox.currentIndex()
-        self.dict["shrink_factors"] = self.shrink_factor_qLineEdit.text().split()
-        self.dict["smooth_sigmas"] = self.smooth_sigmas_qLineEdit.text().split()
-        self.dict["sampling_rate"] = self.sampling_rate_spinBox.value()
-        self.dict["final_interp"] = self.interp_order_spinbox.value()
-        self.dict["number_of_iterations"] = self.no_of_iterations_spinBox.value()
-        self.dict["default_value"] = self.default_number_spinBox.value()
-        print(self.dict)
-        return self.dict
-
-    def set_value(self, key, value):
-        self.dict[key] = value
 
     def set_gridLayout(self):
 
@@ -334,8 +317,21 @@ class ImageFusionOptions(object):
         elif self.dict["optimiser"] == "gradient_descent_line_search":
             self.optimiser_comboBox.setCurrentIndex(2)
 
-        self.shrink_factor_qLineEdit.setText(self.dict["shrink_factors"])
-        self.smooth_sigmas_qLineEdit.setText(self.dict["smooth_sigmas"])
+        # Shrink_factors is stored as a list in JSON convert the list into
+        # a string.
+        shrink_factor_list_json = ''.join(str(e) for e in self.dict[
+            "shrink_factors"])
+        print('Shrink Factor List')
+        print(shrink_factor_list_json)
+        self.shrink_factor_qLineEdit.setText(shrink_factor_list_json)
+
+        # Since smooth_sigma is stored as a list in JSON convert the list
+        # into a string.
+        smooth_sigma_list_json = ''.join(str(e) for e in self.dict[
+            "smooth_sigmas"])
+        print('Smooth Sigma List')
+        print(smooth_sigma_list_json)
+        self.smooth_sigmas_qLineEdit.setText(smooth_sigma_list_json)
 
         msg = ""
 
@@ -354,7 +350,7 @@ class ImageFusionOptions(object):
 
         try:
             self.no_of_iterations_spinBox.setValue(int(self.dict[
-                                                   "number_of_iterations"]))
+                                                           "number_of_iterations"]))
         except ValueError:
             msg += 'There was an error setting the Number of iterations ' \
                    'value.\n'
@@ -367,3 +363,21 @@ class ImageFusionOptions(object):
             msg += 'There was an error setting the Default Number'
             self.warning_label.setText(msg)
 
+    def get_values_from_UI(self):
+
+        # TO DO: Add in checks to ensure values are correct.
+
+        self.dict["reg_method"] = self.reg_method_comboBox.currentIndex()
+        self.dict["metric"] = self.metric_comboBox.currentIndex()
+        self.dict["optimiser"] = self.optimiser_comboBox.currentIndex()
+        self.dict[
+            "shrink_factors"] = self.shrink_factor_qLineEdit.text().split()
+        self.dict[
+            "smooth_sigmas"] = self.smooth_sigmas_qLineEdit.text().split()
+        self.dict["sampling_rate"] = self.sampling_rate_spinBox.value()
+        self.dict["final_interp"] = self.interp_order_spinbox.value()
+        self.dict[
+            "number_of_iterations"] = self.no_of_iterations_spinBox.value()
+        self.dict["default_value"] = self.default_number_spinBox.value()
+        print(self.dict)
+        return self.dict
