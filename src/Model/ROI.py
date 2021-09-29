@@ -751,7 +751,7 @@ def convert_coordinates_map_to_polygon_of_rois(contours_map):
     return polygon_dict
 
 
-def calculate_concave_hull_of_points(pixel_coords, alpha):
+def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
     """
         Return the alpha shape of the highlighted pixels using the alpha
         entered by the user.
@@ -856,41 +856,6 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
             curr_polygon = QtGui.QPolygonF(list_qpoints)
             list_polygons.append(curr_polygon)
     return list_polygons
-
-
-def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
-    """
-        Return the alpha shape of the highlighted pixels using the alpha
-        entered by the user.
-        :param pixel_coords: the coordinates of the contour pixels
-        :alpha: alpha value to generate hull
-        :return: List of lists of points ordered to form polygon(s).
-        """
-    # Get all the pixels in the drawing window's list of highlighted
-    # pixels, excluding the removed pixels.
-    target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in
-                           pixel_coords]
-    # Calculate the concave hull of the points.
-    # alpha = 0.95 * alphashape.optimizealpha(points)
-    hull = alphashape(target_pixel_coords, alpha)
-
-    # Convert hull to points
-    def hull_to_points(hull):
-        hull_xy = hull.exterior.coords.xy
-
-        points = []
-        for i in range(len(hull_xy[0])):
-            points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
-
-        return points
-
-    polygon_list = []
-    if isinstance(hull, Polygon):
-        polygon_list.append(hull_to_points(hull))
-    elif isinstance(hull, MultiPolygon):
-        for polygon in hull:
-            polygon_list.append(hull_to_points(polygon))
-    return polygon_list
 
 
 def ordered_list_rois(rois):

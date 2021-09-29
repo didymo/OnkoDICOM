@@ -18,6 +18,7 @@ from src.View.ProgressWindow import ProgressWindow
 from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid, \
     read_dicom_image_to_sitk
 from src.View.util.ProgressWindowHelper import check_interrupt_flag
+from src.View.util.SaveROIHelper import generate_non_duplicated_name
 
 
 class UITransferROIWindow:
@@ -349,12 +350,7 @@ class UITransferROIWindow:
         # in patient B's initial roi names list
         if transferred_roi_name in patient_B_initial_roi_name_list:
             if self.add_suffix:
-                changed_name = transferred_roi_name
-                i = 1
-                while changed_name in patient_B_initial_roi_name_list:
-                    changed_name = transferred_roi_name + "_" + chr(i + 64)
-                    i = i + 1
-                transferred_roi_name = changed_name
+                transferred_roi_name = generate_non_duplicated_name(transferred_roi_name, patient_B_initial_roi_name_list)
             else:
                 QMessageBox.about(self, "Transfer Failed",
                                   "Duplicated ROI name. "
@@ -400,12 +396,7 @@ class UITransferROIWindow:
             # if add suffix is ticked, iteratively try adding suffix
             # from _A to _Z, stop when no duplicate found
             if self.add_suffix:
-                changed_name = transferred_roi_name
-                i = 1
-                while changed_name in patient_A_current_roi_name_list:
-                    changed_name = transferred_roi_name + "_" + chr(i + 64)
-                    i = i + 1
-                transferred_roi_name = changed_name
+                transferred_roi_name = generate_non_duplicated_name(transferred_roi_name, patient_A_current_roi_name_list)
             else:
                 QMessageBox.about(self, "Transfer Failed",
                                   "Duplicated ROI name. "
