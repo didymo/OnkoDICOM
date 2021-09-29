@@ -17,3 +17,4 @@ pytest
 pyside6==6.1.2
 vtk
 git+https://github.com/matplotlib/matplotlib.git
+shapely==1.8a3
