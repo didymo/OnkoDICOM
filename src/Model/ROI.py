@@ -11,6 +11,7 @@ from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
 from pydicom.uid import generate_uid, ImplicitVRLittleEndian
+from scipy.spatial.qhull import QhullError
 from shapely.geometry import Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import make_valid
 
@@ -23,6 +24,13 @@ from src.Model.Transform import inv_linear_transform
 
 # Disable INFO logging of shapely
 logging.getLogger('shapely.geos').setLevel(logging.CRITICAL)
+
+# Dictionary of lambda functions for ROI Manipulation
+geometry_manipulation = {
+    'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
+    'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
+    'DIFFERENCE': lambda geom_1, geom_2: geom_1.difference(geom_2)
+}
 
 
 def rename_roi(rtss, roi_id, new_name):
@@ -716,7 +724,73 @@ def transform_rois_contours(axial_rois_contours):
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
                         sagittal_rois_contours[name][contour[i][0]][0] \
                             .append([contour[i][1], slice_ids[slice_id]])
+
+    coronal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
+        coronal_rois_contours)
+    sagittal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
+        sagittal_rois_contours)
     return coronal_rois_contours, sagittal_rois_contours
+
+
+def convert_coordinates_map_to_polygon_of_rois(contours_map):
+    """
+
+    this function converts a map (dictionary) of ROI contours into polygon for
+    better ROI display
+
+    :param contours_map: a map(dictionary) of ROI contours.
+
+    """
+    polygon_dict = {}
+    for name, contours_dict in contours_map.items():
+        polygon_dict[name] = {}
+        for slice_id, contour_array in contours_dict.items():
+            roi_array = contour_array[0]
+            hull_list = calculate_concave_hull_of_points(roi_array, alpha=0)
+            polygon_dict[name][slice_id] = hull_list
+    return polygon_dict
+
+
+def calculate_concave_hull_of_points(pixel_coords, alpha):
+    """
+        Return the alpha shape of the highlighted pixels using the alpha
+        entered by the user.
+        :param pixel_coords: the coordinates of the contour pixels
+        :return: List of lists of points ordered to form polygon(s).
+        """
+    # Get all the pixels in the drawing window's list of highlighted
+    # pixels, excluding the removed pixels.
+    target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in
+                           pixel_coords]
+    # Calculate the concave hull of the points.
+    # TODO: auto-generate an optimized alpha value
+    # alpha = 0.95 * alphashape.optimizealpha(points)
+    hull = target_pixel_coords
+    try:
+        hull = alphashape(target_pixel_coords, alpha)
+    except QhullError:
+        pass
+    polygon_list = []
+    if isinstance(hull, Polygon):
+        polygon_list.append(hull_to_points(hull))
+    elif isinstance(hull, MultiPolygon):
+        for polygon in hull:
+            polygon_list.append(hull_to_points(polygon))
+    return polygon_list
+
+
+def hull_to_points(hull):
+    """
+    This function converts hull data to pixel coordinates
+    :param hull: list of hull data
+    """
+    hull_xy = hull.exterior.coords.xy
+
+    points = []
+    for i in range(len(hull_xy[0])):
+        points.append([int(hull_xy[0][i]), int(hull_xy[1][i])])
+
+    return points
 
 
 def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
@@ -1081,13 +1155,6 @@ def roi_to_geometry(dict_rois_contours):
         dict_geometry[slice_uid] = result_geometry
 
     return dict_geometry
-
-
-geometry_manipulation = {
-    'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
-    'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
-    'DIFFERENCE': lambda geom_1, geom_2: geom_1.difference(geom_2)
-}
 
 
 def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
