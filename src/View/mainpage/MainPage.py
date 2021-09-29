@@ -279,9 +279,11 @@ class UIMainWindow:
             if self.image_fusion_view is not None:
                 if self.image_fusion_view_axial.horizontal_view is None or \
                         self.image_fusion_view_axial.vertical_view is None or \
-                        self.image_fusion_view_coronal.horizontal_view is None or \
-                        self.image_fusion_view_coronal.vertical_view is None or \
-                        self.image_fusion_view_sagittal.horizontal_view is None or \
+                        self.image_fusion_view_coronal.horizontal_view is None \
+                        or self.image_fusion_view_coronal.vertical_view is None \
+                        or \
+                        self.image_fusion_view_sagittal.horizontal_view is None \
+                        or \
                         self.image_fusion_view_sagittal.vertical_view is None:
                     self.image_fusion_view_axial.set_views(
                         self.image_fusion_view_coronal,

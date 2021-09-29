@@ -32,8 +32,10 @@ class StructureTab(QtWidgets.QWidget):
         self.patient_dict_container.set("roi_color_dict", self.color_dict)
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
-        self.roi_delete_handler = ROIDelOption(self.fixed_container_structure_modified)
-        self.roi_draw_handler = ROIDrawOption(self.fixed_container_structure_modified)
+        self.roi_delete_handler = ROIDelOption(
+            self.fixed_container_structure_modified)
+        self.roi_draw_handler = ROIDrawOption(
+            self.fixed_container_structure_modified)
         self.roi_manipulate_handler = ROIManipulateOption(
             self.fixed_container_structure_modified)
 
@@ -77,7 +79,8 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.addWidget(modified_indicator_text)
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
-        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss_to_fixed_image_set
+        self.modified_indicator_widget.mouseReleaseEvent = self.\
+            save_new_rtss_to_fixed_image_set
         self.modified_indicator_widget.setVisible(False)
 
         # Create ROI manipulation buttons
@@ -220,7 +223,8 @@ class StructureTab(QtWidgets.QWidget):
             structure = StructureWidget(roi_id, color, roi_dict['name'], self)
             if roi_id in self.patient_dict_container.get("selected_rois"):
                 structure.checkbox.setChecked(Qt.Checked)
-            structure.structure_renamed.connect(self.fixed_container_structure_modified)
+            structure.structure_renamed.\
+                connect(self.fixed_container_structure_modified)
             self.layout_content.addWidget(structure)
             row += 1
 
@@ -322,7 +326,8 @@ class StructureTab(QtWidgets.QWidget):
                     new_raw_dvh.pop(key)
                 self.moving_dict_container.set("raw_dvh", new_raw_dvh)
 
-        if "transfer" in change_description and change_description["transfer"] is None:
+        if "transfer" in change_description \
+                and change_description["transfer"] is None:
             self.save_new_rtss_to_moving_image_set()
 
     def fixed_container_structure_modified(self, changes):
@@ -425,7 +430,8 @@ class StructureTab(QtWidgets.QWidget):
 
         if "draw" in change_description and change_description["draw"] is None:
             self.save_new_rtss_to_fixed_image_set(auto=True)
-        elif "transfer" in change_description and change_description["transfer"] is None:
+        elif "transfer" in change_description \
+                and change_description["transfer"] is None:
             self.save_new_rtss_to_fixed_image_set(auto=True)
 
     def show_modified_indicator(self):
@@ -528,17 +534,18 @@ class StructureTab(QtWidgets.QWidget):
         selected image set.
         """
         self.select_rtss_window = SelectRTSSPopUp(
-            self.patient_dict_container.get("existing_rtss_files"), parent=self)
+            self.patient_dict_container.get("existing_rtss_files"),
+            parent=self)
         self.select_rtss_window.signal_rtss_selected.connect(
             self.on_rtss_selected)
         self.select_rtss_window.show()
 
     def save_new_rtss_to_fixed_image_set(self, event=None, auto=False):
         """
-        Save the current RTSS stored in fixed patient dictionary to the file system.
-        :param event: Not used but will be passed as an argument from
-        modified_indicator_widget on mouseReleaseEvent
-        :param auto: Used for auto save without user confirmation
+        Save the current RTSS stored in fixed patient dictionary to the file
+        system. :param event: Not used but will be passed as an argument
+        from modified_indicator_widget on mouseReleaseEvent :param auto:
+        Used for auto save without user confirmation
         """
         existing_rtss_files = self.patient_dict_container.get(
             "existing_rtss_files")
@@ -609,9 +616,9 @@ class StructureTab(QtWidgets.QWidget):
 
     def save_new_rtss_to_moving_image_set(self, event=None):
         """
-        Save the current RTSS stored in moving patient dictionary to the file system.
-        ROIs modification into moving patient dict is auto saved
-        :param event: Not used but will be passed as an argument from
+        Save the current RTSS stored in moving patient dictionary to the
+        file system. ROIs modification into moving patient dict is auto
+        saved :param event: Not used but will be passed as an argument from
         modified_indicator_widget on mouseReleaseEvent
         """
         if self.moving_dict_container.get("existing_file_rtss") is not None:

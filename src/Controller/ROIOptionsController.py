@@ -154,6 +154,10 @@ class ROIManipulateOption:
 
 
 class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
+    """
+    Create the ROI Manipulate Options class based on the UI from the file in
+    UITransferROIWindow
+    """
     signal_roi_transferred_to_fixed_container = QtCore.Signal(tuple)
     signal_roi_transferred_to_moving_container = QtCore.Signal(tuple)
 
@@ -164,9 +168,20 @@ class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
 
 
 class ROITransferOption:
-
+    """
+        The class that will be called by ImageFusion to access the ROI
+        Transfer controller
+        """
     def __init__(self, fixed_dict_structure_modified_function,
                  moving_dict_structure_modified_function):
+        """
+
+        :param fixed_dict_structure_modified_function: function to call when
+        the fixed image's rtss is modified
+        :param moving_dict_structure_modified_function: function to call when
+        the moving image's rtss is modified
+
+        """
         super(ROITransferOption, self).__init__()
         self.fixed_dict_structure_modified_function = \
             fixed_dict_structure_modified_function

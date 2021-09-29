@@ -9,6 +9,10 @@ class ROITransferOptionView(QtWidgets.QWidget):
                  moving_dict_structure_modified_function):
         """
         Initialize layout
+        :param fixed_dict_structure_modified_function: function to call when
+        the fixed image's rtss is modified
+        :param moving_dict_structure_modified_function: function to call when
+        the moving image's rtss is modified
         """
         QtWidgets.QWidget.__init__(self)
 

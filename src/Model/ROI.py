@@ -158,18 +158,14 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
 def create_roi(rtss, roi_name, roi_list,
                rt_roi_interpreted_type="ORGAN", rtss_owner="PATIENT"):
     """
-        Create new contours of an ROI to rtss
-        :param rtss: dataset of RTSS
-        :param roi_name: ROIName
-        :param roi_list: the list of contours to be added to the rtss.
-            Each element consists of coordinates of pixels for new
-            contour and data set of selected DICOM image file.
-        :param rt_roi_interpreted_type: the interpreted type
-            of the new ROI
-        :param rtss_owner: the type of patient dict container (either PATIENT or MOVING)
-        caller wants to create ROI to
-        :return: rtss, with added ROI
-        """
+    Create new contours of an ROI to rtss :param rtss: dataset of RTSS
+    :param roi_name: ROIName :param roi_list: the list of contours to be
+    added to the rtss. Each element consists of coordinates of pixels for
+    new contour and data set of selected DICOM image file. :param
+    rt_roi_interpreted_type: the interpreted type of the new ROI :param
+    rtss_owner: the type of patient dict container (either PATIENT or
+    MOVING) caller wants to create ROI to :return: rtss, with added ROI
+    """
     if rtss_owner == "MOVING":
         patient_dict_container = MovingDictContainer()
     else:

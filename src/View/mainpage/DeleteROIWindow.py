@@ -62,8 +62,9 @@ class UIDeleteROIWindow:
         # Create a label for the tree view with the list of ROIs to keep
         self.delete_roi_window_keep_tree_view_label = QLabel()
         self.delete_roi_window_keep_tree_view_label.setObjectName("DeleteRoiWindowKeepTreeViewLabel")
-        self.delete_roi_window_keep_tree_view_label.setProperty("QLabelClass",
-                                                                ["tree-view-label", "tree-view-label-keep-delete"])
+        self.delete_roi_window_keep_tree_view_label.\
+            setProperty("QLabelClass",
+                        ["tree-view-label", "tree-view-label-keep-delete"])
         self.delete_roi_window_keep_tree_view_label.setAlignment(Qt.AlignCenter)
         self.delete_roi_window_keep_tree_view_label.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
@@ -222,7 +223,8 @@ class UIDeleteROIWindow:
     def retranslate_ui(self, delete_roi_window_instance):
         _translate = QtCore.QCoreApplication.translate
         delete_roi_window_instance.setWindowTitle(_translate("DeleteRoiWindowInstance", "OnkoDICOM - Delete ROI(s)"))
-        self.delete_roi_window_title.setText(_translate("DeleteRoiWindowTitle", "Delete ROI(s)"))
+        self.delete_roi_window_title.\
+            setText(_translate("DeleteRoiWindowTitle", "Delete ROI(s)"))
         self.delete_roi_window_instruction.setText(_translate("DeleteRoiWindowInstruction",
                                                               "Move the Regions of Interest to be deleted to the right-hand side or vice versa"))
         self.delete_roi_window_keep_tree_view_label.setText(_translate("DeleteRoiWindowKeepTreeViewLabel", "To Keep"))
@@ -321,8 +323,9 @@ class UIDeleteROIWindow:
 
 class DeleteROIProgressWindow(QtWidgets.QDialog):
     """
-    This class displays a window that advises the user that the RTSTRUCT is being modified, and then creates a new
-    thread where the new RTSTRUCT is modified.
+    This class displays a window that advises the user that the RTSTRUCT is
+    being modified, and then creates a new thread where the new RTSTRUCT is
+    modified.
     """
 
     signal_roi_deleted = QtCore.Signal(pydicom.Dataset)  # Emits the new dataset

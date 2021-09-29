@@ -329,7 +329,8 @@ def get_fused_window(level, window):
     generates the fused ismages with applied windows
     :param level: the level (midpoint) of windowing
     :param window: the window (range) of windowing
-    :return: axial, sagittal and coronal pixmaps with windowing
+    :return: axial, sagittal, coronal pixmaps with windowing as well as
+    the transformation object of image fusion
     """
 
     patient_dict_container = PatientDictContainer()
