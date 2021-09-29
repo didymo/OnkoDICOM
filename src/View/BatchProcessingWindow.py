@@ -4,6 +4,8 @@ from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.ROINameCleaningOptions import \
+    ROINameCleaningOptions, ROINameCleaningPrefixLabel
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -112,9 +114,11 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.batchnamecleaning_tab = ROINameCleaningOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
 
         # == Bottom widgets
         # Info text
@@ -234,6 +238,9 @@ class UIBatchProcessingWindow(object):
             self.begin_button.setEnabled(True)
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
+
+            # Update the batch name cleaning table
+            self.batchnamecleaning_tab.populate_table(dicom_structure)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -242,7 +249,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi']
+        processes = ['iso2roi', 'roinamecleaning']
         selected_processes = []
 
         # Get the selected processes
@@ -258,6 +265,41 @@ class UIBatchProcessingWindow(object):
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
+
+        # Set batch ROI name cleaning options if selected
+        if 'roinamecleaning' in selected_processes:
+            # Get ROIs, datasets, options
+            name_cleaning_options = {}
+            roi_name_table = self.batchnamecleaning_tab.table_roi
+            for i in range(roi_name_table.rowCount()):
+                # Get current ROI name and what to do with it
+                roi_name = roi_name_table.item(i, 0).text()
+                option = roi_name_table.cellWidget(i, 1).currentIndex()
+
+                # Get new name text
+                if isinstance(roi_name_table.cellWidget(i, 2),
+                              ROINameCleaningPrefixLabel):
+                    new_name = roi_name_table.cellWidget(i, 2).text()
+                else:
+                    new_name = roi_name_table.cellWidget(i, 2).currentText()
+
+                # Get the dataset(s) the ROI is in
+                dataset_list = []
+                dataset_combo_box = roi_name_table.cellWidget(i, 3)
+                for index in range(dataset_combo_box.count()):
+                    dataset_list.append(dataset_combo_box.itemText(index))
+
+                if roi_name not in name_cleaning_options.keys():
+                    name_cleaning_options[roi_name] = []
+
+                for item in dataset_list:
+                    name_cleaning_options[roi_name].append(
+                        [option, new_name, item])
+
+            # Set batch name cleaning parameters in the batch processing
+            # controller.
+            self.batch_processing_controller.set_name_cleaning_options(
+                name_cleaning_options)
 
         # Enable processing
         self.batch_processing_controller.start_processing()

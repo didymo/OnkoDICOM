@@ -3,6 +3,8 @@ import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessROINameCleaning import \
+    BatchProcessROINameCleaning
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -22,6 +24,7 @@ class BatchProcessingController:
         self.batch_path = ""
         self.processes = []
         self.dicom_structure = None
+        self.name_cleaning_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -95,6 +98,14 @@ class BatchProcessingController:
         :param dicom_structure: DICOMStructure
         """
         self.dicom_structure = dicom_structure
+
+    def set_name_cleaning_options(self, options):
+        """
+        Set name cleaning options for batch ROI name cleaning.
+        :param options: Dictionary of datasets, ROIs, and options for
+                        cleaning the ROIs.
+        """
+        self.name_cleaning_options = options
 
     @staticmethod
     def get_patient_files(patient):
@@ -187,6 +198,18 @@ class BatchProcessingController:
                     self.batch_summary[patient] = {}
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
+
+        # Perform batch ROI Name Cleaning on all patients
+        if 'roinamecleaning' in self.processes:
+            if self.name_cleaning_options:
+                # Get ROIs, dataset locations, options
+                process = \
+                    BatchProcessROINameCleaning(progress_callback,
+                                                interrupt_flag,
+                                                self.name_cleaning_options)
+                success = process.start()
+                # TODO: add summary of batch ROI name cleaning
+                progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
         PatientDictContainer().clear()
 
