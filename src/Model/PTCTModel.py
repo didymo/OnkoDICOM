@@ -69,7 +69,7 @@ def create_pt_ct_model():
     pt_pixmap_aspect["sagittal"] = pt_pixel_spacing[1] / pt_slice_thickness
     pt_pixmap_aspect["coronal"] = pt_slice_thickness / pt_pixel_spacing[0]
     pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
-        get_pixmaps(pt_pixel_values, window, level, pt_pixmap_aspect)
+        get_pixmaps(pt_pixel_values, window, level, pt_pixmap_aspect, color="Heat")
 
     pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
     pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)

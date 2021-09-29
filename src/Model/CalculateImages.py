@@ -88,7 +88,7 @@ def get_img(pixel_array):
     return dict_img
 
 
-def scaled_pixmap(np_pixels, window, level, width, height):
+def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     """
     Rescale the numpy pixels of image and convert to QPixmap for display.
 
@@ -120,13 +120,28 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     qimage = QtGui.QImage(
         np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
         QtGui.QImage.Format_Indexed8)
+    # if color == "Heat":
+    #     heat_map_colors = [
+    #         QtGui.QColor.fromRgb(0, 0, 0),
+    #         QtGui.QColor.fromRgb(65, 23, 18),
+    #         QtGui.QColor.fromRgb(128, 31, 27),
+    #         QtGui.QColor.fromRgb(188, 51, 32),
+    #         QtGui.QColor.fromRgb(224, 101, 10),
+    #         QtGui.QColor.fromRgb(232, 161, 26),
+    #         QtGui.QColor.fromRgb(231, 218, 48),
+    #         QtGui.QColor.fromRgb(255, 255, 255)
+    #     ]
+    #     heat_map_colors = []
+    #     for i in range(256):
+    #         heat_map_colors.append(QtGui.QColor.fromRgb(i, i, i))
+    #     print(qimage.format())
 
     pixmap = QtGui.QPixmap(qimage)
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
     return pixmap
 
 
-def get_pixmaps(pixel_array, window, level, pixmap_aspect):
+def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
     """
     Get a dictionary of pixmaps.
 
@@ -151,11 +166,11 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
                                                   pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height)
+        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height, color)
 
     for i in range(pixel_array_3d.shape[1]):
-        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :], window, level, coronal_width, coronal_height)
-        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width, sagittal_height)
+        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :], window, level, coronal_width, coronal_height, color)
+        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width, sagittal_height, color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 

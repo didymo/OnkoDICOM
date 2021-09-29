@@ -44,31 +44,26 @@ class PetCtView(QtWidgets.QWidget):
         self.slice_view = slice_view
         self.overlay_view = slice_view
 
-        self.heat_map_colors = [
-            QColor.fromRgb(0, 0, 0),
-            QColor.fromRgb(65, 23, 18),
-            QColor.fromRgb(128, 31, 27),
-            QColor.fromRgb(188, 51, 32),
-            QColor.fromRgb(224, 101, 10),
-            QColor.fromRgb(232, 161, 26),
-            QColor.fromRgb(231, 218, 48),
-            QColor.fromRgb(255, 255, 255)
-        ]
         self.display_metadata = False
         self.format_metadata = format_metadata
 
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
         self.radio_button_layout = QtWidgets.QHBoxLayout()
+        self.slider_layout = QtWidgets.QHBoxLayout()
         # self.radio_button_layout.setAlignment(QtCore.Qt.AlignCenter)
 
         # Create components
         self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
         self.init_slider()
-
         self.view = QtWidgets.QGraphicsView()
+
         # Alpha slider
         self.alpha_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.init_alpha_slider()
+
+        # Slider labels
+        self.ct_label = QtWidgets.QLabel("CT")
+        self.pt_label = QtWidgets.QLabel("PET")
 
         self.init_view()
         self.scene = QtWidgets.QGraphicsScene()
@@ -87,11 +82,15 @@ class PetCtView(QtWidgets.QWidget):
         self.dicom_view_layout.addWidget(self.view)
         self.dicom_view_layout.addWidget(self.slider)
 
+        self.slider_layout.addWidget(self.ct_label)
+        self.slider_layout.addWidget(self.alpha_slider)
+        self.slider_layout.addWidget(self.pt_label)
+
         self.load_pet_ct_button.setVisible(False)
         self.pet_ct_view_layout.removeWidget(self.load_pet_ct_button)
 
         self.pet_ct_view_layout.addLayout(self.dicom_view_layout)
-        self.pet_ct_view_layout.addWidget(self.alpha_slider)
+        self.pet_ct_view_layout.addLayout(self.slider_layout)
         self.pet_ct_view_layout.addLayout(self.radio_button_layout,
                                           QtCore.Qt.AlignBottom
                                           | QtCore.Qt.AlignCenter)
@@ -121,7 +120,7 @@ class PetCtView(QtWidgets.QWidget):
         # alpha slider
         self.alpha_slider.setMinimum(0)
         self.alpha_slider.setMaximum(100)
-        self.alpha_slider.setValue(0)
+        self.alpha_slider.setValue(50)
         self.alpha_slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
         self.alpha_slider.setTickInterval(1)
         self.alpha_slider.valueChanged.connect(self.value_changed)
