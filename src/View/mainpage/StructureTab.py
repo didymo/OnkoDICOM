@@ -358,7 +358,8 @@ class StructureTab(QtWidgets.QWidget):
         # is autosaved, and therefore there is no need to tell the user
         # that the RTSS has been modified
         if not("draw" in change_description
-               and change_description["draw"] is None):
+               and change_description["draw"] is None) and \
+                not ("transfer" in change_description):
             self.show_modified_indicator()
 
         # If this is the first change made to the RTSS file, update the

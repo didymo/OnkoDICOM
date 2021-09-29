@@ -42,8 +42,8 @@ class UITransferROIWindow:
             self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
         self.progress_window.setFixedSize(250, 100)
         self.progress_window.signal_loaded \
-            .connect(self.on_transfer_roi_finished)
-        self.progress_window.signal_error.connect(self.on_transfer_roi_error)
+            .connect(self.onTransferRoiFinished)
+        self.progress_window.signal_error.connect(self.onTransferRoiError)
 
         self.init_layout()
 
@@ -59,10 +59,10 @@ class UITransferROIWindow:
         self.patient_B_label.setText(
             _translate("PatientBROILabel", "Second Image Set ROIs"))
         self.transfer_all_rois_to_patient_B_button.setText(
-            _translate("ROITransferToBButton", "")
+            _translate("ROITransferToBButton", "All")
         )
         self.transfer_all_rois_to_patient_A_button.setText(
-            _translate("ROITransferToAButton", "")
+            _translate("ROITransferToAButton", "All")
         )
         self.save_button.setText(
             _translate("SaveButton", "Save")
@@ -121,10 +121,14 @@ class UITransferROIWindow:
         self.transfer_all_rois_to_patient_B_button = QPushButton()
         self.transfer_all_rois_to_patient_B_button.setObjectName(
             "ROITransferToBButton")
-        # TODO: Add icon to button
+
         transfer_all_rois_to_patient_B_icon = QtGui.QIcon()
-        transfer_all_rois_to_patient_B_icon.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/forward_slide_icon.png')))
+        transfer_all_rois_to_patient_B_icon.addPixmap(
+            QtGui.QPixmap(
+                resource_path('res/images/btn-icons/forward_slide_icon.png')),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
         self.transfer_all_rois_to_patient_B_button \
             .setIcon(transfer_all_rois_to_patient_B_icon)
         self.transfer_all_rois_to_patient_B_button.clicked.connect(
@@ -137,8 +141,11 @@ class UITransferROIWindow:
             "ROITransferToAButton")
         self.transfer_all_rois_to_patient_A_button.setMaximumWidth(100)
         transfer_all_rois_to_patient_A_icon = QtGui.QIcon()
-        transfer_all_rois_to_patient_A_icon.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/backward_slide_icon.png')))
+        transfer_all_rois_to_patient_A_icon.addPixmap(
+            QtGui.QPixmap(
+                resource_path('res/images/btn-icons/backward_slide_icon.png')),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On)
         self.transfer_all_rois_to_patient_A_button \
             .setIcon(transfer_all_rois_to_patient_A_icon)
         self.transfer_all_rois_to_patient_A_button.clicked.connect(
@@ -452,18 +459,25 @@ class UITransferROIWindow:
         dicom_image = read_dicom_image_to_sitk(
             self.patient_dict_container.filepaths)
 
+        if not check_interrupt_flag(interrupt_flag):
+            return False
+
         # get array of roi indexes from sitk images
-        rois_images_fixed = \
-            transform_point_set_from_dicom_struct(dicom_image, rtss,
-                                                  self.fixed_to_moving_rois
-                                                  .keys(),
-                                                  spacing_override=None)
+        rois_images_fixed = transform_point_set_from_dicom_struct(
+            dicom_image, rtss, self.fixed_to_moving_rois.keys(),
+            spacing_override=None, interrupt_flag=interrupt_flag)
 
         moving_rtss = self.moving_dict_container.get("dataset_rtss")
+
+        if not check_interrupt_flag(interrupt_flag):
+            return False
 
         # get sitk for the moving image
         moving_dicom_image = read_dicom_image_to_sitk(
             self.moving_dict_container.filepaths)
+
+        if not check_interrupt_flag(interrupt_flag):
+            return False
 
         # get array of roi indexes from sitk images
         progress_callback \
@@ -478,9 +492,14 @@ class UITransferROIWindow:
                 moving_dicom_image,
                 moving_rtss,
                 self.moving_to_fixed_rois.keys(),
-                spacing_override=None)
+                spacing_override=None,
+                interrupt_flag=interrupt_flag)
         else:
             rois_images_moving = ([], [])
+
+        if not check_interrupt_flag(interrupt_flag):
+            return False
+
         tfm = self.moving_dict_container.get("tfm")
 
         progress_callback.emit(
@@ -512,6 +531,7 @@ class UITransferROIWindow:
         if not check_interrupt_flag(interrupt_flag):
             return False
         progress_callback.emit(("Reloading window", 90))
+        return True
 
     def transfer_roi_clicked(self):
         """
@@ -519,7 +539,7 @@ class UITransferROIWindow:
         """
         self.progress_window.start(self.save_clicked)
 
-    def on_transfer_roi_error(self, exception):
+    def onTransferRoiError(self, exception):
         """
         This function is triggered when there is an error in the
         ROI transferring process.
@@ -531,23 +551,27 @@ class UITransferROIWindow:
                           "Please check your image set and ROI data.")
         self.progress_window.close()
 
-    def on_transfer_roi_finished(self):
+    def onTransferRoiFinished(self, result):
         """
         This function is triggered when ROI transferring process is finished.
         """
         # emit changed dataset to structure_modified function and
         # auto_save_roi function
-        if len(self.fixed_to_moving_rois) > 0:
-            self.signal_roi_transferred_to_moving_container.emit((
-                self.moving_dict_container.get("dataset_rtss")
-                , {"transfer": None}))
-        if len(self.moving_to_fixed_rois) > 0:
-            self.signal_roi_transferred_to_fixed_container.emit((
-                self.patient_dict_container.get("dataset_rtss")
-                , {"transfer": None}))
-        self.progress_window.close()
-        QMessageBox.about(self.transfer_roi_window_instance, "Saved",
-                          "ROIs are successfully transferred!")
+        if result[0] is True:
+            if len(self.fixed_to_moving_rois) > 0:
+                self.signal_roi_transferred_to_moving_container.emit((
+                    self.moving_dict_container.get("dataset_rtss")
+                    , {"transfer": None}))
+            if len(self.moving_to_fixed_rois) > 0:
+                self.signal_roi_transferred_to_fixed_container.emit((
+                    self.patient_dict_container.get("dataset_rtss")
+                    , {"transfer": None}))
+            self.progress_window.close()
+            QMessageBox.about(self.transfer_roi_window_instance, "Saved",
+                              "ROIs are successfully transferred!")
+        else:
+            QMessageBox.about(self.transfer_roi_window_instance, "Cancelled",
+                              "ROIs Transfer is cancelled.")
         self.closeWindow()
 
     def transfer_rois(self, transfer_dict, tfm, reference_image,

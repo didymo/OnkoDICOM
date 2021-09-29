@@ -9,10 +9,13 @@ from loguru import logger
 from platipy.dicom.io.rtstruct_to_nifti import fix_missing_data
 from skimage.draw import polygon
 
+from src.View.util.ProgressWindowHelper import check_interrupt_flag
+
 
 def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
                                           struct_name_sequence,
-                                          spacing_override=None):
+                                          spacing_override=None,
+                                          interrupt_flag=None):
     """Converts a set of points from a DICOM RTSTRUCT into a mask array.
     This function is modified from the function
     platipy.dicom.io.transform_point_set_from_dicom_struct to align with
@@ -23,9 +26,10 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
         dicom_struct (pydicom.Dataset): The DICOM RTSTRUCT
         struct_name_sequence: the name of ROIs to be transformed
         spacing_override (list): The spacing to override. Defaults to None
-
+        interrupt_flag: interrupt flag to stop the process
     Returns:
         tuple: Returns a list of masks and a list of structure names
+
     """
     if spacing_override:
         current_spacing = list(dicom_image.GetSpacing())
@@ -53,6 +57,10 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
     final_struct_name_sequence = []
 
     for struct_name in roi_indexes.keys():
+        if interrupt_flag is not None and \
+                not check_interrupt_flag(interrupt_flag):
+            return [], []
+
         struct_index = roi_indexes[struct_name]
         image_blank = np.zeros(dicom_image.GetSize()[::-1], dtype=np.uint8)
         logger.debug(
@@ -76,6 +84,10 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
 
         for sl in range(
                 len(struct_point_sequence[struct_index].ContourSequence)):
+
+            if interrupt_flag is not None and \
+                    not check_interrupt_flag(interrupt_flag):
+                return [], []
 
             contour_data = fix_missing_data(
                 struct_point_sequence[struct_index].ContourSequence[
