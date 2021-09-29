@@ -23,6 +23,11 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
             "name": "pet",
             "sliceable": True
         },
+        # RT Dose
+        "1.2.840.10008.5.1.4.1.1.481.2": {
+            "name": "rtdose",
+            "sliceable": False
+        }
     }
 
     def __init__(self, progress_callback, interrupt_flag, patient_files,
@@ -43,15 +48,17 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
-        self.required_classes = ['ct', 'pet']
+        self.required_classes = ['ct', 'rtdose']
+        self.required_classes_2 = ['pet', 'rtdose']
 
-        # Only need one of either ct or pet
+        # Only need one of either ct or pet (and rtdose)
         self.ready = False
-        for i in range(len(self.required_classes)):
-            ready = self.load_images(patient_files, [self.required_classes[i]])
-            if ready:
-                self.ready = True
-                break
+        ready = self.load_images(patient_files, self.required_classes)
+        if ready:
+            self.ready = True
+        else:
+            self.ready = \
+                self.load_images(patient_files, self.required_classes_2)
         self.input_path = input_path
 
     def start(self):
