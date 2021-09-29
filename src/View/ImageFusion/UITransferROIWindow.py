@@ -40,6 +40,7 @@ class UITransferROIWindow:
         self.add_suffix = True
         self.progress_window = ProgressWindow(
             self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+        self.progress_window.setFixedSize(250, 100)
         self.progress_window.signal_loaded \
             .connect(self.on_transfer_roi_finished)
         self.progress_window.signal_error.connect(self.on_transfer_roi_error)
@@ -466,7 +467,7 @@ class UITransferROIWindow:
 
         # get array of roi indexes from sitk images
         progress_callback \
-            .emit(("Retrieving ROIs from both image sets", 20))
+            .emit(("Retrieving ROIs from \nboth image sets", 20))
 
         # check if interrupt flag is set
         if not check_interrupt_flag(interrupt_flag):
@@ -483,7 +484,7 @@ class UITransferROIWindow:
         tfm = self.moving_dict_container.get("tfm")
 
         progress_callback.emit(
-            ("Transfering ROIs from moving  to fixed image set", 40))
+            ("Transfering ROIs from moving \nto fixed image set", 40))
 
         # check if interrupt flag is set
         if not check_interrupt_flag(interrupt_flag):
@@ -494,7 +495,7 @@ class UITransferROIWindow:
                            rois_images_moving, self.patient_dict_container)
 
         progress_callback.emit(
-            ("Transfering ROIs from fixed to moving image set", 60))
+            ("Transfering ROIs from fixed \nto moving image set", 60))
 
         if not check_interrupt_flag(interrupt_flag):
             return False
@@ -571,11 +572,10 @@ class UITransferROIWindow:
                         reference_image=reference_image, is_structure=True)
                     contour = sitk.GetArrayViewFromImage(new_contour)
                     contours = np.transpose(contour.nonzero())
-                    self. \
-                        save_roi_to_patient_dict_container \
-                        (contours,
-                         new_roi_name,
-                         patient_dict_container)
+                    self.save_roi_to_patient_dict_container(
+                        contours,
+                        new_roi_name,
+                        patient_dict_container)
 
     def save_roi_to_patient_dict_container(self, contours, roi_name,
                                            patient_dict_container):
