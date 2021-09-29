@@ -5,7 +5,8 @@ from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
 
-from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption
+from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, \
+    ROIManipulateOption
 from src.Model.DICOMStructure import Series
 from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2rtdose
@@ -35,6 +36,8 @@ class StructureTab(QtWidgets.QWidget):
 
         self.roi_delete_handler = ROIDelOption(self.structure_modified)
         self.roi_draw_handler = ROIDrawOption(self.structure_modified)
+        self.roi_manipulate_handler = ROIManipulateOption(
+            self.structure_modified)
 
         # Create scrolling area widget to contain the content.
         self.scroll_area = QtWidgets.QScrollArea()
@@ -58,7 +61,29 @@ class StructureTab(QtWidgets.QWidget):
         # Create StructureWidget objects
         self.update_content()
 
+        # Create a modified indicator
+        self.modified_indicator_widget = QtWidgets.QWidget()
+        self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
+        modified_indicator_layout = QtWidgets.QHBoxLayout()
+        modified_indicator_layout.setAlignment(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+
+        modified_indicator_icon = QtWidgets.QLabel()
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(
+            resource_path("res/images/btn-icons/alert_icon.png")))
+        modified_indicator_layout.addWidget(modified_indicator_icon)
+
+        modified_indicator_text = QtWidgets.QLabel(
+            "Structures have been modified")
+        modified_indicator_text.setStyleSheet("color: red")
+        modified_indicator_layout.addWidget(modified_indicator_text)
+
+        self.modified_indicator_widget.setLayout(modified_indicator_layout)
+        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss
+        self.modified_indicator_widget.setVisible(False)
+
         # Create ROI manipulation buttons
+        self.button_roi_manipulate = QtWidgets.QPushButton()
         self.button_roi_draw = QtWidgets.QPushButton()
         self.button_roi_delete = QtWidgets.QPushButton()
         self.roi_buttons = QtWidgets.QWidget()
@@ -66,6 +91,7 @@ class StructureTab(QtWidgets.QWidget):
 
         # Set layout
         self.structure_tab_layout.addWidget(self.scroll_area)
+        self.structure_tab_layout.addWidget(self.modified_indicator_widget)
         self.structure_tab_layout.addWidget(self.roi_buttons)
         self.setLayout(self.structure_tab_layout)
 
@@ -140,6 +166,14 @@ class StructureTab(QtWidgets.QWidget):
             QtGui.QIcon.On
         )
 
+        icon_roi_manipulate = QtGui.QIcon()
+        icon_roi_manipulate.addPixmap(
+            QtGui.QPixmap(
+                resource_path('res/images/btn-icons/manipulate_icon.png')),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+
         self.button_roi_delete.setIcon(icon_roi_delete)
         self.button_roi_delete.setText("Delete ROI")
         self.button_roi_delete.clicked.connect(self.roi_delete_clicked)
@@ -148,9 +182,14 @@ class StructureTab(QtWidgets.QWidget):
         self.button_roi_draw.setText("Draw ROI")
         self.button_roi_draw.clicked.connect(self.roi_draw_clicked)
 
-        layout_roi_buttons = QtWidgets.QHBoxLayout(self.roi_buttons)
+        self.button_roi_manipulate.setIcon(icon_roi_manipulate)
+        self.button_roi_manipulate.setText("Manipulate ROI")
+        self.button_roi_manipulate.clicked.connect(self.roi_manipulate_clicked)
+
+        layout_roi_buttons = QtWidgets.QVBoxLayout(self.roi_buttons)
         layout_roi_buttons.setContentsMargins(0, 0, 0, 0)
         layout_roi_buttons.addWidget(self.button_roi_draw)
+        layout_roi_buttons.addWidget(self.button_roi_manipulate)
         layout_roi_buttons.addWidget(self.button_roi_delete)
 
     def update_ui(self, moving=False):
@@ -201,6 +240,11 @@ class StructureTab(QtWidgets.QWidget):
 
     def roi_draw_clicked(self):
         self.roi_draw_handler.show_roi_draw_options()
+
+    def roi_manipulate_clicked(self):
+        """ Open ROI Manipulate Window """
+        self.roi_manipulate_handler.show_roi_manipulate_options(
+            self.color_dict)
 
     def structure_modified(self, changes):
         """
@@ -302,32 +346,7 @@ class StructureTab(QtWidgets.QWidget):
             self.save_new_rtss(auto=True)
 
     def show_modified_indicator(self):
-        self.modified_indicator_widget = QtWidgets.QWidget()
-        self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
-        modified_indicator_layout = QtWidgets.QHBoxLayout()
-        modified_indicator_layout.setAlignment(
-            QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
-
-        modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap(
-            resource_path("res/images/btn-icons/alert_icon.png")))
-        modified_indicator_layout.addWidget(modified_indicator_icon)
-
-        modified_indicator_text = QtWidgets.QLabel(
-            "Structures have been modified")
-        modified_indicator_text.setStyleSheet("color: red")
-        modified_indicator_layout.addWidget(modified_indicator_text)
-
-        self.modified_indicator_widget.setLayout(modified_indicator_layout)
-        # When the widget is clicked, save the rtss
-        self.modified_indicator_widget.mouseReleaseEvent = self.save_new_rtss
-
-        # Temporarily remove the ROI modify buttons, add this indicator, then
-        # add them back again.
-        # This ensure that the modifier appears above the ROI modify buttons.
-        self.structure_tab_layout.removeWidget(self.roi_buttons)
-        self.structure_tab_layout.addWidget(self.modified_indicator_widget)
-        self.structure_tab_layout.addWidget(self.roi_buttons)
+        self.modified_indicator_widget.setVisible(True)
 
     def structure_checked(self, state, roi_id):
         """
@@ -450,7 +469,8 @@ class StructureTab(QtWidgets.QWidget):
                 existing_rtss_directory = existing_rtss_files[0]
         elif len(existing_rtss_files) > 1:
             self.display_select_rtss_window()
-            return  # This function will be called again when a RTSS is selected
+            # This function will be called again when a RTSS is selected
+            return
         else:
             existing_rtss_directory = None
 
@@ -501,8 +521,8 @@ class StructureTab(QtWidgets.QWidget):
                                             "The RTSTRUCT file has been saved."
                                             )
             self.patient_dict_container.set("rtss_modified", False)
-            if hasattr(self, "modified_indicator_widget"):
-                self.modified_indicator_widget.setParent(None)
+            # Hide the modified indicator
+            self.modified_indicator_widget.setVisible(False)
 
     def display_confirm_merge(self, duplicated_names):
         confirm_merge = QtWidgets.QMessageBox(parent=self)
