@@ -244,8 +244,8 @@ class StructureTab(QtWidgets.QWidget):
 
     def moving_container_structure_modified(self, changes):
         """
-        Executes when a structure is renamed/deleted. Displays indicator
-        that structure has changed. changes is a tuple of (new_dataset,
+        Executes when a structure of moving container is modified.
+        Changes is a tuple of (new_dataset,
         description_of_changes)
         description_of_changes follows the format
         {"type_of_change": value_of_change}.
@@ -323,12 +323,13 @@ class StructureTab(QtWidgets.QWidget):
                 self.moving_dict_container.set("raw_dvh", new_raw_dvh)
 
         if "transfer" in change_description and change_description["transfer"] is None:
-            self.save_new_rtss_to_moving_image_set(auto=True)
+            self.save_new_rtss_to_moving_image_set()
 
     def fixed_container_structure_modified(self, changes):
         """
-        Executes when a structure is renamed/deleted. Displays indicator
-        that structure has changed. changes is a tuple of (new_dataset,
+        Executes when a structure of fixed patient container is modified
+        Displays indicator that structure has changed.
+        Changes is a tuple of (new_dataset,
         description_of_changes)
         description_of_changes follows the format
         {"type_of_change": value_of_change}.
@@ -534,7 +535,7 @@ class StructureTab(QtWidgets.QWidget):
 
     def save_new_rtss_to_fixed_image_set(self, event=None, auto=False):
         """
-        Save the current RTSS stored in patient dictionary to the file system.
+        Save the current RTSS stored in fixed patient dictionary to the file system.
         :param event: Not used but will be passed as an argument from
         modified_indicator_widget on mouseReleaseEvent
         :param auto: Used for auto save without user confirmation
@@ -606,12 +607,12 @@ class StructureTab(QtWidgets.QWidget):
             # Hide the modified indicator
             self.modified_indicator_widget.setVisible(False)
 
-    def save_new_rtss_to_moving_image_set(self, event=None, auto=False):
+    def save_new_rtss_to_moving_image_set(self, event=None):
         """
-        Save the current RTSS stored in patient dictionary to the file system.
+        Save the current RTSS stored in moving patient dictionary to the file system.
+        ROIs modification into moving patient dict is auto saved
         :param event: Not used but will be passed as an argument from
         modified_indicator_widget on mouseReleaseEvent
-        :param auto: Used for auto save without user confirmation
         """
         if self.moving_dict_container.get("existing_file_rtss") is not None:
             existing_rtss_directory = str(Path(self.moving_dict_container.get(
@@ -621,49 +622,22 @@ class StructureTab(QtWidgets.QWidget):
         rtss_directory = str(
             Path(self.moving_dict_container.get("file_rtss")))
 
-        if auto:
-            confirm_save = QtWidgets.QMessageBox.Yes
+        if existing_rtss_directory is None:
+            self.moving_dict_container.get("dataset_rtss").save_as(
+                rtss_directory)
         else:
-            confirm_save = \
-                QtWidgets.QMessageBox.information(self, "Confirmation",
-                                                  "Are you sure you want to "
-                                                  "save the modified RTSTRUCT "
-                                                  "file? This will overwrite "
-                                                  "the existing file. This is "
-                                                  "not reversible.",
-                                                  QtWidgets.QMessageBox.Yes,
-                                                  QtWidgets.QMessageBox.No)
-
-        if confirm_save == QtWidgets.QMessageBox.Yes:
-            if existing_rtss_directory is None:
-                self.moving_dict_container.get("dataset_rtss").save_as(
-                    rtss_directory)
-            else:
-                new_rtss = self.moving_dict_container.get("dataset_rtss")
-                old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
-                old_roi_names = \
-                    set(value["name"] for value in
-                        ImageLoading.get_roi_info(old_rtss).values())
-                new_roi_names = \
-                    set(value["name"] for value in
-                        self.moving_dict_container.get("rois").values())
-                duplicated_names = old_roi_names.intersection(new_roi_names)
-
-                # stop if there are conflicting roi names and user do not
-                # wish to proceed.
-                if duplicated_names and not self.display_confirm_merge(
-                        duplicated_names):
-                    return
-
-                merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
-                merged_rtss.save_as(existing_rtss_directory)
-
-            if not auto:
-                QtWidgets.QMessageBox.about(self.parentWidget(),
-                                            "File saved",
-                                            "The RTSTRUCT file has been saved."
-                                            )
-            self.moving_dict_container.set("rtss_modified", False)
+            new_rtss = self.moving_dict_container.get("dataset_rtss")
+            old_rtss = pydicom.dcmread(existing_rtss_directory, force=True)
+            old_roi_names = \
+                set(value["name"] for value in
+                    ImageLoading.get_roi_info(old_rtss).values())
+            new_roi_names = \
+                set(value["name"] for value in
+                    self.moving_dict_container.get("rois").values())
+            duplicated_names = old_roi_names.intersection(new_roi_names)
+            merged_rtss = merge_rtss(old_rtss, new_rtss, duplicated_names)
+            merged_rtss.save_as(existing_rtss_directory)
+        self.moving_dict_container.set("rtss_modified", False)
 
     def display_confirm_merge(self, duplicated_names):
         confirm_merge = QtWidgets.QMessageBox(parent=self)
