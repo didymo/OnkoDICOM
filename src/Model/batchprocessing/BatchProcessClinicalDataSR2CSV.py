@@ -91,7 +91,7 @@ class BatchProcessClinicalDataSR2CSV(BatchProcess):
         self.write_to_csv(data_dict)
         return True
 
-    def ind_clinical_data_sr(self):
+    def find_clinical_data_sr(self):
         """
         Searches the patient dict container for any SR files containing
         clinical data. Returns the first SR with clinical data found.
