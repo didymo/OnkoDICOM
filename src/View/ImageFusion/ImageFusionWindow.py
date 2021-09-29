@@ -483,19 +483,11 @@ class UIImageFusionWindow(object):
         # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
 
-        if total_selected_image_series > 1:
-            header = "Cannot proceed with more than 1 image selected."
-            proceed = False
-        elif total_selected_image_series < 1:
-            header = "Cannot proceed with no image selected"
-            proceed = False
-        elif not ('CT' in selected_series_types or
-                  'MR' in selected_series_types or
-                  'PT' in selected_series_types):
+        if total_selected_image_series < 1:
             header = "Cannot proceed without an image."
             proceed = False
-        elif 'RTDOSE' in selected_series_types:
-            header = "Cannot fuse with a RTDOSE file."
+        elif total_selected_image_series > 1:
+            header = "Cannot proceed with more than 1 selected image."
             proceed = False
         elif selected_patient.dicom_object.patient_id.strip() != \
                 self.patient_id:
@@ -504,12 +496,75 @@ class UIImageFusionWindow(object):
         elif self.patient_current_image_series_uid in selected_series_id:
             header = "Cannot fuse with the same series."
             proceed = False
+        elif not self.check_selected_items_referencing(checked_nodes):
+            # Check that selected items properly reference each other
+            header = "Selected series do not reference each other."
+            proceed = False
+        elif 'RTSTRUCT' not in selected_series_types and \
+            self.check_existing_rtss(checked_nodes):
+            header = "The associated RTSTRUCT must be selected."
+            proceed = False
+        elif 'RTDOSE' in selected_series_types:
+            header = "Cannot fuse with a RTDOSE file."
+            proceed = False
         else:
             header = ""
         self.open_patient_window_confirm_button.setDisabled(not proceed)
 
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
+
+    def check_selected_items_referencing(self, items):
+        """
+        Check if selected tree items properly reference each other.
+        :param items: List of selected DICOMWidgetItems.
+        :return: True if the selected items belong to the same tree branch.
+        """
+        # Dictionary of series of different file types
+        series = {
+            "IMAGE": None,
+            "RTSTRUCT": None,
+            "RTPLAN": None,
+            "RTDOSE": None,
+            "SR": None
+        }
+
+        for item in items:
+            series_type = item.dicom_object.get_series_type()
+            if series_type in series:
+                series[series_type] = item
+            else:
+                series["IMAGE"] = item
+
+        # Check if the RTSTRUCT, RTPLAN, and RTDOSE are a child item of the
+        # image series
+        if series["IMAGE"]:
+            if series["RTSTRUCT"] and series["RTSTRUCT"].parent() != \
+                    series["IMAGE"]:
+                return False
+
+            if series["RTPLAN"] and \
+                    series["RTPLAN"].parent().parent() != series["IMAGE"]:
+                return False
+
+            if series["SR"] and series["SR"].parent() != series["IMAGE"]:
+                return False
+
+        return True
+
+    def check_existing_rtss(self, items):
+        """
+        Check for existing rtss
+        :return: bool, whether there is a rtss associated with the selected
+        image series
+        """
+        image_series = ['CT', 'MR', 'PT']
+        for item in items:
+            if item.dicom_object.get_series_type() in image_series:
+                for i in range(item.childCount()):
+                    if item.child(i).dicom_object:
+                        return True
+                return False
 
     def get_checked_nodes(self, root):
         """
