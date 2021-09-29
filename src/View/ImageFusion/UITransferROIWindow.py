@@ -350,7 +350,8 @@ class UITransferROIWindow:
         # in patient B's initial roi names list
         if transferred_roi_name in patient_B_initial_roi_name_list:
             if self.add_suffix:
-                transferred_roi_name = generate_non_duplicated_name(transferred_roi_name, patient_B_initial_roi_name_list)
+                transferred_roi_name = generate_non_duplicated_name(
+                    transferred_roi_name, patient_B_initial_roi_name_list)
             else:
                 QMessageBox.about(self, "Transfer Failed",
                                   "Duplicated ROI name. "
@@ -396,7 +397,8 @@ class UITransferROIWindow:
             # if add suffix is ticked, iteratively try adding suffix
             # from _A to _Z, stop when no duplicate found
             if self.add_suffix:
-                transferred_roi_name = generate_non_duplicated_name(transferred_roi_name, patient_A_current_roi_name_list)
+                transferred_roi_name = generate_non_duplicated_name(
+                    transferred_roi_name, patient_A_current_roi_name_list)
             else:
                 QMessageBox.about(self, "Transfer Failed",
                                   "Duplicated ROI name. "
