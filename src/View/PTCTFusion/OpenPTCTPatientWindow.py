@@ -438,6 +438,9 @@ class UIOpenPTCTPatientWindow(object):
         elif selected_series_types.count('PT') < 1:
             header = "PT image not selected."
             proceed = False
+        if selected_series_types.count('MR') > 0:
+            header = "PETCT is incompatible with MR files"
+            proceed = False
         if 'RTSTRUCT' in selected_series_types:
             header = "Cannot proceed with RTSTRUCT file"
             proceed = False
