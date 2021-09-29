@@ -703,19 +703,19 @@ def transform_rois_contours(axial_rois_contours):
             for contour in contours:
                 for i in range(len(contour)):
                     if contour[i][1] in coronal_rois_contours[name]:
-                        coronal_rois_contours[name][contour[i][1]][0]\
+                        coronal_rois_contours[name][contour[i][1]][0] \
                             .append([contour[i][0], slice_ids[slice_id]])
                     else:
                         coronal_rois_contours[name][contour[i][1]] = [[]]
-                        coronal_rois_contours[name][contour[i][1]][0]\
+                        coronal_rois_contours[name][contour[i][1]][0] \
                             .append([contour[i][0], slice_ids[slice_id]])
 
                     if contour[i][0] in sagittal_rois_contours[name]:
-                        sagittal_rois_contours[name][contour[i][0]][0]\
+                        sagittal_rois_contours[name][contour[i][0]][0] \
                             .append([contour[i][1], slice_ids[slice_id]])
                     else:
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
-                        sagittal_rois_contours[name][contour[i][0]][0]\
+                        sagittal_rois_contours[name][contour[i][0]][0] \
                             .append([contour[i][1], slice_ids[slice_id]])
 
     coronal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
@@ -726,6 +726,14 @@ def transform_rois_contours(axial_rois_contours):
 
 
 def convert_coordinates_map_to_polygon_of_rois(contours_map):
+    """
+
+    this function converts a map (dictionary) of ROI contours into polygon for
+    better ROI display
+
+    :param contours_map: a map(dictionary) of ROI contours.
+
+    """
     polygon_dict = {}
     for name, contours_dict in contours_map.items():
         polygon_dict[name] = {}
@@ -748,6 +756,7 @@ def calculate_concave_hull_of_points(pixel_coords, alpha):
     target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in
                            pixel_coords]
     # Calculate the concave hull of the points.
+    # TODO: auto-generate an optimized alpha value
     # alpha = 0.95 * alphashape.optimizealpha(points)
     hull = target_pixel_coords
     try:
@@ -763,8 +772,11 @@ def calculate_concave_hull_of_points(pixel_coords, alpha):
     return polygon_list
 
 
-# Convert hull to points
 def hull_to_points(hull):
+    """
+    This function converts hull data to pixel coordinates
+    :param hull: list of hull data
+    """
     hull_xy = hull.exterior.coords.xy
 
     points = []
@@ -849,7 +861,6 @@ def ordered_list_rois(rois):
 def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
                                 filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
-
     """
     Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
