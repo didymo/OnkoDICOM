@@ -1,7 +1,7 @@
 import csv
 import platform
 from pydicom import dcmread
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
 
 
@@ -16,6 +16,7 @@ class ROINameCleaningOptionComboBox(QtWidgets.QComboBox):
         self.addItem("Ignore")
         self.addItem("Modify")
         self.addItem("Delete")
+        self.setObjectName("BatchROICleaning")
 
 
 class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
@@ -31,7 +32,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         :param organs: a list of standard organ names.
         """
         QtWidgets.QComboBox.__init__(self)
-
+        self.setObjectName("BatchROICleaning")
         # Populate combo box options
         for organ in organs:
             self.addItem(organ)
@@ -42,6 +43,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         A slot for changing whether this combo box is enabled or
         disabled depending on whether "Modify" or "Delete" has been
         selected for the associated ROI.
+        :param index: the new index of the combo box.
         """
         if index == 1:
             self.setEnabled(True)
@@ -60,7 +62,7 @@ class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
         """
         Initialises the object, setting the combo box options to be a
         list of the datasets.
-        :param organs: a list of standard organ names.
+        :param rtss_list: a list RTSTRUCT paths.
         """
         QtWidgets.QComboBox.__init__(self)
 
@@ -68,6 +70,7 @@ class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
         for rtss in rtss_list:
             self.addItem(rtss)
 
+        self.setObjectName("BatchROICleaning")
         # TODO: make changing option do nothing
 
 
@@ -153,6 +156,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.table_roi.setHorizontalHeaderLabels(
             [" ROI Name ", " Option ", " New Name ", " Dataset Location "])
 
+        # Set text align
         self.table_roi.horizontalHeaderItem(0).setTextAlignment(
             QtCore.Qt.AlignLeft)
         self.table_roi.horizontalHeaderItem(1).setTextAlignment(
@@ -162,6 +166,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.table_roi.horizontalHeaderItem(3).setTextAlignment(
             QtCore.Qt.AlignLeft)
 
+        # Set header stretch
         roi_name_header = self.table_roi.horizontalHeader()
         roi_name_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         roi_name_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -184,6 +189,17 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                                 patients loaded.
         :param batch_directory: The directory selected for batch processing.
         """
+        # Update table column view
+        roi_name_header = self.table_roi.horizontalHeader()
+        roi_name_header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Stretch)
+        roi_name_header.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.ResizeToContents)
+        roi_name_header.setSectionResizeMode(
+            2, QtWidgets.QHeaderView.ResizeToContents)
+        roi_name_header.setSectionResizeMode(
+            3, QtWidgets.QHeaderView.ResizeToContents)
+
         # Loop through each patient, get every RTSTRUCT
         rtstruct_list = []
         for patient in dicom_structure.patients:
@@ -284,3 +300,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             self.table_roi.setCellWidget(i, 2, name_box)
             self.table_roi.setCellWidget(i, 3, rtss_combo_box)
             i += 1
+
+        # Set row height
+        vertical_header = self.table_roi.verticalHeader()
+        vertical_header.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        vertical_header.setDefaultSectionSize(40)
