@@ -176,12 +176,13 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Add table to the main layout
         self.main_layout.addWidget(self.table_roi)
 
-    def populate_table(self, dicom_structure):
+    def populate_table(self, dicom_structure, batch_directory):
         """
         Populates the table with ROI names and options once datasets
         have been loaded. Called when datasets have finished loading.
         :param dicom_structure: DICOM structure object representing all
                                 patients loaded.
+        :param batch_directory: The directory selected for batch processing.
         """
         # Loop through each patient, get every RTSTRUCT
         rtstruct_list = []
@@ -249,6 +250,12 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             dataset_list = rois[roi_name]
             if len(dataset_list) == 0:
                 continue
+
+            # Remove common path from RTStructs
+            for index in range(len(dataset_list)):
+                dataset_list[index] = \
+                    dataset_list[index].replace(batch_directory, '')
+
             rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
             rtss_combo_box.setStyleSheet(self.stylesheet)
 

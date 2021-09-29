@@ -1,5 +1,6 @@
 import platform
 from os.path import expanduser
+from pathlib import Path
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
@@ -240,7 +241,9 @@ class UIBatchProcessingWindow(object):
                                                len(dicom_structure.patients))
 
             # Update the batch name cleaning table
-            self.batchnamecleaning_tab.populate_table(dicom_structure)
+            batch_directory = self.directory_input.text()
+            self.batchnamecleaning_tab.populate_table(dicom_structure,
+                                                      batch_directory)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -286,8 +289,10 @@ class UIBatchProcessingWindow(object):
                 # Get the dataset(s) the ROI is in
                 dataset_list = []
                 dataset_combo_box = roi_name_table.cellWidget(i, 3)
+                rtss_path = self.directory_input.text()
                 for index in range(dataset_combo_box.count()):
-                    dataset_list.append(dataset_combo_box.itemText(index))
+                    dataset_list.append(
+                        rtss_path + dataset_combo_box.itemText(index))
 
                 if roi_name not in name_cleaning_options.keys():
                     name_cleaning_options[roi_name] = []
