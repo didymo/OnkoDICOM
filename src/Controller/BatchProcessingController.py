@@ -28,7 +28,7 @@ class BatchProcessingController:
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
-        self.batch_summary = {}
+        self.batch_summary = [{}, ""]
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -194,9 +194,9 @@ class BatchProcessingController:
                     reason = process.summary
 
                 # Append process summary
-                if patient not in self.batch_summary.keys():
-                    self.batch_summary[patient] = {}
-                self.batch_summary[patient]["iso2roi"] = reason
+                if patient not in self.batch_summary[0].keys():
+                    self.batch_summary[0][patient] = {}
+                self.batch_summary[0][patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
 
         # Perform batch ROI Name Cleaning on all patients
@@ -207,8 +207,10 @@ class BatchProcessingController:
                     BatchProcessROINameCleaning(progress_callback,
                                                 interrupt_flag,
                                                 self.name_cleaning_options)
-                success = process.start()
-                # TODO: add summary of batch ROI name cleaning
+                process.start()
+
+                # Append process summary
+                self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
         PatientDictContainer().clear()

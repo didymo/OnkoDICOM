@@ -48,9 +48,10 @@ class BatchProcessROINameCleaning(BatchProcess):
             # TODO: convert print to logging
             print("Stopped Batch ROI Name Cleaning")
             self.patient_dict_container.clear()
-            self.summary = "INTERRUPT"
+            self.summary = "Batch ROI Name Cleaning was interrupted."
             return False
 
+        self.summary = "==Batch ROI Name Cleaning==\n"
         step = len(self.roi_options) / 100
         progress = 0
 
@@ -61,28 +62,40 @@ class BatchProcessROINameCleaning(BatchProcess):
                 # TODO: convert print to logging
                 print("Stopped Batch ROI Name Cleaning")
                 self.patient_dict_container.clear()
-                self.summary = "INTERRUPT"
+                self.summary = "Batch ROI Name Cleaning was interrupted."
                 return False
 
+            self.summary += "ROI: " + roi + "\n"
             roi_step = len(self.roi_options[roi]) / step
             progress += roi_step
             self.progress_callback.emit(("Cleaning ROIs...", progress))
 
+            # Append dataset locations to summary
+            self.summary += "Dataset(s): "
+            for ds in self.roi_options[roi]:
+                self.summary += ds[2] + ", "
+            self.summary += "\n"
+
+            # Loop through each dataset in the ROI
             for info in self.roi_options[roi]:
                 # If ignore
                 if info[0] == 0:
+                    self.summary += "Process: Ignored\n\n"
                     continue
                 # Rename
                 elif info[0] == 1:
                     old_name = roi
                     new_name = info[1]
                     self.rename(info[2], old_name, new_name)
+                    self.summary += "Process: Renamed from \'" + old_name \
+                                    + "\' to \'" + new_name + "\'\n\n"
                 # Delete
                 elif info[0] == 2:
                     name = roi
                     rtss = dcmread(info[2])
                     rtss = ROI.delete_roi(rtss, name)
                     rtss.save_as(info[2])
+                    self.summary += "Process: Deleted\n\n"
 
         return True
 

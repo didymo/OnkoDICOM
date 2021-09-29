@@ -23,6 +23,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
 
         # Create widgets
         self.summary_label = QtWidgets.QLabel()
+        self.summary_label.setWordWrap(True)
         self.scroll_area = QtWidgets.QScrollArea()
         self.export_button = QtWidgets.QPushButton("Export to Text File")
         self.ok_button = QtWidgets.QPushButton("Continue")
@@ -65,15 +66,16 @@ class BatchSummaryWindow(QtWidgets.QDialog):
     def set_summary_text(self, batch_summary):
         """
         Sets the summary text.
-        :param batch_summary: Dictionary where key is a patient, and
-                              value is a dictionary of process name and
-                              status key-value pairs.
+        :param batch_summary: List where first index is a dictionary where key
+                              is a patient, and value is a dictionary of
+                              process name and status key-value pairs, and
+                              second index is a batch ROI name cleaning summary
         """
         # Create summary text
         summary_text = ""
-        for patient in batch_summary.keys():
+        for patient in batch_summary[0].keys():
             summary_text += "Patient ID: " + patient.patient_id + "\n"
-            patient_summary = batch_summary[patient]
+            patient_summary = batch_summary[0][patient]
             for process in patient_summary.keys():
                 # Success
                 if patient_summary[process] == "SUCCESS":
@@ -92,6 +94,10 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                         + " skipped as no RX Dose value was found."
                 summary_text += "\n"
             summary_text += "\n"
+
+        # Add batch ROI name cleaning summary
+        if batch_summary[1] != "":
+            summary_text += batch_summary[1]
 
         # Set summary text
         self.summary_label.setText(summary_text)
