@@ -51,15 +51,29 @@ class UIWelcomeWindow(object):
         self.window_vertical_layout_box.addWidget(self.welcome_window_slogan)
 
         # button to open a patient
-        self.buttons_holder = QtWidgets.QHBoxLayout()
         self.open_patient_button = QtWidgets.QPushButton()
         self.open_patient_button.setObjectName("OpenPatientButton")
         self.open_patient_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.open_patient_button.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.open_patient_button.resize(480, 261)
-        self.buttons_holder.addStretch(1)
-        self.buttons_holder.addWidget(self.open_patient_button)
-        self.buttons_holder.addStretch(1)
+
+        # Button to start batch processing
+        self.open_batch_button = QtWidgets.QPushButton()
+        self.open_batch_button.setObjectName("OpenBatchProcessingButton")
+        self.open_batch_button.setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.open_batch_button.setSizePolicy(
+            QtWidgets.QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+        self.open_batch_button.resize(480, 261)
+
+        # Setup button layout - empty QLabels to align buttons nicely
+        self.buttons_holder = QtWidgets.QGridLayout()
+        self.buttons_holder.addWidget(QtWidgets.QLabel(), 1, 0, 1, 1)
+        self.buttons_holder.addWidget(self.open_patient_button, 1, 1, 2, 1)
+        self.buttons_holder.addWidget(QtWidgets.QLabel(), 1, 3, 1, 1)
+        self.buttons_holder.addWidget(QtWidgets.QLabel(), 3, 0, 1, 1)
+        self.buttons_holder.addWidget(self.open_batch_button, 3, 1, 2, 1)
+        self.buttons_holder.addWidget(QtWidgets.QLabel(), 3, 3, 1, 1)
         self.window_vertical_layout_box.addStretch(1)
         self.window_vertical_layout_box.addLayout(self.buttons_holder)
         self.window_vertical_layout_box.addStretch(1)
@@ -78,4 +92,6 @@ class UIWelcomeWindow(object):
         self.welcome_window_label.setText(_translate("WelcomeWindowInstance", "Welcome to OnkoDICOM!"))
         self.welcome_window_slogan.setText(_translate("WelcomeWindowInstance",
                                         "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
-        self.open_patient_button.setText(_translate("WelcomeWindowInstance", "Continue"))
+        self.open_patient_button.setText(_translate("WelcomeWindowInstance", "Individual Patient Curation"))
+        self.open_batch_button.setText(_translate("WelcomeWindowInstance",
+                                                  "Batch Processing"))
