@@ -1,9 +1,12 @@
+import platform
 import threading
 
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout
 
+from src.Controller.PathHandler import resource_path
 from src.Model.Worker import Worker
 
 
@@ -29,6 +32,20 @@ class ProgressWindow(QDialog):
         self.setFixedSize(248, 80)
 
         self.text_field = QLabel("Loading")
+
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
+
+        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+
+        window_icon = QIcon()
+        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
+                              QIcon.Normal, QIcon.Off)
+
+        self.setWindowIcon(window_icon)
+        self.progress_bar.setStyleSheet(self.stylesheet)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.text_field)

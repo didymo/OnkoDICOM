@@ -8,6 +8,7 @@ from src.Model.InitialModel import create_initial_model
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.MovingModel import read_images_for_fusion
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.BatchProcessingWindow import UIBatchProcessingWindow
 from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
 from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
@@ -43,18 +44,26 @@ class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
     go_next_window = QtCore.Signal()
+    go_batch_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.open_patient_button.clicked.connect(self.go_open_patient_window)
+        self.open_batch_button.clicked.connect(self.open_batch_window)
 
     def go_open_patient_window(self):
         """
         Function to progress to the OpenPatientWindow
         """
         self.go_next_window.emit()
+
+    def open_batch_window(self):
+        """
+        Function to progress to the BatchProcessingWindow
+        """
+        self.go_batch_window.emit()
 
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
@@ -226,6 +235,15 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 event.ignore()
         else:
             self.cleanup()
+
+
+class BatchWindow(QtWidgets.QWidget, UIBatchProcessingWindow):
+    go_next_window = QtCore.Signal()
+
+    # Initialize the batch window and set up the UI
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.setup_ui(self)
 
 
 class PyradiProgressBar(QtWidgets.QWidget):
