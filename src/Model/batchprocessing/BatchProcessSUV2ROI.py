@@ -53,8 +53,6 @@ class BatchProcessSUV2ROI(BatchProcess):
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped SUV2ROI")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -71,8 +69,6 @@ class BatchProcessSUV2ROI(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped SUV2ROI")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -89,8 +85,6 @@ class BatchProcessSUV2ROI(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped SUV2ROI")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -108,15 +102,11 @@ class BatchProcessSUV2ROI(BatchProcess):
         contour_data = suv2roi.calculate_contours()
 
         if not contour_data:
-            # TODO: convert print to logging
-            print("Boundaries could not be calculated.")
             self.summary = "SUV_" + suv2roi.failure_reason
             return False
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped SUV2ROI")
             self.summary = "INTERRUPT"
             return False
 

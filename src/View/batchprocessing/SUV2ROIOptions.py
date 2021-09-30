@@ -59,7 +59,7 @@ class SUV2ROIOptions(QtWidgets.QWidget):
         # Note - "New Name" is only enabled if the option "Rename" is
         # selected.
         self.table_pet_weight.setHorizontalHeaderLabels(
-            [" Patient ID ", " Weight "])
+            [" Patient ID (kg) ", " Weight "])
 
         self.table_pet_weight.horizontalHeaderItem(0).setTextAlignment(
             QtCore.Qt.AlignLeft)
