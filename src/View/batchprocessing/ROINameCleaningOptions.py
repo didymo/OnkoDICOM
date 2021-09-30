@@ -114,6 +114,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
         # Class variables
         self.organ_names = []
+        self.organ_names_lowercase = []
         self.volume_prefixes = []
 
         self.get_standard_names()
@@ -130,6 +131,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.organ_names.append(row[0])
+                self.organ_names_lowercase.append(row[0].lower())
             f.close()
 
         # Get standard volume prefixes
@@ -285,10 +287,17 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             else:
                 name_box = \
                     ROINameCleaningOrganComboBox(self.organ_names)
+                # Set default combo box entry to organ name in proper case
+                # if the organ name is a standard one.
+                if roi_name.lower() in self.organ_names_lowercase:
+                    index = self.organ_names_lowercase.index(roi_name.lower())
+                    name_box.setCurrentIndex(index)
+                    name_box.setEnabled(True)
+                    combo_box.setCurrentIndex(1)
+                else:
+                    name_box.setEnabled(False)
 
-            combo_box.currentIndexChanged.connect(
-                name_box.change_enabled)
-            name_box.setEnabled(False)
+            combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
 
             # Add row to table
