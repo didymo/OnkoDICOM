@@ -1,3 +1,4 @@
+from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
 from src.View.mainpage.DrawROIWindow.UIDrawROIWindow import UIDrawROIWindow
@@ -150,3 +151,55 @@ class ROIManipulateOption:
         else:
             self.manipulate_window.update_ui(rois, dataset_rtss, roi_color)
         self.manipulate_window.show()
+
+
+class ROITransferOptionUI(QtWidgets.QMainWindow, UITransferROIWindow):
+    """
+    Create the ROI Manipulate Options class based on the UI from the file in
+    UITransferROIWindow
+    """
+    signal_roi_transferred_to_fixed_container = QtCore.Signal(tuple)
+    signal_roi_transferred_to_moving_container = QtCore.Signal(tuple)
+
+    def __init__(self):
+        super(ROITransferOptionUI, self).__init__()
+        self.setup_ui(self, self.signal_roi_transferred_to_fixed_container,
+                      self.signal_roi_transferred_to_moving_container)
+
+
+class ROITransferOption:
+    """
+        The class that will be called by ImageFusion to access the ROI
+        Transfer controller
+        """
+    def __init__(self, fixed_dict_structure_modified_function,
+                 moving_dict_structure_modified_function):
+        """
+
+        :param fixed_dict_structure_modified_function: function to call when
+        the fixed image's rtss is modified
+        :param moving_dict_structure_modified_function: function to call when
+        the moving image's rtss is modified
+
+        """
+        super(ROITransferOption, self).__init__()
+        self.fixed_dict_structure_modified_function = \
+            fixed_dict_structure_modified_function
+        self.moving_dict_structure_modified_function = \
+            moving_dict_structure_modified_function
+
+    def show_roi_transfer_options(self):
+        """
+
+        function to display ROI Transfer window when
+        ROI Transfer button is clicked.
+
+        """
+        self.roi_transfer_option_pop_up_window = ROITransferOptionUI()
+        self.roi_transfer_option_pop_up_window. \
+            signal_roi_transferred_to_moving_container\
+            .connect(self.moving_dict_structure_modified_function)
+        self.roi_transfer_option_pop_up_window. \
+            signal_roi_transferred_to_fixed_container\
+            .connect(self.fixed_dict_structure_modified_function)
+        self.roi_transfer_option_pop_up_window.show()
