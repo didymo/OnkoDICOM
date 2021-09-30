@@ -127,6 +127,9 @@ class BatchProcessingController:
         :param progress_callback: A signal that receives the current
                                   progress of the loading.
         """
+        # Clear batch summary
+        self.batch_summary = {}
+
         patient_count = len(self.dicom_structure.patients)
         cur_patient_num = 0
         self.timestamp = self.create_timestamp()
