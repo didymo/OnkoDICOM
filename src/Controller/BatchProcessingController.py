@@ -3,6 +3,8 @@ import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
+    BatchProcessPyRad2PyRadSR
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -119,7 +121,7 @@ class BatchProcessingController:
 
         return cur_patient_files
 
-    def perform_processes(self, interrupt_flag, progress_callback):
+    def perform_processes(self, interrupt_flag, progress_callback=None):
         """
         Performs each selected process to each selected patient.
         :param interrupt_flag: A threading.Event() object that tells the
@@ -144,7 +146,6 @@ class BatchProcessingController:
 
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
-
             # Perform ISO2ROI on patient
             if "iso2roi" in self.processes:
                 # Get patient files
@@ -187,6 +188,26 @@ class BatchProcessingController:
                     self.batch_summary[patient] = {}
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
+
+            if 'pyrad2pyrad-sr' in self.processes:
+                # Get current files
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessPyRad2PyRadSR(progress_callback,
+                                                    interrupt_flag,
+                                                    cur_patient_files)
+                success = process.start()
+
+                # Set summary message
+                if success:
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]['pyrad2pyradSR'] = reason
+                progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
 
         PatientDictContainer().clear()
 

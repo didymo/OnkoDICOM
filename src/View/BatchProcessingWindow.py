@@ -4,7 +4,7 @@ from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
-from src.View.batchprocessing.Pyrad2PyradSR import Pyrad2PyradSROptions
+from src.View.batchprocessing.Pyrad2PyradSROptions import Pyrad2PyradSROptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -245,7 +245,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi']
+        processes = ['iso2roi', 'pyrad2pyrad-sr']
         selected_processes = []
 
         # Get the selected processes
