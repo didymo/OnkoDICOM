@@ -169,6 +169,13 @@ class BatchProcess:
                                         == read_data_dict[0].SeriesInstanceUID:
                                     rtss_found = True
 
+                # Add RTSS if there are no images
+                elif slice_name == 'rtss' and len(read_data_dict) == 0:
+                    rtss_found = True
+                    read_data_dict['rtss'] = read_file
+                    file_names_dict['rtss'] = file
+                    continue
+
                 # Continue if we have found an RTSS but it is not
                 # the right one
                 if slice_name == 'rtss' and not rtss_found:

@@ -3,6 +3,8 @@ import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
+    BatchProcessROIName2FMAID
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 from src.Model.DICOMStructure import Image, Series
@@ -199,10 +201,27 @@ class BatchProcessingController:
                 self.batch_summary[0][patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
 
+            # Perform batch ROI Name to FMA ID on patient
+            if 'roiname2fmaid' in self.processes:
+                # Get patient files and start process
+                cur_patient_files = self.get_patient_files(patient)
+                process = \
+                    BatchProcessROIName2FMAID(progress_callback,
+                                              interrupt_flag,
+                                              cur_patient_files)
+                process.start()
+
+                # Append process summary
+                reason = process.summary
+                if patient not in self.batch_summary[0].keys():
+                    self.batch_summary[0][patient] = {}
+                self.batch_summary[0][patient]["roiname2fmaid"] = reason
+                progress_callback.emit(("Completed ROI Name to FMA ID", 100))
+
         # Perform batch ROI Name Cleaning on all patients
         if 'roinamecleaning' in self.processes:
             if self.name_cleaning_options:
-                # Get ROIs, dataset locations, options
+                # Start the process
                 process = \
                     BatchProcessROINameCleaning(progress_callback,
                                                 interrupt_flag,

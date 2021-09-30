@@ -6,10 +6,10 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 class BatchProcessROINameCleaning(BatchProcess):
     """
-    This class handles batch processing for the DVH2CSV process.
+    This class handles batch processing for the ROI Name Cleaning process.
     Inherits from the BatchProcess class.
     """
-    # Allowed classes for CSV2ClinicalDataSR
+    # Allowed classes for ROI Name Cleaning
     allowed_classes = {
         # RT Structure Set
         "1.2.840.10008.5.1.4.1.1.481.3": {

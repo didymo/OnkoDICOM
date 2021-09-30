@@ -5,6 +5,8 @@ from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.ROIName2FMAIDOptions import \
+    ROIName2FMAIDOptions
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixLabel
 
@@ -116,10 +118,12 @@ class UIBatchProcessingWindow(object):
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
+        self.batchname2fma_tab = ROIName2FMAIDOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
+        self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
 
         # == Bottom widgets
         # Info text
@@ -252,7 +256,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'roinamecleaning']
+        processes = ['iso2roi', 'roinamecleaning', 'roiname2fmaid']
         selected_processes = []
 
         # Get the selected processes
