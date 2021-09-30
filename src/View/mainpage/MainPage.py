@@ -9,6 +9,7 @@ from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
+from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -128,7 +129,7 @@ class UIMainWindow:
             self.isodoses_tab.request_update_isodoses.connect(
                 self.update_views)
             self.isodoses_tab.request_update_ui.connect(
-                self.structures_tab.structure_modified)
+                self.structures_tab.fixed_container_structure_modified)
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
@@ -277,11 +278,13 @@ class UIMainWindow:
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view is not None:
                 if self.image_fusion_view_axial.horizontal_view is None or \
-                    self.image_fusion_view_axial.vertical_view is None or \
-                    self.image_fusion_view_coronal.horizontal_view is None or \
-                    self.image_fusion_view_coronal.vertical_view is None or \
-                    self.image_fusion_view_sagittal.horizontal_view is None or \
-                    self.image_fusion_view_sagittal.vertical_view is None:
+                        self.image_fusion_view_axial.vertical_view is None or \
+                        self.image_fusion_view_coronal.horizontal_view is None \
+                        or self.image_fusion_view_coronal.vertical_view is None \
+                        or \
+                        self.image_fusion_view_sagittal.horizontal_view is None \
+                        or \
+                        self.image_fusion_view_sagittal.vertical_view is None:
                     self.image_fusion_view_axial.set_views(
                         self.image_fusion_view_coronal,
                         self.image_fusion_view_sagittal)
@@ -330,7 +333,7 @@ class UIMainWindow:
             self.dicom_sagittal_view.zoom_out()
         else:
             self.dicom_single_view.zoom_out()
-        
+
         if image_reg_single:
             self.image_fusion_single_view.zoom_out()
 
@@ -358,12 +361,12 @@ class UIMainWindow:
 
         # Instance of Moving Model
         moving_dict_container = MovingDictContainer()
-        
+
         if moving_dict_container.has_modality("rtss"):
             if len(self.structures_tab.rois.items()) == 0:
                 self.structures_tab.update_ui(moving=True)
             # else:
-                # TODO: Display both ROIs in the same tab
+            # TODO: Display both ROIs in the same tab
 
         self.image_fusion_single_view \
             = ImageFusionAxialView()
@@ -376,6 +379,9 @@ class UIMainWindow:
             cut_line_color=QtGui.QColor(0, 255, 0))
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255))
+        self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
+            self.structures_tab.fixed_container_structure_modified,
+            self.structures_tab.moving_container_structure_modified)
 
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -396,6 +402,10 @@ class UIMainWindow:
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
+
+        self.image_fusion_four_views_layout.addWidget(
+            self.image_fusion_roi_transfer_option_view, 1, 1
+        )
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
 

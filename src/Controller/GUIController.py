@@ -1,21 +1,19 @@
 from shutil import which
-import os
 
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
 
+from src.Controller.PathHandler import resource_path
 from src.Model.InitialModel import create_initial_model
+from src.Model.MovingDictContainer import MovingDictContainer
+from src.Model.MovingModel import read_images_for_fusion
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
+from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.PyradiProgressBar import PyradiExtended
-from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
-from src.Controller.PathHandler import resource_path
-
-from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
-from src.Model.MovingModel import read_images_for_fusion
-from src.Model.MovingDictContainer import MovingDictContainer
 
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
@@ -218,7 +216,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
 
             if confirmation_dialog == QMessageBox.Save:
-                self.structures_tab.save_new_rtss()
+                self.structures_tab.save_new_rtss_to_fixed_image_set()
                 event.accept()
                 self.cleanup()
             elif confirmation_dialog == QMessageBox.Discard:

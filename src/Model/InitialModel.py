@@ -1,5 +1,9 @@
 import os
+
 import pydicom
+
+from src.Controller.PathHandler import resource_path
+from src.Model import ImageLoading
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
     dict_instance_uid
