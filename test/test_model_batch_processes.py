@@ -7,6 +7,8 @@ from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
+    BatchProcessROIName2FMAID
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 
@@ -14,7 +16,7 @@ from src.Model.batchprocessing.BatchProcessROINameCleaning import \
 class TestObject:
 
     def __init__(self):
-        self.batch_dir = Path.cwd().joinpath('test', 'testdata')
+        self.batch_dir = Path.cwd().joinpath('test', 'batchtestdata')
         self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
                                                 self.batch_dir,
                                                 self.DummyProgressWindow,
@@ -134,8 +136,8 @@ def test_batch_roi_name_cleaning(test_object):
                                               None)
 
         # Set options (rename LUNGS to Lungs, delete ISO0760)
-        roi_options = {rtss_path: [['LUNGS', 1, 'Lungs'],
-                                   ['ISO0760', 2]]}
+        roi_options = {'LUNGS': [[1, 'Lungs', rtss_path]],
+                       'ISO0760': [[2, 'Adrenal_L', rtss_path]]}
         process.roi_options = roi_options
 
         # Start the process
@@ -154,3 +156,45 @@ def test_batch_roi_name_cleaning(test_object):
 
         # Assert false if ROI name was not changed
         assert False
+
+
+def test_batch_roi_name_to_fma_id(test_object):
+    """
+    Test asserts an ROI changes name and one is deleted.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Get RTSS file path, count number of ROIs
+    rtss_path = None
+    for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
+        for name in files:
+            try:
+                ds = dcmread(os.path.join(root, name))
+                if ds.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.3':
+                    rtss_path = os.path.join(root, name)
+                    break
+            except (InvalidDicomError, FileNotFoundError):
+                pass
+
+    # Assert rtss exists
+    assert rtss_path is not None
+    assert os.path.exists(rtss_path)
+
+    for patient in test_object.get_patients():
+        # Get the files for the patient
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessROIName2FMAID(test_object.DummyProgressWindow,
+                                            test_object.DummyProgressWindow,
+                                            cur_patient_files)
+
+        # Start the process
+        status = process.start()
+        assert status
+
+        # Assert no ROIs called Lungs exists
+        ds = dcmread(rtss_path)
+        for roi in ds.StructureSetROISequence:
+            assert roi.ROIName is not 'Lungs'
