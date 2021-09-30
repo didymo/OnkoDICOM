@@ -1,5 +1,6 @@
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import Qt
+from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtCore import Qt, QRegularExpression
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLayout, QLabel, QSpinBox, \
     QComboBox, QSizePolicy, QDoubleSpinBox, QLineEdit
 
@@ -76,10 +77,8 @@ class ImageFusionOptions(object):
         """
         Custom setVisible function that will set the visibility of the GUI.
 
-        Parameters
-        ----------
-        visibility (boolean): flag for setting the GUI to visible
-
+        Args:
+            visibility (bool): flag for setting the GUI to visible
         """
         self.auto_image_fusion_frame.setVisible(visibility)
 
@@ -214,12 +213,20 @@ class ImageFusionOptions(object):
         self.shrink_factor_label = QLabel("Shrink Factor")
         self.shrink_factor_label.setAlignment(
             Qt.AlignLeft | Qt.AlignTrailing | Qt.AlignVCenter)
+
         self.gridLayout.addWidget(self.shrink_factor_label, 5, 0)
 
         self.shrink_factor_qLineEdit = QLineEdit()
-        self.shrink_factor_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
-                                                   QSizePolicy.Fixed)
-        # self.shrink_factor_qLineEdit.setText("[8]")
+        # self.shrink_factor_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
+        #                                           QSizePolicy.Fixed)
+        self.shrink_factor_qLineEdit.resize(
+            self.shrink_factor_qLineEdit.sizeHint().width(),
+            self.shrink_factor_qLineEdit.sizeHint().height()
+        )
+        self.shrink_factor_qLineEdit.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
+
         self.shrink_factor_qLineEdit.setToolTip("The multi-resolution "
                                                 "downsampling factors. Can be "
                                                 "up to three parameters in an "
@@ -284,9 +291,15 @@ class ImageFusionOptions(object):
         self.gridLayout.addWidget(self.smooth_sigma_label, 4, 2)
 
         self.smooth_sigmas_qLineEdit = QLineEdit()
-        self.smooth_sigmas_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
-                                                   QSizePolicy.Fixed)
-        # self.smooth_sigmas_qLineEdit.setText("[10]")
+        # self.smooth_sigmas_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
+        #                                            QSizePolicy.Fixed)
+        self.smooth_sigmas_qLineEdit.resize(
+            self.smooth_sigmas_qLineEdit.sizeHint().width(),
+            self.smooth_sigmas_qLineEdit.sizeHint().height()
+        )
+        self.smooth_sigmas_qLineEdit.setValidator(
+             QRegularExpressionValidator(
+                 QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
         self.smooth_sigmas_qLineEdit.setToolTip(
             "The multi-resolution smoothing "
             "kernal scale (Gaussian). Can "
@@ -297,8 +310,17 @@ class ImageFusionOptions(object):
         # Label to hold warning labels.
         self.warning_label = QLabel()
 
+        # Button for fast mode
+        self.fast_mode_button = QtWidgets.QPushButton("Fast Mode")
+        self.fast_mode_button .setCursor(
+            QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.fast_mode_button.clicked.connect(self.set_fast_mode)
+
+        # Add Widgets to the vertical layout
+        self.vertical_layout.addWidget(self.fast_mode_button)
         self.vertical_layout.addWidget(self.gridLayoutWidget)
         self.vertical_layout.addWidget(self.warning_label)
+
         # Set layout of frame to the gridlayout widget
         self.auto_image_fusion_frame.setLayout(self.vertical_layout)
 
@@ -388,11 +410,11 @@ class ImageFusionOptions(object):
         self.dict["metric"] = str(self.metric_comboBox.currentText())
         self.dict["optimiser"] = str(self.optimiser_comboBox.currentText())
 
-        a_string = self.shrink_factor_qLineEdit.text().split(", ")
+        a_string = self.shrink_factor_qLineEdit.text().split(",")
         a_int = list(map(int, a_string))
         self.dict["shrink_factors"] = a_int
 
-        a_string = self.smooth_sigmas_qLineEdit.text().split(", ")
+        a_string = self.smooth_sigmas_qLineEdit.text().split(",")
         a_int = list(map(int, a_string))
         self.dict["smooth_sigmas"] = a_int
 
@@ -408,14 +430,22 @@ class ImageFusionOptions(object):
         """
         Check the values of the smooth sigma and shrink factors of that are
         parameters used for images fusion.
-        Returns
-        -------
-
         """
-        # Check if the smooth sigma and shrink factor values match in terms
-        # of lengths. Otherwise, SITK.Execute() cannot perform with lengths
-        # that do not match.
+        print('Lengths of each ')
         len_smooth_sigmas = len(self.dict["smooth_sigmas"])
         len_shrink_factor = len(self.dict["shrink_factors"])
+        print(len_smooth_sigmas)
+        print(len_shrink_factor)
         if len_smooth_sigmas != len_shrink_factor:
             raise ValueError
+
+    def set_fast_mode(self):
+        self.reg_method_comboBox.setCurrentIndex(1)
+        self.metric_comboBox.setCurrentIndex(1)
+        self.optimiser_comboBox.setCurrentIndex(1)
+        self.shrink_factor_qLineEdit.setText("8")
+        self.smooth_sigmas_qLineEdit.setText("10")
+        self.sampling_rate_spinBox.setValue(0.25)
+        self.interp_order_spinbox.setValue(2)
+        self.no_of_iterations_spinBox.setValue(50)
+        self.default_number_spinBox.setValue(-1000)
