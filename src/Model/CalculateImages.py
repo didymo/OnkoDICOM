@@ -116,10 +116,36 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     np_pixels = np_pixels.astype(np.int8)
 
     # Convert numpy array data to QImage for PySide6
-    bytes_per_line = np_pixels.shape[1]
-    qimage = QtGui.QImage(
-        np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
-        QtGui.QImage.Format_Indexed8)
+    if color is not None:
+        # Segregating as colour may not always be linear
+        pixel_array_color = np.stack(3 * (np_pixels,), -1)
+
+        # Colour manipulation
+        # Guide: [r, g, b] all values between 0 and 1
+        if color == "Red":
+            pixel_array_color = [1, 0, 0] * pixel_array_color
+        elif color == "Green":
+            pixel_array_color = [0, 1, 0] * pixel_array_color
+        elif color == "Blue":
+            pixel_array_color = [0, 0, 1] * pixel_array_color
+        elif color == "White":
+            pass
+        else:
+            print("Invalid Color:", color)
+
+        # Generate colour image
+        qimage = QtGui.QImage(
+            (pixel_array_color.astype(np.uint8)),
+            np_pixels.shape[1],
+            np_pixels.shape[0],
+            QtGui.QImage.Format_RGB888)
+
+    else:
+        # generate normal image
+        bytes_per_line = np_pixels.shape[1]
+        qimage = QtGui.QImage(
+            np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
+            QtGui.QImage.Format_Indexed8)
 
     pixmap = QtGui.QPixmap(qimage)
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
