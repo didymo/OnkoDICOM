@@ -212,7 +212,7 @@ class BatchProcess:
                 ref_series = ref_study.RTReferencedSeriesSequence[0]
                 ref_image_series_uid = ref_series.SeriesInstanceUID
             except AttributeError:
-                continue
+                pass
 
             # If we have no images
             if len(read_data_dict) <= 0:
