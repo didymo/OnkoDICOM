@@ -1,9 +1,12 @@
 import pytest
+import os.path
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
+    BatchProcessPyRad2PyRadSR
 
 
 class TestObject:
@@ -94,3 +97,34 @@ def test_batch_iso2roi(test_object):
         # Assert rtss contains new rois
         difference = set(test_object.iso_levels) - set(rois)
         assert len(difference) > 0
+
+
+def test_batch_pyrad2pyradsr(test_object):
+    """
+    Test that a DICOM file 'PyRadiomics-SR.dcm' is created from Pyrad2Pyrad-SR.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        # Get the files for the patient
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the batch process
+        process = BatchProcessPyRad2PyRadSR(test_object.DummyProgressWindow,
+                                            test_object.DummyProgressWindow,
+                                            cur_patient_files)
+
+        # Start the process
+        process.start()
+
+        # Get dataset directory
+
+        directory = process.patient_dict_container.path
+
+        file_name = 'Pyradiomics-SR.dcm'
+
+        path = Path(directory).joinpath(file_name)
+
+        assert os.path.exists(str(path))
