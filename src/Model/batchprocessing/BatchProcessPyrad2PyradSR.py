@@ -53,8 +53,6 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped PyRad2Pyrad-SR")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -91,8 +89,6 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped PyRad2Pyrad-SR")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -110,8 +106,6 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped PyRad2Pyrad-SR")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -125,8 +119,6 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped PyRad2Pyrad-SR")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False

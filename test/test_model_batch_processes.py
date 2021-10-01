@@ -12,7 +12,7 @@ from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
 class TestObject:
 
     def __init__(self):
-        self.batch_dir = Path.cwd().joinpath('test', 'testdata')
+        self.batch_dir = Path.cwd().joinpath('test', 'batchtestdata')
         self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
                                                 self.batch_dir,
                                                 self.DummyProgressWindow,
