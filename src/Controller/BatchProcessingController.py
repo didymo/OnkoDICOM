@@ -133,6 +133,12 @@ class BatchProcessingController:
         # Clear batch summary
         self.batch_summary = {}
 
+        # Dictionary of process names and functions
+        self.process_functions = {
+            "iso2roi": self.batch_iso2roi_handler,
+            "dvh2csv": self.batch_dvh2csv_handler,
+        }
+
         patient_count = len(self.dicom_structure.patients)
         cur_patient_num = 0
         self.timestamp = self.create_timestamp()
@@ -151,71 +157,109 @@ class BatchProcessingController:
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
 
-            # Perform ISO2ROI on patient
-            if "iso2roi" in self.processes:
-                # Get patient files
-                cur_patient_files = self.get_patient_files(patient)
-                process = BatchProcessISO2ROI(progress_callback,
-                                              interrupt_flag,
-                                              cur_patient_files)
-                success = process.start()
-
-                # Add rtss to patient in case it is needed in future
-                # processes
-                if success:
-                    if PatientDictContainer().get("rtss_modified"):
-                        # Get new RTSS
-                        rtss = PatientDictContainer().dataset['rtss']
-
-                        # Create a series and image from the RTSS
-                        rtss_series = Series(rtss.SeriesInstanceUID)
-                        rtss_series.series_description = rtss.get(
-                            "SeriesDescription")
-                        rtss_image = Image(
-                            PatientDictContainer().filepaths['rtss'],
-                            rtss.SOPInstanceUID,
-                            rtss.SOPClassUID,
-                            rtss.Modality)
-                        rtss_series.add_image(rtss_image)
-
-                        # Add the new study to the patient
-                        patient.studies[rtss.StudyInstanceUID].add_series(
-                            rtss_series)
-
-                        # Update the patient dict container
-                        PatientDictContainer().set("rtss_modified", False)
-                    reason = "SUCCESS"
-                else:
-                    reason = process.summary
-
-                # Append process summary
-                if patient not in self.batch_summary.keys():
-                    self.batch_summary[patient] = {}
-                self.batch_summary[patient]["iso2roi"] = reason
-                progress_callback.emit(("Completed ISO2ROI", 100))
-
-            # Perform DVH2CSV on patient
-            if "dvh2csv" in self.processes:
-                cur_patient_files = self.get_patient_files(patient)
-                process = BatchProcessDVH2CSV(progress_callback,
-                                              interrupt_flag,
-                                              cur_patient_files,
-                                              self.dvh_output_path)
-                process.set_filename('DVHs_' + self.timestamp + '.csv')
-                success = process.start()
-
-                if success:
-                    reason = "SUCCESS"
-                else:
-                    reason = process.summary
-
-                # Append process summary
-                if patient not in self.batch_summary.keys():
-                    self.batch_summary[patient] = {}
-                self.batch_summary[patient]['dvh2csv'] = reason
-                progress_callback.emit(("Completed DVH2CSV", 100))
+            # Perform processes on patient
+            for process in self.processes:
+                self.process_functions[process](interrupt_flag,
+                                                progress_callback,
+                                                patient)
 
         PatientDictContainer().clear()
+
+    def update_rtss(self, patient):
+        """
+        Updates the patient dict container with the newly created RTSS (if a
+        process generates one), so it can be used by future processes.
+        :param patient: The patient with the newly-created RTSS.
+        """
+        # Get new RTSS
+        rtss = PatientDictContainer().dataset['rtss']
+
+        # Create a series and image from the RTSS
+        rtss_series = Series(rtss.SeriesInstanceUID)
+        rtss_series.series_description = rtss.get(
+            "SeriesDescription")
+        rtss_image = Image(
+            PatientDictContainer().filepaths['rtss'],
+            rtss.SOPInstanceUID,
+            rtss.SOPClassUID,
+            rtss.Modality)
+        rtss_series.add_image(rtss_image)
+
+        # Add the new study to the patient
+        patient.studies[rtss.StudyInstanceUID].add_series(
+            rtss_series)
+
+        # Update the patient dict container
+        PatientDictContainer().set("rtss_modified", False)
+
+    def batch_iso2roi_handler(self, interrupt_flag,
+                              progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        ISO2ROI.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get current patient files
+        cur_patient_files = self.get_patient_files(patient)
+
+        # Create and start process
+        process = BatchProcessISO2ROI(progress_callback,
+                                      interrupt_flag,
+                                      cur_patient_files)
+        success = process.start()
+
+        # Add rtss to patient in case it is needed in future
+        # processes
+        if success:
+            if PatientDictContainer().get("rtss_modified"):
+                self.update_rtss(patient)
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        # Append process summary
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]["iso2roi"] = reason
+        progress_callback.emit(("Completed ISO2ROI", 100))
+
+    def batch_dvh2csv_handler(self, interrupt_flag,
+                              progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        DVH2CSV.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get current patient files
+        cur_patient_files = self.get_patient_files(patient)
+
+        # Create and start process
+        process = BatchProcessDVH2CSV(progress_callback,
+                                      interrupt_flag,
+                                      cur_patient_files,
+                                      self.dvh_output_path)
+        process.set_filename('DVHs_' + self.timestamp + '.csv')
+        success = process.start()
+
+        # Set process summary
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        # Append process summary
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]['dvh2csv'] = reason
+        progress_callback.emit(("Completed DVH2CSV", 100))
 
     def completed_processing(self):
         """
