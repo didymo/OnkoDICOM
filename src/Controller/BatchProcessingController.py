@@ -3,6 +3,7 @@ import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -22,6 +23,7 @@ class BatchProcessingController:
         self.batch_path = ""
         self.processes = []
         self.dicom_structure = None
+        self.suv2roi_weights = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -44,6 +46,14 @@ class BatchProcessingController:
         :param processes: list of selected processes
         """
         self.processes = processes
+
+    def set_suv2roi_weights(self, suv2roi_weights):
+        """
+        Function used to set suv2roi_weights.
+        :param suv2roi_weights: Dictionary of patient IDs and patient weight
+                                in grams.
+        """
+        self.suv2roi_weights = suv2roi_weights
 
     def start_processing(self):
         """
@@ -190,6 +200,61 @@ class BatchProcessingController:
                     self.batch_summary[patient] = {}
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
+
+            # Perform SUV2ROI on patient
+            if 'suv2roi' in self.processes:
+                # Get patient files
+                cur_patient_files = self.get_patient_files(patient)
+
+                # Get patient weight
+                if patient.patient_id in self.suv2roi_weights.keys():
+                    if self.suv2roi_weights[patient.patient_id] is None:
+                        patient_weight = None
+                    else:
+                        patient_weight = \
+                            self.suv2roi_weights[patient.patient_id] * 1000
+                else:
+                    patient_weight = None
+
+                process = BatchProcessSUV2ROI(progress_callback,
+                                              interrupt_flag,
+                                              cur_patient_files,
+                                              patient_weight)
+                success = process.start()
+
+                # Add rtss to patient in case it is needed in future
+                # processes
+                if success:
+                    if PatientDictContainer().get("rtss_modified"):
+                        # Get new RTSS
+                        rtss = PatientDictContainer().dataset['rtss']
+
+                        # Create a series and image from the RTSS
+                        rtss_series = Series(rtss.SeriesInstanceUID)
+                        rtss_series.series_description = rtss.get(
+                            "SeriesDescription")
+                        rtss_image = Image(
+                            PatientDictContainer().filepaths['rtss'],
+                            rtss.SOPInstanceUID,
+                            rtss.SOPClassUID,
+                            rtss.Modality)
+                        rtss_series.add_image(rtss_image)
+
+                        # Add the new study to the patient
+                        patient.studies[rtss.StudyInstanceUID].add_series(
+                            rtss_series)
+
+                        # Update the patient dict container
+                        PatientDictContainer().set("rtss_modified", False)
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]["suv2roi"] = reason
+                progress_callback.emit(("Completed SUV2ROI", 100))
 
         PatientDictContainer().clear()
 
