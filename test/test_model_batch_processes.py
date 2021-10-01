@@ -1,9 +1,12 @@
+import os
 import pytest
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRadCSV
 
 
 class TestObject:
@@ -94,3 +97,35 @@ def test_batch_iso2roi(test_object):
         # Assert rtss contains new rois
         difference = set(test_object.iso_levels) - set(rois)
         assert len(difference) > 0
+
+
+def test_batch_pyrad2csv(test_object):
+    """
+    Test asserts creation of CSV as result of PyRad2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessPyRadCSV(test_object.DummyProgressWindow,
+                                       test_object.DummyProgressWindow,
+                                       cur_patient_files,
+                                       test_object.batch_dir)
+
+        # Target filename
+        filename = 'Pyradiomics_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))

@@ -90,6 +90,10 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
+                # PyRad2CSV no ROIs in RTSTRUCT
+                elif patient_summary[process] == "PYRAD_NO_DF":
+                    summary_text += process.upper() \
+                        + " failed as RTSTRUCT contained no ROIs."
                 summary_text += "\n"
             summary_text += "\n"
 

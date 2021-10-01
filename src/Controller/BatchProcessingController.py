@@ -3,6 +3,8 @@ import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRad2CSV
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -20,6 +22,7 @@ class BatchProcessingController:
         Class initialiser function.
         """
         self.batch_path = ""
+        self.pyrad_output_path = ""
         self.processes = []
         self.dicom_structure = None
         self.patient_files_loaded = False
@@ -37,6 +40,7 @@ class BatchProcessingController:
         :param file_paths: dict of directories
         """
         self.batch_path = file_paths.get('batch_path')
+        self.pyrad_output_path = file_paths.get('pyrad_output_path')
 
     def set_processes(self, processes):
         """
@@ -190,6 +194,29 @@ class BatchProcessingController:
                     self.batch_summary[patient] = {}
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
+
+            # Perform batch PyRad2CSV on patient
+            if 'pyrad2csv' in self.processes:
+                # Get current files
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessPyRad2CSV(progress_callback,
+                                                interrupt_flag,
+                                                cur_patient_files,
+                                                self.pyrad_output_path)
+                process.set_filename('PyRadiomics_' + self.timestamp + '.csv')
+                success = process.start()
+
+                # Set summary message
+                if success:
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]['pyrad2csv'] = reason
+                progress_callback.emit(("Completed PyRad2CSV", 100))
 
         PatientDictContainer().clear()
 

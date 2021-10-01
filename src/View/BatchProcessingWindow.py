@@ -4,6 +4,7 @@ from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -112,9 +113,11 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.pyrad2csv_tab = PyRad2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
 
         # == Bottom widgets
         # Info text
@@ -204,6 +207,7 @@ class UIBatchProcessingWindow(object):
         start searching the directory.
         """
         self.file_path = self.directory_input.text()
+        self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
 
         self.begin_button.setEnabled(False)
 
@@ -242,7 +246,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi']
+        processes = ['iso2roi', 'pyrad2csv']
         selected_processes = []
 
         # Get the selected processes
@@ -253,7 +257,10 @@ class UIBatchProcessingWindow(object):
         # Save the changed settings
         self.iso2roi_tab.save_isodoses()
 
-        file_directories = {"batch_path": self.file_path}
+        file_directories = {
+            "batch_path": self.file_path,
+            "pyrad_output_path": self.pyrad2csv_tab.get_pyrad_output_location()
+        }
 
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
