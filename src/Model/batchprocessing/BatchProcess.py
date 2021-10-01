@@ -137,7 +137,6 @@ class BatchProcess:
 
         slice_count = 0
         # For each file in the file path list
-        rtss_found = False
         for file in ImageLoading.natural_sort(file_path_list):
             # Try to open it
             try:
@@ -220,12 +219,23 @@ class BatchProcess:
                 file_names_dict['rtss'] = rtss
                 break
             # If we have images
-            else:
+            elif 0 in list(read_data_dict.keys()):
+                # If the RTSTRUCT matches the image, add it
                 if ref_image_series_uid \
-                        == read_data_dict[0].SeriesInstanceUID:
+                    == read_data_dict[0].SeriesInstanceUID:
                     read_data_dict['rtss'] = rt_structs[rtss]
                     file_names_dict['rtss'] = rtss
                     break
+                # If it doesn't continue
+                else:
+                    continue
+            # If we have other datasets that aren't images (eg rtdose, rtplan),
+            # add the RTSTRUCT. This will only be reached if there are other
+            # items in the read_data_dict, but they are not images.
+            else:
+                read_data_dict['rtss'] = rt_structs[rtss]
+                file_names_dict['rtss'] = rtss
+                break
 
         # Get and return read data dict and file names dict
         sorted_read_data_dict, sorted_file_names_dict = \
