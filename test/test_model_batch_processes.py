@@ -304,7 +304,8 @@ def test_batch_csv2clinicaldatasr(test_object):
         assert status
 
     # Assert SR exists
-    sr_path = test_object.batch_dir.joinpath("Clinical-Data-SR.dcm")
+    sr_path = test_object.batch_dir.joinpath("DICOM-RT-02",
+                                             "Clinical-Data-SR.dcm")
     assert os.path.exists(sr_path)
 
     # Assert data is correct in SR
@@ -356,8 +357,13 @@ def test_batch_clinicaldatasr2csv(test_object):
     # Assert dummy SR was created
     assert os.path.exists(dcm_path)
 
+    # Reload patient (to get newly created SR)
+    patients = DICOMDirectorySearch.get_dicom_structure(
+        test_object.batch_dir, test_object.DummyProgressWindow,
+        test_object.DummyProgressWindow)
+
     # Loop through each patient
-    for patient in test_object.get_patients():
+    for patient in patients.patients.values():
         # Get current patient files
         cur_patient_files = BatchProcessingController.get_patient_files(
             patient)
