@@ -4,11 +4,19 @@ from pathlib import Path
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
+    ClinicalDataSR2CSVOptions
+from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
+    CSV2ClinicalDataSROptions
+from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
+from src.View.batchprocessing.Pyrad2PyradSROptions import Pyrad2PyradSROptions
 from src.View.batchprocessing.ROIName2FMAIDOptions import \
     ROIName2FMAIDOptions
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixLabel
+from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -117,11 +125,25 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.suv2roi_tab = SUV2ROIOptions()
+        self.dvh2csv_tab = DVH2CSVOptions()
+        self.pyrad2csv_tab = PyRad2CSVOptions()
+        self.pyrad2pyradSR_tab = Pyrad2PyradSROptions()
+        self.csv2clinicaldatasr_tab = CSV2ClinicalDataSROptions()
+        self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
+        self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
+        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
+        self.tab_widget.addTab(self.pyrad2pyradSR_tab, "Pyrad2Pyrad-SR")
+        self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
+                               "CSV2ClinicalData-SR")
+        self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
+                               "ClinicalData-SR2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
 
@@ -214,6 +236,9 @@ class UIBatchProcessingWindow(object):
         """
         self.file_path = self.directory_input.text()
 
+        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
+        self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
+
         self.begin_button.setEnabled(False)
 
         self.batch_processing_controller.set_dicom_structure(None)
@@ -244,6 +269,9 @@ class UIBatchProcessingWindow(object):
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
 
+            # Update tables
+            self.suv2roi_tab.populate_table(dicom_structure)
+
             # Update the batch name cleaning table
             batch_directory = self.directory_input.text()
             self.batchnamecleaning_tab.populate_table(dicom_structure,
@@ -256,8 +284,16 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'roinamecleaning', 'roiname2fmaid']
+        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
+                     'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
+                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
         selected_processes = []
+        suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+
+        # Return if SUV2ROI weights is None. Alert user weights are incorrect.
+        if suv2roi_weights is None:
+            self.show_invalid_weight_dialog()
+            return
 
         # Get the selected processes
         for i in range(self.tab_widget.count()):
@@ -267,11 +303,21 @@ class UIBatchProcessingWindow(object):
         # Save the changed settings
         self.iso2roi_tab.save_isodoses()
 
-        file_directories = {"batch_path": self.file_path}
+        file_directories = {
+            "batch_path": self.file_path,
+            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location(),
+            "pyrad_output_path":
+                self.pyrad2csv_tab.get_pyrad_output_location(),
+            'clinical_data_input_path':
+                self.csv2clinicaldatasr_tab.get_csv_input_location(),
+            'clinical_data_output_path':
+                self.clinicaldatasr2csv_tab.get_csv_output_location()
+        }
 
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
+        self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:
@@ -312,3 +358,19 @@ class UIBatchProcessingWindow(object):
 
         # Enable processing
         self.batch_processing_controller.start_processing()
+
+    def show_invalid_weight_dialog(self):
+        """
+        Shows a dialog informing the user that an entered weight in the
+        SUV2ROI tab is invalid (either negative or not a number).
+        """
+        button_reply = \
+            QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Warning,
+                                  "Invalid Patient Weight",
+                                  "Please enter a valid patient weight.",
+                                  QtWidgets.QMessageBox.StandardButton.Ok,
+                                  self)
+        button_reply.button(
+            QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
+            self.stylesheet)
+        button_reply.exec_()

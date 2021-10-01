@@ -116,6 +116,18 @@ class ClinicalDataView(QtWidgets.QWidget):
         Attempt to import clinical data from the CSV stored in the
         program's settings database.
         """
+        # Return if there is no RTDOSE in the dataset
+        patient_dict_container = PatientDictContainer()
+        if 'rtdose' not in list(patient_dict_container.dataset.keys()):
+            message = "No RTDOSE found. Clinical data is only imported for " \
+                      "datasets that include an RTDOSE."
+            attrib = QtWidgets.QTableWidgetItem("Warning")
+            value = QtWidgets.QTableWidgetItem(message)
+            self.table_cd.insertRow(0)
+            self.table_cd.setItem(0, 0, attrib)
+            self.table_cd.setItem(0, 1, value)
+            return
+
         # Return if data has been imported from DICOM SR
         if self.table_populated:
             return
@@ -125,7 +137,6 @@ class ClinicalDataView(QtWidgets.QWidget):
         self.clear_table()
 
         # Current patient's ID
-        patient_dict_container = PatientDictContainer()
         patient_id = patient_dict_container.dataset[0].PatientID
 
         # Try get the clinical data CSV file path
