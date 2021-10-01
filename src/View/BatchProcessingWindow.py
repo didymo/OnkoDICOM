@@ -252,6 +252,11 @@ class UIBatchProcessingWindow(object):
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
 
+        # Return if SUV2ROI weights is None. Alert user weights are incorrect.
+        if suv2roi_weights is None:
+            self.show_invalid_weight_dialog()
+            return
+
         # Get the selected processes
         for i in range(self.tab_widget.count()):
             if self.tab_widget.isChecked(i):
@@ -269,3 +274,19 @@ class UIBatchProcessingWindow(object):
 
         # Enable processing
         self.batch_processing_controller.start_processing()
+
+    def show_invalid_weight_dialog(self):
+        """
+        Shows a dialog informing the user that an entered weight in the
+        SUV2ROI tab is invalid (either negative or not a number).
+        """
+        button_reply = \
+            QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Warning,
+                                  "Invalid Patient Weight",
+                                  "Please enter a valid patient weight.",
+                                  QtWidgets.QMessageBox.StandardButton.Ok,
+                                  self)
+        button_reply.button(
+            QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
+            self.stylesheet)
+        button_reply.exec_()

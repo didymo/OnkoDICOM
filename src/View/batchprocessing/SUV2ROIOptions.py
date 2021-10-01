@@ -165,8 +165,9 @@ class SUV2ROIOptions(QtWidgets.QWidget):
                     num = float(weight)
                     if num < 0:
                         raise ValueError
+                # Return if a number is negative or not a number
                 except ValueError:
-                    num = None
+                    return None
             else:
                 num = None
 
