@@ -204,6 +204,8 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
+                if process == 'roinamecleaning':
+                    continue
                 self.process_functions[process](interrupt_flag,
                                                 progress_callback,
                                                 patient)
