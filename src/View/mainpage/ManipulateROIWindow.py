@@ -8,7 +8,8 @@ from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, 
 
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.util.SaveROIs import connectSaveROIProgress
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
+from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path
@@ -446,8 +447,7 @@ class UIManipulateROIWindow:
                 return
 
         # Get a dict to convert SOPInstanceUID to slice id
-        slice_ids_dict = dict(
-            (v, k) for k, v in PatientDictContainer().get("dict_uid").items())
+        slice_ids_dict = get_dict_slice_to_uid(PatientDictContainer())
 
         # Transform new_ROI_contours to a list of roi information
         rois_to_save = {}

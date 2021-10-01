@@ -47,9 +47,9 @@ class MovingImageLoader(ImageLoader):
             raise ImageLoading.NotAllowedClassError
 
         # Populate the initial values in the PatientDictContainer singleton.
-        patient_dict_container = MovingDictContainer()
-        patient_dict_container.clear()
-        patient_dict_container.set_initial_values(
+        moving_dict_container = MovingDictContainer()
+        moving_dict_container.clear()
+        moving_dict_container.set_initial_values(
             path,
             read_data_dict,
             file_names_dict,
@@ -97,11 +97,11 @@ class MovingImageLoader(ImageLoader):
                 print("stopped")
                 return False
 
-            # Add RTSS values to PatientDictContainer
-            patient_dict_container.set("rois", rois)
-            patient_dict_container.set("raw_contour", dict_raw_contour_data)
-            patient_dict_container.set("num_points", dict_numpoints)
-            patient_dict_container.set("pixluts", dict_pixluts)
+            # Add RTSS values to MovingDictContainer
+            moving_dict_container.set("rois", rois)
+            moving_dict_container.set("raw_contour", dict_raw_contour_data)
+            moving_dict_container.set("num_points", dict_numpoints)
+            moving_dict_container.set("pixluts", dict_pixluts)
 
             if 'rtdose' in file_names_dict and self.calc_dvh:
                 dataset_rtdose = dcmread(file_names_dict['rtdose'])
@@ -138,15 +138,60 @@ class MovingImageLoader(ImageLoader):
                     print("stopped")
                     return False
 
-                # Add DVH values to PatientDictContainer
-                patient_dict_container.set("raw_dvh", raw_dvh)
-                patient_dict_container.set("dvh_x_y", dvh_x_y)
-                patient_dict_container.set("dvh_outdated", False)
-
+                # Add DVH values to MovingDictContainer
+                moving_dict_container.set("raw_dvh", raw_dvh)
+                moving_dict_container.set("dvh_x_y", dvh_x_y)
+                moving_dict_container.set("dvh_outdated", False)
+            create_moving_model()
+        else:
+            create_moving_model()
+            self.load_temp_rtss(path, progress_callback, interrupt_flag)
         progress_callback.emit(("Loading Moving Model", 85))
-        create_moving_model()
+
         if interrupt_flag.is_set():  # Stop loading.
             progress_callback.emit(("Stopping", 85))
             return False
 
         return True
+
+    def load_temp_rtss(self, path, progress_callback, interrupt_flag):
+        """
+        Generate a temporary rtss and load its data into
+        MovingDictContainer
+        :param path: str. The common root folder of all DICOM files.
+        :param progress_callback: A signal that receives the current
+        progress of the loading.
+        :param interrupt_flag: A threading.Event() object that tells the
+        function to stop loading.
+        """
+        progress_callback.emit(("Generating temporary rtss...", 20))
+        moving_dict_container = MovingDictContainer()
+        rtss_path = Path(path).joinpath('rtss.dcm')
+        uid_list = ImageLoading.get_image_uid_list(
+            moving_dict_container.dataset)
+        rtss = create_initial_rtss_from_ct(
+            moving_dict_container.dataset[0], rtss_path, uid_list)
+
+        if interrupt_flag.is_set():  # Stop loading.
+            print("stopped")
+            return False
+
+        progress_callback.emit(("Loading temporary rtss...", 50))
+        # Set ROIs
+        rois = ImageLoading.get_roi_info(rtss)
+        moving_dict_container.set("rois", rois)
+
+        # Set pixluts
+        dict_pixluts = ImageLoading.get_pixluts(moving_dict_container.dataset)
+        moving_dict_container.set("pixluts", dict_pixluts)
+
+        # Add RT Struct file path and dataset to moving dict container
+        moving_dict_container.filepaths['rtss'] = rtss_path
+        moving_dict_container.dataset['rtss'] = rtss
+
+        # Set some moving dict container attributes
+        moving_dict_container.set("file_rtss", rtss_path)
+        moving_dict_container.set("dataset_rtss", rtss)
+        ordered_dict = DicomTree(None).dataset_to_dict(rtss)
+        moving_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
+        moving_dict_container.set("selected_rois", [])
