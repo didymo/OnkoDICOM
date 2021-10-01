@@ -7,18 +7,16 @@ from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
     QMessageBox, QComboBox
-from alphashape import alphashape
-from shapely.geometry import MultiPolygon, Polygon
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
-from src.View.util.SaveROIs import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
-from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
+from src.View.mainpage.DrawROIWindow.Drawing import Drawing
+from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
 
