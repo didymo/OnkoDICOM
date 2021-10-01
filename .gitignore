@@ -10,6 +10,7 @@ venv/
 
 # Ignore testdata
 test/testdata
+test/batchtestdata
 
 # Ignore .pyc
 *.pyc
