@@ -29,7 +29,9 @@ logging.getLogger('shapely.geos').setLevel(logging.CRITICAL)
 geometry_manipulation = {
     'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
     'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
-    'DIFFERENCE': lambda geom_1, geom_2: geom_1.difference(geom_2)
+    'DIFFERENCE': lambda geom_1, geom_2: add_rois(geom_1, geom_2)
+    if geom_1.contains(geom_2) else
+    geom_1.difference(geom_2)
 }
 
 
@@ -1161,6 +1163,22 @@ def scale_roi(geometry_dict, millimetres):
     return result_geometry_dict
 
 
+def add_rois(geom1, geom2):
+    """
+    Create a new Geometry object that contains both geometries
+    :param geom1: First geometry
+    :param geom2: Second geometry
+    :return: GeometryCollection
+    """
+    polygon_list = list([geom1]
+                        if geom1.geom_type == 'Polygon'
+                        else geom1) + \
+                   list([geom2]
+                        if geom2.geom_type == 'Polygon'
+                        else geom2)
+    return GeometryCollection(polygon_list)
+
+
 def rind_roi(geometry_dict, millimetres):
     """
     Create Inner/Outer Rind for ROI
@@ -1176,14 +1194,7 @@ def rind_roi(geometry_dict, millimetres):
         orig_geometry = geometry_dict.get(slice_uid)
         new_geometry = new_roi_dict.get(slice_uid)
         # Create 2 polygons with one nested inside the other
-        polygon_list = list([orig_geometry]
-                            if orig_geometry.geom_type == 'Polygon'
-                            else orig_geometry) + \
-                       list([new_geometry]
-                            if new_geometry.geom_type == 'Polygon'
-                            else new_geometry)
-        result_geometry = GeometryCollection(polygon_list)
-        result_geometry_dict[slice_uid] = result_geometry
+        result_geometry_dict[slice_uid] = add_rois(orig_geometry, new_geometry)
 
     return result_geometry_dict
 
