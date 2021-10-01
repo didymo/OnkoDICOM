@@ -48,8 +48,6 @@ class BatchProcessClinicalDataSR2CSV(BatchProcess):
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ClinicalData-SR2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -68,8 +66,6 @@ class BatchProcessClinicalDataSR2CSV(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ClinicalData-SR2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -80,8 +76,6 @@ class BatchProcessClinicalDataSR2CSV(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ClinicalData-SR2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False

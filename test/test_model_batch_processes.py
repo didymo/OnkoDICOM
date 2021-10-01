@@ -1,6 +1,7 @@
 import csv
 import os
 import pytest
+import os.path
 from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -12,7 +13,13 @@ from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
 from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
     BatchProcessCSV2ClinicalDataSR
+from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRad2CSV
+from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
+    BatchProcessPyRad2PyRadSR
+from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 
 
 class TestObject:
@@ -90,7 +97,48 @@ def test_batch_iso2roi(test_object):
                                       test_object.DummyProgressWindow,
                                       cur_patient_files)
         # Start the process
-        process.start()
+        result = process.start()
+
+        # Get rtss
+        if not result:
+            return
+
+        rtss = process.patient_dict_container.dataset['rtss']
+
+        # Get ROIS from rtss
+        rois = []
+        for roi in rtss.StructureSetROISequence:
+            rois.append(roi.ROIName)
+
+        # Assert rtss contains new rois
+        difference = set(test_object.iso_levels) - set(rois)
+        assert len(difference) > 0
+
+
+@pytest.mark.skip()
+def test_batch_suv2roi(test_object):
+    """
+    Test that at least 1 new ROI is created from SUV2ROI.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        # Get the files for the patient
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        patient_weight = 70000
+        process = BatchProcessSUV2ROI(test_object.DummyProgressWindow,
+                                      test_object.DummyProgressWindow,
+                                      cur_patient_files, patient_weight)
+
+        # Start the process
+        result = process.start()
+
+        if not result:
+            return
 
         # Get rtss
         rtss = process.patient_dict_container.dataset['rtss']
@@ -103,6 +151,105 @@ def test_batch_iso2roi(test_object):
         # Assert rtss contains new rois
         difference = set(test_object.iso_levels) - set(rois)
         assert len(difference) > 0
+
+
+def test_batch_dvh2csv(test_object):
+    """
+    Test asserts creation of CSV as result of DVH2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessDVH2CSV(test_object.DummyProgressWindow,
+                                      test_object.DummyProgressWindow,
+                                      cur_patient_files,
+                                      str(test_object.batch_dir))
+
+        # Target filename
+        filename = 'DVHs_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))
+
+        # Assert that there is DVH data in the RT Dose
+        rtdose = process.patient_dict_container.dataset['rtdose']
+        assert len(rtdose.DVHSequence) > 0
+
+@pytest.mark.skip()
+def test_batch_pyrad2csv(test_object):
+    """
+    Test asserts creation of CSV as result of PyRad2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                            TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessPyRad2CSV(test_object.DummyProgressWindow,
+                                        test_object.DummyProgressWindow,
+                                        cur_patient_files,
+                                        test_object.batch_dir)
+
+        # Target filename
+        filename = 'Pyradiomics_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))
+
+@pytest.mark.skip()
+def test_batch_pyrad2pyradsr(test_object):
+    """
+    Test that a DICOM file 'PyRadiomics-SR.dcm' is created from
+    Pyrad2Pyrad-SR.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        # Get the files for the patient
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+
+        # Create and setup the batch process
+        process = BatchProcessPyRad2PyRadSR(test_object.DummyProgressWindow,
+                                            test_object.DummyProgressWindow,
+                                            cur_patient_files)
+
+        # Start the process
+        process.start()
+
+        # Get dataset directory
+        directory = process.patient_dict_container.path
+
+        # Get Pyradiomics SR, assert it exists
+        file_name = 'Pyradiomics-SR.dcm'
+        path = Path(directory).joinpath(file_name)
+        assert os.path.exists(str(path))
+
+        # Delete SR
+        os.remove(path)
 
 
 def test_batch_csv2clinicaldatasr(test_object):

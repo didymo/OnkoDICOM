@@ -68,8 +68,6 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped CSV2ClinicalData-SR")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -87,8 +85,6 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped CSV2ClinicalData-SR")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -108,14 +104,12 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
         data_dict = {}
 
         # Current patient's ID
-        # TODO convert to patient
         patient_dict_container = PatientDictContainer()
         patient_id = patient_dict_container.dataset[0].PatientID
 
         # Check that the clinical data CSV exists, load data if so
         if self.input_path == "" or self.input_path is None \
                 or not os.path.exists(self.input_path):
-            print("CSV does not exist.")
             return None
 
         with open(self.input_path, newline="") as stream:
@@ -132,8 +126,6 @@ class BatchProcessCSV2ClinicalDataSR(BatchProcess):
 
         # Return if patient's data not in the CSV file
         if not patient_in_file:
-            # TODO: convert to logging
-            print("Patient not found in clinical data CSV.")
             return None
 
         # Put patient data into dictionary
