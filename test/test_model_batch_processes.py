@@ -495,4 +495,4 @@ def test_batch_roi_name_to_fma_id(test_object):
         # Assert no ROIs called Lungs exists
         ds = dcmread(rtss_path)
         for roi in ds.StructureSetROISequence:
-            assert roi.ROIName is not 'Lungs'
+            assert roi.ROIName != 'Lungs'
