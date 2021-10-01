@@ -15,6 +15,8 @@ from scipy.spatial.qhull import QhullError
 from shapely.geometry import Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import make_valid
 
+from src.Model.MovingDictContainer import MovingDictContainer
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 from src.constants import DEFAULT_WINDOW_SIZE
 from src.Model.CalculateImages import *
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -154,19 +156,21 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
 
 
 def create_roi(rtss, roi_name, roi_list,
-               rt_roi_interpreted_type="ORGAN"):
+               rt_roi_interpreted_type="ORGAN", rtss_owner="PATIENT"):
     """
-        Create new contours of an ROI to rtss
-        :param rtss: dataset of RTSS
-        :param roi_name: ROIName
-        :param roi_list: the list of contours to be added to the rtss.
-            Each element consists of coordinates of pixels for new
-            contour and data set of selected DICOM image file.
-        :param rt_roi_interpreted_type: the interpreted type
-            of the new ROI
-        :return: rtss, with added ROI
-        """
-    patient_dict_container = PatientDictContainer()
+    Create new contours of an ROI to rtss :param rtss: dataset of RTSS
+    :param roi_name: ROIName :param roi_list: the list of contours to be
+    added to the rtss. Each element consists of coordinates of pixels for
+    new contour and data set of selected DICOM image file. :param
+    rt_roi_interpreted_type: the interpreted type of the new ROI :param
+    rtss_owner: the type of patient dict container (either PATIENT or
+    MOVING) caller wants to create ROI to :return: rtss, with added ROI
+    """
+    if rtss_owner == "MOVING":
+        patient_dict_container = MovingDictContainer()
+    else:
+        patient_dict_container = PatientDictContainer()
+
     existing_rois = patient_dict_container.get("rois")
     roi_exists = False
 
@@ -693,8 +697,7 @@ def transform_rois_contours(axial_rois_contours):
     """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
-    slice_ids = dict((v, k) for k, v
-                     in PatientDictContainer().get("dict_uid").items())
+    slice_ids = get_dict_slice_to_uid(PatientDictContainer())
     for name in axial_rois_contours.keys():
         coronal_rois_contours[name] = {}
         sagittal_rois_contours[name] = {}
@@ -744,7 +747,7 @@ def convert_coordinates_map_to_polygon_of_rois(contours_map):
     return polygon_dict
 
 
-def calculate_concave_hull_of_points(pixel_coords, alpha):
+def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
     """
         Return the alpha shape of the highlighted pixels using the alpha
         entered by the user.
@@ -852,6 +855,16 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
 
 
 def ordered_list_rois(rois):
+    """
+    Generate list of rois in alphabetical order
+    Parameters
+    ----------
+    rois: list of rois
+
+    Returns
+    -------
+    list of rois sorted in alphabetical order
+    """
     res = []
     for roi_id, value in rois.items():
         res.append(roi_id)

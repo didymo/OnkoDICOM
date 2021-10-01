@@ -421,12 +421,10 @@ class UIOpenPatientWindow(object):
 
         # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
-        if not ('CT' in selected_series_types or
-                'MR' in selected_series_types or
-                'PT' in selected_series_types):
+        if total_selected_image_series < 1:
             header = "Cannot proceed without an image."
             proceed = False
-        elif total_selected_image_series != 1:
+        elif total_selected_image_series > 1:
             header = "Cannot proceed with more than 1 selected image."
             proceed = False
         elif not self.check_selected_items_referencing(checked_nodes):
