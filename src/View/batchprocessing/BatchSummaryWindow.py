@@ -40,6 +40,9 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         self.export_button.setStyleSheet(self.stylesheet)
         self.ok_button.setStyleSheet(self.stylesheet)
 
+        # Make QLabel wrap text
+        self.summary_label.setWordWrap(True)
+
         # Set scroll area properties
         self.scroll_area.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAsNeeded)
@@ -90,6 +93,20 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
+                # SUV2ROI requirement not met
+                elif patient_summary[process][0:4] == "SUV_":
+                    summary_text += process.upper() \
+                        + " skipped as PET files did not meet requirement: "
+                    # Not in Bq/mL
+                    if patient_summary[process][4:] == "UNIT":
+                        summary_text += "PET units were not in Bq/mL."
+                    # Not decay corrected
+                    elif patient_summary[process][4:] == "DECY":
+                        summary_text += "PET files were not decay corrected."
+                    # No patient weight
+                    elif patient_summary[process][4:] == "WEIGHT":
+                        summary_text += "Patient weight could not be found " \
+                                        "or not provided."
                 summary_text += "\n"
             summary_text += "\n"
 
