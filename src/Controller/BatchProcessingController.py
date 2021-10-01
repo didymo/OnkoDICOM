@@ -170,7 +170,7 @@ class BatchProcessingController:
                                   progress of the loading.
         """
         # Clear batch summary
-        self.batch_summary = {}
+        self.batch_summary = [{}, ""]
 
         # Dictionary of process names and functions
         self.process_functions = {
@@ -283,9 +283,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["iso2roi"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["iso2roi"] = reason
         progress_callback.emit(("Completed ISO2ROI", 100))
 
     def batch_suv2roi_handler(self, interrupt_flag,
@@ -328,9 +328,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["suv2roi"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["suv2roi"] = reason
         progress_callback.emit(("Completed SUV2ROI", 100))
 
     def batch_dvh2csv_handler(self, interrupt_flag,
@@ -362,9 +362,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]['dvh2csv'] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['dvh2csv'] = reason
         progress_callback.emit(("Completed DVH2CSV", 100))
 
     def batch_pyrad2csv_handler(self, interrupt_flag,
@@ -394,9 +394,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]['pyrad2csv'] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['pyrad2csv'] = reason
         progress_callback.emit(("Completed PyRad2CSV", 100))
 
     def batch_pyrad2pyradsr_handler(self, interrupt_flag,
@@ -425,9 +425,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]['pyrad2pyradSR'] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['pyrad2pyradSR'] = reason
         progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
 
     def batch_csv2clinicaldatasr_handler(self, interrupt_flag,
@@ -456,9 +456,9 @@ class BatchProcessingController:
         else:
             reason = process.summary
 
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["csv2clinicaldatasr"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["csv2clinicaldatasr"] = reason
         progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
 
     def batch_clinicaldatasr2csv_handler(self, interrupt_flag,
@@ -486,9 +486,9 @@ class BatchProcessingController:
         else:
             reason = process.summary
 
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["clinicaldatasr2csv"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["clinicaldatasr2csv"] = reason
         progress_callback.emit(("Completed ClinicalData-SR2CSV", 100))
 
     def batch_roiname2fmaid_handler(self, interrupt_flag,
