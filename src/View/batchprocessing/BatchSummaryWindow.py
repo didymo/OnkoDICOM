@@ -90,6 +90,11 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
+                # DVH2CSV could not calculate
+                elif patient_summary[process] == "DVH_TYPE_ERROR":
+                    summary_text += process.upper() \
+                        + " could not be calculated. The dataset may be " \
+                          "incomplete."
                 summary_text += "\n"
             summary_text += "\n"
 

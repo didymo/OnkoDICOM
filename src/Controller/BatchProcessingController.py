@@ -2,6 +2,7 @@ import datetime
 import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
+from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -20,6 +21,7 @@ class BatchProcessingController:
         Class initialiser function.
         """
         self.batch_path = ""
+        self.dvh_output_path = ""
         self.processes = []
         self.dicom_structure = None
         self.patient_files_loaded = False
@@ -37,6 +39,7 @@ class BatchProcessingController:
         :param file_paths: dict of directories
         """
         self.batch_path = file_paths.get('batch_path')
+        self.dvh_output_path = file_paths.get('dvh_output_path')
 
     def set_processes(self, processes):
         """
@@ -190,6 +193,27 @@ class BatchProcessingController:
                     self.batch_summary[patient] = {}
                 self.batch_summary[patient]["iso2roi"] = reason
                 progress_callback.emit(("Completed ISO2ROI", 100))
+
+            # Perform DVH2CSV on patient
+            if "dvh2csv" in self.processes:
+                cur_patient_files = self.get_patient_files(patient)
+                process = BatchProcessDVH2CSV(progress_callback,
+                                              interrupt_flag,
+                                              cur_patient_files,
+                                              self.dvh_output_path)
+                process.set_filename('DVHs_' + self.timestamp + '.csv')
+                success = process.start()
+
+                if success:
+                    reason = "SUCCESS"
+                else:
+                    reason = process.summary
+
+                # Append process summary
+                if patient not in self.batch_summary.keys():
+                    self.batch_summary[patient] = {}
+                self.batch_summary[patient]['dvh2csv'] = reason
+                progress_callback.emit(("Completed DVH2CSV", 100))
 
         PatientDictContainer().clear()
 
