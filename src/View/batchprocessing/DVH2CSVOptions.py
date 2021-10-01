@@ -1,13 +1,13 @@
 import platform
 from os.path import expanduser
-from pathlib import Path
+
 from PySide6 import QtWidgets
 from src.Controller.PathHandler import resource_path
 
 
-class PyRad2CSVOptions(QtWidgets.QWidget):
+class DVH2CSVOptions(QtWidgets.QWidget):
     """
-    PyRad2CSV options for batch processing.
+    DVH2CSV options for batch processing.
     """
 
     def __init__(self):
@@ -26,8 +26,8 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
-        label = QtWidgets.QLabel("Please choose the file location.")
-
+        label = QtWidgets.QLabel(
+            "Please choose the location for the resulting CSV file:")
         label.setStyleSheet(self.stylesheet)
 
         self.directory_layout = QtWidgets.QFormLayout()
@@ -51,14 +51,15 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
         self.main_layout.addLayout(self.directory_layout)
         self.setLayout(self.main_layout)
 
-    def set_pyrad_output_location(self, path, enable=True,
-                                  change_if_modified=False):
+    def set_dvh_output_location(self, path, enable=True,
+                                change_if_modified=False):
         """
-        Set the location for the resulting PyRad2CSV .csv file.
+        Set the location for the DVH2CSV resulting .csv file.
+        ----------
         :param path: desired path.
         :param enable: Enable the directory text bar.
         :param change_if_modified: Change the directory if already been
-                                   changed.
+        changed.
         """
         if not self.directory_input.isEnabled():
             self.directory_input.setText(path)
@@ -67,12 +68,11 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
             self.directory_input.setText(path)
             self.directory_input.setEnabled(enable)
 
-    def get_pyrad_output_location(self):
+    def get_dvh_output_location(self):
         """
         Get the location of the desired output directory.
-        :return: Directory input text as a Path object.
         """
-        return Path(self.directory_input.text())
+        return self.directory_input.text()
 
     def show_file_browser(self):
         """
@@ -91,4 +91,4 @@ class PyRad2CSVOptions(QtWidgets.QWidget):
             path = expanduser("~")
 
         # Update file path
-        self.set_pyrad_output_location(path, change_if_modified=True)
+        self.set_dvh_output_location(path, change_if_modified=True)

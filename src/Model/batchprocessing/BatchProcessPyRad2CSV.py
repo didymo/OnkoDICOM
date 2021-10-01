@@ -72,7 +72,7 @@ class BatchProcessPyRad2CSV(BatchProcess):
         patient_nrrd_folder_path = patient_path + '/nrrd/'
         patient_nrrd_file_path = patient_nrrd_folder_path + file_name
 
-        output_csv_path = self.output_path + '/CSV/'
+        output_csv_path = self.output_path.joinpath('CSV')
 
         # If folder does not exist
         if not os.path.exists(patient_nrrd_folder_path):
@@ -264,7 +264,7 @@ class BatchProcessPyRad2CSV(BatchProcess):
             # Create folder
             os.makedirs(csv_path)
 
-        target_path = csv_path + self.filename
+        target_path = csv_path.joinpath(self.filename)
 
         create_header = not os.path.isfile(target_path)
 

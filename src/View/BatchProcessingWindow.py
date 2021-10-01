@@ -3,8 +3,10 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
+from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -113,10 +115,14 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.suv2roi_tab = SUV2ROIOptions()
+        self.dvh2csv_tab = DVH2CSVOptions()
         self.pyrad2csv_tab = PyRad2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
+        self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
         self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
 
         # == Bottom widgets
@@ -207,6 +213,8 @@ class UIBatchProcessingWindow(object):
         start searching the directory.
         """
         self.file_path = self.directory_input.text()
+
+        self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
         self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
 
         self.begin_button.setEnabled(False)
@@ -238,6 +246,9 @@ class UIBatchProcessingWindow(object):
             self.begin_button.setEnabled(True)
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
+
+            # Update tables
+            self.suv2roi_tab.populate_table(dicom_structure)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -246,8 +257,14 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'pyrad2csv']
+        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv']
         selected_processes = []
+        suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+
+        # Return if SUV2ROI weights is None. Alert user weights are incorrect.
+        if suv2roi_weights is None:
+            self.show_invalid_weight_dialog()
+            return
 
         # Get the selected processes
         for i in range(self.tab_widget.count()):
@@ -259,12 +276,30 @@ class UIBatchProcessingWindow(object):
 
         file_directories = {
             "batch_path": self.file_path,
+            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location(),
             "pyrad_output_path": self.pyrad2csv_tab.get_pyrad_output_location()
         }
 
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
+        self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
 
         # Enable processing
         self.batch_processing_controller.start_processing()
+
+    def show_invalid_weight_dialog(self):
+        """
+        Shows a dialog informing the user that an entered weight in the
+        SUV2ROI tab is invalid (either negative or not a number).
+        """
+        button_reply = \
+            QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Warning,
+                                  "Invalid Patient Weight",
+                                  "Please enter a valid patient weight.",
+                                  QtWidgets.QMessageBox.StandardButton.Ok,
+                                  self)
+        button_reply.button(
+            QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
+            self.stylesheet)
+        button_reply.exec_()
