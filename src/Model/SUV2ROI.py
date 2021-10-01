@@ -100,6 +100,13 @@ class SUV2ROI:
                 self.patient_weight = None
                 return
 
+    def set_patient_weight(self, weight_in_grams):
+        """
+        Sets the patient weight to the value specified by the parameter.
+        Used for batch processing.
+        """
+        self.patient_weight = weight_in_grams
+
     def pet2suv(self, dataset):
         """
         Converts DICOM PET pixel array values to SUV values. Currently
@@ -118,6 +125,11 @@ class SUV2ROI:
         if (["DECY"] not in dataset.CorrectedImage) and \
                 (dataset.DecayCorrection != "START"):
             self.failure_reason = "DECY"
+            return None
+
+        # Return if patient weight not set
+        if self.patient_weight is None:
+            self.failure_reason = "WEIGHT"
             return None
 
         # Get radiopharmaceutical information

@@ -40,6 +40,9 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         self.export_button.setStyleSheet(self.stylesheet)
         self.ok_button.setStyleSheet(self.stylesheet)
 
+        # Make QLabel wrap text
+        self.summary_label.setWordWrap(True)
+
         # Set scroll area properties
         self.scroll_area.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAsNeeded)
@@ -90,7 +93,26 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "ISO_NO_RX_DOSE":
                     summary_text += process.upper() \
                         + " skipped as no RX Dose value was found."
-                # Pyrad no ROIs in RTSTRUCT
+                # SUV2ROI requirement not met
+                elif patient_summary[process][0:4] == "SUV_":
+                    summary_text += process.upper() \
+                        + " skipped as PET files did not meet requirement: "
+                    # Not in Bq/mL
+                    if patient_summary[process][4:] == "UNIT":
+                        summary_text += "PET units were not in Bq/mL."
+                    # Not decay corrected
+                    elif patient_summary[process][4:] == "DECY":
+                        summary_text += "PET files were not decay corrected."
+                    # No patient weight
+                    elif patient_summary[process][4:] == "WEIGHT":
+                        summary_text += "Patient weight could not be found " \
+                                        "or not provided."
+                # DVH2CSV could not calculate
+                elif patient_summary[process] == "DVH_TYPE_ERROR":
+                    summary_text += process.upper() \
+                        + " could not be calculated. The dataset may be " \
+                          "incomplete."
+                # PyRad no ROIs in RTSTRUCT
                 elif patient_summary[process] == "PYRAD_NO_DF":
                     summary_text += process.upper() \
                         + " failed as RTSTRUCT contained no ROIs."
