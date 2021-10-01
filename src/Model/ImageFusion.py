@@ -329,13 +329,14 @@ def get_fused_window(level, window):
     generates the fused ismages with applied windows
     :param level: the level (midpoint) of windowing
     :param window: the window (range) of windowing
-    :return: axial, sagittal and coronal pixmaps with windowing
+    :return: axial, sagittal, coronal pixmaps with windowing as well as
+    the transformation object of image fusion
     """
 
     patient_dict_container = PatientDictContainer()
     old_images = patient_dict_container.get("sitk_original")
     fused_image = patient_dict_container.get("fused_images")
-
+    tfm = fused_image[1]
     array = sitk.GetArrayFromImage(old_images).shape
 
     axial_slice_count = array[0]
@@ -366,7 +367,7 @@ def get_fused_window(level, window):
             get_fused_pixmap(old_images, fused_image[0], asp, i, "coronal",
                              windowing)
 
-    return color_axial, color_sagittal, color_coronal
+    return color_axial, color_sagittal, color_coronal, tfm
 
 
 # Can be expanded to peform all of platipy's registrations
