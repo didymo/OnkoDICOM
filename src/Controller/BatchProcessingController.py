@@ -4,6 +4,7 @@ from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -24,6 +25,7 @@ class BatchProcessingController:
         self.dvh_output_path = ""
         self.processes = []
         self.dicom_structure = None
+        self.suv2roi_weights = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -47,6 +49,14 @@ class BatchProcessingController:
         :param processes: list of selected processes
         """
         self.processes = processes
+
+    def set_suv2roi_weights(self, suv2roi_weights):
+        """
+        Function used to set suv2roi_weights.
+        :param suv2roi_weights: Dictionary of patient IDs and patient weight
+                                in grams.
+        """
+        self.suv2roi_weights = suv2roi_weights
 
     def start_processing(self):
         """
@@ -136,6 +146,7 @@ class BatchProcessingController:
         # Dictionary of process names and functions
         self.process_functions = {
             "iso2roi": self.batch_iso2roi_handler,
+            "suv2roi": self.batch_suv2roi_handler,
             "dvh2csv": self.batch_dvh2csv_handler,
         }
 
@@ -226,6 +237,51 @@ class BatchProcessingController:
             self.batch_summary[patient] = {}
         self.batch_summary[patient]["iso2roi"] = reason
         progress_callback.emit(("Completed ISO2ROI", 100))
+
+    def batch_suv2roi_handler(self, interrupt_flag,
+                              progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        SUV2ROI.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get patient files
+        cur_patient_files = self.get_patient_files(patient)
+
+        # Get patient weight
+        if patient.patient_id in self.suv2roi_weights.keys():
+            if self.suv2roi_weights[patient.patient_id] is None:
+                patient_weight = None
+            else:
+                patient_weight = \
+                    self.suv2roi_weights[patient.patient_id] * 1000
+        else:
+            patient_weight = None
+
+        process = BatchProcessSUV2ROI(progress_callback,
+                                      interrupt_flag,
+                                      cur_patient_files,
+                                      patient_weight)
+        success = process.start()
+
+        # Add rtss to patient in case it is needed in future
+        # processes
+        if success:
+            if PatientDictContainer().get("rtss_modified"):
+                self.update_rtss(patient)
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        # Append process summary
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]["suv2roi"] = reason
+        progress_callback.emit(("Completed SUV2ROI", 100))
 
     def batch_dvh2csv_handler(self, interrupt_flag,
                               progress_callback, patient):

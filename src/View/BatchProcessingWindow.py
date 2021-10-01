@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -113,10 +114,12 @@ class UIBatchProcessingWindow(object):
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
+        self.suv2roi_tab = SUV2ROIOptions()
         self.dvh2csv_tab = DVH2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
+        self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
 
         # == Bottom widgets
@@ -238,6 +241,9 @@ class UIBatchProcessingWindow(object):
             self.begin_button.setEnabled(True)
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
+
+            # Update tables
+            self.suv2roi_tab.populate_table(dicom_structure)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -246,8 +252,14 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'dvh2csv']
+        processes = ['iso2roi', 'suv2roi', 'dvh2csv']
         selected_processes = []
+        suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+
+        # Return if SUV2ROI weights is None. Alert user weights are incorrect.
+        if suv2roi_weights is None:
+            self.show_invalid_weight_dialog()
+            return
 
         # Get the selected processes
         for i in range(self.tab_widget.count()):
@@ -264,6 +276,23 @@ class UIBatchProcessingWindow(object):
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
+        self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
 
         # Enable processing
         self.batch_processing_controller.start_processing()
+
+    def show_invalid_weight_dialog(self):
+        """
+        Shows a dialog informing the user that an entered weight in the
+        SUV2ROI tab is invalid (either negative or not a number).
+        """
+        button_reply = \
+            QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Warning,
+                                  "Invalid Patient Weight",
+                                  "Please enter a valid patient weight.",
+                                  QtWidgets.QMessageBox.StandardButton.Ok,
+                                  self)
+        button_reply.button(
+            QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
+            self.stylesheet)
+        button_reply.exec_()
