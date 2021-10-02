@@ -185,7 +185,7 @@ class UIMainWindow:
         # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
-        #add PETVT View to right panel as a tab
+        # Add PETVT View to right panel as a tab
         self.pet_ct_tab = PetCtView()
         self.right_panel.addTab(self.pet_ct_tab, "PETCT View")
 
@@ -330,6 +330,9 @@ class UIMainWindow:
             self.image_fusion_view_coronal.zoom_in()
             self.image_fusion_view_sagittal.zoom_in()
 
+        if self.pet_ct_tab.initialised:
+            self.pet_ct_tab.zoom_in()
+
     def zoom_out(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming out function on the four view's
@@ -350,6 +353,9 @@ class UIMainWindow:
             self.image_fusion_view_axial.zoom_out()
             self.image_fusion_view_coronal.zoom_out()
             self.image_fusion_view_sagittal.zoom_out()
+
+        if self.pet_ct_tab.initialised:
+            self.pet_ct_tab.zoom_out()
 
     def format_data(self, size):
         """
