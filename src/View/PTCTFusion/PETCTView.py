@@ -4,8 +4,13 @@ from PySide6.QtWidgets import (QPushButton, QRadioButton)
 from src.Model.PTCTDictContainer import PTCTDictContainer
 
 
-class PetCtView(QtWidgets.QWidget):
+# This class, even though similarly to DicomView is not actually quite the
+# same as DicomView (borrowing a few functions) the rest of the
+# functionalities differ greatly, where the GUI displays a button first as
+# opposed to displaying the images. Therefore, this will remain as a
+# standalone class.
 
+class PetCtView(QtWidgets.QWidget):
     load_pt_ct_signal = QtCore.Signal()
 
     def __init__(self):
@@ -169,7 +174,7 @@ class PetCtView(QtWidgets.QWidget):
             "pt_pixmaps_" + self.slice_view)
         m = float(len(pt_pixmaps)) / len(ct_pixmaps)
         pt_image = pt_pixmaps[int(m * slider_id)].toImage()
-        
+
         # Get alpha
         alpha = float(self.alpha_slider.value() / 100)
 
