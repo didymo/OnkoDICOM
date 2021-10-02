@@ -112,6 +112,10 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                     summary_text += process.upper() \
                         + " could not be calculated. The dataset may be " \
                           "incomplete."
+                # PyRad2CSV no ROIs in RTSTRUCT
+                elif patient_summary[process] == "PYRAD_NO_DF":
+                    summary_text += process.upper() \
+                        + " failed as RTSTRUCT contained no ROIs."
                 summary_text += "\n"
             summary_text += "\n"
 

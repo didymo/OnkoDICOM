@@ -6,6 +6,8 @@ from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRad2CSV
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 
 
@@ -146,7 +148,6 @@ def test_batch_dvh2csv(test_object):
     :param test_object: test_object function, for accessing the shared
                         TestObject object.
     """
-
     # Loop through patient datasets
     for patient in test_object.get_patients():
         cur_patient_files = BatchProcessingController.get_patient_files(
@@ -174,3 +175,34 @@ def test_batch_dvh2csv(test_object):
         # Assert that there is DVH data in the RT Dose
         rtdose = process.patient_dict_container.dataset['rtdose']
         assert len(rtdose.DVHSequence) > 0
+
+
+def test_batch_pyrad2csv(test_object):
+    """
+    Test asserts creation of CSV as result of PyRad2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                            TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessPyRad2CSV(test_object.DummyProgressWindow,
+                                        test_object.DummyProgressWindow,
+                                        cur_patient_files,
+                                        test_object.batch_dir)
+
+        # Target filename
+        filename = 'Pyradiomics_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))
