@@ -28,10 +28,6 @@ QCheckBox::indicator:unchecked {
     image: url(./res/images/widget-icons/checkbox_unchecked.png);
 }
 
-QCheckBox::indicator:unchecked:hover {
-    image: url(./res/images/widget-icons/checkbox_unchecked_hover.png);
-}
-
 QCheckBox::indicator:unchecked:pressed {
     image: url(./res/images/widget-icons/checkbox_unchecked_pressed.png);
 }
@@ -41,7 +37,7 @@ QCheckBox::indicator:checked {
 }
 
 QCheckBox::indicator:checked:hover {
-    image: url(./res/images/widget-icons/checkbox_checked_hover.png);
+    image: url(./res/images/widget-icons/checkbox_checked.png);
 }
 
 QCheckBox::indicator:checked:pressed {
@@ -74,6 +70,16 @@ QLabel[QLabelClass~="tree-view-label-keep-delete"] {
     color: #f5f5f5;
 }
 
+ROINameCleaningPrefixLabel {
+    margin: 4px;
+    padding: 0 4px;
+    font-size: 14px;
+    background-color: rgb(244, 245, 245);
+}
+
+ROINameCleaningPrefixLabel:disabled {
+    background-color: #b9b9b9;
+}
 
 QPushButton {
     margin: 4px;
@@ -272,6 +278,9 @@ QTabBar::tab {
     text-align: center;
     height: 36px;
     width: 100%;
+}
+QTabBar#batch-tabs::tab {
+    width:150%;
 }
 QTabBar::tab:hover {
     background-color: #b299e6;

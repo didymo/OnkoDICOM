@@ -14,8 +14,9 @@ from src.Model.GetPatientInfo import DicomTree
 
 class ImageLoader(QtCore.QObject):
     """
-    This class is responsible for initializing and creating all the values required to create an instance of
-    the PatientDictContainer, that is used to store all the DICOM-related data used to create the patient window.
+    This class is responsible for initializing and creating all the values
+    required to create an instance of the PatientDictContainer, that is used
+    to store all the DICOM-related data used to create the patient window.
     """
 
     signal_request_calc_dvh = QtCore.Signal()
@@ -31,9 +32,11 @@ class ImageLoader(QtCore.QObject):
 
     def load(self, interrupt_flag, progress_callback):
         """
-        :param interrupt_flag: A threading.Event() object that tells the function to stop loading.
-        :param progress_callback: A signal that receives the current progress of the loading.
-        :return: PatientDictContainer object containing all values related to the loaded DICOM files.
+        :param interrupt_flag: A threading.Event() object that tells the
+        function to stop loading. :param progress_callback: A signal that
+        receives the current progress of the loading. :return:
+        PatientDictContainer object containing all values related to the
+        loaded DICOM files.
         """
         progress_callback.emit(("Creating datasets...", 0))
         try:
@@ -54,11 +57,15 @@ class ImageLoader(QtCore.QObject):
             existing_rtss_files=self.existing_rtss
         )
 
-        # As there is no way to interrupt a QRunnable, this method must check after every step whether or not the
-        # interrupt flag has been set, in which case it will interrupt this method after the currently processing
-        # function has finished running. It's not very pretty, and the thread will still run some functions for, in some
-        # cases, up to a couple seconds after the close button on the Progress Window has been clicked, however it's
-        # the best solution I could come up with. If you have a cleaner alternative, please make your contribution.
+        # As there is no way to interrupt a QRunnable, this method must
+        # check after every step whether or not the interrupt flag has been
+        # set, in which case it will interrupt this method after the
+        # currently processing function has finished running. It's not very
+        # pretty, and the thread will still run some functions for, in some
+        # cases, up to a couple seconds after the close button on the
+        # Progress Window has been clicked, however it's the best solution I
+        # could come up with. If you have a cleaner alternative, please make
+        # your contribution.
         if interrupt_flag.is_set():
             print("stopped")
             return False

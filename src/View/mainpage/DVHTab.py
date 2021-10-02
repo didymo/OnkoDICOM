@@ -263,7 +263,7 @@ class DVHTab(QtWidgets.QWidget):
 
     def export_rtdose(self):
         """
-        Exports DVH data into a DICOM-SR file in the dataset directory.
+        Exports DVH data into the RT Dose file in the dataset directory.
         """
         dvh2rtdose(self.raw_dvh)
         QtWidgets.QMessageBox.information(

@@ -3,18 +3,18 @@ from shutil import which
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
 
+from src.Controller.PathHandler import resource_path
 from src.Model.InitialModel import create_initial_model
+from src.Model.MovingDictContainer import MovingDictContainer
+from src.Model.MovingModel import read_images_for_fusion
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.BatchProcessingWindow import UIBatchProcessingWindow
+from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
+from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
 from src.View.OpenPatientWindow import UIOpenPatientWindow
 from src.View.PyradiProgressBar import PyradiExtended
-from src.View.FirstTimeWelcomeWindow import UIFirstTimeWelcomeWindow
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
-from src.Controller.PathHandler import resource_path
-
-from src.View.ImageFusion.ImageFusionWindow import UIImageFusionWindow
-from src.Model.MovingModel import read_images_for_fusion
-from src.Model.MovingDictContainer import MovingDictContainer
 
 from src.View.PTCTFusion.OpenPTCTPatientWindow import UIOpenPTCTPatientWindow
 from src.Model.PTCTDictContainer import PTCTDictContainer
@@ -47,18 +47,26 @@ class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
 
 class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
     go_next_window = QtCore.Signal()
+    go_batch_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.open_patient_button.clicked.connect(self.go_open_patient_window)
+        self.open_batch_button.clicked.connect(self.open_batch_window)
 
     def go_open_patient_window(self):
         """
         Function to progress to the OpenPatientWindow
         """
         self.go_next_window.emit()
+
+    def open_batch_window(self):
+        """
+        Function to progress to the BatchProcessingWindow
+        """
+        self.go_batch_window.emit()
 
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
@@ -254,7 +262,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
 
             if confirmation_dialog == QMessageBox.Save:
-                self.structures_tab.save_new_rtss()
+                self.structures_tab.save_new_rtss_to_fixed_image_set()
                 event.accept()
                 self.cleanup()
             elif confirmation_dialog == QMessageBox.Discard:
@@ -264,6 +272,15 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
                 event.ignore()
         else:
             self.cleanup()
+
+
+class BatchWindow(QtWidgets.QWidget, UIBatchProcessingWindow):
+    go_next_window = QtCore.Signal()
+
+    # Initialize the batch window and set up the UI
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.setup_ui(self)
 
 
 class PyradiProgressBar(QtWidgets.QWidget):
