@@ -6,6 +6,8 @@ from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
     BatchProcessPyRad2CSV
+from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
+    BatchProcessPyRad2PyRadSR
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -136,7 +138,7 @@ class BatchProcessingController:
 
         return cur_patient_files
 
-    def perform_processes(self, interrupt_flag, progress_callback):
+    def perform_processes(self, interrupt_flag, progress_callback=None):
         """
         Performs each selected process to each selected patient.
         :param interrupt_flag: A threading.Event() object that tells the
@@ -153,6 +155,7 @@ class BatchProcessingController:
             "suv2roi": self.batch_suv2roi_handler,
             "dvh2csv": self.batch_dvh2csv_handler,
             "pyrad2csv": self.batch_pyrad2csv_handler,
+            "pyrad2pyrad-sr": self.batch_pyrad2pyradsr_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -357,6 +360,37 @@ class BatchProcessingController:
             self.batch_summary[patient] = {}
         self.batch_summary[patient]['pyrad2csv'] = reason
         progress_callback.emit(("Completed PyRad2CSV", 100))
+
+    def batch_pyrad2pyradsr_handler(self, interrupt_flag,
+                                    progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        PyRad2PyRad-SR.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get current files
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = BatchProcessPyRad2PyRadSR(progress_callback,
+                                            interrupt_flag,
+                                            cur_patient_files)
+        success = process.start()
+
+        # Set summary message
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        # Append process summary
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]['pyrad2pyradSR'] = reason
+        progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
 
     def completed_processing(self):
         """
