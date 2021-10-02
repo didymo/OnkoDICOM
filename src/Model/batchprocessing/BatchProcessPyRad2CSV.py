@@ -129,7 +129,7 @@ class BatchProcessPyRad2CSV(BatchProcess):
 
         # Convert the dataframe to CSV file
         self.progress_callback.emit(("Converting to CSV..", 90))
-        Radiomics.convert_df_to_csv(radiomics_df, output_csv_path)
+        Radiomics.convert_df_to_csv(radiomics_df, output_csv_path, patient_id)
         return True
 
     def set_filename(self, name):
