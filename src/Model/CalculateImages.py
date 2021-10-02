@@ -2,8 +2,8 @@ import numpy as np
 import pydicom
 import src.constants as constant
 from PySide6 import QtCore, QtGui
-from matplotlib import cm, colors
 import cv2
+
 
 def convert_raw_data(ds, rescaled=True, is_ct=False):
     """
@@ -117,63 +117,55 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
 
     # Process heatmap for conversion of the np_pixels to rgb for the purpose of
     # displaying the PT/CT view into RGB.
-    
+
     # Convert numpy array data to QImage for PySide6
-    if color is not None:
-        
-        """
-        Commented out for debugging purposes.
-        """
-        
-        # # Segregating as colour may not always be linear
-        # pixel_array_color = np.stack(3 * (np_pixels,), -1)
+    if color == "Heat":
 
-        # # Colour manipulation
-        # # Guide: [r, g, b] all values between 0 and 1
-        # if color == "Red":
-        #     pixel_array_color = [1, 0, 0] * pixel_array_color
-        # elif color == "Green":
-        #     pixel_array_color = [0, 1, 0] * pixel_array_color
-        # elif color == "Blue":
-        #     pixel_array_color = [0, 0, 1] * pixel_array_color
-        # elif color == "White":
-        #     pass
-        # else:
-        #     print("Invalid Color:", color)
+        pixmap = QtGui.QPixmap(convert_pt_to_heatmap(np_pixels))
 
-        # # Generate colour image
-        # qimage = QtGui.QImage((pixel_array_color.astype(np.uint8)),
-        #                       np_pixels.shape[1],
-        #                       np_pixels.shape[0],
-        #                       QtGui.QImage.Format_RGB888)
-        
-        # Conversion of the array to UINT8
-        arr8 = np_pixels.astype(np.uint8)
-        
-        # Set a custom color map
-        heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_MAGMA)
-        
-        qimage = QtGui.QImage(
-            heatmap, 
-            heatmap.shape[1], 
-            heatmap.shape[0], 
-            QtGui.QImage.Format_RGB888)
-        
     else:
-        # generate normal image
+        # Generate a grayscale image and set pixmap to the image
         bytes_per_line = np_pixels.shape[1]
-        
+
         qimage = QtGui.QImage(
-            np_pixels, 
-            np_pixels.shape[1], 
-            np_pixels.shape[0], 
+            np_pixels,
+            np_pixels.shape[1],
+            np_pixels.shape[0],
             bytes_per_line,
             QtGui.QImage.Format_Indexed8)
+        
+        pixmap = QtGui.QPixmap(qimage)
 
-    pixmap = QtGui.QPixmap(qimage)
+    # Rescale the image accordingly
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio,
                            QtCore.Qt.SmoothTransformation)
     return pixmap
+
+
+def convert_pt_to_heatmap(np_pixels):
+    """
+    Converts the grayscale of the pixel array associated with the PET images to
+    a RGB image with a colormap/heat map applied to it.
+
+    Returns:
+        qimage [Qimage]: The converted heatmap
+    """    
+    # Conversion of the array to UINT8
+    arr8 = np_pixels.astype(np.uint8)
+
+    # Apply a colormap to the imageset (np array)
+    heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_INFERNO)
+
+    # Convert the BGR colorspace to RGB
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+
+    qimage = QtGui.QImage(
+        heatmap,
+        heatmap.shape[1],
+        heatmap.shape[0],
+        QtGui.QImage.Format_RGB888)
+
+    return qimage
 
 
 def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
@@ -205,44 +197,46 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
         pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], 
+        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :],
                                               window,
-                                              level, 
+                                              level,
                                               axial_width,
-                                              axial_height, 
+                                              axial_height,
                                               color)
 
     for i in range(pixel_array_3d.shape[1]):
         dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :],
-                                                window, 
-                                                level, 
+                                                window,
+                                                level,
                                                 coronal_width,
-                                                coronal_height, 
+                                                coronal_height,
                                                 color)
-        
+
         dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i],
-                                                 window, 
+                                                 window,
                                                  level,
                                                  sagittal_width,
-                                                 sagittal_height, 
+                                                 sagittal_height,
                                                  color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 
 # This is not being used.
+
+
 def color_array(pixel_array, color=None):
-    
+
     if color == "Heat":
-        color_array = np.ndarray(pixel_array.shape[0], 
+        color_array = np.ndarray(pixel_array.shape[0],
                                  pixel_array.shape[1],
                                  3)
-        
+
         for row in range(color_array.shape[0]):
             for column in range(color_array.shape[1]):
                 color_array[row, column] = \
                     colour_heat(pixel_array[row, column])
         return color_array
-    
+
     else:
         return None
 
