@@ -54,8 +54,6 @@ class BatchProcessPyRad2CSV(BatchProcess):
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped PyRad2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -66,9 +64,10 @@ class BatchProcessPyRad2CSV(BatchProcess):
 
         rtss_path = self.patient_dict_container.filepaths.get('rtss')
         patient_id = self.patient_dict_container.dataset.get('rtss').PatientID
-        patient_id = self.clean_patient_id(patient_id)
+        patient_id = BatchProcessPyRad2CSV.clean_patient_id(patient_id)
         patient_path = self.patient_dict_container.path
-        file_name = self.clean_patient_id(patient_id) + '.nrrd'
+        file_name = \
+            BatchProcessPyRad2CSV.clean_patient_id(patient_id) + '.nrrd'
         patient_nrrd_folder_path = patient_path + '/nrrd/'
         patient_nrrd_file_path = patient_nrrd_folder_path + file_name
 
@@ -87,12 +86,11 @@ class BatchProcessPyRad2CSV(BatchProcess):
         self.progress_callback.emit(("Converting dicom to nrrd..", 25))
 
         # Convert dicom files to nrrd for pyradiomics processing
-        self.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+        BatchProcessPyRad2CSV.convert_to_nrrd(
+            patient_path, patient_nrrd_file_path)
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped PyRad2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -105,12 +103,11 @@ class BatchProcessPyRad2CSV(BatchProcess):
         self.progress_callback.emit(("Converting ROIs to nrrd..", 45))
 
         # Convert ROIs to nrrd
-        self.convert_rois_to_nrrd(patient_path, rtss_path, mask_folder_path)
+        BatchProcessPyRad2CSV.convert_rois_to_nrrd(
+            patient_path, rtss_path, mask_folder_path)
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped DVH2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -118,13 +115,11 @@ class BatchProcessPyRad2CSV(BatchProcess):
         self.progress_callback.emit(("Running pyradiomics..", 70))
 
         # Run pyradiomics, convert to dataframe
-        radiomics_df = self.get_radiomics_df(
+        radiomics_df = BatchProcessPyRad2CSV.get_radiomics_df(
             patient_path, patient_id, patient_nrrd_file_path, mask_folder_path)
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped DVH2CSV")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False

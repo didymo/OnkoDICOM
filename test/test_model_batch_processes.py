@@ -180,7 +180,6 @@ def test_batch_dvh2csv(test_object):
         assert len(rtdose.DVHSequence) > 0
 
 
-@pytest.mark.skip()
 def test_batch_pyrad2csv(test_object):
     """
     Test asserts creation of CSV as result of PyRad2CSV conversion.
