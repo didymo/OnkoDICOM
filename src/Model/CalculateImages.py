@@ -115,6 +115,8 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     np_pixels[np_pixels > 255] = 255
     np_pixels = np_pixels.astype(np.int8)
 
+    # Process heatmap for conversion of the np_pixels to rgb for the purpose of
+    # displaying the PT/CT view into RGB.
     # Convert numpy array data to QImage for PySide6
     if color is not None:
         # Segregating as colour may not always be linear
@@ -182,31 +184,44 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
         pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window,
-                                              level, axial_width,
-                                              axial_height, color)
+        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], 
+                                              window,
+                                              level, 
+                                              axial_width,
+                                              axial_height, 
+                                              color)
 
     for i in range(pixel_array_3d.shape[1]):
         dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :],
-                                                window, level, coronal_width,
-                                                coronal_height, color)
+                                                window, 
+                                                level, 
+                                                coronal_width,
+                                                coronal_height, 
+                                                color)
+        
         dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i],
-                                                 window, level,
+                                                 window, 
+                                                 level,
                                                  sagittal_width,
-                                                 sagittal_height, color)
+                                                 sagittal_height, 
+                                                 color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 
-
+# This is not being used.
 def color_array(pixel_array, color=None):
+    
     if color == "Heat":
-        color_array = np.ndarray(pixel_array.shape[0], pixel_array.shape[1],
+        color_array = np.ndarray(pixel_array.shape[0], 
+                                 pixel_array.shape[1],
                                  3)
+        
         for row in range(color_array.shape[0]):
             for column in range(color_array.shape[1]):
-                color_array[row, column] = colour_heat(
-                    pixel_array[row, column])
+                color_array[row, column] = \
+                    colour_heat(pixel_array[row, column])
         return color_array
+    
     else:
         return None
 

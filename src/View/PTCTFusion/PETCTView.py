@@ -108,7 +108,8 @@ class PetCtView(QtWidgets.QWidget):
         """
         Create a slider for the DICOM Image View.
         """
-        pixmaps = self.pt_ct_dict_container.get("ct_pixmaps_" + self.slice_view)
+        pixmaps = self.pt_ct_dict_container.get(
+            "ct_pixmaps_" + self.slice_view)
         self.slider.setMinimum(0)
         self.slider.setMaximum(len(pixmaps) - 1)
         self.slider.setValue(int(len(pixmaps) / 2))
@@ -168,12 +169,14 @@ class PetCtView(QtWidgets.QWidget):
         Update the ct_image to be displayed on the DICOM View.
         """
         # Lead CT
-        ct_pixmaps = self.pt_ct_dict_container.get("ct_pixmaps_" + self.slice_view)
+        ct_pixmaps = self.pt_ct_dict_container.get(
+            "ct_pixmaps_" + self.slice_view)
         slider_id = self.slider.value()
         ct_image = ct_pixmaps[slider_id].toImage()
 
         # Load PT
-        pt_pixmaps = self.pt_ct_dict_container.get("pt_pixmaps_" + self.slice_view)
+        pt_pixmaps = self.pt_ct_dict_container.get(
+            "pt_pixmaps_" + self.slice_view)
         m = float(len(pt_pixmaps)) / len(ct_pixmaps)
         pt_image = pt_pixmaps[int(m * slider_id)].toImage()
 
