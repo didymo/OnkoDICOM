@@ -97,6 +97,7 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     :param level: Level value of windowing function
     :param width: Pixel width of the window
     :param height: Pixel height of the window
+    :param color(String): Flag for conversion of pixels to specified color map
     :return: pixmap, a QPixmap of the slice
     """
 
