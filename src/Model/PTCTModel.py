@@ -1,18 +1,11 @@
-import os
-import SimpleITK as sitk
 import pydicom
 
 from src.constants import CT_RESCALE_INTERCEPT
 
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
-from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
-    dict_instance_uid
-from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
+from src.Model.GetPatientInfo import get_basic_info, dict_instance_uid
 
 from src.Model.PTCTDictContainer import PTCTDictContainer
-
-from src.Model.ROI import ordered_list_rois
-from src.Controller.PathHandler import resource_path
 
 
 def create_pt_ct_model():

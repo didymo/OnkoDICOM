@@ -1,13 +1,12 @@
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
-from PySide6.QtWidgets import QStackedWidget, QDialog, QMessageBox
+from PySide6.QtWidgets import QStackedWidget, QMessageBox
 
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
-from src.Model.MovingModel import read_images_for_fusion
 from src.Model.ImageFusion import get_fused_window
 
 
