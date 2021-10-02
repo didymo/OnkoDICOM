@@ -337,7 +337,8 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         # Get current files
-        cur_patient_files = self.get_patient_files(patient)
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
         process = BatchProcessPyRad2CSV(progress_callback,
                                         interrupt_flag,
                                         cur_patient_files,
