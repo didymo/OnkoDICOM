@@ -30,7 +30,7 @@ def convert_raw_data(ds, rescaled=True, is_ct=False):
                     # Perform the rescale
                     data_arr = np_tmp._pixel_array
                     slope, intercept = get_rescale(np_tmp, is_ct)
-                    data_arr = (data_arr*slope + intercept)
+                    data_arr = (data_arr * slope + intercept)
                     # Store the rescaled data
                     ds[key]._pixel_array = data_arr
                 np_pixels.append(np_tmp._pixel_array)
@@ -148,7 +148,8 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
             QtGui.QImage.Format_Indexed8)
 
     pixmap = QtGui.QPixmap(qimage)
-    pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+    pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio,
+                           QtCore.Qt.SmoothTransformation)
     return pixmap
 
 
@@ -170,30 +171,45 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
     dict_pixmaps_coronal = {}
     dict_pixmaps_sagittal = {}
 
-    axial_width, axial_height = scaled_size(pixel_array_3d.shape[1]*pixmap_aspect["axial"], pixel_array_3d.shape[2])
+    axial_width, axial_height = scaled_size(
+        pixel_array_3d.shape[1] * pixmap_aspect["axial"],
+        pixel_array_3d.shape[2])
     coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1],
-                                                pixel_array_3d.shape[0] * pixmap_aspect["coronal"])
-    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
-                                                  pixel_array_3d.shape[0])
+                                                pixel_array_3d.shape[0] *
+                                                pixmap_aspect["coronal"])
+    sagittal_width, sagittal_height = scaled_size(
+        pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
+        pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height, color)
+        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window,
+                                              level, axial_width,
+                                              axial_height, color)
 
     for i in range(pixel_array_3d.shape[1]):
-        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :], window, level, coronal_width, coronal_height, color)
-        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width, sagittal_height, color)
+        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :],
+                                                window, level, coronal_width,
+                                                coronal_height, color)
+        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i],
+                                                 window, level,
+                                                 sagittal_width,
+                                                 sagittal_height, color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 
+
 def color_array(pixel_array, color=None):
     if color == "Heat":
-        color_array = np.ndarray(pixel_array.shape[0], pixel_array.shape[1], 3)
+        color_array = np.ndarray(pixel_array.shape[0], pixel_array.shape[1],
+                                 3)
         for row in range(color_array.shape[0]):
             for column in range(color_array.shape[1]):
-                color_array[row, column] = colour_heat(pixel_array[row, column])
+                color_array[row, column] = colour_heat(
+                    pixel_array[row, column])
         return color_array
     else:
         return None
+
 
 def colour_heat(pixel):
     color = np.zeros(3)
@@ -209,24 +225,20 @@ def colour_heat(pixel):
         return c_0
     elif pixel == 255:
         return c_7
-    elif pixel/255 <= 0.142857143:
-        return c_0 + (c_1-c_0)*(pixel/(255*0.142857143))
-    elif pixel/255 <= 0.285714286:
-        return c_1 + (c_2-c_1)*(pixel/(255*0.285714286))
-    elif pixel/255 <= 0.428571429:
-        return c_2 + (c_3-c_2)*(pixel/(255*0.428571429))
-    elif pixel/255 <= 0.571428571:
-        return c_3 + (c_4-c_3)*(pixel/(255*0.571428571))
-    elif pixel/255 <= 0.714285714:
-        return c_4 + (c_5-c_4)*(pixel/(255*0.714285714))
-    elif pixel/255 <= 0.857142857:
-        return c_5 + (c_6-c_5)*(pixel/(255*0.857142857))
+    elif pixel / 255 <= 0.142857143:
+        return c_0 + (c_1 - c_0) * (pixel / (255 * 0.142857143))
+    elif pixel / 255 <= 0.285714286:
+        return c_1 + (c_2 - c_1) * (pixel / (255 * 0.285714286))
+    elif pixel / 255 <= 0.428571429:
+        return c_2 + (c_3 - c_2) * (pixel / (255 * 0.428571429))
+    elif pixel / 255 <= 0.571428571:
+        return c_3 + (c_4 - c_3) * (pixel / (255 * 0.571428571))
+    elif pixel / 255 <= 0.714285714:
+        return c_4 + (c_5 - c_4) * (pixel / (255 * 0.714285714))
+    elif pixel / 255 <= 0.857142857:
+        return c_5 + (c_6 - c_5) * (pixel / (255 * 0.857142857))
     elif pixel < 255:
-        return c_6 + (c_7-c_6)*(pixel/(255*0.428571429))
-
-
-
-
+        return c_6 + (c_7 - c_6) * (pixel / (255 * 0.428571429))
 
 
 # if color == "Heat":
@@ -246,14 +258,11 @@ def colour_heat(pixel):
 #     print(qimage.format())
 
 
-
-
-
 def scaled_size(width, height):
     if width > height:
-        height = constant.DEFAULT_WINDOW_SIZE/width*height
+        height = constant.DEFAULT_WINDOW_SIZE / width * height
         width = constant.DEFAULT_WINDOW_SIZE
     else:
-        width = constant.DEFAULT_WINDOW_SIZE/height*width
+        width = constant.DEFAULT_WINDOW_SIZE / height * width
         height = constant.DEFAULT_WINDOW_SIZE
     return width, height
