@@ -155,7 +155,7 @@ def convert_pt_to_heatmap(np_pixels):
     arr8 = np_pixels.astype(np.uint8)
 
     # Apply a colormap to the imageset (np array)
-    heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_INFERNO)
+    heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_HOT)
 
     # Convert the BGR colorspace to RGB
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
