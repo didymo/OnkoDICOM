@@ -36,25 +36,23 @@ class PTCTDictContainer(metaclass=Singleton):
         """
         Used to initialize the data on the creation of a new patient.
         :param path: The path of the loaded directory.
-        :param dataset: Dictionary where keys are slice number/RT
-            modality and values are PyDicom dataset objects.
-        :param filepaths: Dictionary where keys are slice number/RT
-            modality and values are filepaths.
         :param kwargs: Any additional values that are required
             (e.g. rois, raw_dvh, raw_contour, etc)
         """
         self.path = path
         self.additional_data = kwargs
 
-    def set_sorted_files(self, pt_data, pt_file, ct_data, ct_file):
+    def set_sorted_files(self, pt_dataset, pt_file, ct_dataset, ct_file):
         """
         Used to store the ct and pt datasets
         :param pt_dataset: the dataset that stores pt data
+        :param pt_file: the file sets used for pt_dataset
         :param ct_dataset: the dataset that stores ct data
+        :param ct_file: the file sets used for ct_dataset
         """
-        self.pt_dataset = pt_data
+        self.pt_dataset = pt_dataset
         self.pt_filepath = pt_file
-        self.ct_dataset = ct_data
+        self.ct_dataset = ct_dataset
         self.ct_filepath = ct_file
 
     def clear(self):

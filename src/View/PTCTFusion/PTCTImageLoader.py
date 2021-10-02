@@ -12,8 +12,8 @@ from src.View.ImageLoader import ImageLoader
 class PTCTImageLoader(ImageLoader):
     """
     This class is responsible for initializing and creating all the values
-    required to create an instance of the PatientDictContainer, that is
-    used to store all the DICOM-related data used to create the patient window.
+    required to create an instance of the PTCTDictContainer, that is
+    used to store all the DICOM-related data used to create the PET CT Window.
     """
 
     signal_request_calc_dvh = QtCore.Signal()

@@ -6,6 +6,7 @@ from src.Controller.PathHandler import resource_path
 from pathlib import Path
 import platform
 
+
 class PTCTProgressWindow(ProgressWindow):
 
     def __init__(self, *args,

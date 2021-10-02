@@ -317,7 +317,8 @@ class ActionHandler:
             ct_pixel_values = pt_ct_dict_container.get("ct_pixel_values")
             ct_pixmap_aspect = pt_ct_dict_container.get("ct_pixmap_aspect")
             ct_pixmaps_axial, ct_pixmaps_coronal, ct_pixmaps_sagittal = \
-                get_pixmaps(ct_pixel_values, window, level, ct_pixmap_aspect)
+                get_pixmaps(ct_pixel_values, window, level,
+                            ct_pixmap_aspect, fusion=True)
             pt_ct_dict_container.set("ct_pixmaps_axial", ct_pixmaps_axial)
             pt_ct_dict_container.set("ct_pixmaps_coronal", ct_pixmaps_coronal)
             pt_ct_dict_container.set("ct_pixmaps_sagittal",
@@ -330,7 +331,7 @@ class ActionHandler:
             pt_pixmap_aspect = pt_ct_dict_container.get("pt_pixmap_aspect")
             pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
                 get_pixmaps(pt_pixel_values, window, level,
-                            pt_pixmap_aspect, color="Heat")
+                            pt_pixmap_aspect, fusion=True, color="Heat")
             pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
             pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)
             pt_ct_dict_container.set("pt_pixmaps_sagittal",

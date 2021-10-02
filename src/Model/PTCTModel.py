@@ -71,11 +71,8 @@ def create_pt_ct_model():
     # Pass in "heat" into the get_pixmaps function to produce
     # a heatmap for the given images.
     pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
-        get_pixmaps(pt_pixel_values, 
-                    window, 
-                    level, 
-                    pt_pixmap_aspect, 
-                    color="Heat")
+        get_pixmaps(pt_pixel_values, window, level, pt_pixmap_aspect,
+                    fusion=True, color="Heat")
 
     pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
     pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)
@@ -124,7 +121,8 @@ def create_pt_ct_model():
     ct_pixmap_aspect["sagittal"] = ct_pixel_spacing[1] / ct_slice_thickness
     ct_pixmap_aspect["coronal"] = ct_slice_thickness / ct_pixel_spacing[0]
     ct_pixmaps_axial, ct_pixmaps_coronal, ct_pixmaps_sagittal = \
-        get_pixmaps(ct_pixel_values, window, level, ct_pixmap_aspect)
+        get_pixmaps(ct_pixel_values, window, level, ct_pixmap_aspect,
+                    fusion=True)
 
     pt_ct_dict_container.set("ct_pixmaps_axial", ct_pixmaps_axial)
     pt_ct_dict_container.set("ct_pixmaps_coronal", ct_pixmaps_coronal)

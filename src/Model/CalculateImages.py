@@ -88,7 +88,8 @@ def get_img(pixel_array):
     return dict_img
 
 
-def scaled_pixmap(np_pixels, window, level, width, height, color=None):
+def scaled_pixmap(np_pixels, window, level, width, height,
+                  fusion=False, color=None):
     """
     Rescale the numpy pixels of image and convert to QPixmap for display.
 
@@ -97,7 +98,8 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     :param level: Level value of windowing function
     :param width: Pixel width of the window
     :param height: Pixel height of the window
-    :param color(String): Flag for conversion of pixels to specified color map
+    :param fusion: Boolean to set scaling for overlayed images
+    :param color: String for conversion of pixels to specified color map
     :return: pixmap, a QPixmap of the slice
     """
 
@@ -134,8 +136,12 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
             np_pixels.shape[0],
             bytes_per_line,
             QtGui.QImage.Format_Indexed8)
-        
+
         pixmap = QtGui.QPixmap(qimage)
+
+    if fusion:
+        width = constant.DEFAULT_WINDOW_SIZE
+        height = constant.DEFAULT_WINDOW_SIZE
 
     # Rescale the image accordingly
     pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio,
@@ -150,7 +156,7 @@ def convert_pt_to_heatmap(np_pixels):
 
     Returns:
         qimage [Qimage]: The converted heatmap
-    """    
+    """
     # Conversion of the array to UINT8, color spaces do not like int8.
     arr8 = np_pixels.astype(np.uint8)
 
@@ -170,7 +176,8 @@ def convert_pt_to_heatmap(np_pixels):
     return qimage
 
 
-def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
+def get_pixmaps(pixel_array, window, level, pixmap_aspect,
+                fusion=False, color=None):
     """
     Get a dictionary of pixmaps.
 
@@ -178,6 +185,8 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
     :param window: Window width of windowing function
     :param level: Level value of windowing function
     :param pixmap_aspect: Scaling ratio for axial, coronal, and sagittal pixmaps
+    :param fusion: Boolean to determine if pixmaps will be fused
+    :param color: String for conversion of pixels to specified color map
     :return: dict_pixmaps, a dictionary of all pixmaps within the patient.
     """
     # Convert pixel array to numpy 3d array
@@ -191,35 +200,42 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
     axial_width, axial_height = scaled_size(
         pixel_array_3d.shape[1] * pixmap_aspect["axial"],
         pixel_array_3d.shape[2])
-    coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1],
-                                                pixel_array_3d.shape[0] *
-                                                pixmap_aspect["coronal"])
+    coronal_width, coronal_height = scaled_size(
+        pixel_array_3d.shape[1],
+        pixel_array_3d.shape[0] *
+        pixmap_aspect["coronal"])
     sagittal_width, sagittal_height = scaled_size(
         pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
         pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :],
-                                              window,
-                                              level,
-                                              axial_width,
-                                              axial_height,
-                                              color)
+        dict_pixmaps_axial[i] = scaled_pixmap(
+            pixel_array_3d[i, :, :],
+            window,
+            level,
+            axial_width,
+            axial_height,
+            fusion,
+            color)
 
     for i in range(pixel_array_3d.shape[1]):
-        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :],
-                                                window,
-                                                level,
-                                                coronal_width,
-                                                coronal_height,
-                                                color)
+        dict_pixmaps_coronal[i] = scaled_pixmap(
+            pixel_array_3d[:, i, :],
+            window,
+            level,
+            coronal_width,
+            coronal_height,
+            fusion,
+            color)
 
-        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i],
-                                                 window,
-                                                 level,
-                                                 sagittal_width,
-                                                 sagittal_height,
-                                                 color)
+        dict_pixmaps_sagittal[i] = scaled_pixmap(
+            pixel_array_3d[:, :, i],
+            window,
+            level,
+            sagittal_width,
+            sagittal_height,
+            fusion,
+            color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 
