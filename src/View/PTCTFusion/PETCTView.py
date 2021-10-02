@@ -1,17 +1,7 @@
-from PySide6 import QtWidgets, QtCore, QtGui
-from PySide6.QtWidgets import QRadioButton, QGridLayout, QWidget, \
-    QApplication, QPushButton
-from PySide6.QtGui import QPainter, QColor
-from skimage import measure
-
-from src.Model.Isodose import get_dose_grid
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QPainter
+from PySide6.QtWidgets import (QPushButton, QRadioButton)
 from src.Model.PTCTDictContainer import PTCTDictContainer
-from src.Model.ROI import get_contour_pixel
-
-from src.Controller.PathHandler import resource_path
-
-import SimpleITK as sitk
-import numpy as np
 
 
 class PetCtView(QtWidgets.QWidget):
@@ -179,7 +169,7 @@ class PetCtView(QtWidgets.QWidget):
             "pt_pixmaps_" + self.slice_view)
         m = float(len(pt_pixmaps)) / len(ct_pixmaps)
         pt_image = pt_pixmaps[int(m * slider_id)].toImage()
-
+        
         # Get alpha
         alpha = float(self.alpha_slider.value() / 100)
 

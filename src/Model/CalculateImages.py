@@ -1,9 +1,9 @@
 import numpy as np
-from PySide6 import QtGui, QtCore
-
-import src.constants as constant
 import pydicom
-
+import src.constants as constant
+from PySide6 import QtCore, QtGui
+from matplotlib import cm, colors
+import cv2
 
 def convert_raw_data(ds, rescaled=True, is_ct=False):
     """
@@ -117,36 +117,57 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
 
     # Process heatmap for conversion of the np_pixels to rgb for the purpose of
     # displaying the PT/CT view into RGB.
+    
     # Convert numpy array data to QImage for PySide6
     if color is not None:
-        # Segregating as colour may not always be linear
-        pixel_array_color = np.stack(3 * (np_pixels,), -1)
+        
+        """
+        Commented out for debugging purposes.
+        """
+        
+        # # Segregating as colour may not always be linear
+        # pixel_array_color = np.stack(3 * (np_pixels,), -1)
 
-        # Colour manipulation
-        # Guide: [r, g, b] all values between 0 and 1
-        if color == "Red":
-            pixel_array_color = [1, 0, 0] * pixel_array_color
-        elif color == "Green":
-            pixel_array_color = [0, 1, 0] * pixel_array_color
-        elif color == "Blue":
-            pixel_array_color = [0, 0, 1] * pixel_array_color
-        elif color == "White":
-            pass
-        else:
-            print("Invalid Color:", color)
+        # # Colour manipulation
+        # # Guide: [r, g, b] all values between 0 and 1
+        # if color == "Red":
+        #     pixel_array_color = [1, 0, 0] * pixel_array_color
+        # elif color == "Green":
+        #     pixel_array_color = [0, 1, 0] * pixel_array_color
+        # elif color == "Blue":
+        #     pixel_array_color = [0, 0, 1] * pixel_array_color
+        # elif color == "White":
+        #     pass
+        # else:
+        #     print("Invalid Color:", color)
 
-        # Generate colour image
+        # # Generate colour image
+        # qimage = QtGui.QImage((pixel_array_color.astype(np.uint8)),
+        #                       np_pixels.shape[1],
+        #                       np_pixels.shape[0],
+        #                       QtGui.QImage.Format_RGB888)
+        
+        # Conversion of the array to UINT8
+        arr8 = np_pixels.astype(np.uint8)
+        
+        # Set a custom color map
+        heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_MAGMA)
+        
         qimage = QtGui.QImage(
-            (pixel_array_color.astype(np.uint8)),
-            np_pixels.shape[1],
-            np_pixels.shape[0],
+            heatmap, 
+            heatmap.shape[1], 
+            heatmap.shape[0], 
             QtGui.QImage.Format_RGB888)
-
+        
     else:
         # generate normal image
         bytes_per_line = np_pixels.shape[1]
+        
         qimage = QtGui.QImage(
-            np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
+            np_pixels, 
+            np_pixels.shape[1], 
+            np_pixels.shape[0], 
+            bytes_per_line,
             QtGui.QImage.Format_Indexed8)
 
     pixmap = QtGui.QPixmap(qimage)
