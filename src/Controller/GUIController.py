@@ -108,7 +108,7 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
         # Compare local patient with previous instance of ImageFusion
         if self.patient_id != patient['id']:
             self.update_patient()
-        
+
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
 
@@ -228,7 +228,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container.clear()
         # Close 3d vtk widget
         self.three_dimension_view.close()
+        self.cleanup_image_fusion()
+        self.cleanup_pt_ct_viewer()
 
+    def cleanup_image_fusion(self):
         # Explicity destroy objects - the purpose of this is to clear
         # any image fusion tabs that have been used previously.
         # Try-catch in the event user has not prompted image-fusion.
@@ -242,10 +245,11 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             del self.image_fusion_view
         except:
             pass
-        
+
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
 
+    def cleanup_pt_ct_viewer(self):
         pt_ct_dict_container = PTCTDictContainer()
         pt_ct_dict_container.clear()
         self.pet_ct_tab.initialised = False

@@ -116,8 +116,8 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     np_pixels[np_pixels > 255] = 255
     np_pixels = np_pixels.astype(np.int8)
 
-    # Process heatmap for conversion of the np_pixels to rgb for the purpose of
-    # displaying the PT/CT view into RGB.
+    # Process heatmap for conversion of the np_pixels to rgb for the purpose
+    # of displaying the PT/CT view in RGB colorspace.
 
     # Convert numpy array data to QImage for PySide6
     if color == "Heat":
@@ -145,19 +145,20 @@ def scaled_pixmap(np_pixels, window, level, width, height, color=None):
 
 def convert_pt_to_heatmap(np_pixels):
     """
-    Converts the grayscale of the pixel array associated with the PET images to
-    a RGB image with a colormap/heat map applied to it.
+    Converts the grayscale of the pixel array associated with the PET images
+    to a RGB image with a colormap/heat map applied to it.
 
     Returns:
         qimage [Qimage]: The converted heatmap
     """    
-    # Conversion of the array to UINT8
+    # Conversion of the array to UINT8, color spaces do not like int8.
     arr8 = np_pixels.astype(np.uint8)
 
     # Apply a colormap to the imageset (np array)
     heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_HOT)
 
-    # Convert the BGR colorspace to RGB
+    # Convert the BGR colorspace to RGB, this is needed as cv2 works in BGR 
+    # colorspace as opposed to RGB colorspace.
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
     qimage = QtGui.QImage(
@@ -221,72 +222,6 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
                                                  color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
-
-# This is not being used.
-
-
-def color_array(pixel_array, color=None):
-
-    if color == "Heat":
-        color_array = np.ndarray(pixel_array.shape[0],
-                                 pixel_array.shape[1],
-                                 3)
-
-        for row in range(color_array.shape[0]):
-            for column in range(color_array.shape[1]):
-                color_array[row, column] = \
-                    colour_heat(pixel_array[row, column])
-        return color_array
-
-    else:
-        return None
-
-
-def colour_heat(pixel):
-    color = np.zeros(3)
-    c_0 = np.ndarray([0, 0, 0])
-    c_1 = np.ndarray([65, 23, 18])
-    c_2 = np.ndarray([128, 31, 27])
-    c_3 = np.ndarray([188, 51, 32])
-    c_4 = np.ndarray([224, 101, 10])
-    c_5 = np.ndarray([232, 161, 26])
-    c_6 = np.ndarray([231, 218, 48])
-    c_7 = np.ndarray([255, 255, 255])
-    if pixel == 0:
-        return c_0
-    elif pixel == 255:
-        return c_7
-    elif pixel / 255 <= 0.142857143:
-        return c_0 + (c_1 - c_0) * (pixel / (255 * 0.142857143))
-    elif pixel / 255 <= 0.285714286:
-        return c_1 + (c_2 - c_1) * (pixel / (255 * 0.285714286))
-    elif pixel / 255 <= 0.428571429:
-        return c_2 + (c_3 - c_2) * (pixel / (255 * 0.428571429))
-    elif pixel / 255 <= 0.571428571:
-        return c_3 + (c_4 - c_3) * (pixel / (255 * 0.571428571))
-    elif pixel / 255 <= 0.714285714:
-        return c_4 + (c_5 - c_4) * (pixel / (255 * 0.714285714))
-    elif pixel / 255 <= 0.857142857:
-        return c_5 + (c_6 - c_5) * (pixel / (255 * 0.857142857))
-    elif pixel < 255:
-        return c_6 + (c_7 - c_6) * (pixel / (255 * 0.428571429))
-
-
-# if color == "Heat":
-#     heat_map_colors = [
-#         QtGui.QColor.fromRgb(0, 0, 0),
-#         QtGui.QColor.fromRgb(65, 23, 18),
-#         QtGui.QColor.fromRgb(128, 31, 27),
-#         QtGui.QColor.fromRgb(188, 51, 32),
-#         QtGui.QColor.fromRgb(224, 101, 10),
-#         QtGui.QColor.fromRgb(232, 161, 26),
-#         QtGui.QColor.fromRgb(231, 218, 48),
-#         QtGui.QColor.fromRgb(255, 255, 255)
-#     ]
-#     heat_map_colors = []
-#     for i in range(256):
-#         heat_map_colors.append(QtGui.QColor.fromRgb(i, i, i))
-#     print(qimage.format())
 
 
 def scaled_size(width, height):
