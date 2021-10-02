@@ -169,7 +169,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     def load_pt_ct_tab(self):
         pcd = PTCTDictContainer()
-        if not self.pet_ct_tab.initialised or not pcd.is_empty():
+        if not pcd.is_empty():
             self.pet_ct_tab.load_pet_ct()
             self.right_panel.setCurrentWidget(self.pet_ct_tab)
 

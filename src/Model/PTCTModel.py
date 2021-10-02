@@ -31,7 +31,6 @@ def create_pt_ct_model():
 
     pt_dataset = pt_ct_dict_container.pt_dataset
     ct_dataset = pt_ct_dict_container.ct_dataset
-    dataset = pt_ct_dict_container.dataset
 
     # Set up PT images
     if 'WindowWidth' in pt_dataset[0]:
