@@ -179,6 +179,7 @@ def test_batch_dvh2csv(test_object):
         rtdose = process.patient_dict_container.dataset['rtdose']
         assert len(rtdose.DVHSequence) > 0
 
+
 @pytest.mark.skip()
 def test_batch_pyrad2csv(test_object):
     """
@@ -239,3 +240,6 @@ def test_batch_pyrad2pyradsr(test_object):
         file_name = 'Pyradiomics-SR.dcm'
         path = Path(directory).joinpath(file_name)
         assert os.path.exists(str(path))
+
+        # Delete Pyradiomics SR
+        os.remove(path)
