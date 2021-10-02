@@ -20,11 +20,11 @@ from src.Model.ImageFusion import create_fused_model, get_fused_window
 
 def create_moving_model():
     """
-    This function initializes all the attributes in the 
+    This function initializes all the attributes in the
     MovingDictContainer model required for the operation of the main
-    window. This should be called before the 
+    window. This should be called before the
     main window's components are constructed, but after the initial
-    values of the MovingDictContainer instance are set (i.e. dataset 
+    values of the MovingDictContainer instance are set (i.e. dataset
     and filepaths).
     """
     ##############################
@@ -185,6 +185,7 @@ def read_images_for_fusion(level=0, window=0):
             continue
 
     new_image = sitk.ReadImage(new_fusion_list)
+    moving_dict_container.set("sitk_moving", new_image)
 
     create_fused_model(orig_image, new_image)
     color_axial, color_sagittal, color_coronal, tfm = \

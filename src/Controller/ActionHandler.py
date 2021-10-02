@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QStackedWidget, QDialog, QMessageBox
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
+from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
 from src.Model.MovingModel import read_images_for_fusion
 from src.Model.ImageFusion import get_fused_window
@@ -288,6 +289,7 @@ class ActionHandler:
             lambda function.
         :param text: The name of the window selected.
         """
+        moving_dict_container = MovingDictContainer()
         # Get the values for window and level from the dict
         windowing_limits = self.patient_dict_container. \
             get("dict_windowing")[text]
@@ -308,6 +310,32 @@ class ActionHandler:
         self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
         self.patient_dict_container.set("window", window)
         self.patient_dict_container.set("level", level)
+
+        if self.__main_page.pet_ct_tab.initialised:
+            pt_ct_dict_container = PTCTDictContainer()
+            # Update CT
+            ct_pixel_values = pt_ct_dict_container.get("ct_pixel_values")
+            ct_pixmap_aspect = pt_ct_dict_container.get("ct_pixmap_aspect")
+            ct_pixmaps_axial, ct_pixmaps_coronal, ct_pixmaps_sagittal = \
+                get_pixmaps(ct_pixel_values, window, level, ct_pixmap_aspect, color="Heat")
+            pt_ct_dict_container.set("ct_pixmaps_axial", ct_pixmaps_axial)
+            pt_ct_dict_container.set("ct_pixmaps_coronal", ct_pixmaps_coronal)
+            pt_ct_dict_container.set("ct_pixmaps_sagittal",
+                                     ct_pixmaps_sagittal)
+            pt_ct_dict_container.set("ct_window", window)
+            pt_ct_dict_container.set("ct_level", level)
+
+            # Update PT
+            pt_pixel_values = pt_ct_dict_container.get("pt_pixel_values")
+            pt_pixmap_aspect = pt_ct_dict_container.get("pt_pixmap_aspect")
+            pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
+                get_pixmaps(pt_pixel_values, window, level, pt_pixmap_aspect)
+            pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
+            pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)
+            pt_ct_dict_container.set("pt_pixmaps_sagittal",
+                                     pt_pixmaps_sagittal)
+            pt_ct_dict_container.set("pt_window", window)
+            pt_ct_dict_container.set("pt_level", level)
 
         if hasattr(self.__main_page, 'image_fusion_view'):
             confirm_fuse_window = QMessageBox.information(

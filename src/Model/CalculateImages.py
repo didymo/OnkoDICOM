@@ -1,11 +1,11 @@
 import numpy as np
-from PySide6 import QtGui, QtCore
-
-import src.constants as constant
 import pydicom
+import src.constants as constant
+from PySide6 import QtCore, QtGui
+import cv2
 
 
-def convert_raw_data(ds, rescaled=True, is_ct=0):
+def convert_raw_data(ds, rescaled=True, is_ct=False):
     """
     Convert the raw pixel data to readable pixel data in every image dataset
     :param ds: A dictionary of datasets of all the DICOM files of the patient
@@ -30,7 +30,7 @@ def convert_raw_data(ds, rescaled=True, is_ct=0):
                     # Perform the rescale
                     data_arr = np_tmp._pixel_array
                     slope, intercept = get_rescale(np_tmp, is_ct)
-                    data_arr = (data_arr*slope + intercept)
+                    data_arr = (data_arr * slope + intercept)
                     # Store the rescaled data
                     ds[key]._pixel_array = data_arr
                 np_pixels.append(np_tmp._pixel_array)
@@ -88,7 +88,7 @@ def get_img(pixel_array):
     return dict_img
 
 
-def scaled_pixmap(np_pixels, window, level, width, height):
+def scaled_pixmap(np_pixels, window, level, width, height, color=None):
     """
     Rescale the numpy pixels of image and convert to QPixmap for display.
 
@@ -97,6 +97,7 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     :param level: Level value of windowing function
     :param width: Pixel width of the window
     :param height: Pixel height of the window
+    :param color(String): Flag for conversion of pixels to specified color map
     :return: pixmap, a QPixmap of the slice
     """
 
@@ -115,18 +116,60 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     np_pixels[np_pixels > 255] = 255
     np_pixels = np_pixels.astype(np.int8)
 
-    # Convert numpy array data to QImage for PySide6
-    bytes_per_line = np_pixels.shape[1]
-    qimage = QtGui.QImage(
-        np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
-        QtGui.QImage.Format_Indexed8)
+    # Process heatmap for conversion of the np_pixels to rgb for the purpose of
+    # displaying the PT/CT view into RGB.
 
-    pixmap = QtGui.QPixmap(qimage)
-    pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+    # Convert numpy array data to QImage for PySide6
+    if color == "Heat":
+
+        pixmap = QtGui.QPixmap(convert_pt_to_heatmap(np_pixels))
+
+    else:
+        # Generate a grayscale image and set pixmap to the image
+        bytes_per_line = np_pixels.shape[1]
+
+        qimage = QtGui.QImage(
+            np_pixels,
+            np_pixels.shape[1],
+            np_pixels.shape[0],
+            bytes_per_line,
+            QtGui.QImage.Format_Indexed8)
+        
+        pixmap = QtGui.QPixmap(qimage)
+
+    # Rescale the image accordingly
+    pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio,
+                           QtCore.Qt.SmoothTransformation)
     return pixmap
 
 
-def get_pixmaps(pixel_array, window, level, pixmap_aspect):
+def convert_pt_to_heatmap(np_pixels):
+    """
+    Converts the grayscale of the pixel array associated with the PET images to
+    a RGB image with a colormap/heat map applied to it.
+
+    Returns:
+        qimage [Qimage]: The converted heatmap
+    """    
+    # Conversion of the array to UINT8
+    arr8 = np_pixels.astype(np.uint8)
+
+    # Apply a colormap to the imageset (np array)
+    heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_INFERNO)
+
+    # Convert the BGR colorspace to RGB
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+
+    qimage = QtGui.QImage(
+        heatmap,
+        heatmap.shape[1],
+        heatmap.shape[0],
+        QtGui.QImage.Format_RGB888)
+
+    return qimage
+
+
+def get_pixmaps(pixel_array, window, level, pixmap_aspect, color=None):
     """
     Get a dictionary of pixmaps.
 
@@ -144,27 +187,113 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
     dict_pixmaps_coronal = {}
     dict_pixmaps_sagittal = {}
 
-    axial_width, axial_height = scaled_size(pixel_array_3d.shape[1]*pixmap_aspect["axial"], pixel_array_3d.shape[2])
+    axial_width, axial_height = scaled_size(
+        pixel_array_3d.shape[1] * pixmap_aspect["axial"],
+        pixel_array_3d.shape[2])
     coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1],
-                                                pixel_array_3d.shape[0] * pixmap_aspect["coronal"])
-    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
-                                                  pixel_array_3d.shape[0])
+                                                pixel_array_3d.shape[0] *
+                                                pixmap_aspect["coronal"])
+    sagittal_width, sagittal_height = scaled_size(
+        pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
+        pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height)
+        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :],
+                                              window,
+                                              level,
+                                              axial_width,
+                                              axial_height,
+                                              color)
 
     for i in range(pixel_array_3d.shape[1]):
-        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :], window, level, coronal_width, coronal_height)
-        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width, sagittal_height)
+        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :],
+                                                window,
+                                                level,
+                                                coronal_width,
+                                                coronal_height,
+                                                color)
+
+        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i],
+                                                 window,
+                                                 level,
+                                                 sagittal_width,
+                                                 sagittal_height,
+                                                 color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
+
+# This is not being used.
+
+
+def color_array(pixel_array, color=None):
+
+    if color == "Heat":
+        color_array = np.ndarray(pixel_array.shape[0],
+                                 pixel_array.shape[1],
+                                 3)
+
+        for row in range(color_array.shape[0]):
+            for column in range(color_array.shape[1]):
+                color_array[row, column] = \
+                    colour_heat(pixel_array[row, column])
+        return color_array
+
+    else:
+        return None
+
+
+def colour_heat(pixel):
+    color = np.zeros(3)
+    c_0 = np.ndarray([0, 0, 0])
+    c_1 = np.ndarray([65, 23, 18])
+    c_2 = np.ndarray([128, 31, 27])
+    c_3 = np.ndarray([188, 51, 32])
+    c_4 = np.ndarray([224, 101, 10])
+    c_5 = np.ndarray([232, 161, 26])
+    c_6 = np.ndarray([231, 218, 48])
+    c_7 = np.ndarray([255, 255, 255])
+    if pixel == 0:
+        return c_0
+    elif pixel == 255:
+        return c_7
+    elif pixel / 255 <= 0.142857143:
+        return c_0 + (c_1 - c_0) * (pixel / (255 * 0.142857143))
+    elif pixel / 255 <= 0.285714286:
+        return c_1 + (c_2 - c_1) * (pixel / (255 * 0.285714286))
+    elif pixel / 255 <= 0.428571429:
+        return c_2 + (c_3 - c_2) * (pixel / (255 * 0.428571429))
+    elif pixel / 255 <= 0.571428571:
+        return c_3 + (c_4 - c_3) * (pixel / (255 * 0.571428571))
+    elif pixel / 255 <= 0.714285714:
+        return c_4 + (c_5 - c_4) * (pixel / (255 * 0.714285714))
+    elif pixel / 255 <= 0.857142857:
+        return c_5 + (c_6 - c_5) * (pixel / (255 * 0.857142857))
+    elif pixel < 255:
+        return c_6 + (c_7 - c_6) * (pixel / (255 * 0.428571429))
+
+
+# if color == "Heat":
+#     heat_map_colors = [
+#         QtGui.QColor.fromRgb(0, 0, 0),
+#         QtGui.QColor.fromRgb(65, 23, 18),
+#         QtGui.QColor.fromRgb(128, 31, 27),
+#         QtGui.QColor.fromRgb(188, 51, 32),
+#         QtGui.QColor.fromRgb(224, 101, 10),
+#         QtGui.QColor.fromRgb(232, 161, 26),
+#         QtGui.QColor.fromRgb(231, 218, 48),
+#         QtGui.QColor.fromRgb(255, 255, 255)
+#     ]
+#     heat_map_colors = []
+#     for i in range(256):
+#         heat_map_colors.append(QtGui.QColor.fromRgb(i, i, i))
+#     print(qimage.format())
 
 
 def scaled_size(width, height):
     if width > height:
-        height = constant.DEFAULT_WINDOW_SIZE/width*height
+        height = constant.DEFAULT_WINDOW_SIZE / width * height
         width = constant.DEFAULT_WINDOW_SIZE
     else:
-        width = constant.DEFAULT_WINDOW_SIZE/height*width
+        width = constant.DEFAULT_WINDOW_SIZE / height * width
         height = constant.DEFAULT_WINDOW_SIZE
     return width, height

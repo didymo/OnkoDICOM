@@ -80,7 +80,7 @@ class NotAllowedClassError(Exception):
     pass
 
 
-def get_datasets(filepath_list):
+def get_datasets(filepath_list, file_type=None):
     """
     This function generates two dictionaries: the dictionary of PyDicom
     datasets, and the dictionary of filepaths. These two dictionaries
@@ -123,8 +123,9 @@ def get_datasets(filepath_list):
                     else:
                         slice_name = allowed_class["name"]
 
-                read_data_dict[slice_name] = read_file
-                file_names_dict[slice_name] = file
+                if file_type is None or read_file.Modality == file_type:
+                    read_data_dict[slice_name] = read_file
+                    file_names_dict[slice_name] = file
             else:
                 raise NotAllowedClassError
 
