@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
+from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
@@ -116,11 +117,13 @@ class UIBatchProcessingWindow(object):
         self.iso2roi_tab = ISO2ROIOptions()
         self.suv2roi_tab = SUV2ROIOptions()
         self.dvh2csv_tab = DVH2CSVOptions()
+        self.pyrad2csv_tab = PyRad2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
+        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
 
         # == Bottom widgets
         # Info text
@@ -210,7 +213,9 @@ class UIBatchProcessingWindow(object):
         start searching the directory.
         """
         self.file_path = self.directory_input.text()
+
         self.dvh2csv_tab.set_dvh_output_location(self.file_path, False)
+        self.pyrad2csv_tab.set_pyrad_output_location(self.file_path, False)
 
         self.begin_button.setEnabled(False)
 
@@ -252,7 +257,7 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi', 'dvh2csv']
+        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
 
@@ -271,7 +276,9 @@ class UIBatchProcessingWindow(object):
 
         file_directories = {
             "batch_path": self.file_path,
-            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location()}
+            "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location(),
+            "pyrad_output_path": self.pyrad2csv_tab.get_pyrad_output_location()
+        }
 
         # Setup the batch processing controller
         self.batch_processing_controller.set_file_paths(file_directories)

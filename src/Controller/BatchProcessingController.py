@@ -4,6 +4,8 @@ from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
+from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
+    BatchProcessPyRad2CSV
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -23,6 +25,7 @@ class BatchProcessingController:
         """
         self.batch_path = ""
         self.dvh_output_path = ""
+        self.pyrad_output_path = ""
         self.processes = []
         self.dicom_structure = None
         self.suv2roi_weights = None
@@ -42,6 +45,7 @@ class BatchProcessingController:
         """
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
+        self.pyrad_output_path = file_paths.get('pyrad_output_path')
 
     def set_processes(self, processes):
         """
@@ -148,6 +152,7 @@ class BatchProcessingController:
             "iso2roi": self.batch_iso2roi_handler,
             "suv2roi": self.batch_suv2roi_handler,
             "dvh2csv": self.batch_dvh2csv_handler,
+            "pyrad2csv": self.batch_pyrad2csv_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -319,6 +324,39 @@ class BatchProcessingController:
             self.batch_summary[patient] = {}
         self.batch_summary[patient]['dvh2csv'] = reason
         progress_callback.emit(("Completed DVH2CSV", 100))
+
+    def batch_pyrad2csv_handler(self, interrupt_flag,
+                                progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        Pyrad2CSV.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get current files
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = BatchProcessPyRad2CSV(progress_callback,
+                                        interrupt_flag,
+                                        cur_patient_files,
+                                        self.pyrad_output_path)
+        process.set_filename('PyRadiomics_' + self.timestamp + '.csv')
+        success = process.start()
+
+        # Set summary message
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        # Append process summary
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]['pyrad2csv'] = reason
+        progress_callback.emit(("Completed PyRad2CSV", 100))
 
     def completed_processing(self):
         """
