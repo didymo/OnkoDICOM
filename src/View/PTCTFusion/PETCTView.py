@@ -14,14 +14,39 @@ class PetCtView(QtWidgets.QWidget):
     load_pt_ct_signal = QtCore.Signal()
 
     def __init__(self):
+        # Initialise Widget
         QtWidgets.QWidget.__init__(self)
         self.initialised = False
         self.pet_ct_view_layout = QtWidgets.QVBoxLayout()
 
+        # Initialise Button
         self.load_pet_ct_button = QPushButton()
         self.load_pet_ct_button.setText("Start PT/CT")
         self.load_pet_ct_button.clicked.connect(self.go_to_patient)
 
+        # Create variables to be initialised later
+        self.pt_ct_dict_container = None
+        self.iso_color = None
+        self.zoom = None
+        self.current_slice_number = None
+        self.slice_view = None
+        self.overlay_view = None
+        self.display_metadata = None
+        self.format_metadata = None
+        self.dicom_view_layout = None
+        self.radio_button_layout = None
+        self.slider_layout = None
+        self.slider = None
+        self.alpha_slider = None
+        self.view = None
+        self.pt_label = None
+        self.ct_label = None
+        self.scene = None
+        self.axial_button = None
+        self.coronal_button = None
+        self.sagittal_button = None
+
+        # Add button to widget and add widget to layout
         self.pet_ct_view_layout.addWidget(self.load_pet_ct_button)
         self.setLayout(self.pet_ct_view_layout)
 
