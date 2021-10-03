@@ -182,6 +182,7 @@ class BatchProcess:
                 #       opens first set of each found + matching RTSS
                 if len(read_data_dict) > 0 \
                         and isinstance(slice_name, int) \
+                        and 0 in list(read_data_dict.keys()) \
                         and read_file.SeriesInstanceUID \
                         != read_data_dict[0].SeriesInstanceUID:
                     continue
