@@ -322,6 +322,14 @@ QComboBox, QDateEdit {
     background-color: rgb(244, 245, 245);
     color: black;
 }
+
+QComboBox#BatchROICleaning {
+    min-height: 34px;
+    margin: 2px;
+    padding: 0 2px;
+    border-bottom: none;
+}
+
 QComboBox:disabled, QDateEdit:disabled {
     background-color: #b9b9b9;
 }

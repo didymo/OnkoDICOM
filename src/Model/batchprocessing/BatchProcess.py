@@ -182,6 +182,7 @@ class BatchProcess:
                 #       opens first set of each found + matching RTSS
                 if len(read_data_dict) > 0 \
                         and isinstance(slice_name, int) \
+                        and 0 in list(read_data_dict.keys()) \
                         and read_file.SeriesInstanceUID \
                         != read_data_dict[0].SeriesInstanceUID:
                     continue
@@ -222,7 +223,7 @@ class BatchProcess:
             elif 0 in list(read_data_dict.keys()):
                 # If the RTSTRUCT matches the image, add it
                 if ref_image_series_uid \
-                    == read_data_dict[0].SeriesInstanceUID:
+                        == read_data_dict[0].SeriesInstanceUID:
                     read_data_dict['rtss'] = rt_structs[rtss]
                     file_names_dict['rtss'] = rtss
                     break
