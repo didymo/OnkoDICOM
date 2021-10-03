@@ -1,5 +1,6 @@
 import platform
 from os.path import expanduser
+from pathlib import Path
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
@@ -11,6 +12,10 @@ from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
 from src.View.batchprocessing.Pyrad2PyradSROptions import Pyrad2PyradSROptions
+from src.View.batchprocessing.ROIName2FMAIDOptions import \
+    ROIName2FMAIDOptions
+from src.View.batchprocessing.ROINameCleaningOptions import \
+    ROINameCleaningOptions, ROINameCleaningPrefixLabel
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
@@ -126,6 +131,8 @@ class UIBatchProcessingWindow(object):
         self.pyrad2pyradSR_tab = Pyrad2PyradSROptions()
         self.csv2clinicaldatasr_tab = CSV2ClinicalDataSROptions()
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
+        self.batchnamecleaning_tab = ROINameCleaningOptions()
+        self.batchname2fma_tab = ROIName2FMAIDOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
@@ -137,6 +144,8 @@ class UIBatchProcessingWindow(object):
                                "CSV2ClinicalData-SR")
         self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
                                "ClinicalData-SR2CSV")
+        self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
+        self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
 
         # == Bottom widgets
         # Info text
@@ -262,6 +271,11 @@ class UIBatchProcessingWindow(object):
 
             # Update tables
             self.suv2roi_tab.populate_table(dicom_structure)
+
+            # Update the batch name cleaning table
+            batch_directory = self.directory_input.text()
+            self.batchnamecleaning_tab.populate_table(dicom_structure,
+                                                      batch_directory)
         else:
             self.search_progress_label.setText("No patients were found.")
             self.batch_processing_controller.set_dicom_structure(None)
@@ -272,7 +286,7 @@ class UIBatchProcessingWindow(object):
         """
         processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
                      'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
-                     'clinicaldata-sr2csv']
+                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
 
@@ -304,6 +318,43 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
+
+        # Set batch ROI name cleaning options if selected
+        if 'roinamecleaning' in selected_processes:
+            # Get ROIs, datasets, options
+            name_cleaning_options = {}
+            roi_name_table = self.batchnamecleaning_tab.table_roi
+            for i in range(roi_name_table.rowCount()):
+                # Get current ROI name and what to do with it
+                roi_name = roi_name_table.item(i, 0).text()
+                option = roi_name_table.cellWidget(i, 1).currentIndex()
+
+                # Get new name text
+                if isinstance(roi_name_table.cellWidget(i, 2),
+                              ROINameCleaningPrefixLabel):
+                    new_name = roi_name_table.cellWidget(i, 2).text()
+                else:
+                    new_name = roi_name_table.cellWidget(i, 2).currentText()
+
+                # Get the dataset(s) the ROI is in
+                dataset_list = []
+                dataset_combo_box = roi_name_table.cellWidget(i, 3)
+                rtss_path = self.directory_input.text()
+                for index in range(dataset_combo_box.count()):
+                    dataset_list.append(
+                        rtss_path + dataset_combo_box.itemText(index))
+
+                if roi_name not in name_cleaning_options.keys():
+                    name_cleaning_options[roi_name] = []
+
+                for item in dataset_list:
+                    name_cleaning_options[roi_name].append(
+                        [option, new_name, item])
+
+            # Set batch name cleaning parameters in the batch processing
+            # controller.
+            self.batch_processing_controller.set_name_cleaning_options(
+                name_cleaning_options)
 
         # Enable processing
         self.batch_processing_controller.start_processing()

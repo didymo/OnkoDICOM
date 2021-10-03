@@ -12,6 +12,10 @@ from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
     BatchProcessPyRad2CSV
 from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
     BatchProcessPyRad2PyRadSR
+from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
+    BatchProcessROIName2FMAID
+from src.Model.batchprocessing.BatchProcessROINameCleaning import \
+    BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -37,10 +41,11 @@ class BatchProcessingController:
         self.processes = []
         self.dicom_structure = None
         self.suv2roi_weights = None
+        self.name_cleaning_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
-        self.batch_summary = {}
+        self.batch_summary = [{}, ""]
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -125,6 +130,14 @@ class BatchProcessingController:
         """
         self.dicom_structure = dicom_structure
 
+    def set_name_cleaning_options(self, options):
+        """
+        Set name cleaning options for batch ROI name cleaning.
+        :param options: Dictionary of datasets, ROIs, and options for
+                        cleaning the ROIs.
+        """
+        self.name_cleaning_options = options
+
     @staticmethod
     def get_patient_files(patient):
         """
@@ -157,7 +170,7 @@ class BatchProcessingController:
                                   progress of the loading.
         """
         # Clear batch summary
-        self.batch_summary = {}
+        self.batch_summary = [{}, ""]
 
         # Dictionary of process names and functions
         self.process_functions = {
@@ -168,6 +181,7 @@ class BatchProcessingController:
             "pyrad2pyrad-sr": self.batch_pyrad2pyradsr_handler,
             "csv2clinicaldata-sr": self.batch_csv2clinicaldatasr_handler,
             "clinicaldata-sr2csv": self.batch_clinicaldatasr2csv_handler,
+            "roiname2fmaid": self.batch_roiname2fmaid_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -190,9 +204,25 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
+                if process == 'roinamecleaning':
+                    continue
                 self.process_functions[process](interrupt_flag,
                                                 progress_callback,
                                                 patient)
+
+        # Perform batch ROI Name Cleaning on all patients
+        if 'roinamecleaning' in self.processes:
+            if self.name_cleaning_options:
+                # Start the process
+                process = \
+                    BatchProcessROINameCleaning(progress_callback,
+                                                interrupt_flag,
+                                                self.name_cleaning_options)
+                process.start()
+
+                # Append process summary
+                self.batch_summary[1] = process.summary
+                progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
         PatientDictContainer().clear()
 
@@ -254,9 +284,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["iso2roi"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["iso2roi"] = reason
         progress_callback.emit(("Completed ISO2ROI", 100))
 
     def batch_suv2roi_handler(self, interrupt_flag,
@@ -300,9 +330,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["suv2roi"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["suv2roi"] = reason
         progress_callback.emit(("Completed SUV2ROI", 100))
 
     def batch_dvh2csv_handler(self, interrupt_flag,
@@ -335,9 +365,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]['dvh2csv'] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['dvh2csv'] = reason
         progress_callback.emit(("Completed DVH2CSV", 100))
 
     def batch_pyrad2csv_handler(self, interrupt_flag,
@@ -368,9 +398,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]['pyrad2csv'] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['pyrad2csv'] = reason
         progress_callback.emit(("Completed PyRad2CSV", 100))
 
     def batch_pyrad2pyradsr_handler(self, interrupt_flag,
@@ -399,9 +429,9 @@ class BatchProcessingController:
             reason = process.summary
 
         # Append process summary
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]['pyrad2pyradSR'] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['pyrad2pyradSR'] = reason
         progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
 
     def batch_csv2clinicaldatasr_handler(self, interrupt_flag,
@@ -430,9 +460,9 @@ class BatchProcessingController:
         else:
             reason = process.summary
 
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["csv2clinicaldatasr"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["csv2clinicaldatasr"] = reason
         progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
 
     def batch_clinicaldatasr2csv_handler(self, interrupt_flag,
@@ -460,10 +490,36 @@ class BatchProcessingController:
         else:
             reason = process.summary
 
-        if patient not in self.batch_summary.keys():
-            self.batch_summary[patient] = {}
-        self.batch_summary[patient]["clinicaldatasr2csv"] = reason
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["clinicaldatasr2csv"] = reason
         progress_callback.emit(("Completed ClinicalData-SR2CSV", 100))
+
+    def batch_roiname2fmaid_handler(self, interrupt_flag,
+                                    progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        ROIName2FMA-ID.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get patient files and start process
+        cur_patient_files = self.get_patient_files(patient)
+        process = \
+            BatchProcessROIName2FMAID(progress_callback,
+                                      interrupt_flag,
+                                      cur_patient_files)
+        process.start()
+
+        # Append process summary
+        reason = process.summary
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["roiname2fmaid"] = reason
+        progress_callback.emit(("Completed ROI Name to FMA ID", 100))
 
     def completed_processing(self):
         """
