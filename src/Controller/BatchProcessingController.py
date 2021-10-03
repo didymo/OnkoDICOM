@@ -2,6 +2,10 @@ import datetime
 import threading
 from PySide6.QtCore import QThreadPool
 from src.Model import DICOMDirectorySearch
+from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
+    BatchProcessClinicalDataSR2CSV
+from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
+    BatchProcessCSV2ClinicalDataSR
 from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
@@ -28,6 +32,8 @@ class BatchProcessingController:
         self.batch_path = ""
         self.dvh_output_path = ""
         self.pyrad_output_path = ""
+        self.clinical_data_input_path = ""
+        self.clinical_data_output_path = ""
         self.processes = []
         self.dicom_structure = None
         self.suv2roi_weights = None
@@ -48,6 +54,10 @@ class BatchProcessingController:
         self.batch_path = file_paths.get('batch_path')
         self.dvh_output_path = file_paths.get('dvh_output_path')
         self.pyrad_output_path = file_paths.get('pyrad_output_path')
+        self.clinical_data_input_path = \
+            file_paths.get('clinical_data_input_path')
+        self.clinical_data_output_path = \
+            file_paths.get('clinical_data_output_path')
 
     def set_processes(self, processes):
         """
@@ -156,6 +166,8 @@ class BatchProcessingController:
             "dvh2csv": self.batch_dvh2csv_handler,
             "pyrad2csv": self.batch_pyrad2csv_handler,
             "pyrad2pyrad-sr": self.batch_pyrad2pyradsr_handler,
+            "csv2clinicaldata-sr": self.batch_csv2clinicaldatasr_handler,
+            "clinicaldata-sr2csv": self.batch_clinicaldatasr2csv_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -391,6 +403,67 @@ class BatchProcessingController:
             self.batch_summary[patient] = {}
         self.batch_summary[patient]['pyrad2pyradSR'] = reason
         progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
+
+    def batch_csv2clinicaldatasr_handler(self, interrupt_flag,
+                                         progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        CSV2ClinicalData-SR.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get current files
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = \
+            BatchProcessCSV2ClinicalDataSR(progress_callback, interrupt_flag,
+                                           cur_patient_files,
+                                           self.clinical_data_input_path)
+        success = process.start()
+
+        # Update summary
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]["csv2clinicaldatasr"] = reason
+        progress_callback.emit(("Completed CSV2ClinicalData-SR", 100))
+
+    def batch_clinicaldatasr2csv_handler(self, interrupt_flag,
+                                         progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        ClinicalData-SR2CSV.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = \
+            BatchProcessClinicalDataSR2CSV(progress_callback, interrupt_flag,
+                                           cur_patient_files,
+                                           self.clinical_data_output_path)
+        success = process.start()
+
+        # Update summary
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        if patient not in self.batch_summary.keys():
+            self.batch_summary[patient] = {}
+        self.batch_summary[patient]["clinicaldatasr2csv"] = reason
+        progress_callback.emit(("Completed ClinicalData-SR2CSV", 100))
 
     def completed_processing(self):
         """

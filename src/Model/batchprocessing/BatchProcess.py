@@ -222,7 +222,7 @@ class BatchProcess:
             elif 0 in list(read_data_dict.keys()):
                 # If the RTSTRUCT matches the image, add it
                 if ref_image_series_uid \
-                    == read_data_dict[0].SeriesInstanceUID:
+                        == read_data_dict[0].SeriesInstanceUID:
                     read_data_dict['rtss'] = rt_structs[rtss]
                     file_names_dict['rtss'] = rtss
                     break

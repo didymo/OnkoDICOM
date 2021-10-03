@@ -3,6 +3,10 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
+    ClinicalDataSR2CSVOptions
+from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
+    CSV2ClinicalDataSROptions
 from src.View.batchprocessing.DVH2CSVOptions import DVH2CSVOptions
 from src.View.batchprocessing.ISO2ROIOptions import ISO2ROIOptions
 from src.View.batchprocessing.PyRad2CSVOptions import PyRad2CSVOptions
@@ -120,6 +124,8 @@ class UIBatchProcessingWindow(object):
         self.dvh2csv_tab = DVH2CSVOptions()
         self.pyrad2csv_tab = PyRad2CSVOptions()
         self.pyrad2pyradSR_tab = Pyrad2PyradSROptions()
+        self.csv2clinicaldatasr_tab = CSV2ClinicalDataSROptions()
+        self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
@@ -127,6 +133,10 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
         self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
         self.tab_widget.addTab(self.pyrad2pyradSR_tab, "Pyrad2Pyrad-SR")
+        self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
+                               "CSV2ClinicalData-SR")
+        self.tab_widget.addTab(self.clinicaldatasr2csv_tab,
+                               "ClinicalData-SR2CSV")
 
         # == Bottom widgets
         # Info text
@@ -261,7 +271,8 @@ class UIBatchProcessingWindow(object):
         Executes when the confirm button is clicked.
         """
         processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
-                     'pyrad2pyrad-sr']
+                     'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
+                     'clinicaldata-sr2csv']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
 
@@ -281,7 +292,12 @@ class UIBatchProcessingWindow(object):
         file_directories = {
             "batch_path": self.file_path,
             "dvh_output_path": self.dvh2csv_tab.get_dvh_output_location(),
-            "pyrad_output_path": self.pyrad2csv_tab.get_pyrad_output_location()
+            "pyrad_output_path":
+                self.pyrad2csv_tab.get_pyrad_output_location(),
+            'clinical_data_input_path':
+                self.csv2clinicaldatasr_tab.get_csv_input_location(),
+            'clinical_data_output_path':
+                self.clinicaldatasr2csv_tab.get_csv_output_location()
         }
 
         # Setup the batch processing controller
