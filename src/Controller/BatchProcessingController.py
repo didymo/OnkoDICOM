@@ -507,7 +507,8 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         # Get patient files and start process
-        cur_patient_files = self.get_patient_files(patient)
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
         process = \
             BatchProcessROIName2FMAID(progress_callback,
                                       interrupt_flag,
