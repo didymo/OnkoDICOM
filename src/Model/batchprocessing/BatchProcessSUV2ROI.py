@@ -1,40 +1,31 @@
 from src.Model import InitialModel
 from src.Model import ImageLoading
-from src.Model.ISO2ROI import ISO2ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.SUV2ROI import SUV2ROI
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 
 
-class BatchProcessISO2ROI(BatchProcess):
+class BatchProcessSUV2ROI(BatchProcess):
     """
     This class handles batch processing for the ISO2ROI process.
     Inherits from the BatchProcess class.
     """
-    # Allowed classes for ISO2ROI
+    # Allowed classes for SUV2ROI
     allowed_classes = {
-        # CT Image
-        "1.2.840.10008.5.1.4.1.1.2": {
-            "name": "ct",
+        # PET Image
+        "1.2.840.10008.5.1.4.1.1.128": {
+            "name": "pet",
             "sliceable": True
         },
         # RT Structure Set
         "1.2.840.10008.5.1.4.1.1.481.3": {
             "name": "rtss",
             "sliceable": False
-        },
-        # RT Dose
-        "1.2.840.10008.5.1.4.1.1.481.2": {
-            "name": "rtdose",
-            "sliceable": False
-        },
-        # RT Plan
-        "1.2.840.10008.5.1.4.1.1.481.5": {
-            "name": "rtplan",
-            "sliceable": False
         }
     }
 
-    def __init__(self, progress_callback, interrupt_flag, patient_files):
+    def __init__(self, progress_callback, interrupt_flag, patient_files,
+                 patient_weight):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -42,26 +33,26 @@ class BatchProcessISO2ROI(BatchProcess):
         :param interrupt_flag: A threading.Event() object that tells the
                                function to stop loading.
         :param patient_files: List of patient files.
+        :param patient_weight: Weight of the patient in grams.
         """
         # Call the parent class
-        super(BatchProcessISO2ROI, self).__init__(progress_callback,
+        super(BatchProcessSUV2ROI, self).__init__(progress_callback,
                                                   interrupt_flag,
                                                   patient_files)
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
-        self.required_classes = ('ct', 'rtdose', 'rtplan')
+        self.required_classes = ['pet']
         self.ready = self.load_images(patient_files, self.required_classes)
+        self.patient_weight = patient_weight
 
     def start(self):
         """
-        Goes through the steps of the ISO2ROI conversion.
+        Goes through the steps of the SUV2ROI conversion.
         :return: True if successful, False if not.
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -78,8 +69,6 @@ class BatchProcessISO2ROI(BatchProcess):
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -89,14 +78,13 @@ class BatchProcessISO2ROI(BatchProcess):
         dataset_complete = ImageLoading.is_dataset_dicom_rt(
             self.patient_dict_container.dataset)
 
-        # Create ISO2ROI object
-        iso2roi = ISO2ROI()
-        self.progress_callback.emit(("Performing ISO2ROI... ", 50))
+        # Create SUV2ROI object
+        suv2roi = SUV2ROI()
+        suv2roi.set_patient_weight(self.patient_weight)
+        self.progress_callback.emit(("Performing SUV2ROI... ", 50))
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ISO2ROI")
             self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
             return False
@@ -109,31 +97,22 @@ class BatchProcessISO2ROI(BatchProcess):
                 self.progress_callback.emit(("Generating RT Struct", 55))
                 self.create_new_rtstruct(self.progress_callback)
 
-        # Get isodose levels to turn into ROIs
-        isodose_levels = \
-            iso2roi.get_iso_levels('data/csv/batch_isodoseRoi.csv')
+        # Calculate boundaries
+        self.progress_callback.emit(("Calculating Boundaries", 60))
+        contour_data = suv2roi.calculate_contours()
+
+        if not contour_data:
+            self.summary = "SUV_" + suv2roi.failure_reason
+            return False
 
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped ISO2ROI")
-            self.patient_dict_container.clear()
             self.summary = "INTERRUPT"
-            return False
-
-        # Calculate boundaries
-        self.progress_callback.emit(("Calculating boundaries...", 60))
-        boundaries = iso2roi.calculate_isodose_boundaries(isodose_levels)
-
-        # Return if boundaries could not be calculated
-        if not boundaries:
-            print("Boundaries could not be calculated.")
-            self.summary = "ISO_NO_RX_DOSE"
             return False
 
         # Generate ROIs
         self.progress_callback.emit(("Generating ROIs...", 80))
-        iso2roi.generate_roi(boundaries, self.progress_callback)
+        suv2roi.generate_ROI(contour_data, self.progress_callback)
 
         # Save new RTSS
         self.progress_callback.emit(("Saving RT Struct...", 90))
