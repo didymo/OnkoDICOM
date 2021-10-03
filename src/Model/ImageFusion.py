@@ -391,22 +391,6 @@ def register_images(image_1, image_2):
                   "r") as file_input:
             dict_fusion = json.load(file_input)
 
-        # # Convert the list of char to list of int for SITK function
-        # print('Shrink Factors in Image Fusion Model')
-        # print('Before conversion')
-        # print(dict_fusion["shrink_factors"])
-        # dict_fusion["shrink_factors"] = list(
-        #     map(int, dict_fusion["shrink_factors"]))
-        # print('After conversion')
-        # print(dict_fusion["shrink_factors"])
-        #
-        # # Convert the list of char to list of int for SITK function
-        # print('Smooth Sigmas in Image Fusion Model')
-        # print(dict_fusion["smooth_sigmas"])
-        # dict_fusion["smooth_sigmas"] = list(
-        #     map(int, dict_fusion["smooth_sigmas"]))
-        # print(dict_fusion["smooth_sigmas"])
-
         img_ct, tfm = linear_registration(
             image_1,
             image_2,
