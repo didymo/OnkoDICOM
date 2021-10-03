@@ -187,7 +187,7 @@ def test_batch_dvh2csv(test_object):
         rtdose = process.patient_dict_container.dataset['rtdose']
         assert len(rtdose.DVHSequence) > 0
 
-@pytest.mark.skip()
+
 def test_batch_pyrad2csv(test_object):
     """
     Test asserts creation of CSV as result of PyRad2CSV conversion.
@@ -218,7 +218,7 @@ def test_batch_pyrad2csv(test_object):
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
 
-@pytest.mark.skip()
+
 def test_batch_pyrad2pyradsr(test_object):
     """
     Test that a DICOM file 'PyRadiomics-SR.dcm' is created from
@@ -248,7 +248,7 @@ def test_batch_pyrad2pyradsr(test_object):
         path = Path(directory).joinpath(file_name)
         assert os.path.exists(str(path))
 
-        # Delete SR
+        # Delete Pyradiomics SR
         os.remove(path)
 
 

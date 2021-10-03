@@ -235,7 +235,8 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         # Get current patient files
-        cur_patient_files = self.get_patient_files(patient)
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
 
         # Create and start process
         process = BatchProcessISO2ROI(progress_callback,
@@ -270,7 +271,8 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         # Get patient files
-        cur_patient_files = self.get_patient_files(patient)
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
 
         # Get patient weight
         if patient.patient_id in self.suv2roi_weights.keys():
@@ -315,7 +317,8 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         # Get current patient files
-        cur_patient_files = self.get_patient_files(patient)
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
 
         # Create and start process
         process = BatchProcessDVH2CSV(progress_callback,
@@ -349,7 +352,8 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         # Get current files
-        cur_patient_files = self.get_patient_files(patient)
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
         process = BatchProcessPyRad2CSV(progress_callback,
                                         interrupt_flag,
                                         cur_patient_files,
