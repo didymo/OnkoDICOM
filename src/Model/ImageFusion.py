@@ -1,5 +1,6 @@
 from PySide6 import QtCore, QtGui
 
+import json
 import numpy as np
 import SimpleITK as sitk
 import datetime
@@ -10,6 +11,7 @@ from copy import deepcopy
 from pydicom.tag import Tag
 
 from src.constants import CT_RESCALE_INTERCEPT
+from src.Controller.PathHandler import resource_path
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -381,14 +383,55 @@ def register_images(image_1, image_2):
         img_ct (Array)
         tfm (sitk.CompositeTransform)
     """
-    img_ct, tfm = linear_registration(
-        image_1,
-        image_2,
-        shrink_factors=[8],
-        smooth_sigmas=[10],
-        reg_method='rigid',
-        verbose=False
-    )
+
+    # Check to see if the imageWindowing.csv file exists
+    if os.path.exists(resource_path('data/json/imageFusion.json')):
+        # If it exists, read data from file into the dictionary
+        with open(resource_path("data/json/imageFusion.json"),
+                  "r") as file_input:
+            dict_fusion = json.load(file_input)
+
+        # # Convert the list of char to list of int for SITK function
+        # print('Shrink Factors in Image Fusion Model')
+        # print('Before conversion')
+        # print(dict_fusion["shrink_factors"])
+        # dict_fusion["shrink_factors"] = list(
+        #     map(int, dict_fusion["shrink_factors"]))
+        # print('After conversion')
+        # print(dict_fusion["shrink_factors"])
+        #
+        # # Convert the list of char to list of int for SITK function
+        # print('Smooth Sigmas in Image Fusion Model')
+        # print(dict_fusion["smooth_sigmas"])
+        # dict_fusion["smooth_sigmas"] = list(
+        #     map(int, dict_fusion["smooth_sigmas"]))
+        # print(dict_fusion["smooth_sigmas"])
+
+        img_ct, tfm = linear_registration(
+            image_1,
+            image_2,
+            reg_method=dict_fusion["reg_method"],
+            metric=dict_fusion["metric"],
+            optimiser=dict_fusion["optimiser"],
+            shrink_factors=dict_fusion["shrink_factors"],
+            smooth_sigmas=dict_fusion["smooth_sigmas"],
+            sampling_rate=dict_fusion["sampling_rate"],
+            final_interp=dict_fusion["final_interp"],
+            number_of_iterations=dict_fusion["number_of_iterations"],
+            default_value=dict_fusion["default_value"],
+            verbose=False
+        )
+    else:
+        # If csv does not exist, initialize registration normally
+        img_ct, tfm = linear_registration(
+            image_1,
+            image_2,
+            shrink_factors=[8],
+            smooth_sigmas=[10],
+            reg_method='rigid',
+            verbose=False
+        )
+
     return img_ct, tfm
 
 
