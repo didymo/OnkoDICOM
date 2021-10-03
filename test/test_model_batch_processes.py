@@ -1,5 +1,6 @@
 import os
 import pytest
+import os.path
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
@@ -8,6 +9,8 @@ from src.Model.batchprocessing.BatchProcessDVH2CSV import BatchProcessDVH2CSV
 from src.Model.batchprocessing.BatchProcessISO2ROI import BatchProcessISO2ROI
 from src.Model.batchprocessing.BatchProcessPyRad2CSV import \
     BatchProcessPyRad2CSV
+from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
+    BatchProcessPyRad2PyRadSR
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 
 
@@ -206,3 +209,36 @@ def test_batch_pyrad2csv(test_object):
         # Assert the resulting .csv file exists
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
+
+
+def test_batch_pyrad2pyradsr(test_object):
+    """
+    Test that a DICOM file 'PyRadiomics-SR.dcm' is created from
+    Pyrad2Pyrad-SR.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        # Get the files for the patient
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+
+        # Create and setup the batch process
+        process = BatchProcessPyRad2PyRadSR(test_object.DummyProgressWindow,
+                                            test_object.DummyProgressWindow,
+                                            cur_patient_files)
+
+        # Start the process
+        process.start()
+
+        # Get dataset directory
+        directory = process.patient_dict_container.path
+
+        # Get Pyradiomics SR, assert it exists
+        file_name = 'Pyradiomics-SR.dcm'
+        path = Path(directory).joinpath(file_name)
+        assert os.path.exists(str(path))
+
+        # Delete Pyradiomics SR
+        os.remove(path)
