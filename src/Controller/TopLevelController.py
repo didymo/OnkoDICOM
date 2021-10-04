@@ -145,6 +145,9 @@ class Controller:
         self.image_fusion_window.show()
 
     def show_pt_ct_select_window(self):
+        """
+        Loads and activates the OpenPTCTPatientWindow
+        """
         self.pt_ct_window = OpenPTCTPatientWindow(self.default_directory)
         self.pt_ct_window.go_next_window.connect(self.show_main_window)
         self.pt_ct_window.show()

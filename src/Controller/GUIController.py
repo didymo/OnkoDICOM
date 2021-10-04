@@ -117,6 +117,11 @@ class OpenPTCTPatientWindow(QtWidgets.QMainWindow, UIOpenPTCTPatientWindow):
     go_next_window = QtCore.Signal(object)
 
     def __init__(self, directory_in):
+        """
+        Initialises the OpenPTCTPatientWindow with default directory
+        information
+        :param directory_in: the default directory of OnkoDICOM
+        """
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.patient_info_initialized.connect(self.open_patient)
@@ -126,6 +131,10 @@ class OpenPTCTPatientWindow(QtWidgets.QMainWindow, UIOpenPTCTPatientWindow):
             self.scan_directory_for_patient()
 
     def open_patient(self, progress_window):
+        """
+        Activates the OpenPTCTPatientWindow for use
+        :param progress_window: The OnkoDICOM progress window
+        """
         self.go_next_window.emit(progress_window)
 
 

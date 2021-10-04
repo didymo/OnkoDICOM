@@ -8,10 +8,16 @@ class PTCTProgressWindow(ProgressWindow):
     def __init__(self, *args,
                  kwargs=QtCore.Qt.WindowTitleHint |
                  QtCore.Qt.WindowCloseButtonHint):
+        """
+        Initialises the progress window
+        """
         super(PTCTProgressWindow, self).__init__(*args, kwargs)
         self.setFixedSize(250, 100)
 
     def start_loading(self, selected_files, existing_rtss=None):
+        """
+        Loads the image loader class and runs it
+        """
         image_loader = PTCTImageLoader(
             selected_files, existing_rtss, self)
         # Start loading the selected files on separate thread

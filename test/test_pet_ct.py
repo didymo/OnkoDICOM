@@ -83,6 +83,9 @@ def test_obj(qtbot):
 
 
 def test_initial_view(test_obj):
+    """
+    Tests the initial values are set properly
+    """
     assert not test_obj.pet_ct.initialised
     assert isinstance(test_obj.pet_ct.load_pet_ct_button, QPushButton)
     test_pc_dict_container = PTCTDictContainer()
@@ -90,6 +93,9 @@ def test_initial_view(test_obj):
 
 
 def test_color_image():
+    """
+    Tests the heat map function maps correctly
+    """
     # Generate two images that mirror each other
     color_1 = convert_pt_to_heatmap(grey_image(False))
     color_2 = convert_pt_to_heatmap(grey_image(True))
@@ -112,6 +118,10 @@ def test_color_image():
 
 
 def grey_image(flipped):
+    """
+    generates one greyscale image with dimensions
+    DEFAULT_WINDOW_SIZE x DEFAULT_WINDOW_SIZE
+    """
     if flipped:
         tmp = np.linspace(255, 0, DEFAULT_WINDOW_SIZE)
     else:
