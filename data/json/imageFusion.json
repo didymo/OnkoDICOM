@@ -1,0 +1,1 @@
+{"reg_method": "rigid", "metric": "mean_squares", "optimiser": "gradient_descent", "shrink_factors": [8], "smooth_sigmas": [10], "sampling_rate": 0.25, "final_interp": 2, "number_of_iterations": 50, "default_value": -1000}

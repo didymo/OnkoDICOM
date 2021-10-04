@@ -2,6 +2,7 @@
 # button
 
 import csv
+import json
 import webbrowser
 from collections import deque
 
@@ -108,6 +109,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "dbID": 530,
                 "parent_ID": 446,
                 "short_name": "Clinical Data CSV File",
+            },
+            {
+                "level": 0,
+                "dbID": 600,
+                "parent_ID": 6,
+                "short_name": "Image Fusion",
+            },
+            {
+                "level": 1,
+                "dbID": 601,
+                "parent_ID": 600,
+                "short_name": "Auto-Registration",
             },
         ]
         # create a model for the tree view of options and attach the
@@ -330,6 +343,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     # into their corresponding files
 
     def accepting(self):
+        """
+        If APPLY is clicked, save the contents of each option and table
+        into their corresponding files.
+        """
+        save_flag = True
+
         # starting save
         # Saving the Windowing options
         with open(resource_path("data/csv/imageWindowing.csv"), "w",
@@ -408,8 +427,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
             new_clinical_data_csv_dir = \
-                self.clinical_data_csv_dir_options.\
-                clinical_data_csv_dir_input_box.text()
+                self.clinical_data_csv_dir_options. \
+                    clinical_data_csv_dir_input_box.text()
             configuration.update_clinical_data_csv_dir(
                 new_clinical_data_csv_dir)
         except SqlError:
@@ -418,22 +437,41 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self,
                 "Config file error",
                 "Failed to update default directory.\nPlease try again.")
+            save_flag = False
 
-        QMessageBox.about(
-            self,
-            "Success",
-            "Changes were successfully applied")
-        
-        # Close the Add-On Options Window after saving
-        if hasattr(self.window, 'structures_tab'):
-            self.window.structures_tab.init_standard_names()
-            self.window.structures_tab.update_content()
+        # Image Fusion
+        try:
+            image_fusion_add_on_options_values = \
+                self.image_fusion_add_on_options.get_values_from_UI()
+            self.image_fusion_add_on_options.check_parameter()
+            json_file = open(resource_path("data/json/imageFusion.json"),
+                             "w", newline="")
+            json.dump(image_fusion_add_on_options_values, json_file)
+        except ValueError:
+            QMessageBox.critical(
+                self,
+                "Image Fusion Error",
+                "The number of parameters for 'Smooth_Sigmas' and "
+                "'Shrink_Factors' do not match.\nPlease try again.")
+            save_flag = False
+        else:
+            json_file.close()
 
-        self.close()
+        if save_flag:
+            QMessageBox.about(
+                self,
+                "Success",
+                "Changes were successfully applied")
+
+            # Close the Add-On Options Window after saving
+            if hasattr(self.window, 'structures_tab'):
+                self.window.structures_tab.init_standard_names()
+                self.window.structures_tab.update_content()
+
+            self.close()
 
     # This function populates the tables with the last known entries
     # based on the corresponding files
-
     def fill_tables(self):
         # Fill the Windowing table
         with open(resource_path("data/csv/imageWindowing.csv"),
@@ -446,7 +484,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if i >= self.table_view.rowCount():
-                    self.table_view.setRowCount(self.table_view.rowCount() + 1)
+                    self.table_view.setRowCount(
+                        self.table_view.rowCount() + 1)
                 self.table_view.setItem(i, 0, items[0])
                 self.table_view.setItem(i, 1, items[1])
                 self.table_view.setItem(i, 2, items[2])
@@ -473,7 +512,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
+        with open(resource_path("data/csv/volumeName.csv"),
+                  "r") as file_input:
             i = 0
             for row in file_input:
                 items = [
@@ -525,6 +565,14 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     self.table_ids.setItem(i, 0, items[0])
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
+
+        # Image Fusion
+        with open(resource_path("data/json/imageFusion.json"),
+                  "r") as file_input:
+            data = json.load(file_input)
+            for key in data:
+                self.image_fusion_add_on_options.set_value(key, data[key])
+        self.image_fusion_add_on_options.set_gridLayout()
 
     # The following function shows a pop up window to add a new entry in
     # the corresponding table
@@ -642,8 +690,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
 # The class that will be called by the main page to access the Add-On
 # Options controller
-
-
 class AddOptions:
     def __init__(self, window):
         self.window = window
