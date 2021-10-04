@@ -167,10 +167,14 @@ def convert_pt_to_heatmap(np_pixels):
     # colorspace as opposed to RGB colorspace.
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
+    # Fix as colored images have 3 bits instead of one
+    bytes_per_line = np_pixels.shape[1]*np_pixels.shape[2]
+
     qimage = QtGui.QImage(
         heatmap,
         heatmap.shape[1],
         heatmap.shape[0],
+        bytes_per_line,
         QtGui.QImage.Format_RGB888)
 
     return qimage
