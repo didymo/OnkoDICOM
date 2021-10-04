@@ -16,6 +16,9 @@ from src.View.PyradiProgressBar import PyradiExtended
 from src.View.WelcomeWindow import UIWelcomeWindow
 from src.View.mainpage.MainPage import UIMainWindow
 
+from src.View.PTCTFusion.OpenPTCTPatientWindow import UIOpenPTCTPatientWindow
+from src.Model.PTCTDictContainer import PTCTDictContainer
+
 
 class FirstTimeWelcomeWindow(QtWidgets.QMainWindow, UIFirstTimeWelcomeWindow):
     update_directory = QtCore.Signal(str)
@@ -105,8 +108,33 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
         # Compare local patient with previous instance of ImageFusion
         if self.patient_id != patient['id']:
             self.update_patient()
-        
+
     def open_patient(self, progress_window):
+        self.go_next_window.emit(progress_window)
+
+
+class OpenPTCTPatientWindow(QtWidgets.QMainWindow, UIOpenPTCTPatientWindow):
+    go_next_window = QtCore.Signal(object)
+
+    def __init__(self, directory_in):
+        """
+        Initialises the OpenPTCTPatientWindow with default directory
+        information
+        :param directory_in: the default directory of OnkoDICOM
+        """
+        QtWidgets.QMainWindow.__init__(self)
+        self.setup_ui(self)
+        self.patient_info_initialized.connect(self.open_patient)
+        if directory_in is not None:
+            self.filepath = directory_in
+            self.open_patient_directory_input_box.setText(directory_in)
+            self.scan_directory_for_patient()
+
+    def open_patient(self, progress_window):
+        """
+        Activates the OpenPTCTPatientWindow for use
+        :param progress_window: The OnkoDICOM progress window
+        """
         self.go_next_window.emit(progress_window)
 
 
@@ -117,6 +145,8 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     run_pyradiomics = QtCore.Signal(str, dict, str)
     # When the image fusion button is pressed
     image_fusion_signal = QtCore.Signal()
+    # When pt/ct button is pressed
+    pt_ct_signal = QtCore.Signal()
 
     # Initialising the main window and setting up the UI
     def __init__(self):
@@ -128,6 +158,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
         self.pyradi_trigger.connect(self.pyradiomics_handler)
+        self.pet_ct_tab.load_pt_ct_signal.connect(self.initialise_pt_ct)
 
     def update_ui(self):
         create_initial_model()
@@ -139,6 +170,17 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
         self.action_handler.action_image_fusion.triggered.connect(
             self.open_image_fusion)
+
+        self.pet_ct_tab.load_pt_ct_signal.connect(self.initialise_pt_ct)
+
+    def initialise_pt_ct(self):
+        self.pt_ct_signal.emit()
+
+    def load_pt_ct_tab(self):
+        pcd = PTCTDictContainer()
+        if not pcd.is_empty():
+            self.pet_ct_tab.load_pet_ct()
+            self.right_panel.setCurrentWidget(self.pet_ct_tab)
 
     def open_new_patient(self):
         """
@@ -195,7 +237,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container.clear()
         # Close 3d vtk widget
         self.three_dimension_view.close()
+        self.cleanup_image_fusion()
+        self.cleanup_pt_ct_viewer()
 
+    def cleanup_image_fusion(self):
         # Explicity destroy objects - the purpose of this is to clear
         # any image fusion tabs that have been used previously.
         # Try-catch in the event user has not prompted image-fusion.
@@ -209,9 +254,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             del self.image_fusion_view
         except:
             pass
-        
+
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
+
+    def cleanup_pt_ct_viewer(self):
+        pt_ct_dict_container = PTCTDictContainer()
+        pt_ct_dict_container.clear()
+        self.pet_ct_tab.initialised = False
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()

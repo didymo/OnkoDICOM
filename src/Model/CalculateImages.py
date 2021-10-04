@@ -1,11 +1,11 @@
 import numpy as np
-from PySide6 import QtGui, QtCore
-
-import src.constants as constant
 import pydicom
+import src.constants as constant
+from PySide6 import QtCore, QtGui
+import cv2
 
 
-def convert_raw_data(ds, rescaled=True, is_ct=0):
+def convert_raw_data(ds, rescaled=True, is_ct=False):
     """
     Convert the raw pixel data to readable pixel data in every image dataset
     :param ds: A dictionary of datasets of all the DICOM files of the patient
@@ -30,7 +30,7 @@ def convert_raw_data(ds, rescaled=True, is_ct=0):
                     # Perform the rescale
                     data_arr = np_tmp._pixel_array
                     slope, intercept = get_rescale(np_tmp, is_ct)
-                    data_arr = (data_arr*slope + intercept)
+                    data_arr = (data_arr * slope + intercept)
                     # Store the rescaled data
                     ds[key]._pixel_array = data_arr
                 np_pixels.append(np_tmp._pixel_array)
@@ -88,7 +88,8 @@ def get_img(pixel_array):
     return dict_img
 
 
-def scaled_pixmap(np_pixels, window, level, width, height):
+def scaled_pixmap(np_pixels, window, level, width, height,
+                  fusion=False, color=None):
     """
     Rescale the numpy pixels of image and convert to QPixmap for display.
 
@@ -97,6 +98,8 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     :param level: Level value of windowing function
     :param width: Pixel width of the window
     :param height: Pixel height of the window
+    :param fusion: Boolean to set scaling for overlayed images
+    :param color: String for conversion of pixels to specified color map
     :return: pixmap, a QPixmap of the slice
     """
 
@@ -115,18 +118,66 @@ def scaled_pixmap(np_pixels, window, level, width, height):
     np_pixels[np_pixels > 255] = 255
     np_pixels = np_pixels.astype(np.int8)
 
-    # Convert numpy array data to QImage for PySide6
-    bytes_per_line = np_pixels.shape[1]
-    qimage = QtGui.QImage(
-        np_pixels, np_pixels.shape[1], np_pixels.shape[0], bytes_per_line,
-        QtGui.QImage.Format_Indexed8)
+    # Process heatmap for conversion of the np_pixels to rgb for the purpose
+    # of displaying the PT/CT view in RGB colorspace.
 
-    pixmap = QtGui.QPixmap(qimage)
-    pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+    # Convert numpy array data to QImage for PySide6
+    if color == "Heat":
+
+        pixmap = QtGui.QPixmap(convert_pt_to_heatmap(np_pixels))
+
+    else:
+        # Generate a grayscale image and set pixmap to the image
+        bytes_per_line = np_pixels.shape[1]
+
+        qimage = QtGui.QImage(
+            np_pixels,
+            np_pixels.shape[1],
+            np_pixels.shape[0],
+            bytes_per_line,
+            QtGui.QImage.Format_Indexed8)
+
+        pixmap = QtGui.QPixmap(qimage)
+
+    if fusion:
+        width = constant.DEFAULT_WINDOW_SIZE
+        height = constant.DEFAULT_WINDOW_SIZE
+
+    # Rescale the image accordingly
+    pixmap = pixmap.scaled(width, height, QtCore.Qt.IgnoreAspectRatio,
+                           QtCore.Qt.SmoothTransformation)
     return pixmap
 
 
-def get_pixmaps(pixel_array, window, level, pixmap_aspect):
+def convert_pt_to_heatmap(np_pixels):
+    """
+    Converts the grayscale of the pixel array associated with the PET images
+    to a RGB image with a colormap/heat map applied to it.
+
+    Returns:
+        qimage [Qimage]: The converted heatmap
+    """
+    # Conversion of the array to UINT8, color spaces do not like int8.
+    arr8 = np_pixels.astype(np.uint8)
+
+    # Apply a colormap to the imageset (np array)
+    heatmap = cv2.applyColorMap(arr8, cv2.COLORMAP_HOT)
+
+    # Convert the BGR colorspace to RGB, this is needed as cv2 works in BGR 
+    # colorspace as opposed to RGB colorspace.
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+
+    qimage = QtGui.QImage(
+        heatmap,
+        heatmap.shape[1],
+        heatmap.shape[0],
+        QtGui.QImage.Format_RGB888)
+
+    return qimage
+
+
+def get_pixmaps(pixel_array, window, level, pixmap_aspect,
+                fusion=False, color=None):
     """
     Get a dictionary of pixmaps.
 
@@ -134,6 +185,8 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
     :param window: Window width of windowing function
     :param level: Level value of windowing function
     :param pixmap_aspect: Scaling ratio for axial, coronal, and sagittal pixmaps
+    :param fusion: Boolean to determine if pixmaps will be fused
+    :param color: String for conversion of pixels to specified color map
     :return: dict_pixmaps, a dictionary of all pixmaps within the patient.
     """
     # Convert pixel array to numpy 3d array
@@ -144,27 +197,54 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect):
     dict_pixmaps_coronal = {}
     dict_pixmaps_sagittal = {}
 
-    axial_width, axial_height = scaled_size(pixel_array_3d.shape[1]*pixmap_aspect["axial"], pixel_array_3d.shape[2])
-    coronal_width, coronal_height = scaled_size(pixel_array_3d.shape[1],
-                                                pixel_array_3d.shape[0] * pixmap_aspect["coronal"])
-    sagittal_width, sagittal_height = scaled_size(pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
-                                                  pixel_array_3d.shape[0])
+    axial_width, axial_height = scaled_size(
+        pixel_array_3d.shape[1] * pixmap_aspect["axial"],
+        pixel_array_3d.shape[2])
+    coronal_width, coronal_height = scaled_size(
+        pixel_array_3d.shape[1],
+        pixel_array_3d.shape[0] *
+        pixmap_aspect["coronal"])
+    sagittal_width, sagittal_height = scaled_size(
+        pixel_array_3d.shape[2] * pixmap_aspect["sagittal"],
+        pixel_array_3d.shape[0])
 
     for i in range(pixel_array_3d.shape[0]):
-        dict_pixmaps_axial[i] = scaled_pixmap(pixel_array_3d[i, :, :], window, level, axial_width, axial_height)
+        dict_pixmaps_axial[i] = scaled_pixmap(
+            pixel_array_3d[i, :, :],
+            window,
+            level,
+            axial_width,
+            axial_height,
+            fusion,
+            color)
 
     for i in range(pixel_array_3d.shape[1]):
-        dict_pixmaps_coronal[i] = scaled_pixmap(pixel_array_3d[:, i, :], window, level, coronal_width, coronal_height)
-        dict_pixmaps_sagittal[i] = scaled_pixmap(pixel_array_3d[:, :, i], window, level, sagittal_width, sagittal_height)
+        dict_pixmaps_coronal[i] = scaled_pixmap(
+            pixel_array_3d[:, i, :],
+            window,
+            level,
+            coronal_width,
+            coronal_height,
+            fusion,
+            color)
+
+        dict_pixmaps_sagittal[i] = scaled_pixmap(
+            pixel_array_3d[:, :, i],
+            window,
+            level,
+            sagittal_width,
+            sagittal_height,
+            fusion,
+            color)
 
     return dict_pixmaps_axial, dict_pixmaps_coronal, dict_pixmaps_sagittal
 
 
 def scaled_size(width, height):
     if width > height:
-        height = constant.DEFAULT_WINDOW_SIZE/width*height
+        height = constant.DEFAULT_WINDOW_SIZE / width * height
         width = constant.DEFAULT_WINDOW_SIZE
     else:
-        width = constant.DEFAULT_WINDOW_SIZE/height*width
+        width = constant.DEFAULT_WINDOW_SIZE / height * width
         height = constant.DEFAULT_WINDOW_SIZE
     return width, height

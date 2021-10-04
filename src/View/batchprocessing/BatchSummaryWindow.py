@@ -23,6 +23,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
 
         # Create widgets
         self.summary_label = QtWidgets.QLabel()
+        self.summary_label.setWordWrap(True)
         self.scroll_area = QtWidgets.QScrollArea()
         self.export_button = QtWidgets.QPushButton("Export to Text File")
         self.ok_button = QtWidgets.QPushButton("Continue")
@@ -68,15 +69,16 @@ class BatchSummaryWindow(QtWidgets.QDialog):
     def set_summary_text(self, batch_summary):
         """
         Sets the summary text.
-        :param batch_summary: Dictionary where key is a patient, and
-                              value is a dictionary of process name and
-                              status key-value pairs.
+        :param batch_summary: List where first index is a dictionary where key
+                              is a patient, and value is a dictionary of
+                              process name and status key-value pairs, and
+                              second index is a batch ROI name cleaning summary
         """
         # Create summary text
         summary_text = ""
-        for patient in batch_summary.keys():
+        for patient in batch_summary[0].keys():
             summary_text += "Patient ID: " + patient.patient_id + "\n"
-            patient_summary = batch_summary[patient]
+            patient_summary = batch_summary[0][patient]
             for process in patient_summary.keys():
                 # Success
                 if patient_summary[process] == "SUCCESS":
@@ -84,7 +86,7 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 # Skipped due to missing files
                 elif patient_summary[process] == "SKIP":
                     summary_text += process.upper() \
-                        + " skipped as one or more required files missing"
+                        + " skipped as one or more required files missing."
                 # Process interrupted
                 elif patient_summary[process] == "INTERRUPT":
                     summary_text += process.upper() \
@@ -112,14 +114,35 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                     summary_text += process.upper() \
                         + " could not be calculated. The dataset may be " \
                           "incomplete."
-                # PyRad2CSV no ROIs in RTSTRUCT
+                # PyRad no ROIs in RTSTRUCT
                 elif patient_summary[process] == "PYRAD_NO_DF":
                     summary_text += process.upper() \
                         + " failed as RTSTRUCT contained no ROIs."
+                # CSV2ClinicalDataSR patient not in CSV
+                elif patient_summary[process] == "CSV_NO_PATIENT":
+                    summary_text += process.upper() \
+                                    + " skipped as the patient was not found in the CSV."
+                # ClinicalDataSR2CSV no SR found for patient
+                elif patient_summary[process] == "CD_NO_SR":
+                    summary_text += process.upper() \
+                                    + " skipped as no SR with clinical data was found."
+                # ROIName2FMAID no ROIs with standard name found
+                elif patient_summary[process] == "FMA_NO_ROI":
+                    summary_text += process.upper() \
+                        + " skipped as no ROIs with standard names were found."
+                # ROIName2FMAID ROIs renamed
+                elif patient_summary[process][0:7] == "FMA_ID_":
+                    summary_text += "Completed " + process.upper() + ". "\
+                        + patient_summary[process][7:] + " ROIs renamed."
                 summary_text += "\n"
             summary_text += "\n"
 
+        # Add batch ROI name cleaning summary
+        if batch_summary[1] != "":
+            summary_text += batch_summary[1]
+
         # Set summary text
+        self.summary_label.setWordWrap(True)
         self.summary_label.setText(summary_text)
 
     def export_button_clicked(self):
