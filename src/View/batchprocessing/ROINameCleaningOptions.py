@@ -237,9 +237,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                     rois[roi_name] = []
 
                 # Add dataset to the list if the ROI name is not a
-                # standard organ name and does not have a standard prefix
-                if roi_name not in self.organ_names and \
-                        roi_name[0:3] not in self.volume_prefixes:
+                # standard organ name or has a standard prefix
+                if roi_name not in self.organ_names or \
+                        roi_name[0:3] in self.volume_prefixes:
                     rois[roi_name].append(rtss)
 
         # Return if no ROIs found
