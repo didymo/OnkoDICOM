@@ -20,11 +20,11 @@ from src.Model.ImageFusion import create_fused_model, get_fused_window
 
 def create_moving_model():
     """
-    This function initializes all the attributes in the 
+    This function initializes all the attributes in the
     MovingDictContainer model required for the operation of the main
-    window. This should be called before the 
+    window. This should be called before the
     main window's components are constructed, but after the initial
-    values of the MovingDictContainer instance are set (i.e. dataset 
+    values of the MovingDictContainer instance are set (i.e. dataset
     and filepaths).
     """
     ##############################
@@ -151,11 +151,14 @@ def create_moving_model():
 def read_images_for_fusion(level=0, window=0):
     """
     Performs initial image fusion, this is by converting the old and
-    new images for transformations, then creating the fusion object,
-    then using the fusion object to generate a comparison color map and
-    storing the color map
-    :param level: the level (midpoint) of windowing
-    :param window: the window (range) of windowing
+    new images for transformations into SITK object. Images are co-registered 
+    using SITK library. Images and SITK.CompositeTransformation objects are 
+    added to the patient dataset.
+    
+    Args:
+        level(int): midpoint of window
+        window(Any): range of values, should at least contain low bound and 
+        high bound
     """
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
@@ -185,6 +188,7 @@ def read_images_for_fusion(level=0, window=0):
             continue
 
     new_image = sitk.ReadImage(new_fusion_list)
+    moving_dict_container.set("sitk_moving", new_image)
 
     create_fused_model(orig_image, new_image)
     color_axial, color_sagittal, color_coronal, tfm = \

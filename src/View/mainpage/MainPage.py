@@ -1,4 +1,3 @@
-import glob
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
@@ -22,7 +21,9 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
+from src.View.PTCTFusion.PETCTView import PetCtView
 from src.View.ProgressWindow import ProgressWindow
+
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from src.View.ImageFusion.ImageFusionSagittalView import \
     ImageFusionSagittalView
@@ -184,6 +185,10 @@ class UIMainWindow:
         # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
+        # Add PETVT View to right panel as a tab
+        self.pet_ct_tab = PetCtView()
+        self.right_panel.addTab(self.pet_ct_tab, "PETCT View")
+
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtdose"):
             self.dvh_tab = DVHTab()
@@ -249,6 +254,10 @@ class UIMainWindow:
 
         if hasattr(self, 'dvh_tab'):
             self.dvh_tab.update_plot()
+
+        if hasattr(self, 'pet_ct_tab'):
+            if self.pet_ct_tab.initialised:
+                self.pet_ct_tab.update_view()
 
         if hasattr(self, 'image_fusion_view'):
             if self.image_fusion_view_axial is not None:
@@ -321,6 +330,9 @@ class UIMainWindow:
             self.image_fusion_view_coronal.zoom_in()
             self.image_fusion_view_sagittal.zoom_in()
 
+        if self.pet_ct_tab.initialised:
+            self.pet_ct_tab.zoom_in()
+
     def zoom_out(self, is_four_view, image_reg_single, image_reg_four):
         """
         This function calls the zooming out function on the four view's
@@ -341,6 +353,9 @@ class UIMainWindow:
             self.image_fusion_view_axial.zoom_out()
             self.image_fusion_view_coronal.zoom_out()
             self.image_fusion_view_sagittal.zoom_out()
+
+        if self.pet_ct_tab.initialised:
+            self.pet_ct_tab.zoom_out()
 
     def format_data(self, size):
         """
