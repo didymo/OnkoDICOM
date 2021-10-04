@@ -29,9 +29,7 @@ logging.getLogger('shapely.geos').setLevel(logging.CRITICAL)
 geometry_manipulation = {
     'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
     'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
-    'DIFFERENCE': lambda geom_1, geom_2: add_rois(geom_1, geom_2)
-    if geom_1.contains(geom_2) else
-    geom_1.difference(geom_2)
+    'DIFFERENCE': lambda geom_1, geom_2: rois_difference(geom_1, geom_2)
 }
 
 
@@ -1118,6 +1116,31 @@ def roi_to_geometry(dict_rois_contours):
         dict_geometry[slice_uid] = result_geometry
 
     return dict_geometry
+
+
+def rois_difference(geom1, geom2):
+    """
+    Geometry DIFFERENCE operation geom1 - geom2
+    :param geom1: shapely Geometry
+    :param geom2: shapely Geometry
+    :return: shapely Geometry
+    """
+    if geom2.geom_type in ['MultiPolygon', 'GeometryCollection']:
+        inner_geoms = []
+        other_geoms = []
+        for sub_geometry in geom2:
+            if sub_geometry.geom_type == "Polygon" \
+                    and not sub_geometry.is_empty \
+                    and geom1.contains(sub_geometry):
+                inner_geoms.append(sub_geometry)
+            elif sub_geometry.geom_type == "Polygon":
+                other_geoms.append(sub_geometry)
+        return add_rois(geom1.difference(MultiPolygon(other_geoms)),
+                        MultiPolygon(inner_geoms))
+    elif geom1.contains(geom2):
+        return add_rois(geom1, geom2)
+    else:
+        return geom1.difference(geom2)
 
 
 def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
