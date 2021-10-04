@@ -567,12 +567,22 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # Image Fusion
-        with open(resource_path("data/json/imageFusion.json"),
-                  "r") as file_input:
-            data = json.load(file_input)
-            for key in data:
-                self.image_fusion_add_on_options.set_value(key, data[key])
-        self.image_fusion_add_on_options.set_gridLayout()
+        # TODO: Will require an alternative flow of events in the event that
+        # data file cannot be found.
+        try:
+            with open(resource_path("data/json/imageFusion.json"),
+                      "r") as file_input:
+                data = json.load(file_input)
+                for key in data:
+                    self.image_fusion_add_on_options.set_value(key, data[key])
+            self.image_fusion_add_on_options.set_gridLayout()
+        except FileNotFoundError:
+            self.image_fusion_add_on_options.set_fast_mode()
+            QMessageBox.critical(
+                self,
+                "File Not Found!",
+                "Could not find imageFusion.json file for\nimage fusion "
+                "add-ons.")
 
     # The following function shows a pop up window to add a new entry in
     # the corresponding table
