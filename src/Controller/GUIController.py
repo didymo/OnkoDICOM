@@ -259,9 +259,14 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         moving_dict_container.clear()
 
     def cleanup_pt_ct_viewer(self):
+
         pt_ct_dict_container = PTCTDictContainer()
         pt_ct_dict_container.clear()
         self.pet_ct_tab.initialised = False
+        try:
+            del self.pet_ct_tab
+        except:
+            pass
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()
