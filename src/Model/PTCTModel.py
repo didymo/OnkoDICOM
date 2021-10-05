@@ -66,7 +66,6 @@ def create_pt_ct_model():
     pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
         get_pixmaps(pt_pixel_values, window, level, pt_pixmap_aspect,
                     fusion=True, color="Heat")
-
     pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
     pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)
     pt_ct_dict_container.set("pt_pixmaps_sagittal", pt_pixmaps_sagittal)

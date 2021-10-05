@@ -8,6 +8,8 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
 from src.Model.ImageFusion import get_fused_window
+from src.View.WindowingUI import Windowing
+from src.Model.Windowing import windowing_model
 
 
 class ActionHandler:
@@ -197,6 +199,9 @@ class ActionHandler:
         self.menu_windowing = QtWidgets.QMenu()
         self.init_windowing_menu()
 
+        self.windowing_window = Windowing(self)
+        self.windowing_window.done_signal.connect(self.update_views)
+
         # Create Export menu
         self.icon_export = QtGui.QIcon()
         self.icon_export.addPixmap(
@@ -288,73 +293,16 @@ class ActionHandler:
             lambda function.
         :param text: The name of the window selected.
         """
-        moving_dict_container = MovingDictContainer()
-        # Get the values for window and level from the dict
-        windowing_limits = self.patient_dict_container. \
-            get("dict_windowing")[text]
+        ptct = PTCTDictContainer()
+        mvd = MovingDictContainer()
+        if ptct.is_empty() and mvd.is_empty():
+            windowing_model(text, [True, False, False, False])
+            self.update_views()
+        else:
+            self.windowing_window.set_window(text)
+            self.windowing_window.show()
 
-        # Set window and level to the new values
-        window = windowing_limits[0]
-        level = windowing_limits[1]
-
-        # Update the dictionary of pixmaps with the update window and
-        # level values
-        pixel_values = self.patient_dict_container.get("pixel_values")
-        pixmap_aspect = self.patient_dict_container.get("pixmap_aspect")
-        pixmaps_axial, pixmaps_coronal, pixmaps_sagittal = \
-            get_pixmaps(pixel_values, window, level, pixmap_aspect)
-
-        self.patient_dict_container.set("pixmaps_axial", pixmaps_axial)
-        self.patient_dict_container.set("pixmaps_coronal", pixmaps_coronal)
-        self.patient_dict_container.set("pixmaps_sagittal", pixmaps_sagittal)
-        self.patient_dict_container.set("window", window)
-        self.patient_dict_container.set("level", level)
-
-        if self.__main_page.pet_ct_tab.initialised:
-            pt_ct_dict_container = PTCTDictContainer()
-            # Update CT
-            ct_pixel_values = pt_ct_dict_container.get("ct_pixel_values")
-            ct_pixmap_aspect = pt_ct_dict_container.get("ct_pixmap_aspect")
-            ct_pixmaps_axial, ct_pixmaps_coronal, ct_pixmaps_sagittal = \
-                get_pixmaps(ct_pixel_values, window, level,
-                            ct_pixmap_aspect, fusion=True)
-            pt_ct_dict_container.set("ct_pixmaps_axial", ct_pixmaps_axial)
-            pt_ct_dict_container.set("ct_pixmaps_coronal", ct_pixmaps_coronal)
-            pt_ct_dict_container.set("ct_pixmaps_sagittal",
-                                     ct_pixmaps_sagittal)
-            pt_ct_dict_container.set("ct_window", window)
-            pt_ct_dict_container.set("ct_level", level)
-
-            # Update PT
-            pt_pixel_values = pt_ct_dict_container.get("pt_pixel_values")
-            pt_pixmap_aspect = pt_ct_dict_container.get("pt_pixmap_aspect")
-            pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
-                get_pixmaps(pt_pixel_values, window, level,
-                            pt_pixmap_aspect, fusion=True, color="Heat")
-            pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
-            pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)
-            pt_ct_dict_container.set("pt_pixmaps_sagittal",
-                                     pt_pixmaps_sagittal)
-            pt_ct_dict_container.set("pt_window", window)
-            pt_ct_dict_container.set("pt_level", level)
-
-        if hasattr(self.__main_page, 'image_fusion_view'):
-            confirm_fuse_window = QMessageBox.information(
-                self.__main_page, "Image Fusion Windowing Confirmation",
-                "Do you want to perform windowing on the Image Fusion Window? "
-                "This process may take a couple of minutes.",
-                QMessageBox.Yes,
-                QMessageBox.No)
-            if confirm_fuse_window == QMessageBox.Yes:
-                fusion_axial, fusion_coronal, fusion_sagittal = \
-                    get_fused_window(level, window)
-                self.patient_dict_container.set(
-                    "color_axial", fusion_axial)
-                self.patient_dict_container.set(
-                    "color_coronal", fusion_coronal)
-                self.patient_dict_container.set(
-                    "color_sagittal", fusion_sagittal)
-
+    def update_views(self):
         self.__main_page.update_views(update_3d_window=True)
 
     def anonymization_handler(self):
