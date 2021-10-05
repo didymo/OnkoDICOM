@@ -42,6 +42,11 @@ class PTCTDictContainer(metaclass=Singleton):
         self.path = path
         self.additional_data = kwargs
 
+        self.pt_dataset = None
+        self.pt_filepath = None
+        self.ct_dataset = None
+        self.ct_filepath = None
+
     def set_sorted_files(self, pt_dataset, pt_file, ct_dataset, ct_file):
         """
         Used to store the ct and pt datasets
