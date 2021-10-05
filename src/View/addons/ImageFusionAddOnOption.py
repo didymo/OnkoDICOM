@@ -146,7 +146,6 @@ class ImageFusionOptions(object):
 
         self.default_number_spinBox = QSpinBox(self.gridLayoutWidget)
         self.default_number_spinBox.setRange(-2147483648, 2147483647)
-        # self.default_number_spinBox.setValue(-1000)
         self.default_number_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                   QSizePolicy.Fixed)
         self.default_number_spinBox.setToolTip(
@@ -160,7 +159,6 @@ class ImageFusionOptions(object):
         self.gridLayout.addWidget(self.interp_order_label, 2, 0)
 
         self.interp_order_spinbox = QSpinBox(self.gridLayoutWidget)
-        # self.interp_order_spinbox.setValue(2)
         self.interp_order_spinbox.setSizePolicy(QSizePolicy.Minimum,
                                                 QSizePolicy.Fixed)
         self.interp_order_spinbox.setToolTip("The final interpolation order. "
@@ -178,7 +176,6 @@ class ImageFusionOptions(object):
         self.metric_comboBox.addItem("mean_squares")
         self.metric_comboBox.addItem("mattes_mi")
         self.metric_comboBox.addItem("joint_hist_mi")
-        # self.metric_comboBox.setCurrentIndex(1)
         self.metric_comboBox.setToolTip("The metric to be optimised during "
                                         "image registration.")
         self.gridLayout.addWidget(self.metric_comboBox, 3, 1)
@@ -193,7 +190,6 @@ class ImageFusionOptions(object):
         self.no_of_iterations_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                     QSizePolicy.Fixed)
         self.no_of_iterations_spinBox.setRange(0, 100)
-        # self.no_of_iterations_spinBox.setValue(50)
         self.no_of_iterations_spinBox.setToolTip("Number of iterations in "
                                                  "each multi-resolution step.")
         self.gridLayout.addWidget(self.no_of_iterations_spinBox, 4, 1)
@@ -206,19 +202,18 @@ class ImageFusionOptions(object):
         self.gridLayout.addWidget(self.shrink_factor_label, 5, 0)
 
         self.shrink_factor_qLineEdit = QLineEdit()
-        # self.shrink_factor_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
-        #                                           QSizePolicy.Fixed)
         self.shrink_factor_qLineEdit.resize(
             self.shrink_factor_qLineEdit.sizeHint().width(),
             self.shrink_factor_qLineEdit.sizeHint().height()
         )
+
         self.shrink_factor_qLineEdit.setValidator(
             QRegularExpressionValidator(
                 QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
 
         self.shrink_factor_qLineEdit.setToolTip("The multi-resolution "
-                                                "downsampling factors. Can be "
-                                                "up to three parameters in an "
+                                                "downsampling factors. Can be"
+                                                "up to three parameters in an"
                                                 "array. Example [8, 2, 1]")
         self.gridLayout.addWidget(self.shrink_factor_qLineEdit, 5, 1)
 
@@ -249,7 +244,6 @@ class ImageFusionOptions(object):
         self.reg_method_comboBox.addItem("affine")
         self.reg_method_comboBox.addItem("scaleversor")
         self.reg_method_comboBox.addItem("scaleskewversor")
-        # self.reg_method_comboBox.setCurrentIndex(2)
         self.reg_method_comboBox.setToolTip("The linear transformation model "
                                             "to be used for image "
                                             "registration.")
@@ -265,7 +259,6 @@ class ImageFusionOptions(object):
         self.sampling_rate_spinBox.setMinimum(0)
         self.sampling_rate_spinBox.setMaximum(1)
         self.sampling_rate_spinBox.setSingleStep(0.01)
-        # self.sampling_rate_spinBox.setValue(0.25)
         self.sampling_rate_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                  QSizePolicy.Fixed)
         self.sampling_rate_spinBox.setToolTip(
@@ -280,15 +273,13 @@ class ImageFusionOptions(object):
         self.gridLayout.addWidget(self.smooth_sigma_label, 4, 2)
 
         self.smooth_sigmas_qLineEdit = QLineEdit()
-        # self.smooth_sigmas_qLineEdit.setSizePolicy(QSizePolicy.Minimum,
-        #                                            QSizePolicy.Fixed)
         self.smooth_sigmas_qLineEdit.resize(
             self.smooth_sigmas_qLineEdit.sizeHint().width(),
             self.smooth_sigmas_qLineEdit.sizeHint().height()
         )
         self.smooth_sigmas_qLineEdit.setValidator(
-             QRegularExpressionValidator(
-                 QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
+            QRegularExpressionValidator(
+                QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
         self.smooth_sigmas_qLineEdit.setToolTip(
             "The multi-resolution smoothing "
             "kernal scale (Gaussian). Can "
@@ -301,7 +292,7 @@ class ImageFusionOptions(object):
 
         # Button for fast mode
         self.fast_mode_button = QtWidgets.QPushButton("Fast Mode")
-        self.fast_mode_button .setCursor(
+        self.fast_mode_button.setCursor(
             QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.fast_mode_button.clicked.connect(self.set_fast_mode)
 
@@ -317,6 +308,8 @@ class ImageFusionOptions(object):
         """
         Set the UI based on the values taken from the JSON
         """
+        msg = ""
+
         # If-Elif statements for setting the dict
         # this can only be done in if-else statements.
         if self.dict["reg_method"] == "translation":
@@ -331,6 +324,9 @@ class ImageFusionOptions(object):
             self.reg_method_comboBox.setCurrentIndex(4)
         elif self.dict["reg_method"] == "scaleskewversor":
             self.reg_method_comboBox.setCurrentIndex(5)
+        else:
+            msg += 'There was an error setting the reg_method value.\n'
+            self.warning_label.setText(msg)
 
         if self.dict["metric"] == "coorelation":
             self.metric_comboBox.setCurrentIndex(0)
@@ -340,6 +336,9 @@ class ImageFusionOptions(object):
             self.metric_comboBox.setCurrentIndex(2)
         elif self.dict["metric"] == "joint_hist_mi":
             self.metric_comboBox.setCurrentIndex(3)
+        else:
+            msg += 'There was an error setting the metric value.\n'
+            self.warning_label.setText(msg)
 
         if self.dict["optimiser"] == "lbfgsb":
             self.optimiser_comboBox.setCurrentIndex(0)
@@ -347,20 +346,31 @@ class ImageFusionOptions(object):
             self.optimiser_comboBox.setCurrentIndex(1)
         elif self.dict["optimiser"] == "gradient_descent_line_search":
             self.optimiser_comboBox.setCurrentIndex(2)
+        else:
+            msg += 'There was an error setting the optimiser value.\n'
+            self.warning_label.setText(msg)
 
-        # Shrink_factors is stored as a list in JSON convert the list into
-        # a string.
-        shrink_factor_list_json = ', '.join(str(e) for e in self.dict[
-            "shrink_factors"])
-        self.shrink_factor_qLineEdit.setText(shrink_factor_list_json)
+        # Check if all elements in lsit are ints
+        if all(isinstance(x, int) for x in self.dict["shrink_factors"]):
+            # Shrink_factors is stored as a list in JSON convert the list into
+            # a string.
+            shrink_factor_list_json = ', '.join(str(e) for e in self.dict[
+                "shrink_factors"])
+            self.shrink_factor_qLineEdit.setText(shrink_factor_list_json)
+        else:
+            msg += 'There was an error setting the Shrink Factors value.\n'
+            self.warning_label.setText(msg)
 
-        # Since smooth_sigma is stored as a list in JSON convert the list
-        # into a string.
-        smooth_sigma_list_json = ', '.join(str(e) for e in self.dict[
-            "smooth_sigmas"])
-        self.smooth_sigmas_qLineEdit.setText(smooth_sigma_list_json)
-
-        msg = ""
+        # Check if all elements in list are ints
+        if all(isinstance(x, int) for x in self.dict["smooth_sigmas"]):
+            # Since smooth_sigma is stored as a list in JSON convert the list
+            # into a string.
+            smooth_sigma_list_json = ', '.join(str(e) for e in self.dict[
+                "smooth_sigmas"])
+            self.smooth_sigmas_qLineEdit.setText(smooth_sigma_list_json)
+        else:
+            msg += 'There was an error setting the Smooth Sigmas value.\n'
+            self.warning_label.setText(msg)
 
         try:
             self.sampling_rate_spinBox.setValue(float(self.dict[

@@ -444,6 +444,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             image_fusion_add_on_options_values = \
                 self.image_fusion_add_on_options.get_values_from_UI()
             self.image_fusion_add_on_options.check_parameter()
+            self.image_fusion_add_on_options.warning_label.setText("")
             json_file = open(resource_path("data/json/imageFusion.json"),
                              "w", newline="")
             json.dump(image_fusion_add_on_options_values, json_file)
@@ -567,8 +568,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # Image Fusion
-        # TODO: Will require an alternative flow of events in the event that
-        # data file cannot be found.
         try:
             with open(resource_path("data/json/imageFusion.json"),
                       "r") as file_input:
