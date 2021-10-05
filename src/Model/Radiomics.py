@@ -20,15 +20,15 @@ def convert_to_nrrd(path, nrrd_output_path):
                    ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
 
     # Command to delete the temporary file generated before
-    cmd_del_nul = 'rm ' + path + '/NUL'
+    cmd_del_nul = 'rm ' + path[:-1] + '/NUL' + '"'
 
     os.system(cmd_for_nrrd)
 
-    if os.path.exists(path + '/NUL'):
+    if os.path.exists(path[1:-1] + '/NUL'):
         if platform.system() != "Windows":
             os.system(cmd_del_nul)
         else:
-            cmd_del_nul = 'del ' + path + '/NUL'
+            cmd_del_nul = 'del ' + path[:-1] + '/NUL' + '"'
             os.system(cmd_del_nul)
 
 
@@ -48,14 +48,14 @@ def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
         ' --output-prefix ' + mask_folder_path + \
         ' --prefix-format nrrd --referenced-ct ' + path + ' 1>' + \
         path + '/NUL'
-    cmd_del_nul = 'rm ' + path + '/NUL'
+    cmd_del_nul = 'rm ' + path[:-1] + '/NUL' + '"'
     os.system(cmd_for_segmask)
 
-    if os.path.exists(path + '/NUL'):
+    if os.path.exists(path[1:-1] + '/NUL'):
         if platform.system() != "Windows":
             os.system(cmd_del_nul)
         else:
-            cmd_del_nul = 'del ' + path + '/NUL'
+            cmd_del_nul = 'del ' + path[:-1] + '/NUL' + '"'
             os.system(cmd_del_nul)
 
 
