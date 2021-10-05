@@ -8,7 +8,7 @@ def windowing_model(text, init):
     """
     Function triggered when a window is selected from the menu.
     :param text: The name of the window selected.
-    :param init: whether the
+    :param init: list of bool to determine which views are chosen
     """
     patient_dict_container = PatientDictContainer()
     pt_ct_dict_container = PTCTDictContainer()
@@ -62,6 +62,7 @@ def windowing_model(text, init):
         pt_ct_dict_container.set("pt_window", window)
         pt_ct_dict_container.set("pt_level", level)
 
+    # Update Fusion
     if init[3]:
         fusion_axial, fusion_coronal, fusion_sagittal = \
             get_fused_window(level, window)

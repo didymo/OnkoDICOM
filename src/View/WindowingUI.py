@@ -12,14 +12,17 @@ from src.Model.Windowing import windowing_model
 
 
 class Windowing(QDialog):
-
     done_signal = QtCore.Signal()
 
     def __init__(self, text):
+        """
+        Initialises the widget
+        :param text: the window selected
+        """
         super(Windowing, self).__init__()
 
-        pt_ct_dict_container = PTCTDictContainer()
-        moving_dict_container = MovingDictContainer()
+        self.pt_ct_dict_container = PTCTDictContainer()
+        self.moving_dict_container = MovingDictContainer()
 
         if platform.system() == 'Darwin':
             self.stylesheet_path = "res/stylesheet.qss"
@@ -40,9 +43,9 @@ class Windowing(QDialog):
         self.layout = QVBoxLayout()
         self.buttons = QHBoxLayout()
 
-        self.setWindowTitle("Select Windows")
+        self.setWindowTitle("Select Views")
 
-        self.label = QLabel("Select Windows to apply to")
+        self.label = QLabel("Select views to apply windowing to:")
         self.normal = QtWidgets.QCheckBox("DICOM View")
         self.pet = QtWidgets.QCheckBox("PET/CT: PET")
         self.ct = QtWidgets.QCheckBox("PET/CT: CT")
@@ -51,23 +54,28 @@ class Windowing(QDialog):
         self.cancel = QtWidgets.QPushButton("Cancel")
 
         self.confirm.clicked.connect(self.confirmed)
+        self.confirm.setProperty("QPushButtonClass", "success-button")
         self.cancel.clicked.connect(self.exit_button)
+        self.cancel.setProperty("QPushButtonClass", "fail-button")
 
         self.buttons.addWidget(self.cancel)
         self.buttons.addWidget(self.confirm)
 
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.normal)
-        if not pt_ct_dict_container.is_empty():
+        if not self.pt_ct_dict_container.is_empty():
             self.layout.addWidget(self.pet)
             self.layout.addWidget(self.ct)
-        if not moving_dict_container.is_empty():
+        if not self.moving_dict_container.is_empty():
             self.layout.addWidget(self.fusion)
         self.layout.addLayout(self.buttons)
 
         self.setLayout(self.layout)
 
     def confirmed(self):
+        """
+        Triggers when confirm button is clicked
+        """
         send = [
             self.normal.isChecked(),
             self.pet.isChecked(),
@@ -78,12 +86,21 @@ class Windowing(QDialog):
         self.done_signal.emit()
 
     def set_window(self, text):
+        """
+        Sets the windowing option
+        """
         self.text = text
 
     def exit_button(self):
+        """
+        Triggers on exit
+        """
         self.cleanup()
 
     def cleanup(self):
+        """
+        Resets window for next use
+        """
         self.normal.setChecked(False)
         self.pet.setChecked(False)
         self.ct.setChecked(False)

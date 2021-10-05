@@ -1,13 +1,11 @@
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
-from PySide6.QtWidgets import QStackedWidget, QMessageBox
+from PySide6.QtWidgets import QStackedWidget
 
-from src.Model.CalculateImages import get_pixmaps
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
-from src.Model.ImageFusion import get_fused_window
 from src.View.WindowingUI import Windowing
 from src.Model.Windowing import windowing_model
 
@@ -303,6 +301,9 @@ class ActionHandler:
             self.windowing_window.show()
 
     def update_views(self):
+        """
+        function to update all dicom views
+        """
         self.__main_page.update_views(update_3d_window=True)
 
     def anonymization_handler(self):
