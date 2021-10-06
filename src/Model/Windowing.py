@@ -1,5 +1,6 @@
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.CalculateImages import get_pixmaps
 from src.Model.ImageFusion import get_fused_window
 
@@ -11,6 +12,7 @@ def windowing_model(text, init):
     :param init: list of bool to determine which views are chosen
     """
     patient_dict_container = PatientDictContainer()
+    moving_dict_container = MovingDictContainer()
     pt_ct_dict_container = PTCTDictContainer()
 
     # Get the values for window and level from the dict
@@ -64,8 +66,9 @@ def windowing_model(text, init):
 
     # Update Fusion
     if init[3]:
-        fusion_axial, fusion_coronal, fusion_sagittal = \
+        fusion_axial, fusion_coronal, fusion_sagittal, tfm = \
             get_fused_window(level, window)
         patient_dict_container.set("color_axial", fusion_axial)
         patient_dict_container.set("color_coronal", fusion_coronal)
         patient_dict_container.set("color_sagittal", fusion_sagittal)
+        moving_dict_container.set("tfm", tfm)
