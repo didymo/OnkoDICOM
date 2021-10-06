@@ -15,7 +15,7 @@ from src.View.batchprocessing.Pyrad2PyradSROptions import Pyrad2PyradSROptions
 from src.View.batchprocessing.ROIName2FMAIDOptions import \
     ROIName2FMAIDOptions
 from src.View.batchprocessing.ROINameCleaningOptions import \
-    ROINameCleaningOptions, ROINameCleaningPrefixLabel
+    ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
@@ -331,8 +331,11 @@ class UIBatchProcessingWindow(object):
 
                 # Get new name text
                 if isinstance(roi_name_table.cellWidget(i, 2),
-                              ROINameCleaningPrefixLabel):
-                    new_name = roi_name_table.cellWidget(i, 2).text()
+                              ROINameCleaningPrefixEntryField):
+                    new_name = roi_name[0:3] \
+                               + roi_name_table.cellWidget(i, 2).text()
+                    # Remove any whitespace, replace with underscores
+                    new_name = '_'.join(new_name.split())
                 else:
                     new_name = roi_name_table.cellWidget(i, 2).currentText()
 

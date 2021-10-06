@@ -74,13 +74,20 @@ class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
         # TODO: make changing option do nothing
 
 
-class ROINameCleaningPrefixLabel(QtWidgets.QLabel):
+class ROINameCleaningPrefixEntryField(QtWidgets.QLineEdit):
     """
     This class inherits QLabel to create a custom widget for the Name
     Cleaning ROI table that allows it to be enabled or disabled when the
-    QComboBox in the same row changes. This widget displays the new
-    name for an ROI that has a standard prefix in the wrong case.
+    QComboBox in the same row changes. This widget displays an entry field
+    for entering in a new name for the ROI.
     """
+
+    def __init__(self):
+        """
+        Simple sets the object name to properly set styling.
+        """
+        QtWidgets.QLineEdit.__init__(self)
+        self.setObjectName("BatchROICleaning")
 
     @QtCore.Slot(int)
     def change_enabled(self, index):
@@ -237,9 +244,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                     rois[roi_name] = []
 
                 # Add dataset to the list if the ROI name is not a
-                # standard organ name and does not have a standard prefix
-                if roi_name not in self.organ_names and \
-                        roi_name[0:3] not in self.volume_prefixes:
+                # standard organ name or has a standard prefix
+                if roi_name not in self.organ_names or \
+                        roi_name[0:3] in self.volume_prefixes:
                     rois[roi_name].append(rtss)
 
         # Return if no ROIs found
@@ -277,13 +284,11 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
             rtss_combo_box.setStyleSheet(self.stylesheet)
 
-            # Generate new name as label if the ROI has a standard
-            # prefix but in the wrong case. Generate organ combobox
-            # otherwise
-            if roi_name[0:3].upper() in self.volume_prefixes:
-                new_name = roi_name[0:3].upper() + roi_name[3:]
-                name_box = ROINameCleaningPrefixLabel()
-                name_box.setText(new_name)
+            # Create text entry field the ROI has a standard prefix.
+            # Generate organ combobox otherwise.
+            if roi_name[0:3] in self.volume_prefixes:
+                name_box = ROINameCleaningPrefixEntryField()
+                name_box.setEnabled(False)
             else:
                 name_box = \
                     ROINameCleaningOrganComboBox(self.organ_names)

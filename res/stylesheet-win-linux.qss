@@ -182,6 +182,14 @@ QLineEdit {
     font-size: 14px;
     background-color: rgb(244, 245, 245);
 }
+
+QLineEdit#BatchROICleaning {
+    min-height: 34px;
+    margin: 2px;
+    padding: 0 2px;
+    border-bottom: none;
+}
+
 QLineEdit:disabled {
     background-color: #b9b9b9;
     color: black;
