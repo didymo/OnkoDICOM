@@ -76,7 +76,8 @@ class CSV2ClinicalDataSROptions(QtWidgets.QWidget):
         """
         # Open a file dialog and return chosen directory
         csv_path = QtWidgets.QFileDialog.getOpenFileName(
-            None, "Open Clinical Data File", "", "CSV data files (*.csv)")[0]
+            None, "Open Clinical Data File", "",
+            "CSV data files (*.csv *.CSV)")[0]
 
         # Update file path
         self.set_csv_input_location(csv_path, change_if_modified=True)
