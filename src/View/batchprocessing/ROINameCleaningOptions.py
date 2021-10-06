@@ -1,8 +1,9 @@
 import csv
 import platform
 from pydicom import dcmread
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import resource_path
+from fuzzywuzzy import process
 
 
 class ROINameCleaningOptionComboBox(QtWidgets.QComboBox):
@@ -25,7 +26,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
     Cleaning ROI table that includes a list of standard organ names.
     """
 
-    def __init__(self, organs):
+    def __init__(self, organ_names, volume_prefixes, roi_name):
         """
         Initialises the object, setting the combo box options to be a
         list of the standard organ names.
@@ -33,8 +34,18 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         """
         QtWidgets.QComboBox.__init__(self)
         self.setObjectName("BatchROICleaning")
+
+        # Get and add suggested roi names
+        roi_suggestions = self.roi_suggestions(roi_name,
+                                               organ_names,
+                                               volume_prefixes)
+        self.addItem(roi_suggestions[0][0])
+        self.addItem(roi_suggestions[1][0])
+        self.addItem(roi_suggestions[2][0])
+        self.insertSeparator(4)
+
         # Populate combo box options
-        for organ in organs:
+        for organ in organ_names:
             self.addItem(organ)
 
     @QtCore.Slot(int)
@@ -49,6 +60,21 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
             self.setEnabled(True)
         else:
             self.setEnabled(False)
+
+    def roi_suggestions(self, roi_name, organ_names, volume_prefixes):
+        """
+        Get the top 3 suggestions for the selected ROI based on
+        string matching with standard ROIs provided in .csv format.
+
+        :return: two dimensional list with ROI name and string match percent
+        i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
+        """
+
+        roi_list = organ_names + volume_prefixes
+        suggestions = process.extract(roi_name, roi_list,
+                                      limit=3)  # will get the top 3 matches
+
+        return suggestions
 
 
 class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
@@ -286,7 +312,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 name_box.setText(new_name)
             else:
                 name_box = \
-                    ROINameCleaningOrganComboBox(self.organ_names)
+                    ROINameCleaningOrganComboBox(self.organ_names,
+                                                 self.volume_prefixes,
+                                                 roi_name)
                 # Set default combo box entry to organ name in proper case
                 # if the organ name is a standard one.
                 if roi_name.lower() in self.organ_names_lowercase:
