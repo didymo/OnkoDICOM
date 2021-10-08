@@ -187,7 +187,7 @@ class UIMainWindow:
 
         # Add PETVT View to right panel as a tab
         self.pet_ct_tab = PetCtView()
-        self.right_panel.addTab(self.pet_ct_tab, "PETCT View")
+        self.right_panel.addTab(self.pet_ct_tab, "PET/CT View")
 
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtdose"):
