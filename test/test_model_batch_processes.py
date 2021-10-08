@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from src.Model import DICOMStructuredReport
+from src.Model import ROI
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
 from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
@@ -118,6 +119,13 @@ def test_batch_iso2roi(test_object):
         difference = set(test_object.iso_levels) - set(rois)
         assert len(difference) > 0
 
+        # An rtss.dcm is being created during this batch test - this is
+        # because the existing RTSTRUCT in DICOM-RT-02 does not match the
+        # rest of the dataset. We need to delete this, or future tests
+        # will fail.
+        rtss_path = test_object.batch_dir.joinpath("DICOM-RT-02", "rtss.dcm")
+        os.remove(rtss_path)
+
 
 @pytest.mark.skip()
 def test_batch_suv2roi(test_object):
@@ -191,7 +199,7 @@ def test_batch_dvh2csv(test_object):
         rtdose = process.patient_dict_container.dataset['rtdose']
         assert len(rtdose.DVHSequence) > 0
 
-
+@pytest.mark.skip()
 def test_batch_pyrad2csv(test_object):
     """
     Test asserts creation of CSV as result of PyRad2CSV conversion.
@@ -222,7 +230,7 @@ def test_batch_pyrad2csv(test_object):
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
 
-
+@pytest.mark.skip()
 def test_batch_pyrad2pyradsr(test_object):
     """
     Test that a DICOM file 'PyRadiomics-SR.dcm' is created from
