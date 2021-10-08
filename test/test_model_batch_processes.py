@@ -411,6 +411,8 @@ def test_batch_roi_name_cleaning(test_object):
         # Get RTSS file path, count number of ROIs
         rtss_path = None
         for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
+            if rtss_path is not None:
+                break
             for name in files:
                 try:
                     ds = dcmread(os.path.join(root, name))
