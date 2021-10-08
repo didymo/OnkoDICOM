@@ -1125,7 +1125,8 @@ def rois_difference(geom1, geom2):
     :param geom2: shapely Geometry
     :return: shapely Geometry
     """
-    if geom2.geom_type in ['MultiPolygon', 'GeometryCollection']:
+    if geom2.geom_type in ['MultiPolygon', 'GeometryCollection'] and \
+            not geom2.is_empty:
         inner_geoms = []
         other_geoms = []
         for sub_geometry in geom2:
