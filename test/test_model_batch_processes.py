@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication
 from src.Controller.BatchProcessingController import BatchProcessingController
 from src.Model import DICOMDirectorySearch
 from src.Model import DICOMStructuredReport
+from src.Model import ROI
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
 from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
@@ -117,6 +118,13 @@ def test_batch_iso2roi(test_object):
         # Assert rtss contains new rois
         difference = set(test_object.iso_levels) - set(rois)
         assert len(difference) > 0
+
+        # An rtss.dcm is being created during this batch test - this is
+        # because the existing RTSTRUCT in DICOM-RT-02 does not match the
+        # rest of the dataset. We need to delete this, or future tests
+        # will fail.
+        rtss_path = test_object.batch_dir.joinpath("DICOM-RT-02", "rtss.dcm")
+        os.remove(rtss_path)
 
 
 @pytest.mark.skip()
@@ -411,6 +419,8 @@ def test_batch_roi_name_cleaning(test_object):
         # Get RTSS file path, count number of ROIs
         rtss_path = None
         for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
+            if rtss_path is not None:
+                break
             for name in files:
                 try:
                     ds = dcmread(os.path.join(root, name))
