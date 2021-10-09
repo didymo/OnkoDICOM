@@ -151,11 +151,14 @@ def create_moving_model():
 def read_images_for_fusion(level=0, window=0):
     """
     Performs initial image fusion, this is by converting the old and
-    new images for transformations, then creating the fusion object,
-    then using the fusion object to generate a comparison color map and
-    storing the color map
-    :param level: the level (midpoint) of windowing
-    :param window: the window (range) of windowing
+    new images for transformations into SITK object. Images are co-registered 
+    using SITK library. Images and SITK.CompositeTransformation objects are 
+    added to the patient dataset.
+    
+    Args:
+        level(int): midpoint of window
+        window(Any): range of values, should at least contain low bound and 
+        high bound
     """
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()

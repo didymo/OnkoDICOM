@@ -4,29 +4,68 @@ from PySide6.QtWidgets import (QPushButton, QRadioButton)
 from src.Model.PTCTDictContainer import PTCTDictContainer
 
 
-class PetCtView(QtWidgets.QWidget):
+# This class, even though similarly to DicomView is not actually quite the
+# same as DicomView (borrowing a few functions) the rest of the
+# functionalities differ greatly, where the GUI displays a button first as
+# opposed to displaying the images. Therefore, this will remain as a
+# standalone class.
 
+class PetCtView(QtWidgets.QWidget):
     load_pt_ct_signal = QtCore.Signal()
 
     def __init__(self):
+        """
+        Initialises the PET/CT View with just the start button
+        """
+        # Initialise Widget
         QtWidgets.QWidget.__init__(self)
         self.initialised = False
         self.pet_ct_view_layout = QtWidgets.QVBoxLayout()
 
+        # Initialise Button
         self.load_pet_ct_button = QPushButton()
         self.load_pet_ct_button.setText("Start PT/CT")
         self.load_pet_ct_button.clicked.connect(self.go_to_patient)
 
+        # Create variables to be initialised later
+        self.pt_ct_dict_container = None
+        self.iso_color = None
+        self.zoom = None
+        self.current_slice_number = None
+        self.slice_view = None
+        self.overlay_view = None
+        self.display_metadata = None
+        self.format_metadata = None
+        self.dicom_view_layout = None
+        self.radio_button_layout = None
+        self.slider_layout = None
+        self.slider = None
+        self.alpha_slider = None
+        self.view = None
+        self.pt_label = None
+        self.ct_label = None
+        self.scene = None
+        self.axial_button = None
+        self.coronal_button = None
+        self.sagittal_button = None
+
+        # Add button to widget and add widget to layout
         self.pet_ct_view_layout.addWidget(self.load_pet_ct_button)
         self.setLayout(self.pet_ct_view_layout)
 
     def go_to_patient(self):
+        """
+        Triggers when the start button is pressed
+        """
         self.load_pet_ct_button.setEnabled(False)
-        self.load_pt_ct_signal.emit()
+        self.load_pt_ct_signal.emit() # Opens the OpenPTCTPatientWindow
         self.load_pet_ct_button.setEnabled(True)
 
     def load_pet_ct(self, roi_color=None, iso_color=None, slice_view="axial",
                     format_metadata=True):
+        """
+        Loads the PET/CT GUI after data has been added to PTCTDictContainer
+        """
         self.pt_ct_dict_container = PTCTDictContainer()
         self.iso_color = iso_color
         self.zoom = 1
@@ -108,7 +147,9 @@ class PetCtView(QtWidgets.QWidget):
         self.slider.valueChanged.connect(self.value_changed)
 
     def init_alpha_slider(self):
-        # alpha slider
+        """
+        Creates the alpha slider for opacity between images
+        """
         self.alpha_slider.setMinimum(0)
         self.alpha_slider.setMaximum(100)
         self.alpha_slider.setValue(50)
@@ -127,6 +168,9 @@ class PetCtView(QtWidgets.QWidget):
         self.view.setBackgroundBrush(background_brush)
 
     def update_axis(self):
+        """
+        Triggers when a radio button is pressed
+        """
         toggled = self.sender()
         if toggled.isChecked():
             self.slice_view = toggled.text().lower()
@@ -138,6 +182,9 @@ class PetCtView(QtWidgets.QWidget):
         self.update_view()
 
     def value_changed(self):
+        """
+        Triggers when a value is changed on PET/CT
+        """
         self.update_view()
 
     def update_view(self, zoom_change=False):
@@ -169,7 +216,7 @@ class PetCtView(QtWidgets.QWidget):
             "pt_pixmaps_" + self.slice_view)
         m = float(len(pt_pixmaps)) / len(ct_pixmaps)
         pt_image = pt_pixmaps[int(m * slider_id)].toImage()
-        
+
         # Get alpha
         alpha = float(self.alpha_slider.value() / 100)
 
@@ -187,9 +234,15 @@ class PetCtView(QtWidgets.QWidget):
         self.scene.addItem(label)
 
     def zoom_in(self):
+        """
+        Zooms in on PET/CT
+        """
         self.zoom *= 1.05
         self.update_view(zoom_change=True)
 
     def zoom_out(self):
+        """
+        Zooms out on PET/CT
+        """
         self.zoom /= 1.05
         self.update_view(zoom_change=True)

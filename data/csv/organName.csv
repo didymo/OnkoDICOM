@@ -229,6 +229,7 @@ Lung_RUL,7333,Lung - upper lobe of right,http://purl.org/sig/ont/fma/fma7333
 Mandible,52748,Mandible,http://purl.org/sig/ont/fma/fma52748
 Masseter_L,48998,Masseter Left,http://purl.org/sig/ont/fma/fma48998
 Masseter_R,48997,Masseter Right,http://purl.org/sig/ont/fma/fma48997
+Maxilla,9711,Maxilla,http://purl.org/sig/ont/fma/fma9711
 Mesorectum,7144,Mesorectum,http://purl.org/sig/ont/fma/fma7144
 Mucosa,85355,Mucosa,http://purl.org/sig/ont/fma/fma85355
 OccipitalLobe_L,72976,Occipital cerebral lobe left,http://purl.org/sig/ont/fma/fma72976
@@ -274,6 +275,7 @@ Rectum,14544,Rectum,http://purl.org/sig/ont/fma/fma14544
 RectalWall,14626,Rectum,http://purl.org/sig/ont/fma/fma14626
 Retina_L,58303,Retina Left,http://purl.org/sig/ont/fma/fma58303
 Retina_R,58302,Retina Right,http://purl.org/sig/ont/fma/fma58302
+Ribs,71331,a set of Ribs,http://purl.org/sig/ont/fma/fma71331
 Rib1_L,7987,First Rib Left,http://purl.org/sig/ont/fma/fma7987
 Rib1_R,7857,First Rib Right,http://purl.org/sig/ont/fma/fma7857
 Rib10_L,8472,Tenth rib Left,http://purl.org/sig/ont/fma/fma8472
@@ -334,6 +336,7 @@ Submand_R,59802,Submandibular gland Right,http://purl.org/sig/ont/fma/fma59802
 A_SMA,14749,Superior mesenteric artery,http://purl.org/sig/ont/fma/fma14749
 V_SVC,4720,Superior vena cava,http://purl.org/sig/ont/fma/fma4720
 PubicSymphysis,16950,Symphysis pubis,http://purl.org/sig/ont/fma/fma16950
+VBs,11945,Vertebral Bodies,http://purl.org/sig/ont/fma/fma11945
 VB_T1,9165,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9165
 VB_T2,9187,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9187
 VB_T3,9209,Thoracic Vertebra,http://purl.org/sig/ont/fma/fma9209
@@ -357,6 +360,7 @@ Testis_R,7211,Testis Right,http://purl.org/sig/ont/fma/fma7211
 ThoracicDuct,5031,Thoracic Duct,http://purl.org/sig/ont/fma/fma5031
 Thyroid,9603,Thyroid,http://purl.org/sig/ont/fma/fma9603
 ThyroidCartilage,55099,Thyroid cartilage,http://purl.org/sig/ont/fma/fma55099
+Tongue,54640,Tongue,http://purl.org/sig/ont/fma/fma54640
 Trachea,7394,Trachea,http://purl.org/sig/ont/fma/fma7394
 Ureter_L,17888,Ureter Left,http://purl.org/sig/ont/fma/fma17888
 Ureter_R,17887,Ureter Right,http://purl.org/sig/ont/fma/fma17887
@@ -364,5 +368,3 @@ Urethra,19667,Urethra,http://purl.org/sig/ont/fma/fma19667
 Uterus,17558,Uterus,http://purl.org/sig/ont/fma/fma17558
 Vagina,19949,Vagina,http://purl.org/sig/ont/fma/fma19949
 Vulva,20462,Vulva (includes mons pubis),http://purl.org/sig/ont/fma/fma20462
-Tongue,54640,Tongue,http://purl.org/sig/ont/fma/fma54640
-Larynx,55097,Larynx,http://purl.org/sig/ont/fma/fma55097

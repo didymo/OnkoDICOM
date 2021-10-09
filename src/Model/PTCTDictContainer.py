@@ -18,43 +18,47 @@ from src.Model.Singleton import Singleton
 class PTCTDictContainer(metaclass=Singleton):
     def __init__(self):
 
+        # Initialize path
+        self.path = None
+
         # Segregate PT and CT
         self.pt_dataset = None
-        self.ct_dataset = None
+        self.pt_filepath = None
 
-        # Initialize base requirements
-        self.path = None        # The path of the loaded directory.
-        self.dataset = None     # Dictionary of PyDicom dataset objects.
-        self.filepaths = None           # Dictionary of filepaths.
+        self.ct_dataset = None
+        self.ct_filepath = None
 
         # Any additional values that are required (e.g. rois, raw_dvh,
         # raw_contour, etc)
         self.additional_data = None
 
-    def set_initial_values(self, path, dataset, filepaths, **kwargs):
+    def set_initial_values(self, path, **kwargs):
         """
         Used to initialize the data on the creation of a new patient.
         :param path: The path of the loaded directory.
-        :param dataset: Dictionary where keys are slice number/RT
-            modality and values are PyDicom dataset objects.
-        :param filepaths: Dictionary where keys are slice number/RT
-            modality and values are filepaths.
         :param kwargs: Any additional values that are required
             (e.g. rois, raw_dvh, raw_contour, etc)
         """
         self.path = path
-        self.dataset = dataset
-        self.filepaths = filepaths
         self.additional_data = kwargs
 
-    def set_sorted_files(self, pt_data, ct_data):
+        self.pt_dataset = None
+        self.pt_filepath = None
+        self.ct_dataset = None
+        self.ct_filepath = None
+
+    def set_sorted_files(self, pt_dataset, pt_file, ct_dataset, ct_file):
         """
         Used to store the ct and pt datasets
         :param pt_dataset: the dataset that stores pt data
+        :param pt_file: the file sets used for pt_dataset
         :param ct_dataset: the dataset that stores ct data
+        :param ct_file: the file sets used for ct_dataset
         """
-        self.pt_dataset = pt_data
-        self.ct_dataset = ct_data
+        self.pt_dataset = pt_dataset
+        self.pt_filepath = pt_file
+        self.ct_dataset = ct_dataset
+        self.ct_filepath = ct_file
 
     def clear(self):
         """
@@ -62,21 +66,23 @@ class PTCTDictContainer(metaclass=Singleton):
         opened.
         """
         self.path = None
-        self.dataset = None
-        self.filepaths = None
         self.additional_data = None
-        self.ct_dataset = []
-        self.pt_dataset = []
+
+        self.ct_dataset = None
+        self.ct_filepath = None
+        self.pt_dataset = None
+        self.pt_filepath = None
 
     def is_empty(self):
         """
         :return: True if class is empty
         """
-        if self.path is not None or self.dataset is not None \
-                or self.filepaths is not None \
+        if self.path is not None \
                 or self.additional_data is not None\
                 or self.ct_dataset is not None\
-                or self.pt_dataset is not None:
+                or self.ct_filepath is not None\
+                or self.pt_dataset is not None\
+                or self.pt_filepath is not None:
             return False
 
         return True
@@ -99,15 +105,6 @@ class PTCTDictContainer(metaclass=Singleton):
         :return: Value if keyword found, else None.
         """
         return self.additional_data.get(keyword)
-
-    def has_modality(self, dicom_type):
-        """
-        Example usage: dicom_data.has_modality("rtss")
-        :param dicom_type: A string containing a DICOM class name as
-            defined in ImageLoading.allowed_classes
-        :return: True if dataset contains provided DICOM type.
-        """
-        return dicom_type in self.dataset
 
     def has_attribute(self, attribute_key):
         """

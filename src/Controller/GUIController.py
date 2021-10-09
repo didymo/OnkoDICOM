@@ -108,7 +108,7 @@ class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
         # Compare local patient with previous instance of ImageFusion
         if self.patient_id != patient['id']:
             self.update_patient()
-        
+
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
 
@@ -117,6 +117,11 @@ class OpenPTCTPatientWindow(QtWidgets.QMainWindow, UIOpenPTCTPatientWindow):
     go_next_window = QtCore.Signal(object)
 
     def __init__(self, directory_in):
+        """
+        Initialises the OpenPTCTPatientWindow with default directory
+        information
+        :param directory_in: the default directory of OnkoDICOM
+        """
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.patient_info_initialized.connect(self.open_patient)
@@ -126,6 +131,10 @@ class OpenPTCTPatientWindow(QtWidgets.QMainWindow, UIOpenPTCTPatientWindow):
             self.scan_directory_for_patient()
 
     def open_patient(self, progress_window):
+        """
+        Activates the OpenPTCTPatientWindow for use
+        :param progress_window: The OnkoDICOM progress window
+        """
         self.go_next_window.emit(progress_window)
 
 
@@ -169,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
     def load_pt_ct_tab(self):
         pcd = PTCTDictContainer()
-        if not self.pet_ct_tab.initialised or not pcd.is_empty():
+        if not pcd.is_empty():
             self.pet_ct_tab.load_pet_ct()
             self.right_panel.setCurrentWidget(self.pet_ct_tab)
 
@@ -228,7 +237,10 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         patient_dict_container.clear()
         # Close 3d vtk widget
         self.three_dimension_view.close()
+        self.cleanup_image_fusion()
+        self.cleanup_pt_ct_viewer()
 
+    def cleanup_image_fusion(self):
         # Explicity destroy objects - the purpose of this is to clear
         # any image fusion tabs that have been used previously.
         # Try-catch in the event user has not prompted image-fusion.
@@ -242,13 +254,19 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
             del self.image_fusion_view
         except:
             pass
-        
+
         moving_dict_container = MovingDictContainer()
         moving_dict_container.clear()
+
+    def cleanup_pt_ct_viewer(self):
 
         pt_ct_dict_container = PTCTDictContainer()
         pt_ct_dict_container.clear()
         self.pet_ct_tab.initialised = False
+        try:
+            del self.pet_ct_tab
+        except:
+            pass
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         patient_dict_container = PatientDictContainer()

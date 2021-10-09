@@ -363,12 +363,20 @@ class UIManipulateROIWindow:
         Display selected ROIs in dropbox when moving to another image slice
         """
         self.display_selected_roi()
+        if self.dicom_preview.slider.value() != self.dicom_view.slider.value():
+            self.dicom_preview.slider.setValue(
+                self.dicom_view.slider.value()
+            )
 
     def dicom_preview_slider_value_changed(self):
         """
         Display generated ROI when moving to another image slice
         """
         self.draw_roi()
+        if self.dicom_preview.slider.value() != self.dicom_view.slider.value():
+            self.dicom_view.slider.setValue(
+                self.dicom_preview.slider.value()
+            )
 
     def onCancelButtonClicked(self):
         """

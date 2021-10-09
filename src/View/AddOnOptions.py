@@ -3,7 +3,6 @@ import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
 from src.Model.Configuration import Configuration, SqlError
-from src.View.ImageFusion.ImageFusionAddOnOption import ImageFusionOptions
 
 
 class UIAddOnOptions(object):
@@ -18,6 +17,7 @@ class UIAddOnOptions(object):
         self.table_ids = None
         self.add_new_window = None
         self.delete_window = None
+        self.standard_organ_name_text = None
         self.add_standard_organ_name = None
         self.import_organ_csv = None
         self.add_standard_volume_name = None
@@ -25,36 +25,9 @@ class UIAddOnOptions(object):
         self.fill_options = None
         self.change_default_directory_frame = None
         self.clinical_data_csv_dir_frame = None
-        self.image_fusion_add_on_options =  None
         self.table_roi = None
         self.add_new_roi = None
         self.delete_roi = None
-
-    def add_into_observer(self):
-        # TO DO: Construct Observer Class rather than Array
-        # inherit from such Observer class.
-        self.observer_array = []
-        self.observer_array.append(self.table_view)
-        self.observer_array.append(self.table_organ)
-        self.observer_array.append(self.table_volume)
-        self.observer_array.append(self.table_ids)
-        self.observer_array.append(self.add_new_window)
-        self.observer_array.append(self.delete_window)
-        self.observer_array.append(self.add_standard_organ_name)
-        self.observer_array.append(self.import_organ_csv)
-        self.observer_array.append(self.add_standard_volume_name)
-        self.observer_array.append(self.import_organ_csv)
-        self.observer_array.append(self.add_standard_volume_name)
-        self.observer_array.append(self.note)
-        self.observer_array.append(self.fill_options)
-        self.observer_array.append(self.change_default_directory_frame)
-        self.observer_array.append(self.table_roi)
-        self.observer_array.append(self.add_new_roi)
-        self.observer_array.append(self.delete_roi)
-        self.observer_array.append(self.table_modules)
-        self.observer_array.append(self.clinical_data_csv_dir_frame)
-        self.observer_array.append(self.image_fusion_add_on_options)
-
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
                  iso_opacity, line_width):
@@ -69,7 +42,7 @@ class UIAddOnOptions(object):
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
-        add_on_options.setMinimumSize(960, 720)
+        add_on_options.setMinimumSize(766, 600)
         add_on_options.setStyleSheet(stylesheet)
         add_on_options.setWindowIcon(QtGui.QIcon(
             resource_path("res/images/btn-icons/onkodicom_icon.png")))
@@ -93,13 +66,10 @@ class UIAddOnOptions(object):
         self.clinical_data_csv_dir_options = \
             ClinicalDataCSVDirectoryOptions(self)
 
-        self.image_fusion_add_on_options = ImageFusionOptions(self)
-
         self.create_cancel_button()
         self.create_apply_button()
         self.init_tree_list()
         self.set_layout()
-        self.add_into_observer()
 
         add_on_options.setCentralWidget(self.widget)
         QtCore.QMetaObject.connectSlotsByName(add_on_options)
@@ -124,7 +94,7 @@ class UIAddOnOptions(object):
         # Add Table Widgets
         self.option_layout.addWidget(self.table_modules, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_view, 1, 0, 1, 3)
-        self.option_layout.addWidget(self.table_organ, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_organ, 2, 0, 1, 3)
         self.option_layout.addWidget(self.table_volume, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_ids, 1, 0, 1, 3)
@@ -134,16 +104,16 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.clinical_data_csv_dir_frame,
                                      1, 0, 1, 3)
 
-        self.option_layout.addWidget(self.image_fusion_add_on_options \
-                .auto_image_fusion_frame, 1, 0, 1, 3)
+        # Add Label Widgets
+        self.option_layout.addWidget(self.standard_organ_name_text, 1, 0, 1, 3)
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
         self.option_layout.addWidget(self.delete_window, 2, 1)
         self.option_layout.addWidget(self.delete_roi, 2, 0)
         self.option_layout.addWidget(self.add_new_roi, 2, 2)
-        self.option_layout.addWidget(self.import_organ_csv, 2, 1)
-        self.option_layout.addWidget(self.add_standard_organ_name, 2, 2)
+        self.option_layout.addWidget(self.import_organ_csv, 3, 1)
+        self.option_layout.addWidget(self.add_standard_organ_name, 3, 2)
         self.option_layout.addWidget(self.add_standard_volume_name, 2, 2)
         self.option_layout.addWidget(self.note, 2, 0, 1, 3)
 
@@ -225,76 +195,177 @@ class UIAddOnOptions(object):
         # Commented out lines are for the extra option (ROI by Isodose)
 
         if type == "Image Windowing":
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.table_modules.setVisible(False)
             self.table_view.setVisible(True)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
             self.add_new_window.setVisible(True)
             self.delete_window.setVisible(True)
-
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
         elif type == "Standard Organ Names":
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
             self.table_organ.setVisible(True)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
-
+            self.standard_organ_name_text.setVisible(True)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
         elif type == "Standard Volume Names":
-            for item in self.observer_array:
-                item.setVisible(False)
-
-            self.table_organ.setVisible(True)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(True)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
             self.add_standard_volume_name.setVisible(True)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
 
         elif type == "Create ROIs from Isodoses":
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
             self.table_roi.setVisible(True)
+            self.table_ids.setVisible(False)
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
             self.add_new_roi.setVisible(True)
             self.delete_roi.setVisible(True)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
 
         elif type == "Patient ID - Hash ID":
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
             self.table_ids.setVisible(True)
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
             self.note.setVisible(True)
-
-        elif type == "User Options" or type == "Configuration" or \
-                type == "Image Fusion":
-
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
+        elif type == "User Options" or type == "Configuration":
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
             self.table_modules.setVisible(True)
-
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
         elif type == "Line & Fill configuration":
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
+            self.note.setVisible(False)
             self.fill_options.setVisible(True)
-
+            self.change_default_directory_frame.setVisible(False)
+            self.clinical_data_csv_dir_frame.setVisible(False)
         elif type == "Default directory":
-            for item in self.observer_array:
-                item.setVisible(False)
+            self.add_new_window.setVisible(False)
+            self.delete_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
             self.change_default_directory_frame.setVisible(True)
-
+            self.clinical_data_csv_dir_frame.setVisible(False)
         elif type == "Clinical Data CSV File":
-
-            for item in self.observer_array:
-                item.setVisible(False)
-
+            self.add_new_window.setVisible(False)
+            self.add_new_roi.setVisible(False)
+            self.delete_roi.setVisible(False)
+            self.add_standard_volume_name.setVisible(False)
+            self.add_standard_organ_name.setVisible(False)
+            self.import_organ_csv.setVisible(False)
+            self.standard_organ_name_text.setVisible(False)
+            self.table_modules.setVisible(False)
+            self.table_view.setVisible(False)
+            self.table_organ.setVisible(False)
+            self.table_volume.setVisible(False)
+            self.table_roi.setVisible(False)
+            self.table_ids.setVisible(False)
+            self.note.setVisible(False)
+            self.fill_options.setVisible(False)
+            self.change_default_directory_frame.setVisible(False)
             self.clinical_data_csv_dir_frame.setVisible(True)
-
-        elif type == "Auto-Registration":
-            for item in self.observer_array:
-                if item != self.image_fusion_add_on_options:
-                    item.setVisible(False)
-
-            self.image_fusion_add_on_options.auto_image_fusion_frame \
-                .setVisible(True)
 
 
 class WindowingOptions(object):
@@ -376,9 +447,25 @@ class StandardOrganOptions(object):
         Create the components for the UI of Standard Organ view.
         """
         self.window = window_options
+        self.create_text()
         self.create_add_button()
         self.create_import_csv_button()
         self.create_table_view()
+
+    def create_text(self):
+        """
+        Create text to direct users to a website containing all standard
+        organ names.
+        """
+        text = "Standard Organ Names - search here - " \
+               "<a href=\"https://bioportal.bioontology.org/ontologies/FMA/" \
+               "?p=classes&conceptid=root\">https://bioportal.bioontology." \
+               "org/ontologies/FMA/?p=classes&conceptid=root</a>"
+
+        self.window.standard_organ_name_text = QtWidgets.QLabel(text)
+        self.window.standard_organ_name_text.setWordWrap(True)
+        self.window.standard_organ_name_text.setOpenExternalLinks(True)
+        self.window.standard_organ_name_text.setVisible(False)
 
     def create_add_button(self):
         """

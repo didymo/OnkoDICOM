@@ -1,18 +1,11 @@
-import os
-import SimpleITK as sitk
 import pydicom
 
 from src.constants import CT_RESCALE_INTERCEPT
 
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
-from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
-    dict_instance_uid
-from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
+from src.Model.GetPatientInfo import get_basic_info, dict_instance_uid
 
 from src.Model.PTCTDictContainer import PTCTDictContainer
-
-from src.Model.ROI import ordered_list_rois
-from src.Controller.PathHandler import resource_path
 
 
 def create_pt_ct_model():
@@ -31,7 +24,6 @@ def create_pt_ct_model():
 
     pt_dataset = pt_ct_dict_container.pt_dataset
     ct_dataset = pt_ct_dict_container.ct_dataset
-    dataset = pt_ct_dict_container.dataset
 
     # Set up PT images
     if 'WindowWidth' in pt_dataset[0]:
@@ -72,12 +64,8 @@ def create_pt_ct_model():
     # Pass in "heat" into the get_pixmaps function to produce
     # a heatmap for the given images.
     pt_pixmaps_axial, pt_pixmaps_coronal, pt_pixmaps_sagittal = \
-        get_pixmaps(pt_pixel_values, 
-                    window, 
-                    level, 
-                    pt_pixmap_aspect, 
-                    color="Heat")
-
+        get_pixmaps(pt_pixel_values, window, level, pt_pixmap_aspect,
+                    fusion=True, color="Heat")
     pt_ct_dict_container.set("pt_pixmaps_axial", pt_pixmaps_axial)
     pt_ct_dict_container.set("pt_pixmaps_coronal", pt_pixmaps_coronal)
     pt_ct_dict_container.set("pt_pixmaps_sagittal", pt_pixmaps_sagittal)
@@ -125,7 +113,8 @@ def create_pt_ct_model():
     ct_pixmap_aspect["sagittal"] = ct_pixel_spacing[1] / ct_slice_thickness
     ct_pixmap_aspect["coronal"] = ct_slice_thickness / ct_pixel_spacing[0]
     ct_pixmaps_axial, ct_pixmaps_coronal, ct_pixmaps_sagittal = \
-        get_pixmaps(ct_pixel_values, window, level, ct_pixmap_aspect)
+        get_pixmaps(ct_pixel_values, window, level, ct_pixmap_aspect,
+                    fusion=True)
 
     pt_ct_dict_container.set("ct_pixmaps_axial", ct_pixmaps_axial)
     pt_ct_dict_container.set("ct_pixmaps_coronal", ct_pixmaps_coronal)

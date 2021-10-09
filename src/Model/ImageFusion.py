@@ -190,15 +190,18 @@ def convert_combined_affine_to_matrix(combined_affine):
 
     return overall
 
-
+#TODO: add support for multiple transformations
 def write_transform_to_dcm(affine_matrix):
     """
     Function to write data of the top(moving) image respective
     to the base(fixed) image.
     
-    This function will require future refacotring when the transform 
+    This function will require future refactoring when the transform 
     DICOM file becomes in use, as this function only assumes there is 
     one RIGID matrix to be saved.
+    
+    Args:
+        affine_matrix (Any) : array of N dimensions
     """
     patient_dict_container = PatientDictContainer()
     patient_path = patient_dict_container.path
@@ -311,9 +314,11 @@ def write_transform_to_dcm(affine_matrix):
 
 def create_fused_model(old_images, new_image):
     """
-    Performs the image fusion and stores fusion information
-    :param old_images: Image set from Primary scan
-    :param new_image: Image set from secondary (moving) scan
+    Performs the image fusion and stores fusion information.
+    
+    Args:
+        old_images(sitk): Image set from Primary/Fixed Image
+        new_image(sitk): Image set from the Secondary/Moving Image
     """
     patient_dict_container = PatientDictContainer()
     fused_image = register_images(old_images, new_image)
@@ -328,13 +333,23 @@ def create_fused_model(old_images, new_image):
 
 def get_fused_window(level, window):
     """
-    generates the fused ismages with applied windows
-    :param level: the level (midpoint) of windowing
-    :param window: the window (range) of windowing
-    :return: axial, sagittal, coronal pixmaps with windowing as well as
-    the transformation object of image fusion
+    Apply windowing on the fixed and moving (linear-registered) images.
+    
+    Args:
+        level(int): the level (midpoint) of windowing
+        window(any): the window (range) of windowing
+    
+    Return:
+        color_axial (QtGui.QPixmap): pixmap of the registered image from axial 
+        view
+        color_sagittal (QtGui.QPixmap): pixmap of the registered image from 
+        sagittal view
+        color_coronal (QtGui.QPixmap): pixmap of the registered image from 
+        coronal view
+        tfm (sitk.CompositeTransform): transformation object containing data 
+        that is a product from linear_registration
     """
-
+  
     patient_dict_container = PatientDictContainer()
     old_images = patient_dict_container.get("sitk_original")
     fused_image = patient_dict_container.get("fused_images")
@@ -422,15 +437,18 @@ def register_images(image_1, image_2):
 def get_fused_pixmap(orig_image, fused_image, aspect,
                      slice_num, view, windowing=(-250, 500)):
     """
-    Get a color pixmap.
-    :param orig_image: original 3d image
-    :param fused_image: fused 3d image
-    :param aspect: scaled pixel spacing of first image
-    :param slice_num: number of slices
-    :param view: axial, sagittal or coronal
-    :param windowing: target level and window of the fused image
-    :return: color pixmap.
-    """
+    Generates a colored pixmap of the array from the inputted view.
+    Args:
+        orig_image(ndarray): N dimension array containing signed int8 values
+        fused_image(ndarray): N dimension array containing signed int8 values
+        aspect(Any): currently not used
+        slice_num(int): slice number of the array
+        view(String): specified flag that can be sagittal, coronal or axial
+    windowing: target level and window of the fused image
+    Returns:
+        pixmap (QtGui.QPixmap): returns the pixmap of co-registered fixed and 
+        moving images.
+    """    
     # Get dimension /could also input dimensions as parameters
     image_array = sitk.GetArrayFromImage(orig_image)
     if view == "sagittal":
