@@ -176,7 +176,8 @@ def convert_pt_to_heatmap(np_pixels):
         heatmap.shape[1],
         heatmap.shape[0],
         bytes_per_line,
-
+        QtGui.QImage.Format_RGB888)
+    
     return qimage
 
 
