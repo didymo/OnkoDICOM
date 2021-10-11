@@ -1,7 +1,7 @@
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
+from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget, QRadioButton
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
@@ -28,7 +28,9 @@ from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from src.View.ImageFusion.ImageFusionSagittalView import \
     ImageFusionSagittalView
 from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
+from src.View.ImageFusion.ManualFusionWindow import UIManualFusionWindow
 from src.Model.MovingDictContainer import MovingDictContainer
+
 
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
@@ -406,6 +408,15 @@ class UIMainWindow:
         self.image_fusion_view_sagittal.update_view(zoom_change=True)
         self.image_fusion_view_coronal.update_view(zoom_change=True)
 
+        # Radio Buttons
+        self.auto_radio_button = QRadioButton("Automatic")
+        self.auto_radio_button.setChecked(True)
+        self.manual_radio_button = QRadioButton("Manual")
+        self.manual_radio_button.setChecked(False)
+
+        self.manual_radio_button.toggled.connect(self.update_manual_fusion)
+
+        #create layouts
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
         for i in range(2):
@@ -417,6 +428,12 @@ class UIMainWindow:
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
+
+        self.image_fusion_four_views_layout.addWidget(
+            self.auto_radio_button, 2, 0, QtCore.Qt.AlignCenter)
+        self.image_fusion_four_views_layout.addWidget(
+            self.manual_radio_button, 2, 1, QtCore.Qt.AlignCenter)
+
 
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_roi_transfer_option_view, 1, 1
@@ -482,3 +499,18 @@ class UIMainWindow:
 
         # Close progress window
         self.suv2roi_progress_window.close()
+
+
+
+    def update_manual_fusion(self):
+        """
+        Triggers when a radio button is pressed
+        """
+        toggled = self.sender()
+        if toggled.isChecked():
+            manual_window = UIManualFusionWindow()
+            manual_window.exec_()
+            print("hello")
+            self.update_views()
+            print("ending")
+
