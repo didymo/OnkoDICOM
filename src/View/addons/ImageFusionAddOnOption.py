@@ -161,8 +161,8 @@ class ImageFusionOptions(object):
         self.interp_order_spinbox = QSpinBox(self.gridLayoutWidget)
         self.interp_order_spinbox.setSizePolicy(QSizePolicy.Minimum,
                                                 QSizePolicy.Fixed)
-        self.interp_order_spinbox.setToolTip("The final interpolation order. "
-                                             "Defaults to 2 (linear).")
+        self.interp_order_spinbox.setToolTip(
+            "The final interpolation order.")
         self.gridLayout.addWidget(self.interp_order_spinbox, 2, 1)
 
         # Metric
@@ -176,8 +176,8 @@ class ImageFusionOptions(object):
         self.metric_comboBox.addItem("mean_squares")
         self.metric_comboBox.addItem("mattes_mi")
         self.metric_comboBox.addItem("joint_hist_mi")
-        self.metric_comboBox.setToolTip("The metric to be optimised during "
-                                        "image registration.")
+        self.metric_comboBox.setToolTip(
+            "The metric to be optimised during image registration.")
         self.gridLayout.addWidget(self.metric_comboBox, 3, 1)
 
         # Number of Iterations
@@ -190,8 +190,8 @@ class ImageFusionOptions(object):
         self.no_of_iterations_spinBox.setSizePolicy(QSizePolicy.Minimum,
                                                     QSizePolicy.Fixed)
         self.no_of_iterations_spinBox.setRange(0, 100)
-        self.no_of_iterations_spinBox.setToolTip("Number of iterations in "
-                                                 "each multi-resolution step.")
+        self.no_of_iterations_spinBox.setToolTip(
+            "Number of iterations in each multi-resolution step.")
         self.gridLayout.addWidget(self.no_of_iterations_spinBox, 4, 1)
 
         # Shrink Factor
@@ -226,8 +226,8 @@ class ImageFusionOptions(object):
         self.optimiser_comboBox.addItem("lbfgsb")
         self.optimiser_comboBox.addItem("gradient_descent")
         self.optimiser_comboBox.addItem("gradient_descent_line_search")
-        self.optimiser_comboBox.setToolTip("The optimiser algorithm used for "
-                                           "image registration.")
+        self.optimiser_comboBox.setToolTip(
+            "The optimiser algorithm used for image registration.")
         self.gridLayout.addWidget(self.optimiser_comboBox, 1, 3)
 
         # Reg Method
@@ -243,9 +243,9 @@ class ImageFusionOptions(object):
         self.reg_method_comboBox.addItem("affine")
         self.reg_method_comboBox.addItem("scaleversor")
         self.reg_method_comboBox.addItem("scaleskewversor")
-        self.reg_method_comboBox.setToolTip("The linear transformation model "
-                                            "to be used for image "
-                                            "registration.")
+        self.reg_method_comboBox.setToolTip(
+            "The linear transformation model to be used for image "
+            "registration.")
         self.gridLayout.addWidget(self.reg_method_comboBox, 2, 3)
 
         # Sampling Rate
@@ -383,8 +383,8 @@ class ImageFusionOptions(object):
             self.warning_label.setText(msg)
 
         try:
-            self.no_of_iterations_spinBox.setValue(int(self.dict[
-                                                           "number_of_iterations"]))
+            self.no_of_iterations_spinBox.setValue(
+                int(self.dict["number_of_iterations"]))
         except ValueError:
             msg += 'There was an error setting the Number of iterations ' \
                    'value.\n'
