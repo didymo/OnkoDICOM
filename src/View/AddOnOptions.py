@@ -26,36 +26,34 @@ class UIAddOnOptions(object):
         self.fill_options = None
         self.change_default_directory_frame = None
         self.clinical_data_csv_dir_frame = None
-        self.image_fusion_add_on_options = None
         self.table_roi = None
         self.add_new_roi = None
         self.delete_roi = None
+        self.image_fusion_add_on_options = None
 
     def add_into_observer(self):
-        # TO DO: Construct Observer Class rather than using an array and 
+        # TO DO: Construct Observer Class rather than using an array and
         # inherit from such Observer class.
         self.observer_array = []
+        self.observer_array.append(self.table_modules)
         self.observer_array.append(self.table_view)
         self.observer_array.append(self.table_organ)
         self.observer_array.append(self.table_volume)
         self.observer_array.append(self.table_ids)
         self.observer_array.append(self.add_new_window)
         self.observer_array.append(self.delete_window)
+        self.observer_array.append(self.standard_organ_name_text)
         self.observer_array.append(self.add_standard_organ_name)
-        self.observer_array.append(self.import_organ_csv)
-        self.observer_array.append(self.add_standard_volume_name)
         self.observer_array.append(self.import_organ_csv)
         self.observer_array.append(self.add_standard_volume_name)
         self.observer_array.append(self.note)
         self.observer_array.append(self.fill_options)
         self.observer_array.append(self.change_default_directory_frame)
+        self.observer_array.append(self.clinical_data_csv_dir_frame)
         self.observer_array.append(self.table_roi)
         self.observer_array.append(self.add_new_roi)
         self.observer_array.append(self.delete_roi)
-        self.observer_array.append(self.table_modules)
-        self.observer_array.append(self.clinical_data_csv_dir_frame)
         self.observer_array.append(self.image_fusion_add_on_options)
-
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
                  iso_opacity, line_width):
@@ -93,7 +91,6 @@ class UIAddOnOptions(object):
         self.change_default_directory = ChangeDefaultDirectory(self)
         self.clinical_data_csv_dir_options = \
             ClinicalDataCSVDirectoryOptions(self)
-
         self.image_fusion_add_on_options = ImageFusionOptions(self)
 
         self.create_cancel_button()
@@ -135,7 +132,10 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.clinical_data_csv_dir_frame,
                                      1, 0, 1, 3)
         self.option_layout.addWidget(self.image_fusion_add_on_options \
-                .auto_image_fusion_frame, 1, 0, 1, 3)
+                                     .auto_image_fusion_frame, 1, 0, 1, 3)
+
+        # Add Label Widgets
+        self.option_layout.addWidget(self.standard_organ_name_text, 1, 0, 1, 3)
 
         # Add Button Widgets
         self.option_layout.addWidget(self.add_new_window, 2, 2)
@@ -231,6 +231,7 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(True)
             self.add_new_window.setVisible(True)
             self.delete_window.setVisible(True)
+
         elif type == "Standard Organ Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -238,11 +239,13 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(True)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
+            self.standard_organ_name_text.setVisible(True)
+
         elif type == "Standard Volume Names":
             for item in self.observer_array:
                 item.setVisible(False)
 
-            self.table_organ.setVisible(True)
+            self.table_volume.setVisible(True)
             self.add_standard_volume_name.setVisible(True)
 
         elif type == "Create ROIs from Isodoses":
@@ -259,10 +262,8 @@ class UIAddOnOptions(object):
 
             self.table_ids.setVisible(True)
             self.note.setVisible(True)
-
         elif type == "User Options" or type == "Configuration" or \
                 type == "Image Fusion":
-
             for item in self.observer_array:
                 item.setVisible(False)
 
@@ -277,10 +278,11 @@ class UIAddOnOptions(object):
         elif type == "Default directory":
             for item in self.observer_array:
                 item.setVisible(False)
-            self.change_default_directory_frame.setVisible(True)
 
+            self.change_default_directory_frame.setVisible(True)
         elif type == "Clinical Data CSV File":
 
+            self.clinical_data_csv_dir_frame.setVisible(True)
             for item in self.observer_array:
                 item.setVisible(False)
 
@@ -293,7 +295,6 @@ class UIAddOnOptions(object):
 
             self.image_fusion_add_on_options.auto_image_fusion_frame \
                 .setVisible(True)
-
 
 class WindowingOptions(object):
     """

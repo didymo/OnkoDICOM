@@ -211,10 +211,9 @@ class ImageFusionOptions(object):
             QRegularExpressionValidator(
                 QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
 
-        self.shrink_factor_qLineEdit.setToolTip("The multi-resolution "
-                                                "downsampling factors. Can be"
-                                                "up to three parameters in an"
-                                                "array. Example [8, 2, 1]")
+        self.shrink_factor_qLineEdit.setToolTip(
+            "The multi-resolution downsampling factors. Can be up to three "
+            "integer elements in an array. Example [8, 2, 1]")
         self.gridLayout.addWidget(self.shrink_factor_qLineEdit, 5, 1)
 
         # Optimiser
@@ -281,10 +280,8 @@ class ImageFusionOptions(object):
             QRegularExpressionValidator(
                 QRegularExpression("^[0-9]*[,]?[0-9]*[,]?[0-9]")))
         self.smooth_sigmas_qLineEdit.setToolTip(
-            "The multi-resolution smoothing "
-            "kernal scale (Gaussian). Can "
-            "allow up to 3 integers in an "
-            "array. Example [4, 2, 0].")
+            "The multi-resolution smoothing kernal scale (Gaussian). Can be "
+            "up to three integer elements in an array. Example [4, 2, 1]")
         self.gridLayout.addWidget(self.smooth_sigmas_qLineEdit, 4, 3)
 
         # Label to hold warning labels.
