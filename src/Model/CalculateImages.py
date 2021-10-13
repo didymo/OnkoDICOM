@@ -1,8 +1,9 @@
+import cv2
 import numpy as np
 import pydicom
-import src.constants as constant
 from PySide6 import QtCore, QtGui
-import cv2
+
+import src.constants as constant
 
 
 def convert_raw_data(ds, rescaled=True, is_ct=False):
@@ -168,7 +169,7 @@ def convert_pt_to_heatmap(np_pixels):
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
     # Fix as colored images have 3*8 bits = 3 bytes instead of one
-    bytes_per_line = np_pixels.shape[1]*3
+    bytes_per_line = np_pixels.shape[1] * 3
 
     qimage = QtGui.QImage(
         heatmap,
