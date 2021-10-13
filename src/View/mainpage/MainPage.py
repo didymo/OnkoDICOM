@@ -187,7 +187,7 @@ class UIMainWindow:
 
         # Add PETVT View to right panel as a tab
         self.pet_ct_tab = PetCtView()
-        self.right_panel.addTab(self.pet_ct_tab, "PETCT View")
+        self.right_panel.addTab(self.pet_ct_tab, "PET/CT View")
 
         # Add DVH tab to right panel as a tab
         if patient_dict_container.has_modality("rtdose"):
@@ -454,15 +454,15 @@ class UIMainWindow:
         """
         if self.suv2roi.suv2roi_status:
             patient_dict_container = PatientDictContainer()
-            self.structures_tab.structure_modified((
+            self.structures_tab.fixed_container_structure_modified((
                 patient_dict_container.get('dataset_rtss'), {"draw": None}))
         else:
             # Alert user that SUV2ROI failed and for what reason
-            #if self.suv2roi.failure_reason == "UNIT":
-            #    failure_reason = \
-            #        "PET units are not Bq/mL. OnkoDICOM can currently only\n" \
-            #        "perform SUV2ROI on PET images stored in these units."
             if self.suv2roi.failure_reason == "UNIT":
+                failure_reason = \
+                    "PET units are not Bq/mL. OnkoDICOM can currently only\n" \
+                    "perform SUV2ROI on PET images stored in these units."
+            elif self.suv2roi.failure_reason == "DECY":
                 failure_reason = \
                     "PET is not decay corrected. OnkoDICOM can currently " \
                     "only\nperform SUV2ROI on PET images that are decay " \

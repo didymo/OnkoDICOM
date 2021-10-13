@@ -80,7 +80,8 @@ class Controller:
             self.main_window.open_patient_window.connect(
                 self.show_open_patient)
             self.main_window.run_pyradiomics.connect(self.show_pyradi_progress)
-            self.main_window.pt_ct_signal.connect(self.show_pt_ct_select_window)
+            self.main_window.pt_ct_signal.connect(
+                self.show_pt_ct_select_window)
 
             # Connect the signal from GUIController
             self.main_window.image_fusion_signal.connect(
@@ -148,6 +149,8 @@ class Controller:
         """
         Loads and activates the OpenPTCTPatientWindow
         """
-        self.pt_ct_window = OpenPTCTPatientWindow(self.default_directory)
-        self.pt_ct_window.go_next_window.connect(self.show_main_window)
+        if not isinstance(self.pt_ct_window, OpenPTCTPatientWindow):
+            self.pt_ct_window = OpenPTCTPatientWindow(self.default_directory)
+            self.pt_ct_window.go_next_window.connect(self.show_main_window)
+            
         self.pt_ct_window.show()

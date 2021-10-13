@@ -88,6 +88,7 @@ def get_img(pixel_array):
     return dict_img
 
 
+
 def scaled_pixmap(np_pixels, window, level, width, height,
                   fusion=False, color=None):
     """
@@ -176,7 +177,7 @@ def convert_pt_to_heatmap(np_pixels):
         heatmap.shape[0],
         bytes_per_line,
         QtGui.QImage.Format_RGB888)
-
+    
     return qimage
 
 

@@ -18,6 +18,7 @@ class UIAddOnOptions(object):
         self.table_ids = None
         self.add_new_window = None
         self.delete_window = None
+        self.standard_organ_name_text = None
         self.add_standard_organ_name = None
         self.import_organ_csv = None
         self.add_standard_volume_name = None
@@ -124,7 +125,7 @@ class UIAddOnOptions(object):
         # Add Table Widgets
         self.option_layout.addWidget(self.table_modules, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_view, 1, 0, 1, 3)
-        self.option_layout.addWidget(self.table_organ, 1, 0, 1, 3)
+        self.option_layout.addWidget(self.table_organ, 2, 0, 1, 3)
         self.option_layout.addWidget(self.table_volume, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_ids, 1, 0, 1, 3)
@@ -133,7 +134,6 @@ class UIAddOnOptions(object):
             self.change_default_directory_frame, 1, 0, 1, 3)
         self.option_layout.addWidget(self.clinical_data_csv_dir_frame,
                                      1, 0, 1, 3)
-
         self.option_layout.addWidget(self.image_fusion_add_on_options \
                 .auto_image_fusion_frame, 1, 0, 1, 3)
 
@@ -142,8 +142,8 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.delete_window, 2, 1)
         self.option_layout.addWidget(self.delete_roi, 2, 0)
         self.option_layout.addWidget(self.add_new_roi, 2, 2)
-        self.option_layout.addWidget(self.import_organ_csv, 2, 1)
-        self.option_layout.addWidget(self.add_standard_organ_name, 2, 2)
+        self.option_layout.addWidget(self.import_organ_csv, 3, 1)
+        self.option_layout.addWidget(self.add_standard_organ_name, 3, 2)
         self.option_layout.addWidget(self.add_standard_volume_name, 2, 2)
         self.option_layout.addWidget(self.note, 2, 0, 1, 3)
 
@@ -231,7 +231,6 @@ class UIAddOnOptions(object):
             self.table_view.setVisible(True)
             self.add_new_window.setVisible(True)
             self.delete_window.setVisible(True)
-
         elif type == "Standard Organ Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -239,7 +238,6 @@ class UIAddOnOptions(object):
             self.table_organ.setVisible(True)
             self.add_standard_organ_name.setVisible(True)
             self.import_organ_csv.setVisible(True)
-
         elif type == "Standard Volume Names":
             for item in self.observer_array:
                 item.setVisible(False)
@@ -376,9 +374,25 @@ class StandardOrganOptions(object):
         Create the components for the UI of Standard Organ view.
         """
         self.window = window_options
+        self.create_text()
         self.create_add_button()
         self.create_import_csv_button()
         self.create_table_view()
+
+    def create_text(self):
+        """
+        Create text to direct users to a website containing all standard
+        organ names.
+        """
+        text = "Standard Organ Names - search here - " \
+               "<a href=\"https://bioportal.bioontology.org/ontologies/FMA/" \
+               "?p=classes&conceptid=root\">https://bioportal.bioontology." \
+               "org/ontologies/FMA/?p=classes&conceptid=root</a>"
+
+        self.window.standard_organ_name_text = QtWidgets.QLabel(text)
+        self.window.standard_organ_name_text.setWordWrap(True)
+        self.window.standard_organ_name_text.setOpenExternalLinks(True)
+        self.window.standard_organ_name_text.setVisible(False)
 
     def create_add_button(self):
         """
