@@ -56,6 +56,11 @@ class Configuration(metaclass=Singleton):
     constructor and it will return the only instance of this class.
     Example usage:
     config = Configuration()
+
+    This class also moves data from the data folder into files in the
+    hidden folder the first time the user opens the program/the first time an
+    instance of this class is created. This class also allows the user to read
+    from and write to these files.
     """
 
     def __init__(self, db_file='OnkoDICOM.db'):
@@ -63,6 +68,7 @@ class Configuration(metaclass=Singleton):
         self.db_file_path = Path(
             os.environ['USER_ONKODICOM_HIDDEN']).joinpath(db_file)
         self.set_up_config_db()
+        self.copy_data_folder()
 
     def set_up_config_db(self):
         """
@@ -78,6 +84,61 @@ class Configuration(metaclass=Singleton):
                 """)
         connection.commit()
         connection.close()
+
+    def copy_data_folder(self):
+        """
+        Copies data from the data folder into files in the hidden
+        directory. Done to overcome permission errors for compiled executables.
+        """
+        # Walk through data folder, get list of data files
+        data_file_tree = []
+        data_file_absolute_tree = []
+        for root, dirs, files in os.walk('data', topdown=True):
+            for name in files:
+                data_file_tree.append(name)
+                data_file_absolute_tree.append(os.path.join(root, name))
+
+        # Walk through directory, get the list of files
+        hidden_folder_tree = []
+        for root, dirs, files in os.walk(os.environ['USER_ONKODICOM_HIDDEN'],
+                                         topdown=True):
+            for name in files:
+                hidden_folder_tree.append(name)
+
+        # Check for each expected DB in the hidden directory. Copy it if it
+        # does not exist
+        for i, file in enumerate(data_file_tree):
+            if file in hidden_folder_tree:
+                continue
+            else:
+                self.copy_data_file(data_file_absolute_tree[i], file)
+
+    def copy_data_file(self, old_file, new_file):
+        """
+        Copies the passed-in 'old_file' into 'new_file' in the hidden
+        directory.
+        :param old_file: The absolute path of the file to copy from.
+        :param new_file: The file name of the file to copy to.
+        """
+        # Make new data folder if it does not exist
+        new_data_folder = \
+            os.path.join(os.environ['USER_ONKODICOM_HIDDEN'], 'data')
+        if not os.path.exists(new_data_folder):
+            os.mkdir(new_data_folder)
+
+        # Get the new path of the file
+        new_path = os.path.join(new_data_folder, new_file)
+
+        # Skip the pickle file
+        # TODO: find out what this is
+        if new_path[-3:] == 'pkl':
+            return
+
+        # Copy each line from the old file into the new file
+        with open(old_file, "r") as old:
+            with open(new_path, "w+") as new:
+                for line in old:
+                    new.write(line)
 
     @error_handling
     def get_default_directory(self):
