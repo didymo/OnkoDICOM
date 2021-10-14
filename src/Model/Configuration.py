@@ -59,8 +59,7 @@ class Configuration(metaclass=Singleton):
 
     This class also moves data from the data folder into files in the
     hidden folder the first time the user opens the program/the first time an
-    instance of this class is created. This class also allows the user to read
-    from and write to these files.
+    instance of this class is created.
     """
 
     def __init__(self, db_file='OnkoDICOM.db'):
@@ -99,9 +98,12 @@ class Configuration(metaclass=Singleton):
                 data_file_absolute_tree.append(os.path.join(root, name))
 
         # Walk through directory, get the list of files
+        path = Path.home().joinpath("OnkoDICOM")
+        if not os.path.exists(path):
+            os.mkdir(path)
+
         hidden_folder_tree = []
-        for root, dirs, files in os.walk(os.environ['USER_ONKODICOM_HIDDEN'],
-                                         topdown=True):
+        for root, dirs, files in os.walk(path, topdown=True):
             for name in files:
                 hidden_folder_tree.append(name)
 
@@ -121,8 +123,7 @@ class Configuration(metaclass=Singleton):
         :param new_file: The file name of the file to copy to.
         """
         # Make new data folder if it does not exist
-        new_data_folder = \
-            os.path.join(os.environ['USER_ONKODICOM_HIDDEN'], 'data')
+        new_data_folder = str(Path.home().joinpath('OnkoDICOM', 'data'))
         if not os.path.exists(new_data_folder):
             os.mkdir(new_data_folder)
 

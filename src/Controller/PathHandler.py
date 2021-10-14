@@ -24,7 +24,7 @@ def data_path(relative_path):
     """
     # Get the absolute path (hidden directory)
     home_dir = Path.home()
-    hidden_dir = home_dir.joinpath('.OnkoDICOM', 'data')
+    hidden_dir = home_dir.joinpath('OnkoDICOM', 'data')
     absolute_path = hidden_dir.joinpath(relative_path)
 
     # Check to see if the file exists in the hidden directory. Return if it
