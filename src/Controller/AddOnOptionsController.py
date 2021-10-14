@@ -11,7 +11,7 @@ from PySide6.QtCore import Slot
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 
 
 # Create the Add-On Options class based on the UI from the file in
@@ -23,7 +23,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
         # read configuration file for line and fill options
-        with open(resource_path("data/line&fill_configuration"), "r") \
+        with open(data_path("line&fill_configuration"), "r") \
                 as stream:
             elements = stream.readlines()
             # if file is not empty, each line represents the last saved
@@ -351,7 +351,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         # starting save
         # Saving the Windowing options
-        with open(resource_path("data/csv/imageWindowing.csv"), "w",
+        with open(data_path("imageWindowing.csv"), "w",
                   newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Organ", "Scan", "Window", "Level"])
@@ -365,7 +365,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # saving the Standard Organ names
-        with open(resource_path("data/csv/organName.csv"), "w",
+        with open(data_path("organName.csv"), "w",
                   newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
@@ -379,7 +379,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # Saving the Standard Volume Names
-        with open(resource_path("data/csv/volumeName.csv"), "w",
+        with open(data_path("volumeName.csv"), "w",
                   newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_volume.rowCount()):
@@ -393,7 +393,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 writer.writerow(rowdata)
 
         # saves the new ROI from Isodoses
-        with open('data/csv/isodoseRoi.csv', 'w', newline="") as stream:
+        with open(data_path('isodoseRoi.csv'), 'w', newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_roi.rowCount()):
                 rowdata = []
@@ -406,7 +406,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 writer.writerow(rowdata)
 
         # save configuration file
-        with open(resource_path("data/line&fill_configuration"),
+        with open(data_path("line&fill_configuration"),
                   "w") as stream:
             stream.write(str(self.line_style_ROI.currentIndex()))
             stream.write("\n")
@@ -445,7 +445,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self.image_fusion_add_on_options.get_values_from_UI()
             self.image_fusion_add_on_options.check_parameter()
             self.image_fusion_add_on_options.warning_label.setText("")
-            json_file = open(resource_path("data/json/imageFusion.json"),
+            json_file = open(data_path("imageFusion.json"),
                              "w", newline="")
             json.dump(image_fusion_add_on_options_values, json_file)
         except ValueError:
@@ -475,7 +475,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     # based on the corresponding files
     def fill_tables(self):
         # Fill the Windowing table
-        with open(resource_path("data/csv/imageWindowing.csv"),
+        with open(data_path("imageWindowing.csv"),
                   "r") as file_input:
             next(file_input)
             i = 0
@@ -494,7 +494,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # organ names table
-        with open(resource_path("data/csv/organName.csv"), "r") as file_input:
+        with open(data_path("organName.csv"), "r") as file_input:
             next(file_input)
             i = 0
             for row in file_input:
@@ -513,7 +513,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"),
+        with open(data_path("volumeName.csv"),
                   "r") as file_input:
             i = 0
             for row in file_input:
@@ -529,7 +529,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # roi isodose table
-        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+        with open(data_path('isodoseRoi.csv'), "r") as fileInput:
             # Clear table to prevent displaying data multiple times
             self.table_roi.setRowCount(0)
 
@@ -550,7 +550,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         # patient hash ID table, which is just for displaying all the
         # patients anonymized byt the software since intallation
-        with open(resource_path("data/csv/patientHash.csv"),
+        with open(data_path("patientHash.csv"),
                   "r") as file_input:
             next(file_input, None)
             i = 0
@@ -569,7 +569,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         # Image Fusion
         try:
-            with open(resource_path("data/json/imageFusion.json"),
+            with open(data_path("imageFusion.json"),
                       "r") as file_input:
                 data = json.load(file_input)
                 for key in data:

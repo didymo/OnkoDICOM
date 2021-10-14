@@ -4,7 +4,7 @@ from skimage import measure
 from src.View.mainpage.DicomView import DicomView
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path, resource_path
 
 
 class DicomAxialView(DicomView):
@@ -307,7 +307,7 @@ class DicomAxialView(DicomView):
                     self.patient_dict_container.get("dose_pixluts")[curr_slice_uid], contours)
 
                 brush_color = self.iso_color[sd]
-                with open(resource_path('data/line&fill_configuration'), 'r') as stream:
+                with open(data_path('line&fill_configuration'), 'r') as stream:
                     elements = stream.readlines()
                     if len(elements) > 0:
                         iso_line = int(elements[2].replace('\n', ''))

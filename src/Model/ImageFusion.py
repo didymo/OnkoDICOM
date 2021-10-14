@@ -11,7 +11,7 @@ from copy import deepcopy
 from pydicom.tag import Tag
 
 from src.constants import CT_RESCALE_INTERCEPT
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -400,9 +400,9 @@ def register_images(image_1, image_2):
     """
 
     # Check to see if the imageWindowing.csv file exists
-    if os.path.exists(resource_path('data/json/imageFusion.json')):
+    if os.path.exists(data_path('imageFusion.json')):
         # If it exists, read data from file into the dictionary
-        with open(resource_path("data/json/imageFusion.json"),
+        with open(data_path("imageFusion.json"),
                   "r") as file_input:
             dict_fusion = json.load(file_input)
 
