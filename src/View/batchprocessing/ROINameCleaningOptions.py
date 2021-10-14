@@ -312,7 +312,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
-            if roi_name[0:3] in self.volume_prefixes:
+            if roi_name[0:3] in self.volume_prefixes \
+                    or roi_name[0:4] in self.volume_prefixes:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setEnabled(False)
             else:
