@@ -3,7 +3,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from src.View.mainpage.DicomGraphicsScene import GraphicsScene
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.constants import INITIAL_ONE_VIEW_ZOOM
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 
 
 class DicomView(QtWidgets.QWidget):
@@ -107,7 +107,7 @@ class DicomView(QtWidgets.QWidget):
             color = self.roi_color[roi_id]
         else:
             color = roi_color[roi_id]
-        with open(resource_path('data/line&fill_configuration'), 'r') as stream:
+        with open(data_path('line&fill_configuration'), 'r') as stream:
             elements = stream.readlines()
             if len(elements) > 0:
                 roi_line = int(elements[0].replace('\n', ''))

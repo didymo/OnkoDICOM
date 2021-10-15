@@ -13,7 +13,7 @@ import src.constants as constant
 from src.Model.Anon import anonymize
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Transform import linear_transform
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 from src.View.mainpage import ClinicalDataView
 
 matplotlib.cbook.handle_exceptions = "print"  # default
@@ -30,15 +30,15 @@ matplotlib.cbook.handle_exceptions = "ignore"
 message = ""
 
 # reading the csv files containing the available diseases
-with open(resource_path('data/ICD10_Topography.csv'), 'r') as f:
+with open(data_path('ICD10_Topography.csv'), 'r') as f:
     reader = csv.reader(f)
     icd = list(reader)
     icd.pop(0)
-with open(resource_path('data/ICD10_Topography_C.csv'), 'r') as f:
+with open(data_path('ICD10_Topography_C.csv'), 'r') as f:
     reader = csv.reader(f)
     icdc = list(reader)
     icdc.pop(0)
-with open(resource_path('data/ICD10_Morphology.csv'), 'r') as f:
+with open(data_path('ICD10_Morphology.csv'), 'r') as f:
     reader = csv.reader(f)
     hist = list(reader)
     hist.pop(0)

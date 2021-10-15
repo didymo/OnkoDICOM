@@ -17,7 +17,7 @@ from src.Model.ROI import ordered_list_rois, get_roi_contour_pixel, \
     calc_roi_polygon, transform_rois_contours, merge_rtss
 from src.View.mainpage.StructureWidget import StructureWidget
 from src.View.util.SelectRTSSPopUp import SelectRTSSPopUp
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path, resource_path
 
 
 class StructureTab(QtWidgets.QWidget):
@@ -136,7 +136,7 @@ class StructureTab(QtWidgets.QWidget):
         Create two lists containing standard organ and standard volume names
         as set by the Add-On options.
         """
-        with open(resource_path('data/csv/organName.csv'), 'r') as f:
+        with open(data_path('organName.csv'), 'r') as f:
             self.standard_organ_names = []
 
             csv_input = csv.reader(f)
@@ -144,7 +144,7 @@ class StructureTab(QtWidgets.QWidget):
             for row in csv_input:
                 self.standard_organ_names.append(row[0])
 
-        with open(resource_path('data/csv/volumeName.csv'), 'r') as f:
+        with open(data_path('volumeName.csv'), 'r') as f:
             self.standard_volume_names = []
 
             csv_input = csv.reader(f)

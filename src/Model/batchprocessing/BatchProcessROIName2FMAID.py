@@ -1,6 +1,6 @@
 import csv
 from pydicom import dcmread
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 from src.Model import ROI
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -86,7 +86,7 @@ class BatchProcessROIName2FMAID(BatchProcess):
         # Get organ names and FMA IDs if they have not been populated
         if not self.organ_names:
             # Get standard organ names
-            with open(resource_path('data/csv/organName.csv'), 'r') as f:
+            with open(data_path('organName.csv'), 'r') as f:
                 csv_input = csv.reader(f)
                 header = next(f)  # Ignore the "header" of the column
                 for row in csv_input:
