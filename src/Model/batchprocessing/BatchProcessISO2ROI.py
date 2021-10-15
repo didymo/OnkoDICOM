@@ -1,3 +1,4 @@
+from src.Controller.PathHandler import data_path
 from src.Model import InitialModel
 from src.Model import ImageLoading
 from src.Model.ISO2ROI import ISO2ROI
@@ -111,7 +112,7 @@ class BatchProcessISO2ROI(BatchProcess):
 
         # Get isodose levels to turn into ROIs
         isodose_levels = \
-            iso2roi.get_iso_levels('data/csv/batch_isodoseRoi.csv')
+            iso2roi.get_iso_levels(data_path('batch_isodoseRoi.csv'))
 
         # Stop loading
         if self.interrupt_flag.is_set():

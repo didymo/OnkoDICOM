@@ -5,7 +5,7 @@ from PySide6 import QtCore, QtGui
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, \
     QWidget, QPushButton, QHBoxLayout, QListWidget, QVBoxLayout
 
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path, resource_path
 
 """
 This Class handles the ROI Pop Up functionalities       
@@ -76,7 +76,7 @@ class SelectROIPopUp(QDialog):
         Create two lists containing standard organ
         and standard volume names as set by the Add-On options.
         """
-        with open(resource_path('data/csv/organName.csv'), 'r') as f:
+        with open(data_path('organName.csv'), 'r') as f:
             standard_organ_names = []
 
             csv_input = csv.reader(f)
@@ -84,7 +84,7 @@ class SelectROIPopUp(QDialog):
             for row in csv_input:
                 standard_organ_names.append(row[0])
 
-        with open(resource_path('data/csv/volumeName.csv'), 'r') as f:
+        with open(data_path('volumeName.csv'), 'r') as f:
             standard_volume_names = []
 
             csv_input = csv.reader(f)
