@@ -326,10 +326,9 @@ def create_fused_model(old_images, new_image):
     patient_dict_container.set("fused_images", fused_image)
 
     # Throw Transform Object into function to write dcm file
-    #if(fused_image[2]):
-    #    combined_affine = convert_composite_to_affine_transform(
-    #        fused_image[1])
-        # test = check_affine_conversion(fused_image[1], combined_affine)
+    if(fused_image[2]):
+        combined_affine = convert_composite_to_affine_transform(
+            fused_image[1])
     affine_matrix = convert_combined_affine_to_matrix(combined_affine)
     write_transform_to_dcm(affine_matrix)
 
