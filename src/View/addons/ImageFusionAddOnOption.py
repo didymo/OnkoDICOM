@@ -36,14 +36,14 @@ class ImageFusionOptions(object):
             filename = patient_dict_container.filepaths[0]
             dicom_tree_slice = DicomTree(filename)
             dict_tree = dicom_tree_slice.dict
-            self.fixed_image = dict_tree["Study Description"][0]
+            self.fixed_image = dict_tree["Series Instance UID"][0]
 
         moving_dict_container = MovingDictContainer()
         if not moving_dict_container.is_empty():
             filename = moving_dict_container.filepaths[0]
             dicom_tree_slice = DicomTree(filename)
             dict_tree = dicom_tree_slice.dict
-            self.moving_image = dict_tree["Study Description"][0]
+            self.moving_image = dict_tree["Series Instance UID"][0]
 
     def set_value(self, key, value):
         """
@@ -106,7 +106,7 @@ class ImageFusionOptions(object):
 
         self.fixed_image_placeholder \
             = QLabel("This is a placeholder for fixed image")
-
+        self.fixed_image_placeholder.setWordWrap(True)
         self.fixed_image_placeholder.setText(str(self.fixed_image))
         self.fixed_image_placeholder.setSizePolicy(
             QSizePolicy.Maximum,
@@ -125,6 +125,7 @@ class ImageFusionOptions(object):
         self.moving_image_label.setSizePolicy(moving_image_label_sizePolicy)
 
         self.moving_image_placeholder = QLabel("This is a placeholder")
+        self.moving_image_placeholder.setWordWrap(True)
         self.moving_image_placeholder.setText(str(self.moving_image))
         self.moving_image_placeholder.setSizePolicy(
             QSizePolicy.Maximum,
