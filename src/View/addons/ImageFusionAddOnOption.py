@@ -108,12 +108,7 @@ class ImageFusionOptions(object):
             = QLabel("This is a placeholder for fixed image")
         self.fixed_image_placeholder.setWordWrap(True)
         self.fixed_image_placeholder.setText(str(self.fixed_image))
-        self.fixed_image_placeholder.setSizePolicy(
-            QSizePolicy.Maximum,
-            QSizePolicy.Maximum)
-        self.fixed_image_placeholder.resize(
-            self.fixed_image_placeholder.sizeHint().width(),
-            self.fixed_image_placeholder.sizeHint().height())
+        self.fixed_image_placeholder.setMaximumSize(200, 50)
 
         self.moving_image_label = QLabel("Moving Image: ")
         moving_image_label_sizePolicy = QSizePolicy(QSizePolicy.Maximum,
@@ -127,12 +122,7 @@ class ImageFusionOptions(object):
         self.moving_image_placeholder = QLabel("This is a placeholder")
         self.moving_image_placeholder.setWordWrap(True)
         self.moving_image_placeholder.setText(str(self.moving_image))
-        self.moving_image_placeholder.setSizePolicy(
-            QSizePolicy.Maximum,
-            QSizePolicy.Maximum)
-        self.moving_image_placeholder.resize(
-            self.moving_image_placeholder.sizeHint().width(),
-            self.moving_image_placeholder.sizeHint().height())
+        self.moving_image_placeholder.setMaximumSize(200, 50)
 
         self.gridLayout.addWidget(self.fixed_image_label, 0, 0)
         self.gridLayout.addWidget(self.fixed_image_placeholder, 0, 1)
