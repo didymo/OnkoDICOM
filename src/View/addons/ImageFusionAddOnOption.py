@@ -400,6 +400,9 @@ class ImageFusionOptions(object):
                     'Couldn\'t find the series instance '
                     'UID for the Moving Image.')
 
+        if moving_dict_container.is_empty() and self.moving_image != "":
+            self.moving_image = ""
+
         self.fixed_image_placeholder.setText(str(self.fixed_image))
         self.moving_image_placeholder.setText(str(self.moving_image))
 
