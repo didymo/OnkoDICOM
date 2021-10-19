@@ -707,3 +707,6 @@ class AddOptions:
     def show_add_on_options(self):
         self.options_window.fill_tables()
         self.options_window.show()
+
+    def update_ui(self):
+        self.options_window.image_fusion_add_on_options.get_patients_info()

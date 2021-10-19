@@ -432,6 +432,9 @@ class UIMainWindow:
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
 
+        # Update the Add On Option GUI
+        self.add_on_options_controller.update_ui()
+
     def perform_suv2roi(self):
         """
         Performs the SUV2ROI process.
