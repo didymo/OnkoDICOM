@@ -164,6 +164,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         create_initial_model()
         self.setup_central_widget()
         self.setup_actions()
+        self.add_on_options_controller.update_ui()
 
         self.action_handler.action_open.triggered.connect(
             self.open_new_patient)

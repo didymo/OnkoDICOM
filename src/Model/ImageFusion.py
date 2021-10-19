@@ -190,7 +190,8 @@ def convert_combined_affine_to_matrix(combined_affine):
 
     return overall
 
-#TODO: add support for multiple transformations
+
+# TODO: add support for multiple transformations
 def write_transform_to_dcm(affine_matrix):
     """
     Function to write data of the top(moving) image respective
@@ -324,11 +325,11 @@ def create_fused_model(old_images, new_image):
     fused_image = register_images(old_images, new_image)
     patient_dict_container.set("fused_images", fused_image)
 
-    # Throw Transform Object into function to write dcm file
-    combined_affine = convert_composite_to_affine_transform(fused_image[1])
-    # test = check_affine_conversion(fused_image[1], combined_affine)
-    affine_matrix = convert_combined_affine_to_matrix(combined_affine)
-    write_transform_to_dcm(affine_matrix)
+    if fused_image[2]:
+        combined_affine = convert_composite_to_affine_transform(
+            fused_image[1])
+        affine_matrix = convert_combined_affine_to_matrix(combined_affine)
+        write_transform_to_dcm(affine_matrix)
 
 
 def get_fused_window(level, window):
@@ -349,7 +350,7 @@ def get_fused_window(level, window):
         tfm (sitk.CompositeTransform): transformation object containing data 
         that is a product from linear_registration
     """
-  
+
     patient_dict_container = PatientDictContainer()
     old_images = patient_dict_container.get("sitk_original")
     fused_image = patient_dict_container.get("fused_images")
@@ -367,7 +368,7 @@ def get_fused_window(level, window):
     color_sagittal = {}
     color_coronal = {}
 
-    windowing = (int(level-CT_RESCALE_INTERCEPT), int(window))
+    windowing = (int(level - CT_RESCALE_INTERCEPT), int(window))
 
     for i in range(axial_slice_count):
         color_axial[i] = \
@@ -399,6 +400,8 @@ def register_images(image_1, image_2):
         tfm (sitk.CompositeTransform)
     """
 
+    store_object_into_dcm = False
+
     # Check to see if the imageWindowing.csv file exists
     if os.path.exists(data_path('imageFusion.json')):
         # If it exists, read data from file into the dictionary
@@ -420,6 +423,13 @@ def register_images(image_1, image_2):
             default_value=dict_fusion["default_value"],
             verbose=False
         )
+
+        # Flag for when a given registration method is rigid.
+        # As DICOM Frame of Reference Transformation Matrix allows
+        # RIGID, RIGID_SCALE or AFFINE
+
+        if dict_fusion["reg_method"] == 'rigid':
+            store_object_into_dcm = True
     else:
         # If csv does not exist, initialize registration normally
         img_ct, tfm = linear_registration(
@@ -430,8 +440,9 @@ def register_images(image_1, image_2):
             reg_method='rigid',
             verbose=False
         )
+        store_object_into_dcm = True
 
-    return img_ct, tfm
+    return img_ct, tfm, store_object_into_dcm
 
 
 def get_fused_pixmap(orig_image, fused_image, aspect,
@@ -444,11 +455,12 @@ def get_fused_pixmap(orig_image, fused_image, aspect,
         aspect(Any): currently not used
         slice_num(int): slice number of the array
         view(String): specified flag that can be sagittal, coronal or axial
+        windowing: upper and lower bound for windowing
     windowing: target level and window of the fused image
     Returns:
         pixmap (QtGui.QPixmap): returns the pixmap of co-registered fixed and 
         moving images.
-    """    
+    """
     # Get dimension /could also input dimensions as parameters
     image_array = sitk.GetArrayFromImage(orig_image)
     if view == "sagittal":
