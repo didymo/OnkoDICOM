@@ -22,28 +22,9 @@ class ImageFusionOptions(object):
         self.fixed_image = None
         self.dict = {}
 
-        self.get_patients_info()
-        self.create_view()
         self.setupUi()
-
-    def get_patients_info(self):
-        """
-        Retrieve the patient's study description of the fixed image
-        and for the moving image (if it exists).
-        """
-        patient_dict_container = PatientDictContainer()
-        if not patient_dict_container.is_empty():
-            filename = patient_dict_container.filepaths[0]
-            dicom_tree_slice = DicomTree(filename)
-            dict_tree = dicom_tree_slice.dict
-            self.fixed_image = dict_tree["Series Instance UID"][0]
-
-        moving_dict_container = MovingDictContainer()
-        if not moving_dict_container.is_empty():
-            filename = moving_dict_container.filepaths[0]
-            dicom_tree_slice = DicomTree(filename)
-            dict_tree = dicom_tree_slice.dict
-            self.moving_image = dict_tree["Series Instance UID"][0]
+        self.create_view()
+        self.get_patients_info()
 
     def set_value(self, key, value):
         """
@@ -83,8 +64,8 @@ class ImageFusionOptions(object):
         self.gridLayoutWidget = QWidget()
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.gridLayout.setContentsMargins(10, 10, 10, 10)
-        self.gridLayout.setVerticalSpacing(7)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setVerticalSpacing(0)
 
         # Create horizontal spacer in the middle of the grid
         hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding,
@@ -106,7 +87,7 @@ class ImageFusionOptions(object):
 
         self.fixed_image_placeholder \
             = QLabel("This is a placeholder for fixed image")
-        self.fixed_image_placeholder.setWordWrap(True)
+        self.fixed_image_placeholder.setWordWrap(False)
         self.fixed_image_placeholder.setText(str(self.fixed_image))
         self.fixed_image_placeholder.setMaximumSize(200, 50)
 
@@ -120,7 +101,7 @@ class ImageFusionOptions(object):
         self.moving_image_label.setSizePolicy(moving_image_label_sizePolicy)
 
         self.moving_image_placeholder = QLabel("This is a placeholder")
-        self.moving_image_placeholder.setWordWrap(True)
+        self.moving_image_placeholder.setWordWrap(False)
         self.moving_image_placeholder.setText(str(self.moving_image))
         self.moving_image_placeholder.setMaximumSize(200, 50)
 
@@ -338,7 +319,7 @@ class ImageFusionOptions(object):
             msg += 'There was an error setting the optimiser value.\n'
             self.warning_label.setText(msg)
 
-        # Check if all elements in lsit are ints
+        # Check if all elements in list are ints
         if all(isinstance(x, int) for x in self.dict["shrink_factors"]):
             # Shrink_factors is stored as a list in JSON convert the list into
             # a string.
@@ -387,6 +368,40 @@ class ImageFusionOptions(object):
         except ValueError:
             msg += 'There was an error setting the Default Number'
             self.warning_label.setText(msg)
+
+    def get_patients_info(self):
+        """
+        Retrieve the patient's study description of the fixed image
+        and for the moving image (if it exists).
+        """
+        patient_dict_container = PatientDictContainer()
+        if not patient_dict_container.is_empty():
+            filename = patient_dict_container.filepaths[0]
+            dicom_tree_slice = DicomTree(filename)
+            dict_tree = dicom_tree_slice.dict
+            try:
+                self.fixed_image = dict_tree["Series Instance UID"][0]
+            except:
+                self.fixed_image = ""
+                self.warning_label.setText(
+                    'Couldn\'t find the series instance '
+                    'UID for the Fixed Image.')
+
+        moving_dict_container = MovingDictContainer()
+        if not moving_dict_container.is_empty():
+            filename = moving_dict_container.filepaths[0]
+            dicom_tree_slice = DicomTree(filename)
+            dict_tree = dicom_tree_slice.dict
+            try:
+                self.moving_image = dict_tree["Series Instance UID"][0]
+            except:
+                self.moving_image = ""
+                self.warning_label.setText(
+                    'Couldn\'t find the series instance '
+                    'UID for the Moving Image.')
+
+        self.fixed_image_placeholder.setText(str(self.fixed_image))
+        self.moving_image_placeholder.setText(str(self.moving_image))
 
     def get_values_from_UI(self):
         """

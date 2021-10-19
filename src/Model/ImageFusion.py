@@ -325,12 +325,11 @@ def create_fused_model(old_images, new_image):
     fused_image = register_images(old_images, new_image)
     patient_dict_container.set("fused_images", fused_image)
 
-    # Throw Transform Object into function to write dcm file
-    if(fused_image[2]):
+    if fused_image[2]:
         combined_affine = convert_composite_to_affine_transform(
             fused_image[1])
-    affine_matrix = convert_combined_affine_to_matrix(combined_affine)
-    write_transform_to_dcm(affine_matrix)
+        affine_matrix = convert_combined_affine_to_matrix(combined_affine)
+        write_transform_to_dcm(affine_matrix)
 
 
 def get_fused_window(level, window):
@@ -401,14 +400,14 @@ def register_images(image_1, image_2):
         tfm (sitk.CompositeTransform)
     """
 
+    store_object_into_dcm = False
+
     # Check to see if the imageWindowing.csv file exists
     if os.path.exists(data_path('imageFusion.json')):
         # If it exists, read data from file into the dictionary
         with open(data_path("imageFusion.json"),
                   "r") as file_input:
             dict_fusion = json.load(file_input)
-
-        store_object_into_dcm = False
 
         img_ct, tfm = linear_registration(
             image_1,
@@ -424,6 +423,10 @@ def register_images(image_1, image_2):
             default_value=dict_fusion["default_value"],
             verbose=False
         )
+
+        # Flag for when a given registration method is rigid.
+        # As DICOM Frame of Reference Transformation Matrix allows
+        # RIGID, RIGID_SCALE or AFFINE
 
         if dict_fusion["reg_method"] == 'rigid':
             store_object_into_dcm = True
