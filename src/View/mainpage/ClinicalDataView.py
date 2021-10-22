@@ -154,11 +154,8 @@ class ClinicalDataView(QtWidgets.QWidget):
             return
 
         # Get CSV data
-        if file_path != "" and file_path is not None:
-            if os.path.exists(file_path):
-                with open(file_path, newline="") as stream:
-                    data = list(csv.reader(stream))
-        else:
+        if file_path == "" or file_path is None \
+                or not os.path.exists(file_path):
             # Clear table
             self.clear_table()
 
@@ -170,6 +167,9 @@ class ClinicalDataView(QtWidgets.QWidget):
             self.table_cd.setItem(0, 0, attrib)
             self.table_cd.setItem(0, 1, value)
             return
+
+        with open(file_path, newline="") as stream:
+            data = list(csv.reader(stream))
 
         # See if CSV data matches patient ID
         patient_in_file = False
