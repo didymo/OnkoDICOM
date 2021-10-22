@@ -152,5 +152,5 @@ class Controller:
         if not isinstance(self.pt_ct_window, OpenPTCTPatientWindow):
             self.pt_ct_window = OpenPTCTPatientWindow(self.default_directory)
             self.pt_ct_window.go_next_window.connect(self.show_main_window)
-
+            
         self.pt_ct_window.show()

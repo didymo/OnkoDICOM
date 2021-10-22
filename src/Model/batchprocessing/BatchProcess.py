@@ -151,6 +151,17 @@ class BatchProcess:
                     slice_name = slice_count
                     slice_count += 1
                 else:
+                    # Add one (the first) clinical data SR
+                    if allowed_class["name"] == 'sr':
+                        sr_type = read_file.SeriesDescription
+                        if sr_type == "CLINICAL-DATA" \
+                                and 'sr' not in list(read_data_dict.keys()):
+                            read_data_dict['sr'] = read_file
+                            file_names_dict['sr'] = file
+                            continue
+                        else:
+                            continue
+
                     slice_name = allowed_class["name"]
 
                 # Here we keep track of what PET images we have found,

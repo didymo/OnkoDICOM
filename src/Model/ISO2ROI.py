@@ -1,5 +1,5 @@
-from pathlib import Path
 from skimage import measure
+from src.Controller.PathHandler import data_path
 from src.Model import ImageLoading
 from src.Model import ROI
 from src.Model.Isodose import get_dose_grid
@@ -25,7 +25,7 @@ class ISO2ROI:
             return False
 
         # Get isodose levels to turn into ROIs
-        isodose_levels = self.get_iso_levels('data/csv/isodoseRoi.csv')
+        isodose_levels = self.get_iso_levels(data_path('isodoseRoi.csv'))
 
         # Stop loading
         if interrupt_flag.is_set():

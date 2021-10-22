@@ -2,7 +2,6 @@ import os
 
 import pydicom
 
-from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
 from src.Model.CalculateImages import convert_raw_data, get_pixmaps
 from src.Model.GetPatientInfo import get_basic_info, DicomTree, \
@@ -11,7 +10,7 @@ from src.Model.Isodose import get_dose_pixluts, calculate_rx_dose_in_cgray
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import ordered_list_rois
 from src.Model import ImageLoading
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 from src.constants import CT_RESCALE_INTERCEPT
 
 
@@ -59,11 +58,11 @@ def create_initial_model():
     patient_dict_container.set("level", level)
 
     # Check to see if the imageWindowing.csv file exists
-    if os.path.exists(resource_path('data/csv/imageWindowing.csv')):
+    if os.path.exists(data_path('imageWindowing.csv')):
         # If it exists, read data from file into the self.dict_windowing
         # variable
         dict_windowing = {}
-        with open(resource_path('data/csv/imageWindowing.csv'), "r") \
+        with open(data_path('imageWindowing.csv'), "r") \
                 as fileInput:
             next(fileInput)
             dict_windowing["Normal"] = [window, level]
@@ -212,11 +211,11 @@ def create_initial_model_batch():
     patient_dict_container.set("level", level)
 
     # Check to see if the imageWindowing.csv file exists
-    if os.path.exists(resource_path('data/csv/imageWindowing.csv')):
+    if os.path.exists(data_path('imageWindowing.csv')):
         # If it exists, read data from file into the self.dict_windowing
         # variable
         dict_windowing = {}
-        with open(resource_path('data/csv/imageWindowing.csv'), "r") \
+        with open(data_path('imageWindowing.csv'), "r") \
                 as fileInput:
             next(fileInput)
             dict_windowing["Normal"] = [window, level]

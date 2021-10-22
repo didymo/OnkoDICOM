@@ -2,6 +2,7 @@
 # button
 
 import csv
+import json
 import webbrowser
 from collections import deque
 
@@ -10,7 +11,7 @@ from PySide6.QtCore import Slot
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path
 
 
 # Create the Add-On Options class based on the UI from the file in
@@ -22,7 +23,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
         # read configuration file for line and fill options
-        with open(resource_path("data/line&fill_configuration"), "r") \
+        with open(data_path("line&fill_configuration"), "r") \
                 as stream:
             elements = stream.readlines()
             # if file is not empty, each line represents the last saved
@@ -108,6 +109,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "dbID": 530,
                 "parent_ID": 446,
                 "short_name": "Clinical Data CSV File",
+            },
+            {
+                "level": 0,
+                "dbID": 600,
+                "parent_ID": 6,
+                "short_name": "Image Fusion",
+            },
+            {
+                "level": 1,
+                "dbID": 601,
+                "parent_ID": 600,
+                "short_name": "Auto-Registration",
             },
         ]
         # create a model for the tree view of options and attach the
@@ -330,9 +343,15 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
     # into their corresponding files
 
     def accepting(self):
+        """
+        If APPLY is clicked, save the contents of each option and table
+        into their corresponding files.
+        """
+        save_flag = True
+
         # starting save
         # Saving the Windowing options
-        with open(resource_path("data/csv/imageWindowing.csv"), "w",
+        with open(data_path("imageWindowing.csv"), "w",
                   newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Organ", "Scan", "Window", "Level"])
@@ -346,7 +365,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # saving the Standard Organ names
-        with open(resource_path("data/csv/organName.csv"), "w",
+        with open(data_path("organName.csv"), "w",
                   newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(["Standard Name", "FMA ID", "Organ", "Url"])
@@ -360,7 +379,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                         rowdata.append("")
                 writer.writerow(rowdata)
         # Saving the Standard Volume Names
-        with open(resource_path("data/csv/volumeName.csv"), "w",
+        with open(data_path("volumeName.csv"), "w",
                   newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_volume.rowCount()):
@@ -374,7 +393,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 writer.writerow(rowdata)
 
         # saves the new ROI from Isodoses
-        with open('data/csv/isodoseRoi.csv', 'w', newline="") as stream:
+        with open(data_path('isodoseRoi.csv'), 'w', newline="") as stream:
             writer = csv.writer(stream)
             for row in range(self.table_roi.rowCount()):
                 rowdata = []
@@ -387,7 +406,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 writer.writerow(rowdata)
 
         # save configuration file
-        with open(resource_path("data/line&fill_configuration"),
+        with open(data_path("line&fill_configuration"),
                   "w") as stream:
             stream.write(str(self.line_style_ROI.currentIndex()))
             stream.write("\n")
@@ -408,8 +427,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 change_default_directory_input_box.text()
             configuration.update_default_directory(new_dir)
             new_clinical_data_csv_dir = \
-                self.clinical_data_csv_dir_options.\
-                clinical_data_csv_dir_input_box.text()
+                self.clinical_data_csv_dir_options. \
+                    clinical_data_csv_dir_input_box.text()
             configuration.update_clinical_data_csv_dir(
                 new_clinical_data_csv_dir)
         except SqlError:
@@ -418,25 +437,45 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 self,
                 "Config file error",
                 "Failed to update default directory.\nPlease try again.")
+            save_flag = False
 
-        QMessageBox.about(
-            self,
-            "Success",
-            "Changes were successfully applied")
-        
-        # Close the Add-On Options Window after saving
-        if hasattr(self.window, 'structures_tab'):
-            self.window.structures_tab.init_standard_names()
-            self.window.structures_tab.update_content()
+        # Image Fusion
+        try:
+            image_fusion_add_on_options_values = \
+                self.image_fusion_add_on_options.get_values_from_UI()
+            self.image_fusion_add_on_options.check_parameter()
+            self.image_fusion_add_on_options.warning_label.setText("")
+            json_file = open(data_path("imageFusion.json"),
+                             "w", newline="")
+            json.dump(image_fusion_add_on_options_values, json_file)
+        except ValueError:
+            QMessageBox.critical(
+                self,
+                "Image Fusion Error",
+                "The number of parameters for 'Smooth_Sigmas' and "
+                "'Shrink_Factors' do not match.\nPlease try again.")
+            save_flag = False
+        else:
+            json_file.close()
 
-        self.close()
+        if save_flag:
+            QMessageBox.about(
+                self,
+                "Success",
+                "Changes were successfully applied")
+
+            # Close the Add-On Options Window after saving
+            if hasattr(self.window, 'structures_tab'):
+                self.window.structures_tab.init_standard_names()
+                self.window.structures_tab.update_content()
+
+            self.close()
 
     # This function populates the tables with the last known entries
     # based on the corresponding files
-
     def fill_tables(self):
         # Fill the Windowing table
-        with open(resource_path("data/csv/imageWindowing.csv"),
+        with open(data_path("imageWindowing.csv"),
                   "r") as file_input:
             next(file_input)
             i = 0
@@ -446,7 +485,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     for item in row.split(",")
                 ]
                 if i >= self.table_view.rowCount():
-                    self.table_view.setRowCount(self.table_view.rowCount() + 1)
+                    self.table_view.setRowCount(
+                        self.table_view.rowCount() + 1)
                 self.table_view.setItem(i, 0, items[0])
                 self.table_view.setItem(i, 1, items[1])
                 self.table_view.setItem(i, 2, items[2])
@@ -454,7 +494,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # organ names table
-        with open(resource_path("data/csv/organName.csv"), "r") as file_input:
+        with open(data_path("organName.csv"), "r") as file_input:
             next(file_input)
             i = 0
             for row in file_input:
@@ -473,7 +513,8 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # volume name table
-        with open(resource_path("data/csv/volumeName.csv"), "r") as file_input:
+        with open(data_path("volumeName.csv"),
+                  "r") as file_input:
             i = 0
             for row in file_input:
                 items = [
@@ -488,7 +529,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 i += 1
 
         # roi isodose table
-        with open('data/csv/isodoseRoi.csv', "r") as fileInput:
+        with open(data_path('isodoseRoi.csv'), "r") as fileInput:
             # Clear table to prevent displaying data multiple times
             self.table_roi.setRowCount(0)
 
@@ -509,7 +550,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         # patient hash ID table, which is just for displaying all the
         # patients anonymized byt the software since intallation
-        with open(resource_path("data/csv/patientHash.csv"),
+        with open(data_path("patientHash.csv"),
                   "r") as file_input:
             next(file_input, None)
             i = 0
@@ -525,6 +566,22 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                     self.table_ids.setItem(i, 0, items[0])
                     self.table_ids.setItem(i, 1, items[1])
                 i += 1
+
+        # Image Fusion
+        try:
+            with open(data_path("imageFusion.json"),
+                      "r") as file_input:
+                data = json.load(file_input)
+                for key in data:
+                    self.image_fusion_add_on_options.set_value(key, data[key])
+            self.image_fusion_add_on_options.set_gridLayout()
+        except FileNotFoundError:
+            self.image_fusion_add_on_options.set_fast_mode()
+            QMessageBox.critical(
+                self,
+                "File Not Found!",
+                "Could not find imageFusion.json file for\nimage fusion "
+                "add-ons.")
 
     # The following function shows a pop up window to add a new entry in
     # the corresponding table
@@ -642,8 +699,6 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
 # The class that will be called by the main page to access the Add-On
 # Options controller
-
-
 class AddOptions:
     def __init__(self, window):
         self.window = window
@@ -652,3 +707,6 @@ class AddOptions:
     def show_add_on_options(self):
         self.options_window.fill_tables()
         self.options_window.show()
+
+    def update_ui(self):
+        self.options_window.image_fusion_add_on_options.get_patients_info()

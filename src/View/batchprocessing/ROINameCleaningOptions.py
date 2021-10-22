@@ -2,7 +2,7 @@ import csv
 import platform
 from pydicom import dcmread
 from PySide6 import QtCore, QtWidgets
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import data_path, resource_path
 from fuzzywuzzy import process
 
 
@@ -159,7 +159,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         Get standard organ names and prefix types.
         """
         # Get standard organ names
-        with open(resource_path('data/csv/organName.csv'), 'r') as f:
+        with open(data_path('organName.csv'), 'r') as f:
             csv_input = csv.reader(f)
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
@@ -168,7 +168,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             f.close()
 
         # Get standard volume prefixes
-        with open(resource_path('data/csv/volumeName.csv'), 'r') as f:
+        with open(data_path('volumeName.csv'), 'r') as f:
             csv_input = csv.reader(f)
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
@@ -312,7 +312,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
-            if roi_name[0:3] in self.volume_prefixes:
+            if roi_name[0:3] in self.volume_prefixes \
+                    or roi_name[0:4] in self.volume_prefixes:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setEnabled(False)
             else:
