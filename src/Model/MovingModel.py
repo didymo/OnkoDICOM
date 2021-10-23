@@ -33,6 +33,9 @@ def create_moving_model():
     moving_dict_container = MovingDictContainer()
 
     dataset = moving_dict_container.dataset
+
+    print("initial length: ", len(dataset))
+
     filepaths = moving_dict_container.filepaths
     moving_dict_container.set("rtss_modified_moving", False)
 

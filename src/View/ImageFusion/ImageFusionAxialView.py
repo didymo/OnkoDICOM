@@ -172,6 +172,7 @@ class ImageFusionAxialView(DicomView):
         """
         Update the image to be displayed on the DICOM View.
         """
+        print("here")
         pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
         slider_id = self.slider.value()
         image = pixmaps[slider_id]
