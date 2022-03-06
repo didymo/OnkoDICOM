@@ -33,3 +33,16 @@ source venv/bin/activate
 To run the tests run:
 
 python -m pytest test/
+
+
+the code coverage reporting is done with
+
+pip install pytest-cov
+
+found here:
+https://pypi.org/project/pytest-cov/
+
+To run the report:
+python -m pytest   --cov=src     test/
+
+
