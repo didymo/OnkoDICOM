@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6.QtCore import Qt
 from fuzzywuzzy import process
 
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -7,8 +7,7 @@ from src.View.mainpage.RenameROIWindow import RenameROIWindow
 
 
 class StructureWidget(QtWidgets.QWidget):
-
-    structure_renamed = QtCore.pyqtSignal(tuple)  # (new_dataset, change_description)
+    structure_renamed = QtCore.Signal(tuple)  # (new_dataset, change_description)
 
     def __init__(self, roi_id, color, text, structure_tab):
         super(StructureWidget, self).__init__()
@@ -30,29 +29,33 @@ class StructureWidget(QtWidgets.QWidget):
         self.layout.addWidget(color_square_label)
 
         # Create checkbox
-        checkbox = QtWidgets.QCheckBox()
-        checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
-        checkbox.clicked.connect(lambda state, text_=roi_id: structure_tab.structure_checked(state, text_))
+        self.checkbox = QtWidgets.QCheckBox()
+        self.checkbox.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.checkbox.clicked.connect(self.checkbox_clicked)
         if text in structure_tab.standard_organ_names or text in structure_tab.standard_volume_names:
             self.standard_name = True
-            checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+            self.checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
         else:
             self.standard_name = False
-            checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
+            self.checkbox.setStyleSheet("font: 10pt \"Laksaman\"; color: red;")
         for item in structure_tab.standard_volume_names:  # Any suffix number will still be considered standard.
             if text.startswith(item):
                 self.standard_name = True
-                checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
-        checkbox.setText(text)
-        self.layout.addWidget(checkbox)
+                self.checkbox.setStyleSheet("font: 10pt \"Laksaman\";")
+        self.checkbox.setText(text)
+        self.layout.addWidget(self.checkbox)
 
         self.layout.setAlignment(Qt.AlignLeft)
 
         self.setLayout(self.layout)
 
+    def checkbox_clicked(self, checked):
+        self.structure_tab.structure_checked(checked, self.roi_id)
+
     def roi_suggestions(self):
         """
-        Get the top 3 suggestions for the selected ROI based on string matching with standard ROIs provided in .csv format.
+        Get the top 3 suggestions for the selected ROI based on
+        string matching with standard ROIs provided in .csv format.
 
         :return: two dimensional list with ROI name and string match percent
         i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
@@ -68,7 +71,6 @@ class StructureWidget(QtWidgets.QWidget):
         This function is called whenever the QWidget is right clicked.
         This creates a right click menu for the widget.
         """
-
         # Part 1: Construct context menu
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
@@ -83,7 +85,7 @@ class StructureWidget(QtWidgets.QWidget):
             suggested_action3 = menu.addAction(suggestions[2][0])
 
         # Part 2: Determine action taken
-        action = menu.exec_(self.mapToGlobal(event.pos()))
+        action = menu.exec(self.mapToGlobal(event.pos()))
         if action == rename_action:
             rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                             self.structure_tab.standard_organ_names,

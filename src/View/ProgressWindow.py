@@ -1,18 +1,24 @@
+import platform
 import threading
 
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtCore import QThreadPool
-from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QMessageBox
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import QThreadPool
+from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout
 
-from src.Model import ImageLoading
+from src.Controller.PathHandler import resource_path
 from src.Model.Worker import Worker
-from src.View.ImageLoader import ImageLoader
 
 
 class ProgressWindow(QDialog):
-    signal_loaded = QtCore.pyqtSignal(tuple)
-    signal_error = QtCore.pyqtSignal(int)
-    signal_advise_calc_dvh = QtCore.pyqtSignal(bool)
+    # Signal that emits when loading has completed
+    signal_loaded = QtCore.Signal(tuple)
+
+    # Signal that emits when exceptions are raised
+    signal_error = QtCore.Signal(Exception)
+
+    # Signal that emits when calc dvh is advised
+    signal_advise_calc_dvh = QtCore.Signal(bool)
 
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)
@@ -27,6 +33,20 @@ class ProgressWindow(QDialog):
 
         self.text_field = QLabel("Loading")
 
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
+
+        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+
+        window_icon = QIcon()
+        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
+                              QIcon.Normal, QIcon.Off)
+
+        self.setWindowIcon(window_icon)
+        self.progress_bar.setStyleSheet(self.stylesheet)
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.text_field)
         self.layout.addWidget(self.progress_bar)
@@ -35,45 +55,45 @@ class ProgressWindow(QDialog):
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
 
-    def start_loading(self, selected_files):
-        image_loader = ImageLoader(selected_files, self)
-        image_loader.signal_request_calc_dvh.connect(self.prompt_calc_dvh)
-
-        worker = Worker(image_loader.load, self.interrupt_flag, progress_callback=True)
+    def start(self, funct):
+        """
+        Function that executes 'funct' on new thread
+        :param funct: function to execute.
+        :param progress_callback: signal that receives the current
+                                  progress of the loading.
+        """
+        self.interrupt_flag.clear()
+        worker = Worker(funct, self.interrupt_flag, progress_callback=True)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)
         worker.signals.progress.connect(self.update_progress)
 
         self.threadpool.start(worker)
+        self.exec_()
 
     def on_finish(self, result):
-        self.update_progress(("Initalizing patient window...", 90))
+        """
+        Executes when the progress bar has finished
+        """
         self.signal_loaded.emit((result, self))
 
     def update_progress(self, progress_update):
         """
         Function responsible for updating the bar percentage and the label.
-        :param progress_update: A tuple containing update text and update percentage
+        :param progress_update: A tuple containing update text and
+        update percentage
         """
         self.text_field.setText(progress_update[0])
         self.progress_bar.setValue(progress_update[1])
 
-    def prompt_calc_dvh(self):
-        choice = QMessageBox.question(self, "Calculate DVHs?", "RTSTRUCT and RTDOSE datasets identified. Would you "
-                                                               "like to calculate DVHs? (This may take up to several "
-                                                               "minutes on some systems.)",
-                                      QMessageBox.Yes | QMessageBox.No)
-
-        if choice == QMessageBox.Yes:
-            self.signal_advise_calc_dvh.emit(True)
-        else:
-            self.signal_advise_calc_dvh.emit(False)
-
     def on_error(self, err):
-        if type(err[1]) is ImageLoading.NotRTSetError:
-            self.signal_error.emit(0)
-        elif type(err[1]) is ImageLoading.NotAllowedClassError:
-            self.signal_error.emit(1)
+        """
+        Executes if an error occurred
+        """
+        self.signal_error.emit(err)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """
+        Override base closeEvent method
+        """
         self.interrupt_flag.set()

@@ -1,6 +1,6 @@
 import pydicom
-from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
+from PySide6 import QtGui, QtWidgets, QtCore
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QListWidget
 
 from src.Model import ROI
 from src.Controller.PathHandler import resource_path
@@ -16,9 +16,9 @@ class RenameROIWindow(QDialog):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
         if platform.system() == 'Darwin':
-            self.stylesheet_path = "src/res/stylesheet.qss"
+            self.stylesheet_path = "res/stylesheet.qss"
         else:
-            self.stylesheet_path = "src/res/stylesheet-win-linux.qss"
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
         stylesheet = open(resource_path(self.stylesheet_path)).read()
         self.setStyleSheet(stylesheet)
 
@@ -34,7 +34,7 @@ class RenameROIWindow(QDialog):
         self.setMinimumSize(300, 90)
 
         self.icon = QtGui.QIcon()
-        self.icon.addPixmap(QtGui.QPixmap(resource_path("src/res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
+        self.icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         self.setWindowIcon(self.icon)
 
         self.explanation_text = QLabel("Enter a new name:")
@@ -82,6 +82,8 @@ class RenameROIWindow(QDialog):
 
 
     def on_text_edited(self, text):
+        self.rename_button.setDefault(True)
+
         if text in self.standard_volume_names or text in self.standard_organ_names:
             self.feedback_text.setStyleSheet("color: green")
             self.feedback_text.setText("Entered text is in standard names")
@@ -129,7 +131,7 @@ class RenameROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_renamed = QtCore.pyqtSignal(pydicom.Dataset)   # Emits the new dataset
+    signal_roi_renamed = QtCore.Signal(pydicom.Dataset)   # Emits the new dataset
 
     def __init__(self, *args, **kwargs):
         super(RenameROIProgressWindow, self).__init__(*args, **kwargs)

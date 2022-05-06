@@ -33,7 +33,7 @@ def get_dose_pixels(pixlut, doselut, img_ds):
         prone * feetfirst / spacing[0]
     y = (np.array(doselut[1]) - pixlut[1][0]) * prone / spacing[1]
 
-    return (x, y)
+    return x, y
 
 
 def get_dose_pixluts(dict_ds):
@@ -50,10 +50,14 @@ def get_dose_pixluts(dict_ds):
     dose_data = calculate_matrix(dict_ds['rtdose'])
     for ds in dict_ds:
         if ds not in non_img_type:
-            img_ds = dict_ds[ds]
-            pixlut = calculate_matrix(img_ds)
-            dose_pixlut = get_dose_pixels(pixlut, dose_data, img_ds)
-            dict_dose_pixluts[img_ds.SOPInstanceUID] = dose_pixlut
+            if isinstance(ds, str) and ds[0:3] == 'sr-':
+                continue
+            else:
+                img_ds = dict_ds[ds]
+                pixlut = calculate_matrix(img_ds)
+                dose_pixlut = get_dose_pixels(pixlut, dose_data, img_ds)
+                dict_dose_pixluts[img_ds.SOPInstanceUID] = dose_pixlut
+
     return dict_dose_pixluts
 
 
@@ -71,28 +75,29 @@ def get_dose_grid(rtd, z=0):
     if 'GridFrameOffsetVector' in rtd:
         z = float(z)
 
-        planes = rtd.ImageOrientationPatient[0] * np.array(rtd.GridFrameOffsetVector) + \
-            rtd.ImagePositionPatient[2]
+        planes = rtd.ImageOrientationPatient[0] \
+                 * np.array(rtd.GridFrameOffsetVector) \
+                 + rtd.ImagePositionPatient[2]
         frame = -1
 
-        if (np.amin(np.fabs(planes - z)) < 0.5):
+        if np.amin(np.fabs(planes - z)) < 0.5:
             frame = np.argmin(np.fabs(planes - z))
             return rtd.pixel_array[frame]
 
-        if ((z > np.amin(planes)) or (z < np.amax(planes))):
-            umin = np.fabs(planes - z)
-            lmin = umin.copy()
-            ub = np.argmin(umin)
+        if (z > np.amin(planes)) or (z < np.amax(planes)):
+            u_min = np.fabs(planes - z)
+            l_min = u_min.copy()
+            ub = np.argmin(u_min)
 
-            lmin[ub] = np.amax(umin)
-            lb = np.argmin(lmin)
+            l_min[ub] = np.amax(u_min)
+            lb = np.argmin(l_min)
 
             # Fractional distance from bottom to top
             # Plane is at upper plane if 1, lower plane if 0
             fz = (z - planes[lb]) / (planes[ub] - planes[lb])
 
-            plane = fz * rtd.pixel_array[ub] + \
-                (1.0 - fz) * rtd.pixel_array[lb]
+            plane = fz * rtd.pixel_array[ub] \
+                    + (1.0 - fz) * rtd.pixel_array[lb]
 
             return plane
 
@@ -106,7 +111,9 @@ def calculate_rx_dose_in_cgray(rtplan):
     if ('DoseReferenceSequence' in rtplan and
             rtplan.DoseReferenceSequence[0].DoseReferenceStructureType and
             rtplan.DoseReferenceSequence[0].TargetPrescriptionDose):
-        rx_dose_in_cgray = rtplan.DoseReferenceSequence[0].TargetPrescriptionDose * GRAY_TO_CGRAY_SCALE_FACTOR
+        rx_dose_in_cgray = rtplan.DoseReferenceSequence[0]. \
+                               TargetPrescriptionDose \
+                           * GRAY_TO_CGRAY_SCALE_FACTOR
     # beam doses are to a point, not necessarily to the same point
     # and don't necessarily add up to the prescribed dose to the target
     # which is frequently to a SITE rather than to a POINT
@@ -118,6 +125,8 @@ def calculate_rx_dose_in_cgray(rtplan):
             number_of_fractions = fraction_group.NumberOfFractionsPlanned
             for beam in beams:
                 if "BeamDose" in beam:
-                    rx_dose_in_cgray += beam.BeamDose * number_of_fractions * GRAY_TO_CGRAY_SCALE_FACTOR
+                    rx_dose_in_cgray += beam.BeamDose \
+                                        * number_of_fractions \
+                                        * GRAY_TO_CGRAY_SCALE_FACTOR
 
     return rx_dose_in_cgray

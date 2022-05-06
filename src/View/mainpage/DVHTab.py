@@ -1,15 +1,16 @@
 import os
 import platform
 import threading
+import numpy as np
+from pathlib import Path
 
 import matplotlib.pylab as plt
-from PyQt5 import QtWidgets, QtCore, QtGui
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from pandas import np
+from PySide6 import QtWidgets, QtCore, QtGui
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from src.Controller.PathHandler import resource_path
 from src.Model import ImageLoading
-from src.Model.CalculateDVHs import dvh2csv
+from src.Model.CalculateDVHs import dvh2csv, dvh2rtdose, rtdose2dvh
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 
@@ -20,6 +21,7 @@ class DVHTab(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
         self.dvh_calculated = self.patient_dict_container.has_attribute("raw_dvh")
+        self.rt_dose = self.patient_dict_container.dataset['rtdose']
 
         self.raw_dvh = None
         self.dvh_x_y = None
@@ -29,44 +31,72 @@ class DVHTab(QtWidgets.QWidget):
 
         self.dvh_tab_layout = QtWidgets.QVBoxLayout()
 
-        # Construct the layout based on whether or not the DVH has already been calculated.
-        if self.dvh_calculated:
-            self.init_layout_dvh()
-        else:
-            self.init_layout_no_dvh()
+        try:
+            # Import the DVH from RT Dose
+            self.import_rtdose()
+        except (AttributeError, KeyError):
+            # Construct the layout based on whether or not the DVH has
+            # already been calculated.
+            # TODO: convert to logging
+            print("DVH data not in RT Dose.")
+            if self.dvh_calculated:
+                self.init_layout_dvh()
+            else:
+                self.init_layout_no_dvh()
 
         self.setLayout(self.dvh_tab_layout)
 
     def init_layout_dvh(self):
+        """
+        Initialise the DVH tab's layout when DVH data exists.
+        """
         self.raw_dvh = self.patient_dict_container.get("raw_dvh")
         self.dvh_x_y = self.patient_dict_container.get("dvh_x_y")
 
         self.plot = self.plot_dvh()
         widget_plot = FigureCanvas(self.plot)
 
-        button_export = QtWidgets.QPushButton("Export DVH")
+        button_layout = QtWidgets.QHBoxLayout()
+
+        button_export = QtWidgets.QPushButton("Export DVH to CSV")
         button_export.clicked.connect(self.export_csv)
+        button_layout.addWidget(button_export)
+
+        # Added Recalculate button
+        button_calc_dvh = QtWidgets.QPushButton("Recalculate DVH")
+        button_calc_dvh.clicked.connect(self.prompt_calc_dvh)
+        button_layout.addWidget(button_calc_dvh)
 
         self.dvh_tab_layout.setAlignment(QtCore.Qt.Alignment())
         self.dvh_tab_layout.addWidget(widget_plot)
-        self.dvh_tab_layout.addWidget(button_export, alignment=QtCore.Qt.AlignRight)
+        self.dvh_tab_layout.addLayout(button_layout)
 
     def init_layout_no_dvh(self):
+        """
+        Initialise the DVH tab's layout when DVH data does not exist.
+        """
         button_calc_dvh = QtWidgets.QPushButton("Calculate DVH")
         button_calc_dvh.clicked.connect(self.prompt_calc_dvh)
 
-        self.dvh_tab_layout.setAlignment(QtCore.Qt.AlignCenter)
+        self.dvh_tab_layout.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
         self.dvh_tab_layout.addWidget(button_calc_dvh)
 
     def clear_layout(self):
+        """
+        Clear the layout of the DVH tab.
+        """
         for i in reversed(range(self.dvh_tab_layout.count())):
-            self.dvh_tab_layout.itemAt(i).widget().setParent(None)
+            item = self.dvh_tab_layout.itemAt(i)
+            if item.widget():
+                item.widget().setParent(None)
+            else:
+                for j in reversed(range(item.count())):
+                    item.itemAt(j).widget().setParent(None)
 
     def plot_dvh(self):
         """
         :return: DVH plot using Matplotlib library.
         """
-
         # Initialisation of the plots
         fig, ax = plt.subplots()
         fig.subplots_adjust(0.1, 0.15, 1, 1)
@@ -82,12 +112,11 @@ class DVHTab(QtWidgets.QWidget):
                 # Bincenters, obtained from the dvh object, give the x axis values
                 # (Doses originally in Gy unit)
                 bincenters = self.dvh_x_y[roi]['bincenters']
-                #print(self.dvh_x_y[roi])
+                # print(self.dvh_x_y[roi])
 
                 # Counts, obtained from the dvh object, give the y axis values
                 # (values between 0 and dvh.volume)
                 counts = self.dvh_x_y[roi]['counts']
-
 
                 # Color of the line is the same as the color shown in the left column of the window
                 color = self.patient_dict_container.get("roi_color_dict")[roi]
@@ -134,14 +163,67 @@ class DVHTab(QtWidgets.QWidget):
         return fig
 
     def prompt_calc_dvh(self):
-        choice = QtWidgets.QMessageBox.question(self, "Calculate DVHs?", "Would you like to calculate DVHs? This may"
-                                                                         " take up to several minutes on some systems.",
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        """
+        Prompt for DVH calculation.
+        """
+        if platform.system() == "Linux":
+            choice = \
+                QtWidgets.QMessageBox.question(
+                    self, "Calculate DVHs?",
+                    "Would you like to (re)calculate DVHs?",
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 
-        if choice == QtWidgets.QMessageBox.Yes:
-            progress_window = CalculateDVHProgressWindow(self, QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
-            progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
-            progress_window.exec_()
+            if choice == QtWidgets.QMessageBox.Yes:
+                progress_window = \
+                    CalculateDVHProgressWindow(
+                        self,
+                        QtCore.Qt.WindowTitleHint |
+                        QtCore.Qt.WindowCloseButtonHint)
+                progress_window.signal_dvh_calculated.connect(
+                    self.dvh_calculation_finished)
+                self.patient_dict_container.set("dvh_outdated", False)
+                progress_window.exec_()
+
+                self.export_rtdose()
+        else:
+            stylesheet_path = ""
+
+            # Select appropriate style sheet
+            if platform.system() == 'Darwin':
+                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
+            else:
+                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
+
+            # Create a message box and add attributes
+            mb = QtWidgets.QMessageBox()
+            mb.setIcon(QtWidgets.QMessageBox.Question)
+            mb.setWindowTitle("Calculate DVHs?")
+            mb.setText("Would you like to (re)calculate DVHs?")
+            button_no = QtWidgets.QPushButton("No")
+            button_yes = QtWidgets.QPushButton("Yes")
+
+            """ We want the buttons 'No' & 'Yes' to be displayed in that exact order. QMessageBox displays buttons in
+                respect to their assigned roles. (0 first, then 0 and so on) 'AcceptRole' is 0 and 'RejectRole' is 1 
+                thus by counterintuitively assigning 'No' to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons are 
+                positioned as desired.
+            """
+            mb.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
+            mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
+
+            # Apply stylesheet to the message box and add icon to the window
+            mb.setStyleSheet(open(stylesheet_path).read())
+            mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
+
+            mb.exec_()
+
+            if mb.clickedButton() == button_yes:
+                progress_window = CalculateDVHProgressWindow(self,
+                                                             QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+                progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
+                self.patient_dict_container.set("dvh_outdated", False)
+                progress_window.exec_()
+
+                self.export_rtdose()
 
     def dvh_calculation_finished(self):
         # Clear the screen
@@ -174,19 +256,56 @@ class DVHTab(QtWidgets.QWidget):
                 path + "/CSV/",
                 'DVH_' + basic_info['id'],
                 basic_info['id'])
-        save_reply = QtWidgets.QMessageBox.information(self, "Message",
-                                                      "The DVH Data was saved successfully in your directory!",
-                                                      QtWidgets.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(
+            self, "Message",
+            "The DVH Data was saved successfully in your directory!",
+            QtWidgets.QMessageBox.Ok)
+
+    def export_rtdose(self):
+        """
+        Exports DVH data into the RT Dose file in the dataset directory.
+        """
+        dvh2rtdose(self.raw_dvh)
+        QtWidgets.QMessageBox.information(
+            self, "Message",
+            "The DVH Data was saved successfully in your directory!",
+            QtWidgets.QMessageBox.Ok)
+
+    def import_rtdose(self):
+        """
+        Import DVH data from an RT Dose.
+        """
+        # Get DVH data
+        result = rtdose2dvh()
+
+        # If there is DVH data
+        if bool(result):
+            incomplete = result["diff"]
+            result.pop("diff")
+            dvh_x_y = ImageLoading.converge_to_0_dvh(result)
+            self.patient_dict_container.set("raw_dvh", result)
+            self.patient_dict_container.set("dvh_x_y", dvh_x_y)
+
+            # If incomplete, tell the user about this
+            if incomplete:
+                self.patient_dict_container.set("dvh_outdated", True)
+                self.display_outdated_indicator()
+
+            # Initialise the display
+            self.dvh_calculation_finished()
+        else:
+            result.pop("diff")
+            self.init_layout_no_dvh()
 
     def display_outdated_indicator(self):
         self.modified_indicator_widget = QtWidgets.QWidget()
         self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
-        #self.modified_indicator_widget.setFixedHeight(35)
+        # self.modified_indicator_widget.setFixedHeight(35)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
-        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft)
+        modified_indicator_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
-        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/alert_icon.png")))
+        modified_indicator_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/alert_icon.png")))
         modified_indicator_layout.addWidget(modified_indicator_icon)
 
         modified_indicator_text = QtWidgets.QLabel("Contours have been modified since DVH calculation. Some DVHs may "
@@ -196,12 +315,12 @@ class DVHTab(QtWidgets.QWidget):
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
 
-        self.dvh_tab_layout.addWidget(self.modified_indicator_widget, QtCore.Qt.AlignTop)
+        self.dvh_tab_layout.addWidget(self.modified_indicator_widget, QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
 
 
 class CalculateDVHProgressWindow(QtWidgets.QDialog):
 
-    signal_dvh_calculated = QtCore.pyqtSignal()
+    signal_dvh_calculated = QtCore.Signal()
 
     def __init__(self, *args, **kwargs):
         super(CalculateDVHProgressWindow, self).__init__(*args, **kwargs)

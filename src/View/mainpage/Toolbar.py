@@ -1,7 +1,6 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QToolBar, QToolButton, QWidget, QSizePolicy
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QToolBar, QToolButton, QWidget, QSizePolicy
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -44,6 +43,12 @@ class Toolbar(QToolBar):
         self.addWidget(self.button_windowing)
         self.addSeparator()
         self.addAction(self.action_handler.action_transect)
+        self.addSeparator()
+        self.addAction(self.action_handler.action_one_view)
+        self.addAction(self.action_handler.action_four_views)
+        self.addAction(self.action_handler.action_show_cut_lines)
+        self.addSeparator()
+        self.addAction(self.action_handler.action_image_fusion)
         self.addSeparator()
         self.addAction(self.action_handler.action_add_ons)
         self.addWidget(spacer)

@@ -10,10 +10,13 @@ jobs:
       DISPLAY: ':99.0'
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.7
+    - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
-        python-version: 3.7
+        python-version: 3.8
+    - name: Install plastimatch
+      run: |
+       sudo apt-get install plastimatch
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -30,7 +33,17 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+        sudo apt-get update
+        sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
+        # install test data
+        sudo apt-get install wget unzip
+        wget -P ~ https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
+        mkdir test/testdata
+        mkdir test/batchtestdata
+        unzip ~/DICOM-RT-02.zip -d test/testdata
+        unzip ~/DICOM-RT-02.zip -d test/batchtestdata
+        sudo chmod -R 777 test/testdata
+        sudo chmod -R 777 test/batchtestdata
         # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
         /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
         sleep 3

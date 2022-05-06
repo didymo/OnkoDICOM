@@ -1,0 +1,9 @@
+Standard Volume Name, Standard Code
+Gross Tumour Volume,GTV
+Clinical Target Volume,CTV
+Internal Target Volume,ITV
+Planning Treatment Volume,PTV_
+Overlap Treatment Volume,OTV
+Standardised Uptake Value,SUV
+Isodose,ISO
+Lymph Node Region, LN_

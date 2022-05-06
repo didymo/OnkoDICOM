@@ -7,20 +7,24 @@ Format for allowed_classes:
     "requires" : [SOPClassUID, ..]
 }
 
-Intention of this dictionary is that as SOP Classes are made compatible with OnkoDICOM, they should be defined here.
-This refactors the ProgressBar.Extended.get_datasets(..) method with the purpose of making it more future-proof than
-it's current state. As it stands, every time a new SOP Class is made compatible with OnkoDICOM, a new if/else branch
-needs to be added to compensate. With this new function, new SOP Classes should be added to the allowed_classes
-dictionary and the get_datasets() function should not need to be added to. (Of course realistically this is not the
-case, however this alternative function promotes scalability and durability of the process).
+Intention of this dictionary is that as SOP Classes are made compatible
+with OnkoDICOM, they should be defined here. This refactors the
+ProgressBar.Extended.get_datasets(..) method with the purpose of making
+it more future-proof than it's current state. As it stands, every time a
+new SOP Class is made compatible with OnkoDICOM, a new if/else branch
+needs to be added to compensate. With this new function, new SOP Classes
+should be added to the allowed_classes dictionary and the get_datasets()
+function should not need to be added to. (Of course realistically this is
+not the case, however this alternative function promotes scalability and
+durability of the process).
 """
 import collections
 import math
 import re
 from multiprocessing import Queue, Process
 
+import numpy as np
 from dicompylercore import dvhcalc
-from pandas import np
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
@@ -38,27 +42,32 @@ allowed_classes = {
     # RT Dose
     "1.2.840.10008.5.1.4.1.1.481.2": {
         "name": "rtdose",
-        "sliceable" : False
+        "sliceable": False
     },
     # RT Plan
     "1.2.840.10008.5.1.4.1.1.481.5": {
         "name": "rtplan",
-        "sliceable" : False
+        "sliceable": False
     },
     # RT Image
     "1.2.840.10008.5.1.4.1.1.481.1": {
         "name": "rtimage",
-        "sliceable" : False
+        "sliceable": False
     },
     # MR Image
-    "1.2.840.10008.5.1.4.1.1.4" : {
+    "1.2.840.10008.5.1.4.1.1.4": {
         "name": "mr",
-        "sliceable" : True
+        "sliceable": True
     },
     # PET Image
-    "1.2.840.10008.5.1.4.1.1.128" : {
+    "1.2.840.10008.5.1.4.1.1.128": {
         "name": "pet",
         "sliceable": True
+    },
+    # Comprehensive SR
+    "1.2.840.10008.5.1.4.1.1.88.33": {
+        "name": "sr",
+        "sliceable": False
     }
 }
 
@@ -71,13 +80,16 @@ class NotAllowedClassError(Exception):
     pass
 
 
-def get_datasets(filepath_list):
+def get_datasets(filepath_list, file_type=None):
     """
-    This function generates two dictionaries: the dictionary of PyDicom datasets, and the dictionary of filepaths.
-    These two dictionaries are used in the PatientDictContainer model as the class attributes: 'dataset' and 'filepaths'
-    The keys of both dictionaries are the dataset's slice number/RT modality. The values of the read_data_dict are
-    PyDicom Dataset objects, and the values of the file_names_dict are filepaths pointing to the location of the .dcm
-    file on the user's computer.
+    This function generates two dictionaries: the dictionary of PyDicom
+    datasets, and the dictionary of filepaths. These two dictionaries
+    are used in the PatientDictContainer model as the class attributes:
+    'dataset' and 'filepaths' The keys of both dictionaries are the
+    dataset's slice number/RT modality. The values of the read_data_dict
+    are PyDicom Dataset objects, and the values of the file_names_dict
+    are filepaths pointing to the location of the .dcm file on the
+    user's computer.
     :param filepath_list: List of all files to be searched.
     :return: Tuple (read_data_dict, file_names_dict)
     """
@@ -85,6 +97,7 @@ def get_datasets(filepath_list):
     file_names_dict = {}
 
     slice_count = 0
+    sr_count = 0
     for file in natural_sort(filepath_list):
         try:
             read_file = dcmread(file)
@@ -97,27 +110,46 @@ def get_datasets(filepath_list):
                     slice_name = slice_count
                     slice_count += 1
                 else:
-                    slice_name = allowed_class["name"]
+                    # Read from Series Description to determine what is
+                    # stored in the SR file.
+                    if allowed_class["name"] == "sr":
+                        if read_file.SeriesDescription == "CLINICAL-DATA":
+                            slice_name = "sr-cd"
+                        elif read_file.SeriesDescription == "PYRADIOMICS":
+                            slice_name = "sr-rad"
+                        else:
+                            slice_name = "sr-other-" + str(sr_count)
+                            sr_count += 1
+                    else:
+                        slice_name = allowed_class["name"]
 
-                read_data_dict[slice_name] = read_file
-                file_names_dict[slice_name] = file
+                if file_type is None or read_file.Modality == file_type:
+                    read_data_dict[slice_name] = read_file
+                    file_names_dict[slice_name] = file
             else:
                 raise NotAllowedClassError
 
-    sorted_read_data_dict, sorted_file_names_dict = image_stack_sort(read_data_dict, file_names_dict)
+    sorted_read_data_dict, sorted_file_names_dict = \
+        image_stack_sort(read_data_dict, file_names_dict)
 
     return sorted_read_data_dict, sorted_file_names_dict
 
 
 def img_stack_displacement(orientation, position):
     """
-    Calculate the projection of the image position patient along the axis perpendicular to the images themselves,
-    i.e. along the stack axis. Intended use is for the sorting key to sort a stack of image datasets so that they are in
-    order, regardless of whether the images are axial, coronal, or sagittal, and independent from the order in which the
-    images were read in.
-    :param orientation: List of strings with six elements, the image orientation patient value from the dataset.
-    :param position: List of strings with three elements, the image position value from the dataset.
-    :return: Float of the image position patient along the image stack axis.
+    Calculate the projection of the image position patient along the
+    axis perpendicular to the images themselves, i.e. along the stack
+    axis. Intended use is for the sorting key to sort a stack of image
+    datasets so that they are in order, regardless of whether the images
+    are axial, coronal, or sagittal, and independent from the order in
+    which the images were read in.
+
+    :param orientation: List of strings with six elements, the image
+        orientation patient value from the dataset.
+    :param position: List of strings with three elements, the image
+    position value from the dataset.
+    :return: Float of the image position patient along the image stack
+        axis.
     """
     ds_orient_x = orientation[0:3]
     ds_orient_y = orientation[3:6]
@@ -132,8 +164,10 @@ def img_stack_displacement(orientation, position):
 
 def get_dict_sort_on_displacement(item):
     """
-    :param item: dictionary key, value item with value of a PyDicom dataset
-    :return: Float of the projection of the image position patient on the axis through the image stack
+    :param item: dictionary key, value item with value of a PyDicom
+        dataset
+    :return: Float of the projection of the image position patient on
+        the axis through the image stack
     """
     img_dataset = item[1]
     orientation = img_dataset.ImageOrientationPatient
@@ -145,17 +179,27 @@ def get_dict_sort_on_displacement(item):
 
 def image_stack_sort(read_data_dict, file_names_dict):
     """
-    Sort the read_data_dict and file_names_dict by order of displacement along the image stack axis.
-    For axial images this is by the Z coordinate.
+    Sort the read_data_dict and file_names_dict by order of displacement
+    along the image stack axis. For axial images this is by the Z
+    coordinate.
     :return: Tuple of sorted dictionaries
     """
-    new_image_dict = {key: value for (key, value) in read_data_dict.items() if str(key).isnumeric()}
-    new_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if str(key).isnumeric()}
-    new_non_image_dict = {key: value for (key, value) in read_data_dict.items() if not str(key).isnumeric()}
-    new_non_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if not str(key).isnumeric()}
+    new_image_dict = {key: value for (key, value)
+                      in read_data_dict.items()
+                      if str(key).isnumeric()}
+    new_image_file_names_dict = {key: value for (key, value)
+                                 in file_names_dict.items()
+                                 if str(key).isnumeric()}
+    new_non_image_dict = {key: value for (key, value)
+                          in read_data_dict.items()
+                          if not str(key).isnumeric()}
+    new_non_image_file_names_dict = {key: value for (key, value)
+                                     in file_names_dict.items()
+                                     if not str(key).isnumeric()}
 
     new_items = new_image_dict.items()
-    sorted_dict_on_displacement = sorted(new_items, key=get_dict_sort_on_displacement, reverse=True)
+    sorted_dict_on_displacement = sorted(
+        new_items, key=get_dict_sort_on_displacement, reverse=True)
 
     new_read_data_dict = {}
     new_file_names_dict = {}
@@ -175,9 +219,11 @@ def image_stack_sort(read_data_dict, file_names_dict):
 
 def is_dataset_dicom_rt(read_data_dict):
     """
-    Tests if a read_data_dict produced by get_datasets(..) is a DICOM-RT set.
+    Tests if a read_data_dict produced by get_datasets(..) is a DICOM-RT
+    set.
     :param read_data_dict: Dictionary of DICOM dataset objects.
-    :return:  True if read_data_dict can be considered a complete DICOM-RT object.
+    :return:  True if read_data_dict can be considered a complete
+        DICOM-RT object.
     """
     class_names = []
 
@@ -195,9 +241,12 @@ def natural_sort(strings):
     :param strings:   List of strings.
     :return: Sorted list of strings.
     """
-    def convert(text): return int(text) if text.isdigit() else text.lower()
 
-    def alphanum_key(key): return [convert(c) for c in re.split('([0-9]+)', key)]
+    def convert(text):
+        return int(text) if text.isdigit() else text.lower()
+
+    def alphanum_key(key):
+        return [convert(c) for c in re.split('([0-9]+)', key)]
 
     return sorted(strings, key=alphanum_key)
 
@@ -220,27 +269,32 @@ def get_roi_info(dataset_rtss):
 
 def get_thickness_dict(dataset_rtss, read_data_dict):
     """
-    Calculates and returns thicknesses for all ROIs in the RTSTRUCT that only contain one contour.
+    Calculates and returns thicknesses for all ROIs in the RTSTRUCT that
+    only contain one contour.
     The process used to calculate thickness is courtesy of @sjswerdloff
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param read_data_dict:
-    :return: Dictionary of ROI thicknesses where the key is the ROI number and the value is the thickness.
+    :return: Dictionary of ROI thicknesses where the key is the ROI
+        number and the value is the thickness.
     """
-    # Generate a dict where keys are ROI numbers for structures with only one contour.
-    # Value of each key is the SOPInstanceUID of the CT slice the contour is positioned on.
+    # Generate a dict where keys are ROI numbers for structures with
+    # only one contour. Value of each key is the SOPInstanceUID of the
+    # CT slice the contour is positioned on.
     single_contour_rois = {}
     for contour in dataset_rtss.ROIContourSequence:
         try:
-            if len(contour.ContourSequence) == 1:        
+            if len(contour.ContourSequence) == 1:
                 single_contour_rois[contour.ReferencedROINumber] = \
-                    contour.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
-            
+                    contour.ContourSequence[0].ContourImageSequence[0]. \
+                    ReferencedSOPInstanceUID
+
         except AttributeError:
             pass
 
     dict_thickness = {}
     for roi_number, sop_instance_uid in single_contour_rois.items():
-        # Get the slice numbers the slices before and after the slice the ROI is positioned on.
+        # Get the slice numbers the slices before and after the slice
+        # the ROI is positioned on.
         slice_key = None
         for key, ds in read_data_dict.items():
             if ds.SOPInstanceUID == sop_instance_uid:
@@ -248,23 +302,34 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
 
         # Get the Image Position (Patient) from the two slices.
         try:
-            position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
-            position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+            position_before = np.array(
+                read_data_dict[slice_key - 1].ImagePositionPatient)
+            position_after = np.array(
+                read_data_dict[slice_key + 1].ImagePositionPatient)
 
             # Calculate displacement between slices
             displacement = position_after - position_before
 
         except KeyError:
-            # If the image slice is either at the top of bottom of the set, use the length of the displacement to the
-            # adjacent slice as the thickness.
-            if slice_key == 1:  # If the image slice is at the bottom of the set.
-                position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
-                position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+            # If the image slice is either at the top or bottom of the
+            # set, use the length of the displacement to the adjacent
+            # slice as the thickness.
+
+            # If the image slice is at the bottom of set.
+            if slice_key == 1:
+                position_current = np.array(
+                    read_data_dict[slice_key].ImagePositionPatient)
+                position_after = np.array(
+                    read_data_dict[slice_key + 1].ImagePositionPatient)
                 displacement = position_after - position_current
-            else:
-                position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
-                position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
+            elif slice_key > 0:
+                position_current = np.array(
+                    read_data_dict[slice_key].ImagePositionPatient)
+                position_before = np.array(
+                    read_data_dict[slice_key - 1].ImagePositionPatient)
                 displacement = position_current - position_before
+            else:
+                continue
 
         # Finally, calculate thickness.
         thickness = math.sqrt(displacement[0] * displacement[0]
@@ -276,13 +341,16 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
     return dict_thickness
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None):
+def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness,
+              interrupt_flag, dose_limit=None):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
     :param rois: Dictionary of ROI information.
-    :param dict_thickness: Dictionary where the keys are ROI numbers and the values are thicknesses of the ROI.
-    :param interrupt_flag: A threading.Event() object that tells the function to stop calculation.
+    :param dict_thickness: Dictionary where the keys are ROI numbers and
+        the values are thicknesses of the ROI.
+    :param interrupt_flag: A threading.Event() object that tells the
+        function to stop calculation.
     :param dose_limit: Limit of dose for DVH calculation.
     :return: Dictionary of all the DVHs of all the ROIs of the patient.
     """
@@ -295,7 +363,8 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag
         thickness = None
         if roi in dict_thickness:
             thickness = dict_thickness[roi]
-        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit, thickness=thickness)
+        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi,
+                                        dose_limit, thickness=thickness)
         if interrupt_flag.is_set():  # Stop calculating at the next DVH.
             return
 
@@ -304,11 +373,13 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag
 
 def calc_dvh_worker(rtss, dose, roi, queue, thickness, dose_limit=None):
     dvh = {}
-    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit, thickness=thickness)
+    dvh[roi] = \
+        dvhcalc.get_dvh(rtss, dose, roi, dose_limit, thickness=thickness)
     queue.put(dvh)
 
 
-def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limit=None):
+def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness,
+                   dose_limit=None):
     """
     Multiprocessing variant of calc_dvh for fork-based platforms.
     """
@@ -324,8 +395,9 @@ def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limi
         thickness = None
         if roi_list[i] in dict_thickness:
             thickness = dict_thickness[roi_list[i]]
-        p = Process(target=calc_dvh_worker, args=(dataset_rtss, dataset_rtdose, roi_list[i],
-                                                  queue, thickness, dose_limit,))
+        p = Process(target=calc_dvh_worker,
+                    args=(dataset_rtss, dataset_rtdose, roi_list[i],
+                          queue, thickness, dose_limit,))
         processes.append(p)
         p.start()
 
@@ -381,7 +453,8 @@ def converge_to_0_dvh(raw_dvh):
 def get_raw_contour_data(dataset_rtss):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
-    :return: Tuple (dict_roi, dict_numpoints) raw contour data of the ROIs.
+    :return: Tuple (dict_roi, dict_numpoints) raw contour data of the
+        ROIs.
     """
     dict_id = {}
     for i, elem in enumerate(dataset_rtss.StructureSetROISequence):
@@ -392,32 +465,36 @@ def get_raw_contour_data(dataset_rtss):
     dict_roi = {}
     dict_numpoints = {}
     for roi in dataset_rtss.ROIContourSequence:
-        ReferencedROINumber = roi.ReferencedROINumber
-        ROIName = dict_id[ReferencedROINumber]
+        referenced_roi_number = roi.ReferencedROINumber
+        roi_name = dict_id[referenced_roi_number]
         dict_contour = collections.defaultdict(list)
         roi_points_count = 0
         if 'ContourSequence' in roi:
-            for slice in roi.ContourSequence:
-                if 'ContourImageSequence' in slice:
-                    for contour_img in slice.ContourImageSequence:
-                        ReferencedSOPInstanceUID = contour_img.ReferencedSOPInstanceUID
-                    ContourGeometricType = slice.ContourGeometricType
-                    NumberOfContourPoints = slice.NumberOfContourPoints
-                    roi_points_count += int(NumberOfContourPoints)
-                    ContourData = slice.ContourData
-                    dict_contour[ReferencedSOPInstanceUID].append(ContourData)
-        dict_roi[ROIName] = dict_contour
-        dict_numpoints[ROIName] = roi_points_count
+            for roi_slice in roi.ContourSequence:
+                if 'ContourImageSequence' in roi_slice:
+                    for contour_img in roi_slice.ContourImageSequence:
+                        referenced_sop_instance_uid = \
+                            contour_img.ReferencedSOPInstanceUID
+                    contour_geometric_type = roi_slice.ContourGeometricType
+                    number_of_contour_points = roi_slice.NumberOfContourPoints
+                    roi_points_count += int(number_of_contour_points)
+                    contour_data = roi_slice.ContourData
+                    dict_contour[
+                        referenced_sop_instance_uid].append(contour_data)
+        dict_roi[roi_name] = dict_contour
+        dict_numpoints[roi_name] = roi_points_count
 
     return dict_roi, dict_numpoints
 
 
 def calculate_matrix(img_ds):
-    # Physical distance (in mm) between the center of each image pixel, specified by a numeric pair
+    # Physical distance (in mm) between the center of each image pixel,
+    # specified by a numeric pair
     # - adjacent row spacing (delimiter) adjacent column spacing.
     dist_row = img_ds.PixelSpacing[0]
     dist_col = img_ds.PixelSpacing[1]
-    # The direction cosines of the first row and the first column with respect to the patient.
+    # The direction cosines of the first row and the first column
+    # with respect to the patient.
     # 6 values inside: [Xx, Xy, Xz, Yx, Yy, Yz]
     orientation = img_ds.ImageOrientationPatient
     # The x, y, and z coordinates of the upper left hand corner
@@ -427,20 +504,23 @@ def calculate_matrix(img_ds):
 
     # Equation C.7.6.2.1-1.
     # https://dicom.innolitics.com/ciods/rt-structure-set/roi-contour/30060039/30060040/30060050
-    matrix_M = np.matrix(
-        [[orientation[0] * dist_row, orientation[3] * dist_col, 0, position[0]],
-         [orientation[1] * dist_row, orientation[4] * dist_col, 0, position[1]],
-         [orientation[2] * dist_row, orientation[5] * dist_col, 0, position[2]],
+    matrix_m = np.matrix(
+        [[orientation[0] * dist_row, orientation[3] * dist_col, 0,
+          position[0]],
+         [orientation[1] * dist_row, orientation[4] * dist_col, 0,
+          position[1]],
+         [orientation[2] * dist_row, orientation[5] * dist_col, 0,
+          position[2]],
          [0, 0, 0, 1]]
     )
     x = []
     y = []
     for i in range(0, img_ds.Columns):
-        i_mat = matrix_M * np.matrix([[i], [0], [0], [1]])
+        i_mat = matrix_m * np.matrix([[i], [0], [0], [1]])
         x.append(float(i_mat[0]))
 
     for j in range(0, img_ds.Rows):
-        j_mat = matrix_M * np.matrix([[0], [j], [0], [1]])
+        j_mat = matrix_m * np.matrix([[0], [j], [0], [1]])
         y.append(float(j_mat[1]))
 
     return np.array(x), np.array(y)
@@ -455,8 +535,35 @@ def get_pixluts(read_data_dict):
     non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
     for ds in read_data_dict:
         if ds not in non_img_type:
-            img_ds = read_data_dict[ds]
-            pixlut = calculate_matrix(img_ds)
-            dict_pixluts[img_ds.SOPInstanceUID] = pixlut
+            if isinstance(ds, str) and ds[0:3] == 'sr-':
+                continue
+            else:
+                img_ds = read_data_dict[ds]
+                pixlut = calculate_matrix(img_ds)
+                dict_pixluts[img_ds.SOPInstanceUID] = pixlut
 
     return dict_pixluts
+
+
+def get_image_uid_list(dataset):
+    """
+    Extract the SOPInstanceUIDs from every image dataset
+    :param dataset: A dictionary of datasets of all the DICOM files of
+        the patient
+    :return: uid_list, a list of SOPInstanceUIDs of all image slices of
+        the patient
+    """
+    non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
+    uid_list = []
+
+    # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE,
+    # RTPLAN)
+    for key in dataset:
+        if key not in non_img_list:
+            if isinstance(key, str):
+                if key[0:3] != 'sr-':
+                    uid_list.append(dataset[key].SOPInstanceUID)
+            else:
+                uid_list.append(dataset[key].SOPInstanceUID)
+
+    return uid_list

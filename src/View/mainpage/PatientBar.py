@@ -1,8 +1,9 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QHBoxLayout, QWidget, QLabel, QSizePolicy
+from PySide6 import QtWidgets, QtGui
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.PathHandler import resource_path
+
 
 class PatientBar(QtWidgets.QWidget):
     def __init__(self):
@@ -21,7 +22,7 @@ class PatientBar(QtWidgets.QWidget):
         self.patient_bar_icon = QLabel()
         self.patient_bar_icon.setObjectName("PatientBarIcon")
         self.patient_bar_icon.setText("")
-        self.patient_bar_icon.setPixmap(QtGui.QPixmap(resource_path("src/res/images/btn-icons/patient.png")))
+        self.patient_bar_icon.setPixmap(QtGui.QPixmap(resource_path("res/images/btn-icons/patient.png")))
 
         # Create patient name
         self.patient_bar_name_info = QLabel()

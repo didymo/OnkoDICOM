@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -9,7 +9,7 @@ class DicomTreeView(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.patient_dict_container = PatientDictContainer()
-        self.pixmaps = self.patient_dict_container.get("pixmaps")
+        self.pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         self.dicom_tree_layout = QtWidgets.QVBoxLayout()
         self.dicom_tree_layout.setContentsMargins(0, 0, 0, 0)
@@ -22,7 +22,8 @@ class DicomTreeView(QtWidgets.QWidget):
         self.tree_view.setModel(self.model_tree)
         self.init_parameters_tree()
 
-        self.dicom_tree_layout.addWidget(self.selector, QtCore.Qt.AlignLeft)
+        self.dicom_tree_layout.addWidget(
+            self.selector, QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         self.dicom_tree_layout.addWidget(self.tree_view)
         self.setLayout(self.dicom_tree_layout)
 
@@ -40,7 +41,8 @@ class DicomTreeView(QtWidgets.QWidget):
         self.tree_view.header().resizeSection(3, 50)
         self.tree_view.header().resizeSection(4, 50)
         self.tree_view.header().setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
-        self.tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tree_view.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers | QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tree_view.setAlternatingRowColors(True)
         self.tree_view.expandAll()
 
@@ -49,16 +51,29 @@ class DicomTreeView(QtWidgets.QWidget):
         combobox.setFocusPolicy(QtCore.Qt.NoFocus)
         combobox.addItem("Select a DICOM dataset...")
 
-        if self.patient_dict_container.has_modality("rtss"):
-            combobox.addItem("RT Structure Set")
+        # determines which files are included
+        self.special_files = []
+
+        combobox.addItem("RT Structure Set")
+        self.special_files.append("rtss")
 
         if self.patient_dict_container.has_modality("rtdose"):
             combobox.addItem("RT Dose")
+            self.special_files.append("rtdose")
 
         if self.patient_dict_container.has_modality("rtplan"):
             combobox.addItem("RT Plan")
+            self.special_files.append("rtplan")
 
-        for i in range(len(self.pixmaps) - 1):
+        if self.patient_dict_container.has_modality("sr-cd"):
+            combobox.addItem("Clinical Data SR")
+            self.special_files.append("sr-cd")
+
+        if self.patient_dict_container.has_modality("sr-rad"):
+            combobox.addItem("Pyradiomics SR")
+            self.special_files.append("sr-rad")
+
+        for i in range(len(self.pixmaps)):
             combobox.addItem("Image Slice " + str(i + 1))
 
         combobox.activated.connect(self.item_selected)
@@ -67,14 +82,10 @@ class DicomTreeView(QtWidgets.QWidget):
         return combobox
 
     def item_selected(self, index):
-        if index == 1:  # RTSS
-            self.update_tree(False, 0, "rtss")
-        elif index == 2:  # RT Dose
-            self.update_tree(False, 0, "rtdose")
-        elif index == 3:  # RT Plan
-            self.update_tree(False, 0, "rtplan")
-        elif index > 3:
-            self.update_tree(True, index - 4, "")
+        if index <= len(self.special_files) and index != 0:
+            self.update_tree(False, 0, self.special_files[index-1])
+        elif index > len(self.special_files):
+            self.update_tree(True, index - len(self.special_files) - 1, "")
 
     def update_tree(self, image_slice, id, name):
         """
@@ -92,13 +103,22 @@ class DicomTreeView(QtWidgets.QWidget):
             dict_tree = dicom_tree_slice.dict
 
         elif name == "rtdose":
-            dict_tree = self.patient_dict_container.get("dict_dicom_tree_rtdose")
+            dict_tree = self.patient_dict_container.get(
+                "dict_dicom_tree_rtdose")
 
         elif name == "rtss":
             dict_tree = self.patient_dict_container.get("dict_dicom_tree_rtss")
 
         elif name == "rtplan":
-            dict_tree = self.patient_dict_container.get("dict_dicom_tree_rtplan")
+            dict_tree = self.patient_dict_container.get(
+                "dict_dicom_tree_rtplan")
+
+        elif name == "sr-cd":
+            dict_tree = self.patient_dict_container.get("dict_dicom_tree_sr_cd")
+
+        elif name == "sr-rad":
+            dict_tree = \
+                self.patient_dict_container.get("dict_dicom_tree_sr_pyrad")
 
         else:
             dict_tree = None

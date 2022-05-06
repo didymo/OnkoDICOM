@@ -39,7 +39,7 @@ App = BUNDLE(exe,
                upx=True,
                upx_exclude=[],
                name='OnkoDICOM.app',
-		          icon='src/res/images/icon.icns',
+		          icon='res/images/icon.icns',
 		          bundle_identifier=None,
     		      info_plist={
                 'NSPrincipalClass': 'NSApplication',

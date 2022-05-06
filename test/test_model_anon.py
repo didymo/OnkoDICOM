@@ -4,13 +4,10 @@ Created on Fri Aug  21 12:33:04 2020
 @author: sjswerdloff
 """
 
-import logging
 import os
 import pathlib
 import tempfile
-
 import pytest
-from pydicom import dataset
 
 from src.Model.Anon import (
     _check_identity_mapping_file_exists,
@@ -40,8 +37,6 @@ def test_check_specific_csv_file_exists():
         with tempfile.TemporaryDirectory() as tmpdir:
             test_path = pathlib.Path()
             test_path = test_path.joinpath(tmpdir)
-            # csv_path = pathlib.Path.joinpath(test_path, "csv")
-            # pathlib.os.mkdir(csv_path)
             os.chdir(test_path)
             csv_filename = "patientHash.csv"
             was_file_present, full_path_to_file = _check_identity_mapping_file_exists(
@@ -49,7 +44,7 @@ def test_check_specific_csv_file_exists():
             )
             assert not was_file_present
             assert not os.path.exists(full_path_to_file)
-            expected_path = test_path.joinpath("src", "data", "csv", csv_filename)
+            expected_path = test_path.joinpath("data", "csv", csv_filename)
             specified_path = pathlib.Path().joinpath(full_path_to_file)
             assert expected_path == specified_path
             os.makedirs(os.path.dirname(specified_path))
@@ -60,7 +55,7 @@ def test_check_specific_csv_file_exists():
             )
             assert was_file_present
             assert os.path.exists(full_path_to_file)
-
+            os.chdir(orig_cwd_path)
     finally:
         os.chdir(orig_cwd_path)
 
@@ -86,7 +81,7 @@ def test_create_hash_csv():
             # print(str(e_info))
 
             csv_filename = "patientHash.csv"
-            expected_path = test_path.joinpath("src", "data", "csv", csv_filename)
+            expected_path = test_path.joinpath("data", "csv", csv_filename)
             # the _create_reidentification_spreadsheet() will fail unless the path is already in place
             # it will not create the directories on its own.
             # so... create the directory in advance for the csv file
@@ -116,7 +111,9 @@ def test_create_hash_csv():
             )
             f = open(expected_path, mode="r")
             lines = f.readlines()
+            f.close()
             # attempt to add a duplicate row does not result in an additional row
             assert 3 == len(lines)
+            os.chdir(orig_cwd_path)
     finally:
         os.chdir(orig_cwd_path)
