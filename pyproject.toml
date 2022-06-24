@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "onkodicom"
+version = "0.1.0"
+description = ""
+authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
+license = "LGPL"
+
+[tool.poetry.dependencies]
+python =  ">=3.6,<3.10" 
+cython = { version = "*", optional = true }  # groups = ["user", "dev"]
+numpy = { version = "^1.21.0", optional = true }
+platipy = { version = "*", optional = true }  # groups = ["user", "dev"]
+alphashape = { version = "*", optional = true }  # groups = ["user", "dev"]
+pandas = { version = "*", optional = true }  # groups = ["user", "dev"]
+scikit-build = { version = "*", optional = true }  # groups = ["user", "dev"]
+scipy = { version = "*", optional = true }  # groups = ["user", "dev"]
+dicompyler-core = { version = "*", optional = true }  # groups = ["user", "dev"]
+pydicom = { version = "*", optional = true }  # groups = ["user", "dev"]
+country-list = { version = "*", optional = true }  # groups = ["user", "dev"]
+scikit-image = { version = "*", optional = true }  # groups = ["user", "dev"]
+fuzzywuzzy = { version = "*", optional = true }  # groups = ["user", "dev"]
+PyWavelets = { version = "^1.1.1", optional = true }
+dataclasses = { version = "^0.7", python = "~3.6" }
+networkx = { version = "*", optional = true }  # groups = ["user", "dev"]
+pymedphys =  { version = ">=0.35,<=0.37.1", optional = true }  # groups = ["user", "dev"]
+pyradiomics = { git = "https://github.com/Radiomics/pyradiomics.git" }
+pytest-qt = { version = ">=4.0.2", optional = true }  # groups = ["user", "dev"]
+pytest = { version = "6.1.2", optional = true }  # groups = ["user", "dev"]
+pyside6 = { version = "6.1.2", optional = true }  # groups = ["user", "dev"]
+vtk = { version = "*", optional = true }  # groups = ["user", "dev"] 
+matplotlib = { git = "https://github.com/matplotlib/matplotlib.git" }
+shapely = { version = "1.8a3", optional = true }  # groups = ["user", "dev"]
+python-Levenshtein = { version = "*", optional = true }  # groups = ["user", "dev"]
+opencv-python = { version = "<=4.5.3.56", optional = true }  # groups = ["user", "dev"]
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+ 
