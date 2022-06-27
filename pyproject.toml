@@ -36,8 +36,6 @@ pyradiomics = { version = "*", optional = false }  # groups = ["user", "dev"]
 
 [tool.poetry.dev-dependencies]
 
-[tool.poetry.scripts]
-onko ="onkodicom.main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
