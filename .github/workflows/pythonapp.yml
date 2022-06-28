@@ -63,4 +63,4 @@ jobs:
     - name: Testing and Coverage with pytest
       run: |
         # Append this for fail under x percent "--cov-fail-under=80"
-        python -m pytest "test/" -v --durations=0 --cov-config=.coveragerc --cov-report term-missing --cov=.
+        python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=.
