@@ -11,12 +11,12 @@ PyWavelets==1.1.1
 dataclasses==0.7;python_version=="3.6.*"
 networkx
 pymedphys>=0.35,<=0.37.1
-git+https://github.com/Radiomics/pyradiomics.git
+pyradiomics
 pytest-qt>=4.0.2
 pytest
 pyside6==6.1.2
 vtk
-git+https://github.com/matplotlib/matplotlib.git
+matplotlib
 shapely==1.8a3
 python-Levenshtein
 opencv-python<=4.5.3.56
