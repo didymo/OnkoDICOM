@@ -28,7 +28,6 @@ jobs:
         pip install -r pre-requirements.txt
         pip install -r requirements.txt
         pip install -r dev-requirements.txt
-        pip install pytest-xvfb pytest-cov
 
     - name: Linting setup
       run: |
@@ -43,6 +42,7 @@ jobs:
 
     - name: Testing setup
       run: |
+        pip install pytest-xvfb pytest-cov
         sudo apt-get update
         sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
         # install test data
