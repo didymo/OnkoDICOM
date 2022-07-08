@@ -1,5 +1,5 @@
+from src import dicom_constants
 from PySide6.QtCore import Qt
-
 from src.Model.DICOMWidgetItem import DICOMWidgetItem
 
 
@@ -60,6 +60,7 @@ class DICOMStructure:
 
 
 class Patient:
+    """Holds id, name and studies relating to patient"""
 
     def __init__(self, patient_id, patient_name):
         """
@@ -108,7 +109,7 @@ class Patient:
         """
         :return: Information about the object as a string
         """
-        return "Patient: %s (%s)" % (self.patient_name, self.patient_id)
+        return f"Patient: {self.patient_name} ({self.patient_id})"
 
     def get_widget_item(self):
         """
@@ -123,6 +124,7 @@ class Patient:
 
 
 class Study:
+    """Holds data relating to a DICOM study for a patient, including a series of images"""
 
     def __init__(self, study_uid):
         """
@@ -195,26 +197,27 @@ class Study:
         """
         :return: Information about the object as a string
         """
-        return "Study: %s (DICOM-RT: %s)" % (
-            self.study_description, "Y" if self.is_dicom_rt() else "N")
+        return f"Study: {self.study_description} (DICOM-RT: {'Y' if self.is_dicom_rt() else 'N'})"
 
     def is_dicom_rt(self):
         """
         :return: True if study can be considered DICOM-RT
         """
-        rt_classes = ["1.2.840.10008.5.1.4.1.1.2",          # CT Image
-                      "1.2.840.10008.5.1.4.1.1.481.3",      # RT Structure Set
-                      "1.2.840.10008.5.1.4.1.1.481.2",      # RT Dose
-                      "1.2.840.10008.5.1.4.1.1.481.5"]      # RT Plan
 
-        contained_classes = []
+        rt_classes = {
+            dicom_constants.CT_IMAGE,
+            dicom_constants.RT_STRUCTURE_SET,
+            dicom_constants.RT_DOSE,
+            dicom_constants.RT_PLAN
+        }
+
+        contained_classes = set()
         for series_type, series in self.series.items():
             for series_uid, image_series in series.items():
                 for image_uid, image in image_series.images.items():
-                    if image.class_id not in contained_classes:
-                        contained_classes.append(image.class_id)
+                    contained_classes.add(image.class_id)
 
-        return sorted(rt_classes) == sorted(contained_classes)
+        return rt_classes == contained_classes
 
     def get_widget_item(self):
         """
@@ -246,8 +249,8 @@ class Study:
         """ Add a DICOMWidgetItem of a RTSTRUCT """
         ref_image_series_uid = rtstruct.ref_image_series_uid
         rtstruct_instance_uid = rtstruct.get_instance_uid()
-        self.rtstruct_widgets[rtstruct_instance_uid] = \
-            rtstruct.get_widget_item()
+        self.rtstruct_widgets[rtstruct_instance_uid] = rtstruct.get_widget_item()
+
         # Check if the referenced image series exists in the dataset
         if ref_image_series_uid != "" and \
                 ref_image_series_uid in self.image_series_widgets:
@@ -269,7 +272,7 @@ class Study:
             for series_uid, rtstruct in self.rtstructs.items():
                 rtstruct_instance_uid = rtstruct.get_instance_uid()
                 if ref_rtstruct_instance_uid == rtstruct_instance_uid:
-                    self.rtstruct_widgets[rtstruct_instance_uid].\
+                    self.rtstruct_widgets[rtstruct_instance_uid]. \
                         addChild(self.rtplan_widgets[rtplan_instance_uid])
                     return
 
@@ -355,12 +358,12 @@ class Study:
         :param modality: modality of the empty object
         :return: DICOMWidgetItem to be used in a QTreeWidget.
         """
-        widget_item = DICOMWidgetItem("No matched " + modality + " was found.",
-                                      None)
+        widget_item = DICOMWidgetItem(f"No matched {modality} was found.", None)
         return widget_item
 
 
 class Series:
+    """Holds a set of images within an individual series within a DICOM study"""
 
     def __init__(self, series_uid):
         """
@@ -380,6 +383,7 @@ class Series:
         self.images[image.image_uid] = image
 
     def add_referenced_objects(self, dicom_file):
+        """Adds referenced dicom file objects to Series"""
         if "FrameOfReferenceUID" in dicom_file:
             self.frame_of_reference_uid = dicom_file.FrameOfReferenceUID
         if dicom_file.Modality == "RTSTRUCT":
@@ -390,10 +394,12 @@ class Series:
             self.add_referenced_rtstruct(dicom_file)
             self.add_referenced_rtplan(dicom_file)
         elif dicom_file.Modality == "SR":
+            # TODO what does this line do PEDRO?
             self.referenced_frame_of_reference_uid = \
                 dicom_file.ReferencedFrameOfReferenceUID
 
     def add_referenced_image_series(self, dicom_file):
+        """adds referenced images to series """
         if "ReferencedFrameOfReferenceSequence" in dicom_file:
             ref_frame = dicom_file.ReferencedFrameOfReferenceSequence
             if "RTReferencedStudySequence" in ref_frame[0]:
@@ -408,6 +414,7 @@ class Series:
             self.ref_image_series_uid = ''
 
     def add_referenced_rtstruct(self, dicom_file):
+        """adds referenced rtstruct to series"""
         if "ReferencedStructureSetSequence" in dicom_file:
             self.ref_rtstruct_instance_uid = \
                 dicom_file.ReferencedStructureSetSequence[
@@ -416,6 +423,7 @@ class Series:
             self.ref_rtstruct_instance_uid = ''
 
     def add_referenced_rtplan(self, dicom_file):
+        """adds referenced rtplan to series"""
         if "ReferencedRTPlanSequence" in dicom_file:
             self.ref_rtplan_instance_uid = \
                 dicom_file.ReferencedRTPlanSequence[
@@ -454,19 +462,18 @@ class Series:
         """
         :return: Information about the object as a string
         """
-        return "Series: %s (%s, %s images)" % (
-            self.series_description, self.get_series_type(), len(self.images))
+        return f"Series: {self.series_description} " \
+               f"({self.get_series_type()}, {len(self.images)} images)"
 
     def get_series_type(self):
         """
         :return: List of string or single string containing modalities of all
         images in the series.
         """
-        series_types = []
+        series_types = set()
         for image_uid, image in self.images.items():
-            if image.modality not in series_types:
-                series_types.append(image.modality)
-        return series_types if len(series_types) > 1 else series_types[0]
+            series_types.add(image.modality)
+        return series_types if len(series_types) > 1 else series_types.pop()
 
     def get_instance_uid(self):
         """
@@ -476,7 +483,7 @@ class Series:
         instance_uid = []
         for image_instance_uid, image in self.images.items():
             instance_uid.append(image_instance_uid)
-        return instance_uid if len(instance_uid) > 1 else instance_uid[0]
+        return instance_uid if len(instance_uid) > 1 else instance_uid.pop()
 
     def get_widget_item(self):
         """
@@ -489,6 +496,7 @@ class Series:
 
 
 class Image:
+    """Holds an instance of an image found within a Series"""
 
     def __init__(self, path, image_uid, class_id, modality):
         """
@@ -504,4 +512,4 @@ class Image:
         """
         :return: Information about the object as a string
         """
-        return "Image: %s | Path: %s" % (self.image_uid, self.path)
+        return f"Image: {self.image_uid} | Path: {self.path}"

@@ -1,3 +1,4 @@
+"""Contains DICOM Structure widget object to be displayed"""
 from PySide6.QtWidgets import QTreeWidgetItem
 
 
