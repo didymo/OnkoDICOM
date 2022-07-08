@@ -17,7 +17,8 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
-from src.Model.DICOM.Structure.DICOMStructure import Image, Series
+from src.Model.DICOM.Structure.DICOMSeries import Series
+from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow

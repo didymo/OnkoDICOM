@@ -7,8 +7,11 @@ import os
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
-from src.Model.DICOM.Structure.DICOMStructure import DICOMStructure, Patient, Study, \
-    Series, Image
+from src.Model.DICOM.Structure.DICOMStructure import DICOMStructure
+from src.Model.DICOM.Structure.DICOMPatient import Patient
+from src.Model.DICOM.Structure.DICOMStudy import Study
+from src.Model.DICOM.Structure.DICOMSeries import Series
+from src.Model.DICOM.Structure.DICOMImage import Image
 
 
 def get_dicom_structure(path, interrupt_flag, progress_callback):

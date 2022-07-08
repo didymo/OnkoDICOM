@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 
 from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, \
     ROIManipulateOption
-from src.Model.DICOM.Structure.DICOMStructure import Series
+from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2rtdose
 from src.Model.GetPatientInfo import DicomTree
