@@ -1,6 +1,6 @@
 from src import dicom_constants
 from PySide6.QtCore import Qt
-from src.Model.DICOMWidgetItem import DICOMWidgetItem
+from src.Model.DICOM.DICOMWidgetItem import DICOMWidgetItem
 
 
 class DICOMStructure:

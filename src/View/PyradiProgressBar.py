@@ -12,7 +12,7 @@ from pathlib import Path
 from PySide6 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
-from src.Model import DICOMStructuredReport
+from src.Model.DICOM import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
 
 

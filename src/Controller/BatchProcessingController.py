@@ -1,7 +1,7 @@
 import datetime
 import threading
 from PySide6.QtCore import QThreadPool
-from src.Model import DICOMDirectorySearch
+from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
 from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
@@ -17,7 +17,7 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
-from src.Model.DICOMStructure import Image, Series
+from src.Model.DICOM.Structure.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow

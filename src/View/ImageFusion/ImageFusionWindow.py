@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, \
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import ImageLoading
-from src.Model import DICOMDirectorySearch
+from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
 from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow

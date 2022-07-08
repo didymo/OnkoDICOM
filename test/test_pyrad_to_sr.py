@@ -1,11 +1,5 @@
-import os
+from src.Model.DICOM import DICOMStructuredReport
 
-from pathlib import Path
-from src.Model import DICOMStructuredReport
-from src.Model import ImageLoading
-from src.Model.PatientDictContainer import PatientDictContainer
-
-import csv
 import os
 
 from pydicom import dcmread

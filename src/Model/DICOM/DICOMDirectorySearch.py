@@ -7,7 +7,7 @@ import os
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
-from src.Model.DICOMStructure import DICOMStructure, Patient, Study, \
+from src.Model.DICOM.Structure.DICOMStructure import DICOMStructure, Patient, Study, \
     Series, Image
 
 
