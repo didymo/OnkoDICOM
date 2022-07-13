@@ -1,10 +1,17 @@
+"""
+File to handle the DICOM directory search functionality
+Searches a given directory to extract a Patient>Study>Series>Image structure
+"""
 import os
 
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
-from src.Model.DICOMStructure import DICOMStructure, Patient, Study, \
-    Series, Image
+from src.Model.DICOM.Structure.DICOMStructure import DICOMStructure
+from src.Model.DICOM.Structure.DICOMPatient import Patient
+from src.Model.DICOM.Structure.DICOMStudy import Study
+from src.Model.DICOM.Structure.DICOMSeries import Series
+from src.Model.DICOM.Structure.DICOMImage import Image
 
 
 def get_dicom_structure(path, interrupt_flag, progress_callback):
@@ -41,7 +48,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
             # just the DICOM files. Otherwise, most files would be
             # skipped and the progress would be inaccurate.
             files_searched += 1
-            progress_callback.emit("%s" % files_searched)
+            progress_callback.emit(files_searched)
 
             # Fix to program crashing when encountering DICOMDIR files
             if file == "DICOMDIR":
@@ -67,8 +74,6 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                       dicom_file.SOPClassUID,
                                       dicom_file.Modality)
                     if not dicom_structure.has_patient(patient_id):
-                        # TODO there is definitely a more efficient way of
-                        #  doing this
                         new_series = Series(dicom_file.SeriesInstanceUID)
                         new_series.series_description = dicom_file.get(
                             "SeriesDescription")
@@ -125,8 +130,3 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                     existing_series.add_image(new_image)
                                     
     return dicom_structure
-
-
-if __name__ == "__main__":
-    ds = get_dicom_structure("XR.Identified")
-    print(ds.get_files())

@@ -6,8 +6,7 @@ from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
 
-from src.Model import DICOMDirectorySearch
-from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
 from src.View.OpenPatientProgressWindow import OpenPatientProgressWindow
 from src.View.resources_open_patient_rc import *
