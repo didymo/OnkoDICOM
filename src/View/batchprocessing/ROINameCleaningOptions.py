@@ -39,10 +39,6 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         roi_suggestions = self.roi_suggestions(roi_name,
                                                organ_names,
                                                volume_prefixes)
-        self.addItem(roi_suggestions[0][0])
-        self.addItem(roi_suggestions[1][0])
-        self.addItem(roi_suggestions[2][0])
-        self.insertSeparator(4)
 
         # Populate combo box options
         for organ in organ_names:
@@ -71,8 +67,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         """
 
         roi_list = organ_names + volume_prefixes
-        suggestions = process.extract(roi_name, roi_list,
-                                      limit=3)  # will get the top 3 matches
+        suggestions = process.extractOne(roi_name, roi_list)  
 
         return suggestions
 
