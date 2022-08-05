@@ -59,15 +59,15 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
 
     def roi_suggestions(self, roi_name, organ_names, volume_prefixes):
         """
-        Get the top 3 suggestions for the selected ROI based on
+        Get the top suggestion for the selected ROI based on 
         string matching with standard ROIs provided in .csv format.
 
-        :return: two dimensional list with ROI name and string match percent
-        i.e [('MANDIBLE', 100), ('SUBMAND_L', 59), ('LIVER', 51)]
+        :return: two dimensional tuple with ROI name and string match percent
+        i.e [('PROSTATE', 100)]
         """
 
         roi_list = organ_names + volume_prefixes
-        suggestions = process.extractOne(roi_name, roi_list)  
+        suggestions = process.extractOne(roi_name, roi_list)
 
         return suggestions
 
