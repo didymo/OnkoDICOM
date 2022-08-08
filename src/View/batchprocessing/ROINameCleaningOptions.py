@@ -144,7 +144,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.organ_names = []
         self.organ_names_lowercase = []
         self.volume_prefixes = []
-        self.volume_prefixes_lowercase = []
 
         self.get_standard_names()
         self.create_table_view()
@@ -169,7 +168,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.volume_prefixes.append(row[1])
-                self.volume_prefixes_lowercase.append(row[1].lower())
             f.close()
 
     def create_table_view(self):
