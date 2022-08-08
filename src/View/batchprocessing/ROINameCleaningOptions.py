@@ -36,7 +36,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         self.setObjectName("BatchROICleaning")
 
         # Get and add suggested roi names
-        roi_suggestions = self.roi_suggestions(roi_name,
+        roi_suggestion = self.roi_suggestion(roi_name,
                                                organ_names,
                                                volume_prefixes)
 
@@ -57,7 +57,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         else:
             self.setEnabled(False)
 
-    def roi_suggestions(self, roi_name, organ_names, volume_prefixes):
+    def roi_suggestion(self, roi_name, organ_names, volume_prefixes):
         """
         Get the top suggestion for the selected ROI based on 
         string matching with standard ROIs provided in .csv format.
@@ -144,6 +144,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.organ_names = []
         self.organ_names_lowercase = []
         self.volume_prefixes = []
+        self.volume_prefixes_lowercase = []
 
         self.get_standard_names()
         self.create_table_view()
@@ -168,6 +169,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.volume_prefixes.append(row[1])
+                self.volume_prefixes_lowercase.append(row[1].lower())
             f.close()
 
     def create_table_view(self):
@@ -287,57 +289,59 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Loop through each ROI
         i = 0
         for roi_name in rois:
-            # Create option combo box
-            combo_box = ROINameCleaningOptionComboBox()
-            combo_box.setStyleSheet(self.stylesheet)
+            # If it is an organ name display otherwise do not 
+            if roi_name.lower() in self.organ_names_lowercase:
+                # Create option combo box
+                combo_box = ROINameCleaningOptionComboBox()
+                combo_box.setStyleSheet(self.stylesheet)
 
-            # Create dataset combo box
-            # Get list of RTSTRUCTs
-            dataset_list = rois[roi_name]
-            if len(dataset_list) == 0:
-                continue
+                # Create dataset combo box
+                # Get list of RTSTRUCTs
+                dataset_list = rois[roi_name]
+                if len(dataset_list) == 0:
+                    continue
 
-            # Remove common path from RTStructs
-            for index in range(len(dataset_list)):
-                dataset_list[index] = \
-                    dataset_list[index].replace(batch_directory, '')
+                # Remove common path from RTStructs
+                for index in range(len(dataset_list)):
+                    dataset_list[index] = \
+                        dataset_list[index].replace(batch_directory, '')
 
-            rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
-            rtss_combo_box.setStyleSheet(self.stylesheet)
+                rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
+                rtss_combo_box.setStyleSheet(self.stylesheet)
 
-            # Create text entry field the ROI has a standard prefix.
-            # Generate organ combobox otherwise.
-            if roi_name[0:3] in self.volume_prefixes \
-                    or roi_name[0:4] in self.volume_prefixes:
-                name_box = ROINameCleaningPrefixEntryField()
-                name_box.setEnabled(False)
-            else:
-                name_box = \
-                    ROINameCleaningOrganComboBox(self.organ_names,
-                                                 self.volume_prefixes,
-                                                 roi_name)
-                # Set default combo box entry to organ name in proper case
-                # if the organ name is a standard one.
-                if roi_name.lower() in self.organ_names_lowercase:
-                    index = self.organ_names_lowercase.index(roi_name.lower())
-                    name_box.setCurrentIndex(index)
-                    name_box.setEnabled(True)
-                    combo_box.setCurrentIndex(1)
-                else:
+                # Create text entry field the ROI has a standard prefix.
+                # Generate organ combobox otherwise.
+                if roi_name[0:3] in self.volume_prefixes \
+                        or roi_name[0:4] in self.volume_prefixes:
+                    name_box = ROINameCleaningPrefixEntryField()
                     name_box.setEnabled(False)
+                else:
+                    name_box = \
+                        ROINameCleaningOrganComboBox(self.organ_names,
+                                                    self.volume_prefixes,
+                                                    roi_name)
+                    # Set default combo box entry to organ name in proper case
+                    # if the organ name is a standard one.
+                    if roi_name.lower() in self.organ_names_lowercase:
+                        index = self.organ_names_lowercase.index(roi_name.lower())
+                        name_box.setCurrentIndex(index)
+                        name_box.setEnabled(True)
+                        combo_box.setCurrentIndex(1)
+                    else:
+                        name_box.setEnabled(False)
 
-            combo_box.currentIndexChanged.connect(name_box.change_enabled)
-            name_box.setStyleSheet(self.stylesheet)
+                combo_box.currentIndexChanged.connect(name_box.change_enabled)
+                name_box.setStyleSheet(self.stylesheet)
 
-            # Add row to table
-            self.table_roi.insertRow(i)
-            self.table_roi.setRowHeight(i, 50)
-            self.table_roi.setItem(
-                i, 0, QtWidgets.QTableWidgetItem(roi_name))
-            self.table_roi.setCellWidget(i, 1, combo_box)
-            self.table_roi.setCellWidget(i, 2, name_box)
-            self.table_roi.setCellWidget(i, 3, rtss_combo_box)
-            i += 1
+                # Add row to table
+                self.table_roi.insertRow(i)
+                self.table_roi.setRowHeight(i, 50)
+                self.table_roi.setItem(
+                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
+                self.table_roi.setCellWidget(i, 1, combo_box)
+                self.table_roi.setCellWidget(i, 2, name_box)
+                self.table_roi.setCellWidget(i, 3, rtss_combo_box)
+                i += 1
 
         # Set row height
         vertical_header = self.table_roi.verticalHeader()
