@@ -367,20 +367,20 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                     or roi_name[0:4] in self.volume_prefixes:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setEnabled(False)
-            else:
+            elif roi_name.lower() in self.organ_names_lowercase:
+            # Set default combo box entry to organ name in proper case
+            # if the organ name is a standard one.
                 name_box = \
-                    ROINameCleaningOrganComboBox(self.organ_names,
-                                                self.volume_prefixes,
-                                                roi_name)
-                # Set default combo box entry to organ name in proper case
-                # if the organ name is a standard one.
-                if roi_name.lower() in self.organ_names_lowercase:
-                    index = self.organ_names_lowercase.index(roi_name.lower())
-                    name_box.setCurrentIndex(index)
-                    name_box.setEnabled(True)
-                    combo_box.setCurrentIndex(1)
-                else:
-                    name_box.setEnabled(False)
+                ROINameCleaningOrganComboBox(self.organ_names,
+                                            self.volume_prefixes,
+                                            roi_name)
+                index = self.organ_names_lowercase.index(roi_name.lower())
+                name_box.setCurrentIndex(index)
+                name_box.setEnabled(True)
+                combo_box.setCurrentIndex(1)
+            else:
+                name_box = ROINameCleaningPrefixEntryField()
+                name_box.setEnabled(False)
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
