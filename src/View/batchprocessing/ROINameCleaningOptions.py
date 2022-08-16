@@ -146,7 +146,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.volume_prefixes = []
 
         self.get_standard_names()
-        self.create_table_view()
+        self.create_table_view_organ()
+        self.create_table_view_volume()
         self.setLayout(self.main_layout)
 
     def get_standard_names(self):
@@ -170,46 +171,87 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.volume_prefixes.append(row[1])
             f.close()
 
-    def create_table_view(self):
+    def create_table_view_organ(self):
         """
         Create a table to display all of the non-standard ROIs and
         options for what to do with them.
         """
         # Create table
-        self.table_roi = QtWidgets.QTableWidget(self)
-        self.table_roi.setStyleSheet(
+        self.table_organ = QtWidgets.QTableWidget(self)
+        self.table_organ.setStyleSheet(
             "background-color: rgb(255, 255, 255);")
-        self.table_roi.setColumnCount(4)
-        self.table_roi.verticalHeader().hide()
+        self.table_organ.setColumnCount(4)
+        self.table_organ.verticalHeader().hide()
         # Note - "New Name" is only enabled if the option "Rename" is
         # selected.
-        self.table_roi.setHorizontalHeaderLabels(
-            [" ROI Name ", " Option ", " New Name ", " Dataset Location "])
+        self.table_organ.setHorizontalHeaderLabels(
+            [" Organ Name ", " Option ", " New Name ", " Dataset Location "])
 
         # Set text align
-        self.table_roi.horizontalHeaderItem(0).setTextAlignment(
+        self.table_organ.horizontalHeaderItem(0).setTextAlignment(
             QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(1).setTextAlignment(
+        self.table_organ.horizontalHeaderItem(1).setTextAlignment(
             QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(2).setTextAlignment(
+        self.table_organ.horizontalHeaderItem(2).setTextAlignment(
             QtCore.Qt.AlignLeft)
-        self.table_roi.horizontalHeaderItem(3).setTextAlignment(
+        self.table_organ.horizontalHeaderItem(3).setTextAlignment(
             QtCore.Qt.AlignLeft)
 
         # Set header stretch
-        roi_name_header = self.table_roi.horizontalHeader()
+        roi_name_header = self.table_organ.horizontalHeader()
         roi_name_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         roi_name_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         roi_name_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         roi_name_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
 
         # Removing the ability to edit tables with immediate click
-        self.table_roi.setEditTriggers(
+        self.table_organ.setEditTriggers(
             QtWidgets.QTreeView.NoEditTriggers |
             QtWidgets.QTreeView.NoEditTriggers)
 
         # Add table to the main layout
-        self.main_layout.addWidget(self.table_roi)
+        self.main_layout.addWidget(self.table_organ)
+
+    def create_table_view_volume(self):
+        """
+        Create a table to display all of the non-standard ROIs and
+        options for what to do with them.
+        """
+        # Create table
+        self.table_volume = QtWidgets.QTableWidget(self)
+        self.table_volume.setStyleSheet(
+            "background-color: rgb(255, 255, 255);")
+        self.table_volume.setColumnCount(4)
+        self.table_volume.verticalHeader().hide()
+        # Note - "New Name" is only enabled if the option "Rename" is
+        # selected.
+        self.table_volume.setHorizontalHeaderLabels(
+            [" Volume Prefix ", " Option ", " New Name ", " Dataset Location "])
+
+        # Set text align
+        self.table_volume.horizontalHeaderItem(0).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.table_volume.horizontalHeaderItem(1).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.table_volume.horizontalHeaderItem(2).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+        self.table_volume.horizontalHeaderItem(3).setTextAlignment(
+            QtCore.Qt.AlignLeft)
+
+        # Set header stretch
+        roi_name_header = self.table_volume.horizontalHeader()
+        roi_name_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        roi_name_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        roi_name_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        roi_name_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+
+        # Removing the ability to edit tables with immediate click
+        self.table_volume.setEditTriggers(
+            QtWidgets.QTreeView.NoEditTriggers |
+            QtWidgets.QTreeView.NoEditTriggers)
+
+        # Add table to the main layout
+        self.main_layout.addWidget(self.table_volume)
 
     def populate_table(self, dicom_structure, batch_directory):
         """
@@ -219,8 +261,19 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                                 patients loaded.
         :param batch_directory: The directory selected for batch processing.
         """
-        # Update table column view
-        roi_name_header = self.table_roi.horizontalHeader()
+        # Update table column view organ
+        roi_name_header = self.table_organ.horizontalHeader()
+        roi_name_header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Stretch)
+        roi_name_header.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.ResizeToContents)
+        roi_name_header.setSectionResizeMode(
+            2, QtWidgets.QHeaderView.ResizeToContents)
+        roi_name_header.setSectionResizeMode(
+            3, QtWidgets.QHeaderView.ResizeToContents)
+
+        # Update table column view volume
+        roi_name_header = self.table_volume.horizontalHeader()
         roi_name_header.setSectionResizeMode(
             0, QtWidgets.QHeaderView.Stretch)
         roi_name_header.setSectionResizeMode(
@@ -245,7 +298,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
         # Return if no RT Structs found
         if not len(rtstruct_list):
-            self.table_roi.setRowCount(0)
+            self.table_organ.setRowCount(0)
+            self.table_volume.setRowCount(0)
             return
 
         # Loop through each RT Struct
@@ -278,70 +332,85 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 break
 
         if not rois_to_process:
-            self.table_roi.setRowCount(0)
+            self.table_organ.setRowCount(0)
+            self.table_volume.setRowCount(0)
             return
 
         # Populate table
-        self.table_roi.setRowCount(0)
+        self.table_organ.setRowCount(0)
+        self.table_volume.setRowCount(0)
 
         # Loop through each ROI
         i = 0
         for roi_name in rois:
-            # If it is an organ name display otherwise do not 
-            if roi_name.lower() in self.organ_names_lowercase:
-                # Create option combo box
-                combo_box = ROINameCleaningOptionComboBox()
-                combo_box.setStyleSheet(self.stylesheet)
+            # Create option combo box
+            combo_box = ROINameCleaningOptionComboBox()
+            combo_box.setStyleSheet(self.stylesheet)
 
-                # Create dataset combo box
-                # Get list of RTSTRUCTs
-                dataset_list = rois[roi_name]
-                if len(dataset_list) == 0:
-                    continue
+            # Create dataset combo box
+            # Get list of RTSTRUCTs
+            dataset_list = rois[roi_name]
+            if len(dataset_list) == 0:
+                continue
 
-                # Remove common path from RTStructs
-                for index in range(len(dataset_list)):
-                    dataset_list[index] = \
-                        dataset_list[index].replace(batch_directory, '')
+            # Remove common path from RTStructs
+            for index in range(len(dataset_list)):
+                dataset_list[index] = \
+                    dataset_list[index].replace(batch_directory, '')
 
-                rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
-                rtss_combo_box.setStyleSheet(self.stylesheet)
+            rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
+            rtss_combo_box.setStyleSheet(self.stylesheet)
 
-                # Create text entry field the ROI has a standard prefix.
-                # Generate organ combobox otherwise.
-                if roi_name[0:3] in self.volume_prefixes \
-                        or roi_name[0:4] in self.volume_prefixes:
-                    name_box = ROINameCleaningPrefixEntryField()
-                    name_box.setEnabled(False)
+            # Create text entry field the ROI has a standard prefix.
+            # Generate organ combobox otherwise.
+            if roi_name[0:3] in self.volume_prefixes \
+                    or roi_name[0:4] in self.volume_prefixes:
+                name_box = ROINameCleaningPrefixEntryField()
+                name_box.setEnabled(False)
+            else:
+                name_box = \
+                    ROINameCleaningOrganComboBox(self.organ_names,
+                                                self.volume_prefixes,
+                                                roi_name)
+                # Set default combo box entry to organ name in proper case
+                # if the organ name is a standard one.
+                if roi_name.lower() in self.organ_names_lowercase:
+                    index = self.organ_names_lowercase.index(roi_name.lower())
+                    name_box.setCurrentIndex(index)
+                    name_box.setEnabled(True)
+                    combo_box.setCurrentIndex(1)
                 else:
-                    name_box = \
-                        ROINameCleaningOrganComboBox(self.organ_names,
-                                                    self.volume_prefixes,
-                                                    roi_name)
-                    # Set default combo box entry to organ name in proper case
-                    # if the organ name is a standard one.
-                    if roi_name.lower() in self.organ_names_lowercase:
-                        index = self.organ_names_lowercase.index(roi_name.lower())
-                        name_box.setCurrentIndex(index)
-                        name_box.setEnabled(True)
-                        combo_box.setCurrentIndex(1)
-                    else:
-                        name_box.setEnabled(False)
+                    name_box.setEnabled(False)
 
-                combo_box.currentIndexChanged.connect(name_box.change_enabled)
-                name_box.setStyleSheet(self.stylesheet)
+            combo_box.currentIndexChanged.connect(name_box.change_enabled)
+            name_box.setStyleSheet(self.stylesheet)
 
+            if roi_name.lower() in self.organ_names_lowercase:
                 # Add row to table
-                self.table_roi.insertRow(i)
-                self.table_roi.setRowHeight(i, 50)
-                self.table_roi.setItem(
+                self.table_organ.insertRow(i)
+                self.table_organ.setRowHeight(i, 50)
+                self.table_organ.setItem(
                     i, 0, QtWidgets.QTableWidgetItem(roi_name))
-                self.table_roi.setCellWidget(i, 1, combo_box)
-                self.table_roi.setCellWidget(i, 2, name_box)
-                self.table_roi.setCellWidget(i, 3, rtss_combo_box)
-                i += 1
+                self.table_organ.setCellWidget(i, 1, combo_box)
+                self.table_organ.setCellWidget(i, 2, name_box)
+                self.table_organ.setCellWidget(i, 3, rtss_combo_box)
+                continue
+            else:
+                # Add row to table
+                self.table_volume.insertRow(i)
+                self.table_volume.setRowHeight(i, 50)
+                self.table_volume.setItem(
+                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
+                self.table_volume.setCellWidget(i, 1, combo_box)
+                self.table_volume.setCellWidget(i, 2, name_box)
+                self.table_volume.setCellWidget(i, 3, rtss_combo_box)
+            i += 1
 
         # Set row height
-        vertical_header = self.table_roi.verticalHeader()
-        vertical_header.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-        vertical_header.setDefaultSectionSize(40)
+        vertical_header_organ = self.table_organ.verticalHeader()
+        vertical_header_organ.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        vertical_header_organ.setDefaultSectionSize(40)
+
+        vertical_header_volume = self.table_volume.verticalHeader()
+        vertical_header_volume.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        vertical_header_volume.setDefaultSectionSize(40)
