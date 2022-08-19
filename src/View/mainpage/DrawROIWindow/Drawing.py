@@ -185,6 +185,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         Convert QImage containing modified CT slice with highlighted pixels
         into a QPixmap, and then display it onto the view.
         """
+        self.removeItem(self.q_pixmaps)
         self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(
             QtGui.QPixmap.fromImage(self.q_image))
         self.addItem(self.q_pixmaps)
