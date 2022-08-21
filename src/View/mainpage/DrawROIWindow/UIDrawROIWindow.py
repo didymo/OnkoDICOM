@@ -779,10 +779,27 @@ class UIDrawROIWindow:
             max_pixel = self.max_pixel_density_line_edit.text()
 
             # If they are number inputs
-            if min_pixel.isdecimal() and max_pixel.isdecimal():
 
-                min_pixel = int(min_pixel)
-                max_pixel = int(max_pixel)
+            min_is_float = False
+            max_is_float = False
+
+            try:
+                float(min_pixel)
+                min_is_float = True
+            except ValueError:
+                min_is_float = False
+
+            try:
+                float(max_pixel)
+                max_is_float = True
+            except ValueError:
+                max_is_float = False
+
+            # If they are number inputs
+            if min_is_float and max_is_float:
+
+                min_pixel = float(min_pixel)
+                max_pixel = float(max_pixel)
 
                 if min_pixel >= max_pixel:
                     QMessageBox.about(self.draw_roi_window_instance,
