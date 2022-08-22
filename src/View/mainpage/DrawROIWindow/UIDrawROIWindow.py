@@ -672,7 +672,7 @@ class UIDrawROIWindow:
                 and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input. \
-            setText("{:.0f}".format(self.dicom_view.zoom * 100) + "%")
+            setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
     def transparency_slider_value_changed(self):
