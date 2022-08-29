@@ -329,7 +329,6 @@ class UIDrawROIWindow:
         self.transparency_slider_box.addWidget(self.transparency_slider)
         self.draw_roi_window_input_container_box.addRow(self.transparency_slider_box)
 
-
         # Create field to toggle two options: Keep empty pixel or fill empty
         # pixel when using draw cursor
         self.toggle_keep_empty_pixel_box = QHBoxLayout()

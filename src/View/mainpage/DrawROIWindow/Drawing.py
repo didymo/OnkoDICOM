@@ -118,9 +118,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.according_color_dict[(x_coord, y_coord)] = colors
 
             points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
-
             self._set_color_of_pixels(points)
-
             self.refresh_image()
 
     def _set_color_of_pixels(self, points):
