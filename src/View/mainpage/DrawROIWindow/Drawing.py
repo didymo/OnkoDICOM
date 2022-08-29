@@ -210,9 +210,6 @@ class Drawing(QtWidgets.QGraphicsScene):
             clicked_x, clicked_y, self.rows, self.cols)
         according_color_dict_key_list = list(self.according_color_dict.keys())
 
-        color_to_draw = QtGui.QColor()
-        color_to_draw.setRgb(90, 250, 175, 200)
-
         for x, y in according_color_dict_key_list:
             colors = self.according_color_dict[(x, y)]
             clicked_point = numpy.array((clicked_x, clicked_y))
@@ -258,13 +255,13 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.slice_changed = True
         clicked_x, clicked_y = linear_transform(
             clicked_x, clicked_y, self.rows, self.cols)
-        scaled_tool_radius = int(self.draw_tool_radius * (
-                float(self.rows) / DEFAULT_WINDOW_SIZE))
+        scaled_tool_radius = self.draw_tool_radius * (
+                float(self.rows) / DEFAULT_WINDOW_SIZE)
 
-        min_y_bound_square = math.floor(clicked_y) - scaled_tool_radius
-        min_x_bound_square = math.floor(clicked_x) - scaled_tool_radius
-        max_y_bound_square = math.floor(clicked_y) + scaled_tool_radius
-        max_x_bound_square = math.floor(clicked_x) + scaled_tool_radius
+        min_y_bound_square = math.ceil(clicked_y - scaled_tool_radius)
+        min_x_bound_square = math.ceil(clicked_x - scaled_tool_radius)
+        max_y_bound_square = math.ceil(clicked_y + scaled_tool_radius)
+        max_x_bound_square = math.ceil(clicked_x + scaled_tool_radius)
         for y_coord in range(
                 max(self.min_y, min_y_bound_square),
                 min(self.max_y, max_y_bound_square)):

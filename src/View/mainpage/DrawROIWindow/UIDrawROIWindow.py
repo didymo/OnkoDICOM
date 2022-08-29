@@ -965,7 +965,7 @@ class UIDrawROIWindow:
         """
         function triggered when user reduce cursor radius
         """
-        self.drawing_tool_radius = max(self.drawing_tool_radius - 1, 4)
+        self.drawing_tool_radius = max(self.drawing_tool_radius - 0.5, 0.5)
         self.draw_roi_window_cursor_radius_change_input.setText(
             str(self.drawing_tool_radius))
         self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
@@ -975,7 +975,7 @@ class UIDrawROIWindow:
         """
         function triggered when user increase cursor radius
         """
-        self.drawing_tool_radius = min(self.drawing_tool_radius + 1, 25)
+        self.drawing_tool_radius = min(self.drawing_tool_radius + 0.5, 25)
         self.draw_roi_window_cursor_radius_change_input.setText(
             str(self.drawing_tool_radius))
         self.draw_cursor_when_radius_changed()
