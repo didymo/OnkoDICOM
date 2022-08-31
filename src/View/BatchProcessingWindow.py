@@ -19,11 +19,44 @@ from src.View.batchprocessing.ROINameCleaningOptions import \
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 
 
+class TabBar(QtWidgets.QTabBar):
+    def tabSizeHint(self, index):
+        s = QtWidgets.QTabBar.tabSizeHint(self, index)
+        s.transpose()
+        return s
+
+    def paintEvent(self, event):
+        painter = QtWidgets.QStylePainter(self)
+        opt = QtWidgets.QStyleOptionTab()
+
+        for i in range(self.count()):
+            self.initStyleOption(opt, i)
+            painter.drawControl(QtWidgets.QStyle.CE_TabBarTabShape, opt)
+            painter.save()
+
+            s = opt.rect.size()
+            s.transpose()
+            r = QtCore.QRect(QtCore.QPoint(), s)
+            r.moveCenter(opt.rect.center())
+            opt.rect = r
+
+            c = self.tabRect(i).center()
+            painter.translate(c)
+            painter.rotate(90)
+            painter.translate(-c)
+            painter.drawControl(QtWidgets.QStyle.CE_TabBarTabLabel, opt)
+            painter.restore()
+
 class CheckableTabWidget(QtWidgets.QTabWidget):
     """
     Creates a clickable tab widget.
     """
     checked_list = []
+
+    def __init__(self, *args, **kwargs):
+        QtWidgets.QTabWidget.__init__(self, *args, **kwargs)
+        self.setTabBar(TabBar(self))
+        self.setTabPosition(QtWidgets.QTabWidget.West)
 
     def addTab(self, widget, title):
         """
@@ -58,7 +91,6 @@ class CheckableTabWidget(QtWidgets.QTabWidget):
         self.tabBar().tabButton(
             index,
             QtWidgets.QTabBar.LeftSide).setCheckState(check_state)
-
 
 class UIBatchProcessingWindow(object):
     """
@@ -117,11 +149,15 @@ class UIBatchProcessingWindow(object):
         self.browse_button.setObjectName("NormalButton")
         self.browse_button.setStyleSheet(self.stylesheet)
 
+        # Filter options table
+        self.filter_table = QtWidgets.QTableWidget(0, 0)
+
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
         self.tab_widget.tabBar().setObjectName("batch-tabs")
-        self.tab_widget.setStyleSheet(self.stylesheet)
+        # TODO: styling for tabs needs to be updated
+        # self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Tabs
         self.iso2roi_tab = ISO2ROIOptions()
@@ -186,6 +222,7 @@ class UIBatchProcessingWindow(object):
         self.layout.addLayout(self.directory_layout)
 
         # Add middle widgets (patient count, tabs)
+        self.middle_layout.addWidget(self.filter_table)
         self.middle_layout.addWidget(self.tab_widget)
         self.layout.addLayout(self.middle_layout)
 
