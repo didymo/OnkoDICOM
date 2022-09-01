@@ -1,6 +1,6 @@
 import math
-
 import numpy
+import logging
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
@@ -21,7 +21,7 @@ class Drawing(QtWidgets.QGraphicsScene):
     # Initialisation function  of the class
     def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
                  draw_roi_window_instance, slice_changed,
-                 current_slice, drawing_tool_radius, keep_empty_pixel,
+                 current_slice, drawing_tool_radius, keep_empty_pixel, pixel_transparency,
                  target_pixel_coords=set()):
         super(Drawing, self).__init__()
 
@@ -61,6 +61,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.draw_tool_radius = drawing_tool_radius
         self.is_current_pixel_coloured = False
         self.keep_empty_pixel = keep_empty_pixel
+        self.pixel_transparency = pixel_transparency
+        self.drawn_pixel_color = QtGui.QColor(255, 0, 0, 255)
         self._display_pixel_color()
 
     def _display_pixel_color(self):
@@ -102,9 +104,9 @@ class Drawing(QtWidgets.QGraphicsScene):
                         self.target_pixel_coords.add((x_coord, y_coord))
 
             """For the meantime, a new image is created and the pixels 
-            specified are coloured. This will need to altered so that it 
-            creates a new layer over the existing image instead of replacing 
-            it. """
+            specified are coloured. The _set_colour_of_pixels function
+             is then called to colour the newly drawn pixels and blend in
+             transparency."""
             # Convert QPixMap into Qimage
             for x_coord, y_coord in self.target_pixel_coords:
                 temp = set()
@@ -115,14 +117,41 @@ class Drawing(QtWidgets.QGraphicsScene):
                 colors = QColor(c).getRgbF()
                 self.according_color_dict[(x_coord, y_coord)] = colors
 
-            color = QtGui.QColor()
-            color.setRgb(90, 250, 175, 200)
-            points = get_pixel_coords(self.according_color_dict, self.rows,
-                                      self.cols)
-            for x_coord, y_coord in points:
-                self.q_image.setPixelColor(x_coord, y_coord, color)
-
+            points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+            self._set_color_of_pixels(points)
             self.refresh_image()
+
+    def _set_color_of_pixels(self, points):
+        """
+        Takes a set of points that need to be coloured, and updates the colour of
+        each pixel with the drawn on colour, blended together based on the transparency value.
+
+        :param points:  Set of x and y co-ordinates of pixels to be coloured
+        """
+        logging.debug("_set_color_of_pixels started")
+        img = self.img.toImage()
+        for x_coord, y_coord in points:
+            old_color = img.pixelColor(x_coord, y_coord)
+            # Blend the individual RGB values of the original pixel with the drawn ROI colour values
+            new_color = QtGui.QColor(self.drawn_pixel_color.red() * (1 - self.pixel_transparency)
+                                     + old_color.red() * self.pixel_transparency,
+                                     self.drawn_pixel_color.blue() * (1 - self.pixel_transparency)
+                                     + old_color.blue() * self.pixel_transparency,
+                                     self.drawn_pixel_color.green() * (1 - self.pixel_transparency)
+                                     + old_color.green() * self.pixel_transparency,
+                                     255)
+            self.q_image.setPixelColor(x_coord, y_coord, new_color)
+        logging.debug("_set_color_of_pixels finished")
+
+    def update_pixel_transparency(self):
+        """
+        Updates the transparency of pixels that have already been drawn, with new
+        transparency value set by user and refreshes the image.
+        """
+        logging.debug("update_pixel_transparency started")
+        self._set_color_of_pixels(get_pixel_coords(self.target_pixel_coords, self.rows, self.cols))
+        self.refresh_image()
+        logging.debug("update_pixel_transparency finished")
 
     def _find_neighbor_point(self, event):
         """
@@ -159,6 +188,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         Convert QImage containing modified CT slice with highlighted pixels
         into a QPixmap, and then display it onto the view.
         """
+        self.removeItem(self.q_pixmaps)
         self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(
             QtGui.QPixmap.fromImage(self.q_image))
         self.addItem(self.q_pixmaps)
@@ -262,13 +292,10 @@ class Drawing(QtWidgets.QGraphicsScene):
                         points_to_color.add((x_coord, y_coord))
                         self.target_pixel_coords.add((x_coord, y_coord))
 
-        # Color to draw
-        color_to_draw = QtGui.QColor()
-        color_to_draw.setRgb(90, 250, 175, 200)
-
         points = get_pixel_coords(points_to_color, self.rows, self.cols)
-        for x_coord, y_coord in points:
-            self.q_image.setPixelColor(x_coord, y_coord, color_to_draw)
+
+        self._set_color_of_pixels(points)
+
         self.refresh_image()
 
     def clear_cursor(self, drawing_tool_radius):
