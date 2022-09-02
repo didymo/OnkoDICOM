@@ -116,17 +116,9 @@ class BatchProcessROIName2FMAID(BatchProcess):
         :return: the new RTSS.
         """
         # Find ROI with old name
-        roi_id = None
         for sequence in rtss.StructureSetROISequence:
             if sequence.ROIName == old_name:
-                roi_id = sequence.ROINumber
-                break
+                return ROI.rename_roi(rtss, sequence.ROINumber, new_name)
 
         # Return if not found
-        if not roi_id:
-            return
-
-        # Change name of ROI to new name
-        rtss = ROI.rename_roi(rtss, roi_id, new_name)
-
-        return rtss
+        return

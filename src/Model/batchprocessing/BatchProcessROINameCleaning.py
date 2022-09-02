@@ -113,15 +113,13 @@ class BatchProcessROINameCleaning(BatchProcess):
         roi_id = None
         for sequence in rtss.StructureSetROISequence:
             if sequence.ROIName == old_name:
-                roi_id = sequence.ROINumber
-                break
+                # Change name of ROI to new name
+                rtss = ROI.rename_roi(rtss, roi_id, new_name)
+
+                # Save dataset
+                rtss.save_as(dataset)
 
         # Return if not found
-        if not roi_id:
-            return
+        return
 
-        # Change name of ROI to new name
-        rtss = ROI.rename_roi(rtss, roi_id, new_name)
-
-        # Save dataset
-        rtss.save_as(dataset)
+        
