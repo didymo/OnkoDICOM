@@ -65,7 +65,7 @@ class BatchProcessFMAID2ROIName(BatchProcess):
         rtss = self.patient_dict_container.dataset['rtss']
         total = 0
         progress = 40
-        step = (90 - 40)/len(roi_names)
+        step = 50/len(roi_names)
         for fmaid in roi_names:
             self.progress_callback.emit(("Renaming FMAs...", progress))
             progress += step
