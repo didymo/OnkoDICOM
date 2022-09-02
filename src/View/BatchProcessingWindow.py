@@ -17,6 +17,8 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
+from src.View.batchprocessing.FMAID2ROINameOptions import \
+    FMAID2ROINameOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -133,6 +135,7 @@ class UIBatchProcessingWindow(object):
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
+        self.batchfma2name_tab = FMAID2ROINameOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
@@ -146,6 +149,7 @@ class UIBatchProcessingWindow(object):
                                "ClinicalData-SR2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
+        self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
 
         # == Bottom widgets
         # Info text
@@ -286,7 +290,7 @@ class UIBatchProcessingWindow(object):
         """
         processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
                      'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
-                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
+                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid', 'fmaid2roiname']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
 

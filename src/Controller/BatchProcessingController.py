@@ -16,6 +16,8 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
     BatchProcessROIName2FMAID
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
+from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
+    BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
@@ -183,6 +185,7 @@ class BatchProcessingController:
             "csv2clinicaldata-sr": self.batch_csv2clinicaldatasr_handler,
             "clinicaldata-sr2csv": self.batch_clinicaldatasr2csv_handler,
             "roiname2fmaid": self.batch_roiname2fmaid_handler,
+            "fmaid2roiname": self.batch_fmaid2roiname_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -522,6 +525,33 @@ class BatchProcessingController:
             self.batch_summary[0][patient] = {}
         self.batch_summary[0][patient]["roiname2fmaid"] = reason
         progress_callback.emit(("Completed ROI Name to FMA ID", 100))
+
+    def batch_fmaid2roiname_handler(self, interrupt_flag,
+                                    progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        FMA-ID2ROIName.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get patient files and start process
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = \
+            BatchProcessFMAID2ROIName(progress_callback,
+                                      interrupt_flag,
+                                      cur_patient_files)
+        process.start()
+
+        # Append process summary
+        reason = process.summary
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["fmaid2roiname"] = reason
+        progress_callback.emit(("Completed FMA ID to ROI Name", 100))
 
     def completed_processing(self):
         """
