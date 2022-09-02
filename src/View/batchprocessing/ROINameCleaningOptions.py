@@ -144,6 +144,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Class variables
         self.organ_names = []
         self.organ_names_lowercase = []
+        self.fma_id = []
         self.volume_prefixes = []
 
         self.get_standard_names()
@@ -161,6 +162,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.organ_names.append(row[0])
+                self.fma_id.append(row[1])
                 self.organ_names_lowercase.append(row[0].lower())
             f.close()
 
@@ -391,6 +393,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 name_box.setCurrentIndex(index)
                 name_box.setEnabled(True)
                 combo_box.setCurrentIndex(1)
+            elif roi_name in self.fma_id:
+                continue
             else:
                 logging.debug("not a standard organ name")
                 name_box = ROINameCleaningPrefixEntryField()
