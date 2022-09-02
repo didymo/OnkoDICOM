@@ -367,8 +367,7 @@ class UIBatchProcessingWindow(object):
                 # Get new name text
                 if isinstance(volume_prefix_table.cellWidget(i, 2),
                               ROINameCleaningPrefixEntryField):
-                    new_name = roi_name[0:3] \
-                               + volume_prefix_table.cellWidget(i, 2).text()
+                    new_name = volume_prefix_table.cellWidget(i, 2).text()
                     # Remove any whitespace, replace with underscores
                     new_name = '_'.join(new_name.split())
                 else:

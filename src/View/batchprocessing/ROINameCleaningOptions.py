@@ -113,7 +113,6 @@ class ROINameCleaningPrefixEntryField(QtWidgets.QLineEdit):
 
     @QtCore.Slot(int)
     def change_enabled(self, index):
-        print(index)
         if index == 1:
             self.setEnabled(True)
         else:
@@ -154,7 +153,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
     def get_standard_names(self):
         """
-        Get standard organ names and prefix types.
+        Get standard organ names, FMA IDs and prefix types.
         """
         # Get standard organ names
         with open(data_path('organName.csv'), 'r') as f:
@@ -380,6 +379,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                     or roi_name[0:4] in self.volume_prefixes:
                 logging.debug("if roi_name is volume prefix created text entry field")
                 name_box = ROINameCleaningPrefixEntryField()
+                name_box.setText(roi_name)
                 name_box.setEnabled(False)
             elif roi_name.lower() in self.organ_names_lowercase:
             # Set default combo box entry to organ name in proper case
@@ -393,11 +393,13 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 name_box.setCurrentIndex(index)
                 name_box.setEnabled(True)
                 combo_box.setCurrentIndex(1)
+            # If roi_name is a FMA ID skip
             elif roi_name in self.fma_id:
                 continue
             else:
                 logging.debug("not a standard organ name")
                 name_box = ROINameCleaningPrefixEntryField()
+                name_box.setText(roi_name)
                 name_box.setEnabled(False)
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
