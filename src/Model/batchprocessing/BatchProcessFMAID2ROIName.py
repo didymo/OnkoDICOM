@@ -92,7 +92,6 @@ class BatchProcessFMAID2ROIName(BatchProcess):
                 for row in csv_input:
                     self.fma_ids.append(row[1])
                     self.organ_names[row[1]] = row[0]
-                f.close()
 
         rtss = self.patient_dict_container.dataset['rtss']
         rois = []
