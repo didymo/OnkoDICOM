@@ -1,10 +1,9 @@
-"""Declares BatchProcessingFilterModel for the application"""
-from PyQt6.QtCore import QObject, pyqtSignal
+"""Declares BatchProcessFilterModel for the application"""
 
 
-class BatchProcessingFilterModel(QObject):
+class BatchProcessFilterModel(object):
     """
-    BatchProcessingFilterModel that serves as a central 
+    BatchProcessFilterModel that serves as a central 
     data store to maintain state for the filtering pipeline 
     using Clinical Data while in BatchProcessing 
     """
@@ -12,7 +11,6 @@ class BatchProcessingFilterModel(QObject):
     def __init__(self):
         super().__init__()
 
-        self._selected_csv_directory = ""
         self._selected_filters = {}
 
     @property
@@ -22,29 +20,25 @@ class BatchProcessingFilterModel(QObject):
         """
         return self._selected_filters
 
-    @selected_filters.setter
-    def selected_filters(self, values):
+    def set_selected_filters(self, filter_type, value):
         """
         Setter for the selected csv directory
         """
-        filter_type, value = values
 
         if filter_type not in self._selected_filters.keys():
             self._selected_filters[filter_type] = [value]
         else:
             self._selected_filters[filter_type].append(value)
 
-    def remove_selected_filters(self, values):
+    def remove_selected_filters(self, filter_type, value):
         """
         Remove filter from the selected_filters store
         """
 
-        filter_type, value = values
-
         if filter_type not in self._selected_filters.keys():
             return
         else:
-            self._selected_filters[filter_type] = self._selected_filters[filter_type].remove(value)
+            self._selected_filters[filter_type].remove(value)
             
             if self._selected_filters[filter_type] == None:
                 self._selected_filters[filter_type] = []

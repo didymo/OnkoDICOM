@@ -17,6 +17,7 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
+from src.Model.BatchProcessFilter import BatchProcessFilterModel
 
 
 class TabBar(QtWidgets.QTabBar):
@@ -151,12 +152,13 @@ class UIBatchProcessingWindow(object):
 
         # Filter options table
         self.filter_table = QtWidgets.QTableWidget(0, 0)
+        self.filter_table.setStyleSheet(self.stylesheet)
 
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
         self.tab_widget.tabBar().setObjectName("batch-tabs")
-        # TODO: styling for tabs needs to be updated
+        # TODO: styling for this section needs to be updated
         # self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Tabs
@@ -237,12 +239,16 @@ class UIBatchProcessingWindow(object):
         self.begin_button.clicked.connect(self.confirm_button_clicked)
         self.back_button.clicked.connect(
             lambda: QtCore.QCoreApplication.exit(0))
+        self.filter_table.cellClicked.connect(self.select_filter_option_cell)
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)
 
+        # Set model for storing filter options
+        self._batch_process_filter_model = BatchProcessFilterModel()
+
         # Create batch processing controller, enable the processing
-        self.batch_processing_controller = BatchProcessingController()
+        self.batch_processing_controller = BatchProcessingController(self._batch_process_filter_model)
 
     def show_file_browser(self):
         """
@@ -305,6 +311,14 @@ class UIBatchProcessingWindow(object):
             self.begin_button.setEnabled(True)
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
+
+            # Check for Clinical data
+            clinical_data = self.batch_processing_controller.get_all_clinical_data()
+            if clinical_data:
+                self.show_filtering_options_in_table(clinical_data)
+            else:
+                # TODO: display message warning of no clinical data found to use as filter
+                pass
 
             # Update tables
             self.suv2roi_tab.populate_table(dicom_structure)
@@ -414,3 +428,48 @@ class UIBatchProcessingWindow(object):
             QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
             self.stylesheet)
         button_reply.exec_()
+
+    def show_filtering_options_in_table(self, options_data_dict):
+        if self.file_path == "":
+            return 
+
+        self.filter_table.setRowCount(0)
+
+        for title in options_data_dict.keys():
+            col = self.filter_table.columnCount()
+            self.filter_table.insertColumn(col)
+            
+            for row in range(0, len(options_data_dict[title])):
+                filter = QtWidgets.QTableWidgetItem(str(options_data_dict[title][row]))
+                
+                if row >= self.filter_table.rowCount():
+                    self.filter_table.insertRow(row)
+
+                self.filter_table.setItem(row, col, filter)
+
+        self.filter_table.setHorizontalHeaderLabels(options_data_dict.keys())
+
+    def select_filter_option_cell(self, row, column):
+        item = self.filter_table.item(row, column)
+
+        # in the case they select empty cell
+        if not item:
+            return
+        
+        header = self.filter_table.horizontalHeaderItem(column).text()
+        text_filter = item.text()
+
+        if header in self._batch_process_filter_model.selected_filters.keys():
+            current_filters = self._batch_process_filter_model.selected_filters[header]
+
+            if text_filter in current_filters:
+                item.setBackground(QtGui.QColor(255, 255, 255))
+
+                # and remove item
+                self._batch_process_filter_model.remove_selected_filters(header, text_filter)
+                return
+
+        item.setBackground(QtGui.QColor(144, 238, 144))
+
+        # store in model for reference at output
+        self._batch_process_filter_model.set_selected_filters(header, text_filter)

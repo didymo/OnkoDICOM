@@ -30,7 +30,7 @@ class BatchProcessingController:
     This class is the controller for batch processing. It starts and
     ends processes, and controls the progress window.
     """
-    def __init__(self):
+    def __init__(self, batch_filter_model):
         """
         Class initialiser function.
         """
@@ -47,6 +47,7 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
+        self._batch_process_filter_model = batch_filter_model
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -191,6 +192,43 @@ class BatchProcessingController:
 
         # Loop through each patient
         for patient in self.dicom_structure.patients.values():
+            
+            if self._batch_process_filter_model.selected_filters:
+                within_filter = False
+
+                # Check patient meets filter criteria
+                cur_patient_files = \
+                BatchProcessingController.get_patient_files(patient)
+                process = \
+                BatchProcessClinicalDataSR2CSV(None, None,
+                                            cur_patient_files,
+                                            None)
+                
+                cd_sr = process.find_clinical_data_sr()
+
+                # if they do then get the data
+                if cd_sr:
+                    single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                    
+                    for filter_attribute, allowed_filtered_values in self._batch_process_filter_model.selected_filters.items():
+                        try:
+                            patient_value = single_patient_data[filter_attribute]
+                            
+                            if len(allowed_filtered_values)==0:
+                                continue
+                            
+                            if patient_value in allowed_filtered_values:
+                                within_filter = True
+                                break
+                        except KeyError:
+                            # they have an sr file that does not contain this trait
+                            continue
+                    else:
+                        within_filter = True
+                
+                if not within_filter:
+                    continue
+            
             # Stop loading
             if interrupt_flag.is_set():
                 # TODO: convert print to logging
@@ -542,6 +580,41 @@ class BatchProcessingController:
         print("Error performing batch processing.")
         self.progress_window.close()
         return
+    
+    def get_all_clinical_data(self):
+        clinical_data_dict = {}
+        
+        for patient in self.dicom_structure.patients.values():
+            cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+            process = \
+            BatchProcessClinicalDataSR2CSV(None, None,
+                                           cur_patient_files,
+                                           None)
+            
+            cd_sr = process.find_clinical_data_sr()
+
+            # if they do then get the data
+            if cd_sr:
+                single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                # adds all the current titles
+                titles = list(single_patient_data)
+                
+                for title in titles:
+                    data = single_patient_data[title]
+                    
+                    if title not in clinical_data_dict.keys():
+                        clinical_data_dict[title]=[data]
+                    else:
+                        combined_data = clinical_data_dict[title]
+                        combined_data.append(data)
+
+                        # removes duplicates
+                        combined_data = list(dict.fromkeys(combined_data))
+
+                        clinical_data_dict[title] = combined_data
+
+        return clinical_data_dict
 
     @classmethod
     def create_timestamp(cls):
