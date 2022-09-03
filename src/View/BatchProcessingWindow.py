@@ -4,6 +4,8 @@ from pathlib import Path
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.SelectSubgroupOptions import \
+    SelectSubgroupOptions
 from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
     ClinicalDataSR2CSVOptions
 from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
@@ -150,10 +152,6 @@ class UIBatchProcessingWindow(object):
         self.browse_button.setObjectName("NormalButton")
         self.browse_button.setStyleSheet(self.stylesheet)
 
-        # Filter options table
-        self.filter_table = QtWidgets.QTableWidget(0, 0)
-        self.filter_table.setStyleSheet(self.stylesheet)
-
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
@@ -161,7 +159,11 @@ class UIBatchProcessingWindow(object):
         # TODO: styling for this section needs to be updated
         # self.tab_widget.setStyleSheet(self.stylesheet)
 
+        # Set model for storing filter options
+        self._batch_process_filter_model = BatchProcessFilterModel()
+
         # Tabs
+        self.select_subgroup_tab = SelectSubgroupOptions(self._batch_process_filter_model)
         self.iso2roi_tab = ISO2ROIOptions()
         self.suv2roi_tab = SUV2ROIOptions()
         self.dvh2csv_tab = DVH2CSVOptions()
@@ -173,6 +175,7 @@ class UIBatchProcessingWindow(object):
         self.batchname2fma_tab = ROIName2FMAIDOptions()
 
         # Add tabs to tab widget
+        self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
@@ -224,7 +227,6 @@ class UIBatchProcessingWindow(object):
         self.layout.addLayout(self.directory_layout)
 
         # Add middle widgets (patient count, tabs)
-        self.middle_layout.addWidget(self.filter_table)
         self.middle_layout.addWidget(self.tab_widget)
         self.layout.addLayout(self.middle_layout)
 
@@ -239,13 +241,9 @@ class UIBatchProcessingWindow(object):
         self.begin_button.clicked.connect(self.confirm_button_clicked)
         self.back_button.clicked.connect(
             lambda: QtCore.QCoreApplication.exit(0))
-        self.filter_table.cellClicked.connect(self.select_filter_option_cell)
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)
-
-        # Set model for storing filter options
-        self._batch_process_filter_model = BatchProcessFilterModel()
 
         # Create batch processing controller, enable the processing
         self.batch_processing_controller = BatchProcessingController(self._batch_process_filter_model)
@@ -315,7 +313,7 @@ class UIBatchProcessingWindow(object):
             # Check for Clinical data
             clinical_data = self.batch_processing_controller.get_all_clinical_data()
             if clinical_data:
-                self.show_filtering_options_in_table(clinical_data)
+                self.select_subgroup_tab.show_filtering_options_in_table(clinical_data)
             else:
                 # TODO: display message warning of no clinical data found to use as filter
                 pass
@@ -335,7 +333,13 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
+        # WARNING: the order of this list is important.
+        # TODO: this should be replaced with something more dynamic
+        # as currently this is very flaky. ie. changing the order of
+        # this list without changingthe order of the tabs being added
+        # will cause this process to break when getting the selected 
+        # processes in the for loop below
+        processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
                      'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
         selected_processes = []
@@ -428,48 +432,3 @@ class UIBatchProcessingWindow(object):
             QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
             self.stylesheet)
         button_reply.exec_()
-
-    def show_filtering_options_in_table(self, options_data_dict):
-        if self.file_path == "":
-            return 
-
-        self.filter_table.setRowCount(0)
-
-        for title in options_data_dict.keys():
-            col = self.filter_table.columnCount()
-            self.filter_table.insertColumn(col)
-            
-            for row in range(0, len(options_data_dict[title])):
-                filter = QtWidgets.QTableWidgetItem(str(options_data_dict[title][row]))
-                
-                if row >= self.filter_table.rowCount():
-                    self.filter_table.insertRow(row)
-
-                self.filter_table.setItem(row, col, filter)
-
-        self.filter_table.setHorizontalHeaderLabels(options_data_dict.keys())
-
-    def select_filter_option_cell(self, row, column):
-        item = self.filter_table.item(row, column)
-
-        # in the case they select empty cell
-        if not item:
-            return
-        
-        header = self.filter_table.horizontalHeaderItem(column).text()
-        text_filter = item.text()
-
-        if header in self._batch_process_filter_model.selected_filters.keys():
-            current_filters = self._batch_process_filter_model.selected_filters[header]
-
-            if text_filter in current_filters:
-                item.setBackground(QtGui.QColor(255, 255, 255))
-
-                # and remove item
-                self._batch_process_filter_model.remove_selected_filters(header, text_filter)
-                return
-
-        item.setBackground(QtGui.QColor(144, 238, 144))
-
-        # store in model for reference at output
-        self._batch_process_filter_model.set_selected_filters(header, text_filter)

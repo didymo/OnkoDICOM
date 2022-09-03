@@ -17,6 +17,7 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
+from src.Model.batchprocessing.BatchProcessSelectSubgroup import BatchProcessSelectSubgroup
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -30,7 +31,7 @@ class BatchProcessingController:
     This class is the controller for batch processing. It starts and
     ends processes, and controls the progress window.
     """
-    def __init__(self, batch_filter_model):
+    def __init__(self, _batch_process_filter_model):
         """
         Class initialiser function.
         """
@@ -47,7 +48,8 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
-        self._batch_process_filter_model = batch_filter_model
+        
+        self._batch_process_filter_model = _batch_process_filter_model
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -176,6 +178,7 @@ class BatchProcessingController:
 
         # Dictionary of process names and functions
         self.process_functions = {
+            "select_subgroup": self.batch_select_subgroup_handler,
             "iso2roi": self.batch_iso2roi_handler,
             "suv2roi": self.batch_suv2roi_handler,
             "dvh2csv": self.batch_dvh2csv_handler,
@@ -192,43 +195,6 @@ class BatchProcessingController:
 
         # Loop through each patient
         for patient in self.dicom_structure.patients.values():
-            
-            if self._batch_process_filter_model.selected_filters:
-                within_filter = False
-
-                # Check patient meets filter criteria
-                cur_patient_files = \
-                BatchProcessingController.get_patient_files(patient)
-                process = \
-                BatchProcessClinicalDataSR2CSV(None, None,
-                                            cur_patient_files,
-                                            None)
-                
-                cd_sr = process.find_clinical_data_sr()
-
-                # if they do then get the data
-                if cd_sr:
-                    single_patient_data = process.read_clinical_data_from_sr(cd_sr)
-                    
-                    for filter_attribute, allowed_filtered_values in self._batch_process_filter_model.selected_filters.items():
-                        try:
-                            patient_value = single_patient_data[filter_attribute]
-                            
-                            if len(allowed_filtered_values)==0:
-                                continue
-                            
-                            if patient_value in allowed_filtered_values:
-                                within_filter = True
-                                break
-                        except KeyError:
-                            # they have an sr file that does not contain this trait
-                            continue
-                    else:
-                        within_filter = True
-                
-                if not within_filter:
-                    continue
-            
             # Stop loading
             if interrupt_flag.is_set():
                 # TODO: convert print to logging
@@ -241,9 +207,19 @@ class BatchProcessingController:
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
 
+
+            if 'select_subgroup' in self.processes:
+                patient_in_subgroup = self.process_functions["select_subgroup"](interrupt_flag,
+                                                progress_callback,
+                                                patient)
+
+                if not patient_in_subgroup:
+                    # dont complete processes on this patient
+                    continue
+
             # Perform processes on patient
             for process in self.processes:
-                if process == 'roinamecleaning':
+                if process == 'roinamecleaning' or process == 'select_subgroup':
                     continue
                 self.process_functions[process](interrupt_flag,
                                                 progress_callback,
@@ -291,6 +267,29 @@ class BatchProcessingController:
 
         # Update the patient dict container
         PatientDictContainer().set("rtss_modified", False)
+
+    def batch_select_subgroup_handler(self, interrupt_flag,
+                              progress_callback, patient):
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = \
+            BatchProcessSelectSubgroup(progress_callback, interrupt_flag,
+                                           cur_patient_files,
+                                           self._batch_process_filter_model)
+        success = process.start()
+
+        # Update summary
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["select_subgroup"] = reason
+        progress_callback.emit(("Completed Select Subgroup", 100))
+
+        return process.within_filter
 
     def batch_iso2roi_handler(self, interrupt_flag,
                               progress_callback, patient):
