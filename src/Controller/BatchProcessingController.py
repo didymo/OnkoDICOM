@@ -587,7 +587,7 @@ class BatchProcessingController:
             cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
             process = \
-            BatchProcessClinicalDataSR2CSV(None, None,
+            BatchProcessSelectSubgroup(None, None,
                                            cur_patient_files,
                                            None)
             
@@ -598,7 +598,7 @@ class BatchProcessingController:
                 single_patient_data = process.read_clinical_data_from_sr(cd_sr)
                 # adds all the current titles
                 titles = list(single_patient_data)
-                
+
                 for title in titles:
                     data = single_patient_data[title]
                     
