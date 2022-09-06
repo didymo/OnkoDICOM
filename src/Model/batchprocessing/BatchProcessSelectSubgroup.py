@@ -92,10 +92,13 @@ class BatchProcessSelectSubgroup(BatchProcess):
                  nothing found.
         """
         datasets = self.patient_dict_container.dataset
+        
+        if not datasets:
+            return None
 
         for ds in datasets:
             # Check for SR files
-            if datasets[ds].SOPClassUID == '1.2.840.10008.5.1.4.1.1.88.33':
+            if datasets[ds].SOPClassUID == "1.2.840.10008.5.1.4.1.1.88.33":
                 # Check to see if it is a clinical data SR
                 if datasets[ds].SeriesDescription == "CLINICAL-DATA":
                     return datasets[ds]
@@ -115,7 +118,7 @@ class BatchProcessSelectSubgroup(BatchProcess):
 
         data_list = data.split("\n")
         for row in range(len(data_list)):
-            if data_list[row] == '':
+            if data_list[row] == "":
                 continue
             # Assumes neither data nor attributes have colons
             row_data = data_list[row].split(":")
