@@ -6,7 +6,7 @@ from src.Controller.PathHandler import resource_path
 
 class SelectSubgroupOptions(QtWidgets.QWidget):
     """
-    ClinicalData-SR2CSV options for batch processing.
+    Select subgroup options for batch processing.
     """
 
     def __init__(self):
@@ -45,9 +45,15 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self.filter_table.cellClicked.connect(self.select_filter_option_cell)
 
     def get_selected_filter_options(self):
+        """
+        Getter for the selected filters
+        """
         return self._selected_filters
 
     def display_no_data(self):
+        """
+        Utility method to display an empty table and appropriate message
+        """
         print("display no data called")
         self.message.setText(
             "No Clinical-data-SR files located in current selected directory"
@@ -57,6 +63,11 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self.filter_table.setHorizontalHeaderLabels([])
 
     def show_filtering_options_in_table(self, options_data_dict):
+        """
+        Displays the data in the table
+        :param options_data_dict: dictionary of clinical data attributes and values
+        """
+        
         if not options_data_dict:
             self.display_no_data()
             return
@@ -99,6 +110,11 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self.filter_table.setHorizontalHeaderLabels(options_data_dict.keys())
 
     def select_filter_option_cell(self, row, column):
+        """
+        Toggles the selected options green and stores value
+        :param row: row index that was clicked
+        :param column: column index that was clicked
+        """
         item = self.filter_table.item(row, column)
 
         # in the case they select empty cell
@@ -126,6 +142,8 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
     def set_selected_filters(self, filter_type, value):
         """
         Setter for the selected filters
+        :param filter_type: the column name
+        :param value: the actual value within that column
         """
 
         if filter_type not in self._selected_filters.keys():
@@ -136,6 +154,8 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
     def remove_selected_filters(self, filter_type, value):
         """
         Remove filter from the selected_filters store
+        :param filter_type: the column name
+        :param value: the actual value within that column
         """
 
         if filter_type not in self._selected_filters.keys():

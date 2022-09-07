@@ -282,6 +282,15 @@ class BatchProcessingController:
                                       interrupt_flag,
                                       progress_callback,
                                       patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        select_subgroup.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
         process = \
@@ -594,6 +603,13 @@ class BatchProcessingController:
         return
 
     def get_all_clinical_data(self):
+        """
+        Reads in all clinical data from a directory which may
+        contain multiple patients.
+        :return: only unique values in a dictionary with keys as the
+        column name and a list of values found
+        """
+        
         clinical_data_dict = {}
 
         for patient in self.dicom_structure.patients.values():

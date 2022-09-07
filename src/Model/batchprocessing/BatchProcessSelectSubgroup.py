@@ -5,7 +5,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 
 class BatchProcessSelectSubgroup(BatchProcess):
     """
-    This class handles batch processing for the Clinical Data 2 CSV
+    This class handles batch processing for the Selecting subgroup
     process. Inherits from the BatchProcessing class.
     """
     # Allowed classes for ClinicalDataSR2CSV
@@ -26,6 +26,8 @@ class BatchProcessSelectSubgroup(BatchProcess):
         :param interrupt_flag: A threading.Event() object that tells the
                                function to stop loading.
         :param patient_files: List of patient files.
+        :param selected_filters: dictionary of keys and lists of valid values
+        to filter by in the patients clinical-data-sr file (if one exists)
         """
         # Call the parent class
         super(BatchProcessSelectSubgroup, self).__init__(progress_callback,
@@ -41,7 +43,7 @@ class BatchProcessSelectSubgroup(BatchProcess):
 
     def start(self):
         """
-        Goes through the steps of the ClinicalData-SR2CSV conversion.
+        Goes through the steps of the ClinicalData filtering.
         :return: True if successful, False if not.
         """
         # Stop loading
@@ -127,6 +129,11 @@ class BatchProcessSelectSubgroup(BatchProcess):
         return data_dict
 
     def check_if_patient_meets_filter_criteria(self, data_dict):
+        """
+        Checks if data_dict from patients clinical data contains a match
+        from the selected_filters dictionary.
+        :param sr_cd: the patients clinical data SR dataset.
+        """
         for filter_attribute, allowed_values in self.selected_filters.items():
             try:
                 patient_value = data_dict[filter_attribute]
