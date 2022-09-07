@@ -212,7 +212,7 @@ class UIBatchProcessingWindow(object):
         batch_window_instance.setLayout(self.layout)
 
         # Create batch processing controller, enable the processing
-        self.batch_processing_controller = BatchProcessingController(self._batch_process_filter_model)
+        self.batch_processing_controller = BatchProcessingController()
 
     def show_file_browser(self):
         """
@@ -308,6 +308,7 @@ class UIBatchProcessingWindow(object):
                      'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+        subgroup_filter_options = self.select_subgroup_tab.get_selected_filter_options()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
@@ -337,6 +338,8 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
+        self.batch_processing_controller.set_subgroup_filter_options(
+                subgroup_filter_options)
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:

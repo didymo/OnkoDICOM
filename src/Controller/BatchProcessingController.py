@@ -31,7 +31,7 @@ class BatchProcessingController:
     This class is the controller for batch processing. It starts and
     ends processes, and controls the progress window.
     """
-    def __init__(self, _batch_process_filter_model):
+    def __init__(self):
         """
         Class initialiser function.
         """
@@ -44,12 +44,11 @@ class BatchProcessingController:
         self.dicom_structure = None
         self.suv2roi_weights = None
         self.name_cleaning_options = None
+        self.subgroup_filter_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
-        
-        self._batch_process_filter_model = _batch_process_filter_model
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -141,6 +140,14 @@ class BatchProcessingController:
                         cleaning the ROIs.
         """
         self.name_cleaning_options = options
+
+    def set_subgroup_filter_options(self, options):
+        """
+        Set subgroup filter options for batch subgroup selection.
+        :param options: Dictionary of attributes with list of values
+        to filter by in that column.
+        """
+        self.subgroup_filter_options = options
 
     @staticmethod
     def get_patient_files(patient):
@@ -275,7 +282,7 @@ class BatchProcessingController:
         process = \
             BatchProcessSelectSubgroup(progress_callback, interrupt_flag,
                                            cur_patient_files,
-                                           self._batch_process_filter_model)
+                                           self.subgroup_filter_options)
         success = process.start()
 
         # Update summary

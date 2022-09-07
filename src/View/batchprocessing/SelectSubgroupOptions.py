@@ -43,6 +43,9 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
 
         self.filter_table.cellClicked.connect(self.select_filter_option_cell)
 
+    def get_selected_filter_options(self):
+        return self._batch_process_filter_model.selected_filters
+
     def display_no_data(self):
         print("display no data called")
         self.message.setText("No Clinical-data-SR files located in current selected directory")

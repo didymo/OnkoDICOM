@@ -19,7 +19,7 @@ class BatchProcessSelectSubgroup(BatchProcess):
         }
     }
 
-    def __init__(self, progress_callback, interrupt_flag, patient_files, _batch_process_filter_model):
+    def __init__(self, progress_callback, interrupt_flag, patient_files, selected_filters):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -38,7 +38,7 @@ class BatchProcessSelectSubgroup(BatchProcess):
         self.required_classes = ['sr']
         self.ready = self.load_images(patient_files, self.required_classes)
         self.within_filter = False
-        self._batch_process_filter_model = _batch_process_filter_model
+        self.selected_filters = selected_filters
 
     def start(self):
         """
@@ -127,7 +127,7 @@ class BatchProcessSelectSubgroup(BatchProcess):
         return data_dict
 
     def check_if_patient_meets_filter_criteria(self, data_dict):               
-        for filter_attribute, allowed_filtered_values in self._batch_process_filter_model.selected_filters.items():
+        for filter_attribute, allowed_filtered_values in self.selected_filters.items():
             try:
                 patient_value = data_dict[filter_attribute]
                 
