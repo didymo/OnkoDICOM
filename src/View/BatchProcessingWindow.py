@@ -123,7 +123,6 @@ class UIBatchProcessingWindow(object):
         # Tab widget
         self.tab_widget = CheckableTabWidget()
         self.tab_widget.tabBar().setObjectName("batch-tabs")
-        # TODO: styling for this section needs to be updated
         self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Set model for storing filter options
@@ -299,9 +298,9 @@ class UIBatchProcessingWindow(object):
         Executes when the confirm button is clicked.
         """
         # WARNING: the order of this list is important.
-        # TODO: this should be replaced with something more dynamic
+        # TODO: this should be replaced with something more global
         # as currently this is very flaky. ie. changing the order of
-        # this list without changingthe order of the tabs being added
+        # this list without changing the order of the tabs being added
         # will cause this process to break when getting the selected 
         # processes in the for loop below
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',

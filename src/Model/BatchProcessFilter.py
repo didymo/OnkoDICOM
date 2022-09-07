@@ -39,6 +39,3 @@ class BatchProcessFilterModel(object):
             return
         else:
             self._selected_filters[filter_type].remove(value)
-            
-            if self._selected_filters[filter_type] == None:
-                self._selected_filters[filter_type] = []
