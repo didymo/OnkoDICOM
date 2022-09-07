@@ -154,7 +154,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                                      255)
             self.q_image.setPixelColor(x_coord, y_coord, new_color)
         logging.debug("_set_color_of_pixels finished")
-    
+
     def update_pixel_transparency(self):
         """
         Updates the transparency of pixels that have already been drawn, with new
