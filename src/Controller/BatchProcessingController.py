@@ -17,7 +17,8 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
-from src.Model.batchprocessing.BatchProcessSelectSubgroup import BatchProcessSelectSubgroup
+from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
+    BatchProcessSelectSubgroup
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -214,20 +215,22 @@ class BatchProcessingController:
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
 
-
             if 'select_subgroup' in self.processes:
-                patient_in_subgroup = self.process_functions["select_subgroup"](interrupt_flag,
-                                                progress_callback,
-                                                patient)
+                in_subgroup = self.process_functions["select_subgroup"](
+                    interrupt_flag,
+                    progress_callback,
+                    patient
+                    )
 
-                if not patient_in_subgroup:
+                if not in_subgroup:
                     # dont complete processes on this patient
                     continue
 
             # Perform processes on patient
             for process in self.processes:
-                if process == 'roinamecleaning' or process == 'select_subgroup':
+                if process in ['roinamecleaning',  'select_subgroup']:
                     continue
+
                 self.process_functions[process](interrupt_flag,
                                                 progress_callback,
                                                 patient)
@@ -275,14 +278,17 @@ class BatchProcessingController:
         # Update the patient dict container
         PatientDictContainer().set("rtss_modified", False)
 
-    def batch_select_subgroup_handler(self, interrupt_flag,
-                              progress_callback, patient):
+    def batch_select_subgroup_handler(self,
+                                      interrupt_flag,
+                                      progress_callback,
+                                      patient):
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
         process = \
-            BatchProcessSelectSubgroup(progress_callback, interrupt_flag,
-                                           cur_patient_files,
-                                           self.subgroup_filter_options)
+            BatchProcessSelectSubgroup(progress_callback,
+                                       interrupt_flag,
+                                       cur_patient_files,
+                                       self.subgroup_filter_options)
         success = process.start()
 
         # Update summary
@@ -586,18 +592,16 @@ class BatchProcessingController:
         print("Error performing batch processing.")
         self.progress_window.close()
         return
-    
+
     def get_all_clinical_data(self):
         clinical_data_dict = {}
-        
+
         for patient in self.dicom_structure.patients.values():
             cur_patient_files = \
-            BatchProcessingController.get_patient_files(patient)
+                BatchProcessingController.get_patient_files(patient)
             process = \
-            BatchProcessSelectSubgroup(None, None,
-                                           cur_patient_files,
-                                           None)
-            
+                BatchProcessSelectSubgroup(None, None, cur_patient_files, None)
+
             cd_sr = process.find_clinical_data_sr()
 
             # if they do then get the data
@@ -608,9 +612,9 @@ class BatchProcessingController:
 
                 for title in titles:
                     data = single_patient_data[title]
-                    
+
                     if title not in clinical_data_dict.keys():
-                        clinical_data_dict[title]=[data]
+                        clinical_data_dict[title] = [data]
                     else:
                         combined_data = clinical_data_dict[title]
                         combined_data.append(data)
@@ -637,6 +641,6 @@ class BatchProcessingController:
         sec = cur_time.second
 
         time_stamp = str(year) + str(month) + str(day) + str(hour) + \
-                     str(min) + str(sec)
+            str(min) + str(sec)
 
         return time_stamp

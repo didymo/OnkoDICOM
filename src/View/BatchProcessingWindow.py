@@ -61,6 +61,7 @@ class CheckableTabWidget(QtWidgets.QTabWidget):
             index,
             QtWidgets.QTabBar.LeftSide).setCheckState(check_state)
 
+
 class UIBatchProcessingWindow(object):
     """
     This class contains the user interface for the batch processing
@@ -110,7 +111,7 @@ class UIBatchProcessingWindow(object):
 
         # Label to display file search status
         self.search_progress_label = QtWidgets.QLabel("No directory is "
-                                                  "currently selected.")
+                                                      "currently selected.")
         self.search_progress_label.setFont(label_font)
 
         # Browse button
@@ -273,7 +274,8 @@ class UIBatchProcessingWindow(object):
                                                len(dicom_structure.patients))
 
             # Check for Clinical data
-            clinical_data = self.batch_processing_controller.get_all_clinical_data()
+            clinical_data = self.batch_processing_controller \
+                .get_all_clinical_data()
             self.select_subgroup_tab.show_filtering_options_in_table(
                 clinical_data
                 )
@@ -297,14 +299,16 @@ class UIBatchProcessingWindow(object):
         # TODO: this should be replaced with something more global
         # as currently this is very flaky. ie. changing the order of
         # this list without changing the order of the tabs being added
-        # will cause this process to break when getting the selected 
+        # will cause this process to break when getting the selected
         # processes in the for loop below
-        processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
-                     'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
-                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
+        processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
+                     'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
+                     'clinicaldata-sr2csv', 'roinamecleaning',
+                     'roiname2fmaid']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
-        subgroup_filter_options = self.select_subgroup_tab.get_selected_filter_options()
+        subgroup_filter_options = self.select_subgroup_tab \
+            .get_selected_filter_options()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:

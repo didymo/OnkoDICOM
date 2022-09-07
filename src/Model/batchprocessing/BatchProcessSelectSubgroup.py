@@ -1,5 +1,3 @@
-import csv
-import os
 from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -19,7 +17,8 @@ class BatchProcessSelectSubgroup(BatchProcess):
         }
     }
 
-    def __init__(self, progress_callback, interrupt_flag, patient_files, selected_filters):
+    def __init__(self, progress_callback, interrupt_flag, patient_files,
+                 selected_filters):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -30,8 +29,8 @@ class BatchProcessSelectSubgroup(BatchProcess):
         """
         # Call the parent class
         super(BatchProcessSelectSubgroup, self).__init__(progress_callback,
-                                                             interrupt_flag,
-                                                             patient_files)
+                                                         interrupt_flag,
+                                                         patient_files)
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
@@ -92,7 +91,7 @@ class BatchProcessSelectSubgroup(BatchProcess):
                  nothing found.
         """
         datasets = self.patient_dict_container.dataset
-        
+
         if not datasets:
             return None
 
@@ -127,18 +126,17 @@ class BatchProcessSelectSubgroup(BatchProcess):
 
         return data_dict
 
-    def check_if_patient_meets_filter_criteria(self, data_dict):               
-        for filter_attribute, allowed_filtered_values in self.selected_filters.items():
+    def check_if_patient_meets_filter_criteria(self, data_dict):
+        for filter_attribute, allowed_values in self.selected_filters.items():
             try:
                 patient_value = data_dict[filter_attribute]
-                
-                if len(allowed_filtered_values)==0:
+
+                if len(allowed_values) == 0:
                     continue
-                
-                if patient_value in allowed_filtered_values:
+
+                if patient_value in allowed_values:
                     self.within_filter = True
                     break
             except KeyError:
                 # they have an sr file that does not contain this trait
                 continue
-

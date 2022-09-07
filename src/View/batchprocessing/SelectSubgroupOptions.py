@@ -49,7 +49,9 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
 
     def display_no_data(self):
         print("display no data called")
-        self.message.setText("No Clinical-data-SR files located in current selected directory")
+        self.message.setText(
+            "No Clinical-data-SR files located in current selected directory"
+            )
         self.filter_table.setRowCount(0)
         self.filter_table.setColumnCount(0)
         self.filter_table.setHorizontalHeaderLabels([])
@@ -60,7 +62,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
             return
 
         self.message.setText("Select values to filter by:")
-        
+
         self.filter_table.setRowCount(0)
         self.filter_table.setColumnCount(0)
 
@@ -75,20 +77,20 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
             if len(filtered_values) == 0:
                 columns_to_remove.append(title)
 
-        for title in columns_to_remove:        
+        for title in columns_to_remove:
             options_data_dict.pop(title)
 
         for title in options_data_dict.keys():
             col = self.filter_table.columnCount()
             self.filter_table.insertColumn(col)
-            
+
             for row in range(0, len(options_data_dict[title])):
                 str_value = str(options_data_dict[title][row])
                 # filters out blank options
                 if str_value == "":
                     continue
                 filter_value = QtWidgets.QTableWidgetItem(str_value)
-                
+
                 if row >= self.filter_table.rowCount():
                     self.filter_table.insertRow(row)
 
@@ -102,7 +104,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         # in the case they select empty cell
         if not item:
             return
-        
+
         header = self.filter_table.horizontalHeaderItem(column).text()
         text_filter = item.text()
 
