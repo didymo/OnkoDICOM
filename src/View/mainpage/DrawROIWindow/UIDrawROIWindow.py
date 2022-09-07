@@ -127,9 +127,9 @@ class UIDrawROIWindow:
 
         self.draw_roi_window_viewport_zoom_label.setText(
             _translate("DrawRoiWindowViewportZoomLabel", "Zoom: "))
-        self.draw_roi_window_cursor_radius_change_label.setText(
-            _translate("DrawRoiWindowCursorRadiusChangeLabel",
-                       "Cursor Radius: "))
+        self.draw_roi_window_cursor_diameter_change_label.setText(
+            _translate("DrawRoiWindowCursorDiameterChangeLabel",
+                       "Cursor Diameter: "))
 
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
@@ -296,7 +296,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_input_container_box. \
             addRow(self.draw_roi_window_viewport_zoom_box)
 
-        self.init_cursor_radius_change_box()
+        self.init_cursor_diameter_change_box()
 
         # Create slider to adjust the transparency of drawn pixels
         self.transparency_slider_box = QHBoxLayout()
@@ -641,11 +641,11 @@ class UIDrawROIWindow:
                 self.current_slice]['drawingROI']
             self.ds = self.drawn_roi_list[self.current_slice]['ds']
             self.dicom_view.view.setScene(self.drawingROI)
-            self.enable_cursor_radius_change_box()
+            self.enable_cursor_diameter_change_box()
             self.drawingROI.clear_cursor(self.drawing_tool_radius)
 
         else:
-            self.disable_cursor_radius_change_box()
+            self.disable_cursor_diameter_change_box()
             self.ds = None
 
     def onZoomInClicked(self):
@@ -866,7 +866,7 @@ class UIDrawROIWindow:
                 )
                 self.slice_changed = True
                 self.dicom_view.view.setScene(self.drawingROI)
-                self.enable_cursor_radius_change_box()
+                self.enable_cursor_diameter_change_box()
             else:
                 QMessageBox.about(self.draw_roi_window_instance,
                                   "Not Enough Data",
@@ -883,7 +883,7 @@ class UIDrawROIWindow:
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
-        self.disable_cursor_radius_change_box()
+        self.disable_cursor_diameter_change_box()
 
     def onSaveClicked(self):
         """
@@ -961,28 +961,28 @@ class UIDrawROIWindow:
         self.ROI_name = roi_name
         self.roi_name_line_edit.setText(self.ROI_name)
 
-    def onRadiusReduceClicked(self):
+    def onDiameterReduceClicked(self):
         """
-        function triggered when user reduce cursor radius
+        function triggered when user reduce cursor diameter
         """
         self.drawing_tool_radius = max(self.drawing_tool_radius - 0.5, 0.5)
-        self.draw_roi_window_cursor_radius_change_input.setText(
-            str(self.drawing_tool_radius))
-        self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
-        self.draw_cursor_when_radius_changed()
+        self.draw_roi_window_cursor_diameter_change_input.setText(
+            "{:.0f}".format(self.drawing_tool_radius*2))
+        self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
+        self.draw_cursor_when_diameter_changed()
 
-    def onRadiusIncreaseClicked(self):
+    def onDiameterIncreaseClicked(self):
         """
-        function triggered when user increase cursor radius
+        function triggered when user increase cursor diameter
         """
         self.drawing_tool_radius = min(self.drawing_tool_radius + 0.5, 25)
-        self.draw_roi_window_cursor_radius_change_input.setText(
-            str(self.drawing_tool_radius))
-        self.draw_cursor_when_radius_changed()
+        self.draw_roi_window_cursor_diameter_change_input.setText(
+            "{:.0f}".format(self.drawing_tool_radius*2))
+        self.draw_cursor_when_diameter_changed()
 
-    def draw_cursor_when_radius_changed(self):
+    def draw_cursor_when_diameter_changed(self):
         """
-        function to update drawing cursor when radius changed
+        function to update drawing cursor when diameter changed
         """
         if self.drawingROI.cursor:
             self.drawingROI.draw_cursor(
@@ -996,100 +996,102 @@ class UIDrawROIWindow:
                 self.drawing_tool_radius,
                 True)
 
-    def init_cursor_radius_change_box(self):
+    def init_cursor_diameter_change_box(self):
         """
-        function to init cursor radius change box
+        Function to init cursor diameter change box elements. Note, while the user
+        facing elements refer to diameter, the back end calculations are performed
+        using radius instead (with 0.5 radius increments).
         """
-        # Create a horizontal box for containing the cursor radius changing
+        # Create a horizontal box for containing the cursor diameter changing
         # function
-        self.draw_roi_window_cursor_radius_change_box = QHBoxLayout()
-        self.draw_roi_window_cursor_radius_change_box.setObjectName(
-            "DrawRoiWindowCursorRadiusChangeBox")
-        # Create a label for cursor radius change
-        self.draw_roi_window_cursor_radius_change_label = QLabel()
-        self.draw_roi_window_cursor_radius_change_label.setObjectName(
-            "DrawRoiWindowCursorRadiusChangeLabel")
-        # Create an input box for cursor radius
-        self.draw_roi_window_cursor_radius_change_input = QLineEdit()
-        self.draw_roi_window_cursor_radius_change_input.setObjectName(
-            "DrawRoiWindowCursorRadiusChangeInput")
-        self.draw_roi_window_cursor_radius_change_input.setText(str(19))
-        self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
-        self.draw_roi_window_cursor_radius_change_input.setEnabled(False)
-        self.draw_roi_window_cursor_radius_change_input.setSizePolicy(
+        self.draw_roi_window_cursor_diameter_change_box = QHBoxLayout()
+        self.draw_roi_window_cursor_diameter_change_box.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeBox")
+        # Create a label for cursor diameter change
+        self.draw_roi_window_cursor_diameter_change_label = QLabel()
+        self.draw_roi_window_cursor_diameter_change_label.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeLabel")
+        # Create an input box for cursor diameter
+        self.draw_roi_window_cursor_diameter_change_input = QLineEdit()
+        self.draw_roi_window_cursor_diameter_change_input.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeInput")
+        self.draw_roi_window_cursor_diameter_change_input.setText("{:.0f}".format(self.drawing_tool_radius*2))
+        self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
+        self.draw_roi_window_cursor_diameter_change_input.setEnabled(False)
+        self.draw_roi_window_cursor_diameter_change_input.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.draw_roi_window_cursor_radius_change_input.resize(
-            self.draw_roi_window_cursor_radius_change_input.sizeHint().width(),
-            self.draw_roi_window_cursor_radius_change_input.sizeHint().height()
+        self.draw_roi_window_cursor_diameter_change_input.resize(
+            self.draw_roi_window_cursor_diameter_change_input.sizeHint().width(),
+            self.draw_roi_window_cursor_diameter_change_input.sizeHint().height()
         )
-        # Create 2 buttons for increasing and reducing cursor radius
+        # Create 2 buttons for increasing and reducing cursor diameter
         # Increase Button
-        self.draw_roi_window_cursor_radius_change_increase_button = \
+        self.draw_roi_window_cursor_diameter_change_increase_button = \
             QPushButton()
-        self.draw_roi_window_cursor_radius_change_increase_button. \
-            setObjectName("DrawRoiWindowCursorRadiusIncreaseButton")
-        self.draw_roi_window_cursor_radius_change_increase_button. \
+        self.draw_roi_window_cursor_diameter_change_increase_button. \
+            setObjectName("DrawRoiWindowCursorDiameterIncreaseButton")
+        self.draw_roi_window_cursor_diameter_change_increase_button. \
             setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_cursor_radius_change_increase_button.resize(
+        self.draw_roi_window_cursor_diameter_change_increase_button.resize(
             QSize(24, 24))
-        self.draw_roi_window_cursor_radius_change_increase_button.setProperty(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setProperty(
             "QPushButtonClass", "zoom-button")
         icon_zoom_in = QtGui.QIcon()
         icon_zoom_in.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/zoom_in_icon.png')))
-        self.draw_roi_window_cursor_radius_change_increase_button.setIcon(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setIcon(
             icon_zoom_in)
-        self.draw_roi_window_cursor_radius_change_increase_button.clicked. \
-            connect(self.onRadiusIncreaseClicked)
+        self.draw_roi_window_cursor_diameter_change_increase_button.clicked. \
+            connect(self.onDiameterIncreaseClicked)
         # Reduce Button
-        self.draw_roi_window_cursor_radius_change_reduce_button = QPushButton()
-        self.draw_roi_window_cursor_radius_change_reduce_button.setObjectName(
-            "DrawRoiWindowCursorRadiusReduceButton")
-        self.draw_roi_window_cursor_radius_change_reduce_button.setSizePolicy(
+        self.draw_roi_window_cursor_diameter_change_reduce_button = QPushButton()
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setObjectName(
+            "DrawRoiWindowCursorDiameterReduceButton")
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_cursor_radius_change_reduce_button.resize(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.resize(
             QSize(24, 24))
-        self.draw_roi_window_cursor_radius_change_reduce_button.setProperty(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setProperty(
             "QPushButtonClass", "zoom-button")
         icon_zoom_out = QtGui.QIcon()
         icon_zoom_out.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/zoom_out_icon.png')))
-        self.draw_roi_window_cursor_radius_change_reduce_button.setIcon(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setIcon(
             icon_zoom_out)
-        self.draw_roi_window_cursor_radius_change_reduce_button.clicked. \
-            connect(self.onRadiusReduceClicked)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_label)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_input)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_reduce_button)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_increase_button)
+        self.draw_roi_window_cursor_diameter_change_reduce_button.clicked. \
+            connect(self.onDiameterReduceClicked)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_label)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_input)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_reduce_button)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_increase_button)
         self.draw_roi_window_input_container_box.addRow(
-            self.draw_roi_window_cursor_radius_change_box)
-        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
+            self.draw_roi_window_cursor_diameter_change_box)
+        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             False)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
             False)
 
-    def disable_cursor_radius_change_box(self):
+    def disable_cursor_diameter_change_box(self):
         """
-        function  to disable cursor radius change box
+        function  to disable cursor diameter change box
         """
-        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
             False)
-        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             False)
         self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
 
-    def enable_cursor_radius_change_box(self):
+    def enable_cursor_diameter_change_box(self):
         """
-        function  to enable cursor radius change box
+        function  to enable cursor diameter change box
         """
-        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
             True)
-        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             True)
         self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
 
