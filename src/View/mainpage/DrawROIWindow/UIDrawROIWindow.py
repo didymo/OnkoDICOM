@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QSize, QRegularExpression
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
-    QMessageBox, QComboBox
+    QMessageBox, QComboBox, QSlider
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
@@ -56,6 +56,7 @@ class UIDrawROIWindow:
         self.colour = None
         self.ds = None
         self.zoom = 1.0
+        self.pixel_transparency = 0.50
 
         self.upper_limit = None
         self.lower_limit = None
@@ -119,6 +120,8 @@ class UIDrawROIWindow:
             _translate("MaxPixelDensityLabel", "Maximum density (pixels): "))
         self.max_pixel_density_line_edit.setText(
             _translate("MaxPixelDensityInput", ""))
+        self.transparency_slider_label.setText(
+            _translate("TransparencySliderLabel", "Transparency:"))
         self.toggle_keep_empty_pixel_label.setText(
             _translate("ToggleKeepEmptyPixelLabel", "Keep empty pixel: "))
 
@@ -294,6 +297,38 @@ class UIDrawROIWindow:
             addRow(self.draw_roi_window_viewport_zoom_box)
 
         self.init_cursor_radius_change_box()
+
+        # Create slider to adjust the transparency of drawn pixels
+        self.transparency_slider_box = QHBoxLayout()
+        self.transparency_slider_label = QLabel()
+        self.transparency_slider_label.setObjectName("TransparencySliderLabel")
+
+        self.transparency_slider_input_box = QLineEdit()
+        self.transparency_slider_input_box.setObjectName("TransparencySliderInputBox")
+        self.transparency_slider_input_box.setText("{:.0f}".format(self.pixel_transparency * 100) + "%")
+        self.transparency_slider_input_box.setCursorPosition(0)
+        self.transparency_slider_input_box.setEnabled(False)
+        self.transparency_slider_input_box.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.transparency_slider_input_box.resize(self.transparency_slider_input_box.sizeHint().width(),
+                                                  self.transparency_slider_input_box.sizeHint().height())
+
+        self.transparency_slider = QSlider(Qt.Horizontal)
+        self.transparency_slider.setMinimum(0)
+        self.transparency_slider.setMaximum(100)
+        self.transparency_slider.setSingleStep(1)
+        self.transparency_slider.setTickPosition(QSlider.TicksBothSides)
+        self.transparency_slider.setTickInterval(10)
+        self.transparency_slider.setValue(50)
+        self.transparency_slider.setObjectName("TransparencySlider")
+        self.transparency_slider.resize(self.transparency_slider.sizeHint().width(),
+                                        self.transparency_slider.sizeHint().height())
+        self.transparency_slider.valueChanged.connect(self.transparency_slider_value_changed)
+
+        self.transparency_slider_box.addWidget(self.transparency_slider_label)
+        self.transparency_slider_box.addWidget(self.transparency_slider_input_box)
+        self.transparency_slider_box.addWidget(self.transparency_slider)
+        self.draw_roi_window_input_container_box.addRow(self.transparency_slider_box)
+
         # Create field to toggle two options: Keep empty pixel or fill empty
         # pixel when using draw cursor
         self.toggle_keep_empty_pixel_box = QHBoxLayout()
@@ -639,6 +674,14 @@ class UIDrawROIWindow:
             setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
+    def transparency_slider_value_changed(self):
+        self.pixel_transparency = round(self.transparency_slider.value() / 100.0, 2)
+        self.transparency_slider_input_box.setText("{:.0f}".format(self.pixel_transparency * 100) + "%")
+        self.transparency_slider_input_box.setCursorPosition(0)
+        if hasattr(self, 'drawingROI') and self.drawingROI:
+            self.drawingROI.pixel_transparency = self.pixel_transparency
+            self.drawingROI.update_pixel_transparency()
+
     def toggle_keep_empty_pixel_box_index_changed(self):
         self.keep_empty_pixel = self.toggle_keep_empty_pixel_combo_box. \
                                     currentText() == "On"
@@ -818,8 +861,8 @@ class UIDrawROIWindow:
                     self.current_slice,
                     self.drawing_tool_radius,
                     self.keep_empty_pixel,
+                    self.pixel_transparency,
                     set()
-
                 )
                 self.slice_changed = True
                 self.dicom_view.view.setScene(self.drawingROI)
