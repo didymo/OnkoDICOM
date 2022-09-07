@@ -118,10 +118,11 @@ class BatchProcessSelectSubgroup(BatchProcess):
 
         data_list = data.split("\n")
         for row in range(len(data_list)):
-            if data_list[row] == "":
+            value = data_list[row].strip()
+            if value == "":
                 continue
             # Assumes neither data nor attributes have colons
-            row_data = data_list[row].split(":")
+            row_data = value.split(":")
             data_dict[row_data[0]] = row_data[1][1:]
 
         return data_dict

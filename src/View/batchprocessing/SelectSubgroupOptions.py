@@ -63,14 +63,30 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self.filter_table.setRowCount(0)
         self.filter_table.setColumnCount(0)
 
+        # not a necessary filter option as specified in requirements
         options_data_dict.pop("HASHidentifier")
+
+        columns_to_remove = []
+
+        # remove the keys with an empty list of options
+        for title, values_list in options_data_dict.items():
+            filtered_values = [x for x in values_list if x != ""]
+            if len(filtered_values) == 0:
+                columns_to_remove.append(title)
+
+        for title in columns_to_remove:        
+            options_data_dict.pop(title)
 
         for title in options_data_dict.keys():
             col = self.filter_table.columnCount()
             self.filter_table.insertColumn(col)
             
             for row in range(0, len(options_data_dict[title])):
-                filter_value = QtWidgets.QTableWidgetItem(str(options_data_dict[title][row]))
+                str_value = str(options_data_dict[title][row])
+                # filters out blank options
+                if str_value == "":
+                    continue
+                filter_value = QtWidgets.QTableWidgetItem(str_value)
                 
                 if row >= self.filter_table.rowCount():
                     self.filter_table.insertRow(row)
