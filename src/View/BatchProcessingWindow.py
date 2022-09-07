@@ -19,7 +19,6 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
-from src.Model.BatchProcessFilter import BatchProcessFilterModel
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -125,11 +124,8 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.tabBar().setObjectName("batch-tabs")
         self.tab_widget.setStyleSheet(self.stylesheet)
 
-        # Set model for storing filter options
-        self._batch_process_filter_model = BatchProcessFilterModel()
-
         # Tabs
-        self.select_subgroup_tab = SelectSubgroupOptions(self._batch_process_filter_model)
+        self.select_subgroup_tab = SelectSubgroupOptions()
         self.iso2roi_tab = ISO2ROIOptions()
         self.suv2roi_tab = SUV2ROIOptions()
         self.dvh2csv_tab = DVH2CSVOptions()

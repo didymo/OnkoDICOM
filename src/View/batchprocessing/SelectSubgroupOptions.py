@@ -9,7 +9,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
     ClinicalData-SR2CSV options for batch processing.
     """
 
-    def __init__(self, _batch_process_filter_model):
+    def __init__(self):
         """
         Initialise the class.
         """
@@ -39,12 +39,13 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self.main_layout.addWidget(self.filter_table)
         self.setLayout(self.main_layout)
 
-        self._batch_process_filter_model = _batch_process_filter_model
+        # storing the currently selected filter options
+        self._selected_filters = {}
 
         self.filter_table.cellClicked.connect(self.select_filter_option_cell)
 
     def get_selected_filter_options(self):
-        return self._batch_process_filter_model.selected_filters
+        return self._selected_filters
 
     def display_no_data(self):
         print("display no data called")
@@ -105,17 +106,37 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         header = self.filter_table.horizontalHeaderItem(column).text()
         text_filter = item.text()
 
-        if header in self._batch_process_filter_model.selected_filters.keys():
-            current_filters = self._batch_process_filter_model.selected_filters[header]
+        if header in self._selected_filters.keys():
+            current_filters = self._selected_filters[header]
 
             if text_filter in current_filters:
                 item.setBackground(QtGui.QColor(255, 255, 255))
 
                 # and remove item
-                self._batch_process_filter_model.remove_selected_filters(header, text_filter)
+                self.remove_selected_filters(header, text_filter)
                 return
 
         item.setBackground(QtGui.QColor(144, 238, 144))
 
         # store in model for reference at output
-        self._batch_process_filter_model.set_selected_filters(header, text_filter)
+        self.set_selected_filters(header, text_filter)
+
+    def set_selected_filters(self, filter_type, value):
+        """
+        Setter for the selected filters
+        """
+
+        if filter_type not in self._selected_filters.keys():
+            self._selected_filters[filter_type] = [value]
+        else:
+            self._selected_filters[filter_type].append(value)
+
+    def remove_selected_filters(self, filter_type, value):
+        """
+        Remove filter from the selected_filters store
+        """
+
+        if filter_type not in self._selected_filters.keys():
+            return
+        else:
+            self._selected_filters[filter_type].remove(value)
