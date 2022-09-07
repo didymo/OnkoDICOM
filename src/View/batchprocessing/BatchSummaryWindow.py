@@ -130,10 +130,14 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "FMA_NO_ROI":
                     summary_text += process.upper() \
                         + " skipped as no ROIs with standard names were found."
-                # ROIName2FMAID ROIs renamed
+                # ROIName2FMAID or FMAID2ROIName ROIs renamed 
                 elif patient_summary[process][0:7] == "FMA_ID_":
                     summary_text += "Completed " + process.upper() + ". "\
                         + patient_summary[process][7:] + " ROIs renamed."
+                # FMAID2ROIName no ROIs with FMA IDs found
+                elif patient_summary[process] == "ROI_NO_FMA":
+                    summary_text += process.upper() \
+                        + " skipped as no ROIs with FMA IDs were found."
                 summary_text += "\n"
             summary_text += "\n"
 

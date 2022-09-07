@@ -6,9 +6,9 @@ from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-class BatchProcessROIName2FMAID(BatchProcess):
+class BatchProcessFMAID2ROIName(BatchProcess):
     """
-    This class handles batch processing for the ROI Name to FMA ID process.
+    This class handles batch processing for the FMA ID to ROI name process.
     Inherits from the BatchProcess class.
     """
     # Allowed classes for ROI Name Cleaning
@@ -30,14 +30,14 @@ class BatchProcessROIName2FMAID(BatchProcess):
         :param patient_files: List of patient files.
         """
         # Call the parent class
-        super(BatchProcessROIName2FMAID, self).__init__(progress_callback,
+        super(BatchProcessFMAID2ROIName, self).__init__(progress_callback,
                                                         interrupt_flag,
                                                         patient_files)
 
         # Set class variables
         self.required_classes = ['rtss']
-        self.organ_names = []
-        self.fma_ids = {}
+        self.organ_names = {}
+        self.fma_ids = []
         self.ready = self.load_images(patient_files, self.required_classes)
         self.patient_dict_container = PatientDictContainer()
 
@@ -54,22 +54,22 @@ class BatchProcessROIName2FMAID(BatchProcess):
 
         # Lookup ROI names in Organ List
         self.progress_callback.emit(("Reading ROIs...", 40))
-        roi_names = self.find_roi_names()
+        roi_names = self.find_fma_ids()
 
         # Return false if RTSS has no ROIs
         if not roi_names:
-            self.summary = "FMA_NO_ROI"
+            self.summary = "ROI_NO_FMA"
             return False
 
-        # Convert ROI name to FMA ID
+        # Convert FMA ID to ROI name 
         rtss = self.patient_dict_container.dataset['rtss']
         total = 0
         progress = 40
         step = 50/len(roi_names)
-        for name in roi_names:
-            self.progress_callback.emit(("Renaming ROIs...", progress))
+        for fmaid in roi_names:
+            self.progress_callback.emit(("Renaming FMAs...", progress))
             progress += step
-            rtss = self.rename(rtss, name, self.fma_ids[name])
+            rtss = self.rename(rtss, fmaid, self.organ_names[fmaid])
             total += 1
 
         rtss.save_as(self.patient_dict_container.filepaths['rtss'])
@@ -78,20 +78,20 @@ class BatchProcessROIName2FMAID(BatchProcess):
         self.summary = "FMA_ID_" + str(total)
         return True
 
-    def find_roi_names(self):
+    def find_fma_ids(self):
         """
         Return a list of ROI names in the RTSS that are standard organ names.
         :return: list of ROI names.
         """
         # Get organ names and FMA IDs if they have not been populated
-        if not self.organ_names:
+        if not self.fma_ids:
             # Get standard organ names
             with open(data_path('organName.csv'), 'r') as f:
                 csv_input = csv.reader(f)
                 header = next(f)  # Ignore the "header" of the column
                 for row in csv_input:
-                    self.organ_names.append(row[0])
-                    self.fma_ids[row[0]] = row[1]
+                    self.fma_ids.append(row[1])
+                    self.organ_names[row[1]] = row[0]
 
         rtss = self.patient_dict_container.dataset['rtss']
         rois = []
@@ -101,7 +101,7 @@ class BatchProcessROIName2FMAID(BatchProcess):
             roi_name = rtss.StructureSetROISequence[i].ROIName
 
             # Add ROI name to the list
-            if roi_name in self.organ_names:
+            if roi_name in self.fma_ids:
                 rois.append(roi_name)
 
         return rois
