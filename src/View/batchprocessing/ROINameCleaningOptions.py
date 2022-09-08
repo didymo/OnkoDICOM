@@ -395,7 +395,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
-
+            
             if roi_name.lower() in self.organ_names_lowercase:
                 # Add row to table
                 self.table_organ.insertRow(i)
@@ -406,7 +406,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.table_organ.setCellWidget(i, 2, name_box)
                 self.table_organ.setCellWidget(i, 3, rtss_combo_box)
                 continue
-            else:
+            if roi_name[0:3] in self.volume_prefixes \
+                    or roi_name[0:4] in self.volume_prefixes \
+                    or "PTV" in roi_name or "LN" in roi_name:
                 # Add row to table
                 self.table_volume.insertRow(i)
                 self.table_volume.setRowHeight(i, 50)
@@ -415,6 +417,16 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.table_volume.setCellWidget(i, 1, combo_box)
                 self.table_volume.setCellWidget(i, 2, name_box)
                 self.table_volume.setCellWidget(i, 3, rtss_combo_box)
+                continue
+            else:
+                # Add row to table
+                self.table_organ.insertRow(i)
+                self.table_organ.setRowHeight(i, 50)
+                self.table_organ.setItem(
+                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
+                self.table_organ.setCellWidget(i, 1, combo_box)
+                self.table_organ.setCellWidget(i, 2, name_box)
+                self.table_organ.setCellWidget(i, 3, rtss_combo_box)
             i += 1
 
         # Set row height
