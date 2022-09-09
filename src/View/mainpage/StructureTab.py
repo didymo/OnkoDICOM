@@ -239,7 +239,7 @@ class StructureTab(QtWidgets.QWidget):
         self.roi_delete_handler.show_roi_delete_options()
 
     def roi_draw_clicked(self):
-        self.roi_draw_handler.show_roi_draw_options()
+        self.roi_draw_handler.show_roi_draw_window()
 
     def roi_manipulate_clicked(self):
         """ Open ROI Manipulate Window """
