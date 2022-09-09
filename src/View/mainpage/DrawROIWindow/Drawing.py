@@ -2,6 +2,7 @@ import math
 import numpy
 import logging
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
 
@@ -15,11 +16,13 @@ class Drawing(QtWidgets.QGraphicsScene):
         Class responsible for the ROI drawing functionality
         """
 
+    seed = Signal(list)
+
     # Initialisation function  of the class
     def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
                  draw_roi_window_instance, slice_changed,
                  current_slice, drawing_tool_radius, keep_empty_pixel, pixel_transparency,
-                 target_pixel_coords=set()):
+                 target_pixel_coords=set(), **kwargs):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary
@@ -65,6 +68,13 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.max_bounds_x = self.rows
         self.max_bounds_y = self.cols
         self.fill_source = None
+        if 'x' in kwargs and 'y' in kwargs:
+            self.fill_source = [kwargs.get('x'), kwargs.get('y')]
+
+        # TODO fix up
+        if 'UI' in kwargs:
+            print("here")
+            self.seed.connect(kwargs.get('UI').set_seed)
 
     def set_bounds(self):
         """
@@ -116,9 +126,9 @@ class Drawing(QtWidgets.QGraphicsScene):
                             self.target_pixel_coords.add((element[0], element[1]))
 
         """For the meantime, a new image is created and the pixels 
-                    specified are coloured. The _set_colour_of_pixels function
-                     is then called to colour the newly drawn pixels and blend in
-                     transparency."""
+        specified are coloured. The _set_colour_of_pixels function
+         is then called to colour the newly drawn pixels and blend in
+         transparency."""
         # Convert QPixMap into Qimage
         for x_coord, y_coord in self.target_pixel_coords:
             temp = set()
@@ -129,9 +139,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             colors = QColor(c).getRgbF()
             self.according_color_dict[(x_coord, y_coord)] = colors
 
-            points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
-            self._set_color_of_pixels(points)
-            self.refresh_image()
+        points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+        self._set_color_of_pixels(points)
+        self.refresh_image()
 
     def _set_color_of_pixels(self, points):
         """
@@ -388,6 +398,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         Uses the users mouse click position to set the fill source
         """
         self.fill_source = [event.scenePos().x(), event.scenePos().y()]
+        self.seed.emit(self.fill_source)
         self._display_pixel_color()
 
     def manual_draw_roi(self, event):

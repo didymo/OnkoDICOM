@@ -2,7 +2,7 @@ import platform
 
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QSize, QRegularExpression
+from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
@@ -623,6 +623,7 @@ class UIDrawROIWindow:
         actions to be taken when slider value changes
 
         """
+        print("Slider change")
         image_slice_number = self.current_slice
         # save progress
         self.save_drawing_progress(image_slice_number)
@@ -806,6 +807,8 @@ class UIDrawROIWindow:
         """
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
+        # self.dicom_view.slider.setValue(50)
+
         if self.min_pixel_density_line_edit.text() == "" \
                 or self.max_pixel_density_line_edit.text() == "":
             QMessageBox.about(self.draw_roi_window_instance, "Not Enough Data",
@@ -814,12 +817,12 @@ class UIDrawROIWindow:
             # Getting most updated selected slice
             id = self.current_slice
 
-            dt = self.patient_dict_container.dataset[id]
-            dt.convert_pixel_data()
-
-            # Path to the selected .dcm file
-            location = self.patient_dict_container.filepaths[id]
-            self.ds = pydicom.dcmread(location)
+            # dt = self.patient_dict_container.dataset[id]
+            # dt.convert_pixel_data()
+            #
+            # # Path to the selected .dcm file
+            # location = self.patient_dict_container.filepaths[id]
+            # self.ds = pydicom.dcmread(location)
 
             min_pixel = self.min_pixel_density_line_edit.text()
             max_pixel = self.max_pixel_density_line_edit.text()
@@ -853,27 +856,71 @@ class UIDrawROIWindow:
                                       "Please ensure maximum density is "
                                       "atleast higher than minimum density.")
 
-                self.drawingROI = Drawing(
-                    pixmaps[id],
-                    dt._pixel_array.transpose(),
-                    min_pixel,
-                    max_pixel,
-                    self.patient_dict_container.dataset[id],
-                    self.draw_roi_window_instance,
-                    self.slice_changed,
-                    self.current_slice,
-                    self.drawing_tool_radius,
-                    self.keep_empty_pixel,
-                    self.pixel_transparency,
-                    set()
-                )
-                self.slice_changed = True
-                self.dicom_view.view.setScene(self.drawingROI)
-                self.enable_cursor_radius_change_box()
+                # id would go where tempid is
+                negative = False
+                last = False
+                tempid = id
+                for x in range(0, 3):
+                    if x == 0:
+                        negative = True
+                    elif x == 1:
+                        negative = False
+                    else:
+                        last = True
+
+                    for y in range(1, 3):
+                        if negative:
+                            tempid = id - y
+                        else:
+                            tempid = id + y
+
+                        if last:
+                            tempid = id
+
+                        # for x in range(94, 100):
+                        #     tempid = x-1
+                        #     print("aaaaaa" + str(tempid))
+                        self.dicom_view.slider.setValue(tempid)
+
+                        dt = self.patient_dict_container.dataset[tempid]
+                        dt.convert_pixel_data()
+
+                        # Path to the selected .dcm file
+                        location = self.patient_dict_container.filepaths[tempid]
+                        self.ds = pydicom.dcmread(location)
+
+                        self.drawingROI = Drawing(
+                            pixmaps[tempid],
+                            dt._pixel_array.transpose(),
+                            min_pixel,
+                            max_pixel,
+                            self.patient_dict_container.dataset[tempid],
+                            self.draw_roi_window_instance,
+                            self.slice_changed,
+                            self.current_slice,
+                            self.drawing_tool_radius,
+                            self.keep_empty_pixel,
+                            self.pixel_transparency,
+                            set(),
+                            x=251.0,
+                            y=235.0,
+                            UI=self
+                        )
+                        self.slice_changed = True
+                        self.dicom_view.view.setScene(self.drawingROI)
+                        self.enable_cursor_radius_change_box()
+
+                        self.drawingROI._display_pixel_color()
             else:
                 QMessageBox.about(self.draw_roi_window_instance,
                                   "Not Enough Data",
                                   "Not all values are specified or correct.")
+
+    # TODO fix up
+    @Slot(list)
+    def set_seed(self, s):
+        print("really")
+        print(s)
 
     def onBoxDrawClicked(self):
         """
