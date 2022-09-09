@@ -965,20 +965,24 @@ class UIDrawROIWindow:
         """
         function triggered when user reduce cursor diameter
         """
+        logging.debug("onDiameterReduceClicked started")
         self.drawing_tool_radius = max(self.drawing_tool_radius - 0.5, 0.5)
         self.draw_roi_window_cursor_diameter_change_input.setText(
             "{:.0f}".format(self.drawing_tool_radius*2))
         self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
         self.draw_cursor_when_diameter_changed()
+        logging.debug("onDiameterReduceClicked finished")
 
     def onDiameterIncreaseClicked(self):
         """
         function triggered when user increase cursor diameter
         """
+        logging.debug("onDiameterIncreaseClicked started")
         self.drawing_tool_radius = min(self.drawing_tool_radius + 0.5, 25)
         self.draw_roi_window_cursor_diameter_change_input.setText(
             "{:.0f}".format(self.drawing_tool_radius*2))
         self.draw_cursor_when_diameter_changed()
+        logging.debug("onDiameterIncreaseClicked finished")
 
     def draw_cursor_when_diameter_changed(self):
         """

@@ -199,6 +199,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         updates the image. :param clicked_x: the current x coordinate :param
         clicked_y: the current y coordinate
         """
+        logging.debug("remove_pixels_within_circle started")
         # Calculate euclidean distance between each highlighted point and
         # the clicked point. If the distance is less than the radius,
         # remove it from the highlighted pixels.
@@ -236,6 +237,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.slice_changed = True
 
         self.refresh_image()
+        logging.debug("remove_pixels_within_circle finished")
 
     def fill_pixels_within_circle(self, clicked_x, clicked_y):
         """
@@ -243,6 +245,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         the image. :param clicked_x: the current x coordinate :param
         clicked_y: the current y coordinate
         """
+        logging.debug("fill_pixels_within_circle started")
         # Calculate euclidean distance between each highlighted point and
         # the clicked point. If the distance is less than the radius,
         # add it to the highlighted pixels.
@@ -294,6 +297,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self._set_color_of_pixels(points)
 
         self.refresh_image()
+        logging.debug("fill_pixels_within_circle finished")
 
     def clear_cursor(self, drawing_tool_radius):
         """
