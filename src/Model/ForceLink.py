@@ -25,7 +25,11 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
         "SR": None
     }
     # exit the function if the number of files is less than 2
-    if len(dicom_array_in) < 2:
+    try:
+        if len(dicom_array_in) < 2:
+            logging.info("Force link aborted, Not enough dicom files selected")
+            return -1
+    except TypeError:
         logging.info("Force link aborted, Not enough dicom files selected")
         return -1
 
@@ -34,6 +38,9 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
         directory = os.listdir(file_path)
     except FileNotFoundError:
         logging.info("Force link aborted, file not found")
+        return -1
+    except TypeError:
+        logging.info("Force link aborted, file input invalid")
         return -1
     for file in directory:
         if file.endswith(".dcm"):
