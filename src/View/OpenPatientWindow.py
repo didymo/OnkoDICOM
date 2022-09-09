@@ -16,6 +16,7 @@ from src.Model.ForceLink import force_link
 from src.Controller.PathHandler import resource_path
 import platform
 
+import logging
 
 class UIOpenPatientWindow(object):
     patient_info_initialized = QtCore.Signal(object)
@@ -594,8 +595,8 @@ class UIOpenPatientWindow(object):
 
         checked = self.get_checked_nodes(
             self.open_patient_window_patients_tree.invisibleRootItem())
-        # array of DICOMWidgetItem, defined in Model/DICOM/DICOMWidgetItem
         dicom_objects = [checked_node.dicom_object for checked_node in checked]
+        logging.info("DICOM array populated for force link function")
         if len(dicom_objects) < 1:
             return -1
 
@@ -606,26 +607,39 @@ class UIOpenPatientWindow(object):
             else:
                 series["IMAGE"] = item
         force_check = -1
+        force_continue = 0
         try:
+            if series["IMAGE"].frame_of_reference_uid:
+                new_id = series["IMAGE"].frame_of_reference_uid
+                force_continue = 1
             if(series["IMAGE"].frame_of_reference_uid ==
                         series["RTSTRUCT"].frame_of_reference_uid):
-                    new_id = series["IMAGE"].frame_of_reference_uid
+                    new_id = series["RTSTRUCT"].frame_of_reference_uid
+                    force_continue = 1
             else:
                 QMessageBox.about(self, "Force Link",
                                  "Force Link aborted")
                 return -1
         except AttributeError:
-            return -1
-        else:
-            force_check = force_link(new_id,
-                                     self.open_patient_directory_input_box.text(),
-                                     dicom_objects)
+            logging.info("Attribute error in force link, no frame of reference "
+                         "ID in dicom item")
+            if force_continue == 0:
+                logging.info("Force link aborted")
+                return -1
+            logging.info("Force link continuing")
+
+        logging.info("Initiating force link")
+        force_check = force_link(new_id,
+                                 self.open_patient_directory_input_box.text(),
+                                 dicom_objects)
 
         if force_check == 1:
+            logging.info("Force link successful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Successful")
 
         else:
+            logging.info("Force link unsuccessful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Unsuccessful")
 
