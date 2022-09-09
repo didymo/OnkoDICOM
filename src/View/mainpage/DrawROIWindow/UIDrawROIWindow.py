@@ -1,5 +1,5 @@
 import platform
-
+import logging
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, QSize, QRegularExpression
