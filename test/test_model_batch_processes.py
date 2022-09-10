@@ -22,6 +22,8 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
     BatchProcessROIName2FMAID
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
+from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
+    BatchProcessSelectSubgroup
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 
 
@@ -82,7 +84,6 @@ def test_object():
     test = TestObject()
     return test
 
-
 def test_batch_iso2roi(test_object):
     """
     Test that at least 1 new ROI is created from ISO2ROI.
@@ -91,6 +92,7 @@ def test_batch_iso2roi(test_object):
     """
     # Loop through patient datasets
     for patient in test_object.get_patients():
+
         # Get the files for the patient
         cur_patient_files = BatchProcessingController.get_patient_files(
             patient)
@@ -329,6 +331,98 @@ def test_batch_csv2clinicaldatasr(test_object):
     # Delete dummy CSV and SR
     os.remove(csv_path)
     os.remove(sr_path)
+
+
+def test_batch_selectsubgroup(test_object):
+    """
+    Test asserts filter is created with dummy clinical data.
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+
+    # No filter options are selected so nothing should be within filter
+    selected_filters = {}
+
+    # Loop through each patient
+    for patient in test_object.get_patients():
+        # Get current patient files
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create Batch Clinical Data SR to CSV object
+        process = BatchProcessSelectSubgroup(test_object.DummyProgressWindow,
+                                           test_object.DummyProgressWindow,
+                                           cur_patient_files,
+                                           selected_filters)
+
+        # Start the process, assert it finished successfully
+        status = process.start()
+        assert status
+        
+        assert process.within_filter == False
+
+    # No filter options are selected so nothing should be within filter
+    # Get patient ID for dummy SR
+    patient_id = None
+    for root, dirs, files in os.walk(test_object.batch_dir, topdown=True):
+        if patient_id is not None:
+            break
+        for name in files:
+            try:
+                ds = dcmread(os.path.join(root, name))
+                if hasattr(ds, 'PatientID') \
+                        and ds.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2':
+                    patient_id = ds.PatientID
+                    break
+            except (InvalidDicomError, FileNotFoundError):
+                pass
+
+    # Assert a patient ID was found
+    assert patient_id is not None
+
+    # Create dummy SR
+    dcm_path = test_object.batch_dir.joinpath("Clinical-Data-SR.dcm")
+    text_data = "MD5Hash: " + patient_id + "\n"
+    text_data += "Age: 20\nNationality: Australian\n"
+    dicom_sr = DICOMStructuredReport.generate_dicom_sr(dcm_path, ds, text_data,
+                                                       "CLINICAL-DATA")
+    dicom_sr.save_as(dcm_path)
+
+    # Assert dummy SR was created
+    assert os.path.exists(dcm_path)
+
+    # Reload patient (to get newly created SR)
+    patients = DICOMDirectorySearch.get_dicom_structure(
+        test_object.batch_dir, test_object.DummyProgressWindow,
+        test_object.DummyProgressWindow)
+
+    # May need to be changed depending on what test data is used
+    EXPECTED_MATCH_COUNT = 1
+    MATCHES = 0
+
+    # this is an attribute included in the above SR file
+    selected_filters = {"Age": ["20"]}
+
+    # Loop through each patient
+    for patient in patients.patients.values():
+        # Get current patient files
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create Batch Clinical Data SR to CSV object
+        process = BatchProcessSelectSubgroup(test_object.DummyProgressWindow,
+                                           test_object.DummyProgressWindow,
+                                           cur_patient_files,
+                                           selected_filters)
+
+        # Start the process, assert it finished successfully
+        status = process.start()
+        assert status
+        
+        if process.within_filter:
+            MATCHES+=1
+
+    assert MATCHES == EXPECTED_MATCH_COUNT
 
 
 def test_batch_clinicaldatasr2csv(test_object):
