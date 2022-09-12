@@ -2,6 +2,7 @@ import platform
 from os.path import expanduser
 from PySide6 import QtWidgets, QtGui
 from src.Controller.PathHandler import resource_path
+import logging
 
 
 class SelectSubgroupOptions(QtWidgets.QWidget):
@@ -43,6 +44,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self._selected_filters = {}
 
         self.filter_table.cellClicked.connect(self.select_filter_option_cell)
+        logging.info("SelectSubgroupOptions successfully initialised.")
 
     def get_selected_filter_options(self):
         """
@@ -54,7 +56,6 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         """
         Utility method to display an empty table and appropriate message
         """
-        print("display no data called")
         self.message.setText(
             "No Clinical-data-SR files located in current selected directory"
             )
@@ -65,9 +66,10 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
     def show_filtering_options_in_table(self, options_data_dict):
         """
         Displays the data in the table
-        :param options_data_dict: dictionary of clinical data attributes and values
+        :param options_data_dict: dictionary of clinical
+        data attributes and values
         """
-        
+
         if not options_data_dict:
             self.display_no_data()
             return
@@ -124,6 +126,9 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         header = self.filter_table.horizontalHeaderItem(column).text()
         text_filter = item.text()
 
+        logging.debug(f"Cell selected: ({row}, {column}). " \
+        "Column header: '{header}'. String-value: '{text_filter}'")
+
         if header in self._selected_filters.keys():
             current_filters = self._selected_filters[header]
 
@@ -132,12 +137,17 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
 
                 # and remove item
                 self.remove_selected_filters(header, text_filter)
+
+                logging.debug(f"Value: '{text_filter}' deselected")
+
                 return
 
         item.setBackground(QtGui.QColor(144, 238, 144))
 
         # store in model for reference at output
         self.set_selected_filters(header, text_filter)
+
+        logging.debug(f"Value: '{text_filter}' selected")
 
     def set_selected_filters(self, filter_type, value):
         """

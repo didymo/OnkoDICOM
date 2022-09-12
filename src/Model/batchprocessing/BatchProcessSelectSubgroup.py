@@ -1,6 +1,7 @@
 from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
+import logging
 
 
 class BatchProcessSelectSubgroup(BatchProcess):
@@ -142,8 +143,11 @@ class BatchProcessSelectSubgroup(BatchProcess):
                     continue
 
                 if patient_value in allowed_values:
+                    logging.info("Patient within filter")
                     self.within_filter = True
                     break
             except KeyError:
                 # they have an sr file that does not contain this trait
                 continue
+
+        logging.info("Patient NOT within filter")

@@ -25,6 +25,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
 from src.View.ProgressWindow import ProgressWindow
+import logging
 
 
 class BatchProcessingController:
@@ -148,6 +149,9 @@ class BatchProcessingController:
         :param options: Dictionary of attributes with list of values
         to filter by in that column.
         """
+        logging.info(f"{self.__class__.__name__} \
+        .set_subgroup_filter_options(options) called")
+        logging.debug(f"'options' set to: {options}")
         self.subgroup_filter_options = options
 
     @staticmethod
@@ -291,6 +295,8 @@ class BatchProcessingController:
                                   progress of the loading.
         :param patient: The patient to perform this process on.
         """
+        logging.info(f"{self.__class__.__name__}" \
+        ".batch_select_subgroup_handler() called")
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
         process = \
@@ -609,10 +615,15 @@ class BatchProcessingController:
         :return: only unique values in a dictionary with keys as the
         column name and a list of values found
         """
-        
+        logging.info(f"{self.__class__.__name__}" \
+        ".get_all_clinical_data() called")
+
         clinical_data_dict = {}
 
         for patient in self.dicom_structure.patients.values():
+            logging.debug(f"{len(self.dicom_structure.patients.values())}" \
+            "patient(s) in dicom_structure object")
+
             cur_patient_files = \
                 BatchProcessingController.get_patient_files(patient)
             process = \
@@ -639,6 +650,8 @@ class BatchProcessingController:
                         combined_data = list(dict.fromkeys(combined_data))
 
                         clinical_data_dict[title] = combined_data
+
+        logging.debug(f"clinical_data_dict: {clinical_data_dict}")
 
         return clinical_data_dict
 
