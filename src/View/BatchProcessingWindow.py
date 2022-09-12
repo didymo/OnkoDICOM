@@ -19,6 +19,8 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
+from src.View.batchprocessing.FMAID2ROINameOptions import \
+    FMAID2ROINameOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -136,6 +138,7 @@ class UIBatchProcessingWindow(object):
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
+        self.batchfma2name_tab = FMAID2ROINameOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -150,6 +153,7 @@ class UIBatchProcessingWindow(object):
                                "ClinicalData-SR2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
+        self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
 
         # == Bottom widgets
         # Info text
@@ -304,7 +308,8 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid']
+                     'roiname2fmaid', 'fmaid2roiname']
+
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
         subgroup_filter_options = self.select_subgroup_tab \
@@ -345,25 +350,55 @@ class UIBatchProcessingWindow(object):
         if 'roinamecleaning' in selected_processes:
             # Get ROIs, datasets, options
             name_cleaning_options = {}
-            roi_name_table = self.batchnamecleaning_tab.table_roi
-            for i in range(roi_name_table.rowCount()):
-                # Get current ROI name and what to do with it
-                roi_name = roi_name_table.item(i, 0).text()
-                option = roi_name_table.cellWidget(i, 1).currentIndex()
+            organ_name_table = self.batchnamecleaning_tab.table_organ
+            volume_prefix_table = self.batchnamecleaning_tab.table_volume
+            for i in range(organ_name_table.rowCount()):
+                # Get current organ name and what to do with it
+                roi_name = organ_name_table.item(i, 0).text()
+                option = organ_name_table.cellWidget(i, 1).currentIndex()
 
                 # Get new name text
-                if isinstance(roi_name_table.cellWidget(i, 2),
+                if isinstance(organ_name_table.cellWidget(i, 2),
                               ROINameCleaningPrefixEntryField):
                     new_name = roi_name[0:3] \
-                               + roi_name_table.cellWidget(i, 2).text()
+                               + organ_name_table.cellWidget(i, 2).text()
                     # Remove any whitespace, replace with underscores
                     new_name = '_'.join(new_name.split())
                 else:
-                    new_name = roi_name_table.cellWidget(i, 2).currentText()
+                    new_name = organ_name_table.cellWidget(i, 2).currentText()
 
-                # Get the dataset(s) the ROI is in
+                # Get the dataset(s) the organ is in
                 dataset_list = []
-                dataset_combo_box = roi_name_table.cellWidget(i, 3)
+                dataset_combo_box = organ_name_table.cellWidget(i, 3)
+                rtss_path = self.directory_input.text()
+                for index in range(dataset_combo_box.count()):
+                    dataset_list.append(
+                        rtss_path + dataset_combo_box.itemText(index))
+
+                if roi_name not in name_cleaning_options.keys():
+                    name_cleaning_options[roi_name] = []
+
+                for item in dataset_list:
+                    name_cleaning_options[roi_name].append(
+                        [option, new_name, item])
+
+            for i in range(volume_prefix_table.rowCount()):
+                # Get current volume prefix and what to do with it
+                roi_name = volume_prefix_table.item(i, 0).text()
+                option = volume_prefix_table.cellWidget(i, 1).currentIndex()
+
+                # Get new name text
+                if isinstance(volume_prefix_table.cellWidget(i, 2),
+                              ROINameCleaningPrefixEntryField):
+                    new_name = volume_prefix_table.cellWidget(i, 2).text()
+                    # Remove any whitespace, replace with underscores
+                    new_name = '_'.join(new_name.split())
+                else:
+                    new_name = volume_prefix_table.cellWidget(i, 2).currentText()
+
+                # Get the dataset(s) the volume is in
+                dataset_list = []
+                dataset_combo_box = volume_prefix_table.cellWidget(i, 3)
                 rtss_path = self.directory_input.text()
                 for index in range(dataset_combo_box.count()):
                     dataset_list.append(
