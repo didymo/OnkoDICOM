@@ -199,6 +199,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         updates the image. :param clicked_x: the current x coordinate :param
         clicked_y: the current y coordinate
         """
+        logging.debug("remove_pixels_within_circle started")
         # Calculate euclidean distance between each highlighted point and
         # the clicked point. If the distance is less than the radius,
         # remove it from the highlighted pixels.
@@ -209,9 +210,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         clicked_x, clicked_y = linear_transform(
             clicked_x, clicked_y, self.rows, self.cols)
         according_color_dict_key_list = list(self.according_color_dict.keys())
-
-        color_to_draw = QtGui.QColor()
-        color_to_draw.setRgb(90, 250, 175, 200)
 
         for x, y in according_color_dict_key_list:
             colors = self.according_color_dict[(x, y)]
@@ -239,6 +237,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.slice_changed = True
 
         self.refresh_image()
+        logging.debug("remove_pixels_within_circle finished")
 
     def fill_pixels_within_circle(self, clicked_x, clicked_y):
         """
@@ -246,6 +245,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         the image. :param clicked_x: the current x coordinate :param
         clicked_y: the current y coordinate
         """
+        logging.debug("fill_pixels_within_circle started")
         # Calculate euclidean distance between each highlighted point and
         # the clicked point. If the distance is less than the radius,
         # add it to the highlighted pixels.
@@ -258,13 +258,13 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.slice_changed = True
         clicked_x, clicked_y = linear_transform(
             clicked_x, clicked_y, self.rows, self.cols)
-        scaled_tool_radius = int(self.draw_tool_radius * (
-                float(self.rows) / DEFAULT_WINDOW_SIZE))
+        scaled_tool_radius = self.draw_tool_radius * (
+                float(self.rows) / DEFAULT_WINDOW_SIZE)
 
-        min_y_bound_square = math.floor(clicked_y) - scaled_tool_radius
-        min_x_bound_square = math.floor(clicked_x) - scaled_tool_radius
-        max_y_bound_square = math.floor(clicked_y) + scaled_tool_radius
-        max_x_bound_square = math.floor(clicked_x) + scaled_tool_radius
+        min_y_bound_square = math.ceil(clicked_y - scaled_tool_radius)
+        min_x_bound_square = math.ceil(clicked_x - scaled_tool_radius)
+        max_y_bound_square = math.ceil(clicked_y + scaled_tool_radius)
+        max_x_bound_square = math.ceil(clicked_x + scaled_tool_radius)
         for y_coord in range(
                 max(self.min_y, min_y_bound_square),
                 min(self.max_y, max_y_bound_square)):
@@ -297,6 +297,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self._set_color_of_pixels(points)
 
         self.refresh_image()
+        logging.debug("fill_pixels_within_circle finished")
 
     def clear_cursor(self, drawing_tool_radius):
         """
