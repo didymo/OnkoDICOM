@@ -151,7 +151,7 @@ class BatchProcessingController:
         :param options: Dictionary of attributes with list of values
         to filter by in that column.
         """
-        logging.info(f"{self.__class__.__name__} \
+        logging.debug(f"{self.__class__.__name__} \
         .set_subgroup_filter_options(options) called")
         logging.debug(f"'options' set to: {options}")
         self.subgroup_filter_options = options
@@ -298,7 +298,7 @@ class BatchProcessingController:
                                   progress of the loading.
         :param patient: The patient to perform this process on.
         """
-        logging.info(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}" \
         ".batch_select_subgroup_handler() called")
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
@@ -645,7 +645,7 @@ class BatchProcessingController:
         :return: only unique values in a dictionary with keys as the
         column name and a list of values found
         """
-        logging.info(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}" \
         ".get_all_clinical_data() called")
 
         clinical_data_dict = {}

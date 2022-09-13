@@ -143,11 +143,11 @@ class BatchProcessSelectSubgroup(BatchProcess):
                     continue
 
                 if patient_value in allowed_values:
-                    logging.info("Patient within filter")
+                    logging.debug("Patient within filter")
                     self.within_filter = True
                     break
             except KeyError:
                 # they have an sr file that does not contain this trait
                 continue
 
-        logging.info("Patient NOT within filter")
+        logging.debug("Patient NOT within filter")

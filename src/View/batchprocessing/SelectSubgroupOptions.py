@@ -44,7 +44,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self._selected_filters = {}
 
         self.filter_table.cellClicked.connect(self.select_filter_option_cell)
-        logging.info("SelectSubgroupOptions successfully initialised.")
+        logging.debug("SelectSubgroupOptions successfully initialised.")
 
     def get_selected_filter_options(self):
         """
