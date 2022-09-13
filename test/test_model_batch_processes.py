@@ -84,6 +84,7 @@ def test_object():
     test = TestObject()
     return test
 
+
 def test_batch_iso2roi(test_object):
     """
     Test that at least 1 new ROI is created from ISO2ROI.
@@ -357,7 +358,7 @@ def test_batch_selectsubgroup(test_object):
 
         # Start the process, assert it finished successfully
         status = process.start()
-        assert status
+        assert status == False
         
         assert process.within_filter == False
 
@@ -423,6 +424,9 @@ def test_batch_selectsubgroup(test_object):
             MATCHES+=1
 
     assert MATCHES == EXPECTED_MATCH_COUNT
+
+    # Delete the test Clinical-Data-SR.dcm file
+    os.remove(dcm_path)
 
 
 def test_batch_clinicaldatasr2csv(test_object):
