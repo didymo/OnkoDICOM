@@ -80,7 +80,9 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         self.filter_table.setColumnCount(0)
 
         # removes the Patient Identifier (assumed to be first column
-        # in the dataset)
+        # in the dataset) 
+        # As the column name may be changing we cannot hard code the 
+        # column name
         # not a necessary filter option as specified in requirements
         options_data_dict.pop(list(options_data_dict)[0])
 
