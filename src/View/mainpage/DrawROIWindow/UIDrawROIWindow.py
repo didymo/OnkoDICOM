@@ -396,6 +396,7 @@ class UIDrawROIWindow:
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
         self.draw_roi_window_transect_draw_box. \
             addWidget(self.image_slice_number_box_draw_button)
+
         # Create a draw button
         self.image_slice_number_draw_button = QPushButton()
         self.image_slice_number_draw_button. \
@@ -416,12 +417,12 @@ class UIDrawROIWindow:
             addRow(self.draw_roi_window_transect_draw_box)
 
         # Create a contour preview button
-        self.row_preview_layout = QtWidgets.QHBoxLayout()
+        self.row_layout = QtWidgets.QHBoxLayout()
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
         self.button_contour_preview.clicked.connect(self.onPreviewClicked)
-        self.row_preview_layout.addWidget(self.button_contour_preview)
+        self.row_layout.addWidget(self.button_contour_preview)
         self.draw_roi_window_input_container_box. \
-            addRow(self.row_preview_layout)
+            addRow(self.row_layout)
         icon_preview = QtGui.QIcon()
         icon_preview.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/preview_icon.png')))
@@ -654,7 +655,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        if self.drawingROI \
+        if hasattr(self, 'drawingROI') and self.drawingROI \
                 and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText(
@@ -667,7 +668,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        if self.drawingROI \
+        if hasattr(self, 'drawingROI') and self.drawingROI \
                 and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input. \
@@ -685,7 +686,8 @@ class UIDrawROIWindow:
     def toggle_keep_empty_pixel_box_index_changed(self):
         self.keep_empty_pixel = self.toggle_keep_empty_pixel_combo_box. \
                                     currentText() == "On"
-        self.drawingROI.keep_empty_pixel = self.keep_empty_pixel
+        if hasattr(self, 'drawingROI'):
+            self.drawingROI.keep_empty_pixel = self.keep_empty_pixel
 
     def onCancelButtonClicked(self):
         """
@@ -921,8 +923,6 @@ class UIDrawROIWindow:
                           "New contour successfully created!")
         self.closeWindow()
 
-
-
     def onPreviewClicked(self):
         """
         function triggered when Preview button is clicked
@@ -995,8 +995,8 @@ class UIDrawROIWindow:
                 self.drawing_tool_radius)
         else:
             self.drawingROI.draw_cursor(
-                (self.drawingROI.min_x + self.drawingROI.max_x) / 2,
-                (self.drawingROI.min_y + self.drawingROI.max_y) / 2,
+                (self.drawingROI.min_bounds_x + self.drawingROI.max_bounds_x) / 2,
+                (self.drawingROI.min_bounds_y + self.drawingROI.max_bounds_y) / 2,
                 self.drawing_tool_radius,
                 True)
 
