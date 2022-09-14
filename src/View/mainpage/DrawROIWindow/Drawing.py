@@ -13,8 +13,8 @@ from src.Model.Transform import linear_transform, get_pixel_coords, \
 
 class Drawing(QtWidgets.QGraphicsScene):
     """
-        Class responsible for the ROI drawing functionality
-        """
+    Class responsible for the ROI drawing functionality
+    """
 
     seed = Signal(list)
 
@@ -68,12 +68,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.max_bounds_x = self.rows
         self.max_bounds_y = self.cols
         self.fill_source = None
-        if 'x' in kwargs and 'y' in kwargs:
-            self.fill_source = [kwargs.get('x'), kwargs.get('y')]
-
-        # TODO fix up
+        if 'xy' in kwargs:
+            self.fill_source = kwargs.get('xy')
         if 'UI' in kwargs:
-            print("here")
             self.seed.connect(kwargs.get('UI').set_seed)
 
     def set_bounds(self):
@@ -398,8 +395,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         Uses the users mouse click position to set the fill source
         """
         self.fill_source = [event.scenePos().x(), event.scenePos().y()]
-        self.seed.emit(self.fill_source)
         self._display_pixel_color()
+        self.seed.emit(self.fill_source)
 
     def manual_draw_roi(self, event):
         """
