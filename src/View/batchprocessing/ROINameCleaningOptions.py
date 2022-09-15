@@ -1,5 +1,6 @@
 import csv
 import platform
+import re
 from pydicom import dcmread
 from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import data_path, resource_path
@@ -318,18 +319,41 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Loop through each ROI in the RT Struct
             for i in range(len(rtstruct.StructureSetROISequence)):
                 # Get the ROI name
-                roi_name = rtstruct.StructureSetROISequence[i].ROIName
+                roi_name = rtstruct.StructureSetROISequence[i].ROIName.lstrip()
 
                 # Add ROI name to the dictionary
                 if roi_name not in rois.keys():
                     rois[roi_name] = []
-
+                
                 # Add dataset to the list if the ROI name is not a
-                # standard organ name or has a standard prefix
-                if roi_name not in self.organ_names or \
-                        roi_name[0:3] in self.volume_prefixes:
-                    rois[roi_name].append(rtss)
+                # standard organ name or has a standard prefix GTV/CTV/ITV 
+                if roi_name not in self.organ_names and \
+                roi_name not in self.fma_id and \
+                roi_name != self.volume_prefixes[0] and \
+                roi_name != self.volume_prefixes[1] and \
+                roi_name != self.volume_prefixes[2]:
+                    # Split numbers from words e.g. PTV1011 is now [(PTV, 1011)]
+                    split_roi_name = [re.findall(r'(\w+?)(\d+)', roi_name)]
 
+                    # If no numbers after prefix
+                    if len(str(split_roi_name)) <= 4:
+                        rois[roi_name].append(rtss)
+
+                    # If prefix has numbers afterwards 
+                    # check to ensure that there are only 4 digits afterwards
+                    # within a certain set of prefixes
+                    elif self.volume_prefixes[4] not in str(split_roi_name) and \
+                    self.volume_prefixes[5] not in str(split_roi_name) and \
+                    self.volume_prefixes[6] not in str(split_roi_name) and \
+                    self.volume_prefixes[7] not in str(split_roi_name) and \
+                    len(roi_name) == 7:
+                        rois[roi_name].append(rtss)
+
+                    # Check if PTV_ has the right amount of numbers afterwards
+                    elif self.volume_prefixes[3] not in str(split_roi_name) and \
+                    len(roi_name) == 8:
+                        rois[roi_name].append(rtss)
+                        
         # Return if no ROIs found
         rois_to_process = False
         for roi in rois:
@@ -374,7 +398,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setText(roi_name)
                 name_box.setEnabled(False)
-            elif roi_name.lower() in self.organ_names_lowercase:
+            if roi_name.lower() in self.organ_names_lowercase:
             # Set default combo box entry to organ name in proper case
             # if the organ name is a standard one.
                 name_box = \
@@ -385,9 +409,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 name_box.setCurrentIndex(index)
                 name_box.setEnabled(True)
                 combo_box.setCurrentIndex(1)
-            # If roi_name is a FMA ID skip
-            elif roi_name in self.fma_id:
-                continue
             else:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setText(roi_name)
@@ -407,8 +428,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.table_organ.setCellWidget(i, 3, rtss_combo_box)
                 continue
             if roi_name[0:3] in self.volume_prefixes \
-                    or roi_name[0:4] in self.volume_prefixes \
-                    or "PTV" in roi_name or "LN" in roi_name:
+            or roi_name[0:4] in self.volume_prefixes \
+            or "PTV" in roi_name or "LN" in roi_name:
                 # Add row to table
                 self.table_volume.insertRow(i)
                 self.table_volume.setRowHeight(i, 50)
