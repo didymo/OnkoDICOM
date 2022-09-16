@@ -1,10 +1,11 @@
 import os
 import pytest
 from pathlib import Path
+
+from PySide6.QtCore import Qt
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from src.Controller.GUIController import MainWindow
-from src.Controller.ROIOptionsController import RoiDrawOptions
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -60,11 +61,6 @@ class TestDrawingMock:
         # main window
         self.main_window = MainWindow()
 
-        rois = patient_dict_container.get("rois")
-        dataset_rtss = patient_dict_container.get("dataset_rtss")
-
-        self.draw_window = RoiDrawOptions(rois, dataset_rtss)
-
 
 @pytest.fixture(scope="module")
 def test_object():
@@ -73,25 +69,59 @@ def test_object():
     return test
 
 
+def test_draw_roi_window_displayed(qtbot, test_object):
+    """Function to test that the draw_roi_window is displayed within the main window when the draw ROI button is clicked"""
+    qtbot.mouseClick(test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
+    assert test_object.main_window.splitter.isHidden() == True
+    assert test_object.main_window.draw_roi.isHidden() == False
+
+    assert test_object.main_window.draw_roi is not None
+
+    menu_items = [test_object.main_window.action_handler.action_save_structure,
+                  test_object.main_window.action_handler.action_save_as_anonymous,
+                  test_object.main_window.action_handler.action_zoom_out,
+                  test_object.main_window.action_handler.action_zoom_in,
+                  test_object.main_window.action_handler.menu_windowing,
+                  test_object.main_window.action_handler.windowing_window,
+                  test_object.main_window.action_handler.action_transect,
+
+                  test_object.main_window.action_handler.action_one_view,
+                  test_object.main_window.action_handler.action_four_views,
+                  test_object.main_window.action_handler.action_show_cut_lines,
+                  test_object.main_window.action_handler.action_image_fusion
+                  ]
+
+    for object in menu_items:
+        assert object.isEnabled() == False
+
+    qtbot.mouseClick(test_object.main_window.draw_roi.draw_roi_window_instance_cancel_button, Qt.LeftButton)
+    assert test_object.main_window.splitter.isHidden() == False
+    assert test_object.main_window.draw_roi.isHidden() == True
+
+    for object in menu_items:
+        assert object.isEnabled() == True
+
+
 def test_change_transparency_slider_value(qtbot, test_object, init_config):
     """Function to change the value of the transparency slider, and assert that the image has been updated."""
-    # Assert Drawing window exists
-    test_object.draw_window.show()
-    assert test_object.draw_window.windowTitle() == "OnkoDICOM - Draw Region Of Interest"
+    # Triggering draw window
+    qtbot.mouseClick(test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
+    assert test_object.main_window.draw_roi is not None
+    draw_roi_window = test_object.main_window.draw_roi
 
     # Assert initial drawing has been created
-    test_object.draw_window.min_pixel_density_line_edit.setText("900")
-    test_object.draw_window.max_pixel_density_line_edit.setText("1000")
-    test_object.draw_window.onDrawClicked()
-    test_object.draw_window.drawingROI.fill_source = [250,250]
-    test_object.draw_window.drawingROI._display_pixel_color()
-    post_draw_clicked_drawing = test_object.draw_window.drawingROI.q_pixmaps
+    draw_roi_window.min_pixel_density_line_edit.setText("900")
+    draw_roi_window.max_pixel_density_line_edit.setText("1000")
+    draw_roi_window.onDrawClicked()
+    draw_roi_window.drawingROI.fill_source = [250, 250]
+    draw_roi_window.drawingROI._display_pixel_color()
+    post_draw_clicked_drawing = draw_roi_window.drawingROI.q_pixmaps
     assert post_draw_clicked_drawing is not None
 
     # Assert drawn image has been changed after slider adjustment
-    test_object.draw_window.transparency_slider.setValue(100)
-    post_transparency_change_drawing = test_object.draw_window.drawingROI.q_pixmaps
+    draw_roi_window.transparency_slider.setValue(100)
+    post_transparency_change_drawing = draw_roi_window.drawingROI.q_pixmaps
     assert post_transparency_change_drawing != post_draw_clicked_drawing
 
     # Run Drawing reset, prevents post test crash
-    test_object.draw_window.onResetClicked()
+    draw_roi_window.onResetClicked()

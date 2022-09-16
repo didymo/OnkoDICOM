@@ -53,13 +53,14 @@ class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
     View/ROI Draw Option
     """
     signal_roi_drawn = QtCore.Signal(tuple)
+    signal_draw_roi_closed = QtCore.Signal()
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn)
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
 
     def update_ui(self, rois, dataset_rtss):
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn)
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
 
 
 class ROIDrawOption:
@@ -68,9 +69,10 @@ class ROIDrawOption:
     Options controller
     """
 
-    def __init__(self, structure_modified_function):
+    def __init__(self, structure_modified_function, remove_draw_roi_instance):
         super(ROIDrawOption, self).__init__()
         self.structure_modified_function = structure_modified_function
+        self.remove_roi_draw_instance = remove_draw_roi_instance
 
     def show_roi_draw_window(self):
         """
@@ -85,10 +87,17 @@ class ROIDrawOption:
             self.draw_window = RoiDrawOptions(rois, dataset_rtss)
             self.draw_window.signal_roi_drawn.connect(
                 self.structure_modified_function)
+            self.draw_window.signal_draw_roi_closed.connect(
+                self.remove_roi_draw_instance
+            )
         else:
             self.draw_window.update_ui(rois, dataset_rtss)
 
-        self.draw_window.show()
+        return self.draw_window
+
+    def remove_roi_draw_window(self):
+        if hasattr(self, "draw_window"):
+            delattr(self, 'draw_window')
 
 
 class RoiManipulateOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
