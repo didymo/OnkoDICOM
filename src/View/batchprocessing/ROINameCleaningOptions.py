@@ -94,7 +94,6 @@ class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
             self.addItem(rtss)
 
         self.setObjectName("BatchROICleaning")
-        # TODO: make changing option do nothing
 
 
 class ROINameCleaningPrefixEntryField(QtWidgets.QLineEdit):
@@ -325,35 +324,28 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 if roi_name not in rois.keys():
                     rois[roi_name] = []
                 
+                # Get the suffix of the ROI name if it is a integer
+                temp = re.search(r'\d+$', roi_name)
+                if temp:
+                    suffix = temp.group(0)
+
                 # Add dataset to the list if the ROI name is not a
-                # standard organ name or has a standard prefix GTV/CTV/ITV 
+                # standard organ name, standard prefix GTV/CTV/ITV 
+                # or standard prefix PTV_, LN_, OTV, ISO, SUV 
+                # and there are 4 digits as a suffix
                 if roi_name not in self.organ_names and \
                 roi_name not in self.fma_id and \
                 roi_name != self.volume_prefixes[0] and \
                 roi_name != self.volume_prefixes[1] and \
-                roi_name != self.volume_prefixes[2]:
-                    # Split numbers from words e.g. PTV1011 is now [(PTV, 1011)]
-                    split_roi_name = [re.findall(r'(\w+?)(\d+)', roi_name)]
+                roi_name != self.volume_prefixes[2] and \
+                ("PTV_" not in roi_name and \
+                self.volume_prefixes[4] not in roi_name and \
+                self.volume_prefixes[5] not in roi_name and \
+                self.volume_prefixes[6] not in roi_name and \
+                "LN_" not in roi_name or \
+                len(suffix) != 4):
+                    rois[roi_name].append(rtss)
 
-                    # If no numbers after prefix
-                    if len(str(split_roi_name)) <= 4:
-                        rois[roi_name].append(rtss)
-
-                    # If prefix has numbers afterwards 
-                    # check to ensure that there are only 4 digits afterwards
-                    # within a certain set of prefixes
-                    elif self.volume_prefixes[4] not in str(split_roi_name) and \
-                    self.volume_prefixes[5] not in str(split_roi_name) and \
-                    self.volume_prefixes[6] not in str(split_roi_name) and \
-                    self.volume_prefixes[7] not in str(split_roi_name) and \
-                    len(roi_name) == 7:
-                        rois[roi_name].append(rtss)
-
-                    # Check if PTV_ has the right amount of numbers afterwards
-                    elif self.volume_prefixes[3] not in str(split_roi_name) and \
-                    len(roi_name) == 8:
-                        rois[roi_name].append(rtss)
-                        
         # Return if no ROIs found
         rois_to_process = False
         for roi in rois:
