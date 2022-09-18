@@ -17,6 +17,7 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
+from src.Model.batchprocessing.BatchProcessKaplanMeier import BatchProcessKaplanMeier
 from src.Model.DICOMStructure import Image, Series
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
@@ -46,6 +47,7 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
+        self.kaplanmeier_targetCol =""
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -182,6 +184,7 @@ class BatchProcessingController:
             "csv2clinicaldata-sr": self.batch_csv2clinicaldatasr_handler,
             "clinicaldata-sr2csv": self.batch_clinicaldatasr2csv_handler,
             "roiname2fmaid": self.batch_roiname2fmaid_handler,
+            "kaplanmeier": self.batch_kaplanmeier_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -560,3 +563,87 @@ class BatchProcessingController:
                      str(min) + str(sec)
 
         return time_stamp
+
+    def set_kaplanmeier_targetCol(self, target):
+        self.kaplanmeier_targetCol = target
+
+    def set_kaplanmeier_DurationOfLifeCol(self):
+        return self.combobox.currentText()
+
+    def set_kaplanmeier_AliveOrDeadCol(self):
+        return self.combobox.currentText()
+
+    def batch_kaplanmeier_handler(self, interrupt_flag,
+                                    progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        ROIName2FMA-ID.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get patient files and start process
+        # Get current files
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = BatchProcessKaplanMeier(progress_callback,
+                                            interrupt_flag,
+                                            cur_patient_files,self.get_all_clinical_data(), self.kaplanmeier_targetCol)
+        success = process.start()
+
+        # Set summary message
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        # Append process summary
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]['pyrad2pyradSR'] = reason
+        progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
+
+    def get_all_clinical_data(self):
+        """
+        Reads in all clinical data from a directory which may
+        contain multiple patients.
+        :return: only unique values in a dictionary with keys as the
+        column name and a list of values found
+        """
+
+        clinical_data_dict = {}
+
+        for patient in self.dicom_structure.patients.values():
+            cur_patient_files = \
+                BatchProcessingController.get_patient_files(patient)
+            process = \
+                BatchProcessClinicalDataSR2CSV(None, None, cur_patient_files, None)
+
+            cd_sr = process.find_clinical_data_sr()
+
+            # if they do then get the data
+            if cd_sr:
+                single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                # adds all the current titles
+                titles = list(single_patient_data)
+
+                for title in titles:
+                    data = single_patient_data[title]
+
+                    if title not in clinical_data_dict.keys():
+                        clinical_data_dict[title] = [data]
+                    else:
+                        combined_data = clinical_data_dict[title]
+                        combined_data.append(data)
+
+                        # removes duplicates
+                        combined_data = list(dict.fromkeys(combined_data))
+
+                        clinical_data_dict[title] = combined_data
+
+        return clinical_data_dict
+
+
+

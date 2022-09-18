@@ -17,6 +17,7 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
+from src.View.batchprocessing.KaplanMeier import KaplanMeierOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -133,6 +134,7 @@ class UIBatchProcessingWindow(object):
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
+        self.kaplanmeier_tab = KaplanMeierOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
@@ -146,6 +148,7 @@ class UIBatchProcessingWindow(object):
                                "ClinicalData-SR2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
+        self.tab_widget.addTab(self.kaplanmeier_tab,"Kaplan Meier Plot")
 
         # == Bottom widgets
         # Info text
@@ -272,6 +275,13 @@ class UIBatchProcessingWindow(object):
             # Update tables
             self.suv2roi_tab.populate_table(dicom_structure)
 
+            # Get column headings
+            clinical_data = self.batch_processing_controller \
+                .get_all_clinical_data()
+            self.kaplanmeier_tab.store_data(
+                clinical_data
+                )
+
             # Update the batch name cleaning table
             batch_directory = self.directory_input.text()
             self.batchnamecleaning_tab.populate_table(dicom_structure,
@@ -286,9 +296,10 @@ class UIBatchProcessingWindow(object):
         """
         processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
                      'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
-                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid']
+                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid', 'kaplanmeier']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+        kaplanmeier_targetCol = self.kaplanmeier_tab.getTargetCol()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
@@ -318,6 +329,7 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
+        self.batch_processing_controller.set_kaplanmeier_targetCol(kaplanmeier_targetCol)
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:
