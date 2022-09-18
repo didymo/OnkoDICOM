@@ -1,3 +1,4 @@
+import logging
 from pydicom import dcmread
 from src.Model import ROI
 from src.Model.batchprocessing.BatchProcess import BatchProcess
@@ -45,8 +46,7 @@ class BatchProcessROINameCleaning(BatchProcess):
         """
         # Stop loading
         if self.interrupt_flag.is_set():
-            # TODO: convert print to logging
-            print("Stopped Batch ROI Name Cleaning")
+            logging.debug("Stopped Batch ROI Name Cleaning")
             self.patient_dict_container.clear()
             self.summary = "Batch ROI Name Cleaning was interrupted."
             return False
@@ -59,8 +59,7 @@ class BatchProcessROINameCleaning(BatchProcess):
         for roi in self.roi_options:
             # Stop loading
             if self.interrupt_flag.is_set():
-                # TODO: convert print to logging
-                print("Stopped Batch ROI Name Cleaning")
+                logging.debug("Stopped Batch ROI Name Cleaning")
                 self.patient_dict_container.clear()
                 self.summary = "Batch ROI Name Cleaning was interrupted."
                 return False
