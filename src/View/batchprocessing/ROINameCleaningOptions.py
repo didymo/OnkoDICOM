@@ -338,14 +338,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 # and there are 4 digits as a suffix
                 if roi_name not in self.organ_names and \
                 roi_name not in self.fma_id and \
-                roi_name != self.volume_prefixes[0] and \
-                roi_name != self.volume_prefixes[1] and \
-                roi_name != self.volume_prefixes[2] and \
-                (self.volume_prefixes[3] != roi_name[0:4] and \
-                self.volume_prefixes[4] != roi_name[0:3] and \
-                self.volume_prefixes[5] != roi_name[0:3] and \
-                self.volume_prefixes[6] != roi_name[0:3] and \
-                self.volume_prefixes[7] != roi_name[0:3] or \
+                roi_name not in self.volume_prefixes[0:3] and \
+                (roi_name[0:4] != self.volume_prefixes[3] and \
+                roi_name[0:3] not in self.volume_prefixes[4:9] or \
                 len(suffix) != 4):
                     rois[roi_name].append(rtss)
 
@@ -389,7 +384,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
             if roi_name[0:3] in self.volume_prefixes \
-            or roi_name[0:4] in self.volume_prefixes \
             or 'PTV' in roi_name or 'LN' in roi_name:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setText(roi_name)
@@ -410,19 +404,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
             
-            if roi_name.lower() in self.organ_names_lowercase:
-                # Add row to table
-                self.table_organ.insertRow(i)
-                self.table_organ.setRowHeight(i, 50)
-                self.table_organ.setItem(
-                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
-                self.table_organ.setCellWidget(i, 1, combo_box)
-                self.table_organ.setCellWidget(i, 2, name_box)
-                self.table_organ.setCellWidget(i, 3, rtss_combo_box)
-                continue
             if roi_name[0:3] in self.volume_prefixes \
-            or roi_name[0:4] in self.volume_prefixes \
-            or "PTV" in roi_name or "LN" in roi_name:
+            or 'PTV' in roi_name or 'LN' in roi_name:
                 # Add row to table
                 self.table_volume.insertRow(i)
                 self.table_volume.setRowHeight(i, 50)
@@ -441,6 +424,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.table_organ.setCellWidget(i, 1, combo_box)
                 self.table_organ.setCellWidget(i, 2, name_box)
                 self.table_organ.setCellWidget(i, 3, rtss_combo_box)
+                continue
             i += 1
 
         # Set row height
