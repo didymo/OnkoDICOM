@@ -35,7 +35,9 @@ class TabBar(QtWidgets.QTabBar):
 
         for i in range(self.count()):
             self.initStyleOption(opt, i)
+            painter.rotate(90)
             painter.drawControl(QtWidgets.QStyle.CE_TabBarTabShape, opt)
+            painter.rotate(-90)
             painter.save()
 
             s = opt.rect.size()

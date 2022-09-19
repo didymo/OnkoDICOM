@@ -263,32 +263,27 @@ QTreeView::branch:open:has-children:has-siblings  {
         image: url('./res/images/qtree/collapse-tree.png');
 }
 
+
+
 QTabWidget::pane {
     border: 0;
     padding-top: 2px;
     background-color: white;
 }
-QTabBar{
+QTabBar {
     background-color: rgb(244, 245, 245);
 }
 QTabBar::tab {
-    padding-right: 12px;
-    border-bottom: 3px solid #b3b3b3;
+    padding: 0 10px;
     background-color: rgb(244, 245, 245);
+    text-align: center;
     width: 36px;
-    height: 150%;
-}
-QTabBar::tab:hover {
-    background-color: #b299e6;
-    border-bottom: 3px solid #9370DB;
-}
-QTabBar::tab:pressed {
-    background-color: #5c2eb8;
+    height: 150px;
 }
 QTabBar::tab:selected {
-    background-color: white;
-    border-bottom: 3px solid #5c2eb8;
+    font-weight: bold;
 }
+
 
 QToolBar, QToolButton {
     background-color: rgb(244, 245, 245);
