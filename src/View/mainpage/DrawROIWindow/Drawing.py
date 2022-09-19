@@ -389,7 +389,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         Uses the users mouse click position to set the fill source
         """
-        self.fill_source = [event.scenePos().x(), event.scenePos().y()]
+        self.fill_source = [round(event.scenePos().x()), round(event.scenePos().y())]
         self._display_pixel_color()
 
     def manual_draw_roi(self, event):
