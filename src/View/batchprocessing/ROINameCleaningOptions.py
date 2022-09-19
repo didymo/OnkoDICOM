@@ -171,6 +171,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             csv_input = csv.reader(f)
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
+                self.organ_names_lowercase.append(row[1].lower())
                 self.volume_prefixes.append(row[1])
             f.close()
 
@@ -328,6 +329,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 temp = re.search(r'\d+$', roi_name)
                 if temp:
                     suffix = temp.group(0)
+                else:
+                    suffix = ""
 
                 # Add dataset to the list if the ROI name is not a
                 # standard organ name, standard prefix GTV/CTV/ITV 
@@ -338,11 +341,11 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 roi_name != self.volume_prefixes[0] and \
                 roi_name != self.volume_prefixes[1] and \
                 roi_name != self.volume_prefixes[2] and \
-                ("PTV_" not in roi_name and \
-                self.volume_prefixes[4] not in roi_name and \
-                self.volume_prefixes[5] not in roi_name and \
-                self.volume_prefixes[6] not in roi_name and \
-                "LN_" not in roi_name or \
+                (self.volume_prefixes[3] != roi_name[0:4] and \
+                self.volume_prefixes[4] != roi_name[0:3] and \
+                self.volume_prefixes[5] != roi_name[0:3] and \
+                self.volume_prefixes[6] != roi_name[0:3] and \
+                self.volume_prefixes[7] != roi_name[0:3] or \
                 len(suffix) != 4):
                     rois[roi_name].append(rtss)
 
@@ -386,25 +389,23 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
             if roi_name[0:3] in self.volume_prefixes \
-                    or roi_name[0:4] in self.volume_prefixes:
+            or roi_name[0:4] in self.volume_prefixes \
+            or 'PTV' in roi_name or 'LN' in roi_name:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setText(roi_name)
                 name_box.setEnabled(False)
-            if roi_name.lower() in self.organ_names_lowercase:
+            else:
             # Set default combo box entry to organ name in proper case
             # if the organ name is a standard one.
                 name_box = \
                 ROINameCleaningOrganComboBox(self.organ_names,
                                             self.volume_prefixes,
                                             roi_name)
-                index = self.organ_names_lowercase.index(roi_name.lower())
+                index = self.organ_names_lowercase.index(
+                    name_box.roi_suggestion(roi_name, self.organ_names, self.volume_prefixes)[0].lower())
                 name_box.setCurrentIndex(index)
                 name_box.setEnabled(True)
                 combo_box.setCurrentIndex(1)
-            else:
-                name_box = ROINameCleaningPrefixEntryField()
-                name_box.setText(roi_name)
-                name_box.setEnabled(False)
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
