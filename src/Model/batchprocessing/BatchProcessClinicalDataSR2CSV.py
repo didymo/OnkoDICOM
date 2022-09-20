@@ -94,6 +94,9 @@ class BatchProcessClinicalDataSR2CSV(BatchProcess):
         """
         datasets = self.patient_dict_container.dataset
 
+        if not datasets:
+            return None
+
         for ds in datasets:
             # Check for SR files
             if datasets[ds].SOPClassUID == '1.2.840.10008.5.1.4.1.1.88.33':

@@ -1,3 +1,4 @@
+import logging
 import platform
 import logging
 import pydicom
@@ -16,6 +17,7 @@ from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
+from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
 from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
@@ -82,7 +84,7 @@ class UIDrawROIWindow:
                        "OnkoDICOM - Draw Region Of Interest"))
         self.roi_name_label.setText(_translate("ROINameLabel",
                                                "Region of Interest: "))
-        self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
+        self.select_roi_type.setText(_translate("SelectRoiTypeButton", "Select ROI"))
         self.image_slice_number_label.setText(
             _translate("ImageSliceNumberLabel", "Slice Number: "))
         self.image_slice_number_line_edit.setText(
@@ -163,17 +165,20 @@ class UIDrawROIWindow:
         # Create a label for denoting the ROI name
         self.roi_name_label = QLabel()
         self.roi_name_label.setObjectName("ROINameLabel")
-        self.roi_name_line_edit = QLineEdit()
-        # Create an input box for ROI name
-        self.roi_name_line_edit.setObjectName("ROINameLineEdit")
-        self.roi_name_line_edit.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.roi_name_line_edit.resize(
-            self.roi_name_line_edit.sizeHint().width(),
-            self.roi_name_line_edit.sizeHint().height())
-        self.roi_name_line_edit.setEnabled(False)
+
+        # Create a select ROI button
+        self.select_roi_type = QPushButton()
+        self.select_roi_type. \
+            setObjectName("SelectRoiTypeButton")
+        self.select_roi_type.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.select_roi_type.resize(
+            self.select_roi_type.sizeHint().width(),
+            self.select_roi_type.sizeHint().height())
+        self.select_roi_type.clicked.connect(self.show_roi_type_options)
+
         self.draw_roi_window_input_container_box. \
-            addRow(self.roi_name_label, self.roi_name_line_edit)
+            addRow(self.roi_name_label, self.select_roi_type)
 
         # Create horizontal box to store image slice number and backward,
         # forward buttons
@@ -899,6 +904,12 @@ class UIDrawROIWindow:
         """
             Function triggered when saving ROI list
         """
+        logging.debug("saveROIList started")
+        if self.ROI_name is None:
+            QMessageBox.about(self.draw_roi_window_instance, "No ROI instance selected",
+                              "Please ensure you have selected your ROI instance before saving.")
+            return
+
         roi_list = ROI.convert_hull_list_to_contours_data(
             self.drawn_roi_list, self.patient_dict_container)
         if len(roi_list) == 0:
@@ -946,7 +957,6 @@ class UIDrawROIWindow:
 
         patient_dict_container = PatientDictContainer()
         existing_rois = patient_dict_container.get("rois")
-        number_of_rois = len(existing_rois)
 
         # Check to see if the ROI already exists
         for key, value in existing_rois.items():
@@ -959,7 +969,7 @@ class UIDrawROIWindow:
                               "Would you like to continue?")
 
         self.ROI_name = roi_name
-        self.roi_name_line_edit.setText(self.ROI_name)
+        self.select_roi_type.setText(self.ROI_name)
 
     def onDiameterReduceClicked(self):
         """
@@ -1098,6 +1108,14 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             True)
         self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
+
+    def show_roi_type_options(self):
+        """Creates and displays roi type options popup"""
+        logging.debug("show_roi_type_options started")
+        self.choose_roi_name_window = SelectROIPopUp()
+        self.choose_roi_name_window.signal_roi_name.connect(
+            self.set_selected_roi_name)
+        self.choose_roi_name_window.show()
 
     def closeWindow(self):
         """
