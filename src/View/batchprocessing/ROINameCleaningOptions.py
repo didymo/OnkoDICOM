@@ -172,7 +172,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.organ_names_lowercase.append(row[1].lower())
-                self.volume_prefixes.append(row[1])
+                self.volume_prefixes.append(row[1].strip())
             f.close()
 
 
@@ -319,7 +319,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Loop through each ROI in the RT Struct
             for i in range(len(rtstruct.StructureSetROISequence)):
                 # Get the ROI name
-                roi_name = rtstruct.StructureSetROISequence[i].ROIName.lstrip()
+                roi_name = rtstruct.StructureSetROISequence[i].ROIName.strip()
 
                 # Add ROI name to the dictionary
                 if roi_name not in rois.keys():
