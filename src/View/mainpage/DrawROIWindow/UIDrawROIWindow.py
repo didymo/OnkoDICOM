@@ -25,7 +25,7 @@ from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 class UIDrawROIWindow:
 
     def setup_ui(self, draw_roi_window_instance,
-                 rois, dataset_rtss, signal_roi_drawn):
+                 rois, dataset_rtss, signal_roi_drawn, signal_draw_roi_closed):
         """
         this function is responsible for setting up the UI
         for DrawROIWindow
@@ -41,6 +41,7 @@ class UIDrawROIWindow:
         self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.signal_roi_drawn = signal_roi_drawn
+        self.signal_draw_roi_closed = signal_draw_roi_closed
         self.drawn_roi_list = {}
         self.standard_organ_names = []
         self.standard_volume_names = []
@@ -1128,3 +1129,4 @@ class UIDrawROIWindow:
             delattr(self, 'drawingROI')
         self.ds = None
         self.close()
+        self.signal_draw_roi_closed.emit()
