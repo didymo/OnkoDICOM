@@ -112,7 +112,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     # Assert initial drawing has been created
     draw_roi_window.min_pixel_density_line_edit.setText("900")
     draw_roi_window.max_pixel_density_line_edit.setText("1000")
-    draw_roi_window.onDrawClicked()
+    draw_roi_window.onFillClicked()
     draw_roi_window.drawingROI.fill_source = [250, 250]
     draw_roi_window.drawingROI._display_pixel_color()
     post_draw_clicked_drawing = draw_roi_window.drawingROI.q_pixmaps
@@ -122,6 +122,25 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     draw_roi_window.transparency_slider.setValue(100)
     post_transparency_change_drawing = draw_roi_window.drawingROI.q_pixmaps
     assert post_transparency_change_drawing != post_draw_clicked_drawing
+
+    # Run Drawing reset, prevents post test crash
+    draw_roi_window.onResetClicked()
+
+
+def test_manual_drawing(qtbot, test_object, init_config):
+    """Function to create a drawing, press fill, press draw, and assert that the drawing is in draw "mode"."""
+    # Triggering draw window
+    qtbot.mouseClick(test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
+    assert test_object.main_window.draw_roi is not None
+    draw_roi_window = test_object.main_window.draw_roi
+
+    # Assert drawing is in draw "mode"
+    draw_roi_window.min_pixel_density_line_edit.setText("900")
+    draw_roi_window.max_pixel_density_line_edit.setText("1000")
+    qtbot.mouseClick(draw_roi_window.image_slice_number_fill_button, Qt.LeftButton)
+    qtbot.mouseClick(draw_roi_window.image_slice_number_draw_button, Qt.LeftButton)
+    assert draw_roi_window.keep_empty_pixel is True
+    assert draw_roi_window.drawingROI.is_drawing is True
 
     # Run Drawing reset, prevents post test crash
     draw_roi_window.onResetClicked()
