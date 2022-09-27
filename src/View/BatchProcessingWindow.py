@@ -206,8 +206,6 @@ class UIBatchProcessingWindow(object):
         # Connect buttons to functions
         self.browse_button.clicked.connect(self.show_file_browser)
         self.begin_button.clicked.connect(self.confirm_button_clicked)
-        self.back_button.clicked.connect(
-            lambda: QtCore.QCoreApplication.exit(0))
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)

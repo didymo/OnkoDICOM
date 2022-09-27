@@ -170,7 +170,6 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_exit_button.resize(self.open_patient_window_stop_button.sizeHint().width(),
                                                     self.open_patient_window_stop_button.sizeHint().height())
         self.open_patient_window_exit_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.open_patient_window_exit_button.clicked.connect(self.exit_button_clicked)
         self.open_patient_window_exit_button.setProperty("QPushButtonClass", "fail-button")
         self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_exit_button)
 
@@ -258,9 +257,6 @@ class UIOpenPatientWindow(object):
             _translate("OpenPatientWindowInstance", "Exit"))
         self.open_patient_window_confirm_button.setText(
             _translate("OpenPatientWindowInstance", "Confirm"))
-
-    def exit_button_clicked(self):
-        QCoreApplication.exit(0)
 
     def scan_directory_for_patient(self):
         # Reset tree view header and last patient

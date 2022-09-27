@@ -71,12 +71,14 @@ class WelcomeWindow(QtWidgets.QMainWindow, UIWelcomeWindow):
 
 class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
     go_next_window = QtCore.Signal(object)
+    go_back_window = QtCore.Signal()
 
     # Initialisation function to display the UI
     def __init__(self, default_directory):
         QtWidgets.QMainWindow.__init__(self)
         self.setup_ui(self)
         self.patient_info_initialized.connect(self.open_patient)
+        self.open_patient_window_exit_button.clicked.connect(self.open_previous_window)
 
         if default_directory is not None:
             self.filepath = default_directory
@@ -85,6 +87,12 @@ class OpenPatientWindow(QtWidgets.QMainWindow, UIOpenPatientWindow):
 
     def open_patient(self, progress_window):
         self.go_next_window.emit(progress_window)
+        
+    def open_previous_window(self):
+        """
+        Function to go back to WelcomeWindow
+        """
+        self.go_back_window.emit()
 
 
 class ImageFusionWindow(QtWidgets.QMainWindow, UIImageFusionWindow):
@@ -295,11 +303,19 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
 class BatchWindow(QtWidgets.QWidget, UIBatchProcessingWindow):
     go_next_window = QtCore.Signal()
+    go_back_window = QtCore.Signal()
 
     # Initialize the batch window and set up the UI
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.setup_ui(self)
+        self.back_button.clicked.connect(self.open_previous_window)
+        
+    def open_previous_window(self):
+        """
+        Function to go back to WelcomeWindow
+        """
+        self.go_back_window.emit()
 
 
 class PyradiProgressBar(QtWidgets.QWidget):
