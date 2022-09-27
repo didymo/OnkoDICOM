@@ -1,4 +1,5 @@
 import platform
+import threading
 
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -19,6 +20,7 @@ from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.constants import INITIAL_DRAWING_TOOL_RADIUS
+from threading import Thread
 
 
 class UIDrawROIWindow:
@@ -407,13 +409,32 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.resize(
             self.image_slice_number_draw_button.sizeHint().width(),
             self.image_slice_number_draw_button.sizeHint().height())
-        self.image_slice_number_draw_button.clicked.connect(self.onDrawClicked)
+        self.image_slice_number_draw_button.clicked.connect(lambda: self.onDrawClicked(False))
         icon_draw = QtGui.QIcon()
         icon_draw.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/draw_icon.png')))
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_roi_window_transect_draw_box. \
             addWidget(self.image_slice_number_draw_button)
+        self.draw_roi_window_input_container_box. \
+            addRow(self.draw_roi_window_transect_draw_box)
+
+        # Create the 3d draw button
+        self.image_slice_number_draw_button3D = QPushButton()
+        self.image_slice_number_draw_button3D. \
+            setObjectName("ImageSliceNumber3dDrawButton")
+        self.image_slice_number_draw_button3D.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_draw_button3D.resize(
+            self.image_slice_number_draw_button3D.sizeHint().width(),
+            self.image_slice_number_draw_button3D.sizeHint().height())
+        self.image_slice_number_draw_button3D.clicked.connect(lambda: self.onDrawClicked(True))
+        icon_draw3d = QtGui.QIcon()
+        icon_draw3d.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/3d_icon.png')))
+        self.image_slice_number_draw_button3D.setIcon(icon_draw3d)
+        self.draw_roi_window_transect_draw_box. \
+            addWidget(self.image_slice_number_draw_button3D)
         self.draw_roi_window_input_container_box. \
             addRow(self.draw_roi_window_transect_draw_box)
 
@@ -802,7 +823,7 @@ class UIDrawROIWindow:
 
         self.dicom_view.update_view()
 
-    def onDrawClicked(self):
+    def onDrawClicked(self, is_3d):
         """
         Function triggered when the Draw button is pressed from the menu.
         """
@@ -850,10 +871,12 @@ class UIDrawROIWindow:
                 id = self.current_slice
 
                 # This needs to be updated when merged with 2d
-                is_3d = True
+
                 if is_3d:
                     if hasattr(self, 'seed'):
                         delattr(self, 'seed')
+                    self.create_drawing(min_pixel, max_pixel, pixmaps, id, is_3d)
+                else:
                     self.create_drawing(min_pixel, max_pixel, pixmaps, id, is_3d)
 
             else:
@@ -865,37 +888,43 @@ class UIDrawROIWindow:
         """
         Creates drawing allowing for the user to start drawing on dicom view.
         """
+        negative = False
+        last = False
+        temp_id = id
+        range_start = 0
+        range_end = 0
+        step = 1
+
         if is_3d:
             if hasattr(self, 'seed'):
-                negative = False
-                tempid = id
                 for x in range(0, 2):
                     if x == 0:
-                        negative = True
+                        range_start_down = id - 1
+                        range_end_down = 1
+                        step_down = -1
                     else:
-                        negative = False
+                        range_start = id
+                        range_end = len(self.patient_dict_container.dataset)
+                        step = 1
 
-                    for y in range(1, 3):
-                        if negative:
-                            tempid = id - y
-                        else:
-                            tempid = id + y
+                    for y_search in range(range_start, range_end, step):
+                        temp_id = y_search
 
-                        self.dicom_view.slider.setValue(tempid)
+                        self.dicom_view.slider.setValue(temp_id)
 
-                        dt = self.patient_dict_container.dataset[tempid]
+                        dt = self.patient_dict_container.dataset[temp_id]
                         dt.convert_pixel_data()
 
                         # Path to the selected .dcm file
-                        location = self.patient_dict_container.filepaths[tempid]
+                        location = self.patient_dict_container.filepaths[temp_id]
                         self.ds = pydicom.dcmread(location)
 
                         self.drawingROI = Drawing(
-                            pixmaps[tempid],
+                            pixmaps[temp_id],
                             dt._pixel_array.transpose(),
                             min_pixel,
                             max_pixel,
-                            self.patient_dict_container.dataset[tempid],
+                            self.patient_dict_container.dataset[temp_id],
                             self.draw_roi_window_instance,
                             self.slice_changed,
                             self.current_slice,
@@ -910,6 +939,9 @@ class UIDrawROIWindow:
                         self.dicom_view.view.setScene(self.drawingROI)
                         self.enable_cursor_radius_change_box()
                         self.drawingROI._display_pixel_color()
+
+                        if self.drawingROI._display_pixel_color() != True:
+                            break
 
             else:
                 dt = self.patient_dict_container.dataset[id]
