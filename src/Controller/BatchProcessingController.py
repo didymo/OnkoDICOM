@@ -26,6 +26,7 @@ from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
+from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
 
@@ -255,6 +256,19 @@ class BatchProcessingController:
                 # Append process summary
                 self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
+
+        if 'ml_learning' in self.processes:
+            process = BatchProcessMLTrainingModel()
+            process.start()
+            self.batch_summary[1] = process.summary
+            progress_callback.emit(("Completed ML Training Cleaning", 100))
+
+            # Create window to store ML results
+            ml_results_window = BatchMLResultsWindow()
+            ml_results_window.set_results_values(process.get_results_values())
+            ml_results_window.set_results_values({})
+            ml_results_window.set_ml_model(process.ml_model)
+            ml_results_window.exec_()
 
         PatientDictContainer().clear()
 
