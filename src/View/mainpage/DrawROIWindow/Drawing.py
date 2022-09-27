@@ -4,6 +4,7 @@ import logging
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
+from PySide6.QtCore import Slot
 
 from src.constants import DEFAULT_WINDOW_SIZE
 from src.Model.Transform import linear_transform, get_pixel_coords, \
@@ -65,6 +66,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.max_bounds_x = self.rows
         self.max_bounds_y = self.cols
         self.fill_source = None
+        self.is_drawing = False
 
     def set_bounds(self):
         """
@@ -392,6 +394,15 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.fill_source = [round(event.scenePos().x()), round(event.scenePos().y())]
         self._display_pixel_color()
 
+    @Slot(bool)
+    def set_is_drawing(self, is_drawing):
+        """
+        Function triggered when either the Draw or Fill button is pressed from the menu.
+        Sets the is_drawing bool, allows for filling or drawing from separate button presses
+        """
+        logging.debug("set_is_drawing started")
+        self.is_drawing = is_drawing
+
     def manual_draw_roi(self, event):
         """
         Draws the ROI based on the users mouse press event and position
@@ -425,7 +436,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             This method is called to handle a mouse press event
             :param event: the mouse event
         """
-        if self.fill_source is None:
+        if not self.is_drawing:
             self.set_source(event)
         else:
             self.manual_draw_roi(event)
