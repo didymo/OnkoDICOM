@@ -5,7 +5,6 @@ import platform
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QFont
-
 from src.Model.Configuration import Configuration
 from src.Controller.TopLevelController import Controller
 warnings.filterwarnings("ignore")

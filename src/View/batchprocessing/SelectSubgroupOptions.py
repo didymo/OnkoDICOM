@@ -109,6 +109,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
                 filter_value = QtWidgets.QTableWidgetItem(str_value)
 
                 if row >= self.filter_table.rowCount():
+                    print(row)
                     self.filter_table.insertRow(row)
 
                 self.filter_table.setItem(row, col, filter_value)

@@ -21,6 +21,8 @@ from src.View.batchprocessing.ROINameCleaningOptions import \
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 from src.View.batchprocessing.FMAID2ROINameOptions import \
     FMAID2ROINameOptions
+from src.View.batchprocessing.MachineLearning import \
+    MachineLearning
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -139,6 +141,7 @@ class UIBatchProcessingWindow(object):
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
+        self.batchmachineaLearning_tab = MachineLearning ()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -154,6 +157,8 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
+        self.tab_widget.addTab(self.batchmachineaLearning_tab, 'Machine Learning')
+
 
         # == Bottom widgets
         # Info text
