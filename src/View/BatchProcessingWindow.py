@@ -313,7 +313,7 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname']
+                     'roiname2fmaid', 'fmaid2roiname', 'machine_learning']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()

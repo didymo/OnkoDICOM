@@ -223,7 +223,7 @@ class BatchProcessingController:
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
 
-            if 'select_subgroup' in self.processes:
+            if "select_subgroup" in self.processes:
                 in_subgroup = self.process_functions["select_subgroup"](
                     interrupt_flag,
                     progress_callback,
@@ -236,7 +236,7 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
-                if process in ['roinamecleaning',  'select_subgroup']:
+                if process in ["roinamecleaning",  "select_subgroup", "machine_learning"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -257,8 +257,21 @@ class BatchProcessingController:
                 self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
-        if 'ml_learning' in self.processes:
-            process = BatchProcessMLTrainingModel()
+        # TODO: replace this with a set_method which will be called from
+        # BatchProcessingWindow.confirm_button_clicked()
+        dummy_data = {
+            "features": ["name", "age"],
+            "target": "Local_Fail",
+            "type": "Classification",
+            "Accuracy": 80.15,
+            "ML with Tuning": "Yes"
+        }
+        self.machine_learning_options = dummy_data
+
+        if "machine_learning" in self.processes:
+            process = BatchProcessMachineLearning(progress_callback.
+                                                  interrupt_flag,
+                                                  self.machine_learning_options)
             process.start()
             self.batch_summary[1] = process.summary
             progress_callback.emit(("Completed ML Training Cleaning", 100))
@@ -266,7 +279,6 @@ class BatchProcessingController:
             # Create window to store ML results
             ml_results_window = BatchMLResultsWindow()
             ml_results_window.set_results_values(process.get_results_values())
-            ml_results_window.set_results_values({})
             ml_results_window.set_ml_model(process.ml_model)
             ml_results_window.exec_()
 

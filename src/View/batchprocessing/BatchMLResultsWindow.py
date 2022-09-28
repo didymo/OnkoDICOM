@@ -77,14 +77,6 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
                               second index is a batch ROI name cleaning summary
         """
 
-        dummy_data = {
-            "features": ["name", "age"],
-            "target": "Local_Fail",
-            "type": "Classification",
-            "Accuracy": 80.15,
-            "ML with Tuning": "Yes"
-        }
-
         # Create summary text
         summary_text = ""
         for key, value in dummy_data.items():
@@ -93,6 +85,9 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         # Set summary text
         # self.summary_label.setWordWrap(True)
         self.summary_label.setText(summary_text)
+
+    def set_ml_model(self, ml_model):
+        self.ml_model = ml_model
 
     def export_risk_table_clicked(self):
         """
@@ -114,4 +109,6 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         window.
         :return: True when the window has closed.
         """
+        # TODO: save function for self.ml_model
+
         self.close()
