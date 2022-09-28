@@ -21,6 +21,8 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
+from src.Model.batchprocessing.BatchProcessMachineLearning import \
+    BatchProcessMachineLearning
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -269,7 +271,7 @@ class BatchProcessingController:
         self.machine_learning_options = dummy_data
 
         if "machine_learning" in self.processes:
-            process = BatchProcessMachineLearning(progress_callback.
+            process = BatchProcessMachineLearning(progress_callback,
                                                   interrupt_flag,
                                                   self.machine_learning_options)
             process.start()

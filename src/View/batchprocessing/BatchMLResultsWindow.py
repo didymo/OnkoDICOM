@@ -68,7 +68,7 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         # Set layout of window
         self.setLayout(self.layout)
 
-    def set_results_values(self, batch_summary):
+    def set_results_values(self, results_values):
         """
         Sets the summary text.
         :param batch_summary: List where first index is a dictionary where key
@@ -79,7 +79,7 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
 
         # Create summary text
         summary_text = ""
-        for key, value in dummy_data.items():
+        for key, value in results_values.items():
             summary_text += f"{key.upper()}: {value}\n"
 
         # Set summary text
@@ -94,14 +94,18 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         Function to handle the export button being clicked. Opens a file
         save dialog and saves the summary text to this text file.
         """
-        file_path = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save As...", '', 'Text Files (*.txt)')
+        # file_path = QtWidgets.QFileDialog.getSaveFileName(
+        #     self, "Save As...", '', 'Text Files (*.txt)')
 
-        if file_path:
-            text = self.summary_label.text()
-            f = open(file_path[0], "w")
-            f.write(text)
-            f.close()
+        # if file_path:
+        #     text = self.summary_label.text()
+        #     f = open(file_path[0], "w")
+        #     f.write(text)
+        #     f.close()
+
+        # export risk table self.risk_table?
+
+        self.close()
 
     def save_ml_model_clicked(self):
         """
