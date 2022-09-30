@@ -110,31 +110,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.set_bounds()
         self.pixel_array = self.dataset._pixel_array
 
-        color = QtGui.QColor(90, 250, 175, 200)
-        self.q_image = self.img.toImage()
-
-        queue = [self.fill_source]
-
-        while len(queue) > 0:
-            current = queue.pop(0)
-
-            for x_neighbour in range(-1, 2):
-                for y_neighbour in range(-1, 2):
-                    element = [current[0] + x_neighbour, current[1] + y_neighbour]
-
-                    if self.check_roi_validity(element):
-                        if (element[0], element[1]) not in self.target_pixel_coords:
-                            queue.append([element[0], element[1]])
-                            self.target_pixel_coords.add((element[0], element[1]))
-    def _display_pixel_color(self):
-        """
-        Finds the pixel coordinates used to draw the ROI based on the min and max values.
-        This process uses a generic BFS that is bound to the min and max bounds,
-        as well as the min and max pixel density.
-        """
-        self.set_bounds()
-        self.pixel_array = self.dataset._pixel_array
-
         self.q_image = self.img.toImage()
         queue = [self.fill_source]
 
@@ -150,23 +125,30 @@ class Drawing(QtWidgets.QGraphicsScene):
                             queue.append([element[0], element[1]])
                             self.target_pixel_coords.add((element[0], element[1]))
 
-            """For the meantime, a new image is created and the pixels 
-            specified are coloured. The _set_colour_of_pixels function
-             is then called to colour the newly drawn pixels and blend in
-             transparency."""
-            # Convert QPixMap into Qimage
-            for x_coord, y_coord in self.target_pixel_coords:
-                temp = set()
-                temp.add((x_coord, y_coord))
-                points = get_pixel_coords(temp, self.rows, self.cols)
-                temp_2 = get_first_entry(points)
-                c = self.q_image.pixel(temp_2[0], temp_2[1])
-                colors = QColor(c).getRgbF()
-                self.according_color_dict[(x_coord, y_coord)] = colors
+        """For the meantime, a new image is created and the pixels 
+        specified are coloured. The _set_colour_of_pixels function
+         is then called to colour the newly drawn pixels and blend in
+         transparency."""
+        # Convert QPixMap into Qimage
+        for x_coord, y_coord in self.target_pixel_coords:
+            temp = set()
+            temp.add((x_coord, y_coord))
+            points = get_pixel_coords(temp, self.rows, self.cols)
+            temp_2 = get_first_entry(points)
+            c = self.q_image.pixel(temp_2[0], temp_2[1])
+            colors = QColor(c).getRgbF()
+            self.according_color_dict[(x_coord, y_coord)] = colors
 
-            points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
-            self._set_color_of_pixels(points)
-            self.refresh_image()
+        points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+        print(len(points))
+
+        self._set_color_of_pixels(points)
+        self.refresh_image()
+        if len(points) < 1:
+            return False
+        else:
+            return True
+
 
     def _set_color_of_pixels(self, points):
         """
@@ -470,6 +452,7 @@ class Drawing(QtWidgets.QGraphicsScene):
             This method is called to handle a mouse press event
             :param event: the mouse event
         """
+        print("mousePress even called with event: " + str(event))
         if self.cursor:
             self.removeItem(self.cursor)
         self.isPressed = True
@@ -500,9 +483,14 @@ class Drawing(QtWidgets.QGraphicsScene):
             This method is called to handle a mouse press event
             :param event: the mouse event
         """
+        print("mousePressEvent Triggered")
+        # if self.fill_source is None:
+        #     self.set_source(event)
         if not self.is_drawing:
+            print("is drawing false")
             self.set_source(event)
         else:
+            print("is drawing true")
             self.manual_draw_roi(event)
         self.update()
 

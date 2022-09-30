@@ -833,11 +833,12 @@ class UIDrawROIWindow:
         Function triggered when the Draw button is pressed from the menu.
         """
         logging.debug("onFillClicked started")
+        print("onFillClicked called")
         if self.has_drawing:
             self.is_drawing.connect(self.drawingROI.set_is_drawing)
             self.is_drawing.emit(False)
             self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
-            return None
+            # return None
 
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
@@ -884,8 +885,9 @@ class UIDrawROIWindow:
                 id = self.current_slice
 
                 # This needs to be updated when merged with 2d
-
+                print("is_3d: " + str(is_3d))
                 if is_3d:
+                    print(str(is_3d) + ": is_3d")
                     if hasattr(self, 'seed'):
                         delattr(self, 'seed')
                     self.create_drawing(min_pixel, max_pixel, pixmaps, id, is_3d)
@@ -901,6 +903,7 @@ class UIDrawROIWindow:
         """
         Creates drawing allowing for the user to start drawing on dicom view.
         """
+        print(str(is_3d) + ": is_3d create_drawing")
         negative = False
         last = False
         temp_id = id
@@ -909,18 +912,23 @@ class UIDrawROIWindow:
         step = 1
 
         if is_3d:
+            print(str(is_3d) + ": is_3d might not have attr")
             if hasattr(self, 'seed'):
+                print(str(is_3d) + ": is_3d hasattr")
+                print("------------ HERE ------------")
                 for x in range(0, 2):
+                    print("x == " + str(x))
                     if x == 0:
-                        range_start_down = id - 1
-                        range_end_down = 1
-                        step_down = -1
+                        range_start = id - 1
+                        range_end = 1
+                        step = -1
                     else:
                         range_start = id
-                        range_end = len(self.patient_dict_container.dataset)
+                        range_end = len(self.patient_dict_container.dataset) -1
                         step = 1
 
                     for y_search in range(range_start, range_end, step):
+                        print(str(range_start) + " range end: " + str(range_end) + " range: " + str(step))
                         temp_id = y_search
 
                         self.dicom_view.slider.setValue(temp_id)
@@ -947,19 +955,17 @@ class UIDrawROIWindow:
                             set(),
                             xy=self.seed
                         )
-
+                        print("xy = " + str(self.seed))
                         self.slice_changed = True
+                        self.has_drawing = True
                         self.dicom_view.view.setScene(self.drawingROI)
-                        self.enable_cursor_radius_change_box()
-                        self.drawingROI._display_pixel_color()
+                        self.enable_cursor_diameter_change_box()
 
                         if self.drawingROI._display_pixel_color() != True:
-                            break
-
+                             break
             else:
                 dt = self.patient_dict_container.dataset[id]
                 dt.convert_pixel_data()
-
                 # Path to the selected .dcm file
                 location = self.patient_dict_container.filepaths[id]
                 self.ds = pydicom.dcmread(location)
@@ -984,10 +990,33 @@ class UIDrawROIWindow:
                 self.has_drawing = True
                 self.dicom_view.view.setScene(self.drawingROI)
                 self.enable_cursor_diameter_change_box()
-                else:
-                    QMessageBox.about(self.draw_roi_window_instance,
-                                      "Not Enough Data",
-                                      "Not all values are specified or correct.")
+        else:
+            dt = self.patient_dict_container.dataset[id]
+            dt.convert_pixel_data()
+            # Path to the selected .dcm file
+            location = self.patient_dict_container.filepaths[id]
+            self.ds = pydicom.dcmread(location)
+
+            self.drawingROI = Drawing(
+                pixmaps[id],
+                dt._pixel_array.transpose(),
+                min_pixel,
+                max_pixel,
+                self.patient_dict_container.dataset[id],
+                self.draw_roi_window_instance,
+                self.slice_changed,
+                self.current_slice,
+                self.drawing_tool_radius,
+                self.keep_empty_pixel,
+                self.pixel_transparency,
+                set()
+            )
+
+            self.slice_changed = True
+            self.has_drawing = True
+            self.dicom_view.view.setScene(self.drawingROI)
+            self.enable_cursor_diameter_change_box()
+
         logging.debug("onFillClicked finished")
 
     @Slot(list)
