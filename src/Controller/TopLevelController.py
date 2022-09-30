@@ -39,6 +39,12 @@ class Controller:
         """
         Display welcome page
         """
+        # Close all other open windows first
+        if self.open_patient_window.isVisible():
+            self.open_patient_window.close()
+        if self.batch_window.isVisible():
+            self.batch_window.close()
+            
         self.welcome_window = WelcomeWindow()
         self.welcome_window.go_next_window.connect(self.show_open_patient)
         self.welcome_window.go_batch_window.connect(self.show_batch_window)
@@ -62,12 +68,14 @@ class Controller:
                 self.default_directory)
             self.open_patient_window.go_next_window.connect(
                 self.show_main_window)
+            self.open_patient_window.go_back_window.connect(
+                self.show_welcome)
 
         self.open_patient_window.show()
 
         # Run check_selected_items() upon open patient window is shown
         self.open_patient_window.check_selected_items()
-
+        
     def show_main_window(self, progress_window):
         """
         Displays the main patient window after completing the loading.
@@ -109,13 +117,25 @@ class Controller:
         self.pt_ct_window.close()
 
     def show_batch_window(self):
+        """
+        Display batch window
+        """
+        # Close all other open windows first
+        if self.welcome_window.isVisible():
+            self.welcome_window.close()
+        if self.main_window.isVisible():
+            self.main_window.close()
+        if self.first_time_welcome_window.isVisible():
+            self.first_time_welcome_window.close()
+            
         # Only initialise the batch processing window once
         if not isinstance(self.batch_window, BatchWindow):
             self.batch_window = BatchWindow()
+            self.batch_window.go_back_window.connect(
+                self.show_welcome)
 
-        # Close the main window and show the batch processing window
+        # Show the batch processing window
         self.batch_window.show()
-        self.welcome_window.close()
 
     def show_pyradi_progress(self, path, filepaths, target_path):
         """

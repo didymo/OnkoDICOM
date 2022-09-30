@@ -1,8 +1,9 @@
+import logging
 import platform
-
+import logging
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QSize, QRegularExpression
+from PySide6.QtCore import Qt, QSize, QRegularExpression, Signal
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
@@ -16,14 +17,17 @@ from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
+from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
 from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
 
 class UIDrawROIWindow:
 
+    is_drawing = Signal(bool)
+
     def setup_ui(self, draw_roi_window_instance,
-                 rois, dataset_rtss, signal_roi_drawn):
+                 rois, dataset_rtss, signal_roi_drawn, signal_draw_roi_closed):
         """
         this function is responsible for setting up the UI
         for DrawROIWindow
@@ -39,6 +43,7 @@ class UIDrawROIWindow:
         self.rois = rois
         self.dataset_rtss = dataset_rtss
         self.signal_roi_drawn = signal_roi_drawn
+        self.signal_draw_roi_closed = signal_draw_roi_closed
         self.drawn_roi_list = {}
         self.standard_organ_names = []
         self.standard_volume_names = []
@@ -49,7 +54,7 @@ class UIDrawROIWindow:
         self.drawingROI = None
         self.slice_changed = False
         self.drawing_tool_radius = INITIAL_DRAWING_TOOL_RADIUS
-        self.keep_empty_pixel = False
+        self.keep_empty_pixel = True  # This constant will not change
         # pixel density
         self.target_pixel_coords_single_array = []  # 1D array
         self.draw_roi_window_instance = draw_roi_window_instance
@@ -57,6 +62,7 @@ class UIDrawROIWindow:
         self.ds = None
         self.zoom = 1.0
         self.pixel_transparency = 0.50
+        self.has_drawing = False
 
         self.upper_limit = None
         self.lower_limit = None
@@ -82,7 +88,7 @@ class UIDrawROIWindow:
                        "OnkoDICOM - Draw Region Of Interest"))
         self.roi_name_label.setText(_translate("ROINameLabel",
                                                "Region of Interest: "))
-        self.roi_name_line_edit.setText(_translate("ROINameLineEdit", ""))
+        self.select_roi_type.setText(_translate("SelectRoiTypeButton", "Select ROI"))
         self.image_slice_number_label.setText(
             _translate("ImageSliceNumberLabel", "Slice Number: "))
         self.image_slice_number_line_edit.setText(
@@ -94,6 +100,8 @@ class UIDrawROIWindow:
             _translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(
             _translate("ImageSliceNumberDrawButton", "Draw"))
+        self.image_slice_number_fill_button.setText(
+            _translate("ImageSliceNumberFillButton", "Fill"))
         self.image_slice_number_move_forward_button.setText(
             _translate("ImageSliceNumberMoveForwardButton", ""))
         self.image_slice_number_move_backward_button.setText(
@@ -122,14 +130,12 @@ class UIDrawROIWindow:
             _translate("MaxPixelDensityInput", ""))
         self.transparency_slider_label.setText(
             _translate("TransparencySliderLabel", "Transparency:"))
-        self.toggle_keep_empty_pixel_label.setText(
-            _translate("ToggleKeepEmptyPixelLabel", "Keep empty pixel: "))
 
         self.draw_roi_window_viewport_zoom_label.setText(
             _translate("DrawRoiWindowViewportZoomLabel", "Zoom: "))
-        self.draw_roi_window_cursor_radius_change_label.setText(
-            _translate("DrawRoiWindowCursorRadiusChangeLabel",
-                       "Cursor Radius: "))
+        self.draw_roi_window_cursor_diameter_change_label.setText(
+            _translate("DrawRoiWindowCursorDiameterChangeLabel",
+                       "Cursor Diameter: "))
 
         self.draw_roi_window_instance_action_reset_button.setText(
             _translate("DrawRoiWindowInstanceActionClearButton", "Reset"))
@@ -163,17 +169,20 @@ class UIDrawROIWindow:
         # Create a label for denoting the ROI name
         self.roi_name_label = QLabel()
         self.roi_name_label.setObjectName("ROINameLabel")
-        self.roi_name_line_edit = QLineEdit()
-        # Create an input box for ROI name
-        self.roi_name_line_edit.setObjectName("ROINameLineEdit")
-        self.roi_name_line_edit.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.roi_name_line_edit.resize(
-            self.roi_name_line_edit.sizeHint().width(),
-            self.roi_name_line_edit.sizeHint().height())
-        self.roi_name_line_edit.setEnabled(False)
+
+        # Create a select ROI button
+        self.select_roi_type = QPushButton()
+        self.select_roi_type. \
+            setObjectName("SelectRoiTypeButton")
+        self.select_roi_type.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.select_roi_type.resize(
+            self.select_roi_type.sizeHint().width(),
+            self.select_roi_type.sizeHint().height())
+        self.select_roi_type.clicked.connect(self.show_roi_type_options)
+
         self.draw_roi_window_input_container_box. \
-            addRow(self.roi_name_label, self.roi_name_line_edit)
+            addRow(self.roi_name_label, self.select_roi_type)
 
         # Create horizontal box to store image slice number and backward,
         # forward buttons
@@ -296,7 +305,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_input_container_box. \
             addRow(self.draw_roi_window_viewport_zoom_box)
 
-        self.init_cursor_radius_change_box()
+        self.init_cursor_diameter_change_box()
 
         # Create slider to adjust the transparency of drawn pixels
         self.transparency_slider_box = QHBoxLayout()
@@ -329,32 +338,19 @@ class UIDrawROIWindow:
         self.transparency_slider_box.addWidget(self.transparency_slider)
         self.draw_roi_window_input_container_box.addRow(self.transparency_slider_box)
 
-        # Create field to toggle two options: Keep empty pixel or fill empty
-        # pixel when using draw cursor
-        self.toggle_keep_empty_pixel_box = QHBoxLayout()
-        self.toggle_keep_empty_pixel_label = QLabel()
-        self.toggle_keep_empty_pixel_label. \
-            setObjectName("ToggleKeepEmptyPixelLabel")
-        # Create input for min pixel size
-        self.toggle_keep_empty_pixel_combo_box = QComboBox()
-        self.toggle_keep_empty_pixel_combo_box.addItems(["Off", "On"])
-        self.toggle_keep_empty_pixel_combo_box.setCurrentIndex(0)
-        self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
-        self.toggle_keep_empty_pixel_combo_box. \
-            setObjectName("ToggleKeepEmptyPixelComboBox")
-        self.toggle_keep_empty_pixel_combo_box. \
-            setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.toggle_keep_empty_pixel_combo_box.resize(
-            self.toggle_keep_empty_pixel_combo_box.sizeHint().width(),
-            self.toggle_keep_empty_pixel_combo_box.sizeHint().height())
-        self.toggle_keep_empty_pixel_combo_box.currentIndexChanged.connect(
-            self.toggle_keep_empty_pixel_box_index_changed)
-        self.toggle_keep_empty_pixel_box. \
-            addWidget(self.toggle_keep_empty_pixel_label)
-        self.toggle_keep_empty_pixel_box. \
-            addWidget(self.toggle_keep_empty_pixel_combo_box)
+        # Create a draw button
+        self.draw_button_row_layout = QHBoxLayout()
+        self.image_slice_number_draw_button = QPushButton()
+        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_draw_button.clicked.connect(self.onDrawClicked)
+        self.image_slice_number_draw_button.setEnabled(False)
+        self.draw_button_row_layout.addWidget(self.image_slice_number_draw_button)
         self.draw_roi_window_input_container_box. \
-            addRow(self.toggle_keep_empty_pixel_box)
+            addRow(self.draw_button_row_layout)
+        icon_draw = QtGui.QIcon()
+        icon_draw.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/draw_icon.png')))
+        self.image_slice_number_draw_button.setIcon(icon_draw)
 
         # Create a horizontal box for transect and draw button
         self.draw_roi_window_transect_draw_box = QHBoxLayout()
@@ -396,32 +392,30 @@ class UIDrawROIWindow:
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
         self.draw_roi_window_transect_draw_box. \
             addWidget(self.image_slice_number_box_draw_button)
-        # Create a draw button
-        self.image_slice_number_draw_button = QPushButton()
-        self.image_slice_number_draw_button. \
-            setObjectName("ImageSliceNumberDrawButton")
-        self.image_slice_number_draw_button.setSizePolicy(
+
+        # Create a fill button
+        self.image_slice_number_fill_button = QPushButton()
+        self.image_slice_number_fill_button. \
+            setObjectName("ImageSliceNumberFillButton")
+        self.image_slice_number_fill_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_draw_button.resize(
-            self.image_slice_number_draw_button.sizeHint().width(),
-            self.image_slice_number_draw_button.sizeHint().height())
-        self.image_slice_number_draw_button.clicked.connect(self.onDrawClicked)
-        icon_draw = QtGui.QIcon()
-        icon_draw.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/draw_icon.png')))
-        self.image_slice_number_draw_button.setIcon(icon_draw)
+        self.image_slice_number_fill_button.resize(
+            self.image_slice_number_fill_button.sizeHint().width(),
+            self.image_slice_number_fill_button.sizeHint().height())
+        self.image_slice_number_fill_button.clicked.connect(self.onFillClicked)
+        # TODO: Add fill icon
         self.draw_roi_window_transect_draw_box. \
-            addWidget(self.image_slice_number_draw_button)
+            addWidget(self.image_slice_number_fill_button)
         self.draw_roi_window_input_container_box. \
             addRow(self.draw_roi_window_transect_draw_box)
 
         # Create a contour preview button
-        self.row_preview_layout = QtWidgets.QHBoxLayout()
+        self.row_layout = QtWidgets.QHBoxLayout()
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
         self.button_contour_preview.clicked.connect(self.onPreviewClicked)
-        self.row_preview_layout.addWidget(self.button_contour_preview)
+        self.row_layout.addWidget(self.button_contour_preview)
         self.draw_roi_window_input_container_box. \
-            addRow(self.row_preview_layout)
+            addRow(self.row_layout)
         icon_preview = QtGui.QIcon()
         icon_preview.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/preview_icon.png')))
@@ -641,12 +635,14 @@ class UIDrawROIWindow:
                 self.current_slice]['drawingROI']
             self.ds = self.drawn_roi_list[self.current_slice]['ds']
             self.dicom_view.view.setScene(self.drawingROI)
-            self.enable_cursor_radius_change_box()
+            self.enable_cursor_diameter_change_box()
             self.drawingROI.clear_cursor(self.drawing_tool_radius)
+            self.has_drawing = True
 
         else:
-            self.disable_cursor_radius_change_box()
+            self.disable_cursor_diameter_change_box()
             self.ds = None
+            self.has_drawing = False
 
     def onZoomInClicked(self):
         """
@@ -654,7 +650,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom *= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        if self.drawingROI \
+        if hasattr(self, 'drawingROI') and self.drawingROI \
                 and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input.setText(
@@ -667,7 +663,7 @@ class UIDrawROIWindow:
         """
         self.dicom_view.zoom /= 1.05
         self.dicom_view.update_view(zoom_change=True)
-        if self.drawingROI \
+        if hasattr(self, 'drawingROI') and self.drawingROI \
                 and self.drawingROI.current_slice == self.current_slice:
             self.dicom_view.view.setScene(self.drawingROI)
         self.draw_roi_window_viewport_zoom_input. \
@@ -681,11 +677,6 @@ class UIDrawROIWindow:
         if hasattr(self, 'drawingROI') and self.drawingROI:
             self.drawingROI.pixel_transparency = self.pixel_transparency
             self.drawingROI.update_pixel_transparency()
-
-    def toggle_keep_empty_pixel_box_index_changed(self):
-        self.keep_empty_pixel = self.toggle_keep_empty_pixel_combo_box. \
-                                    currentText() == "On"
-        self.drawingROI.keep_empty_pixel = self.keep_empty_pixel
 
     def onCancelButtonClicked(self):
         """
@@ -737,6 +728,7 @@ class UIDrawROIWindow:
             delattr(self, 'bounds_box_draw')
         if hasattr(self, 'drawingROI'):
             delattr(self, 'drawingROI')
+            self.has_drawing = False
         self.ds = None
 
     def transect_handler(self):
@@ -759,6 +751,7 @@ class UIDrawROIWindow:
             colS,
             is_roi_draw=True,
         )
+        self.has_drawing = False
 
     def save_drawing_progress(self, image_slice_number):
         """
@@ -801,6 +794,25 @@ class UIDrawROIWindow:
         """
         Function triggered when the Draw button is pressed from the menu.
         """
+        logging.debug("onDrawClicked started")
+        if hasattr(self, 'drawingROI'):
+            if self.drawingROI is not None:
+                self.is_drawing.connect(self.drawingROI.set_is_drawing)
+                self.is_drawing.emit(True)
+                self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
+        logging.debug("onDrawClicked finished")
+
+    def onFillClicked(self):
+        """
+        Function triggered when the Fill button is pressed from the menu.
+        """
+        logging.debug("onFillClicked started")
+        if self.has_drawing:
+            self.is_drawing.connect(self.drawingROI.set_is_drawing)
+            self.is_drawing.emit(False)
+            self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
+            return None
+
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         if self.min_pixel_density_line_edit.text() == "" \
@@ -865,12 +877,14 @@ class UIDrawROIWindow:
                     set()
                 )
                 self.slice_changed = True
+                self.has_drawing = True
                 self.dicom_view.view.setScene(self.drawingROI)
-                self.enable_cursor_radius_change_box()
+                self.enable_cursor_diameter_change_box()
             else:
                 QMessageBox.about(self.draw_roi_window_instance,
                                   "Not Enough Data",
                                   "Not all values are specified or correct.")
+        logging.debug("onFillClicked finished")
 
     def onBoxDrawClicked(self):
         """
@@ -883,7 +897,8 @@ class UIDrawROIWindow:
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
-        self.disable_cursor_radius_change_box()
+        self.disable_cursor_diameter_change_box()
+        self.has_drawing = False
 
     def onSaveClicked(self):
         """
@@ -897,6 +912,12 @@ class UIDrawROIWindow:
         """
             Function triggered when saving ROI list
         """
+        logging.debug("saveROIList started")
+        if self.ROI_name is None:
+            QMessageBox.about(self.draw_roi_window_instance, "No ROI instance selected",
+                              "Please ensure you have selected your ROI instance before saving.")
+            return
+
         roi_list = ROI.convert_hull_list_to_contours_data(
             self.drawn_roi_list, self.patient_dict_container)
         if len(roi_list) == 0:
@@ -921,8 +942,6 @@ class UIDrawROIWindow:
                           "New contour successfully created!")
         self.closeWindow()
 
-
-
     def onPreviewClicked(self):
         """
         function triggered when Preview button is clicked
@@ -946,7 +965,6 @@ class UIDrawROIWindow:
 
         patient_dict_container = PatientDictContainer()
         existing_rois = patient_dict_container.get("rois")
-        number_of_rois = len(existing_rois)
 
         # Check to see if the ROI already exists
         for key, value in existing_rois.items():
@@ -959,30 +977,34 @@ class UIDrawROIWindow:
                               "Would you like to continue?")
 
         self.ROI_name = roi_name
-        self.roi_name_line_edit.setText(self.ROI_name)
+        self.select_roi_type.setText(self.ROI_name)
 
-    def onRadiusReduceClicked(self):
+    def onDiameterReduceClicked(self):
         """
-        function triggered when user reduce cursor radius
+        function triggered when user reduce cursor diameter
         """
-        self.drawing_tool_radius = max(self.drawing_tool_radius - 1, 4)
-        self.draw_roi_window_cursor_radius_change_input.setText(
-            str(self.drawing_tool_radius))
-        self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
-        self.draw_cursor_when_radius_changed()
+        logging.debug("onDiameterReduceClicked started")
+        self.drawing_tool_radius = max(self.drawing_tool_radius - 0.5, 0.5)
+        self.draw_roi_window_cursor_diameter_change_input.setText(
+            "{:.0f}".format(self.drawing_tool_radius*2))
+        self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
+        self.draw_cursor_when_diameter_changed()
+        logging.debug("onDiameterReduceClicked finished")
 
-    def onRadiusIncreaseClicked(self):
+    def onDiameterIncreaseClicked(self):
         """
-        function triggered when user increase cursor radius
+        function triggered when user increase cursor diameter
         """
-        self.drawing_tool_radius = min(self.drawing_tool_radius + 1, 25)
-        self.draw_roi_window_cursor_radius_change_input.setText(
-            str(self.drawing_tool_radius))
-        self.draw_cursor_when_radius_changed()
+        logging.debug("onDiameterIncreaseClicked started")
+        self.drawing_tool_radius = min(self.drawing_tool_radius + 0.5, 25)
+        self.draw_roi_window_cursor_diameter_change_input.setText(
+            "{:.0f}".format(self.drawing_tool_radius*2))
+        self.draw_cursor_when_diameter_changed()
+        logging.debug("onDiameterIncreaseClicked finished")
 
-    def draw_cursor_when_radius_changed(self):
+    def draw_cursor_when_diameter_changed(self):
         """
-        function to update drawing cursor when radius changed
+        function to update drawing cursor when diameter changed
         """
         if self.drawingROI.cursor:
             self.drawingROI.draw_cursor(
@@ -991,107 +1013,117 @@ class UIDrawROIWindow:
                 self.drawing_tool_radius)
         else:
             self.drawingROI.draw_cursor(
-                (self.drawingROI.min_x + self.drawingROI.max_x) / 2,
-                (self.drawingROI.min_y + self.drawingROI.max_y) / 2,
+                (self.drawingROI.min_bounds_x + self.drawingROI.max_bounds_x) / 2,
+                (self.drawingROI.min_bounds_y + self.drawingROI.max_bounds_y) / 2,
                 self.drawing_tool_radius,
                 True)
 
-    def init_cursor_radius_change_box(self):
+    def init_cursor_diameter_change_box(self):
         """
-        function to init cursor radius change box
+        Function to init cursor diameter change box elements. Note, while the user
+        facing elements refer to diameter, the back end calculations are performed
+        using radius instead (with 0.5 radius increments).
         """
-        # Create a horizontal box for containing the cursor radius changing
+        # Create a horizontal box for containing the cursor diameter changing
         # function
-        self.draw_roi_window_cursor_radius_change_box = QHBoxLayout()
-        self.draw_roi_window_cursor_radius_change_box.setObjectName(
-            "DrawRoiWindowCursorRadiusChangeBox")
-        # Create a label for cursor radius change
-        self.draw_roi_window_cursor_radius_change_label = QLabel()
-        self.draw_roi_window_cursor_radius_change_label.setObjectName(
-            "DrawRoiWindowCursorRadiusChangeLabel")
-        # Create an input box for cursor radius
-        self.draw_roi_window_cursor_radius_change_input = QLineEdit()
-        self.draw_roi_window_cursor_radius_change_input.setObjectName(
-            "DrawRoiWindowCursorRadiusChangeInput")
-        self.draw_roi_window_cursor_radius_change_input.setText(str(19))
-        self.draw_roi_window_cursor_radius_change_input.setCursorPosition(0)
-        self.draw_roi_window_cursor_radius_change_input.setEnabled(False)
-        self.draw_roi_window_cursor_radius_change_input.setSizePolicy(
+        self.draw_roi_window_cursor_diameter_change_box = QHBoxLayout()
+        self.draw_roi_window_cursor_diameter_change_box.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeBox")
+        # Create a label for cursor diameter change
+        self.draw_roi_window_cursor_diameter_change_label = QLabel()
+        self.draw_roi_window_cursor_diameter_change_label.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeLabel")
+        # Create an input box for cursor diameter
+        self.draw_roi_window_cursor_diameter_change_input = QLineEdit()
+        self.draw_roi_window_cursor_diameter_change_input.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeInput")
+        self.draw_roi_window_cursor_diameter_change_input.setText("{:.0f}".format(self.drawing_tool_radius*2))
+        self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
+        self.draw_roi_window_cursor_diameter_change_input.setEnabled(False)
+        self.draw_roi_window_cursor_diameter_change_input.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.draw_roi_window_cursor_radius_change_input.resize(
-            self.draw_roi_window_cursor_radius_change_input.sizeHint().width(),
-            self.draw_roi_window_cursor_radius_change_input.sizeHint().height()
+        self.draw_roi_window_cursor_diameter_change_input.resize(
+            self.draw_roi_window_cursor_diameter_change_input.sizeHint().width(),
+            self.draw_roi_window_cursor_diameter_change_input.sizeHint().height()
         )
-        # Create 2 buttons for increasing and reducing cursor radius
+        # Create 2 buttons for increasing and reducing cursor diameter
         # Increase Button
-        self.draw_roi_window_cursor_radius_change_increase_button = \
+        self.draw_roi_window_cursor_diameter_change_increase_button = \
             QPushButton()
-        self.draw_roi_window_cursor_radius_change_increase_button. \
-            setObjectName("DrawRoiWindowCursorRadiusIncreaseButton")
-        self.draw_roi_window_cursor_radius_change_increase_button. \
+        self.draw_roi_window_cursor_diameter_change_increase_button. \
+            setObjectName("DrawRoiWindowCursorDiameterIncreaseButton")
+        self.draw_roi_window_cursor_diameter_change_increase_button. \
             setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_cursor_radius_change_increase_button.resize(
+        self.draw_roi_window_cursor_diameter_change_increase_button.resize(
             QSize(24, 24))
-        self.draw_roi_window_cursor_radius_change_increase_button.setProperty(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setProperty(
             "QPushButtonClass", "zoom-button")
         icon_zoom_in = QtGui.QIcon()
         icon_zoom_in.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/zoom_in_icon.png')))
-        self.draw_roi_window_cursor_radius_change_increase_button.setIcon(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setIcon(
             icon_zoom_in)
-        self.draw_roi_window_cursor_radius_change_increase_button.clicked. \
-            connect(self.onRadiusIncreaseClicked)
+        self.draw_roi_window_cursor_diameter_change_increase_button.clicked. \
+            connect(self.onDiameterIncreaseClicked)
         # Reduce Button
-        self.draw_roi_window_cursor_radius_change_reduce_button = QPushButton()
-        self.draw_roi_window_cursor_radius_change_reduce_button.setObjectName(
-            "DrawRoiWindowCursorRadiusReduceButton")
-        self.draw_roi_window_cursor_radius_change_reduce_button.setSizePolicy(
+        self.draw_roi_window_cursor_diameter_change_reduce_button = QPushButton()
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setObjectName(
+            "DrawRoiWindowCursorDiameterReduceButton")
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_cursor_radius_change_reduce_button.resize(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.resize(
             QSize(24, 24))
-        self.draw_roi_window_cursor_radius_change_reduce_button.setProperty(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setProperty(
             "QPushButtonClass", "zoom-button")
         icon_zoom_out = QtGui.QIcon()
         icon_zoom_out.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/zoom_out_icon.png')))
-        self.draw_roi_window_cursor_radius_change_reduce_button.setIcon(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setIcon(
             icon_zoom_out)
-        self.draw_roi_window_cursor_radius_change_reduce_button.clicked. \
-            connect(self.onRadiusReduceClicked)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_label)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_input)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_reduce_button)
-        self.draw_roi_window_cursor_radius_change_box.addWidget(
-            self.draw_roi_window_cursor_radius_change_increase_button)
+        self.draw_roi_window_cursor_diameter_change_reduce_button.clicked. \
+            connect(self.onDiameterReduceClicked)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_label)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_input)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_reduce_button)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_increase_button)
         self.draw_roi_window_input_container_box.addRow(
-            self.draw_roi_window_cursor_radius_change_box)
-        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
+            self.draw_roi_window_cursor_diameter_change_box)
+        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             False)
-        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
             False)
 
-    def disable_cursor_radius_change_box(self):
+    def disable_cursor_diameter_change_box(self):
         """
-        function  to disable cursor radius change box
+        function  to disable cursor diameter change box
         """
-        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
             False)
-        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             False)
-        self.toggle_keep_empty_pixel_combo_box.setEnabled(False)
+        self.image_slice_number_draw_button.setEnabled(False)
 
-    def enable_cursor_radius_change_box(self):
+    def enable_cursor_diameter_change_box(self):
         """
-        function  to enable cursor radius change box
+        function  to enable cursor diameter change box
         """
-        self.draw_roi_window_cursor_radius_change_reduce_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
             True)
-        self.draw_roi_window_cursor_radius_change_increase_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
             True)
-        self.toggle_keep_empty_pixel_combo_box.setEnabled(True)
+        self.image_slice_number_draw_button.setEnabled(True)
+
+    def show_roi_type_options(self):
+        """Creates and displays roi type options popup"""
+        logging.debug("show_roi_type_options started")
+        self.choose_roi_name_window = SelectROIPopUp()
+        self.choose_roi_name_window.signal_roi_name.connect(
+            self.set_selected_roi_name)
+        self.choose_roi_name_window.show()
 
     def closeWindow(self):
         """
@@ -1104,3 +1136,4 @@ class UIDrawROIWindow:
             delattr(self, 'drawingROI')
         self.ds = None
         self.close()
+        self.signal_draw_roi_closed.emit()

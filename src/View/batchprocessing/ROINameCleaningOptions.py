@@ -1,5 +1,6 @@
 import csv
 import platform
+import re
 from pydicom import dcmread
 from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import data_path, resource_path
@@ -93,7 +94,6 @@ class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
             self.addItem(rtss)
 
         self.setObjectName("BatchROICleaning")
-        # TODO: make changing option do nothing
 
 
 class ROINameCleaningPrefixEntryField(QtWidgets.QLineEdit):
@@ -171,7 +171,8 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             csv_input = csv.reader(f)
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
-                self.volume_prefixes.append(row[1])
+                self.organ_names_lowercase.append(row[1].lower())
+                self.volume_prefixes.append(row[1].strip())
             f.close()
 
 
@@ -318,16 +319,29 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Loop through each ROI in the RT Struct
             for i in range(len(rtstruct.StructureSetROISequence)):
                 # Get the ROI name
-                roi_name = rtstruct.StructureSetROISequence[i].ROIName
+                roi_name = rtstruct.StructureSetROISequence[i].ROIName.strip()
 
                 # Add ROI name to the dictionary
                 if roi_name not in rois.keys():
                     rois[roi_name] = []
+                
+                # Get the suffix of the ROI name if it is a integer
+                temp = re.search(r'\d+$', roi_name)
+                if temp:
+                    suffix = temp.group(0)
+                else:
+                    suffix = ""
 
                 # Add dataset to the list if the ROI name is not a
-                # standard organ name or has a standard prefix
-                if roi_name not in self.organ_names or \
-                        roi_name[0:3] in self.volume_prefixes:
+                # standard organ name, standard prefix GTV/CTV/ITV 
+                # or standard prefix PTV_, LN_, OTV, ISO, SUV 
+                # and there are 4 digits as a suffix
+                if roi_name not in self.organ_names and \
+                roi_name not in self.fma_id and \
+                roi_name not in self.volume_prefixes[0:3] and \
+                (roi_name[0:4] != self.volume_prefixes[3] and \
+                roi_name[0:3] not in self.volume_prefixes[4:9] or \
+                len(suffix) != 4):
                     rois[roi_name].append(rtss)
 
         # Return if no ROIs found
@@ -370,45 +384,28 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
             if roi_name[0:3] in self.volume_prefixes \
-                    or roi_name[0:4] in self.volume_prefixes:
+            or 'PTV' in roi_name or 'LN' in roi_name:
                 name_box = ROINameCleaningPrefixEntryField()
                 name_box.setText(roi_name)
                 name_box.setEnabled(False)
-            elif roi_name.lower() in self.organ_names_lowercase:
+            else:
             # Set default combo box entry to organ name in proper case
             # if the organ name is a standard one.
                 name_box = \
                 ROINameCleaningOrganComboBox(self.organ_names,
                                             self.volume_prefixes,
                                             roi_name)
-                index = self.organ_names_lowercase.index(roi_name.lower())
+                index = self.organ_names_lowercase.index(
+                    name_box.roi_suggestion(roi_name, self.organ_names, self.volume_prefixes)[0].lower())
                 name_box.setCurrentIndex(index)
                 name_box.setEnabled(True)
                 combo_box.setCurrentIndex(1)
-            # If roi_name is a FMA ID skip
-            elif roi_name in self.fma_id:
-                continue
-            else:
-                name_box = ROINameCleaningPrefixEntryField()
-                name_box.setText(roi_name)
-                name_box.setEnabled(False)
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
             
-            if roi_name.lower() in self.organ_names_lowercase:
-                # Add row to table
-                self.table_organ.insertRow(i)
-                self.table_organ.setRowHeight(i, 50)
-                self.table_organ.setItem(
-                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
-                self.table_organ.setCellWidget(i, 1, combo_box)
-                self.table_organ.setCellWidget(i, 2, name_box)
-                self.table_organ.setCellWidget(i, 3, rtss_combo_box)
-                continue
             if roi_name[0:3] in self.volume_prefixes \
-                    or roi_name[0:4] in self.volume_prefixes \
-                    or "PTV" in roi_name or "LN" in roi_name:
+            or 'PTV' in roi_name or 'LN' in roi_name:
                 # Add row to table
                 self.table_volume.insertRow(i)
                 self.table_volume.setRowHeight(i, 50)
@@ -427,6 +424,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.table_organ.setCellWidget(i, 1, combo_box)
                 self.table_organ.setCellWidget(i, 2, name_box)
                 self.table_organ.setCellWidget(i, 3, rtss_combo_box)
+                continue
             i += 1
 
         # Set row height

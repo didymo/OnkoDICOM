@@ -4,6 +4,8 @@ from pathlib import Path
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.batchprocessing.SelectSubgroupOptions import \
+    SelectSubgroupOptions
 from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
     ClinicalDataSR2CSVOptions
 from src.View.batchprocessing.CSV2ClinicalDataSROptions import \
@@ -111,7 +113,7 @@ class UIBatchProcessingWindow(object):
 
         # Label to display file search status
         self.search_progress_label = QtWidgets.QLabel("No directory is "
-                                                  "currently selected.")
+                                                      "currently selected.")
         self.search_progress_label.setFont(label_font)
 
         # Browse button
@@ -126,6 +128,7 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.setStyleSheet(self.stylesheet)
 
         # Tabs
+        self.select_subgroup_tab = SelectSubgroupOptions()
         self.iso2roi_tab = ISO2ROIOptions()
         self.suv2roi_tab = SUV2ROIOptions()
         self.dvh2csv_tab = DVH2CSVOptions()
@@ -138,6 +141,7 @@ class UIBatchProcessingWindow(object):
         self.batchfma2name_tab = FMAID2ROINameOptions()
 
         # Add tabs to tab widget
+        self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
@@ -202,8 +206,6 @@ class UIBatchProcessingWindow(object):
         # Connect buttons to functions
         self.browse_button.clicked.connect(self.show_file_browser)
         self.begin_button.clicked.connect(self.confirm_button_clicked)
-        self.back_button.clicked.connect(
-            lambda: QtCore.QCoreApplication.exit(0))
 
         # Set window layout
         batch_window_instance.setLayout(self.layout)
@@ -273,6 +275,13 @@ class UIBatchProcessingWindow(object):
             self.search_progress_label.setText("%s patients found." %
                                                len(dicom_structure.patients))
 
+            # Check for Clinical data
+            clinical_data = self.batch_processing_controller \
+                .get_all_clinical_data()
+            self.select_subgroup_tab.show_filtering_options_in_table(
+                clinical_data
+                )
+
             # Update tables
             self.suv2roi_tab.populate_table(dicom_structure)
 
@@ -288,11 +297,21 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
-                     'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
-                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid', 'fmaid2roiname']
+        # WARNING: the order of this list is important.
+        # TODO: this should be replaced with something more global
+        # as currently this is very flaky. ie. changing the order of
+        # this list without changing the order of the tabs being added
+        # will cause this process to break when getting the selected
+        # processes in the for loop below
+        processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
+                     'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
+                     'clinicaldata-sr2csv', 'roinamecleaning',
+                     'roiname2fmaid', 'fmaid2roiname']
+
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+        subgroup_filter_options = self.select_subgroup_tab \
+            .get_selected_filter_options()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
@@ -322,6 +341,8 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
+        self.batch_processing_controller.set_subgroup_filter_options(
+                subgroup_filter_options)
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:
