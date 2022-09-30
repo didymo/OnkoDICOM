@@ -42,6 +42,9 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
     except TypeError:
         logging.debug("Force link aborted, file input invalid")
         return -1
+    except NotADirectoryError:
+        logging.debug("Force link aborted, file input invalid")
+        return -1
     for file in directory:
         if file.endswith(".dcm"):
             files.append(os.path.join(file_path, file))
