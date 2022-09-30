@@ -1,6 +1,6 @@
 import csv
 import platform
-import logging
+import re
 from pydicom import dcmread
 from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import data_path, resource_path
@@ -44,6 +44,7 @@ class ROINameCleaningOrganComboBox(QtWidgets.QComboBox):
         # Populate combo box options
         for organ in organ_names:
             self.addItem(organ)
+
 
     @QtCore.Slot(int)
     def change_enabled(self, index):
@@ -93,7 +94,6 @@ class ROINameCleaningDatasetComboBox(QtWidgets.QComboBox):
             self.addItem(rtss)
 
         self.setObjectName("BatchROICleaning")
-        # TODO: make changing option do nothing
 
 
 class ROINameCleaningPrefixEntryField(QtWidgets.QLineEdit):
@@ -113,7 +113,6 @@ class ROINameCleaningPrefixEntryField(QtWidgets.QLineEdit):
 
     @QtCore.Slot(int)
     def change_enabled(self, index):
-        print(index)
         if index == 1:
             self.setEnabled(True)
         else:
@@ -144,6 +143,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Class variables
         self.organ_names = []
         self.organ_names_lowercase = []
+        self.fma_id = []
         self.volume_prefixes = []
 
         self.get_standard_names()
@@ -151,9 +151,10 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         self.create_table_view_volume()
         self.setLayout(self.main_layout)
 
+
     def get_standard_names(self):
         """
-        Get standard organ names and prefix types.
+        Get standard organ names, FMA IDs and prefix types.
         """
         # Get standard organ names
         with open(data_path('organName.csv'), 'r') as f:
@@ -161,6 +162,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
                 self.organ_names.append(row[0])
+                self.fma_id.append(row[1])
                 self.organ_names_lowercase.append(row[0].lower())
             f.close()
 
@@ -169,15 +171,16 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             csv_input = csv.reader(f)
             header = next(f)  # Ignore the "header" of the column
             for row in csv_input:
-                self.volume_prefixes.append(row[1])
+                self.organ_names_lowercase.append(row[1].lower())
+                self.volume_prefixes.append(row[1].strip())
             f.close()
+
 
     def create_table_view_organ(self):
         """
         Create a table to display all of the non-standard ROIs and
         options for what to do with them.
         """
-        logging.info("create_table_view_organ start")
         # Create table
         self.table_organ = QtWidgets.QTableWidget(self)
         self.table_organ.setStyleSheet(
@@ -214,14 +217,12 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Add table to the main layout
         self.main_layout.addWidget(self.table_organ)
 
-        logging.info("create_table_view_organ success")
 
     def create_table_view_volume(self):
         """
         Create a table to display all of the non-standard ROIs and
         options for what to do with them.
         """
-        logging.info("create_table_view_volume start")
         # Create table
         self.table_volume = QtWidgets.QTableWidget(self)
         self.table_volume.setStyleSheet(
@@ -258,7 +259,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Add table to the main layout
         self.main_layout.addWidget(self.table_volume)
 
-        logging.info("create_table_view_volume success")
 
     def populate_table(self, dicom_structure, batch_directory):
         """
@@ -268,7 +268,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                                 patients loaded.
         :param batch_directory: The directory selected for batch processing.
         """
-        logging.info("populate_table start")
         # Update table column view organ
         roi_name_header = self.table_organ.horizontalHeader()
         roi_name_header.setSectionResizeMode(
@@ -320,16 +319,29 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Loop through each ROI in the RT Struct
             for i in range(len(rtstruct.StructureSetROISequence)):
                 # Get the ROI name
-                roi_name = rtstruct.StructureSetROISequence[i].ROIName
+                roi_name = rtstruct.StructureSetROISequence[i].ROIName.strip()
 
                 # Add ROI name to the dictionary
                 if roi_name not in rois.keys():
                     rois[roi_name] = []
+                
+                # Get the suffix of the ROI name if it is a integer
+                temp = re.search(r'\d+$', roi_name)
+                if temp:
+                    suffix = temp.group(0)
+                else:
+                    suffix = ""
 
                 # Add dataset to the list if the ROI name is not a
-                # standard organ name or has a standard prefix
-                if roi_name not in self.organ_names or \
-                        roi_name[0:3] in self.volume_prefixes:
+                # standard organ name, standard prefix GTV/CTV/ITV 
+                # or standard prefix PTV_, LN_, OTV, ISO, SUV 
+                # and there are 4 digits as a suffix
+                if roi_name not in self.organ_names and \
+                roi_name not in self.fma_id and \
+                roi_name not in self.volume_prefixes[0:3] and \
+                (roi_name[0:4] != self.volume_prefixes[3] and \
+                roi_name[0:3] not in self.volume_prefixes[4:9] or \
+                len(suffix) != 4):
                     rois[roi_name].append(rtss)
 
         # Return if no ROIs found
@@ -351,7 +363,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         # Loop through each ROI
         i = 0
         for roi_name in rois:
-            logging.debug("going through roi_name in rois")
             # Create option combo box
             combo_box = ROINameCleaningOptionComboBox()
             combo_box.setStyleSheet(self.stylesheet)
@@ -360,12 +371,10 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Get list of RTSTRUCTs
             dataset_list = rois[roi_name]
             if len(dataset_list) == 0:
-                logging.debug("creating dataset combo box")
                 continue
 
             # Remove common path from RTStructs
             for index in range(len(dataset_list)):
-                logging.debug("removing common path from RTStructs")
                 dataset_list[index] = \
                     dataset_list[index].replace(batch_directory, '')
 
@@ -375,32 +384,38 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
             if roi_name[0:3] in self.volume_prefixes \
-                    or roi_name[0:4] in self.volume_prefixes:
-                logging.debug("if roi_name is volume prefix created text entry field")
+            or 'PTV' in roi_name or 'LN' in roi_name:
                 name_box = ROINameCleaningPrefixEntryField()
+                name_box.setText(roi_name)
                 name_box.setEnabled(False)
-            elif roi_name.lower() in self.organ_names_lowercase:
+            else:
             # Set default combo box entry to organ name in proper case
             # if the organ name is a standard one.
-                logging.debug("if the organ name is a standard one")
                 name_box = \
                 ROINameCleaningOrganComboBox(self.organ_names,
                                             self.volume_prefixes,
                                             roi_name)
-                index = self.organ_names_lowercase.index(roi_name.lower())
+                index = self.organ_names_lowercase.index(
+                    name_box.roi_suggestion(roi_name, self.organ_names, self.volume_prefixes)[0].lower())
                 name_box.setCurrentIndex(index)
                 name_box.setEnabled(True)
                 combo_box.setCurrentIndex(1)
-            else:
-                logging.debug("not a standard organ name")
-                name_box = ROINameCleaningPrefixEntryField()
-                name_box.setEnabled(False)
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
             name_box.setStyleSheet(self.stylesheet)
-
-            if roi_name.lower() in self.organ_names_lowercase:
-                logging.debug("adding rows to tables organ")
+            
+            if roi_name[0:3] in self.volume_prefixes \
+            or 'PTV' in roi_name or 'LN' in roi_name:
+                # Add row to table
+                self.table_volume.insertRow(i)
+                self.table_volume.setRowHeight(i, 50)
+                self.table_volume.setItem(
+                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
+                self.table_volume.setCellWidget(i, 1, combo_box)
+                self.table_volume.setCellWidget(i, 2, name_box)
+                self.table_volume.setCellWidget(i, 3, rtss_combo_box)
+                continue
+            else:
                 # Add row to table
                 self.table_organ.insertRow(i)
                 self.table_organ.setRowHeight(i, 50)
@@ -410,29 +425,13 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 self.table_organ.setCellWidget(i, 2, name_box)
                 self.table_organ.setCellWidget(i, 3, rtss_combo_box)
                 continue
-            else:
-                logging.debug("adding rows to tables volume")
-                # Add row to table
-                self.table_volume.insertRow(i)
-                self.table_volume.setRowHeight(i, 50)
-                self.table_volume.setItem(
-                    i, 0, QtWidgets.QTableWidgetItem(roi_name))
-                self.table_volume.setCellWidget(i, 1, combo_box)
-                self.table_volume.setCellWidget(i, 2, name_box)
-                self.table_volume.setCellWidget(i, 3, rtss_combo_box)
             i += 1
-        
-        logging.debug("Completed for loop")
 
-        logging.debug("setting row height for organ table")
         # Set row height
         vertical_header_organ = self.table_organ.verticalHeader()
         vertical_header_organ.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         vertical_header_organ.setDefaultSectionSize(40)
 
-        logging.debug("setting row height for volume table")
         vertical_header_volume = self.table_volume.verticalHeader()
         vertical_header_volume.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         vertical_header_volume.setDefaultSectionSize(40)
-
-        logging.info("populate_table success")

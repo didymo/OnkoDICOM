@@ -1,3 +1,4 @@
+import logging
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
@@ -6,6 +7,7 @@ from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
+from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
@@ -108,7 +110,7 @@ class UIMainWindow:
 
         self.patient_bar = PatientBar()
 
-        splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         # Left panel contains stuctures tab, isodoses tab,
         # and structure information
@@ -121,6 +123,7 @@ class UIMainWindow:
             self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(
                 self.update_views)
+            self.structures_tab.signal_roi_draw.connect(self.add_draw_roi_instance)
         else:
             self.structures_tab.update_ui()
         self.left_panel.addTab(self.structures_tab, "Structures")
@@ -206,16 +209,26 @@ class UIMainWindow:
         # Add clinical data tab
         self.call_class.display_clinical_data(self.right_panel)
 
-        splitter.addWidget(self.left_panel)
-        splitter.addWidget(self.right_panel)
+        self.splitter.addWidget(self.left_panel)
+        self.splitter.addWidget(self.right_panel)
 
         # Create footer
         self.footer = QtWidgets.QWidget()
         self.create_footer()
 
+        # Create main content page
+        self.main_content = QVBoxLayout()
+        self.main_content.addWidget(self.splitter)
+
+        # Create draw roi controller
+        self.roi_draw_handler = ROIDrawOption(
+            self.structures_tab.fixed_container_structure_modified,
+            self.remove_draw_roi_instance
+        )
+
         # Set layout
         self.central_widget_layout.addWidget(self.patient_bar)
-        self.central_widget_layout.addWidget(splitter)
+        self.central_widget_layout.addLayout(self.main_content)
         self.central_widget_layout.addWidget(self.footer)
 
         self.central_widget.setLayout(self.central_widget_layout)
@@ -485,3 +498,38 @@ class UIMainWindow:
 
         # Close progress window
         self.suv2roi_progress_window.close()
+
+    def add_draw_roi_instance(self):
+        """Use ROIDrawOption controller to add the roi instance to the main window"""
+        logging.debug("add_draw_roi_instance started")
+
+        self.splitter.setVisible(False)
+        self.draw_roi = self.roi_draw_handler.show_roi_draw_window()
+        self.main_content.addWidget(self.draw_roi)
+        self.draw_roi_toggle_toolbar_items(True)
+
+    def remove_draw_roi_instance(self):
+        """removes the draw roi instance from the main window, also removing the instance from the ROIDrawOption controller"""
+        logging.debug("remove_draw_roi_instance started")
+
+        self.roi_draw_handler.remove_roi_draw_window()
+        self.main_content.removeWidget(self.draw_roi)
+        self.draw_roi_toggle_toolbar_items(False)
+        self.splitter.setVisible(True)
+
+
+    def draw_roi_toggle_toolbar_items(self, disabled):
+        """Called to disable toolbar options when they do not apply / cannot be used in the current draw roi context"""
+        self.action_handler.action_save_structure.setDisabled(disabled)
+        self.action_handler.action_save_as_anonymous.setDisabled(disabled)
+
+        self.action_handler.action_zoom_out.setDisabled(disabled)
+        self.action_handler.action_zoom_in.setDisabled(disabled)
+        self.action_handler.menu_windowing.setDisabled(disabled)
+        self.action_handler.windowing_window.setDisabled(disabled)
+        self.action_handler.action_transect.setDisabled(disabled)
+
+        self.action_handler.action_one_view.setDisabled(disabled)
+        self.action_handler.action_four_views.setDisabled(disabled)
+        self.action_handler.action_show_cut_lines.setDisabled(disabled)
+        self.action_handler.action_image_fusion.setDisabled(disabled)

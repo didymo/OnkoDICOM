@@ -5,7 +5,7 @@ from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
 
-from src.Controller.ROIOptionsController import ROIDelOption, ROIDrawOption, \
+from src.Controller.ROIOptionsController import ROIDelOption, \
     ROIManipulateOption
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model import ImageLoading
@@ -22,6 +22,7 @@ from src.Controller.PathHandler import data_path, resource_path
 
 class StructureTab(QtWidgets.QWidget):
     request_update_structures = QtCore.Signal()
+    signal_roi_draw = QtCore.Signal()
 
     def __init__(self, moving=False):
         QtWidgets.QWidget.__init__(self)
@@ -33,8 +34,6 @@ class StructureTab(QtWidgets.QWidget):
         self.structure_tab_layout = QtWidgets.QVBoxLayout()
 
         self.roi_delete_handler = ROIDelOption(
-            self.fixed_container_structure_modified)
-        self.roi_draw_handler = ROIDrawOption(
             self.fixed_container_structure_modified)
         self.roi_manipulate_handler = ROIManipulateOption(
             self.fixed_container_structure_modified)
@@ -79,7 +78,7 @@ class StructureTab(QtWidgets.QWidget):
         modified_indicator_layout.addWidget(modified_indicator_text)
 
         self.modified_indicator_widget.setLayout(modified_indicator_layout)
-        self.modified_indicator_widget.mouseReleaseEvent = self.\
+        self.modified_indicator_widget.mouseReleaseEvent = self. \
             save_new_rtss_to_fixed_image_set
         self.modified_indicator_widget.setVisible(False)
 
@@ -223,7 +222,7 @@ class StructureTab(QtWidgets.QWidget):
             structure = StructureWidget(roi_id, color, roi_dict['name'], self)
             if roi_id in self.patient_dict_container.get("selected_rois"):
                 structure.checkbox.setChecked(Qt.Checked)
-            structure.structure_renamed.\
+            structure.structure_renamed. \
                 connect(self.fixed_container_structure_modified)
             self.layout_content.addWidget(structure)
             row += 1
@@ -239,7 +238,7 @@ class StructureTab(QtWidgets.QWidget):
         self.roi_delete_handler.show_roi_delete_options()
 
     def roi_draw_clicked(self):
-        self.roi_draw_handler.show_roi_draw_options()
+        self.signal_roi_draw.emit()
 
     def roi_manipulate_clicked(self):
         """ Open ROI Manipulate Window """
@@ -357,8 +356,8 @@ class StructureTab(QtWidgets.QWidget):
         # not {"draw": None}, as this description means that the RTSS
         # is autosaved, and therefore there is no need to tell the user
         # that the RTSS has been modified
-        if not("draw" in change_description
-               and change_description["draw"] is None) and \
+        if not ("draw" in change_description
+                and change_description["draw"] is None) and \
                 not ("transfer" in change_description):
             self.show_modified_indicator()
 
