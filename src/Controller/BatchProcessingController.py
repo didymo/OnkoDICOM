@@ -48,6 +48,8 @@ class BatchProcessingController:
         self.timestamp = ""
         self.batch_summary = [{}, ""]
         self.kaplanmeier_targetCol =""
+        self.kaplanmeier_DurationOfLifeCol = ""
+        self.kaplanmeier_AliveOrDeadCol = ""
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -567,11 +569,11 @@ class BatchProcessingController:
     def set_kaplanmeier_targetCol(self, target):
         self.kaplanmeier_targetCol = target
 
-    def set_kaplanmeier_DurationOfLifeCol(self):
-        return self.combobox.currentText()
+    def set_kaplanmeier_DurationOfLifeCol(self, duration):
+        self.kaplanmeier_DurationOfLifeCol = duration
 
-    def set_kaplanmeier_AliveOrDeadCol(self):
-        return self.combobox.currentText()
+    def set_kaplanmeier_AliveOrDeadCol(self, AliveOrDead):
+        self.kaplanmeier_AliveOrDeadCol = AliveOrDead
 
     def batch_kaplanmeier_handler(self, interrupt_flag,
                                     progress_callback, patient):
@@ -590,7 +592,9 @@ class BatchProcessingController:
             BatchProcessingController.get_patient_files(patient)
         process = BatchProcessKaplanMeier(progress_callback,
                                             interrupt_flag,
-                                            cur_patient_files,self.get_all_clinical_data(), self.kaplanmeier_targetCol)
+                                            cur_patient_files,self.get_all_clinical_data(),
+                                            self.kaplanmeier_targetCol,
+                                            self.kaplanmeier_DurationOfLifeCol, self.kaplanmeier_AliveOrDeadCol)
         success = process.start()
 
         # Set summary message

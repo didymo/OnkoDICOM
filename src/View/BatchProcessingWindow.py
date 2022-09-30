@@ -300,6 +300,8 @@ class UIBatchProcessingWindow(object):
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
         kaplanmeier_targetCol = self.kaplanmeier_tab.getTargetCol()
+        kaplanmeier_DurationOfLifeCol = self.kaplanmeier_tab.getDurationOfLifeCol()
+        kaplanmeier_AliveOrDeadCol = self.kaplanmeier_tab.getAliveOrDeadCol()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
@@ -330,6 +332,8 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
         self.batch_processing_controller.set_kaplanmeier_targetCol(kaplanmeier_targetCol)
+        self.batch_processing_controller.set_kaplanmeier_DurationOfLifeCol(kaplanmeier_DurationOfLifeCol)
+        self.batch_processing_controller.set_kaplanmeier_AliveOrDeadCol(kaplanmeier_AliveOrDeadCol)
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:

@@ -1,13 +1,11 @@
 import csv
 import os
-import kaplanmeier as km
-import matplotlib
 
-matplotlib.use("TkAgg")
+import kaplanmeier as km
+import matplotlib as mp1
+mp1.use("TkAgg")
 from matplotlib import pyplot as plt
 import pandas as pd
-from threading import Thread
-from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -28,7 +26,7 @@ class BatchProcessKaplanMeier(BatchProcess):
     }
 
     def __init__(self, progress_callback, interrupt_flag, patient_files, data_Dict,
-                 kaplanmeier_targetCol):
+                 kaplanmeier_targetCol, kaplanmeier_DurationOfLifeCol, kaplanmeier_AliveOrDeadCol):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -48,6 +46,10 @@ class BatchProcessKaplanMeier(BatchProcess):
         self.required_classes = ['sr']
         self.ready = self.load_images(patient_files, self.required_classes)
         self.kaplanmeier_targetCol = kaplanmeier_targetCol
+        self.kaplanmeier_ = kaplanmeier_targetCol
+        self.kaplanmeier_targetCol = kaplanmeier_targetCol
+        self.kaplanmeier_DurationOfLifeCol = kaplanmeier_DurationOfLifeCol
+        self.kaplanmeier_AliveOrDeadCol = kaplanmeier_AliveOrDeadCol
         self.dataDict = data_Dict
 
     def start(self):
@@ -91,7 +93,7 @@ class BatchProcessKaplanMeier(BatchProcess):
 
         # Write clinical data to CSV
         self.progress_callback.emit(("Writing clinical data to CSV...", 80))
-        self.plot(data_dict, self.kaplanmeier_targetCol)
+        self.plot(data_dict, self.kaplanmeier_targetCol, self.kaplanmeier_DurationOfLifeCol, self.kaplanmeier_AliveOrDeadCol)
         return True
 
     def find_clinical_data_sr(self):
@@ -133,15 +135,16 @@ class BatchProcessKaplanMeier(BatchProcess):
 
         return data_dict
 
-    def plot(self,data_dict, target):
-        # Specify columns
-        #print(target)
+    def plot(self,data_dict, target, DurationOfLife, AliveOfDead):
+        """
+            Creates plot based off input columns
+        """
 
         #df = pd.read_csv('C:/Users/Santino/Desktop/CSCI 316 Data Mining/OnkoDICOM.ClinicalData.csv')
         df = pd.DataFrame.from_dict(self.dataDict)
-        time_event = df['DurationOfLife']
-        censoring = df['AliveOrDead']
-        y = df['Diag_Code']
+        time_event = df[DurationOfLife]
+        censoring = df[AliveOfDead]
+        y = df[target]
         # create kaplanmeier plot
         results = km.fit(time_event, censoring, y)
         km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
@@ -153,6 +156,5 @@ class BatchProcessKaplanMeier(BatchProcess):
                             right=0.965,
                             hspace=0.2,
                             wspace=0.2)
-
         plt.show()
 

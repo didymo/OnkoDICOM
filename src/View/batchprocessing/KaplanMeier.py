@@ -1,9 +1,6 @@
 import platform
 from PySide6 import QtWidgets
-import kaplanmeier as km
-import matplotlib.pyplot as plt
 from PySide6.QtWidgets import QComboBox
-
 from src.Controller.PathHandler import resource_path
 
 class KaplanMeierOptions(QtWidgets.QWidget):
@@ -33,26 +30,58 @@ class KaplanMeierOptions(QtWidgets.QWidget):
         self.message = QtWidgets.QLabel(
             "No files located in current selected directory"
         )
+        #creates layouts
+        self.target_layout = QtWidgets.QFormLayout()
+        self.duration_layout = QtWidgets.QFormLayout()
+        self.AliveOrDead_layout = QtWidgets.QFormLayout()
 
-        # Dropdown list
-        self.combobox = QComboBox()
+        # target column widgets
+        self.comboboxTarget = QComboBox()
+        self.comboboxTarget.setStyleSheet(self.stylesheet)
+        targetLabel = QtWidgets.QLabel(
+            "Target Column")
+        targetLabel.setStyleSheet(self.stylesheet)
+        self.target_layout.addWidget(targetLabel)
+        self.target_layout.addRow(self.comboboxTarget)
 
-        #self.patien
+        # life duration widgets
+        self.comboboxDuration = QComboBox()
+        self.comboboxDuration.setStyleSheet(self.stylesheet)
+        DurationLabel = QtWidgets.QLabel(
+            "Duration of Life Column")
+        DurationLabel.setStyleSheet(self.stylesheet)
+        self.duration_layout.addWidget(DurationLabel)
+        self.duration_layout.addRow(self.comboboxDuration)
 
-        self.main_layout.addWidget(self.combobox)
+        # alive or dead widgets
+        self.comboboxAliveOrDead = QComboBox()
+        self.comboboxAliveOrDead.setStyleSheet(self.stylesheet)
+        AliveOrDeadLabel = QtWidgets.QLabel(
+            "Alive or Dead Column")
+        AliveOrDeadLabel.setStyleSheet(self.stylesheet)
+        self.AliveOrDead_layout.addWidget(AliveOrDeadLabel)
+        self.AliveOrDead_layout.addRow(self.comboboxAliveOrDead)
+
+        #adds Layout
+        self.main_layout.addLayout(self.target_layout)
+        self.main_layout.addLayout(self.duration_layout)
+        self.main_layout.addLayout(self.AliveOrDead_layout)
         self.setLayout(self.main_layout)
 
-    #def show_headings_options(self, headings):
-
     def store_data(self, dataDic):
+        """
+                Gets User Selected Columns
+        """
         self.dataDictionary = dataDic
-        self.combobox.addItems(self.dataDictionary.keys())
+        self.comboboxTarget.addItems(self.dataDictionary.keys())
+        self.comboboxDuration.addItems(self.dataDictionary.keys())
+        self.comboboxAliveOrDead.addItems(self.dataDictionary.keys())
 
     def getTargetCol(self):
-        return self.combobox.currentText()
+        return self.comboboxTarget.currentText()
 
     def getDurationOfLifeCol(self):
-        return self.combobox.currentText()
+        return self.comboboxDuration.currentText()
 
     def getAliveOrDeadCol(self):
-        return self.combobox.currentText()
+        return self.comboboxAliveOrDead.currentText()
