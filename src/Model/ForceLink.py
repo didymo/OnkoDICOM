@@ -16,7 +16,7 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
     array of dicom ONKO DICOM widget items. This function will return 1 if the
     Link has been forced, and will return -1 if the link cannot be forced for
     any reason."""
-    logging.info("Force link initiated")
+    logging.debug("Force link initiated")
     dicom = []
     files = []
     series = {
@@ -27,20 +27,20 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
     # exit the function if the number of files is less than 2
     try:
         if len(dicom_array_in) < 2:
-            logging.info("Force link aborted, Not enough dicom files selected")
+            logging.debug("Force link aborted, Not enough dicom files selected")
             return -1
     except TypeError:
-        logging.info("Force link aborted, Not enough dicom files selected")
+        logging.debug("Force link aborted, Not enough dicom files selected")
         return -1
 
     # get a list of dicom files in the desired directory
     try:
         directory = os.listdir(file_path)
     except FileNotFoundError:
-        logging.info("Force link aborted, file not found")
+        logging.debug("Force link aborted, file not found")
         return -1
     except TypeError:
-        logging.info("Force link aborted, file input invalid")
+        logging.debug("Force link aborted, file input invalid")
         return -1
     for file in directory:
         if file.endswith(".dcm"):
@@ -57,7 +57,7 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
             break
     logging.debug("Force link forced ID = " + new_id)
     if new_id == "":
-        logging.info("Force link forced ID not assigned, process aborted")
+        logging.debug("Force link forced ID not assigned, process aborted")
         return -1
 
     image_ids = []
@@ -75,5 +75,5 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
                 logging.debug("DICOM updated at" + path)
                 break
         index = index + 1
-    logging.info("Force link completed successfully")
+    logging.debug("Force link completed successfully")
     return 1

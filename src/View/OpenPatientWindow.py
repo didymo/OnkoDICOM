@@ -595,7 +595,7 @@ class UIOpenPatientWindow(object):
         checked = self.get_checked_nodes(
             self.open_patient_window_patients_tree.invisibleRootItem())
         dicom_objects = [checked_node.dicom_object for checked_node in checked]
-        logging.info("DICOM array populated for force link function")
+        logging.debug("DICOM array populated for force link function")
         if len(dicom_objects) < 1:
             return -1
 
@@ -620,25 +620,25 @@ class UIOpenPatientWindow(object):
                                  "Force Link aborted")
                 return -1
         except AttributeError:
-            logging.info("Attribute error in force link, no frame of reference "
+            logging.debug("Attribute error in force link, no frame of reference "
                          "ID in dicom item")
             if force_continue == 0:
-                logging.info("Force link aborted")
+                logging.debug("Force link aborted")
                 return -1
-            logging.info("Force link continuing")
+            logging.debug("Force link continuing")
 
-        logging.info("Initiating force link")
+        logging.debug("Initiating force link")
         force_check = force_link(new_id,
                                  self.open_patient_directory_input_box.text(),
                                  dicom_objects)
 
         if force_check == 1:
-            logging.info("Force link successful")
+            logging.debug("Force link successful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Successful")
 
         else:
-            logging.info("Force link unsuccessful")
+            logging.debug("Force link unsuccessful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Unsuccessful")
 
