@@ -70,10 +70,11 @@ def test_object():
 
 
 def test_draw_roi_window_displayed(qtbot, test_object):
-    """Function to test that the draw_roi_window is displayed within the main window when the draw ROI button is clicked"""
+    """Function to test that the draw_roi_window is displayed
+    within the main window when the draw ROI button is clicked"""
     qtbot.mouseClick(test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
-    assert test_object.main_window.splitter.isHidden() == True
-    assert test_object.main_window.draw_roi.isHidden() == False
+    assert test_object.main_window.splitter.isHidden() is True
+    assert test_object.main_window.draw_roi.isHidden() is False
 
     assert test_object.main_window.draw_roi is not None
 
@@ -87,15 +88,15 @@ def test_draw_roi_window_displayed(qtbot, test_object):
                   test_object.main_window.action_handler.action_image_fusion
                   ]
 
-    for object in menu_items:
-        assert object.isEnabled() == False
+    for item in menu_items:
+        assert item.isEnabled() is False
 
     qtbot.mouseClick(test_object.main_window.draw_roi.draw_roi_window_instance_cancel_button, Qt.LeftButton)
-    assert test_object.main_window.splitter.isHidden() == False
-    assert test_object.main_window.draw_roi.isHidden() == True
+    assert test_object.main_window.splitter.isHidden() is False
+    assert hasattr(test_object.main_window, 'draw_roi') is False
 
-    for object in menu_items:
-        assert object.isEnabled() == True
+    for item in menu_items:
+        assert item.isEnabled() is True
 
 
 def test_change_transparency_slider_value(qtbot, test_object, init_config):
