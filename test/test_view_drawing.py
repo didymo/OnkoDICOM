@@ -79,12 +79,8 @@ def test_draw_roi_window_displayed(qtbot, test_object):
 
     menu_items = [test_object.main_window.action_handler.action_save_structure,
                   test_object.main_window.action_handler.action_save_as_anonymous,
-                  test_object.main_window.action_handler.action_zoom_out,
-                  test_object.main_window.action_handler.action_zoom_in,
                   test_object.main_window.action_handler.menu_windowing,
                   test_object.main_window.action_handler.windowing_window,
-                  test_object.main_window.action_handler.action_transect,
-
                   test_object.main_window.action_handler.action_one_view,
                   test_object.main_window.action_handler.action_four_views,
                   test_object.main_window.action_handler.action_show_cut_lines,
