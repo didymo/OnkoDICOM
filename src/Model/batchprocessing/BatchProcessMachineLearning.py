@@ -2,6 +2,8 @@ from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import logging
+from src.Model.batchprocessing.batchprocessingMachineLearning.PreprocessingClass import Preprocessing
+from src.Model.batchprocessing.batchprocessingMachineLearning.MlCLass import MlModeling
 
 
 class BatchProcessMachineLearning(BatchProcess):
@@ -9,6 +11,7 @@ class BatchProcessMachineLearning(BatchProcess):
     This class handles batch processing for the Selecting subgroup
     process. Inherits from the BatchProcessing class.
     """
+
     # Allowed classes for ClinicalDataSR2CSV
     # allowed_classes = {
     #     # Comprehensive SR
@@ -19,7 +22,7 @@ class BatchProcessMachineLearning(BatchProcess):
     # }
 
     def __init__(self, progress_callback, interrupt_flag,
-                 options):
+                 options, clinical_data_path, dvh_data_path, pyrad_data_path):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -32,14 +35,27 @@ class BatchProcessMachineLearning(BatchProcess):
         """
         # Call the parent class
         super(BatchProcessMachineLearning, self).__init__(progress_callback,
-                                                         interrupt_flag,
-                                                         options)
+                                                          interrupt_flag,
+                                                          options)
 
         # Set class variables
         self.patient_dict_container = PatientDictContainer()
         # self.required_classes = ['sr']
         self.machine_learning_options = options
         self.ml_model = None
+
+        # path
+        self.clinical_data_path = clinical_data_path
+        self.dvh_data_path = dvh_data_path
+        self.pyrad_data_path = pyrad_data_path
+
+        self.preprocessing = None
+        self.run_ml = None
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
+        self.params = None
 
     def start(self):
         """
@@ -52,9 +68,13 @@ class BatchProcessMachineLearning(BatchProcess):
         # 1) self.ml_model which is the ML model?
         # AND
         # 2) The variables needed in the results, eg. self.accuracy
-        # Also needs a functions 'def get_results_values()' 
+        # Also needs a functions 'def get_results_values()'
 
-        self.ml_model = 1
+        # Preprocessing
+        self.preprocessing_for_ml()
+        print("Run Start")
+        self.run_model()
+        # Machine learning
 
         # Stop loading
         # if self.interrupt_flag.is_set():
@@ -93,10 +113,11 @@ class BatchProcessMachineLearning(BatchProcess):
         # Write clinical data to CSV
         # self.progress_callback.emit(("Writing clinical data to CSV...", 80))
         # self.check_if_patient_meets_filter_criteria(data_dict)
-        
+
         return True
 
-    def get_results_values(self):                
+    def get_results_values(self):
+        self.machine_learning_options.update(self.run_ml.accuracy)
         return self.machine_learning_options
 
     def find_clinical_data_sr(self):
@@ -164,3 +185,34 @@ class BatchProcessMachineLearning(BatchProcess):
                 continue
 
         logging.debug("Patient NOT within filter")
+
+    def preprocessing_for_ml(self):
+        self.preprocessing = Preprocessing(
+            pathClinicalData=self.clinical_data_path  # Path to Clinical Data
+            , pathPyrData=self.pyrad_data_path  # Path to Pyrad Data
+            , pathDVHData=self.dvh_data_path  # Path to DVH Data
+            , columnNames=self.machine_learning_options['features']  # DR. Selects Columns
+            , typeOfColumn=self.machine_learning_options['type']  # Type of Column (Category/Numerical)
+            , target=self.machine_learning_options['target']  # Target Column to be predicted for training
+            , renameValues=self.machine_learning_options['renameValues']  # Dr. rename values in Target Column
+        )
+        self.X_train, self.X_test, self.y_train, self.y_test = self.preprocessing.prepareforML()
+        self.params = self.preprocessing.saveParam()
+
+    def run_model(self):
+        self.run_ml = MlModeling(self.X_train  # Dataset X_train that we got from preprocessing class
+                                   , self.X_test  # Dataset X_test that we got from preprocessing class
+                                   , self.y_train  # Dataset Y_train that we got from preprocessing class
+                                   , self.y_test  # Dataset Y_train that we got from preprocessing class
+                                   , self.preprocessing.target  # Label Column (can be exported from Preprocessing )
+                                   , self.preprocessing.typeOfColumn #type of the ML
+                                   , tunning=self.machine_learning_options['tune']  # Tunning
+                                   )
+        result = self.run_ml.runModel()
+        self.ml_model = type(self.run_ml.model).__name__
+        print('PRINTING ML MODEL NAME',self.ml_model)
+        print('PRINTING ML ACCURACY', self.run_ml.accuracy)
+
+
+
+

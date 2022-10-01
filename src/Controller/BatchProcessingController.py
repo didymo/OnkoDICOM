@@ -57,6 +57,18 @@ class BatchProcessingController:
         self.timestamp = ""
         self.batch_summary = [{}, ""]
 
+        #Path
+        self.clinical_data_path = ""
+        self.dvh_data_path = ""
+        self.pyrad_data_path = ""
+        #Parameters
+        self.machine_learning_features = []
+        self.machine_learning_target = []
+        self.machine_learning_type = ""
+        self.machine_learning_rename = []
+        self.machine_learning_tune = ""
+
+
         # Threadpool for file loading
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
@@ -158,6 +170,32 @@ class BatchProcessingController:
         .set_subgroup_filter_options(options) called")
         logging.debug(f"'options' set to: {options}")
         self.subgroup_filter_options = options
+
+    # Path
+    def set_clinical_data_path(self, clinical_path):
+        self.clinical_data_path = clinical_path
+
+    def set_dvh_data_path(self, dvh_path):
+        self.dvh_data_path = dvh_path
+
+    def set_pyrad_data_path(self, pyrad_path):
+        self.pyrad_data_path = pyrad_path
+
+    # Params
+    def set_machine_learning_features(self, machine_learning_features):
+        self.machine_learning_features = machine_learning_features
+
+    def set_machine_learning_target(self, machine_learning_target):
+        self.machine_learning_target = machine_learning_target
+
+    def set_machine_learning_type(self, machine_learning_type):
+        self.machine_learning_type = machine_learning_type
+
+    def set_machine_learning_rename(self, machine_learning_rename):
+        self.machine_learning_rename = machine_learning_rename
+
+    def set_machine_learning_tune(self, machine_learning_tune):
+        self.machine_learning_tune = machine_learning_tune
 
     @staticmethod
     def get_patient_files(patient):
@@ -262,18 +300,21 @@ class BatchProcessingController:
         # TODO: replace this with a set_method which will be called from
         # BatchProcessingWindow.confirm_button_clicked()
         dummy_data = {
-            "features": ["name", "age"],
-            "target": "Local_Fail",
-            "type": "Classification",
-            "Accuracy": 80.15,
-            "ML with Tuning": "Yes"
+            "features": self.machine_learning_features,
+            "target": self.machine_learning_target,
+            "type": self.machine_learning_type,
+            "tune": self.machine_learning_tune,
+            "renameValues": self.machine_learning_rename
         }
         self.machine_learning_options = dummy_data
 
         if "machine_learning" in self.processes:
             process = BatchProcessMachineLearning(progress_callback,
                                                   interrupt_flag,
-                                                  self.machine_learning_options)
+                                                  self.machine_learning_options,
+                                                  self.clinical_data_path,
+                                                  self.dvh_data_path,
+                                                  self.pyrad_data_path)
             process.start()
             self.batch_summary[1] = process.summary
             progress_callback.emit(("Completed ML Training Cleaning", 100))
@@ -712,6 +753,7 @@ class BatchProcessingController:
         logging.debug(f"clinical_data_dict: {clinical_data_dict}")
 
         return clinical_data_dict
+
 
     @classmethod
     def create_timestamp(cls):

@@ -2,6 +2,7 @@ import platform
 from PySide6 import QtWidgets, QtCore, QtGui
 from os.path import expanduser
 from src.Controller.PathHandler import resource_path
+import numpy as np
 
 import pandas as pd
 
@@ -11,16 +12,17 @@ class CheckableCombox(QtWidgets.QComboBox):
         super().__init__()
         self.setEditable(True)
         self.lineEdit().setReadOnly(True)
-        self.closeOnlineEditClick = False
 
         self.lineEdit().installEventFilter(self)
+        self.closeOnLineEditClick = False
+
         self.view().viewport().installEventFilter(self)
-        self.model().dataChanged.connect(self.updateLineEditFiled())
+        #self.model().dataChanged.connect(self.updateLineEditFiled())
 
     def eventFilter(self, widget, event):
         if widget == self.lineEdit():
             if event.type() == QtCore.QEvent.MouseButtonRelease:
-                if self.closeOnlineEditClick:
+                if self.closeOnLineEditClick:
                     self.hidePopup()
                 else:
                     self.showPopup()
@@ -41,6 +43,14 @@ class CheckableCombox(QtWidgets.QComboBox):
     def hidePopup(self):
         super().hidePopup()
         self.startTimer(100)
+        self.updateLineEditFiled()
+        self.closeOnLineEditClick = False
+
+    def showPopup(self):
+        super().showPopup()
+        # When the popup is displayed, a click on the lineedit should close it
+        self.closeOnLineEditClick = True
+
 
     def addItems(self, items, itemList=None):
         for indx, text in enumerate(items):
@@ -62,12 +72,15 @@ class CheckableCombox(QtWidgets.QComboBox):
 
     def updateLineEditFiled(self):
         text_container = []
+
         for i in range(self.model().rowCount()):
             if self.model().item(i).checkState() == QtCore.Qt.Checked:
-                print(self.model().item(i))
                 text_container.append(self.model().item(i).text())
-        text_string = ", ".join(text_container)
-        self.lineEdit().setText(text_string)
+        if len(text_container)>0:
+            text_string = ", ".join(text_container)
+            self.lineEdit().setText(text_string)
+        else:
+            self.lineEdit().setText("Not Selected")
 
 
 class MachineLearning(QtWidgets.QWidget):
@@ -80,6 +93,8 @@ class MachineLearning(QtWidgets.QWidget):
         Initialise the class
         """
         QtWidgets.QWidget.__init__(self)
+        self.dataDictionary = {}
+        self.binaryData = False
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -174,11 +189,11 @@ class MachineLearning(QtWidgets.QWidget):
                          "Rename Values in Target",
                          "ML with Tuning"]
         # set 3rd Column
-        comments = ["Please select a column to pass to the ML model",
+        comments = ["Please select columns to pass to the ML model",
                     "Please select a column for the target to ML model",
                     "Please select a column type for the ML model based on that column will be chosen ML",
                     "Only if the Category type is binary [0,1]!",
-                    "Usually, Running improves the model, but it takes from 20 - 40 min to Tune the Model."
+                    "Usually, Running improves the model, but it takes between 20 - 40 min to Tune the Model."
                     "It does not guarantee better performance compared to default ML"
                     ]
 
@@ -192,31 +207,31 @@ class MachineLearning(QtWidgets.QWidget):
 
         # add features
         self.combox_feature = CheckableCombox()
-        comment = QtWidgets.QTableWidgetItem("Select Features")
+        comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR files located in current selected directory")
         self.filter_table.setItem(0, 1, comment)
 
         # add target
         self.combox_target = QtWidgets.QComboBox()
+        self.combox_target.setStyleSheet(self.stylesheet)
         self.combox_target.setEditable(True)
         self.combox_target.lineEdit().setReadOnly(True)
-        self.combox_target.closeOnlineEditClick = False
-        comment = QtWidgets.QTableWidgetItem("Select Target")
+        comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR files located in current selected directory")
         self.filter_table.setItem(1, 1, comment)
 
         # add Type
         self.combox_type = QtWidgets.QComboBox()
+        self.combox_type.setStyleSheet(self.stylesheet)
         self.combox_type.setEditable(True)
         self.combox_type.lineEdit().setReadOnly(True)
-        self.combox_type.closeOnlineEditClick = False
         self.combox_type.addItems(["category", "numerical"])
         self.filter_table.setCellWidget(2, 1, self.combox_type)
 
         # add Tune
         self.combox_tune = QtWidgets.QComboBox()
+        self.combox_tune.setStyleSheet(self.stylesheet)
         self.combox_tune.setEditable(True)
         self.combox_tune.lineEdit().setReadOnly(True)
-        self.combox_tune.closeOnlineEditClick = False
-        self.combox_tune.addItems(["yes", "no"])
+        self.combox_tune.addItems(["no", "yes"])
         self.filter_table.setCellWidget(4, 1, self.combox_tune)
 
         self.main_layout.addWidget(self.filter_table)
@@ -224,27 +239,57 @@ class MachineLearning(QtWidgets.QWidget):
 
         self.filter_table.cellClicked.connect(self.select_filter_option_cell)
 
-    def addFeature(self):
-        data = pd.read_csv(self.get_csv_output_location_clinicalData())
-        columnNamesList = list(data.columns)
 
-        self.combox_feature.addItems(columnNamesList)
+
+    def store_data(self, dataDic):
+        """
+                Gets User Selected Columns
+        """
+        # removes the Patient Identifier (assumed to be first column
+        # in the dataset)
+        # As the column name may be changing we cannot hard code the
+        # column name
+        # not a necessary filter option as specified in requirements
+        self.dataDictionary = dataDic.copy()
+        self.dataDictionary.pop(list(self.dataDictionary)[0])
+
+        self.combox_feature.addItems(self.dataDictionary.keys())
+        self.combox_target.addItems(self.dataDictionary.keys())
+
         self.filter_table.setCellWidget(0, 1, self.combox_feature)
+        self.combox_feature.updateLineEditFiled()
 
-    def addTarget(self):
-        data = pd.read_csv(self.get_csv_output_location_clinicalData())
-        columnNamesList = list(data.columns)
-        self.combox_target.addItems(columnNamesList)
         self.filter_table.setCellWidget(1, 1, self.combox_target)
 
+    def checkIfBinary(self,dict):
+        str_list = dict
+        # Remove None Values
+        if None in str_list:
+            str_list.remove(None)
+
+        arr = np.array(str_list)
+        arr = arr[arr != ""]
+        arr = arr[arr != " "]
+
+        # Check if binary
+        if np.isin(arr, [0, 1]).all() or np.isin(arr, ['0', '1']).all():
+            self.binaryData = True
+            return True
+        else:
+            self.binaryData = False
+            return False
+
+
     def renameValues(self,targetName):
-        data = pd.read_csv(self.get_csv_output_location_clinicalData())
-        values = list(sorted(data[targetName].unique()))
-        text_rename = ", ".join(str(values))
-        return text_rename
-
-
-
+        self.binaryData = self.checkIfBinary(self.dataDictionary[targetName])
+        if self.binaryData:
+            output = set()
+            for x in self.dataDictionary[targetName]:
+                output.add(str(x))
+            text_rename = str(sorted(list(output)))
+            return text_rename
+        else:
+            return f"Selected column is not Binary {targetName}"
 
     def select_filter_option_cell(self, row, column):
         """
@@ -252,25 +297,29 @@ class MachineLearning(QtWidgets.QWidget):
         :param row: row index that was clicked
         :param column: column index that was clicked
         """
-        item = self.filter_table.item(row, column)
         header = self.filter_table.horizontalHeaderItem(column).text()
         if header == "Selected Value":
-            if (row == 1):
-                self.addTarget()
-            elif (row == 0):
-                self.addFeature()
-            elif (row == 3):
+            if (row == 3):
                 if self.combox_target.currentText() != "":
                     rename = self.renameValues(self.combox_target.currentText())
                     comment = QtWidgets.QTableWidgetItem(rename)
                     self.filter_table.setItem(3, 1, comment)
-
-
-
-        elif (header == "Function Name"):
-            if (row == 1):
-                print(self.combox_target.currentText())
-                self.combox_feature.updateLineEditFiled()
+                    features  = self.getFeature()
+                    print(f'Feature {features}')
+                    target = self.getTarget()
+                    print('Target',target)
+                    type = self.getType()
+                    print('Type',type)
+                    tune = self.getTune()
+                    print('Tune',tune)
+                    rename = self.getRename()
+                    print('Rename',rename)
+                    clin  = self.get_csv_output_location_clinicalData()
+                    print('clinical data',clin )
+                    dvh = self.get_csv_output_location_dvhData()
+                    print('dvh', dvh)
+                    pyrad = self.get_csv_output_location_payrad()
+                    print('pyrad',pyrad)
 
     # Function for Clinical Data
     def set_csv_output_location_clinicalData(self, path, enable=True,
@@ -455,3 +504,32 @@ class MachineLearning(QtWidgets.QWidget):
 
         # Update file path
         self.set_csv_output_location_pyrad(path, change_if_modified=True)
+
+
+    def getFeature(self):
+        features = self.combox_feature.currentText()
+        features = features.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
+        features = features.split(',')
+        return features
+
+    def getTarget(self):
+        return self.combox_target.currentText()
+
+    def getType(self):
+        return self.combox_type.currentText()
+
+    def getRename(self):
+        if self.binaryData:
+            rename = self.filter_table.item(3, 1).text()
+            rename = rename.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
+            rename = rename.split(',')
+            return rename
+        return None
+
+    def getTune(self):
+        if self.combox_tune.currentText() == 'no':
+            return False
+        else:
+            return True
+
+

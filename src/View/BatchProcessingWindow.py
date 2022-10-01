@@ -141,7 +141,7 @@ class UIBatchProcessingWindow(object):
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
-        self.batchmachineaLearning_tab = MachineLearning ()
+        self.batchmachineaLearning_tab = MachineLearning()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -285,6 +285,7 @@ class UIBatchProcessingWindow(object):
             # Check for Clinical data
             clinical_data = self.batch_processing_controller \
                 .get_all_clinical_data()
+            self.batchmachineaLearning_tab.store_data(clinical_data)
             self.select_subgroup_tab.show_filtering_options_in_table(
                 clinical_data
                 )
@@ -320,6 +321,17 @@ class UIBatchProcessingWindow(object):
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
 
+        #Path
+        clinical_data_path = self.batchmachineaLearning_tab.get_csv_output_location_clinicalData()
+        dvh_data_path = self.batchmachineaLearning_tab.get_csv_output_location_dvhData()
+        pyrad_data_path = self.batchmachineaLearning_tab.get_csv_output_location_payrad()
+        #Parameters
+        machine_learning_features = self.batchmachineaLearning_tab.getFeature()
+        machine_learning_target = self.batchmachineaLearning_tab.getTarget()
+        machine_learning_type = self.batchmachineaLearning_tab.getType()
+        machine_learning_rename = self.batchmachineaLearning_tab.getRename()
+        machine_learning_tune = self.batchmachineaLearning_tab.getTune()
+
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
             self.show_invalid_weight_dialog()
@@ -350,6 +362,16 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
         self.batch_processing_controller.set_subgroup_filter_options(
                 subgroup_filter_options)
+        #Path
+        self.batch_processing_controller.set_clinical_data_path(clinical_data_path)
+        self.batch_processing_controller.set_dvh_data_path(dvh_data_path)
+        self.batch_processing_controller.set_pyrad_data_path(pyrad_data_path)
+        self.batch_processing_controller.set_machine_learning_features(machine_learning_features)
+        self.batch_processing_controller.set_machine_learning_target(machine_learning_target)
+        self.batch_processing_controller.set_machine_learning_type(machine_learning_type)
+        self.batch_processing_controller.set_machine_learning_rename(machine_learning_rename)
+        self.batch_processing_controller.set_machine_learning_tune(machine_learning_tune)
+
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:
