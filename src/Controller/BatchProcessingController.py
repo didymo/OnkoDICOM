@@ -21,11 +21,14 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
+from src.Model.batchprocessing.BatchProcessMachineLearning import \
+    BatchProcessMachineLearning
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
+from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
 
@@ -222,7 +225,7 @@ class BatchProcessingController:
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
 
-            if 'select_subgroup' in self.processes:
+            if "select_subgroup" in self.processes:
                 in_subgroup = self.process_functions["select_subgroup"](
                     interrupt_flag,
                     progress_callback,
@@ -235,7 +238,7 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
-                if process in ['roinamecleaning',  'select_subgroup']:
+                if process in ["roinamecleaning",  "select_subgroup", "machine_learning"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -255,6 +258,31 @@ class BatchProcessingController:
                 # Append process summary
                 self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
+
+        # TODO: replace this with a set_method which will be called from
+        # BatchProcessingWindow.confirm_button_clicked()
+        dummy_data = {
+            "features": ["name", "age"],
+            "target": "Local_Fail",
+            "type": "Classification",
+            "Accuracy": 80.15,
+            "ML with Tuning": "Yes"
+        }
+        self.machine_learning_options = dummy_data
+
+        if "machine_learning" in self.processes:
+            process = BatchProcessMachineLearning(progress_callback,
+                                                  interrupt_flag,
+                                                  self.machine_learning_options)
+            process.start()
+            self.batch_summary[1] = process.summary
+            progress_callback.emit(("Completed ML Training Cleaning", 100))
+
+            # Create window to store ML results
+            ml_results_window = BatchMLResultsWindow()
+            ml_results_window.set_results_values(process.get_results_values())
+            ml_results_window.set_ml_model(process.ml_model)
+            ml_results_window.exec_()
 
         PatientDictContainer().clear()
 
