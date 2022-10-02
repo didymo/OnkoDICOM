@@ -68,6 +68,8 @@ class BatchProcessingController:
         self.machine_learning_rename = []
         self.machine_learning_tune = ""
 
+        self.machine_learning_process = None
+
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -309,21 +311,15 @@ class BatchProcessingController:
         self.machine_learning_options = dummy_data
 
         if "machine_learning" in self.processes:
-            process = BatchProcessMachineLearning(progress_callback,
+            self.machine_learning_process = BatchProcessMachineLearning(progress_callback,
                                                   interrupt_flag,
                                                   self.machine_learning_options,
                                                   self.clinical_data_path,
                                                   self.dvh_data_path,
                                                   self.pyrad_data_path)
-            process.start()
-            self.batch_summary[1] = process.summary
+            self.machine_learning_process.start()
+            self.batch_summary[1] = self.machine_learning_process.summary
             progress_callback.emit(("Completed ML Training Cleaning", 100))
-
-            # Create window to store ML results
-            ml_results_window = BatchMLResultsWindow()
-            ml_results_window.set_results_values(process.get_results_values())
-            ml_results_window.set_ml_model(process.ml_model)
-            ml_results_window.exec_()
 
         PatientDictContainer().clear()
 
@@ -694,10 +690,23 @@ class BatchProcessingController:
         self.progress_window.update_progress(("Processing complete!", 100))
         self.progress_window.close()
 
+        if self.machine_learning_process!=None:
+            #Create window to store ML results
+            ml_results_window = BatchMLResultsWindow()
+            ml_results_window.set_results_values(self.machine_learning_process.get_results_values())
+            ml_results_window.set_ml_model(self.machine_learning_process.ml_model)
+
+            ml_results_window.set_df_parameters(self.machine_learning_process.params)
+            ml_results_window.set_df_scaling(self.machine_learning_process.scaling)
+
+            ml_results_window.exec_()
+
         # Create window to store summary info
         batch_summary_window = BatchSummaryWindow()
         batch_summary_window.set_summary_text(self.batch_summary)
         batch_summary_window.exec_()
+
+
 
     def error_processing(self):
         """

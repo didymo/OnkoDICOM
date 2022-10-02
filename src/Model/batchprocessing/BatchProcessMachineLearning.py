@@ -56,6 +56,7 @@ class BatchProcessMachineLearning(BatchProcess):
         self.y_train = None
         self.y_test = None
         self.params = None
+        self.scaling = None
 
     def start(self):
         """
@@ -74,6 +75,7 @@ class BatchProcessMachineLearning(BatchProcess):
         self.preprocessing_for_ml()
         print("Run Start")
         self.run_model()
+        self.machine_learning_options.update(self.run_ml.accuracy)
         # Machine learning
 
         # Stop loading
@@ -117,7 +119,6 @@ class BatchProcessMachineLearning(BatchProcess):
         return True
 
     def get_results_values(self):
-        self.machine_learning_options.update(self.run_ml.accuracy)
         return self.machine_learning_options
 
     def find_clinical_data_sr(self):
@@ -198,6 +199,7 @@ class BatchProcessMachineLearning(BatchProcess):
         )
         self.X_train, self.X_test, self.y_train, self.y_test = self.preprocessing.prepareforML()
         self.params = self.preprocessing.saveParam()
+        self.scaling = self.preprocessing.scaling
 
     def run_model(self):
         self.run_ml = MlModeling(self.X_train  # Dataset X_train that we got from preprocessing class
@@ -209,7 +211,7 @@ class BatchProcessMachineLearning(BatchProcess):
                                    , tunning=self.machine_learning_options['tune']  # Tunning
                                    )
         result = self.run_ml.runModel()
-        self.ml_model = type(self.run_ml.model).__name__
+        self.ml_model = self.run_ml
         print('PRINTING ML MODEL NAME',self.ml_model)
         print('PRINTING ML ACCURACY', self.run_ml.accuracy)
 

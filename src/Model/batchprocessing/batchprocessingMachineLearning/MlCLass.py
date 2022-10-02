@@ -45,7 +45,10 @@ class MlModeling():
         self.confusionMatrix = None
         self.model = None
         self.score = None
-        self.accuracy = {"accuracy": ''}
+        self.accuracy = {
+            "accuracy": '',
+            "model": ''
+        }
 
     """
     Below 3 Functions that helps identify what perfomance calculation should be used for the Model
@@ -341,4 +344,5 @@ class MlModeling():
             else:
                 self.model = self.RegressionML()
 
+        self.accuracy['model'] = type(self.model).__name__
         return self.model
