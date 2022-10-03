@@ -830,15 +830,14 @@ class UIDrawROIWindow:
 
     def onFillClicked(self, is_3d):
         """
-        Function triggered when the Draw button is pressed from the menu.
+        Function triggered when the Fill or 3d Fill button is pressed from the menu.
         """
         logging.debug("onFillClicked started")
-        print("onFillClicked called")
         if self.has_drawing:
             self.is_drawing.connect(self.drawingROI.set_is_drawing)
             self.is_drawing.emit(False)
             self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
-            # return None
+
 
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
@@ -900,6 +899,7 @@ class UIDrawROIWindow:
                                   "Not all values are specified or correct.")
 
     def create_drawing(self, min_pixel, max_pixel, pixmaps, id):
+        """Creates 3d drawing using BFS"""
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         # Path to the selected .dcm file
@@ -928,10 +928,11 @@ class UIDrawROIWindow:
 
     def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id):
         """
-        Creates drawing allowing for the user to start drawing on dicom view.
+        Creates drawing across multiple slides allowing for the user to start drawing on dicom view.
         """
         # If the seed is set then start searching, else assign the drawing function to the left click
         if hasattr(self, 'seed'):
+            # Search down from the start position then up from the start position
             for x in range(0, 2):
                 print("x == " + str(x))
                 if x == 0:
@@ -942,7 +943,7 @@ class UIDrawROIWindow:
                     range_start = id
                     range_end = len(self.patient_dict_container.dataset) - 1
                     step = 1
-
+                # Search the slides in the above ranges (down and up)
                 for y_search in range(range_start, range_end, step):
                     print(str(range_start) + " range end: " + str(range_end) + " range: " + str(step))
                     temp_id = y_search
@@ -1007,9 +1008,7 @@ class UIDrawROIWindow:
             # Assigns the above drawing function to the left click
             self.dicom_view.view.setScene(self.drawingROI)
             self.enable_cursor_diameter_change_box()
-
-
-        logging.debug("onFillClicked finished")
+        logging.debug("create_drawing_3D finished")
 
     @Slot(list)
     def set_seed(self, s):

@@ -13,8 +13,6 @@ from src.Model.Transform import linear_transform, get_pixel_coords, \
     get_first_entry, inv_linear_transform
 
 
-# noinspection PyAttributeOutsideInit
-
 class Drawing(QtWidgets.QGraphicsScene):
     """
     Class responsible for the ROI drawing functionality
@@ -140,7 +138,6 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.according_color_dict[(x_coord, y_coord)] = colors
 
         points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
-        print(len(points))
 
         self._set_color_of_pixels(points)
         self.refresh_image()
@@ -452,9 +449,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             This method is called to handle a mouse press event
             :param event: the mouse event
         """
-        print("mousePress even called with event: " + str(event))
         if self.cursor:
             self.removeItem(self.cursor)
+
         self.isPressed = True
         if (
                 2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
@@ -483,14 +480,11 @@ class Drawing(QtWidgets.QGraphicsScene):
             This method is called to handle a mouse press event
             :param event: the mouse event
         """
-        print("mousePressEvent Triggered")
         # if self.fill_source is None:
         #     self.set_source(event)
         if not self.is_drawing:
-            print("is drawing false")
             self.set_source(event)
         else:
-            print("is drawing true")
             self.manual_draw_roi(event)
         self.update()
 
