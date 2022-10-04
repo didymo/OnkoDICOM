@@ -1,4 +1,3 @@
-import logging
 import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
@@ -7,11 +6,11 @@ from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
 from src.Controller.MainPageController import MainPageCallClass
-from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.mainpage.DVHTab import DVHTab
+from src.View.mainpage.MLTab import MLTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DicomCoronalView import DicomCoronalView
@@ -110,7 +109,7 @@ class UIMainWindow:
 
         self.patient_bar = PatientBar()
 
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         # Left panel contains stuctures tab, isodoses tab,
         # and structure information
@@ -123,7 +122,6 @@ class UIMainWindow:
             self.structures_tab = StructureTab()
             self.structures_tab.request_update_structures.connect(
                 self.update_views)
-            self.structures_tab.signal_roi_draw.connect(self.add_draw_roi_instance)
         else:
             self.structures_tab.update_ui()
         self.left_panel.addTab(self.structures_tab, "Structures")
@@ -188,6 +186,7 @@ class UIMainWindow:
         # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
 
+
         # Add PETVT View to right panel as a tab
         self.pet_ct_tab = PetCtView()
         self.right_panel.addTab(self.pet_ct_tab, "PET/CT View")
@@ -209,26 +208,20 @@ class UIMainWindow:
         # Add clinical data tab
         self.call_class.display_clinical_data(self.right_panel)
 
-        self.splitter.addWidget(self.left_panel)
-        self.splitter.addWidget(self.right_panel)
+        splitter.addWidget(self.left_panel)
+        splitter.addWidget(self.right_panel)
+
+        # Add ML  to right panel as a tab
+        self.MLTab= MLTab()
+        self.right_panel.addTab(self.MLTab, "Run ML")
 
         # Create footer
         self.footer = QtWidgets.QWidget()
         self.create_footer()
 
-        # Create main content page
-        self.main_content = QVBoxLayout()
-        self.main_content.addWidget(self.splitter)
-
-        # Create draw roi controller
-        self.roi_draw_handler = ROIDrawOption(
-            self.structures_tab.fixed_container_structure_modified,
-            self.remove_draw_roi_instance
-        )
-
         # Set layout
         self.central_widget_layout.addWidget(self.patient_bar)
-        self.central_widget_layout.addLayout(self.main_content)
+        self.central_widget_layout.addWidget(splitter)
         self.central_widget_layout.addWidget(self.footer)
 
         self.central_widget.setLayout(self.central_widget_layout)
@@ -328,26 +321,23 @@ class UIMainWindow:
         or the single view depending on what view is showing on screen.
         is_four_view: Whether the four view is showing
         """
-        if hasattr(self, 'draw_roi') and self.draw_roi:
-            self.draw_roi.onZoomInClicked()
+        if is_four_view:
+            self.dicom_axial_view.zoom_in()
+            self.dicom_coronal_view.zoom_in()
+            self.dicom_sagittal_view.zoom_in()
         else:
-            if is_four_view:
-                self.dicom_axial_view.zoom_in()
-                self.dicom_coronal_view.zoom_in()
-                self.dicom_sagittal_view.zoom_in()
-            else:
-                self.dicom_single_view.zoom_in()
+            self.dicom_single_view.zoom_in()
 
-            if image_reg_single:
-                self.image_fusion_single_view.zoom_in()
+        if image_reg_single:
+            self.image_fusion_single_view.zoom_in()
 
-            if image_reg_four:
-                self.image_fusion_view_axial.zoom_in()
-                self.image_fusion_view_coronal.zoom_in()
-                self.image_fusion_view_sagittal.zoom_in()
+        if image_reg_four:
+            self.image_fusion_view_axial.zoom_in()
+            self.image_fusion_view_coronal.zoom_in()
+            self.image_fusion_view_sagittal.zoom_in()
 
-            if self.pet_ct_tab.initialised:
-                self.pet_ct_tab.zoom_in()
+        if self.pet_ct_tab.initialised:
+            self.pet_ct_tab.zoom_in()
 
     def zoom_out(self, is_four_view, image_reg_single, image_reg_four):
         """
@@ -355,26 +345,23 @@ class UIMainWindow:
         views or the single view depending on what view is showing on screen.
         is_four_view: Whether the four view is showing
         """
-        if hasattr(self, 'draw_roi') and self.draw_roi:
-            self.draw_roi.onZoomOutClicked()
+        if is_four_view:
+            self.dicom_axial_view.zoom_out()
+            self.dicom_coronal_view.zoom_out()
+            self.dicom_sagittal_view.zoom_out()
         else:
-            if is_four_view:
-                self.dicom_axial_view.zoom_out()
-                self.dicom_coronal_view.zoom_out()
-                self.dicom_sagittal_view.zoom_out()
-            else:
-                self.dicom_single_view.zoom_out()
+            self.dicom_single_view.zoom_out()
 
-            if image_reg_single:
-                self.image_fusion_single_view.zoom_out()
+        if image_reg_single:
+            self.image_fusion_single_view.zoom_out()
 
-            if image_reg_four:
-                self.image_fusion_view_axial.zoom_out()
-                self.image_fusion_view_coronal.zoom_out()
-                self.image_fusion_view_sagittal.zoom_out()
+        if image_reg_four:
+            self.image_fusion_view_axial.zoom_out()
+            self.image_fusion_view_coronal.zoom_out()
+            self.image_fusion_view_sagittal.zoom_out()
 
-            if self.pet_ct_tab.initialised:
-                self.pet_ct_tab.zoom_out()
+        if self.pet_ct_tab.initialised:
+            self.pet_ct_tab.zoom_out()
 
     def format_data(self, size):
         """
@@ -504,36 +491,3 @@ class UIMainWindow:
 
         # Close progress window
         self.suv2roi_progress_window.close()
-
-    def add_draw_roi_instance(self):
-        """Use ROIDrawOption controller to add the roi instance to the main window"""
-        logging.debug("add_draw_roi_instance started")
-
-        self.splitter.setVisible(False)
-        self.draw_roi = self.roi_draw_handler.show_roi_draw_window()
-        self.main_content.addWidget(self.draw_roi)
-        self.draw_roi_toggle_toolbar_items(True)
-
-    def remove_draw_roi_instance(self):
-        """removes the draw roi instance from the main window,
-        also removing the instance from the ROIDrawOption controller"""
-        logging.debug("remove_draw_roi_instance started")
-
-        self.roi_draw_handler.remove_roi_draw_window()
-        self.main_content.removeWidget(self.draw_roi)
-        delattr(self, 'draw_roi')
-        self.draw_roi_toggle_toolbar_items(False)
-        self.splitter.setVisible(True)
-
-    def draw_roi_toggle_toolbar_items(self, disabled):
-        """Called to disable toolbar options when they do not apply / cannot be used in the current draw roi context"""
-        self.action_handler.action_save_structure.setDisabled(disabled)
-        self.action_handler.action_save_as_anonymous.setDisabled(disabled)
-
-        self.action_handler.menu_windowing.setDisabled(disabled)
-        self.action_handler.windowing_window.setDisabled(disabled)
-
-        self.action_handler.action_one_view.setDisabled(disabled)
-        self.action_handler.action_four_views.setDisabled(disabled)
-        self.action_handler.action_show_cut_lines.setDisabled(disabled)
-        self.action_handler.action_image_fusion.setDisabled(disabled)
