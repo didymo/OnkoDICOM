@@ -782,13 +782,12 @@ class MLTab(QtWidgets.QWidget):
 
         ml_tester.predict_values() # return True/False if successful or error
 
-        # once run will trigger results popup window
-
         results = f"According to the '{ml_tester.get_model_name()}' " \
             f"model located in '{self.get_model_path()}', the following values " \
             f"have been predicted: '{ml_tester.get_predicted_values()}' " \
             f"for the column: '{ml_tester.get_target()}'"
 
+        # once run will trigger results popup window
         ml_results_window = MLResultsWindow()
         ml_results_window.set_results_values(results)
         ml_results_window.set_ml_tester(ml_tester)
