@@ -844,9 +844,6 @@ class MachineLearningTester:
 
         return True
 
-    def get_patient_name(self):
-        return "John Smith"
-
     def save_into_csv(self, path_to_save):
         # TODO: is all this necessary?
         new_data = pd.read_csv(self.clinical_data_csv_path)
