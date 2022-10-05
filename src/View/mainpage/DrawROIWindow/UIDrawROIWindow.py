@@ -644,6 +644,26 @@ class UIDrawROIWindow:
             self.ds = None
             self.has_drawing = False
 
+    def update_draw_roi_pixmaps(self):
+        """
+        Updates the pixmaps_axial data for the displayed DICOM draw roi panel.
+        This will update all slices that do not have a drawn ROI, as well as looping through the drawn objects and
+        updating the ROI image
+        """
+        logging.debug("update_draw_roi_pixmaps started")
+        self.save_drawing_progress(self.current_slice)
+        self.dicom_view.update_view()
+
+        # for each drawn ROI slice
+        for slice_number in self.drawn_roi_list:
+            if self.drawn_roi_list.get(slice_number)['drawingROI'] is not None:
+                slice_drawing_roi = self.drawn_roi_list[slice_number]['drawingROI']
+                slice_drawing_roi.img = self.patient_dict_container.get("pixmaps_axial")[slice_number]
+                slice_drawing_roi.update_dicom_image()
+
+        if hasattr(self, 'drawingROI') and self.drawingROI:
+            self.dicom_view.view.setScene(self.drawingROI)
+
     def onZoomInClicked(self):
         """
         This function is used for zooming in button

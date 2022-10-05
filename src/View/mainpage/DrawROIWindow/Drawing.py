@@ -179,6 +179,19 @@ class Drawing(QtWidgets.QGraphicsScene):
                     return True
         return False
 
+    def update_dicom_image(self):
+        """
+        Updates the dicom image data, recalculating the roi pixel colour and displaying changes
+        """
+        logging.debug("update_dicom_image started for slice %s", self.current_slice)
+
+        self.q_image = self.img.toImage()
+
+        points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+        self._set_color_of_pixels(points)
+
+        self.refresh_image()
+
     def getValues(self):
         """
         This function gets the corresponding values of all the points in the
