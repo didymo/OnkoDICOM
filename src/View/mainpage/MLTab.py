@@ -4,7 +4,7 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtWidgets import QComboBox, QPushButton, QRadioButton, QMessageBox, QApplication, QDialog
-
+import datetime
 
 import pandas as pd
 import numpy as np
@@ -727,9 +727,9 @@ class MLTab(QtWidgets.QWidget):
             if not os.path.isdir(directory):
                 continue
             
-            save_file_suffixes = {"_ML.pkl": 0,
-                                  "_PARAMS.txt": 0,
-                                  "_Scale.pkl": 0}
+            save_file_suffixes = {"_ml.pkl": 0,
+                                  "_params.txt": 0,
+                                  "_scaler.pkl": 0}
             save_file_names = []
             
             for file in os.listdir(directory):
@@ -769,7 +769,6 @@ class MLTab(QtWidgets.QWidget):
 
     def run_prediction(self):
         model_path = self.get_model_path()
-        print(model_path)
 
         # trigger ML model to run
         # requires the directory for the 3 csvs + selected model directory
@@ -785,11 +784,10 @@ class MLTab(QtWidgets.QWidget):
 
         # once run will trigger results popup window
 
-        results = f"According to '{ml_tester.get_model_name()}' \
-        model in {self.get_model_path()}, this patient \
-        {ml_tester.get_patient_name()} has been classified as a: \
-        '{ml_tester.get_predicted_value()}' for column: \
-        '{ml_tester.get_target()}'"
+        results = f"According to the '{ml_tester.get_model_name()}' " \
+            f"model located in '{self.get_model_path()}', the following values " \
+            f"have been predicted: '{ml_tester.get_predicted_values()}' " \
+            f"for the column: '{ml_tester.get_target()}'"
 
         ml_results_window = MLResultsWindow()
         ml_results_window.set_results_values(results)
@@ -809,13 +807,13 @@ class MachineLearningTester:
         self.pyrad_csv_path = pyrad_csv_path
         self.saved_model_path = saved_model_path
         self.model_name = model_name
-        self.target = "TEST_TARGET"
+        self.predicted_column_name = ""
 
-    def get_predicted_value(self):
+    def get_predicted_values(self):
         return self.predictions
 
     def get_target(self):
-        return self.target
+        return self.predicted_column_name
 
     def get_model_name(self):
         return self.model_name
@@ -825,11 +823,7 @@ class MachineLearningTester:
         params_file_name = f"{self.saved_model_path}/{self.model_name}_params.txt"
         ml_file_name = f"{self.saved_model_path}/{self.model_name}_ml.pkl"
 
-        my_columns, predicted_column_name = self.read_txt_ml_params(params_file_name)
-
-        print(self.clinical_data_csv_path)
-        print(self.pyrad_csv_path)
-        print(self.dvh_csv_path)
+        my_columns, self.predicted_column_name = self.read_txt_ml_params(params_file_name)
 
         testing_data = Preprocessing(
             pathClinicalData = self.clinical_data_csv_path,
@@ -838,11 +832,11 @@ class MachineLearningTester:
             columnNames = my_columns
         )
 
-        data, ID = testing_data.prepareforML()
+        self.data, self.ID = testing_data.prepareforML()
 
         scaler = self.get_saved_model(scaler_file_name)
 
-        scaled_data = self.scale(scaler, data)
+        scaled_data = self.scale(scaler, self.data)
 
         saved_model = self.get_model_file(ml_file_name)
 
@@ -856,15 +850,15 @@ class MachineLearningTester:
     def save_into_csv(self, path_to_save):
         # TODO: is all this necessary?
         new_data = pd.read_csv(self.clinical_data_csv_path)
-        new_data = new_data[['HASHidentifier','Name']]
+        new_data = new_data[['HASHidentifier']]
         pyrad = pd.read_csv(self.pyrad_csv_path).rename(columns={"Hash ID":"HASHidentifier"})[['HASHidentifier','ROI']]
-        data['HASHidentifier'] = ID  # var ID comes from the pre_process functions
-        data[predictedColumnName] = self.predictions
-        data = data[['HASHidentifier',predictedColumnName]]
-        final_data = pyrad.merge(data,how='left',on='HASHidentifier')
+        self.data['HASHidentifier'] = self.ID
+        self.data[self.predicted_column_name] = self.predictions
+        self.data = self.data[['HASHidentifier',self.predicted_column_name]]
+        final_data = pyrad.merge(self.data,how='left',on='HASHidentifier')
         final_data = new_data.merge(final_data,how='left',on='HASHidentifier')
         final_data = final_data.drop_duplicates(subset=['HASHidentifier','ROI']).reset_index(drop=True)
-        final_data.to_csv(f"{path_to_save}/Clinical_data_with_predicted_TARGET_NAME.csv", index=False)
+        final_data.to_csv(f"{path_to_save}/Clinical_data_with_predicted_{self.get_target()}.csv", index=False)
 
     def read_txt_ml_params(self, path):
         my_file = open(f"{path}", "r")
@@ -927,7 +921,8 @@ class MLResultsWindow(QtWidgets.QDialog):
         self.summary_label = QtWidgets.QLabel()
         self.summary_label.setWordWrap(True)
         self.scroll_area = QtWidgets.QScrollArea()
-        self.save_ml_parameters_button = QtWidgets.QPushButton("Save CSV")
+        self.save_ml_predicted_txt = QtWidgets.QPushButton("Save Txt file with above information")
+        self.save_ml_predicted_csv = QtWidgets.QPushButton("Save CSV with predicted values")
 
         # # Get stylesheet
         if platform.system() == 'Darwin':
@@ -939,7 +934,8 @@ class MLResultsWindow(QtWidgets.QDialog):
         # Set stylesheet
         self.summary_label.setStyleSheet(self.stylesheet)
         self.scroll_area.setStyleSheet(self.stylesheet)
-        self.save_ml_parameters_button.setStyleSheet(self.stylesheet)
+        self.save_ml_predicted_txt.setStyleSheet(self.stylesheet)
+        self.save_ml_predicted_csv.setStyleSheet(self.stylesheet)
 
         # Make QLabel wrap text
         self.summary_label.setWordWrap(True)
@@ -956,11 +952,12 @@ class MLResultsWindow(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.scroll_area)
         self.layout.addStretch(1)
-        self.layout.addWidget(self.save_ml_parameters_button)
+        self.layout.addWidget(self.save_ml_predicted_txt)
+        self.layout.addWidget(self.save_ml_predicted_csv)
 
         # Connect button to functions
-        # save text file too?
-        self.save_ml_parameters_button.clicked.connect(self.save_ml_model_paramaters_clicked)
+        self.save_ml_predicted_txt.clicked.connect(self.save_ml_txt_with_predicted_values_clicked)
+        self.save_ml_predicted_csv.clicked.connect(self.save_ml_csv_with_predicted_values_clicked)
 
         # Set layout of window
         self.setLayout(self.layout)
@@ -979,8 +976,30 @@ class MLResultsWindow(QtWidgets.QDialog):
     def set_ml_tester(self, ml_tester):
         self.ml_tester = ml_tester
 
-    def save_ml_model_paramaters_clicked(self):
+    def save_ml_csv_with_predicted_values_clicked(self):
         file_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open Directory", "",
                                                                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
         if file_path:
             self.ml_tester.save_into_csv(f'{file_path}/')
+
+    def save_ml_txt_with_predicted_values_clicked(self):
+        file_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open Directory", "",
+                                                               QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
+        if file_path:
+            with open(f"{file_path}/Prediction_summary_{self.create_timestamp()}.txt", "w") as output_file:
+                output_file.write(self.summary_label.text())
+
+    def create_timestamp(self):
+        """
+        Create a unique timestamp as a string.
+        returns string
+        """
+        cur_time = datetime.datetime.now()
+        year = cur_time.year
+        month = cur_time.month
+        day = cur_time.day
+        hour = cur_time.hour
+        mins = cur_time.minute
+        sec = cur_time.second
+
+        return f"{year}{month}{day}{hour}{mins}{sec}"
