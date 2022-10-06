@@ -326,11 +326,11 @@ class UIBatchProcessingWindow(object):
         dvh_data_path = self.batchmachinelearning_tab.get_csv_output_location_dvhData()
         pyrad_data_path = self.batchmachinelearning_tab.get_csv_output_location_payrad()
         #Parameters
-        machine_learning_features = self.batchmachinelearning_tab.getFeature()
-        machine_learning_target = self.batchmachinelearning_tab.getTarget()
-        machine_learning_type = self.batchmachinelearning_tab.getType()
-        machine_learning_rename = self.batchmachinelearning_tab.getRename()
-        machine_learning_tune = self.batchmachinelearning_tab.getTune()
+        machine_learning_features = self.batchmachinelearning_tab.get_feature()
+        machine_learning_target = self.batchmachinelearning_tab.get_target()
+        machine_learning_type = self.batchmachinelearning_tab.get_type()
+        machine_learning_rename = self.batchmachinelearning_tab.get_rename()
+        machine_learning_tune = self.batchmachinelearning_tab.get_tune()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:

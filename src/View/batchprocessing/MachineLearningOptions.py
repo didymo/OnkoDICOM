@@ -4,9 +4,6 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 import numpy as np
 
-import pandas as pd
-
-
 class CheckableCombox(QtWidgets.QComboBox):
     def __init__(self):
         super().__init__()
@@ -237,7 +234,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.main_layout.addWidget(self.filter_table)
         self.setLayout(self.main_layout)
 
-        self.filter_table.cellClicked.connect(self.select_filter_option_cell)
+        self.filter_table.cellClicked.connect(self.select_rename_value_cell)
 
 
 
@@ -261,7 +258,10 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         self.filter_table.setCellWidget(1, 1, self.combox_target)
 
-    def checkIfBinary(self,dict):
+    def check_binary(self, dict):
+        """
+        checks if the selected target is binary
+        """
         str_list = dict
         # Remove None Values
         if None in str_list:
@@ -280,8 +280,8 @@ class MachineLearningOptions(QtWidgets.QWidget):
             return False
 
 
-    def renameValues(self,targetName):
-        self.binaryData = self.checkIfBinary(self.dataDictionary[targetName])
+    def rename_values(self, targetName):
+        self.binaryData = self.check_binary(self.dataDictionary[targetName])
         if self.binaryData:
             output = set()
             for x in self.dataDictionary[targetName]:
@@ -291,9 +291,9 @@ class MachineLearningOptions(QtWidgets.QWidget):
         else:
             return f"Selected column is not Binary {targetName}"
 
-    def select_filter_option_cell(self, row, column):
+    def select_rename_value_cell(self, row, column):
         """
-        Toggles the selected options green and stores value
+        Allows user to rename values of the target
         :param row: row index that was clicked
         :param column: column index that was clicked
         """
@@ -301,31 +301,15 @@ class MachineLearningOptions(QtWidgets.QWidget):
         if header == "Selected Value":
             if (row == 3):
                 if self.combox_target.currentText() != "":
-                    rename = self.renameValues(self.combox_target.currentText())
+                    rename = self.rename_values(self.combox_target.currentText())
                     comment = QtWidgets.QTableWidgetItem(rename)
                     self.filter_table.setItem(3, 1, comment)
-                    # features  = self.getFeature()
-                    # print(f'Feature {features}')
-                    # target = self.getTarget()
-                    # print('Target',target)
-                    # type = self.getType()
-                    # print('Type',type)
-                    # tune = self.getTune()
-                    # print('Tune',tune)
-                    # rename = self.getRename()
-                    # print('Rename',rename)
-                    # clin  = self.get_csv_output_location_clinicalData()
-                    # print('clinical data',clin )
-                    # dvh = self.get_csv_output_location_dvhData()
-                    # print('dvh', dvh)
-                    # pyrad = self.get_csv_output_location_payrad()
-                    # print('pyrad',pyrad)
 
     # Function for Clinical Data
     def set_csv_output_location_clinicalData(self, path, enable=True,
                                              change_if_modified=False):
         """
-        Set the location for the ClinicalData-SR2CSV resulting .csv file.
+        Set the location for the ClinicalData .csv file.
         :param path: desired path.
         :param enable: Enable the directory text bar.
         :param change_if_modified: Change the directory if already been
@@ -371,53 +355,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
     def set_csv_output_location_dvhData(self, path, enable=True,
                                         change_if_modified=False):
         """
-        Set the location for the ClinicalData-SR2CSV resulting .csv file.
-        :param path: desired path.
-        :param enable: Enable the directory text bar.
-        :param change_if_modified: Change the directory if already been
-                                   changed.
-        """
-        if not self.directory_input_dvhData.isEnabled():
-            self.directory_input_dvhData.setText(path)
-            self.directory_input_dvhData.setEnabled(enable)
-        elif change_if_modified:
-            self.directory_input_dvhData.setText(path)
-            self.directory_input_dvhData.setEnabled(enable)
-
-    def get_csv_output_location_dvhData(self):
-        """
-        Get the location of the desired output directory.
-        """
-        return self.directory_input_dvhData.text()
-
-    def show_file_browser_dvhData(self):
-        """
-        Show the file browser for selecting a folder for the Onko
-        default directory.
-        """
-        # Open a file dialog and return chosen directory
-        path = QtWidgets.QFileDialog.getOpenFileName(
-            None, "Open Clinical Data File", "",
-            "CSV data files (*.csv *.CSV)")[0]
-
-        # If chosen directory is nothing (user clicked cancel) set to
-        # user home
-        if path == "" and self.directory_input_dvhData.text() == 'No file selected':
-            path = expanduser("~")
-        elif (path == ""
-              and
-              (self.directory_input_dvhData.text() != 'No file selected'
-               or self.directory_input_dvhData.text() != expanduser("~"))):
-            path = self.directory_input_dvhData.text()
-
-        # Update file path
-        self.set_csv_output_location_dvhData(path, change_if_modified=True)
-
-    # Function for DVH Data
-    def set_csv_output_location_dvhData(self, path, enable=True,
-                                        change_if_modified=False):
-        """
-        Set the location for the ClinicalData-SR2CSV resulting .csv file.
+        Set the location for the dvh .csv file.
         :param path: desired path.
         :param enable: Enable the directory text bar.
         :param change_if_modified: Change the directory if already been
@@ -463,7 +401,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
     def set_csv_output_location_pyrad(self, path, enable=True,
                                       change_if_modified=False):
         """
-        Set the location for the ClinicalData-SR2CSV resulting .csv file.
+        Set the location for the pyradiomics .csv file.
         :param path: desired path.
         :param enable: Enable the directory text bar.
         :param change_if_modified: Change the directory if already been
@@ -506,19 +444,31 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.set_csv_output_location_pyrad(path, change_if_modified=True)
 
 
-    def getFeature(self):
+    def get_feature(self):
+        """
+        get selected columns
+        """
         features = self.combox_feature.currentText()
         features = features.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
         features = features.split(',')
         return features
 
-    def getTarget(self):
+    def get_target(self):
+        """
+        get selected target
+        """
         return self.combox_target.currentText()
 
-    def getType(self):
+    def get_type(self):
+        """
+        get selected type
+        """
         return self.combox_type.currentText()
 
-    def getRename(self):
+    def get_rename(self):
+        """
+        get selected values
+        """
         if self.binaryData:
             rename = self.filter_table.item(3, 1).text()
             rename = rename.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
@@ -526,7 +476,10 @@ class MachineLearningOptions(QtWidgets.QWidget):
             return rename
         return None
 
-    def getTune(self):
+    def get_tune(self):
+        """
+        get selected value
+        """
         if self.combox_tune.currentText() == 'no':
             return False
         else:
