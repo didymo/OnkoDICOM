@@ -21,8 +21,8 @@ from src.View.batchprocessing.ROINameCleaningOptions import \
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 from src.View.batchprocessing.FMAID2ROINameOptions import \
     FMAID2ROINameOptions
-from src.View.batchprocessing.MachineLearning import \
-    MachineLearning
+from src.View.batchprocessing.MachineLearningOptions import \
+    MachineLearningOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -141,7 +141,7 @@ class UIBatchProcessingWindow(object):
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
-        self.batchmachineaLearning_tab = MachineLearning()
+        self.batchmachinelearning_tab = MachineLearningOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -157,7 +157,7 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
-        self.tab_widget.addTab(self.batchmachineaLearning_tab, 'Machine Learning')
+        self.tab_widget.addTab(self.batchmachinelearning_tab, 'Machine Learning')
 
 
         # == Bottom widgets
@@ -285,7 +285,7 @@ class UIBatchProcessingWindow(object):
             # Check for Clinical data
             clinical_data = self.batch_processing_controller \
                 .get_all_clinical_data()
-            self.batchmachineaLearning_tab.store_data(clinical_data)
+            self.batchmachinelearning_tab.store_data(clinical_data)
             self.select_subgroup_tab.show_filtering_options_in_table(
                 clinical_data
                 )
@@ -322,15 +322,15 @@ class UIBatchProcessingWindow(object):
             .get_selected_filter_options()
 
         #Path
-        clinical_data_path = self.batchmachineaLearning_tab.get_csv_output_location_clinicalData()
-        dvh_data_path = self.batchmachineaLearning_tab.get_csv_output_location_dvhData()
-        pyrad_data_path = self.batchmachineaLearning_tab.get_csv_output_location_payrad()
+        clinical_data_path = self.batchmachinelearning_tab.get_csv_output_location_clinicalData()
+        dvh_data_path = self.batchmachinelearning_tab.get_csv_output_location_dvhData()
+        pyrad_data_path = self.batchmachinelearning_tab.get_csv_output_location_payrad()
         #Parameters
-        machine_learning_features = self.batchmachineaLearning_tab.getFeature()
-        machine_learning_target = self.batchmachineaLearning_tab.getTarget()
-        machine_learning_type = self.batchmachineaLearning_tab.getType()
-        machine_learning_rename = self.batchmachineaLearning_tab.getRename()
-        machine_learning_tune = self.batchmachineaLearning_tab.getTune()
+        machine_learning_features = self.batchmachinelearning_tab.getFeature()
+        machine_learning_target = self.batchmachinelearning_tab.getTarget()
+        machine_learning_type = self.batchmachinelearning_tab.getType()
+        machine_learning_rename = self.batchmachinelearning_tab.getRename()
+        machine_learning_tune = self.batchmachinelearning_tab.getTune()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:

@@ -1,9 +1,7 @@
 import pandas as pd
-import numpy as np
 # Skit Learn Modules
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler  # standartiztion
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
 from sklearn.compose import ColumnTransformer
@@ -11,8 +9,6 @@ from sklearn.utils import resample
 from collections import Counter
 import logging
 import ast
-from joblib import Parallel, delayed
-import joblib
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -31,55 +27,56 @@ class Preprocessing:
     ##gets path of (Clinical Data,Pyrad,DVH), selected column name, type of the target, renamed columns
     def __init__(self
                  # Path
-                 , pathClinicalData=None  # clinical data
-                 , pathPyrData=None  # Pyradiomics
-                 , pathDVHData=None  # DVH
+                 , path_clinical_data=None  # clinical data
+                 , path_pyr_data=None  # Pyradiomics
+                 , path_dvh_data=None  # DVH
                  # Selected Columns
-                 , columnNames=None
+                 , column_names=None
                  # Type of the Column (category/numerical)
-                 , typeOfColumn=None
+                 , type_column=None
                  # Rename values list []
                  , target=None
                  # column Name for target
-                 , renameValues=None):
+                 , rename_values=None):
 
-        self.pathClinicalData = pathClinicalData
-        self.pathPyrData = pathPyrData
-        self.pathDVHData = pathDVHData
-        self.columnNames = columnNames
-        self.typeOfColumn = typeOfColumn
-        self.renameValues = renameValues
+        self.path_clinical_data = path_clinical_data
+        self.path_pyr_data = path_pyr_data
+        self.path_dvh_data = path_dvh_data
+        self.column_names = column_names
+        self.type_column = type_column
+        self.rename_values = rename_values
         self.target = target
         self.scaling = None
+        self.missing_id = []
 
     # read csv files and return 3 CSV files as pandas DF
     def read_csv(self):
         try:
             # Check if Path was provided for Clinical data and selected Columns Names
-            if (self.columnNames != None):
-                self.columnNames.append('HASHidentifier')
+            if (self.column_names != None):
+                self.column_names.append('HASHidentifier')
 
                 # check if Target not NULL
                 if (self.target != None):
-                    self.columnNames.append(self.target)
+                    self.column_names.append(self.target)
 
-                if self.pathClinicalData != None:
-                    data_Clinical = pd.read_csv(f'{self.pathClinicalData}', usecols=self.columnNames)
+                if self.path_clinical_data != None:
+                    data_Clinical = pd.read_csv(f'{self.path_clinical_data}', usecols=self.column_names)
             else:
-                if self.pathClinicalData != None:
-                    data_Clinical = pd.read_csv(f'{self.pathClinicalData}')
+                if self.path_clinical_data != None:
+                    data_Clinical = pd.read_csv(f'{self.path_clinical_data}')
 
             # Check if Path was provided for DVH data
-            if self.pathDVHData != None:
-                data_DVH = pd.read_csv(f'{self.pathDVHData}', on_bad_lines='skip').rename(
+            if self.path_dvh_data != None:
+                data_DVH = pd.read_csv(f'{self.path_dvh_data}', on_bad_lines='skip').rename(
                     columns={"Patient ID": "HASHidentifier"})
 
             # Check if Path was provided for PyRad data
-            if self.pathPyrData != None:
-                data_Py = pd.read_csv(f'{self.pathPyrData}').rename(columns={"Hash ID": "HASHidentifier"})
+            if self.path_pyr_data != None:
+                data_Py = pd.read_csv(f'{self.path_pyr_data}').rename(columns={"Hash ID": "HASHidentifier"})
 
         except:
-            logging.warning('Error in loading Files')
+            logging.debug('Error in loading Files')
 
         return data_Clinical, data_DVH, data_Py
 
@@ -90,14 +87,14 @@ class Preprocessing:
     If it is numeric or list is empty it return initial pandas DF that was provided.
     """
 
-    def rename(self, clinicalData):
-        if (self.typeOfColumn == 'category' and self.renameValues != None):
-            for i in range(len(self.renameValues)):
-                clinicalData.loc[clinicalData[self.target] == i, self.target] = self.renameValues[i]
-            return clinicalData
+    def rename(self, clinical_data):
+        if (self.type_column == 'category' and self.rename_values != None):
+            for i in range(len(self.rename_values)):
+                clinical_data.loc[clinical_data[self.target] == i, self.target] = self.rename_values[i]
+            return clinical_data
         else:
-            logging.warning('Function rename is not allowed for numerical values')
-            return clinicalData
+            logging.debug('Function rename is not allowed for numerical values')
+            return clinical_data
 
     """
     Following function does preprocessing of the Clinical Data
@@ -109,17 +106,17 @@ class Preprocessing:
     6.drop empty columns if exists
     """
 
-    def preProcessingClinicalData(self, clinicalData):
+    def pre_processing_clinical_data(self, clinical_data):
 
         # Function checks % of missing values in a column. Those Columns that are less than 5% will be removed from DF
-        def check_percentage_ofMissingValues(data):
-            dropColumns = []
+        def check_percentage_missing_values(data):
+            drop_columns = []
             for x in data.columns:
                 percentage = (100 - (data[x].isna().sum() / len(data) * 100))
                 if percentage < 5:
-                    dropColumns.append(x)
+                    drop_columns.append(x)
 
-            return dropColumns
+            return drop_columns
 
         # Function to replace 2nd value in string
         def replace_nth_occurance(some_str, original, replacement, n):
@@ -132,16 +129,16 @@ class Preprocessing:
             return first_originals_back
 
         if (self.target != None):
-            clinicalData = self.rename(clinicalData)
+            clinical_data = self.rename(clinical_data)
 
-        listColumnsToRemove = ['Dist_Mets_1', 'Dist_Mets_2', 'Dist_Mets_3', 'DepthOfInvasion', 'Operation_DtTm',
+        list_columns_remove = ['Dist_Mets_1', 'Dist_Mets_2', 'Dist_Mets_3', 'DepthOfInvasion', 'Operation_DtTm',
                                'OperationName', 'Chemo', 'ChemoDrug', 'Immuno', 'ImmunoDrug', 'Diag_Addendum',
                                'PNI', 'SUVn', 'Birth_Place', 'Marital', 'Religion', 'Description', 'Diag_Code']
 
-        diff1 = list((Counter(clinicalData.columns) - Counter(listColumnsToRemove)).elements())
+        diff1 = list((Counter(clinical_data.columns) - Counter(list_columns_remove)).elements())
 
         # Select columns that will be used in machined learning model
-        data_Clinical = clinicalData[diff1]
+        data_Clinical = clinical_data[diff1]
         data_Clinical = data_Clinical.drop_duplicates(subset=['HASHidentifier'])
 
         # preprocess
@@ -177,34 +174,33 @@ class Preprocessing:
                 data_Clinical['AgeAtDeath'] = data_Clinical['AgeAtDeath'].fillna(0)
 
             try:
-                listTodrop = check_percentage_ofMissingValues(data_Clinical)
-                if listTodrop:
-                    data_Clinical = data_Clinical.drop(listTodrop, axis=1)
-                    print(f'columns to drop : {listTodrop}')
+                list_drop = check_percentage_missing_values(data_Clinical)
+                if list_drop:
+                    data_Clinical = data_Clinical.drop(list_drop, axis=1)
             except:
-                logging.warning('error in dropping empty columns ')
+                logging.debug('error in dropping empty columns ')
 
 
 
         except:
-            logging.warning('error in Preprocessing Clinical Data columns')
+            logging.debug('error in Preprocessing Clinical Data columns')
 
         return data_Clinical
 
     # Preprocessing DVH data
-    def preProcessingDVHData(self, dvhData):
+    def pre_processing_dvh_data(self, dvh_data):
         try:
-            dvhData = dvhData.fillna(0)
-            dvhData = dvhData.drop_duplicates(subset=['HASHidentifier', 'ROI'], keep='last')
+            dvh_data = dvh_data.fillna(0)
+            dvh_data = dvh_data.drop_duplicates(subset=['HASHidentifier', 'ROI'], keep='last')
 
         except:
-            logging.warning('error in Preprocessing DVH Data columns')
+            logging.debug('error in Preprocessing DVH Data columns')
 
-        return dvhData
+        return dvh_data
 
     # Preprocessing Pyrad data
-    def preProcessingPyradData(self, Pyrad):
-        listColumnsToRemove = ['diagnostics_Versions_PyRadiomics', 'diagnostics_Versions_Numpy',
+    def pre_processing_pyrad_data(self, Pyrad):
+        list_columns_remove = ['diagnostics_Versions_PyRadiomics', 'diagnostics_Versions_Numpy',
                                'diagnostics_Versions_SimpleITK', 'diagnostics_Versions_PyWavelet',
                                'diagnostics_Versions_Python', 'diagnostics_Configuration_Settings',
                                'diagnostics_Image-original_Dimensionality', 'diagnostics_Image-original_Size',
@@ -212,7 +208,7 @@ class Preprocessing:
                                'diagnostics_Mask-original_Size', 'diagnostics_Configuration_EnabledImageTypes',
                                'diagnostics_Image-original_Hash', 'diagnostics_Image-original_Spacing']
 
-        diff1 = list((Counter(Pyrad.columns) - Counter(listColumnsToRemove)).elements())
+        diff1 = list((Counter(Pyrad.columns) - Counter(list_columns_remove)).elements())
 
         Pyrad = Pyrad[diff1]
 
@@ -228,32 +224,32 @@ class Preprocessing:
                 Pyrad['diagnostics_Mask-original_CenterOfMass'] = Pyrad['diagnostics_Mask-original_CenterOfMass'].apply(
                     lambda x: ast.literal_eval(x)).apply(lambda x: sum(x) / len(x))
         except:
-            logging.warning('error in Preprocessing Pyrad Data columns')
+            logging.debug('error in Preprocessing Pyrad Data columns')
 
         return Pyrad
 
     # Reading Clinical,DVG,Pyrad and Preprocess it
-    def preprocessingData(self):
-        clinicalData, dvhData, pyradData = self.read_csv()  # Reading Clinical,DVG,Pyrad
-        clinicalData = self.preProcessingClinicalData(clinicalData)  # Preprocessing ClinicalData
-        dvhData = self.preProcessingDVHData(dvhData)  # Preprocessing DVH
-        pyradData = self.preProcessingPyradData(pyradData)  # Preprocessing Pyrad
+    def pre_processing_data(self):
+        clinical_data, dvh_data, pyrad_data = self.read_csv()  # Reading Clinical,DVG,Pyrad
+        clinical_data = self.pre_processing_clinical_data(clinical_data)  # Preprocessing ClinicalData
+        dvh_data = self.pre_processing_dvh_data(dvh_data)  # Preprocessing DVH
+        pyrad_data = self.pre_processing_pyrad_data(pyrad_data)  # Preprocessing Pyrad
 
-        return clinicalData, dvhData, pyradData
+        return clinical_data, dvh_data, pyrad_data
 
     # Following function Merge 3 DFs into 1 Data Frame
-    def mergingData(self, clinicalData, dvhData, pyradData):
+    def merging_data(self, clinical_data, dvh_data, pyrad_data):
         # get all List of unique IDs in Clinical Data
-        Clinical_data = clinicalData['HASHidentifier'].unique().tolist()
-        DVH_data = dvhData['HASHidentifier'].unique().tolist()
+        Clinical_data = clinical_data['HASHidentifier'].unique().tolist()
+        DVH_data = dvh_data['HASHidentifier'].unique().tolist()
         # Find Missing IDs
         diff1 = list((Counter(Clinical_data) - Counter(DVH_data)).elements())
-        # Need to use here Logging to display IDs which is missing
-        # logging.warning(data_Clinical[data_Clinical['HASHidentifier'].isin(diff1)][['HASHidentifier']])
+        if len(diff1)!=0:
+            self.missing_id.append(diff1)
         # merge
-        clinicalData = clinicalData[clinicalData['HASHidentifier'].isin(dvhData['HASHidentifier'])]
-        clnical_DVH = clinicalData.merge(dvhData, how="left", on="HASHidentifier")
-        clnical_DVH_Pyrad = clnical_DVH.merge(pyradData, how="left", on=["HASHidentifier", 'ROI'])
+        clinical_data = clinical_data[clinical_data['HASHidentifier'].isin(dvh_data['HASHidentifier'])]
+        clnical_DVH = clinical_data.merge(dvh_data, how="left", on="HASHidentifier")
+        clnical_DVH_Pyrad = clnical_DVH.merge(pyrad_data, how="left", on=["HASHidentifier", 'ROI'])
         clnical_DVH_Pyrad = clnical_DVH_Pyrad.drop_duplicates()
 
         return clnical_DVH_Pyrad
@@ -284,7 +280,7 @@ class Preprocessing:
             return False, minV
 
     # Following Function does upsampling for dataset Only if it is needed
-    def upSampling(self, data):
+    def up_sampling(self, data):
         result = self.check_percentage_value_counts(data[self.target])
         if result[0]:
             # Separate majority and minority classes
@@ -310,13 +306,17 @@ class Preprocessing:
     If so, then it does Scaling Data and Upsampling(if needed)
     """
 
-    def prepareforML(self):
-        ClinicalData, DVH, Pyr = self.preprocessingData()
+    def prepare_for_ml(self):
+        clinical_data, dvh, pyrad_data = self.pre_processing_data()
         # Used only for Training if it is Testing Then returns Merged DF
         if (self.target != None):
-            X_train, X_test = train_test_split(ClinicalData, test_size=0.3, random_state=42)
-            X_train = self.mergingData(X_train, DVH, Pyr)
-            X_test = self.mergingData(X_test, DVH, Pyr)
+            X_train, X_test = train_test_split(clinical_data, test_size=0.3, random_state=42)
+            X_train = self.merging_data(X_train, dvh, pyrad_data)
+            X_test = self.merging_data(X_test, dvh, pyrad_data)
+
+            if self.missing_id!=0:
+                logging.debug('Can not find IDs in DVH and Pyradiomics')
+                logging.debug(self.missing_id)
 
             X_train = X_train.drop(['HASHidentifier'], axis=1)
             X_test = X_test.drop(['HASHidentifier'], axis=1)
@@ -337,7 +337,7 @@ class Preprocessing:
             ])
 
             # Check if label is inbalanced, if so, then it does Upsampling on train
-            if result[0]: X_train = self.upSampling(X_train)
+            if result[0]: X_train = self.up_sampling(X_train)
 
             # Split on Test and Train Dataset
             y_train = X_train[self.target]
@@ -348,24 +348,24 @@ class Preprocessing:
 
             return X_train, X_test, y_train, y_test
         else:
-            data = self.mergingData(ClinicalData, DVH, Pyr)
+            data = self.merging_data(clinical_data, dvh, pyrad_data)
             IDs = data['HASHidentifier']
             data = data.drop(['HASHidentifier'], axis=1)
             return data, IDs
 
     # Should be saved in txt (columnNames), 2 value name of the Model (self.target+'_ML')
-    def saveParam(self):
+    def get_params_clinical_data(self):
         # if columnNames not empty
-        if self.columnNames != None:
-            self.columnNames.remove(self.target)
-            self.columnNames.remove('HASHidentifier')
+        if self.column_names != None:
+            self.column_names.remove(self.target)
+            self.column_names.remove('HASHidentifier')
 
         # If columnNames is Empty
         else:
 
             data1, data2, data3 = self.read_csv()
-            self.columnNames = list(data1.columns)
-            self.columnNames.remove(self.target)
-            self.columnNames.remove('HASHidentifier')
-        return {"columns": self.columnNames,
+            self.column_names = list(data1.columns)
+            self.column_names.remove(self.target)
+            self.column_names.remove('HASHidentifier')
+        return {"columns": self.column_names,
                 "saveModel": self.target}

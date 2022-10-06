@@ -109,7 +109,7 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         """
         file_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open Directory","", QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
         if file_path:
-            self.ml_model.saveConfusionMatrix(f'{file_path}/')
+            self.ml_model.save_confusion_matrix(f'{file_path}/')
 
 
     def save_ml_model_clicked(self):
@@ -120,10 +120,10 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         """
         file_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open Directory","", QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
         if file_path:
-            self.ml_model.saveMLModel(self.params,f'{file_path}/',self.scaling)
+            self.ml_model.save_ml_model(self.params, f'{file_path}/', self.scaling)
 
     def save_ml_model_paramaters_clicked(self):
         file_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Open Directory", "",
                                                                QtWidgets.QFileDialog.ShowDirsOnly | QtWidgets.QFileDialog.DontResolveSymlinks)
         if file_path:
-            self.ml_model.saveModelParameters(f'{file_path}/')
+            self.ml_model.save_model_parameters(f'{file_path}/')

@@ -2,9 +2,8 @@ import pandas as pd
 import numpy as np
 
 # scroing
-from sklearn.metrics import (classification_report, confusion_matrix, accuracy_score,
-                             f1_score, make_scorer, roc_curve,
-                             balanced_accuracy_score)
+from sklearn.metrics import (confusion_matrix, accuracy_score,
+                             f1_score, make_scorer)
 
 from imblearn.metrics import geometric_mean_score
 
@@ -21,28 +20,26 @@ from sklearn.neural_network import MLPRegressor  # MLP Regressor
 import logging
 import os
 
-# Save model
-from joblib import Parallel, delayed
 import joblib
 
 
 class MlModeling():
     def __init__(self,
-                 trainFeature
-                 , testFeature
-                 , trainLabel
-                 , testLabel
+                 train_feature
+                 , test_feature
+                 , train_label
+                 , test_label
                  , target
-                 , typeofModel
+                 , type_model
                  , tunning=False):
-        self.trainFeature = trainFeature
-        self.testFeature = testFeature
-        self.trainLabel = trainLabel
-        self.testLabel = testLabel
+        self.train_feature = train_feature
+        self.test_feature = test_feature
+        self.train_label = train_label
+        self.test_label = test_label
         self.target = target
-        self.typeofModel = typeofModel
+        self.type_model = type_model
         self.tunning = tunning
-        self.confusionMatrix = None
+        self.confusion_matrix = None
         self.model = None
         self.score = None
         self.accuracy = {
@@ -54,31 +51,31 @@ class MlModeling():
     Below 3 Functions that helps identify what perfomance calculation should be used for the Model
     """
 
-    def calPerfomanceGM(self, predictions):
-        return 'geometric mean', geometric_mean_score(self.testLabel, predictions)
+    def cal_perfomance_gm(self, predictions):
+        return 'geometric mean', geometric_mean_score(self.test_label, predictions)
 
-    def calPerfomanceF1_Sample(self, predictions):
-        return 'f1_macro', f1_score(self.testLabel, predictions, average='macro')
+    def cal_perfomance_f1_macro(self, predictions):
+        return 'f1_macro', f1_score(self.test_label, predictions, average='macro')
 
-    def calPerfomanceAccuracy(self, predictions):
-        return 'accuracy', accuracy_score(self.testLabel, predictions)
+    def cal_perfomance_accuracy(self, predictions):
+        return 'accuracy', accuracy_score(self.test_label, predictions)
 
         # Check if Our Test Label is Balanced
 
-    def calculateBalance(self):
+    def calculate_balance(self):
 
         balance = True
 
-        for i in range(len(self.testLabel.unique())):
-            if round(self.testLabel.value_counts()[i] / len(self.testLabel) * 100, 2) < 15:
+        for i in range(len(self.test_label.unique())):
+            if round(self.test_label.value_counts()[i] / len(self.test_label) * 100, 2) < 15:
                 balance = False
 
         return balance
 
-    def CastomConfusion_matrix(self, predictions):
-        unique_label = np.unique([self.testLabel, predictions])
+    def castom_confusion_matrix(self, predictions):
+        unique_label = np.unique([self.test_label, predictions])
         cmtx = pd.DataFrame(
-            confusion_matrix(self.testLabel, predictions, labels=unique_label),
+            confusion_matrix(self.test_label, predictions, labels=unique_label),
             index=['true:{:}'.format(x) for x in unique_label],
             columns=['pred:{:}'.format(x) for x in unique_label]
         )
@@ -89,10 +86,7 @@ class MlModeling():
     Then among all models it picks the best one
     """
 
-    def ClassificationMLTunned(self):
-        print('Selected Mode Tunning Model')
-        print('Please be aware that it takes time Appx 10-20 min')
-
+    def classification_ml_tunned(self):
         # Tunning Random Forest
         param_grid_RF = [
             {'n_estimators': [400, 500, 600], 'max_depth': [5, None], 'criterion': ['gini', 'entropy', 'log_loss']},
@@ -111,19 +105,19 @@ class MlModeling():
         mlp_cla = MLPClassifier(random_state=42, max_iter=5000)
 
         # check if it is binary labels (2 classes)
-        if len(self.testLabel.unique()) == 2:
+        if len(self.test_label.unique()) == 2:
             print('running self.testLabel.unique()) == 2')
-            f1_scorer = make_scorer(f1_score, pos_label=self.testLabel[0])
+            f1_scorer = make_scorer(f1_score, pos_label=self.test_label[0])
             grid_search_rf = GridSearchCV(forest_clas, param_grid_RF, cv=5
                                           , scoring=f1_scorer, return_train_score=True)
 
             grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5
                                            , scoring=f1_scorer, return_train_score=True)
 
-            perfomance = self.calPerfomanceGM
+            perfomance = self.cal_perfomance_gm
 
         # check it is not Balanced
-        elif not self.calculateBalance():
+        elif not self.calculate_balance():
             print('running not self.calculateBalance()')
             grid_search_rf = GridSearchCV(forest_clas, param_grid_RF, cv=5
                                           , scoring='f1_macro', return_train_score=True)
@@ -131,7 +125,7 @@ class MlModeling():
             grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5
                                            , scoring='f1_macro', return_train_score=True)
 
-            perfomance = self.calPerfomanceF1_Sample
+            perfomance = self.cal_perfomance_f1_macro
 
         # if Balanced
         else:
@@ -141,28 +135,28 @@ class MlModeling():
 
             grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5
                                            , scoring='accuracy', return_train_score=True)
-            perfomance = self.calPerfomanceAccuracy
+            perfomance = self.cal_perfomance_accuracy
 
         # RANDOM FOREST
-        grid_search_rf.fit(self.trainFeature, self.trainLabel)
+        grid_search_rf.fit(self.train_feature, self.train_label)
         rf_tree = grid_search_rf.best_estimator_
-        RandomForest_pred = rf_tree.predict(self.testFeature)
-        random_forest_score = perfomance(RandomForest_pred)
+        random_forest_pred = rf_tree.predict(self.test_feature)
+        random_forest_score = perfomance(random_forest_pred)
 
         # MLP
-        grid_search_mlp.fit(self.trainFeature, self.trainLabel)
+        grid_search_mlp.fit(self.train_feature, self.train_label)
         print(grid_search_mlp.best_params_)
-        mlpModel = grid_search_mlp.best_estimator_
-        mlp_pred = mlpModel.predict(self.testFeature)
+        mlp_model = grid_search_mlp.best_estimator_
+        mlp_pred = mlp_model.predict(self.test_feature)
         mlp_score = perfomance(mlp_pred)
 
         if mlp_score > random_forest_score:
-            self.confusionMatrix = self.CastomConfusion_matrix(mlp_pred)
+            self.confusion_matrix = self.castom_confusion_matrix(mlp_pred)
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
-            return mlpModel
+            return mlp_model
 
-        self.confusionMatrix = self.CastomConfusion_matrix(RandomForest_pred)
+        self.confusion_matrix = self.castom_confusion_matrix(random_forest_pred)
         self.score = random_forest_score
         self.accuracy['accuracy'] = f'{self.score}'
         return rf_tree
@@ -171,45 +165,43 @@ class MlModeling():
     Following function does classification
     """
 
-    def ClassificationML(self):
+    def classification_ml(self):
         # check if it is binary labels (2 classes)
-        if len(self.testLabel.unique()) == 2:
-            perfomance = self.calPerfomanceGM
+        if len(self.test_label.unique()) == 2:
+            perfomance = self.cal_perfomance_gm
 
         # check it is not Balanced
-        elif not self.calculateBalance():
-            perfomance = self.calPerfomanceF1_Sample
+        elif not self.calculate_balance():
+            perfomance = self.cal_perfomance_f1_macro
 
         # if Balanced
         else:
-            perfomance = self.calPerfomanceAccuracy
+            perfomance = self.cal_perfomance_accuracy
 
         # Call Random Forest
         forest_clas = RandomForestClassifier(random_state=42)
-        forest_clas.fit(self.trainFeature, self.trainLabel)
-        RandomForest_pred = forest_clas.predict(self.testFeature)
-        random_forest_score = perfomance(RandomForest_pred)
+        forest_clas.fit(self.train_feature, self.train_label)
+        random_forest_pred = forest_clas.predict(self.test_feature)
+        random_forest_score = perfomance(random_forest_pred)
 
         # Call MLP
         mlp_cla = MLPClassifier(random_state=42)
-        mlp_cla.fit(self.trainFeature, self.trainLabel)
-        mlp_pred = mlp_cla.predict(self.testFeature)
+        mlp_cla.fit(self.train_feature, self.train_label)
+        mlp_pred = mlp_cla.predict(self.test_feature)
         mlp_score = perfomance(mlp_pred)
 
         if mlp_score > random_forest_score:
-            self.confusionMatrix = self.CastomConfusion_matrix(mlp_pred)
+            self.confusion_matrix = self.castom_confusion_matrix(mlp_pred)
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_cla
 
-        self.confusionMatrix = self.CastomConfusion_matrix(RandomForest_pred)
+        self.confusion_matrix = self.castom_confusion_matrix(random_forest_pred)
         self.score = random_forest_score
         self.accuracy['accuracy'] = f'{self.score}'
         return forest_clas
 
-    def RegressionMLTunned(self):
-        print('Selected Mode Tunning Model')
-        print('Please be aware that it takes time Appx 20-30 min')
+    def regression_ml_tunned(self):
         # Tunning Random Forest
         param_grid_RF = [
             {'n_estimators': [400, 500, 600], 'max_depth': [5, None], 'criterion': ['gini', 'entropy', 'log_loss']},
@@ -238,20 +230,20 @@ class MlModeling():
                                        return_train_score=True)
 
         # RANDOM FOREST
-        grid_search_rf.fit(self.trainFeature, self.trainLabel)
+        grid_search_rf.fit(self.train_feature, self.train_label)
         rf_tree = grid_search_rf.best_estimator_
-        random_forest_pred = rf_tree.predict(self.testFeature)
+        random_forest_pred = rf_tree.predict(self.test_feature)
 
-        rmse_rf = np.sqrt(np.mean((self.testLabel - random_forest_pred) ** 2))
-        score_rf = rf_tree.score(self.testFeature, self.testLabel)
+        rmse_rf = np.sqrt(np.mean((self.test_label - random_forest_pred) ** 2))
+        score_rf = rf_tree.score(self.test_feature, self.test_label)
 
         # MLP
-        grid_search_mlp.fit(self.trainFeature, self.trainLabel)
+        grid_search_mlp.fit(self.train_feature, self.train_label)
         mlp_model = grid_search_mlp.best_estimator_
-        mlp_pred = mlp_model.predict(self.testFeature)
+        mlp_pred = mlp_model.predict(self.test_feature)
 
-        rmse_mlp = np.sqrt(np.mean((self.testLabel - mlp_pred) ** 2))
-        mlp_score = mlp_cla.score(self.testFeature, self.testLabel)
+        rmse_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
+        mlp_score = mlp_cla.score(self.test_feature, self.test_label)
 
         if rmse_mlp < rmse_rf:
             self.score = mlp_score
@@ -262,22 +254,22 @@ class MlModeling():
         self.accuracy['accuracy'] = f'{self.score}'
         return rf_tree
 
-    def RegressionML(self):
+    def regression_ml(self):
         # RANDOM FOREST
         forest_clas_reg = RandomForestRegressor(random_state=42)
-        forest_clas_reg.fit(self.trainFeature, self.trainLabel)
-        random_forest_pred = forest_clas_reg.predict(self.testFeature)
+        forest_clas_reg.fit(self.train_feature, self.train_label)
+        random_forest_pred = forest_clas_reg.predict(self.test_feature)
 
-        rmse_rf = np.sqrt(np.mean((self.testLabel - random_forest_pred) ** 2))
-        score_rf = forest_clas_reg.score(self.testFeature, self.testLabel)
+        rmse_rf = np.sqrt(np.mean((self.test_label - random_forest_pred) ** 2))
+        score_rf = forest_clas_reg.score(self.test_feature, self.test_label)
 
         # MLP
         mlp_reg = MLPRegressor(random_state=42, max_iter=5000)
-        mlp_reg.fit(self.trainFeature, self.trainLabel)
-        mlp_pred = mlp_reg.predict(self.testFeature)
+        mlp_reg.fit(self.train_feature, self.train_label)
+        mlp_pred = mlp_reg.predict(self.test_feature)
 
-        rmse_mlp = np.sqrt(np.mean((self.testLabel - mlp_pred) ** 2))
-        mlp_score = mlp_reg.score(self.testFeature, self.testLabel)
+        rmse_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
+        mlp_score = mlp_reg.score(self.test_feature, self.test_label)
 
         if rmse_mlp < rmse_rf:
             self.score = mlp_score
@@ -288,33 +280,33 @@ class MlModeling():
         self.accuracy['accuracy'] = f'{self.score}'
         return forest_clas_reg
 
-    def saveMLModel(self, paramsAndModelName, path, scaling):
+    def save_ml_model(self, params_model_name, path, scaling):
         # Create directory
-        list_ToSave = paramsAndModelName["columns"]
-        list_ToSave.append(paramsAndModelName["saveModel"])
-        dirName = f'{path}{paramsAndModelName["saveModel"]}'
+        list_ToSave = params_model_name["columns"]
+        list_ToSave.append(params_model_name["saveModel"])
+        dir_name = f'{path}{params_model_name["saveModel"]}'
         try:
             # Create target Directory
-            os.mkdir(dirName)
-            print("Directory ", dirName, " Created ")
+            os.mkdir(dir_name)
+            print("Directory ", dir_name, " Created ")
         except FileExistsError:
-            print("Directory ", dirName, " already exists")
+            print("Directory ", dir_name, " already exists")
 
             # Save Params for Clinical Data
-        with open(f'{dirName}/{paramsAndModelName["saveModel"]}_PARAMS.txt', 'w') as f:
+        with open(f'{dir_name}/{params_model_name["saveModel"]}_params.txt', 'w') as f:
             print(list_ToSave, file=f)
 
         try:
-            jobMLfileML = f'{dirName}/{paramsAndModelName["saveModel"]}_ML.pkl'  # the location, If you want to save in local directory then just add filename
-            jobfileScale = f'{dirName}/{paramsAndModelName["saveModel"]}_Scale.pkl'
-            joblib.dump(scaling, jobfileScale)
+            job_ml_file_ml = f'{dir_name}/{params_model_name["saveModel"]}_ml.pkl'  # the location, If you want to save in local directory then just add filename
+            jobfile_scale = f'{dir_name}/{params_model_name["saveModel"]}_scaler.pkl'
+            joblib.dump(scaling, jobfile_scale)
             ##  Save the model as a pickle in a file
-            joblib.dump(self.model, jobMLfileML)  # model is the trained ML model , model = randomforestclassifier()
+            joblib.dump(self.model, job_ml_file_ml)  # model is the trained ML model , model = randomforestclassifier()
             # call this function after model is fit --- model.fit(X_train, y_train)
         except:
             logging.warning('error in Saving ML model')
 
-    def saveModelParameters(self, path):
+    def save_model_parameters(self, path):
         path += f'{self.target}_ML_params.txt'
         count = 0
         with open(path, 'w') as f:
@@ -322,27 +314,27 @@ class MlModeling():
                 count += 1
                 print(f'{count}. {key} = {value}', file=f)
 
-    def saveConfusionMatrix(self, path):
+    def save_confusion_matrix(self, path):
         path += f'{self.target}_ML_RiskTable.txt'
         headers = ['RISK TABLE', 'ML PERFOMANCE']
         with open(path, 'w') as f:
             print(f'{headers[0]}\n', file=f)
-            dfAsString = self.confusionMatrix.to_string(header=True, index=True)
+            dfAsString = self.confusion_matrix.to_string(header=True, index=True)
             f.write(dfAsString)
             print(f'\n\n{headers[1]}\n', file=f)
             print(f'{self.score[0]}: {self.score[1]}', file=f)
 
-    def runModel(self):
-        if self.typeofModel == 'category':
+    def run_model(self):
+        if self.type_model == 'category':
             if self.tunning:
-                self.model = self.ClassificationMLTunned()
+                self.model = self.classification_ml_tunned()
             else:
-                self.model = self.ClassificationML()
+                self.model = self.classification_ml()
         else:
             if self.tunning:
-                self.model = self.RegressionMLTunned()
+                self.model = self.regression_ml_tunned()
             else:
-                self.model = self.RegressionML()
+                self.model = self.regression_ml()
 
         self.accuracy['model'] = type(self.model).__name__
         return self.model

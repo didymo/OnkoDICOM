@@ -83,7 +83,7 @@ class CheckableCombox(QtWidgets.QComboBox):
             self.lineEdit().setText("Not Selected")
 
 
-class MachineLearning(QtWidgets.QWidget):
+class MachineLearningOptions(QtWidgets.QWidget):
     """
     DVH2CSV options for batch processing.
     """

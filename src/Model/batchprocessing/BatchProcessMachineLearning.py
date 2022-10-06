@@ -2,8 +2,8 @@ from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import logging
-from src.Model.batchprocessing.batchprocessingMachineLearning.PreprocessingClass import Preprocessing
-from src.Model.batchprocessing.batchprocessingMachineLearning.MlCLass import MlModeling
+from src.Model.batchprocessing.batchprocessingMachineLearning.Preprocessing import Preprocessing
+from src.Model.batchprocessing.batchprocessingMachineLearning.MachineLearningTrainingStage import MlModeling
 
 
 class BatchProcessMachineLearning(BatchProcess):
@@ -189,32 +189,29 @@ class BatchProcessMachineLearning(BatchProcess):
 
     def preprocessing_for_ml(self):
         self.preprocessing = Preprocessing(
-            pathClinicalData=self.clinical_data_path  # Path to Clinical Data
-            , pathPyrData=self.pyrad_data_path  # Path to Pyrad Data
-            , pathDVHData=self.dvh_data_path  # Path to DVH Data
-            , columnNames=self.machine_learning_options['features']  # DR. Selects Columns
-            , typeOfColumn=self.machine_learning_options['type']  # Type of Column (Category/Numerical)
+            path_clinical_data=self.clinical_data_path  # Path to Clinical Data
+            , path_pyr_data=self.pyrad_data_path  # Path to Pyrad Data
+            , path_dvh_data=self.dvh_data_path  # Path to DVH Data
+            , column_names=self.machine_learning_options['features']  # DR. Selects Columns
+            , type_column=self.machine_learning_options['type']  # Type of Column (Category/Numerical)
             , target=self.machine_learning_options['target']  # Target Column to be predicted for training
-            , renameValues=self.machine_learning_options['renameValues']  # Dr. rename values in Target Column
+            , rename_values=self.machine_learning_options['renameValues']  # Dr. rename values in Target Column
         )
-        self.X_train, self.X_test, self.y_train, self.y_test = self.preprocessing.prepareforML()
-        self.params = self.preprocessing.saveParam()
+        self.X_train, self.X_test, self.y_train, self.y_test = self.preprocessing.prepare_for_ml()
+        self.params = self.preprocessing.get_params_clinical_data()
         self.scaling = self.preprocessing.scaling
 
     def run_model(self):
         self.run_ml = MlModeling(self.X_train  # Dataset X_train that we got from preprocessing class
-                                   , self.X_test  # Dataset X_test that we got from preprocessing class
-                                   , self.y_train  # Dataset Y_train that we got from preprocessing class
-                                   , self.y_test  # Dataset Y_train that we got from preprocessing class
-                                   , self.preprocessing.target  # Label Column (can be exported from Preprocessing )
-                                   , self.preprocessing.typeOfColumn #type of the ML
-                                   , tunning=self.machine_learning_options['tune']  # Tunning
-                                   )
-        result = self.run_ml.runModel()
+                                 , self.X_test  # Dataset X_test that we got from preprocessing class
+                                 , self.y_train  # Dataset Y_train that we got from preprocessing class
+                                 , self.y_test  # Dataset Y_train that we got from preprocessing class
+                                 , self.preprocessing.target  # Label Column (can be exported from Preprocessing )
+                                 , self.preprocessing.type_column  #type of the ML
+                                 , tunning=self.machine_learning_options['tune']  # Tunning
+                                 )
+        result = self.run_ml.run_model()
         self.ml_model = self.run_ml
-        print('PRINTING ML MODEL NAME',self.ml_model)
-        print('PRINTING ML ACCURACY', self.run_ml.accuracy)
-
 
 
 

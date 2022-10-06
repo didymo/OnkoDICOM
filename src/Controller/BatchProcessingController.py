@@ -301,14 +301,14 @@ class BatchProcessingController:
 
         # TODO: replace this with a set_method which will be called from
         # BatchProcessingWindow.confirm_button_clicked()
-        dummy_data = {
+        ml_data = {
             "features": self.machine_learning_features,
             "target": self.machine_learning_target,
             "type": self.machine_learning_type,
             "tune": self.machine_learning_tune,
             "renameValues": self.machine_learning_rename
         }
-        self.machine_learning_options = dummy_data
+        self.machine_learning_options = ml_data
 
         if "machine_learning" in self.processes:
             self.machine_learning_process = BatchProcessMachineLearning(progress_callback,
