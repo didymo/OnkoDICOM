@@ -29,9 +29,9 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         self.summary_label.setWordWrap(True)
         self.scroll_area = QtWidgets.QScrollArea()
         self.export_risk_table_button = QtWidgets.QPushButton("Export 'Risk table' to Text File")
+
         self.save_ml_model_button = QtWidgets.QPushButton("Save model")
         self.save_ml_parameters_button = QtWidgets.QPushButton("Save model parameters")
-        self.results_table = QtWidgets.QTableWidget(0, 0)
 
         # # Get stylesheet
         if platform.system() == 'Darwin':
@@ -62,7 +62,6 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.scroll_area)
         self.layout.addStretch(1)
-        self.layout.addWidget(self.results_table)
         self.layout.addWidget(self.export_risk_table_button)
         self.layout.addWidget(self.save_ml_model_button)
         self.layout.addWidget(self.save_ml_parameters_button)

@@ -30,8 +30,6 @@ class BatchProcessMachineLearning(BatchProcess):
         :param interrupt_flag: A threading.Event() object that tells the
                                function to stop loading.
         :param patient_files: List of patient files.
-        :param selected_filters: dictionary of keys and lists of valid values
-        to filter by in the patients clinical-data-sr file (if one exists)
         """
         # Call the parent class
         super(BatchProcessMachineLearning, self).__init__(progress_callback,
@@ -63,58 +61,17 @@ class BatchProcessMachineLearning(BatchProcess):
         Goes through the steps of the ClinicalData filtering.
         :return: True if successful, False if not.
         """
-        # TODO: add all the necessary steps here to do machine learning
-        # all options are in the self.machine_learning_options
-        # Expected to set a variable:
-        # 1) self.ml_model which is the ML model?
-        # AND
-        # 2) The variables needed in the results, eg. self.accuracy
-        # Also needs a functions 'def get_results_values()'
-
         # Preprocessing
+        self.progress_callback.emit(("Preprocessing Data..", 20))
         self.preprocessing_for_ml()
-        print("Run Start")
-        self.run_model()
-        self.machine_learning_options.update(self.run_ml.accuracy)
         # Machine learning
+        self.progress_callback.emit(("Running Model..", 50))
+        self.run_model()
+        self.progress_callback.emit(("Writing results...", 80))
 
-        # Stop loading
-        # if self.interrupt_flag.is_set():
-        #     self.patient_dict_container.clear()
-        #     self.summary = "INTERRUPT"
-        #     return False
-
-        # if not self.ready:
-        #     self.summary = "SKIP"
-        #     return False
-
-        # # See if SR contains clinical data
-        # self.progress_callback.emit(("Checking SR file...", 20))
-        # cd_sr = self.find_clinical_data_sr()
-
-        # if cd_sr is None:
-        #     self.summary = "CD_NO_SR"
-        #     return False
-
-        # # Stop loading
-        # if self.interrupt_flag.is_set():
-        #     self.patient_dict_container.clear()
-        #     self.summary = "INTERRUPT"
-        #     return False
-
-        # # Read in clinical data from SR
-        # self.progress_callback.emit(("Reading clinical data...", 50))
-        # data_dict = self.read_clinical_data_from_sr(cd_sr)
-
-        # # Stop loading
-        # if self.interrupt_flag.is_set():
-        #     self.patient_dict_container.clear()
-        #     self.summary = "INTERRUPT"
-        #     return False
-
-        # Write clinical data to CSV
-        # self.progress_callback.emit(("Writing clinical data to CSV...", 80))
-        # self.check_if_patient_meets_filter_criteria(data_dict)
+        # Set outputs
+        self.machine_learning_options.update(self.run_ml.accuracy)
+        self.summary = "Complete Machine learning Process"
 
         return True
 

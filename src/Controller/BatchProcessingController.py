@@ -56,12 +56,9 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
-
-        #Path
         self.clinical_data_path = ""
         self.dvh_data_path = ""
         self.pyrad_data_path = ""
-        #Parameters
         self.machine_learning_features = []
         self.machine_learning_target = []
         self.machine_learning_type = ""

@@ -14,7 +14,6 @@ class CheckableCombox(QtWidgets.QComboBox):
         self.closeOnLineEditClick = False
 
         self.view().viewport().installEventFilter(self)
-        #self.model().dataChanged.connect(self.updateLineEditFiled())
 
     def eventFilter(self, widget, event):
         if widget == self.lineEdit():
@@ -304,6 +303,9 @@ class MachineLearningOptions(QtWidgets.QWidget):
                     rename = self.rename_values(self.combox_target.currentText())
                     comment = QtWidgets.QTableWidgetItem(rename)
                     self.filter_table.setItem(3, 1, comment)
+        if header == "Function Name":
+                if (row == 3):
+                    self.get_rename()
 
     # Function for Clinical Data
     def set_csv_output_location_clinicalData(self, path, enable=True,
@@ -471,7 +473,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
         """
         if self.binaryData:
             rename = self.filter_table.item(3, 1).text()
-            rename = rename.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
+            rename = rename.replace('[', '').replace(']', '').replace("'", "")
             rename = rename.split(',')
             return rename
         return None
