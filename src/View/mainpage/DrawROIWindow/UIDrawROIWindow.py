@@ -923,9 +923,6 @@ class UIDrawROIWindow:
         self.dicom_view.view.setScene(self.drawingROI)
         self.enable_cursor_diameter_change_box()
 
-
-
-
     def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id):
         """
         Creates drawing across multiple slides allowing for the user to start drawing on dicom view.

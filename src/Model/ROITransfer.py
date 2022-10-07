@@ -5,7 +5,7 @@ import pydicom
 import numpy as np
 import SimpleITK as sitk
 
-from loguru import logger
+import logging
 from platipy.dicom.io.rtstruct_to_nifti import fix_missing_data
 from skimage.draw import polygon
 
@@ -63,22 +63,22 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
 
         struct_index = roi_indexes[struct_name]
         image_blank = np.zeros(dicom_image.GetSize()[::-1], dtype=np.uint8)
-        logger.debug(
+        logging.debug(
             "Converting structure {0} with name: {1}".format(struct_index,
                                                              struct_name))
 
         if not hasattr(struct_point_sequence[struct_index], "ContourSequence"):
-            logger.debug(
+            logging.debug(
                 "No contour sequence found for this structure, skipping.")
             continue
 
         if len(struct_point_sequence[struct_index].ContourSequence) == 0:
-            logger.debug(
+            logging.debug(
                 "Contour sequence empty for this structure, skipping.")
             continue
 
         if len(struct_point_sequence[struct_index].ContourSequence) == 0:
-            logger.debug(
+            logging.debug(
                 "Contour sequence empty for this structure, skipping.")
             continue
 
@@ -107,18 +107,18 @@ def transform_point_set_from_dicom_struct(dicom_image, dicom_struct,
             [x_vertex_arr_image, y_vertex_arr_image] = point_arr[[0, 1]]
             z_index = point_arr[2][0]
             if np.any(point_arr[2] != z_index):
-                logger.debug(
+                logging.debug(
                     "Error: axial slice index varies in contour. Quitting now.")
-                logger.debug("Structure:   {0}".format(struct_name))
-                logger.debug("Slice index: {0}".format(z_index))
+                logging.debug("Structure:   {0}".format(struct_name))
+                logging.debug("Slice index: {0}".format(z_index))
                 quit()
 
             if z_index >= dicom_image.GetSize()[2]:
-                logger.debug(
+                logging.debug(
                     "Warning: Slice index greater than image size. Skipping "
                     "slice.")
-                logger.debug("Structure:   {0}".format(struct_name))
-                logger.debug("Slice index: {0}".format(z_index))
+                logging.debug("Structure:   {0}".format(struct_name))
+                logging.debug("Slice index: {0}".format(z_index))
                 continue
 
             slice_arr = np.zeros(image_blank.shape[-2:], dtype=np.uint8)
