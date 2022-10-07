@@ -44,13 +44,13 @@ class SelectROIPopUp(QDialog):
         self.button_area = QWidget()
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.on_cancel_clicked)
-        self.begin_draw_button = QPushButton("Begin Draw Process")
+        self.select_roi_button = QPushButton("Select ROI")
 
-        self.begin_draw_button.clicked.connect(self.on_begin_clicked)
+        self.select_roi_button.clicked.connect(self.on_select_roi_clicked)
 
         self.button_layout = QHBoxLayout()
         self.button_layout.addWidget(self.cancel_button)
-        self.button_layout.addWidget(self.begin_draw_button)
+        self.button_layout.addWidget(self.select_roi_button)
         self.button_area.setLayout(self.button_layout)
 
         self.list_label = QLabel()
@@ -111,10 +111,10 @@ class SelectROIPopUp(QDialog):
         """
         function triggered when an ROI is clicked
         """
-        self.begin_draw_button.setEnabled(True)
-        self.begin_draw_button.setFocus()
+        self.select_roi_button.setEnabled(True)
+        self.select_roi_button.setFocus()
 
-    def on_begin_clicked(self):
+    def on_select_roi_clicked(self):
         """
         function to start the draw ROI function
         """

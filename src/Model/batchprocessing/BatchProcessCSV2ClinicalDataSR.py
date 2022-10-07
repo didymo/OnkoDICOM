@@ -1,7 +1,7 @@
 import csv
 import os
 from pathlib import Path
-from src.Model import DICOMStructuredReport
+from src.Model.DICOM import DICOMStructuredReport
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 

@@ -6,7 +6,7 @@ from PySide6 import QtCore, QtGui
 from PySide6.QtWidgets import QDialog, QLabel, QWidget, QPushButton, \
     QHBoxLayout, QVBoxLayout, QCheckBox, QScrollArea, QButtonGroup
 
-from src.Model.DICOMStructure import Series
+from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Controller.PathHandler import resource_path
 
 """

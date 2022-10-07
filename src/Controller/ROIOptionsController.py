@@ -1,6 +1,7 @@
+import logging
+
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
 from src.View.mainpage.DrawROIWindow.UIDrawROIWindow import UIDrawROIWindow
 from src.View.mainpage.ManipulateROIWindow import *
 
@@ -52,13 +53,14 @@ class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
     View/ROI Draw Option
     """
     signal_roi_drawn = QtCore.Signal(tuple)
+    signal_draw_roi_closed = QtCore.Signal()
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn)
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
 
     def update_ui(self, rois, dataset_rtss):
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn)
+        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
 
 
 class ROIDrawOption:
@@ -67,17 +69,16 @@ class ROIDrawOption:
     Options controller
     """
 
-    def __init__(self, structure_modified_function):
+    def __init__(self, structure_modified_function, remove_draw_roi_instance):
         super(ROIDrawOption, self).__init__()
         self.structure_modified_function = structure_modified_function
+        self.remove_roi_draw_instance = remove_draw_roi_instance
 
-    def show_roi_draw_options(self):
-        self.choose_roi_name_window = SelectROIPopUp()
-        self.choose_roi_name_window.signal_roi_name.connect(
-            self.roi_name_selected)
-        self.choose_roi_name_window.show()
-
-    def roi_name_selected(self, roi_name):
+    def show_roi_draw_window(self):
+        """
+        Gets data needed for the draw ROI window, creates it and displays the popup window
+        """
+        logging.debug("show_roi_draw_window started")
         patient_dict_container = PatientDictContainer()
         rois = patient_dict_container.get("rois")
         dataset_rtss = patient_dict_container.get("dataset_rtss")
@@ -86,11 +87,17 @@ class ROIDrawOption:
             self.draw_window = RoiDrawOptions(rois, dataset_rtss)
             self.draw_window.signal_roi_drawn.connect(
                 self.structure_modified_function)
+            self.draw_window.signal_draw_roi_closed.connect(
+                self.remove_roi_draw_instance
+            )
         else:
             self.draw_window.update_ui(rois, dataset_rtss)
 
-        self.draw_window.set_selected_roi_name(roi_name)
-        self.draw_window.show()
+        return self.draw_window
+
+    def remove_roi_draw_window(self):
+        if hasattr(self, "draw_window"):
+            delattr(self, 'draw_window')
 
 
 class RoiManipulateOptions(QtWidgets.QMainWindow, UIManipulateROIWindow):
@@ -172,6 +179,7 @@ class ROITransferOption:
         The class that will be called by ImageFusion to access the ROI
         Transfer controller
         """
+
     def __init__(self, fixed_dict_structure_modified_function,
                  moving_dict_structure_modified_function):
         """
@@ -197,9 +205,9 @@ class ROITransferOption:
         """
         self.roi_transfer_option_pop_up_window = ROITransferOptionUI()
         self.roi_transfer_option_pop_up_window. \
-            signal_roi_transferred_to_moving_container\
+            signal_roi_transferred_to_moving_container \
             .connect(self.moving_dict_structure_modified_function)
         self.roi_transfer_option_pop_up_window. \
-            signal_roi_transferred_to_fixed_container\
+            signal_roi_transferred_to_fixed_container \
             .connect(self.fixed_dict_structure_modified_function)
         self.roi_transfer_option_pop_up_window.show()
