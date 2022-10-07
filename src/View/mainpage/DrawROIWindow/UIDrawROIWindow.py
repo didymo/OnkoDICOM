@@ -923,6 +923,9 @@ class UIDrawROIWindow:
         self.dicom_view.view.setScene(self.drawingROI)
         self.enable_cursor_diameter_change_box()
 
+
+
+
     def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id):
         """
         Creates drawing across multiple slides allowing for the user to start drawing on dicom view.
@@ -934,17 +937,17 @@ class UIDrawROIWindow:
 
                 if x == 0:
                     # search down slice
-                    range_start = id - 1
-                    range_end = 1
+                    slice_start = id - 1
+                    slice_end = 1
                     step = -1
                 else:
                     # search up slices
-                    range_start = id
-                    range_end = len(self.patient_dict_container.dataset) - 1
+                    slice_start = id
+                    slice_end = len(self.patient_dict_container.dataset) - 1
                     step = 1
 
                 # Search the slides in the above ranges (down and up)
-                for y_search in range(range_start, range_end, step):
+                for y_search in range(slice_start, slice_end, step):
                     temp_id = y_search
 
                     self.dicom_view.slider.setValue(temp_id)
