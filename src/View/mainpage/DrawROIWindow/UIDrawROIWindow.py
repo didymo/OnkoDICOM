@@ -116,7 +116,7 @@ class UIDrawROIWindow:
             _translate("InternalHoleLabel",
                        "Maximum internal hole size (pixels): "))
         self.internal_hole_max_line_edit.setText(
-            _translate("InternalHoleInput", "9"))
+            _translate("InternalHoleInput", "5"))
         self.isthmus_width_max_label.setText(
             _translate("IsthmusWidthLabel",
                        "Maximum isthmus width size (pixels): "))
@@ -550,7 +550,7 @@ class UIDrawROIWindow:
             self.internal_hole_max_line_edit.sizeHint().height())
         self.internal_hole_max_line_edit.setValidator(
             QRegularExpressionValidator(
-                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
+                QRegularExpression("^[0-9]*$")))
         self.draw_roi_window_input_container_box.addRow(
             self.internal_hole_max_label, self.internal_hole_max_line_edit)
 
@@ -852,6 +852,26 @@ class UIDrawROIWindow:
                 # position
                 self.dicom_view.slider.setValue(image_slice_number + 1)
 
+    def onResetClicked(self):
+        """
+        This function is used when reset button is clicked
+        """
+        self.dicom_view.image_display()
+        self.dicom_view.update_view()
+        self.isthmus_width_max_line_edit.setText("5")
+        self.internal_hole_max_line_edit.setText("5")
+        self.min_pixel_density_line_edit.setText("")
+        self.max_pixel_density_line_edit.setText("")
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+            self.has_drawing = False
+        if hasattr(self, 'seed'):
+            delattr(self, 'seed')
+
+        self.ds = None
+
     def transect_handler(self):
         """
         Function triggered when the Transect button is pressed from the menu.
@@ -931,7 +951,7 @@ class UIDrawROIWindow:
             self.is_drawing.connect(self.drawingROI.set_is_drawing)
             self.is_drawing.emit(False)
             self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
-        pixmaps = self.patient_dict_container.get("pixmaps_axial")
+            return None
 
         if self.min_pixel_density_line_edit.text() == "" \
                 or self.max_pixel_density_line_edit.text() == "":
@@ -972,22 +992,28 @@ class UIDrawROIWindow:
                                       "Please ensure maximum density is "
                                       "atleast higher than minimum density.")
 
+                internal_hole_max = self.internal_hole_max_line_edit.text()
+                max_internal_hole_size = 0
+                if internal_hole_max != "":
+                    if int(internal_hole_max) > 0:
+                        max_internal_hole_size = int(internal_hole_max)
+
                 pixmaps = self.patient_dict_container.get("pixmaps_axial")
                 id = self.current_slice
 
                 if is_3d:
                     if hasattr(self, 'seed'):
                         delattr(self, 'seed')
-                    self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id)
+                    self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size)
                 else:
-                    self.create_drawing(min_pixel, max_pixel, pixmaps, id)
+                    self.create_drawing(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size)
 
             else:
                 QMessageBox.about(self.draw_roi_window_instance,
                                   "Not Enough Data",
                                   "Not all values are specified or correct.")
 
-    def create_drawing(self, min_pixel, max_pixel, pixmaps, id):
+    def create_drawing(self, min_pixel, max_pixel, pixmaps, id, max_internal_hole_size):
         """Creates drawing using BFS on a single slice"""
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
@@ -1007,6 +1033,7 @@ class UIDrawROIWindow:
             self.drawing_tool_radius,
             self.keep_empty_pixel,
             self.pixel_transparency,
+            max_internal_hole_size,
             set()
         )
 
@@ -1015,7 +1042,7 @@ class UIDrawROIWindow:
         self.dicom_view.view.setScene(self.drawingROI)
         self.enable_cursor_diameter_transparency()
 
-    def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id):
+    def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id, max_internal_hole_size):
         """
         Creates drawing across multiple slides allowing for the user to start drawing on dicom view.
         """
@@ -1060,6 +1087,7 @@ class UIDrawROIWindow:
                         self.drawing_tool_radius,
                         self.keep_empty_pixel,
                         self.pixel_transparency,
+                        max_internal_hole_size,
                         set(),
                         xy=self.seed
                     )
@@ -1090,6 +1118,7 @@ class UIDrawROIWindow:
                 self.drawing_tool_radius,
                 self.keep_empty_pixel,
                 self.pixel_transparency,
+                max_internal_hole_size,
                 set(),
                 UI=self
             )
@@ -1111,7 +1140,8 @@ class UIDrawROIWindow:
         self.create_drawing_3D(float(self.min_pixel_density_line_edit.text()),
                                float(self.max_pixel_density_line_edit.text()),
                                self.patient_dict_container.get("pixmaps_axial"),
-                               self.current_slice)
+                               self.current_slice,
+                               int(self.internal_hole_max_line_edit.text()))
 
     def onBoxDrawClicked(self):
         """
