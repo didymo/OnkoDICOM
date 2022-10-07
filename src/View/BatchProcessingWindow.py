@@ -19,12 +19,9 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
-<<<<<<< HEAD
 from src.View.batchprocessing.KaplanMeierOptions import KaplanMeierOptions
-=======
 from src.View.batchprocessing.FMAID2ROINameOptions import \
     FMAID2ROINameOptions
->>>>>>> b0a2283ddc3d33c649327724cf19c94328601cfb
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -142,11 +139,8 @@ class UIBatchProcessingWindow(object):
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
-<<<<<<< HEAD
         self.kaplanmeier_tab = KaplanMeierOptions()
-=======
         self.batchfma2name_tab = FMAID2ROINameOptions()
->>>>>>> b0a2283ddc3d33c649327724cf19c94328601cfb
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -161,11 +155,8 @@ class UIBatchProcessingWindow(object):
                                "ClinicalData-SR2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
-<<<<<<< HEAD
         self.tab_widget.addTab(self.kaplanmeier_tab,"Kaplan Meier Plot")
-=======
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
->>>>>>> b0a2283ddc3d33c649327724cf19c94328601cfb
 
         # == Bottom widgets
         # Info text
@@ -318,7 +309,6 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-<<<<<<< HEAD
         processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
                      'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid', 'kaplanmeier']
@@ -327,7 +317,6 @@ class UIBatchProcessingWindow(object):
         kaplanmeier_targetCol = self.kaplanmeier_tab.getTargetCol()
         kaplanmeier_DurationOfLifeCol = self.kaplanmeier_tab.getDurationOfLifeCol()
         kaplanmeier_AliveOrDeadCol = self.kaplanmeier_tab.getAliveOrDeadCol()
-=======
         # WARNING: the order of this list is important.
         # TODO: this should be replaced with something more global
         # as currently this is very flaky. ie. changing the order of
@@ -343,7 +332,6 @@ class UIBatchProcessingWindow(object):
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
->>>>>>> b0a2283ddc3d33c649327724cf19c94328601cfb
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
@@ -373,14 +361,11 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
-<<<<<<< HEAD
         self.batch_processing_controller.set_kaplanmeier_targetCol(kaplanmeier_targetCol)
         self.batch_processing_controller.set_kaplanmeier_DurationOfLifeCol(kaplanmeier_DurationOfLifeCol)
         self.batch_processing_controller.set_kaplanmeier_AliveOrDeadCol(kaplanmeier_AliveOrDeadCol)
-=======
         self.batch_processing_controller.set_subgroup_filter_options(
                 subgroup_filter_options)
->>>>>>> b0a2283ddc3d33c649327724cf19c94328601cfb
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:

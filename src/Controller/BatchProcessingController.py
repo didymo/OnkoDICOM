@@ -20,7 +20,6 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
     BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessKaplanMeier import BatchProcessKaplanMeier
-from src.Model.DICOMStructure import Image, Series
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
 from src.Model.DICOM.Structure.DICOMSeries import Series
@@ -752,46 +751,3 @@ class BatchProcessingController:
             self.batch_summary[0][patient] = {}
         self.batch_summary[0][patient]['pyrad2pyradSR'] = reason
         progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
-
-    def get_all_clinical_data(self):
-        """
-        Reads in all clinical data from a directory which may
-        contain multiple patients.
-        :return: only unique values in a dictionary with keys as the
-        column name and a list of values found
-        """
-
-        clinical_data_dict = {}
-
-        for patient in self.dicom_structure.patients.values():
-            cur_patient_files = \
-                BatchProcessingController.get_patient_files(patient)
-            process = \
-                BatchProcessClinicalDataSR2CSV(None, None, cur_patient_files, None)
-
-            cd_sr = process.find_clinical_data_sr()
-
-            # if they do then get the data
-            if cd_sr:
-                single_patient_data = process.read_clinical_data_from_sr(cd_sr)
-                # adds all the current titles
-                titles = list(single_patient_data)
-
-                for title in titles:
-                    data = single_patient_data[title]
-
-                    if title not in clinical_data_dict.keys():
-                        clinical_data_dict[title] = [data]
-                    else:
-                        combined_data = clinical_data_dict[title]
-                        combined_data.append(data)
-
-                        # removes duplicates
-                        combined_data = list(dict.fromkeys(combined_data))
-
-                        clinical_data_dict[title] = combined_data
-
-        return clinical_data_dict
-
-
-
