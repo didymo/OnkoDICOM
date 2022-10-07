@@ -1,6 +1,3 @@
-import csv
-import os
-
 import kaplanmeier as km
 import matplotlib as mp1
 mp1.use("TkAgg")
@@ -8,7 +5,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
-
+import logging
 
 
 class BatchProcessKaplanMeier(BatchProcess):
@@ -139,22 +136,28 @@ class BatchProcessKaplanMeier(BatchProcess):
         """
             Creates plot based off input columns
         """
-
-        #df = pd.read_csv('C:/Users/Santino/Desktop/CSCI 316 Data Mining/OnkoDICOM.ClinicalData.csv')
-        df = pd.DataFrame.from_dict(self.dataDict)
-        time_event = df[DurationOfLife]
-        censoring = df[AliveOfDead]
-        y = df[target]
-        # create kaplanmeier plot
-        results = km.fit(time_event, censoring, y)
-        km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
-        # change layout
-        plt.tight_layout()
-        plt.subplots_adjust(top=0.903,
-                            bottom=0.423,
-                            left=0.085,
-                            right=0.965,
-                            hspace=0.2,
-                            wspace=0.2)
-        plt.show()
-
+        logging.debug("Plot function called")
+        try:
+            logging.debug("Creating/Displaying plot")
+            # creates dataframe based on patient records
+            df = pd.DataFrame.from_dict(self.dataDict)
+            # creates input parameters for the km.fit() function
+            time_event = df[DurationOfLife]
+            censoring = df[AliveOfDead]
+            y = df[target]
+            # create kaplanmeier plot
+            results = km.fit(time_event, censoring, y)
+            km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
+            # specifies plot layout
+            plt.tight_layout()
+            plt.subplots_adjust(top=0.903,
+                                bottom=0.423,
+                                left=0.085,
+                                right=0.965,
+                                hspace=0.2,
+                                wspace=0.2)
+            #displays plot
+            plt.show()
+        except:
+            logging.debug("failed to create plot")
+            self.summary = "INTERRUPT"

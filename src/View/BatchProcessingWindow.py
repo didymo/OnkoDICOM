@@ -17,7 +17,7 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
-from src.View.batchprocessing.KaplanMeier import KaplanMeierOptions
+from src.View.batchprocessing.KaplanMeierOptions import KaplanMeierOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
