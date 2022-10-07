@@ -424,6 +424,7 @@ class UIDrawROIWindow:
         icon_draw3d.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/3d_icon.png')))
         self.image_slice_number_draw_button3D.setIcon(icon_draw3d)
+        self.image_slice_number_draw_button3D.setText("3D Fill")
         self.draw_roi_window_transect_draw_box. \
             addWidget(self.image_slice_number_draw_button3D)
         self.draw_roi_window_input_container_box. \
