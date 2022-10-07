@@ -1,13 +1,13 @@
 import logging
 import platform
-import logging
+
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QSize, QRegularExpression, Signal
+from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot, Signal
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
-    QMessageBox, QComboBox, QSlider
+    QMessageBox, QComboBox, QGraphicsPixmapItem, QSlider
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
@@ -15,6 +15,7 @@ from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.mainpage.DicomAxialView import DicomAxialView
+from src.View.mainpage.DicomGraphicsScene import GraphicsScene
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
@@ -402,10 +403,30 @@ class UIDrawROIWindow:
         self.image_slice_number_fill_button.resize(
             self.image_slice_number_fill_button.sizeHint().width(),
             self.image_slice_number_fill_button.sizeHint().height())
-        self.image_slice_number_fill_button.clicked.connect(self.onFillClicked)
+        self.image_slice_number_fill_button.clicked.connect(lambda: self.onFillClicked(False))
         # TODO: Add fill icon
         self.draw_roi_window_transect_draw_box. \
             addWidget(self.image_slice_number_fill_button)
+        self.draw_roi_window_input_container_box. \
+            addRow(self.draw_roi_window_transect_draw_box)
+
+        # Create the 3d draw button
+        self.image_slice_number_draw_button3D = QPushButton()
+        self.image_slice_number_draw_button3D. \
+            setObjectName("ImageSliceNumber3dDrawButton")
+        self.image_slice_number_draw_button3D.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_draw_button3D.resize(
+            self.image_slice_number_draw_button3D.sizeHint().width(),
+            self.image_slice_number_draw_button3D.sizeHint().height())
+        self.image_slice_number_draw_button3D.clicked.connect(lambda: self.onFillClicked(True))
+        icon_draw3d = QtGui.QIcon()
+        icon_draw3d.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/3d_icon.png')))
+        self.image_slice_number_draw_button3D.setIcon(icon_draw3d)
+        self.image_slice_number_draw_button3D.setText("3D Fill")
+        self.draw_roi_window_transect_draw_box. \
+            addWidget(self.image_slice_number_draw_button3D)
         self.draw_roi_window_input_container_box. \
             addRow(self.draw_roi_window_transect_draw_box)
 
@@ -416,10 +437,13 @@ class UIDrawROIWindow:
         self.row_layout.addWidget(self.button_contour_preview)
         self.draw_roi_window_input_container_box. \
             addRow(self.row_layout)
+        self.row_layout.addWidget(self.button_contour_preview)
         icon_preview = QtGui.QIcon()
         icon_preview.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/preview_icon.png')))
         self.button_contour_preview.setIcon(icon_preview)
+        self.draw_roi_window_input_container_box. \
+            addRow(self.row_layout)
 
         # Create input line edit for alpha value
         self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
@@ -749,6 +773,9 @@ class UIDrawROIWindow:
         if hasattr(self, 'drawingROI'):
             delattr(self, 'drawingROI')
             self.has_drawing = False
+        if hasattr(self, 'seed'):
+            delattr(self, 'seed')
+
         self.ds = None
 
     def transect_handler(self):
@@ -822,16 +849,16 @@ class UIDrawROIWindow:
                 self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
         logging.debug("onDrawClicked finished")
 
-    def onFillClicked(self):
+    def onFillClicked(self, is_3d):
         """
-        Function triggered when the Fill button is pressed from the menu.
+        Function triggered when the Fill or 3d Fill button is pressed from the menu.
         """
         logging.debug("onFillClicked started")
         if self.has_drawing:
             self.is_drawing.connect(self.drawingROI.set_is_drawing)
             self.is_drawing.emit(False)
             self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
-            return None
+
 
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
@@ -841,14 +868,6 @@ class UIDrawROIWindow:
                               "Not all values are specified or correct.")
         else:
             # Getting most updated selected slice
-            id = self.current_slice
-
-            dt = self.patient_dict_container.dataset[id]
-            dt.convert_pixel_data()
-
-            # Path to the selected .dcm file
-            location = self.patient_dict_container.filepaths[id]
-            self.ds = pydicom.dcmread(location)
 
             min_pixel = self.min_pixel_density_line_edit.text()
             max_pixel = self.max_pixel_density_line_edit.text()
@@ -882,29 +901,146 @@ class UIDrawROIWindow:
                                       "Please ensure maximum density is "
                                       "atleast higher than minimum density.")
 
-                self.drawingROI = Drawing(
-                    pixmaps[id],
-                    dt._pixel_array.transpose(),
-                    min_pixel,
-                    max_pixel,
-                    self.patient_dict_container.dataset[id],
-                    self.draw_roi_window_instance,
-                    self.slice_changed,
-                    self.current_slice,
-                    self.drawing_tool_radius,
-                    self.keep_empty_pixel,
-                    self.pixel_transparency,
-                    set()
-                )
-                self.slice_changed = True
-                self.has_drawing = True
-                self.dicom_view.view.setScene(self.drawingROI)
-                self.enable_cursor_diameter_change_box()
+                pixmaps = self.patient_dict_container.get("pixmaps_axial")
+                id = self.current_slice
+
+                if is_3d:
+                    if hasattr(self, 'seed'):
+                        delattr(self, 'seed')
+                    self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id)
+                else:
+                    self.create_drawing(min_pixel, max_pixel, pixmaps, id)
+
             else:
                 QMessageBox.about(self.draw_roi_window_instance,
                                   "Not Enough Data",
                                   "Not all values are specified or correct.")
-        logging.debug("onFillClicked finished")
+
+    def create_drawing(self, min_pixel, max_pixel, pixmaps, id):
+        """Creates drawing using BFS on a single slice"""
+        dt = self.patient_dict_container.dataset[id]
+        dt.convert_pixel_data()
+        # Path to the selected .dcm file
+        location = self.patient_dict_container.filepaths[id]
+        self.ds = pydicom.dcmread(location)
+
+        self.drawingROI = Drawing(
+            pixmaps[id],
+            dt._pixel_array.transpose(),
+            min_pixel,
+            max_pixel,
+            self.patient_dict_container.dataset[id],
+            self.draw_roi_window_instance,
+            self.slice_changed,
+            self.current_slice,
+            self.drawing_tool_radius,
+            self.keep_empty_pixel,
+            self.pixel_transparency,
+            set()
+        )
+
+        self.slice_changed = True
+        self.has_drawing = True
+        self.dicom_view.view.setScene(self.drawingROI)
+        self.enable_cursor_diameter_change_box()
+
+    def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id):
+        """
+        Creates drawing across multiple slides allowing for the user to start drawing on dicom view.
+        """
+        # If the seed is set then start searching, else assign the drawing function to the left click
+        if hasattr(self, 'seed'):
+            # Search down from the start position then up from the start position
+            for x in range(0, 2):
+
+                if x == 0:
+                    # search down slice
+                    slice_start = id - 1
+                    slice_end = 1
+                    step = -1
+                else:
+                    # search up slices
+                    slice_start = id
+                    slice_end = len(self.patient_dict_container.dataset) - 1
+                    step = 1
+
+                # Search the slides in the above ranges (down and up)
+                for y_search in range(slice_start, slice_end, step):
+                    temp_id = y_search
+
+                    self.dicom_view.slider.setValue(temp_id)
+
+                    dt = self.patient_dict_container.dataset[temp_id]
+                    dt.convert_pixel_data()
+
+                    # Path to the selected .dcm file
+                    location = self.patient_dict_container.filepaths[temp_id]
+                    self.ds = pydicom.dcmread(location)
+
+                    self.drawingROI = Drawing(
+                        pixmaps[temp_id],
+                        dt._pixel_array.transpose(),
+                        min_pixel,
+                        max_pixel,
+                        self.patient_dict_container.dataset[temp_id],
+                        self.draw_roi_window_instance,
+                        self.slice_changed,
+                        self.current_slice,
+                        self.drawing_tool_radius,
+                        self.keep_empty_pixel,
+                        self.pixel_transparency,
+                        set(),
+                        xy=self.seed
+                    )
+                    self.slice_changed = True
+                    self.has_drawing = True
+                    self.dicom_view.view.setScene(self.drawingROI)
+                    self.enable_cursor_diameter_change_box()
+
+                    if self.drawingROI._display_pixel_color() != True:
+                        break
+        else:
+            dt = self.patient_dict_container.dataset[id]
+            dt.convert_pixel_data()
+            # Path to the selected .dcm file
+            location = self.patient_dict_container.filepaths[id]
+            self.ds = pydicom.dcmread(location)
+
+            # Creating the drawing function that binds to the mousePressedEvent
+            self.drawingROI = Drawing(
+                pixmaps[id],
+                dt._pixel_array.transpose(),
+                min_pixel,
+                max_pixel,
+                self.patient_dict_container.dataset[id],
+                self.draw_roi_window_instance,
+                self.slice_changed,
+                self.current_slice,
+                self.drawing_tool_radius,
+                self.keep_empty_pixel,
+                self.pixel_transparency,
+                set(),
+                UI=self
+            )
+
+            self.slice_changed = True
+            self.has_drawing = True
+            # Assigns the above drawing function to the left click
+            self.dicom_view.view.setScene(self.drawingROI)
+            self.enable_cursor_diameter_change_box()
+        logging.debug("create_drawing_3D finished")
+
+    @Slot(list)
+    def set_seed(self, s):
+        """
+        Sets the seed in this class, seed retrieved from Drawing.py when user clicks on the view
+        Is only used for the 3D drawing
+        """
+        self.seed = s
+        self.create_drawing_3D(float(self.min_pixel_density_line_edit.text()),
+                            float(self.max_pixel_density_line_edit.text()),
+                            self.patient_dict_container.get("pixmaps_axial"),
+                            self.current_slice)
 
     def onBoxDrawClicked(self):
         """
@@ -1155,5 +1291,7 @@ class UIDrawROIWindow:
         if hasattr(self, 'drawingROI'):
             delattr(self, 'drawingROI')
         self.ds = None
+        if hasattr(self, 'seed'):
+            delattr(self, 'seed')
         self.close()
         self.signal_draw_roi_closed.emit()
