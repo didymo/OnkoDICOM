@@ -141,10 +141,7 @@ class Drawing(QtWidgets.QGraphicsScene):
 
         self._set_color_of_pixels(points)
         self.refresh_image()
-        if len(points) < 1:
-            return False
-        else:
-            return True
+        return False if len(points) < 1 else True
 
 
     def _set_color_of_pixels(self, points):
@@ -446,7 +443,7 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def mousePressEvent(self, event):
         """
-            This method is called to handle a mouse press event
+            This method is called to handle the drawing mouse press event
             :param event: the mouse event
         """
         if self.cursor:
@@ -477,11 +474,9 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def mousePressEvent(self, event):
         """
-            This method is called to handle a mouse press event
+            This method is called to handle the BFS mousePressEvent
             :param event: the mouse event
         """
-        # if self.fill_source is None:
-        #     self.set_source(event)
         if not self.is_drawing:
             self.set_source(event)
         else:

@@ -112,7 +112,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     # Assert initial drawing has been created
     draw_roi_window.min_pixel_density_line_edit.setText("900")
     draw_roi_window.max_pixel_density_line_edit.setText("1000")
-    draw_roi_window.onFillClicked()
+    draw_roi_window.onFillClicked(False)
     draw_roi_window.drawingROI.fill_source = [250, 250]
     draw_roi_window.drawingROI._display_pixel_color()
     post_draw_clicked_drawing = draw_roi_window.drawingROI.q_pixmaps

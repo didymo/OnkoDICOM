@@ -883,10 +883,7 @@ class UIDrawROIWindow:
                 pixmaps = self.patient_dict_container.get("pixmaps_axial")
                 id = self.current_slice
 
-                # This needs to be updated when merged with 2d
-                print("is_3d: " + str(is_3d))
                 if is_3d:
-                    print(str(is_3d) + ": is_3d")
                     if hasattr(self, 'seed'):
                         delattr(self, 'seed')
                     self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id)
@@ -899,7 +896,7 @@ class UIDrawROIWindow:
                                   "Not all values are specified or correct.")
 
     def create_drawing(self, min_pixel, max_pixel, pixmaps, id):
-        """Creates 3d drawing using BFS"""
+        """Creates drawing using BFS on a single slice"""
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         # Path to the selected .dcm file
@@ -934,18 +931,20 @@ class UIDrawROIWindow:
         if hasattr(self, 'seed'):
             # Search down from the start position then up from the start position
             for x in range(0, 2):
-                print("x == " + str(x))
+
                 if x == 0:
+                    # search down slice
                     range_start = id - 1
                     range_end = 1
                     step = -1
                 else:
+                    # search up slices
                     range_start = id
                     range_end = len(self.patient_dict_container.dataset) - 1
                     step = 1
+
                 # Search the slides in the above ranges (down and up)
                 for y_search in range(range_start, range_end, step):
-                    print(str(range_start) + " range end: " + str(range_end) + " range: " + str(step))
                     temp_id = y_search
 
                     self.dicom_view.slider.setValue(temp_id)
@@ -972,7 +971,6 @@ class UIDrawROIWindow:
                         set(),
                         xy=self.seed
                     )
-                    print("xy = " + str(self.seed))
                     self.slice_changed = True
                     self.has_drawing = True
                     self.dicom_view.view.setScene(self.drawingROI)
@@ -987,6 +985,7 @@ class UIDrawROIWindow:
             location = self.patient_dict_container.filepaths[id]
             self.ds = pydicom.dcmread(location)
 
+            # Creating the drawing function that binds to the mousePressedEvent
             self.drawingROI = Drawing(
                 pixmaps[id],
                 dt._pixel_array.transpose(),
@@ -1014,6 +1013,7 @@ class UIDrawROIWindow:
     def set_seed(self, s):
         """
         Sets the seed in this class, seed retrieved from Drawing.py when user clicks on the view
+        Is only used for the 3D drawing
         """
         self.seed = s
         self.create_drawing_3D(float(self.min_pixel_density_line_edit.text()),
