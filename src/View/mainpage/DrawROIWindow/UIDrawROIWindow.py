@@ -203,7 +203,6 @@ class UIDrawROIWindow:
         self.image_slice_number_line_edit.resize(
             self.image_slice_number_line_edit.sizeHint().width(),
             self.image_slice_number_line_edit.sizeHint().height())
-
         self.image_slice_number_line_edit.setCursorPosition(0)
         self.image_slice_number_line_edit.setEnabled(False)
         self.image_slice_number_box. \
@@ -264,52 +263,79 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_input.resize(
             self.draw_roi_window_viewport_zoom_input.sizeHint().width(),
             self.draw_roi_window_viewport_zoom_input.sizeHint().height())
-        # Create 2 buttons for zooming in and out
-        # Zoom In Button
-        self.draw_roi_window_viewport_zoom_in_button = QPushButton()
-        self.draw_roi_window_viewport_zoom_in_button. \
-            setObjectName("DrawRoiWindowViewportZoomInButton")
-        self.draw_roi_window_viewport_zoom_in_button.setSizePolicy(
+        # Create a slider for zooming in and out
+        self.draw_roi_zoom_slider = QSlider(Qt.Horizontal)
+        self.draw_roi_zoom_slider.setMinimum(50)
+        self.draw_roi_zoom_slider.setMaximum(1050)
+        self.draw_roi_zoom_slider.setSingleStep(10)
+        self.draw_roi_zoom_slider.setTickPosition(QSlider.TicksBothSides)
+        self.draw_roi_zoom_slider.setTickInterval(100)
+        self.draw_roi_zoom_slider.setValue(100)
+        self.draw_roi_zoom_slider.setObjectName("ZoomSlider")
+        self.draw_roi_zoom_slider.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_viewport_zoom_in_button.resize(QSize(24, 24))
-        self.draw_roi_window_viewport_zoom_in_button. \
-            setProperty("QPushButtonClass", "zoom-button")
-        icon_zoom_in = QtGui.QIcon()
-        icon_zoom_in.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/zoom_in_icon.png')))
-        self.draw_roi_window_viewport_zoom_in_button.setIcon(icon_zoom_in)
-        self.draw_roi_window_viewport_zoom_in_button.clicked. \
-            connect(self.onZoomInClicked)
-        # Zoom Out Button
-        self.draw_roi_window_viewport_zoom_out_button = QPushButton()
-        self.draw_roi_window_viewport_zoom_out_button. \
-            setObjectName("DrawRoiWindowViewportZoomOutButton")
-        self.draw_roi_window_viewport_zoom_out_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_viewport_zoom_out_button.resize(QSize(24, 24))
-        self.draw_roi_window_viewport_zoom_out_button. \
-            setProperty("QPushButtonClass", "zoom-button")
-        icon_zoom_out = QtGui.QIcon()
-        icon_zoom_out.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/zoom_out_icon.png')))
-        self.draw_roi_window_viewport_zoom_out_button.setIcon(icon_zoom_out)
-        self.draw_roi_window_viewport_zoom_out_button.clicked. \
-            connect(self.onZoomOutClicked)
+        self.draw_roi_zoom_slider.setFixedSize(QSize(130, 24))
+        self.draw_roi_zoom_slider.valueChanged.connect(self.zoom_slider_value_changed)
         self.draw_roi_window_viewport_zoom_box. \
             addWidget(self.draw_roi_window_viewport_zoom_label)
         self.draw_roi_window_viewport_zoom_box. \
             addWidget(self.draw_roi_window_viewport_zoom_input)
         self.draw_roi_window_viewport_zoom_box. \
-            addWidget(self.draw_roi_window_viewport_zoom_out_button)
-        self.draw_roi_window_viewport_zoom_box. \
-            addWidget(self.draw_roi_window_viewport_zoom_in_button)
+            addWidget(self.draw_roi_zoom_slider)
         self.draw_roi_window_input_container_box. \
             addRow(self.draw_roi_window_viewport_zoom_box)
 
-        self.init_cursor_diameter_change_box()
+        # Create a horizontal box for containing the cursor diameter changing function
+        self.draw_roi_window_cursor_diameter_change_box = QHBoxLayout()
+        self.draw_roi_window_cursor_diameter_change_box.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeBox")
+        # Create a label for cursor diameter change
+        self.draw_roi_window_cursor_diameter_change_label = QLabel()
+        self.draw_roi_window_cursor_diameter_change_label.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeLabel")
+        # Create an input box for cursor diameter
+        self.draw_roi_window_cursor_diameter_change_input = QLineEdit()
+        self.draw_roi_window_cursor_diameter_change_input.setObjectName(
+            "DrawRoiWindowCursorDiameterChangeInput")
+        self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
+        self.draw_roi_window_cursor_diameter_change_input.setEnabled(False)
+        self.draw_roi_window_cursor_diameter_change_input.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.draw_roi_window_cursor_diameter_change_input.resize(
+            self.draw_roi_window_cursor_diameter_change_input.sizeHint().width(),
+            self.draw_roi_window_cursor_diameter_change_input.sizeHint().height()
+        )
 
-        # Create slider to adjust the transparency of drawn pixels
+        # Create a slider for increasing and reducing cursor diameter
+        self.draw_roi_window_cursor_diameter_slider = QSlider(Qt.Horizontal)
+        self.draw_roi_window_cursor_diameter_slider.setMinimum(1)
+        self.draw_roi_window_cursor_diameter_slider.setMaximum(50)
+        self.draw_roi_window_cursor_diameter_slider.setSingleStep(0.25)
+        self.draw_roi_window_cursor_diameter_slider.setTickPosition(QSlider.TicksBothSides)
+        self.draw_roi_window_cursor_diameter_slider.setTickInterval(5)
+        self.draw_roi_window_cursor_diameter_slider.setValue(38)
+        self.draw_roi_window_cursor_diameter_slider.setObjectName("CursorDiameterSlider")
+        self.draw_roi_window_cursor_diameter_slider.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.draw_roi_window_cursor_diameter_slider.setFixedSize(QSize(130, 24))
+        self.draw_roi_window_cursor_diameter_slider.valueChanged.connect(self.cursor_diameter_slider_value_changed)
+        self.draw_roi_window_cursor_diameter_change_input.setText(
+            "{:.0f}".format(self.draw_roi_window_cursor_diameter_slider.value()))
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_label)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_change_input)
+        self.draw_roi_window_cursor_diameter_change_box.addWidget(
+            self.draw_roi_window_cursor_diameter_slider)
+        self.draw_roi_window_input_container_box.addRow(
+            self.draw_roi_window_cursor_diameter_change_box)
+        self.draw_roi_window_cursor_diameter_slider.setEnabled(
+            False)
+
+        # Create a horizontal box for containing the transparency changing function
         self.transparency_slider_box = QHBoxLayout()
+        self.transparency_slider_box.setObjectName(
+            "TransparencySliderBox")
+        # Create slider to adjust the transparency of drawn pixels
         self.transparency_slider_label = QLabel()
         self.transparency_slider_label.setObjectName("TransparencySliderLabel")
 
@@ -330,8 +356,8 @@ class UIDrawROIWindow:
         self.transparency_slider.setTickInterval(10)
         self.transparency_slider.setValue(50)
         self.transparency_slider.setObjectName("TransparencySlider")
-        self.transparency_slider.resize(self.transparency_slider.sizeHint().width(),
-                                        self.transparency_slider.sizeHint().height())
+        self.transparency_slider.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.transparency_slider.setFixedSize(QSize(130, 24))
         self.transparency_slider.valueChanged.connect(self.transparency_slider_value_changed)
 
         self.transparency_slider_box.addWidget(self.transparency_slider_label)
@@ -339,41 +365,9 @@ class UIDrawROIWindow:
         self.transparency_slider_box.addWidget(self.transparency_slider)
         self.draw_roi_window_input_container_box.addRow(self.transparency_slider_box)
 
-        # Create a draw button
-        self.draw_button_row_layout = QHBoxLayout()
-        self.image_slice_number_draw_button = QPushButton()
-        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
-        self.image_slice_number_draw_button.clicked.connect(self.onDrawClicked)
-        self.image_slice_number_draw_button.setEnabled(False)
-        self.draw_button_row_layout.addWidget(self.image_slice_number_draw_button)
-        self.draw_roi_window_input_container_box. \
-            addRow(self.draw_button_row_layout)
-        icon_draw = QtGui.QIcon()
-        icon_draw.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/draw_icon.png')))
-        self.image_slice_number_draw_button.setIcon(icon_draw)
-
-        # Create a horizontal box for transect and draw button
-        self.draw_roi_window_transect_draw_box = QHBoxLayout()
-        self.draw_roi_window_transect_draw_box. \
-            setObjectName("DrawRoiWindowTransectDrawBox")
-        # Create a transect button
-        self.image_slice_number_transect_button = QPushButton()
-        self.image_slice_number_transect_button. \
-            setObjectName("ImageSliceNumberTransectButton")
-        self.image_slice_number_transect_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.image_slice_number_transect_button.resize(
-            self.image_slice_number_transect_button.sizeHint().width(),
-            self.image_slice_number_transect_button.sizeHint().height())
-        self.image_slice_number_transect_button.clicked. \
-            connect(self.transect_handler)
-        icon_transect = QtGui.QIcon()
-        icon_transect.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/transect_icon.png')))
-        self.image_slice_number_transect_button.setIcon(icon_transect)
-        self.draw_roi_window_transect_draw_box. \
-            addWidget(self.image_slice_number_transect_button)
+        # Create a horizontal box for containing the Set Bounds function
+        self.set_bounds_box = QHBoxLayout()
+        self.set_bounds_box.setObjectName("SetBounds")
         # Create a bounding box button
         self.image_slice_number_box_draw_button = QPushButton()
         self.image_slice_number_box_draw_button. \
@@ -391,8 +385,30 @@ class UIDrawROIWindow:
         icon_box_draw.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/draw_bound_icon.png')))
         self.image_slice_number_box_draw_button.setIcon(icon_box_draw)
-        self.draw_roi_window_transect_draw_box. \
-            addWidget(self.image_slice_number_box_draw_button)
+        self.set_bounds_box.addWidget(self.image_slice_number_box_draw_button)
+        self.draw_roi_window_input_container_box. \
+            addRow(self.set_bounds_box)
+
+        # Create a horizontal box for containing the draw, clear, fill, 3D fill function
+        self.draw_button_row_layout = QHBoxLayout()
+        self.draw_button_row_layout.setObjectName("DrawButtonRowLayout")
+        # Create a draw button
+        self.image_slice_number_draw_button = QPushButton()
+        self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_draw_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_draw_button.resize(
+            self.image_slice_number_draw_button.sizeHint().width(),
+            self.image_slice_number_draw_button.sizeHint().height())
+        self.image_slice_number_draw_button.clicked.connect(self.onDrawClicked)
+        self.image_slice_number_draw_button.setEnabled(False)
+        icon_draw = QtGui.QIcon()
+        icon_draw.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/draw_icon.png')))
+        self.image_slice_number_draw_button.setIcon(icon_draw)
+        self.draw_button_row_layout.addWidget(self.image_slice_number_draw_button)
+
+        # TODO: Create Clear button
 
         # Create a fill button
         self.image_slice_number_fill_button = QPushButton()
@@ -404,11 +420,13 @@ class UIDrawROIWindow:
             self.image_slice_number_fill_button.sizeHint().width(),
             self.image_slice_number_fill_button.sizeHint().height())
         self.image_slice_number_fill_button.clicked.connect(lambda: self.onFillClicked(False))
-        # TODO: Add fill icon
-        self.draw_roi_window_transect_draw_box. \
+        icon_fill = QtGui.QIcon()
+        icon_fill.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/fill_icon.png')))
+        self.image_slice_number_fill_button.setIcon(icon_fill)
+        self.image_slice_number_fill_button.setText("Fill")
+        self.draw_button_row_layout. \
             addWidget(self.image_slice_number_fill_button)
-        self.draw_roi_window_input_container_box. \
-            addRow(self.draw_roi_window_transect_draw_box)
 
         # Create the 3d draw button
         self.image_slice_number_draw_button3D = QPushButton()
@@ -425,25 +443,48 @@ class UIDrawROIWindow:
             resource_path('res/images/btn-icons/3d_icon.png')))
         self.image_slice_number_draw_button3D.setIcon(icon_draw3d)
         self.image_slice_number_draw_button3D.setText("3D Fill")
-        self.draw_roi_window_transect_draw_box. \
+        self.draw_button_row_layout. \
             addWidget(self.image_slice_number_draw_button3D)
         self.draw_roi_window_input_container_box. \
-            addRow(self.draw_roi_window_transect_draw_box)
+            addRow(self.draw_button_row_layout)
+
+        # Create a horizontal box for containing the transect and preview contour function
+        self.transect_preview_contour_box = QHBoxLayout()
+        self.transect_preview_contour_box.setObjectName("TransectPreviewContourBox")
+        # Create a transect button
+        self.image_slice_number_transect_button = QPushButton()
+        self.image_slice_number_transect_button. \
+            setObjectName("ImageSliceNumberTransectButton")
+        self.image_slice_number_transect_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_transect_button.resize(
+            self.image_slice_number_transect_button.sizeHint().width(),
+            self.image_slice_number_transect_button.sizeHint().height())
+        self.image_slice_number_transect_button.clicked. \
+            connect(self.transect_handler)
+        icon_transect = QtGui.QIcon()
+        icon_transect.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/transect_icon.png')))
+        self.image_slice_number_transect_button.setIcon(icon_transect)
+        self.transect_preview_contour_box. \
+            addWidget(self.image_slice_number_transect_button)
 
         # Create a contour preview button
-        self.row_layout = QtWidgets.QHBoxLayout()
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
+        self.button_contour_preview.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.button_contour_preview.resize(
+            self.button_contour_preview.sizeHint().width(),
+            self.button_contour_preview.sizeHint().height())
         self.button_contour_preview.clicked.connect(self.onPreviewClicked)
-        self.row_layout.addWidget(self.button_contour_preview)
-        self.draw_roi_window_input_container_box. \
-            addRow(self.row_layout)
-        self.row_layout.addWidget(self.button_contour_preview)
         icon_preview = QtGui.QIcon()
         icon_preview.addPixmap(QtGui.QPixmap(
             resource_path('res/images/btn-icons/preview_icon.png')))
         self.button_contour_preview.setIcon(icon_preview)
+        self.transect_preview_contour_box. \
+            addWidget(self.button_contour_preview)
         self.draw_roi_window_input_container_box. \
-            addRow(self.row_layout)
+            addRow(self.transect_preview_contour_box)
 
         # Create input line edit for alpha value
         self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
@@ -528,29 +569,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_input_container_box.addRow(
             self.max_pixel_density_label, self.max_pixel_density_line_edit)
 
-        # Create a button to clear the draw
-        self.draw_roi_window_instance_action_reset_button = QPushButton()
-        self.draw_roi_window_instance_action_reset_button. \
-            setObjectName("DrawRoiWindowInstanceActionClearButton")
-        self.draw_roi_window_instance_action_reset_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-
-        reset_button = self.draw_roi_window_instance_action_reset_button
-        self.draw_roi_window_instance_action_reset_button.resize(
-            reset_button.sizeHint().width(), reset_button.sizeHint().height())
-        self.draw_roi_window_instance_action_reset_button.clicked. \
-            connect(self.onResetClicked)
-        self.draw_roi_window_instance_action_reset_button. \
-            setProperty("QPushButtonClass", "fail-button")
-        icon_clear_roi_draw = QtGui.QIcon()
-        icon_clear_roi_draw.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/reset_roi_draw_icon.png')))
-        self.draw_roi_window_instance_action_reset_button. \
-            setIcon(icon_clear_roi_draw)
-        self.draw_roi_window_input_container_box. \
-            addRow(self.draw_roi_window_instance_action_reset_button)
-
-        # Create a horizontal box for saving and cancel the drawing
+        # Create a horizontal box for saving, reset and cancel the drawing
         self.draw_roi_window_cancel_save_box = QHBoxLayout()
         self.draw_roi_window_cancel_save_box. \
             setObjectName("DrawRoiWindowCancelSaveBox")
@@ -576,6 +595,27 @@ class UIDrawROIWindow:
         self.draw_roi_window_instance_cancel_button.setIcon(icon_cancel)
         self.draw_roi_window_cancel_save_box. \
             addWidget(self.draw_roi_window_instance_cancel_button)
+
+        # Create a button to reset the draw
+        self.draw_roi_window_instance_action_reset_button = QPushButton()
+        self.draw_roi_window_instance_action_reset_button. \
+            setObjectName("DrawRoiWindowInstanceActionClearButton")
+        self.draw_roi_window_instance_action_reset_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.draw_roi_window_instance_action_reset_button.setStyleSheet("background-color: orange");
+        reset_button = self.draw_roi_window_instance_action_reset_button
+        self.draw_roi_window_instance_action_reset_button.resize(
+            reset_button.sizeHint().width(), reset_button.sizeHint().height())
+        self.draw_roi_window_instance_action_reset_button.clicked. \
+            connect(self.onResetClicked)
+        icon_clear_roi_draw = QtGui.QIcon()
+        icon_clear_roi_draw.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/reset_roi_draw_icon.png')))
+        self.draw_roi_window_instance_action_reset_button. \
+            setIcon(icon_clear_roi_draw)
+        self.draw_roi_window_cancel_save_box. \
+            addWidget(self.draw_roi_window_instance_action_reset_button)
+
         # Create a save button to save all the changes
         self.draw_roi_window_instance_save_button = QPushButton()
         self.draw_roi_window_instance_save_button. \
@@ -714,6 +754,19 @@ class UIDrawROIWindow:
             setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
 
+    def zoom_slider_value_changed(self):
+        """
+        This function is used for zoom slider value change
+        """
+        self.dicom_view.zoom = round(self.draw_roi_zoom_slider.value() / 100.0, 2)
+        self.dicom_view.update_view(zoom_change=True)
+        if hasattr(self, 'drawingROI') and self.drawingROI \
+                and self.drawingROI.current_slice == self.current_slice:
+            self.dicom_view.view.setScene(self.drawingROI)
+        self.draw_roi_window_viewport_zoom_input. \
+            setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
+        self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+
     def transparency_slider_value_changed(self):
         self.pixel_transparency = round(self.transparency_slider.value() / 100.0, 2)
         self.transparency_slider_input_box.setText("{:.0f}".format(self.pixel_transparency * 100) + "%")
@@ -782,7 +835,6 @@ class UIDrawROIWindow:
         """
         Function triggered when the Transect button is pressed from the menu.
         """
-
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
         id = self.current_slice
         dt = self.patient_dict_container.dataset[id]
@@ -1135,28 +1187,15 @@ class UIDrawROIWindow:
         self.ROI_name = roi_name
         self.select_roi_type.setText(self.ROI_name)
 
-    def onDiameterReduceClicked(self):
+    def cursor_diameter_slider_value_changed(self):
         """
-        function triggered when user reduce cursor diameter
+            function to update slider value change
         """
-        logging.debug("onDiameterReduceClicked started")
-        self.drawing_tool_radius = max(self.drawing_tool_radius - 0.5, 0.5)
+        self.drawing_tool_radius = round(self.draw_roi_window_cursor_diameter_slider.value() / 2)
         self.draw_roi_window_cursor_diameter_change_input.setText(
-            "{:.0f}".format(self.drawing_tool_radius*2))
+            "{:.0f}".format(self.draw_roi_window_cursor_diameter_slider.value()))
         self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
         self.draw_cursor_when_diameter_changed()
-        logging.debug("onDiameterReduceClicked finished")
-
-    def onDiameterIncreaseClicked(self):
-        """
-        function triggered when user increase cursor diameter
-        """
-        logging.debug("onDiameterIncreaseClicked started")
-        self.drawing_tool_radius = min(self.drawing_tool_radius + 0.5, 25)
-        self.draw_roi_window_cursor_diameter_change_input.setText(
-            "{:.0f}".format(self.drawing_tool_radius*2))
-        self.draw_cursor_when_diameter_changed()
-        logging.debug("onDiameterIncreaseClicked finished")
 
     def draw_cursor_when_diameter_changed(self):
         """
@@ -1174,92 +1213,11 @@ class UIDrawROIWindow:
                 self.drawing_tool_radius,
                 True)
 
-    def init_cursor_diameter_change_box(self):
-        """
-        Function to init cursor diameter change box elements. Note, while the user
-        facing elements refer to diameter, the back end calculations are performed
-        using radius instead (with 0.5 radius increments).
-        """
-        # Create a horizontal box for containing the cursor diameter changing
-        # function
-        self.draw_roi_window_cursor_diameter_change_box = QHBoxLayout()
-        self.draw_roi_window_cursor_diameter_change_box.setObjectName(
-            "DrawRoiWindowCursorDiameterChangeBox")
-        # Create a label for cursor diameter change
-        self.draw_roi_window_cursor_diameter_change_label = QLabel()
-        self.draw_roi_window_cursor_diameter_change_label.setObjectName(
-            "DrawRoiWindowCursorDiameterChangeLabel")
-        # Create an input box for cursor diameter
-        self.draw_roi_window_cursor_diameter_change_input = QLineEdit()
-        self.draw_roi_window_cursor_diameter_change_input.setObjectName(
-            "DrawRoiWindowCursorDiameterChangeInput")
-        self.draw_roi_window_cursor_diameter_change_input.setText("{:.0f}".format(self.drawing_tool_radius*2))
-        self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
-        self.draw_roi_window_cursor_diameter_change_input.setEnabled(False)
-        self.draw_roi_window_cursor_diameter_change_input.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.draw_roi_window_cursor_diameter_change_input.resize(
-            self.draw_roi_window_cursor_diameter_change_input.sizeHint().width(),
-            self.draw_roi_window_cursor_diameter_change_input.sizeHint().height()
-        )
-        # Create 2 buttons for increasing and reducing cursor diameter
-        # Increase Button
-        self.draw_roi_window_cursor_diameter_change_increase_button = \
-            QPushButton()
-        self.draw_roi_window_cursor_diameter_change_increase_button. \
-            setObjectName("DrawRoiWindowCursorDiameterIncreaseButton")
-        self.draw_roi_window_cursor_diameter_change_increase_button. \
-            setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_cursor_diameter_change_increase_button.resize(
-            QSize(24, 24))
-        self.draw_roi_window_cursor_diameter_change_increase_button.setProperty(
-            "QPushButtonClass", "zoom-button")
-        icon_zoom_in = QtGui.QIcon()
-        icon_zoom_in.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/zoom_in_icon.png')))
-        self.draw_roi_window_cursor_diameter_change_increase_button.setIcon(
-            icon_zoom_in)
-        self.draw_roi_window_cursor_diameter_change_increase_button.clicked. \
-            connect(self.onDiameterIncreaseClicked)
-        # Reduce Button
-        self.draw_roi_window_cursor_diameter_change_reduce_button = QPushButton()
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setObjectName(
-            "DrawRoiWindowCursorDiameterReduceButton")
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setSizePolicy(
-            QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.draw_roi_window_cursor_diameter_change_reduce_button.resize(
-            QSize(24, 24))
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setProperty(
-            "QPushButtonClass", "zoom-button")
-        icon_zoom_out = QtGui.QIcon()
-        icon_zoom_out.addPixmap(QtGui.QPixmap(
-            resource_path('res/images/btn-icons/zoom_out_icon.png')))
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setIcon(
-            icon_zoom_out)
-        self.draw_roi_window_cursor_diameter_change_reduce_button.clicked. \
-            connect(self.onDiameterReduceClicked)
-        self.draw_roi_window_cursor_diameter_change_box.addWidget(
-            self.draw_roi_window_cursor_diameter_change_label)
-        self.draw_roi_window_cursor_diameter_change_box.addWidget(
-            self.draw_roi_window_cursor_diameter_change_input)
-        self.draw_roi_window_cursor_diameter_change_box.addWidget(
-            self.draw_roi_window_cursor_diameter_change_reduce_button)
-        self.draw_roi_window_cursor_diameter_change_box.addWidget(
-            self.draw_roi_window_cursor_diameter_change_increase_button)
-        self.draw_roi_window_input_container_box.addRow(
-            self.draw_roi_window_cursor_diameter_change_box)
-        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
-            False)
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
-            False)
-
     def disable_cursor_diameter_change_box(self):
         """
         function  to disable cursor diameter change box
         """
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
-            False)
-        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_slider.setEnabled(
             False)
         self.image_slice_number_draw_button.setEnabled(False)
 
@@ -1267,9 +1225,7 @@ class UIDrawROIWindow:
         """
         function  to enable cursor diameter change box
         """
-        self.draw_roi_window_cursor_diameter_change_reduce_button.setEnabled(
-            True)
-        self.draw_roi_window_cursor_diameter_change_increase_button.setEnabled(
+        self.draw_roi_window_cursor_diameter_slider.setEnabled(
             True)
         self.image_slice_number_draw_button.setEnabled(True)
 
