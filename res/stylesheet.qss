@@ -75,8 +75,14 @@ QPushButton#SUV2ROI_Button {
 }
 
 QPushButton:disabled, QPushButton[QPushButtonClass="success-button"]:disabled,
+QPushButton[QPushButtonClass="draw-roi-button"]:disabled,
+QPushButton[QPushButtonClass="reset-button"]:disabled,
 QPushButton[QPushButtonClass="fail-button"]:disabled {
     background-color: #b3b3b3;
+}
+
+QPushButton[QPushButtonClass="draw-roi-button"] {
+    min-height: 30px;
 }
 
 QPushButton[QPushButtonClass="success-button"] {
@@ -97,6 +103,21 @@ QPushButton[QPushButtonClass="fail-button"]:hover {
 }
 QPushButton[QPushButtonClass="fail-button"]:pressed {
     background-color: #c2160a;
+}
+
+QPushButton#DrawRoiWindowInstanceSaveButton,
+#DrawRoiWindowInstanceCancelButton{
+    min-height: 30px;
+}
+
+QPushButton[QPushButtonClass="reset-button"] {
+    background-color: darkorange;
+}
+QPushButton[QPushButtonClass="reset-button"]:hover {
+    background-color: #f8b393;
+}
+QPushButton[QPushButtonClass="reset-button"]:pressed {
+    background-color: #f84e04;
 }
 
 /* First Time Welcome Page */
@@ -155,6 +176,17 @@ QLineEdit#BatchROICleaning {
     margin: 2px;
     padding: 0 2px;
     border-bottom: none;
+}
+QLineEdit#ImageSliceNumberLineEdit,
+#DrawRoiWindowViewportZoomInput,
+#DrawRoiWindowCursorDiameterChangeInput,
+#TransparencySliderInputBox,
+#AlphaValueInput,
+#InternalHoleInput,
+#IsthmusWidthInput,
+#MinPixelDensityInput,
+#MaxPixelDensityInput{
+    min-height: 28px;
 }
 QLineEdit:disabled {
     background-color: #b9b9b9;

@@ -180,6 +180,8 @@ class UIDrawROIWindow:
         self.select_roi_type.resize(
             self.select_roi_type.sizeHint().width(),
             self.select_roi_type.sizeHint().height())
+        self.select_roi_type. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.select_roi_type.clicked.connect(self.show_roi_type_options)
 
         self.draw_roi_window_input_container_box. \
@@ -214,6 +216,8 @@ class UIDrawROIWindow:
         self.image_slice_number_move_backward_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.image_slice_number_move_backward_button.resize(QSize(24, 24))
+        self.image_slice_number_move_backward_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_move_backward_button.clicked. \
             connect(self.onBackwardClicked)
         icon_move_backward = QtGui.QIcon()
@@ -230,6 +234,8 @@ class UIDrawROIWindow:
         self.image_slice_number_move_forward_button.setSizePolicy(
             QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.image_slice_number_move_forward_button.resize(QSize(24, 24))
+        self.image_slice_number_move_forward_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_move_forward_button.clicked. \
             connect(self.onForwardClicked)
         icon_move_forward = QtGui.QIcon()
@@ -372,6 +378,8 @@ class UIDrawROIWindow:
         self.image_slice_number_box_draw_button = QPushButton()
         self.image_slice_number_box_draw_button. \
             setObjectName("ImageSliceNumberBoxDrawButton")
+        self.image_slice_number_box_draw_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_box_draw_button.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.Minimum
         )
@@ -395,6 +403,8 @@ class UIDrawROIWindow:
         # Create a draw button
         self.image_slice_number_draw_button = QPushButton()
         self.image_slice_number_draw_button.setObjectName("ImageSliceNumberDrawButton")
+        self.image_slice_number_draw_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_draw_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.image_slice_number_draw_button.resize(
@@ -414,6 +424,8 @@ class UIDrawROIWindow:
         self.image_slice_number_fill_button = QPushButton()
         self.image_slice_number_fill_button. \
             setObjectName("ImageSliceNumberFillButton")
+        self.image_slice_number_fill_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_fill_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.image_slice_number_fill_button.resize(
@@ -432,6 +444,8 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button3D = QPushButton()
         self.image_slice_number_draw_button3D. \
             setObjectName("ImageSliceNumber3dDrawButton")
+        self.image_slice_number_draw_button3D. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_draw_button3D.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.image_slice_number_draw_button3D.resize(
@@ -455,6 +469,8 @@ class UIDrawROIWindow:
         self.image_slice_number_transect_button = QPushButton()
         self.image_slice_number_transect_button. \
             setObjectName("ImageSliceNumberTransectButton")
+        self.image_slice_number_transect_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.image_slice_number_transect_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.image_slice_number_transect_button.resize(
@@ -471,6 +487,8 @@ class UIDrawROIWindow:
 
         # Create a contour preview button
         self.button_contour_preview = QtWidgets.QPushButton("Preview contour")
+        self.button_contour_preview. \
+            setProperty("QPushButtonClass", "draw-roi-button")
         self.button_contour_preview.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
         self.button_contour_preview.resize(
@@ -489,6 +507,7 @@ class UIDrawROIWindow:
         # Create input line edit for alpha value
         self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
         self.input_alpha_value = QtWidgets.QLineEdit("0.2")
+        self.input_alpha_value.setObjectName("AlphaValueInput")
         self.input_alpha_value. \
             setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.input_alpha_value.resize(
@@ -602,7 +621,8 @@ class UIDrawROIWindow:
             setObjectName("DrawRoiWindowInstanceActionClearButton")
         self.draw_roi_window_instance_action_reset_button.setSizePolicy(
             QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
-        self.draw_roi_window_instance_action_reset_button.setStyleSheet("background-color: orange");
+        self.draw_roi_window_instance_action_reset_button. \
+            setProperty("QPushButtonClass", "reset-button")
         reset_button = self.draw_roi_window_instance_action_reset_button
         self.draw_roi_window_instance_action_reset_button.resize(
             reset_button.sizeHint().width(), reset_button.sizeHint().height())
