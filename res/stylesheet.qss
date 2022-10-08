@@ -112,6 +112,7 @@ QPushButton#DrawRoiWindowInstanceSaveButton,
 
 QPushButton[QPushButtonClass="reset-button"] {
     background-color: darkorange;
+    min-height: 30px;
 }
 QPushButton[QPushButtonClass="reset-button"]:hover {
     background-color: #f8b393;
