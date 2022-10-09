@@ -4,7 +4,7 @@ import platform
 from pathlib import Path
 from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import resource_path
-from src.Model import DICOMStructuredReport
+from src.Model.DICOM import DICOMStructuredReport
 from src.Model.Configuration import Configuration, SqlError
 from src.Model.PatientDictContainer import PatientDictContainer
 

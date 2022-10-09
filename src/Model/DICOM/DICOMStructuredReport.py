@@ -1,11 +1,15 @@
+"""
+File to generate the DICOM structured report files for the given file path
+"""
+
 import datetime
-import pydicom
 from copy import deepcopy
+import pydicom
 from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
-from pydicom.uid import generate_uid, ImplicitVRLittleEndian
-
+from pydicom.uid import ImplicitVRLittleEndian
+from src import dicom_constants
 
 def generate_dicom_sr(file_path, img_ds, data, series_description):
     """
@@ -25,7 +29,7 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 238
     file_meta.FileMetaInformationVersion = b'\x00\x01'
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.88.33'
+    file_meta.MediaStorageSOPClassUID = dicom_constants.COMPREHENSIVE_SR
     file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
     file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     validate_file_meta(file_meta)
@@ -116,9 +120,7 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
     dicom_sr.ReferencedDateTime = ""
 
     dicom_sr.MeasuredValueSequence = Sequence()
-    og_frame_of_reference_UID = \
-        deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
-    dicom_sr.ReferencedFrameOfReferenceUID = og_frame_of_reference_UID
+    dicom_sr.ReferencedFrameOfReferenceUID = deepcopy(img_ds[Tag("FrameOfReferenceUID")].value)
 
     # == Content Sequence
     content_sequence = Sequence([Dataset()])
@@ -136,7 +138,7 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
     dicom_sr.ContentSequence = content_sequence
 
     # == SOP Common Module
-    dicom_sr.SOPClassUID = '1.2.840.10008.5.1.4.1.1.88.33'
+    dicom_sr.SOPClassUID = dicom_constants.COMPREHENSIVE_SR
     dicom_sr.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
 
     dicom_sr.is_little_endian = True

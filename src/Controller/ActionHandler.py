@@ -346,25 +346,28 @@ class ActionHandler:
         Function triggered when the Transect button is pressed from the
         menu.
         """
-        if self.is_four_view:
-            view = self.__main_page.dicom_axial_view.view
-            slider_id = self.__main_page.dicom_axial_view.slider.value()
+        if hasattr(self.__main_page, 'draw_roi') and self.__main_page.draw_roi:
+            self.__main_page.draw_roi.transect_handler()
         else:
-            view = self.__main_page.dicom_single_view.view
-            slider_id = self.__main_page.dicom_single_view.slider.value()
-        dt = self.patient_dict_container.dataset[slider_id]
-        row_s = dt.PixelSpacing[0]
-        col_s = dt.PixelSpacing[1]
-        dt.convert_pixel_data()
-        pixmap = self.patient_dict_container.get("pixmaps_axial")[slider_id]
-        self.__main_page.call_class.run_transect(
-            self.__main_page,
-            view,
-            pixmap,
-            dt._pixel_array.transpose(),
-            row_s,
-            col_s
-        )
+            if self.is_four_view:
+                view = self.__main_page.dicom_axial_view.view
+                slider_id = self.__main_page.dicom_axial_view.slider.value()
+            else:
+                view = self.__main_page.dicom_single_view.view
+                slider_id = self.__main_page.dicom_single_view.slider.value()
+            dt = self.patient_dict_container.dataset[slider_id]
+            row_s = dt.PixelSpacing[0]
+            col_s = dt.PixelSpacing[1]
+            dt.convert_pixel_data()
+            pixmap = self.patient_dict_container.get("pixmaps_axial")[slider_id]
+            self.__main_page.call_class.run_transect(
+                self.__main_page,
+                view,
+                pixmap,
+                dt._pixel_array.transpose(),
+                row_s,
+                col_s
+            )
 
     def add_on_options_handler(self):
         self.__main_page.add_on_options_controller.show_add_on_options()

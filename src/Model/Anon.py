@@ -637,7 +637,7 @@ def _anonymise_dicom_data(path, new_dict_dataset, all_filepaths):
             new_patient_folder_name,
         )
 
-    logging.info("Saved %d files", count)
+    logging.debug("Saved %d files", count)
     if current_datasets_previously_anonymised:
         count = 0  # nothing was anonymised, just
         # written to anonymisation folder as is

@@ -2,7 +2,7 @@ import csv
 import os
 import shutil
 from pathlib import Path
-from src.Model import DICOMStructuredReport
+from src.Model.DICOM import DICOMStructuredReport
 from src.Model import Radiomics
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess

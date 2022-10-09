@@ -1,9 +1,11 @@
 import math
-
 import numpy
+import logging
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
+from PySide6.QtCore import Slot
 
 import src.constants as constant
 from src.constants import DEFAULT_WINDOW_SIZE
@@ -11,18 +13,18 @@ from src.Model.Transform import linear_transform, get_pixel_coords, \
     get_first_entry, inv_linear_transform
 
 
-# noinspection PyAttributeOutsideInit
-
 class Drawing(QtWidgets.QGraphicsScene):
     """
-        Class responsible for the ROI drawing functionality
-        """
+    Class responsible for the ROI drawing functionality
+    """
+
+    seed = Signal(list)
 
     # Initialisation function  of the class
     def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
                  draw_roi_window_instance, slice_changed,
-                 current_slice, drawing_tool_radius, keep_empty_pixel,
-                 target_pixel_coords=set()):
+                 current_slice, drawing_tool_radius, keep_empty_pixel, pixel_transparency,
+                 target_pixel_coords=set(), **kwargs):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary
@@ -61,87 +63,143 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.draw_tool_radius = drawing_tool_radius
         self.is_current_pixel_coloured = False
         self.keep_empty_pixel = keep_empty_pixel
-        self._display_pixel_color()
+        self.pixel_transparency = pixel_transparency
+        self.drawn_pixel_color = QtGui.QColor(255, 0, 0, 255)
+        self.min_bounds_x = 0
+        self.min_bounds_y = 0
+        self.max_bounds_x = self.rows
+        self.max_bounds_y = self.cols
+        self.fill_source = None
+        self.is_drawing = False
+        if 'xy' in kwargs:
+            self.fill_source = kwargs.get('xy')
+        if 'UI' in kwargs:
+            self.seed.connect(kwargs.get('UI').set_seed)
+
+    def set_bounds(self):
+        """
+        Sets the custom bounds based on the bounds_box_draw instance
+        """
+        if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
+            bound_box = \
+                self.draw_roi_window_instance.bounds_box_draw.box.rect()
+            self.min_bounds_x, self.min_bounds_y = linear_transform(
+                bound_box.x(), bound_box.y(),
+                self.rows, self.cols
+            )
+            self.max_bounds_x, self.max_bounds_y = linear_transform(
+                bound_box.width(), bound_box.height(),
+                self.rows, self.cols
+            )
+            self.max_bounds_x += self.min_bounds_x
+            self.max_bounds_y += self.min_bounds_y
+        else:
+            self.min_bounds_x = 0
+            self.min_bounds_y = 0
+            self.max_bounds_x = self.rows
+            self.max_bounds_y = self.cols
 
     def _display_pixel_color(self):
         """
-        Creates the initial list of pixel values within the given minimum
-        and maximum densities, then displays them on the view.
+        Finds the pixel coordinates used to draw the ROI based on the min and max values.
+        This process uses a generic BFS that is bound to the min and max bounds,
+        as well as the min and max pixel density.
         """
-        if self.min_pixel <= self.max_pixel:
-            data_set = self.dataset
-            if hasattr(self.draw_roi_window_instance, 'bounds_box_draw'):
-                bound_box = \
-                    self.draw_roi_window_instance.bounds_box_draw.box.rect()
-                self.min_x, self.min_y = linear_transform(
-                    bound_box.x(), bound_box.y(),
-                    self.rows, self.cols
-                )
-                self.max_x, self.max_y = linear_transform(
-                    bound_box.width(), bound_box.height(),
-                    self.rows, self.cols
-                )
-                self.max_x += self.min_x
-                self.max_y += self.min_y
-            else:
-                self.min_x = 0
-                self.min_y = 0
-                self.max_x = self.rows
-                self.max_y = self.cols
+        self.set_bounds()
+        self.pixel_array = self.dataset._pixel_array
 
-            """pixel_array is a 2-Dimensional array containing all pixel 
-            coordinates of the q_image. pixel_array[x][y] will return the 
-            density of the pixel """
-            self.pixel_array = data_set._pixel_array
-            self.q_image = self.img.toImage()
-            for y_coord in range(self.min_y, self.max_y):
-                for x_coord in range(self.min_x, self.max_x):
-                    if (self.pixel_array[y_coord][x_coord] >= self.min_pixel) \
-                            and (self.pixel_array[y_coord][
-                                     x_coord] <= self.max_pixel):
-                        self.target_pixel_coords.add((x_coord, y_coord))
+        self.q_image = self.img.toImage()
+        queue = [self.fill_source]
 
-            """For the meantime, a new image is created and the pixels 
-            specified are coloured. This will need to altered so that it 
-            creates a new layer over the existing image instead of replacing 
-            it. """
-            # Convert QPixMap into Qimage
-            for x_coord, y_coord in self.target_pixel_coords:
-                temp = set()
-                temp.add((x_coord, y_coord))
-                points = get_pixel_coords(temp, self.rows, self.cols)
-                temp_2 = get_first_entry(points)
-                c = self.q_image.pixel(temp_2[0], temp_2[1])
-                colors = QColor(c).getRgbF()
-                self.according_color_dict[(x_coord, y_coord)] = colors
+        while len(queue) > 0:
+            current = queue.pop(0)
 
-            color = QtGui.QColor()
-            color.setRgb(90, 250, 175, 200)
-            points = get_pixel_coords(self.according_color_dict, self.rows,
-                                      self.cols)
-            for x_coord, y_coord in points:
-                self.q_image.setPixelColor(x_coord, y_coord, color)
+            for x_neighbour in range(-1, 2):
+                for y_neighbour in range(-1, 2):
+                    element = [current[0] + x_neighbour, current[1] + y_neighbour]
 
-            self.refresh_image()
+                    if self.check_roi_validity(element):
+                        if (element[0], element[1]) not in self.target_pixel_coords:
+                            queue.append([element[0], element[1]])
+                            self.target_pixel_coords.add((element[0], element[1]))
 
-    def _find_neighbor_point(self, event):
+        """For the meantime, a new image is created and the pixels 
+        specified are coloured. The _set_colour_of_pixels function
+         is then called to colour the newly drawn pixels and blend in
+         transparency."""
+        # Convert QPixMap into Qimage
+        for x_coord, y_coord in self.target_pixel_coords:
+            temp = set()
+            temp.add((x_coord, y_coord))
+            points = get_pixel_coords(temp, self.rows, self.cols)
+            temp_2 = get_first_entry(points)
+            c = self.q_image.pixel(temp_2[0], temp_2[1])
+            colors = QColor(c).getRgbF()
+            self.according_color_dict[(x_coord, y_coord)] = colors
+
+        points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+
+        self._set_color_of_pixels(points)
+        self.refresh_image()
+        return False if len(points) < 1 else True
+
+
+    def _set_color_of_pixels(self, points):
         """
-        Find point around mouse position. This function is for if we want to
-        choose and drag the circle :rtype: ((int, int)|None) :param event:
-        the mouse event :return: (x, y) if there are any point around mouse
-        else None
+        Takes a set of points that need to be coloured, and updates the colour of
+        each pixel with the drawn on colour, blended together based on the transparency value.
+
+        :param points:  Set of x and y co-ordinates of pixels to be coloured
         """
-        distance_threshold = 3.0
-        nearest_point = None
-        min_distance = math.sqrt(2 * (100 ** 2))
-        for x, y in self._points.items():
-            distance = math.hypot(event.xdata - x, event.ydata - y)
-            if distance < min_distance:
-                min_distance = distance
-                nearest_point = (x, y)
-        if min_distance < distance_threshold:
-            return nearest_point
-        return None
+        logging.debug("_set_color_of_pixels started")
+        img = self.img.toImage()
+        for x_coord, y_coord in points:
+            old_color = img.pixelColor(x_coord, y_coord)
+            # Blend the individual RGB values of the original pixel with the drawn ROI colour values
+            new_color = QtGui.QColor(self.drawn_pixel_color.red() * (1 - self.pixel_transparency)
+                                     + old_color.red() * self.pixel_transparency,
+                                     self.drawn_pixel_color.blue() * (1 - self.pixel_transparency)
+                                     + old_color.blue() * self.pixel_transparency,
+                                     self.drawn_pixel_color.green() * (1 - self.pixel_transparency)
+                                     + old_color.green() * self.pixel_transparency,
+                                     255)
+            self.q_image.setPixelColor(x_coord, y_coord, new_color)
+        logging.debug("_set_color_of_pixels finished")
+
+    def update_pixel_transparency(self):
+        """
+        Updates the transparency of pixels that have already been drawn, with new
+        transparency value set by user and refreshes the image.
+        """
+        logging.debug("update_pixel_transparency started")
+        self._set_color_of_pixels(get_pixel_coords(self.target_pixel_coords, self.rows, self.cols))
+        self.refresh_image()
+        logging.debug("update_pixel_transparency finished")
+
+    def check_roi_validity(self, coords):
+        """
+        checks the validity of the ROI coordinates
+        returning true or false
+        """
+        if self.min_bounds_x < coords[0] < self.max_bounds_x:
+            if self.min_bounds_y < coords[1] < self.max_bounds_y:
+                # note that the x and y are purposely flipped, this was pre-existing
+                if self.min_pixel < self.pixel_array[int(coords[1])][int(coords[0])] < self.max_pixel:
+                    return True
+        return False
+
+    def update_dicom_image(self):
+        """
+        Updates the dicom image data, recalculating the roi pixel colour and displaying changes
+        """
+        logging.debug("update_dicom_image started for slice %s", self.current_slice)
+
+        self.q_image = self.img.toImage()
+
+        points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+        self._set_color_of_pixels(points)
+
+        self.refresh_image()
 
     def getValues(self):
         """
@@ -159,6 +217,8 @@ class Drawing(QtWidgets.QGraphicsScene):
         Convert QImage containing modified CT slice with highlighted pixels
         into a QPixmap, and then display it onto the view.
         """
+        if self.q_pixmaps:
+            self.removeItem(self.q_pixmaps)
         self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(
             QtGui.QPixmap.fromImage(self.q_image))
         self.addItem(self.q_pixmaps)
@@ -169,6 +229,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         updates the image. :param clicked_x: the current x coordinate :param
         clicked_y: the current y coordinate
         """
+        logging.debug("remove_pixels_within_circle started")
         # Calculate euclidean distance between each highlighted point and
         # the clicked point. If the distance is less than the radius,
         # remove it from the highlighted pixels.
@@ -179,9 +240,6 @@ class Drawing(QtWidgets.QGraphicsScene):
         clicked_x, clicked_y = linear_transform(
             clicked_x, clicked_y, self.rows, self.cols)
         according_color_dict_key_list = list(self.according_color_dict.keys())
-
-        color_to_draw = QtGui.QColor()
-        color_to_draw.setRgb(90, 250, 175, 200)
 
         for x, y in according_color_dict_key_list:
             colors = self.according_color_dict[(x, y)]
@@ -209,6 +267,7 @@ class Drawing(QtWidgets.QGraphicsScene):
                 self.slice_changed = True
 
         self.refresh_image()
+        logging.debug("remove_pixels_within_circle finished")
 
     def fill_pixels_within_circle(self, clicked_x, clicked_y):
         """
@@ -216,6 +275,7 @@ class Drawing(QtWidgets.QGraphicsScene):
         the image. :param clicked_x: the current x coordinate :param
         clicked_y: the current y coordinate
         """
+        logging.debug("fill_pixels_within_circle started")
         # Calculate euclidean distance between each highlighted point and
         # the clicked point. If the distance is less than the radius,
         # add it to the highlighted pixels.
@@ -228,19 +288,19 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.slice_changed = True
         clicked_x, clicked_y = linear_transform(
             clicked_x, clicked_y, self.rows, self.cols)
-        scaled_tool_radius = int(self.draw_tool_radius * (
-                float(self.rows) / DEFAULT_WINDOW_SIZE))
+        scaled_tool_radius = self.draw_tool_radius * (
+                float(self.rows) / DEFAULT_WINDOW_SIZE)
 
-        min_y_bound_square = math.floor(clicked_y) - scaled_tool_radius
-        min_x_bound_square = math.floor(clicked_x) - scaled_tool_radius
-        max_y_bound_square = math.floor(clicked_y) + scaled_tool_radius
-        max_x_bound_square = math.floor(clicked_x) + scaled_tool_radius
+        min_y_bound_square = math.ceil(clicked_y - scaled_tool_radius)
+        min_x_bound_square = math.ceil(clicked_x - scaled_tool_radius)
+        max_y_bound_square = math.ceil(clicked_y + scaled_tool_radius)
+        max_x_bound_square = math.ceil(clicked_x + scaled_tool_radius)
         for y_coord in range(
-                max(self.min_y, min_y_bound_square),
-                min(self.max_y, max_y_bound_square)):
+                max(self.min_bounds_y, min_y_bound_square),
+                min(self.max_bounds_y, max_y_bound_square)):
             for x_coord in range(
-                    max(self.min_x, min_x_bound_square),
-                    min(self.max_x, max_x_bound_square)):
+                    max(self.min_bounds_x, min_x_bound_square),
+                    min(self.max_bounds_x, max_x_bound_square)):
                 clicked_point = numpy.array((clicked_x, clicked_y))
                 point_to_check = numpy.array((x_coord, y_coord))
                 distance = numpy.linalg.norm(
@@ -262,14 +322,12 @@ class Drawing(QtWidgets.QGraphicsScene):
                         points_to_color.add((x_coord, y_coord))
                         self.target_pixel_coords.add((x_coord, y_coord))
 
-        # Color to draw
-        color_to_draw = QtGui.QColor()
-        color_to_draw.setRgb(90, 250, 175, 200)
-
         points = get_pixel_coords(points_to_color, self.rows, self.cols)
-        for x_coord, y_coord in points:
-            self.q_image.setPixelColor(x_coord, y_coord, color_to_draw)
+
+        self._set_color_of_pixels(points)
+
         self.refresh_image()
+        logging.debug("fill_pixels_within_circle finished")
 
     def clear_cursor(self, drawing_tool_radius):
         """
@@ -351,10 +409,26 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.polygon_preview.append(graphics_polygon_item)
             self.addItem(graphics_polygon_item)
 
-    def mousePressEvent(self, event):
+    def set_source(self, event):
         """
-            This method is called to handle a mouse press event
-            :param event: the mouse event
+        Uses the users mouse click position to set the fill source
+        """
+        self.fill_source = [round(event.scenePos().x()), round(event.scenePos().y())]
+        self._display_pixel_color()
+        self.seed.emit(self.fill_source)
+
+    @Slot(bool)
+    def set_is_drawing(self, is_drawing):
+        """
+        Function triggered when either the Draw or Fill button is pressed from the menu.
+        Sets the is_drawing bool, allows for filling or drawing from separate button presses
+        """
+        logging.debug("set_is_drawing started")
+        self.is_drawing = is_drawing
+
+    def manual_draw_roi(self, event):
+        """
+        Draws the ROI based on the users mouse press event and position
         """
         if self.cursor:
             self.removeItem(self.cursor)
@@ -379,6 +453,47 @@ class Drawing(QtWidgets.QGraphicsScene):
         else:
             self.remove_pixels_within_circle(event.scenePos().x(),
                                              event.scenePos().y())
+
+    def mousePressEvent(self, event):
+        """
+            This method is called to handle the drawing mouse press event
+            :param event: the mouse event
+        """
+        if self.cursor:
+            self.removeItem(self.cursor)
+
+        self.isPressed = True
+        if (
+                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
+                < self.rect.width()
+        ):
+            self.drag_position = event.pos() - self.rect.topLeft()
+        super().mousePressEvent(event)
+        x, y = linear_transform(
+            math.floor(event.scenePos().x()), math.floor(event.scenePos().y()),
+            self.rows, self.cols)
+        is_coloured = (x, y) in self.according_color_dict
+        self.is_current_pixel_coloured = is_coloured
+        self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
+                         self.draw_tool_radius, new_circle=True)
+
+        if self.is_current_pixel_coloured:
+            self.fill_pixels_within_circle(event.scenePos().x(),
+                                           event.scenePos().y())
+        else:
+            self.remove_pixels_within_circle(event.scenePos().x(),
+                                             event.scenePos().y())
+        self.update()
+
+    def mousePressEvent(self, event):
+        """
+            This method is called to handle the BFS mousePressEvent
+            :param event: the mouse event
+        """
+        if not self.is_drawing:
+            self.set_source(event)
+        else:
+            self.manual_draw_roi(event)
         self.update()
 
     def mouseMoveEvent(self, event):

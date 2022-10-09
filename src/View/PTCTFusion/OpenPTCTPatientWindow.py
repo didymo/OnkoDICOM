@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, \
     QMessageBox, QHBoxLayout, QVBoxLayout, \
     QLabel, QLineEdit, QSizePolicy, QPushButton
 
-from src.Model import DICOMDirectorySearch
+from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
 from src.View.PTCTFusion.PTCTProgressWindow import PTCTProgressWindow
 from src.View.resources_open_patient_rc import *

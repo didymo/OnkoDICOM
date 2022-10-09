@@ -1,7 +1,7 @@
 import datetime
 import threading
 from PySide6.QtCore import QThreadPool
-from src.Model import DICOMDirectorySearch
+from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
 from src.Model.batchprocessing.BatchProcessCSV2ClinicalDataSR import \
@@ -16,12 +16,18 @@ from src.Model.batchprocessing.BatchProcessROIName2FMAID import \
     BatchProcessROIName2FMAID
 from src.Model.batchprocessing.BatchProcessROINameCleaning import \
     BatchProcessROINameCleaning
+from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
+    BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
-from src.Model.DICOMStructure import Image, Series
+from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
+    BatchProcessSelectSubgroup
+from src.Model.DICOM.Structure.DICOMSeries import Series
+from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
 from src.View.ProgressWindow import ProgressWindow
+import logging
 
 
 class BatchProcessingController:
@@ -42,6 +48,7 @@ class BatchProcessingController:
         self.dicom_structure = None
         self.suv2roi_weights = None
         self.name_cleaning_options = None
+        self.subgroup_filter_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -138,6 +145,17 @@ class BatchProcessingController:
         """
         self.name_cleaning_options = options
 
+    def set_subgroup_filter_options(self, options):
+        """
+        Set subgroup filter options for batch subgroup selection.
+        :param options: Dictionary of attributes with list of values
+        to filter by in that column.
+        """
+        logging.debug(f"{self.__class__.__name__} \
+        .set_subgroup_filter_options(options) called")
+        logging.debug(f"'options' set to: {options}")
+        self.subgroup_filter_options = options
+
     @staticmethod
     def get_patient_files(patient):
         """
@@ -174,6 +192,7 @@ class BatchProcessingController:
 
         # Dictionary of process names and functions
         self.process_functions = {
+            "select_subgroup": self.batch_select_subgroup_handler,
             "iso2roi": self.batch_iso2roi_handler,
             "suv2roi": self.batch_suv2roi_handler,
             "dvh2csv": self.batch_dvh2csv_handler,
@@ -182,6 +201,7 @@ class BatchProcessingController:
             "csv2clinicaldata-sr": self.batch_csv2clinicaldatasr_handler,
             "clinicaldata-sr2csv": self.batch_clinicaldatasr2csv_handler,
             "roiname2fmaid": self.batch_roiname2fmaid_handler,
+            "fmaid2roiname": self.batch_fmaid2roiname_handler,
         }
 
         patient_count = len(self.dicom_structure.patients)
@@ -202,10 +222,22 @@ class BatchProcessingController:
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
                                      cur_patient_num, patient_count), 20))
 
+            if 'select_subgroup' in self.processes:
+                in_subgroup = self.process_functions["select_subgroup"](
+                    interrupt_flag,
+                    progress_callback,
+                    patient
+                    )
+
+                if not in_subgroup:
+                    # dont complete processes on this patient
+                    continue
+
             # Perform processes on patient
             for process in self.processes:
-                if process == 'roinamecleaning':
+                if process in ['roinamecleaning',  'select_subgroup']:
                     continue
+
                 self.process_functions[process](interrupt_flag,
                                                 progress_callback,
                                                 patient)
@@ -252,6 +284,43 @@ class BatchProcessingController:
 
         # Update the patient dict container
         PatientDictContainer().set("rtss_modified", False)
+
+    def batch_select_subgroup_handler(self,
+                                      interrupt_flag,
+                                      progress_callback,
+                                      patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        select_subgroup.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        logging.debug(f"{self.__class__.__name__}" \
+        ".batch_select_subgroup_handler() called")
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = \
+            BatchProcessSelectSubgroup(progress_callback,
+                                       interrupt_flag,
+                                       cur_patient_files,
+                                       self.subgroup_filter_options)
+        success = process.start()
+
+        # Update summary
+        if success:
+            reason = "SUCCESS"
+        else:
+            reason = process.summary
+
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["select_subgroup"] = reason
+        progress_callback.emit(("Completed Select Subgroup", 100))
+
+        return process.within_filter
 
     def batch_iso2roi_handler(self, interrupt_flag,
                               progress_callback, patient):
@@ -522,6 +591,33 @@ class BatchProcessingController:
         self.batch_summary[0][patient]["roiname2fmaid"] = reason
         progress_callback.emit(("Completed ROI Name to FMA ID", 100))
 
+    def batch_fmaid2roiname_handler(self, interrupt_flag,
+                                    progress_callback, patient):
+        """
+        Handles creating, starting, and processing the results of batch
+        FMA-ID2ROIName.
+        :param interrupt_flag: A threading.Event() object that tells the
+                               function to stop loading.
+        :param progress_callback: A signal that receives the current
+                                  progress of the loading.
+        :param patient: The patient to perform this process on.
+        """
+        # Get patient files and start process
+        cur_patient_files = \
+            BatchProcessingController.get_patient_files(patient)
+        process = \
+            BatchProcessFMAID2ROIName(progress_callback,
+                                      interrupt_flag,
+                                      cur_patient_files)
+        process.start()
+
+        # Append process summary
+        reason = process.summary
+        if patient not in self.batch_summary[0].keys():
+            self.batch_summary[0][patient] = {}
+        self.batch_summary[0][patient]["fmaid2roiname"] = reason
+        progress_callback.emit(("Completed FMA ID to ROI Name", 100))
+
     def completed_processing(self):
         """
         Runs when batch processing has been completed.
@@ -542,6 +638,53 @@ class BatchProcessingController:
         self.progress_window.close()
         return
 
+    def get_all_clinical_data(self):
+        """
+        Reads in all clinical data from a directory which may
+        contain multiple patients.
+        :return: only unique values in a dictionary with keys as the
+        column name and a list of values found
+        """
+        logging.debug(f"{self.__class__.__name__}" \
+        ".get_all_clinical_data() called")
+
+        clinical_data_dict = {}
+
+        for patient in self.dicom_structure.patients.values():
+            logging.debug(f"{len(self.dicom_structure.patients.values())}" \
+            "patient(s) in dicom_structure object")
+
+            cur_patient_files = \
+                BatchProcessingController.get_patient_files(patient)
+            process = \
+                BatchProcessSelectSubgroup(None, None, cur_patient_files, None)
+
+            cd_sr = process.find_clinical_data_sr()
+
+            # if they do then get the data
+            if cd_sr:
+                single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                # adds all the current titles
+                titles = list(single_patient_data)
+
+                for title in titles:
+                    data = single_patient_data[title]
+
+                    if title not in clinical_data_dict.keys():
+                        clinical_data_dict[title] = [data]
+                    else:
+                        combined_data = clinical_data_dict[title]
+                        combined_data.append(data)
+
+                        # removes duplicates
+                        combined_data = list(dict.fromkeys(combined_data))
+
+                        clinical_data_dict[title] = combined_data
+
+        logging.debug(f"clinical_data_dict: {clinical_data_dict}")
+
+        return clinical_data_dict
+
     @classmethod
     def create_timestamp(cls):
         """
@@ -557,6 +700,6 @@ class BatchProcessingController:
         sec = cur_time.second
 
         time_stamp = str(year) + str(month) + str(day) + str(hour) + \
-                     str(min) + str(sec)
+            str(min) + str(sec)
 
         return time_stamp

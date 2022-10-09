@@ -6,7 +6,7 @@ from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from PySide6.QtWidgets import QTableWidgetItem
-from src.Model import DICOMStructuredReport
+from src.Model.DICOM import DICOMStructuredReport
 from src.Model import ImageLoading
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.ClinicalDataView import ClinicalDataView
