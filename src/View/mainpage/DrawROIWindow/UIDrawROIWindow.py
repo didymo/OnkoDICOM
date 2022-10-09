@@ -365,7 +365,7 @@ class UIDrawROIWindow:
         self.transparency_slider.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.transparency_slider.setFixedSize(QSize(130, 24))
         self.transparency_slider.valueChanged.connect(self.transparency_slider_value_changed)
-
+        self.transparency_slider.setEnabled(False)
         self.transparency_slider_box.addWidget(self.transparency_slider_label)
         self.transparency_slider_box.addWidget(self.transparency_slider_input_box)
         self.transparency_slider_box.addWidget(self.transparency_slider)
@@ -719,12 +719,12 @@ class UIDrawROIWindow:
                 self.current_slice]['drawingROI']
             self.ds = self.drawn_roi_list[self.current_slice]['ds']
             self.dicom_view.view.setScene(self.drawingROI)
-            self.enable_cursor_diameter_change_box()
+            self.enable_cursor_diameter_transparency()
             self.drawingROI.clear_cursor(self.drawing_tool_radius)
             self.has_drawing = True
 
         else:
-            self.disable_cursor_diameter_change_box()
+            self.disable_cursor_diameter_transparency()
             self.ds = None
             self.has_drawing = False
 
@@ -1014,7 +1014,7 @@ class UIDrawROIWindow:
         self.slice_changed = True
         self.has_drawing = True
         self.dicom_view.view.setScene(self.drawingROI)
-        self.enable_cursor_diameter_change_box()
+        self.enable_cursor_diameter_transparency()
 
     def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id):
         """
@@ -1067,7 +1067,7 @@ class UIDrawROIWindow:
                     self.slice_changed = True
                     self.has_drawing = True
                     self.dicom_view.view.setScene(self.drawingROI)
-                    self.enable_cursor_diameter_change_box()
+                    self.enable_cursor_diameter_transparency()
 
                     if self.drawingROI._display_pixel_color() != True:
                         break
@@ -1099,7 +1099,7 @@ class UIDrawROIWindow:
             self.has_drawing = True
             # Assigns the above drawing function to the left click
             self.dicom_view.view.setScene(self.drawingROI)
-            self.enable_cursor_diameter_change_box()
+            self.enable_cursor_diameter_transparency()
         logging.debug("create_drawing_3D finished")
 
     @Slot(list)
@@ -1125,7 +1125,7 @@ class UIDrawROIWindow:
 
         self.bounds_box_draw = DrawBoundingBox(pixmaps[id], dt)
         self.dicom_view.view.setScene(self.bounds_box_draw)
-        self.disable_cursor_diameter_change_box()
+        self.disable_cursor_diameter_transparency()
         self.has_drawing = False
 
     def onSaveClicked(self):
@@ -1233,21 +1233,23 @@ class UIDrawROIWindow:
                 self.drawing_tool_radius,
                 True)
 
-    def disable_cursor_diameter_change_box(self):
+    def disable_cursor_diameter_transparency(self):
         """
-        function  to disable cursor diameter change box
+        function to disable cursor diameter change box, draw button and transparency slider
         """
         self.draw_roi_window_cursor_diameter_slider.setEnabled(
             False)
         self.image_slice_number_draw_button.setEnabled(False)
+        self.transparency_slider.setEnabled(False)
 
-    def enable_cursor_diameter_change_box(self):
+    def enable_cursor_diameter_transparency(self):
         """
-        function  to enable cursor diameter change box
+        function to enable cursor diameter change box, draw button and transparency slider
         """
         self.draw_roi_window_cursor_diameter_slider.setEnabled(
             True)
         self.image_slice_number_draw_button.setEnabled(True)
+        self.transparency_slider.setEnabled(True)
 
     def show_roi_type_options(self):
         """Creates and displays roi type options popup"""
