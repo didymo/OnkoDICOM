@@ -3,7 +3,7 @@ import platform
 
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot, Signal
+from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot, Signal, QThread
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
@@ -14,6 +14,7 @@ from src.Controller.PathHandler import resource_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
+from src.View.ProgressWindow import ProgressWindow
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
@@ -23,7 +24,6 @@ from src.constants import INITIAL_DRAWING_TOOL_RADIUS
 
 
 class UIDrawROIWindow:
-
     is_drawing = Signal(bool)
 
     def setup_ui(self, draw_roi_window_instance,
@@ -964,10 +964,6 @@ class UIDrawROIWindow:
             max_pixel = self.max_pixel_density_line_edit.text()
 
             # If they are number inputs
-
-            min_is_float = False
-            max_is_float = False
-
             try:
                 float(min_pixel)
                 min_is_float = True
@@ -1004,7 +1000,7 @@ class UIDrawROIWindow:
                 if is_3d:
                     if hasattr(self, 'seed'):
                         delattr(self, 'seed')
-                    self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size)
+                    self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size, True)
                 else:
                     self.create_drawing(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size)
 
@@ -1013,8 +1009,16 @@ class UIDrawROIWindow:
                                   "Not Enough Data",
                                   "Not all values are specified or correct.")
 
-    def create_drawing(self, min_pixel, max_pixel, pixmaps, id, max_internal_hole_size):
-        """Creates drawing using BFS on a single slice"""
+    def create_drawing(self, min_pixel, max_pixel, pixmaps, id, max_internal_hole_size, multiple=False):
+        """
+        Creates drawing using BFS on a single slice
+            If the multiple flag is set, process 3D roi will be indirectly triggered through a signal
+        """
+        logging.debug("create_drawing started")
+        UI = None
+        if multiple:
+            UI = self
+
         dt = self.patient_dict_container.dataset[id]
         dt.convert_pixel_data()
         # Path to the selected .dcm file
@@ -1034,7 +1038,8 @@ class UIDrawROIWindow:
             self.keep_empty_pixel,
             self.pixel_transparency,
             max_internal_hole_size,
-            set()
+            set(),
+            UI=UI
         )
 
         self.slice_changed = True
@@ -1042,13 +1047,18 @@ class UIDrawROIWindow:
         self.dicom_view.view.setScene(self.drawingROI)
         self.enable_cursor_diameter_transparency()
 
-    def create_drawing_3D(self, min_pixel, max_pixel, pixmaps, id, max_internal_hole_size):
+    def process_3D_roi(self, min_pixel, max_pixel, pixmaps, id, max_internal_hole_size, thread=None, interrupt_flag=None,
+                       progress_callback=None):
         """
+        Processes roi drawing accross multiple slices using a seperate thread, allowing for the user to start drawing on the dicom view
         Creates drawing across multiple slides allowing for the user to start drawing on dicom view.
         """
+        logging.debug("process_3D_roi started")
+
         # If the seed is set then start searching, else assign the drawing function to the left click
         if hasattr(self, 'seed'):
             # Search down from the start position then up from the start position
+            total_slices = len(self.patient_dict_container.dataset)
             for x in range(0, 2):
 
                 if x == 0:
@@ -1059,14 +1069,28 @@ class UIDrawROIWindow:
                 else:
                     # search up slices
                     slice_start = id
-                    slice_end = len(self.patient_dict_container.dataset) - 1
+                    slice_end = total_slices - 1
                     step = 1
 
                 # Search the slides in the above ranges (down and up)
                 for y_search in range(slice_start, slice_end, step):
+                    # checking for interrupt (threading)
+                    if interrupt_flag.isSet():
+                        logging.debug("interrupting process_3D_roi")
+                        break
+
+                    # updating progress
+                    progress_callback.emit(
+                        ("Processing ROI for multiple slices", int(len(self.drawn_roi_list) / total_slices * 100)))
                     temp_id = y_search
 
-                    self.dicom_view.slider.setValue(temp_id)
+                    # saving previous drawing and updating slice
+                    self.save_drawing_progress(self.current_slice)
+                    self.current_slice = temp_id
+
+                    if self.drawn_roi_list.get(self.current_slice) is not None:
+                        # do not redraw, continue to check the next slice
+                        continue
 
                     dt = self.patient_dict_container.dataset[temp_id]
                     dt.convert_pixel_data()
@@ -1093,55 +1117,41 @@ class UIDrawROIWindow:
                     )
                     self.slice_changed = True
                     self.has_drawing = True
-                    self.dicom_view.view.setScene(self.drawingROI)
                     self.enable_cursor_diameter_transparency()
 
-                    if not self.drawingROI._display_pixel_color():
+                    roi_drawn = self.drawingROI._display_pixel_color()
+                    self.drawingROI.moveToThread(thread)
+                    if not roi_drawn:
                         break
-        else:
-            dt = self.patient_dict_container.dataset[id]
-            dt.convert_pixel_data()
-            # Path to the selected .dcm file
-            location = self.patient_dict_container.filepaths[id]
-            self.ds = pydicom.dcmread(location)
-
-            # Creating the drawing function that binds to the mousePressedEvent
-            self.drawingROI = Drawing(
-                pixmaps[id],
-                dt._pixel_array.transpose(),
-                min_pixel,
-                max_pixel,
-                self.patient_dict_container.dataset[id],
-                self.draw_roi_window_instance,
-                self.slice_changed,
-                self.current_slice,
-                self.drawing_tool_radius,
-                self.keep_empty_pixel,
-                self.pixel_transparency,
-                max_internal_hole_size,
-                set(),
-                UI=self
-            )
-
-            self.slice_changed = True
-            self.has_drawing = True
-            # Assigns the above drawing function to the left click
-            self.dicom_view.view.setScene(self.drawingROI)
-            self.enable_cursor_diameter_transparency()
-        logging.debug("create_drawing_3D finished")
+        logging.debug("process_3D_roi finished")
 
     @Slot(list)
     def set_seed(self, s):
         """
         Sets the seed in this class, seed retrieved from Drawing.py when user clicks on the view
-        Is only used for the 3D drawing
+        This will then trigger to start processing an ROI for each slice based on the source seed
         """
+
         self.seed = s
-        self.create_drawing_3D(float(self.min_pixel_density_line_edit.text()),
-                               float(self.max_pixel_density_line_edit.text()),
-                               self.patient_dict_container.get("pixmaps_axial"),
-                               self.current_slice,
-                               int(self.internal_hole_max_line_edit.text()))
+        roi_processing_window = ProgressWindow()
+
+        def finished():
+            """Inner function called when 3D ROI is finished"""
+            roi_processing_window.close()
+            self.dicom_view.slider.setValue(self.current_slice)
+
+        def errored(err):
+            """Inner function called when 3D ROI has errored"""
+            logging.error('process_3D_roi has errored: %s', err)
+            roi_processing_window.close()
+
+        roi_processing_window.signal_loaded.connect(finished)
+        roi_processing_window.signal_error.connect(errored)
+
+        roi_processing_window.start(self.process_3D_roi, float(self.min_pixel_density_line_edit.text()),
+                                    float(self.max_pixel_density_line_edit.text()),
+                                    self.patient_dict_container.get("pixmaps_axial"),
+                                    self.current_slice, int(self.internal_hole_max_line_edit.text(), QThread.currentThread())
 
     def onBoxDrawClicked(self):
         """
