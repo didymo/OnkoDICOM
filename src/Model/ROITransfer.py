@@ -5,7 +5,6 @@ import pydicom
 import numpy as np
 import SimpleITK as sitk
 import logging
-
 from platipy.dicom.io.rtstruct_to_nifti import fix_missing_data
 from skimage.draw import polygon
 
