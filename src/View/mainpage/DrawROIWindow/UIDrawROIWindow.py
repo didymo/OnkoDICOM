@@ -760,6 +760,8 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_input.setText(
             "{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+        # update the zoom slider
+        self.draw_roi_zoom_slider.setValue(self.dicom_view.zoom * 100)
 
     def onZoomOutClicked(self):
         """
@@ -773,6 +775,8 @@ class UIDrawROIWindow:
         self.draw_roi_window_viewport_zoom_input. \
             setText("{:.2f}".format(self.dicom_view.zoom * 100) + "%")
         self.draw_roi_window_viewport_zoom_input.setCursorPosition(0)
+        # update the zoom slider
+        self.draw_roi_zoom_slider.setValue(self.dicom_view.zoom * 100)
 
     def zoom_slider_value_changed(self):
         """
