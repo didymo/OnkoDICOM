@@ -302,7 +302,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
 
 
 class BatchWindow(QtWidgets.QWidget, UIBatchProcessingWindow):
-    go_next_window = QtCore.Signal()
     go_back_window = QtCore.Signal()
 
     # Initialize the batch window and set up the UI

@@ -45,9 +45,14 @@ class Controller:
         if self.batch_window.isVisible():
             self.batch_window.close()
             
-        self.welcome_window = WelcomeWindow()
-        self.welcome_window.go_next_window.connect(self.show_open_patient)
-        self.welcome_window.go_batch_window.connect(self.show_batch_window)
+        # only initialize welcome_window once
+        if not isinstance(self.welcome_window, WelcomeWindow):
+            self.welcome_window = WelcomeWindow()
+            self.welcome_window.go_next_window.connect(
+                self.show_open_patient)
+            self.welcome_window.go_batch_window.connect(
+                self.show_batch_window)
+            
         self.welcome_window.show()
 
     def show_open_patient(self):
@@ -63,7 +68,7 @@ class Controller:
             self.first_time_welcome_window.close()
 
         # only initialize open_patient_window once
-        if not isinstance(self.main_window, MainWindow):
+        if not isinstance(self.open_patient_window, OpenPatientWindow):
             self.open_patient_window = OpenPatientWindow(
                 self.default_directory)
             self.open_patient_window.go_next_window.connect(
@@ -128,7 +133,7 @@ class Controller:
         if self.first_time_welcome_window.isVisible():
             self.first_time_welcome_window.close()
             
-        # Only initialise the batch processing window once
+        # Only initialize the batch processing window once
         if not isinstance(self.batch_window, BatchWindow):
             self.batch_window = BatchWindow()
             self.batch_window.go_back_window.connect(
