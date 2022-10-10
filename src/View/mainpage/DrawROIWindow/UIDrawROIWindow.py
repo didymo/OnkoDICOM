@@ -316,10 +316,10 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_diameter_slider = QSlider(Qt.Horizontal)
         self.draw_roi_window_cursor_diameter_slider.setMinimum(1)
         self.draw_roi_window_cursor_diameter_slider.setMaximum(50)
-        self.draw_roi_window_cursor_diameter_slider.setSingleStep(0.25)
+        self.draw_roi_window_cursor_diameter_slider.setSingleStep(1)
         self.draw_roi_window_cursor_diameter_slider.setTickPosition(QSlider.TicksBothSides)
         self.draw_roi_window_cursor_diameter_slider.setTickInterval(5)
-        self.draw_roi_window_cursor_diameter_slider.setValue(38)
+        self.draw_roi_window_cursor_diameter_slider.setValue(25)
         self.draw_roi_window_cursor_diameter_slider.setObjectName("CursorDiameterSlider")
         self.draw_roi_window_cursor_diameter_slider.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.draw_roi_window_cursor_diameter_slider.setFixedSize(QSize(130, 24))
@@ -1215,7 +1215,7 @@ class UIDrawROIWindow:
         """
             function to update slider value change
         """
-        self.drawing_tool_radius = round(self.draw_roi_window_cursor_diameter_slider.value() / 2)
+        self.drawing_tool_radius = self.draw_roi_window_cursor_diameter_slider.value() / 2
         self.draw_roi_window_cursor_diameter_change_input.setText(
             "{:.0f}".format(self.draw_roi_window_cursor_diameter_slider.value()))
         self.draw_roi_window_cursor_diameter_change_input.setCursorPosition(0)
