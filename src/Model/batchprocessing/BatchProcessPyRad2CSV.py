@@ -1,12 +1,10 @@
 import os
 import platform
-import re
 import logging
 from radiomics import featureextractor
 from src.Model import Radiomics
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess
-from pydicom import dcmread
 import pandas as pd
 
 
