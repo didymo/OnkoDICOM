@@ -1,25 +1,14 @@
-from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
-import logging
 from src.Model.batchprocessing.batchprocessingMachineLearning.Preprocessing import Preprocessing
 from src.Model.batchprocessing.batchprocessingMachineLearning.MachineLearningTrainingStage import MlModeling
 
 
 class BatchProcessMachineLearning(BatchProcess):
     """
-    This class handles batch processing for the Selecting subgroup
+    This class handles batch processing for the machine learning
     process. Inherits from the BatchProcessing class.
     """
-
-    # Allowed classes for ClinicalDataSR2CSV
-    # allowed_classes = {
-    #     # Comprehensive SR
-    #     "1.2.840.10008.5.1.4.1.1.88.33": {
-    #         "name": "sr",
-    #         "sliceable": False
-    #     }
-    # }
 
     def __init__(self, progress_callback, interrupt_flag,
                  options, clinical_data_path, dvh_data_path, pyrad_data_path):
@@ -30,6 +19,10 @@ class BatchProcessMachineLearning(BatchProcess):
         :param interrupt_flag: A threading.Event() object that tells the
                                function to stop loading.
         :param patient_files: List of patient files.
+        :param options: list of values for machine learning
+        :param clinical_data_path: clinical data path to file.
+        :param dvh_data_path: dvh path to file.
+        :param pyrad_data_path: pyradiomics path to file.
         """
         # Call the parent class
         super(BatchProcessMachineLearning, self).__init__(progress_callback,
@@ -58,7 +51,7 @@ class BatchProcessMachineLearning(BatchProcess):
 
     def start(self):
         """
-        Goes through the steps of the ClinicalData filtering.
+        Goes through the steps of the machine learning.
         :return: True if successful, False if not.
         """
         # Preprocessing
@@ -77,72 +70,6 @@ class BatchProcessMachineLearning(BatchProcess):
 
     def get_results_values(self):
         return self.machine_learning_options
-
-    def find_clinical_data_sr(self):
-        """
-        Searches the patient dict container for any SR files containing
-        clinical data. Returns the first SR with clinical data found.
-        :return: ds, SR dataset containing clinical data, or None if
-                 nothing found.
-        """
-        datasets = self.patient_dict_container.dataset
-
-        if not datasets:
-            return None
-
-        for ds in datasets:
-            # Check for SR files
-            if datasets[ds].SOPClassUID == "1.2.840.10008.5.1.4.1.1.88.33":
-                # Check to see if it is a clinical data SR
-                if datasets[ds].SeriesDescription == "CLINICAL-DATA":
-                    return datasets[ds]
-
-        return None
-
-    def read_clinical_data_from_sr(self, sr_cd):
-        """
-        Reads clinical data from the found SR file.
-        :param sr_cd: the clinical data SR dataset.
-        :return: dictionary of clinical data, where keys are attributes
-                 and values are data.
-        """
-        data = sr_cd.ContentSequence[0].TextValue
-
-        data_dict = {}
-
-        data_list = data.split("\n")
-        for row in range(len(data_list)):
-            value = data_list[row].strip()
-            if value == "":
-                continue
-            # Assumes neither data nor attributes have colons
-            row_data = value.split(":")
-            data_dict[row_data[0]] = row_data[1][1:]
-
-        return data_dict
-
-    def check_if_patient_meets_filter_criteria(self, data_dict):
-        """
-        Checks if data_dict from patients clinical data contains a match
-        from the selected_filters dictionary.
-        :param sr_cd: the patients clinical data SR dataset.
-        """
-        for filter_attribute, allowed_values in self.selected_filters.items():
-            try:
-                patient_value = data_dict[filter_attribute]
-
-                if len(allowed_values) == 0:
-                    continue
-
-                if patient_value in allowed_values:
-                    logging.debug("Patient within filter")
-                    self.within_filter = True
-                    break
-            except KeyError:
-                # they have an sr file that does not contain this trait
-                continue
-
-        logging.debug("Patient NOT within filter")
 
     def preprocessing_for_ml(self):
         self.preprocessing = Preprocessing(

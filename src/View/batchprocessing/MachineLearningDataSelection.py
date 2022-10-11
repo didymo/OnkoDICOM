@@ -86,12 +86,11 @@ class MachineLearningDataSelection(QtWidgets.QWidget):
     def read_dvh_payrad(self):
         unique_name_dvh = None
         try:
-            data_dvh = pd.read_csv(f'{self.get_csv_output_location_dvhData()}', on_bad_lines='skip').rename(
-                columns={"Patient ID": "HASHidentifier"})
+            data_dvh = pd.read_csv(f'{self.get_csv_output_location_dvhData()}', on_bad_lines='skip')
         except:
             logging.debug("Wrong path for DVH")
         try:
-            data_Py = pd.read_csv(f'{self.get_csv_output_location_payrad()}').rename(columns={"Hash ID": "HASHidentifier"})
+            data_Py = pd.read_csv(f'{self.get_csv_output_location_payrad()}')
         except:
             logging.debug("Wrong path for pyRadiomics")
 
