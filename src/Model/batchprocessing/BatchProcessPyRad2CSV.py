@@ -70,21 +70,12 @@ class BatchProcessPyRad2CSV(BatchProcess):
         patient_id = self.patient_dict_container.dataset.get('rtss').PatientID
         patient_id = Radiomics.clean_patient_id(patient_id)
         patient_path = self.patient_dict_container.path
-        file_name = Radiomics.clean_patient_id(patient_id) + '.nrrd'
-        patient_nrrd_folder_path = patient_path + '/nrrd/'
-        patient_nrrd_file_path = patient_nrrd_folder_path + file_name
-
         output_csv_path = self.output_path.joinpath('CSV')
 
         if not os.path.exists(patient_path + '/Pyradiomics-SR.dcm'):
             self.patient_dict_container.clear()
             self.summary = "NO_SR"
             return False
-
-        # If folder does not exist
-        if not os.path.exists(patient_nrrd_folder_path):
-            # Create folder
-            os.makedirs(patient_nrrd_folder_path)
 
         # If folder does not exist
         if not os.path.exists(output_csv_path):
