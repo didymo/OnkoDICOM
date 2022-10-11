@@ -1,9 +1,12 @@
 import os
 import platform
+import re
+import logging
 from radiomics import featureextractor
 from src.Model import Radiomics
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.batchprocessing.BatchProcess import BatchProcess
+from pydicom import dcmread
 import pandas as pd
 
 
@@ -53,6 +56,8 @@ class BatchProcessPyRad2CSV(BatchProcess):
         """
         Goes through the steps of the PyRadCSV conversion.
         """
+        logging.debug("start pyrad-sr2csv")
+
         # Stop loading
         if self.interrupt_flag.is_set():
             self.patient_dict_container.clear()
@@ -73,6 +78,11 @@ class BatchProcessPyRad2CSV(BatchProcess):
 
         output_csv_path = self.output_path.joinpath('CSV')
 
+        if not os.path.exists(patient_path + '/Pyradiomics-SR.dcm'):
+            self.patient_dict_container.clear()
+            self.summary = "NO_SR"
+            return False
+
         # If folder does not exist
         if not os.path.exists(patient_nrrd_folder_path):
             # Create folder
@@ -83,39 +93,101 @@ class BatchProcessPyRad2CSV(BatchProcess):
             # Create folder
             os.makedirs(output_csv_path)
 
-        self.progress_callback.emit(("Converting dicom to nrrd..", 25))
+        self.progress_callback.emit(("PyRad-SR to CSV..", 70))
 
-        # Convert dicom files to nrrd for pyradiomics processing
-        Radiomics.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+        # Convert pyradsr to dataframe
+        srfile = open(patient_path + '/Pyradiomics-SR.dcm', 'rb')
+        contents = srfile.readlines()
+        pre_df = []
 
-        # Stop loading
-        if self.interrupt_flag.is_set():
-            self.patient_dict_container.clear()
-            self.summary = "INTERRUPT"
-            return False
+        # This while loop is to get the next line after the one with Hash ID in it 
+        i = 0
+        while i != len(contents):
+            if b'Hash' in contents[i]:
+                tick = i
+                break
+            i += 1
+        
+        i = 0
+        while i != (len(contents)-1):
+            if i == 0:
+                # Setup headers for DataFrame
+                start = str(contents).find("Hash")
+                end = str(contents).find("original_ngtdm_Strength")
+                # +23 to make sure the whole original_ngtdm_Strength is in the last header
+                temp = str(contents)[start:end+23]
+                headers = temp.split(",")
+                i = tick
 
-        # Location of folder where converted masks saved
-        mask_folder_path = patient_nrrd_folder_path + 'structures'
-        if not os.path.exists(mask_folder_path):
-            os.makedirs(mask_folder_path)
+            else:
+                # Formatting for DataFrame
+                # Certain headers require data within brackets hence why indexes are called so that 
+                # the data can be extracted correctly and when the csv file is viewed all values
+                # correlate to their relative header
+                temp = str(contents[i])[2:]
+                srdata = temp[:len(temp)-4]
+                srdata = srdata.split(",", 8)
+                del srdata[8]
 
-        self.progress_callback.emit(("Converting ROIs to nrrd..", 45))
+                end = temp[:len(temp)-4]
+                end = end.rsplit(",", 107)
+                del end[0]
 
-        # Convert ROIs to nrrd
-        Radiomics.convert_rois_to_nrrd(
-            patient_path, rtss_path, mask_folder_path)
+                preIndex = temp.find("{")
+                postIndex = temp.find("}")
+                mid = temp[preIndex:postIndex+1]
+                srdata.append(mid)
 
-        # Stop loading
-        if self.interrupt_flag.is_set():
-            self.patient_dict_container.clear()
-            self.summary = "INTERRUPT"
-            return False
+                mid = temp[postIndex+2:].split(",")
+                mid = mid[0:3]
 
-        self.progress_callback.emit(("Running pyradiomics..", 70))
+                preIndex = temp.find("(")
+                postIndex = temp.find(")")
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
 
-        # Run pyradiomics, convert to dataframe
-        radiomics_df = Radiomics.get_radiomics_df(
-            patient_path, patient_id, patient_nrrd_file_path, mask_folder_path)
+                preIndex = temp.find("(", postIndex+1)
+                postIndex = temp.find(")", preIndex)
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
+
+                midContent = temp[postIndex+2:].split(",")
+                mid += midContent[0:4]
+
+                preIndex = temp.find("(", postIndex)
+                postIndex = temp.find(")", preIndex)
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
+
+                preIndex = temp.find("(", postIndex)
+                postIndex = temp.find(")", preIndex)
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
+
+                preIndex = temp.find("(", postIndex)
+                postIndex = temp.find(")", preIndex)
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
+
+                midContent = temp[postIndex+2:].split(",")
+                mid += midContent[0:2]
+
+                preIndex = temp.find("(", postIndex)
+                postIndex = temp.find(")", preIndex)
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
+
+                preIndex = temp.find("(", postIndex)
+                postIndex = temp.find(")", preIndex)
+                midContent = temp[preIndex:postIndex+1]
+                mid.append(midContent)
+
+                srdata += mid + end
+                pre_df.append(srdata)
+            
+            i += 1
+
+        radiomics_df = pd.DataFrame(pre_df)
 
         # Stop loading
         if self.interrupt_flag.is_set():
@@ -126,29 +198,27 @@ class BatchProcessPyRad2CSV(BatchProcess):
         if radiomics_df is None:
             self.summary = "PYRAD_NO_DF"
             return False
-
+        
         # Convert the dataframe to CSV file
         self.progress_callback.emit(("Converting to CSV..", 90))
-        self.convert_df_to_csv(radiomics_df, output_csv_path)
+        # If folder does not exist
+        if not os.path.exists(output_csv_path):
+            # Create folder
+            os.makedirs(output_csv_path)
+        target_path = output_csv_path.joinpath(self.filename)
+        create_header = not os.path.isfile(target_path)
+        if create_header:
+            # Export dataframe as csv
+            radiomics_df.to_csv(target_path, mode='a', index=False, header=headers)
+        else:
+            # Export dataframe as csv
+            radiomics_df.to_csv(target_path, mode='a', index=False, header=False)
         return True
+
+        logging.debug("pyrad-sr2csv success")
 
     def set_filename(self, name):
         if name != '':
             self.filename = name
         else:
             self.filename = "Pyradiomics_.csv"
-
-    def convert_df_to_csv(self, radiomics_df, csv_path):
-        """
-        Export dataframe as a csv file.
-        :param radiomics_df: dataframe containing radiomics data.
-        :param csv_path: output folder path.
-        """
-        # If folder does not exist
-        if not os.path.exists(csv_path):
-            # Create folder
-            os.makedirs(csv_path)
-        target_path = csv_path.joinpath(self.filename)
-        create_header = not os.path.isfile(target_path)
-        # Export dataframe as csv
-        radiomics_df.to_csv(target_path, mode='a', header=create_header)
