@@ -352,10 +352,6 @@ class Preprocessing:
             self.scaling = full_pipeline
 
             return x_train, x_test, y_train, y_test
-        # if DVH or Pyradiomics has only 1 id then return error
-        elif self.target is not None and len(clinical_data) <= 1:
-            return 1, 2, 3, 4
-
         else:
             data = self.merging_data(clinical_data, dvh, pyrad_data)
             ids = data['HASHidentifier']

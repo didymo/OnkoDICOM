@@ -186,7 +186,8 @@ class MachineLearningOptions(QtWidgets.QWidget):
                          "Rename Values in Target",
                          "ML with Tuning"]
         # set 3rd Column
-        comments = ["Please select columns to pass to the ML model",
+        comments = ["Please select columns to pass to the ML model."
+                    "If you won't select any columns then it takes all columns and passes to ML",
                     "Please select a column for the target to ML model",
                     "Please select a column type for the ML model based on that column will be chosen ML",
                     "Only if the Category type is binary [0,1]!",
@@ -301,6 +302,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
         if header == "Selected Value":
             if (row == 3):
                 if self.combox_target.currentText() != "":
+                    print(self.get_feature())
                     rename = self.rename_values(self.combox_target.currentText())
                     comment = QtWidgets.QTableWidgetItem(rename)
                     self.filter_table.setItem(3, 1, comment)
@@ -451,6 +453,10 @@ class MachineLearningOptions(QtWidgets.QWidget):
         features = self.combox_feature.currentText()
         features = features.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
         features = features.split(',')
+        #if user do not select any features then it reads all features
+        if 'NotSelected' in features:
+            return None
+
         return features
 
     def get_target(self):

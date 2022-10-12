@@ -146,7 +146,6 @@ class MlModeling():
 
         # MLP
         grid_search_mlp.fit(self.train_feature, self.train_label)
-        print(grid_search_mlp.best_params_)
         mlp_model = grid_search_mlp.best_estimator_
         mlp_pred = mlp_model.predict(self.test_feature)
         mlp_score = perfomance(mlp_pred)
@@ -244,7 +243,7 @@ class MlModeling():
         mlp_pred = mlp_model.predict(self.test_feature)
 
         rmse_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
-        mlp_score = mlp_cla.score(self.test_feature, self.test_label)
+        mlp_score = mlp_model.score(self.test_feature, self.test_label)
 
         if rmse_mlp < rmse_rf:
             self.score = mlp_score

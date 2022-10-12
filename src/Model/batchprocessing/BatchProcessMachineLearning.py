@@ -64,6 +64,7 @@ class BatchProcessMachineLearning(BatchProcess):
         self.run_model()
 
         self.progress_callback.emit(("Writing results...", 80))
+
         if self.run_model_accept is not None:
             self.summary = "Failed Machine learning Process.\n" \
                            "Your Dataset is too small.\n" \
@@ -81,6 +82,7 @@ class BatchProcessMachineLearning(BatchProcess):
         return self.run_model_accept
 
     def preprocessing_for_ml(self):
+        print('self.machine_learning_options["features"]',self.machine_learning_options['features'])
         self.preprocessing = Preprocessing(
             path_clinical_data=self.clinical_data_path  # Path to Clinical Data
             , path_pyr_data=self.pyrad_data_path  # Path to Pyrad Data
@@ -90,15 +92,17 @@ class BatchProcessMachineLearning(BatchProcess):
             , target=self.machine_learning_options['target']  # Target Column to be predicted for training
             , rename_values=self.machine_learning_options['renameValues']  # Dr. rename values in Target Column
         )
+        print('True or False check preprocessing',self.preprocessing.check_preprocessing_data())
         if self.preprocessing.check_preprocessing_data():
             self.X_train, self.X_test, self.y_train, self.y_test = self.preprocessing.prepare_for_ml()
             self.params = self.preprocessing.get_params_clinical_data()
             self.scaling = self.preprocessing.scaling
-
+            self.machine_learning_options['features'] = self.preprocessing.column_names
         self.run_model_accept = self.preprocessing.permission
 
     def run_model(self):
-        if self.run_model_accept:
+        print('True or False',self.run_model_accept)
+        if self.run_model_accept is None:
             self.run_ml = MlModeling(
                 self.X_train  # Dataset X_train that we got from preprocessing class
                 , self.X_test  # Dataset X_test that we got from preprocessing class
@@ -108,10 +112,12 @@ class BatchProcessMachineLearning(BatchProcess):
                 , self.preprocessing.type_column  # type of the ML
                 , tunning=self.machine_learning_options['tune']  # Tunning
                 , permission=self.run_model_accept)
+
             self.run_ml.run_model()
             self.ml_model = self.run_ml
-
+            print(self.run_ml.accuracy)
             # Set outputs
             self.machine_learning_options.update(self.run_ml.accuracy)
+
         else:
             logging.debug('Failed Run Ml Model')
