@@ -23,6 +23,8 @@ from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
 from src.Model.batchprocessing.BatchProcessMachineLearning import \
     BatchProcessMachineLearning
+from src.Model.batchprocessing.BatchprocessMachineLearningDataSelection import \
+    BatchprocessMachineLearningDataSelection
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -52,6 +54,7 @@ class BatchProcessingController:
         self.suv2roi_weights = None
         self.name_cleaning_options = None
         self.subgroup_filter_options = None
+        self.ml_data_selection_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -170,6 +173,20 @@ class BatchProcessingController:
         logging.debug(f"'options' set to: {options}")
         self.subgroup_filter_options = options
 
+    def set_ml_data_selection_options(self, options):
+        """
+        Set ml data selection options for batch process.
+        :param options: Dictionary of:
+        {"dvh_path": "",
+        "pyrad_path": "",
+        "dvh_value": "",
+        "pyrad_value": ""}
+        """
+        logging.debug(f"{self.__class__.__name__} \
+        .set_ml_data_selection_options(options) called")
+        logging.debug(f"'options' set to: {options}")
+        self.ml_data_selection_options = options
+
     # Path
     def set_clinical_data_path(self, clinical_path):
         self.clinical_data_path = clinical_path
@@ -275,7 +292,7 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
-                if process in ["roinamecleaning",  "select_subgroup", "machine_learning"]:
+                if process in ["roinamecleaning",  "select_subgroup", "machine_learning", "machine_learning_data_selection"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -296,8 +313,17 @@ class BatchProcessingController:
                 self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
-        # TODO: replace this with a set_method which will be called from
-        # BatchProcessingWindow.confirm_button_clicked()
+        if "machine_learning_data_selection" in self.processes:
+            process = BatchprocessMachineLearningDataSelection(progress_callback,
+                                                  interrupt_flag,
+                                                  self.ml_data_selection_options["dvh_path"],
+                                                  self.ml_data_selection_options["pyrad_path"],
+                                                  self.ml_data_selection_options["dvh_value"],
+                                                  self.ml_data_selection_options["pyrad_value"])
+            process.start()
+            self.batch_summary[1] = process.summary
+            progress_callback.emit(("Completed ML Data selection", 100))
+
         ml_data = {
             "features": self.machine_learning_features,
             "target": self.machine_learning_target,
