@@ -82,7 +82,7 @@ class CheckableCombox(QtWidgets.QComboBox):
 
 class MachineLearningOptions(QtWidgets.QWidget):
     """
-    DVH2CSV options for batch processing.
+    Machine Learning options for batch processing.
     """
 
     def __init__(self):
@@ -471,7 +471,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
         """
         if self.binaryData:
             rename = self.filter_table.item(3, 1).text()
-            rename = rename.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
+            rename = rename.replace('[', '').replace(']', '').replace("'", "")
             rename = rename.split(',')
             return rename
         return None

@@ -19,7 +19,6 @@ from sklearn.neural_network import MLPRegressor  # MLP Regressor
 
 import logging
 import os
-
 import joblib
 
 
@@ -31,7 +30,8 @@ class MlModeling():
                  , test_label
                  , target
                  , type_model
-                 , tunning=False):
+                 , tunning=False
+                 , permission=None):
         self.train_feature = train_feature
         self.test_feature = test_feature
         self.train_label = train_label
@@ -39,6 +39,7 @@ class MlModeling():
         self.target = target
         self.type_model = type_model
         self.tunning = tunning
+        self.permission = permission
         self.confusion_matrix = None
         self.model = None
         self.score = None
@@ -88,12 +89,12 @@ class MlModeling():
 
     def classification_ml_tunned(self):
         # Tunning Random Forest
-        param_grid_RF = [
+        param_grid_rf = [
             {'n_estimators': [400, 500, 600], 'max_depth': [5, None], 'criterion': ['gini', 'entropy', 'log_loss']},
             {'bootstrap': [False], 'n_estimators': [400, 500, 600], 'criterion': ['gini', 'entropy', 'log_loss'],
              'max_depth': [5, None]}]
 
-        param_grid_MLP = [
+        param_grid_mlp = [
             {'hidden_layer_sizes': [(100,), (200,), (300,)], 'activation': ['identity', 'logistic', 'tanh', 'relu']
                 , 'solver': ['sgd', 'adam'], 'alpha': [0.01, 0.1], 'learning_rate_init': [0.01, 0.1]},
             {'hidden_layer_sizes': [(100,), (200,), (300,)], 'activation': ['identity', 'logistic', 'tanh', 'relu']
@@ -108,10 +109,10 @@ class MlModeling():
         if len(self.test_label.unique()) == 2:
             print('running self.testLabel.unique()) == 2')
             f1_scorer = make_scorer(f1_score, pos_label=self.test_label[0])
-            grid_search_rf = GridSearchCV(forest_clas, param_grid_RF, cv=5
+            grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5
                                           , scoring=f1_scorer, return_train_score=True)
 
-            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5
+            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5
                                            , scoring=f1_scorer, return_train_score=True)
 
             perfomance = self.cal_perfomance_gm
@@ -119,10 +120,10 @@ class MlModeling():
         # check it is not Balanced
         elif not self.calculate_balance():
             print('running not self.calculateBalance()')
-            grid_search_rf = GridSearchCV(forest_clas, param_grid_RF, cv=5
+            grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5
                                           , scoring='f1_macro', return_train_score=True)
 
-            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5
+            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5
                                            , scoring='f1_macro', return_train_score=True)
 
             perfomance = self.cal_perfomance_f1_macro
@@ -130,10 +131,10 @@ class MlModeling():
         # if Balanced
         else:
             print('else')
-            grid_search_rf = GridSearchCV(forest_clas, param_grid_RF, cv=5
+            grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5
                                           , scoring='accuracy', return_train_score=True)
 
-            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5
+            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5
                                            , scoring='accuracy', return_train_score=True)
             perfomance = self.cal_perfomance_accuracy
 
@@ -203,14 +204,14 @@ class MlModeling():
 
     def regression_ml_tunned(self):
         # Tunning Random Forest
-        param_grid_RF = [
+        param_grid_rf = [
             {'n_estimators': [400, 500, 600], 'max_depth': [5, None], 'criterion': ['gini', 'entropy', 'log_loss']},
             {'bootstrap': [False], 'n_estimators': [400, 500, 600], 'criterion': ['gini', 'entropy', 'log_loss'],
              'max_depth': [5, None]}]
 
-        param_grid_MLP = [{'hidden_layer_sizes': [(100,), (200,), (300,)
-                                                  ], 'activation': ['identity', 'logistic', 'tanh', 'relu']
-                              , 'solver': ['sgd', 'adam'], 'alpha': [0.0001, 0.001, 0.01, 0.1],
+        param_grid_mlp = [{'hidden_layer_sizes': [(100,), (200,), (300,)],
+                           'activation': ['identity', 'logistic', 'tanh', 'relu'],
+                           'solver': ['sgd', 'adam'], 'alpha': [0.0001, 0.001, 0.01, 0.1],
                            'learning_rate_init': [0.001, 0.01, 0.1, 1]},
                           {'hidden_layer_sizes': [(100,), (200,), (300,)
                                                   ], 'activation': ['identity', 'logistic', 'tanh', 'relu']
@@ -221,11 +222,11 @@ class MlModeling():
         # MLP Regression
         mlp_cla = MLPRegressor(random_state=42, max_iter=5000)
 
-        grid_search_rf = GridSearchCV(forest_clas, param_grid_RF, cv=5,
+        grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5,
                                       scoring='neg_mean_squared_error',
                                       return_train_score=True)
 
-        grid_search_mlp = GridSearchCV(mlp_cla, param_grid_MLP, cv=5,
+        grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5,
                                        scoring='neg_mean_squared_error',
                                        return_train_score=True)
 
@@ -297,12 +298,13 @@ class MlModeling():
             print(list_ToSave, file=f)
 
         try:
-            job_ml_file_ml = f'{dir_name}/{params_model_name["saveModel"]}_ml.pkl'  # the location, If you want to save in local directory then just add filename
+            # the location, If you want to save in local directory then just add filename
+            job_ml_file_ml = f'{dir_name}/' \
+                             f'{params_model_name["saveModel"]}_ml.pkl'
             jobfile_scale = f'{dir_name}/{params_model_name["saveModel"]}_scaler.pkl'
             joblib.dump(scaling, jobfile_scale)
-            ##  Save the model as a pickle in a file
-            joblib.dump(self.model, job_ml_file_ml)  # model is the trained ML model , model = randomforestclassifier()
-            # call this function after model is fit --- model.fit(X_train, y_train)
+            # Save the model as a pickle in a file
+            joblib.dump(self.model, job_ml_file_ml)
         except:
             logging.warning('error in Saving ML model')
 
@@ -319,12 +321,17 @@ class MlModeling():
         headers = ['RISK TABLE', 'ML PERFOMANCE']
         with open(path, 'w') as f:
             print(f'{headers[0]}\n', file=f)
-            dfAsString = self.confusion_matrix.to_string(header=True, index=True)
-            f.write(dfAsString)
+            df_as_string = self.confusion_matrix.to_string(header=True, index=True)
+            f.write(df_as_string)
             print(f'\n\n{headers[1]}\n', file=f)
             print(f'{self.score[0]}: {self.score[1]}', file=f)
 
     def run_model(self):
+        if self.permission is False:
+            self.accuracy['model'] = 'None'
+            self.accuracy['accuracy'] = 'None'
+            return
+
         if self.type_model == 'category':
             if self.tunning:
                 self.model = self.classification_ml_tunned()
@@ -337,4 +344,3 @@ class MlModeling():
                 self.model = self.regression_ml()
 
         self.accuracy['model'] = type(self.model).__name__
-        return self.model
