@@ -54,105 +54,65 @@ class MachineLearningDataSelection(QtWidgets.QWidget):
         # Button For Pyradiomics Data to set location
         self.change_button_pyradiomicsData = QtWidgets.QPushButton("Change")
         self.change_button_pyradiomicsData.setMaximumWidth(100)
-        self.change_button_pyradiomicsData.clicked.connect(self.show_file_browser_payrad)
+        self.change_button_pyradiomicsData.clicked.connect(self.show_file_browser_pyrad)
         self.change_button_pyradiomicsData.setObjectName("NormalButton")
         self.change_button_pyradiomicsData.setStyleSheet(self.stylesheet)
 
-        # Set button read DVH and Pyradiomics
-        self.read_button_dvh_pyrad = QtWidgets.QPushButton("Read DVH and Pyradiomics")
-        self.read_button_dvh_pyrad.clicked.connect(self.read_dvh_payrad)
-        self.read_button_dvh_pyrad.setObjectName("NormalButton")
-        self.read_button_dvh_pyrad.setStyleSheet(self.stylesheet)
-
         # Set DVH data
         self.directory_layout.addWidget(label_DVG)
-        self.directory_layout.addRow(self.directory_input_dvhData)
-        self.directory_layout.addRow(self.change_button_dvhData)
+        self.directory_layout.addWidget(self.directory_input_dvhData)
+        self.directory_layout.addWidget(self.change_button_dvhData)
 
         # Set Pyradiomics data
         self.directory_layout.addWidget(label_Pyrad)
-        self.directory_layout.addRow(self.directory_input_pyrad)
-        self.directory_layout.addRow(self.change_button_pyradiomicsData)
+        self.directory_layout.addWidget(self.directory_input_pyrad)
+        self.directory_layout.addWidget(self.change_button_pyradiomicsData)
 
-        self.directory_layout.addRow(self.read_button_dvh_pyrad)
+        # create dropdown menu for dvh values to select from
+        self.dvh_dropdown_menu = QtWidgets.QComboBox()
+        self.dvh_dropdown_menu.setStyleSheet(self.stylesheet)
+        
+        # create dropdown menu for dvh values to select from
+        self.pyrad_dropdown_menu = QtWidgets.QComboBox()
+        self.pyrad_dropdown_menu.setStyleSheet(self.stylesheet)
 
+        # add dropdowns to main_layout
+        self.directory_layout.addWidget(self.dvh_dropdown_menu)
+        self.directory_layout.addWidget(self.pyrad_dropdown_menu)
 
         self.main_layout.addLayout(self.directory_layout)
-
-
         self.setLayout(self.main_layout)
 
+        # storing the currently selected filter options
+        self._selected_DVH_ROI = ""
+        self._selected_pyrad_ROI = ""
 
-    def read_dvh_payrad(self):
-        unique_name_dvh = None
-        try:
-            data_dvh = pd.read_csv(f'{self.get_csv_output_location_dvhData()}', on_bad_lines='skip')
-        except:
-            logging.debug("Wrong path for DVH")
-        try:
-            data_Py = pd.read_csv(f'{self.get_csv_output_location_payrad()}')
-        except:
-            logging.debug("Wrong path for pyRadiomics")
+    def set_dvh_dropdown_menu_data(self, options):
+        self.dvh_dropdown_menu.clear()
+        self.dvh_dropdown_menu.addItems(options)
 
-        try:
-            unique_name_dvh = {
-                "DVH ROI": list(data_dvh[data_dvh['ROI'].str.contains('PTV')]['ROI'].unique()),
-                "PyRadiomics ROI": list(data_Py[data_Py['ROI'].str.contains('GTV')]['ROI'].unique())
-            }
-        except:
-            logging.debug("Error in loading pyRadiomics ROI and DVH ROI ")
+    def set_pyrad_dropdown_menu_data(self, options):
+        self.pyrad_dropdown_menu.clear()
+        self.pyrad_dropdown_menu.addItems(options)
 
-        if unique_name_dvh!=None:
-            # Table
-            self.filter_table = QtWidgets.QTableWidget(0, 0)
-            self.filter_table.setStyleSheet(self.stylesheet)
+    def read_in_dvh_data(self):
+        data_dvh = pd.read_csv(f'{self.get_csv_input_location_dvh_data()}', on_bad_lines='skip')
+        return list(data_dvh[data_dvh['ROI'].str.contains('PTV')]['ROI'].unique())
 
-            self.main_layout.addWidget(self.filter_table)
+    def read_in_pyrad_data(self):
+        data_Py = pd.read_csv(f'{self.get_csv_input_location_pyrad()}')
+        return list(data_Py[data_Py['ROI'].str.contains('GTV')]['ROI'].unique())
 
-            # Modify Table
-            titleListofHeaders = ["DVH ROI", "PyRadiomics ROI"]
-            for title in titleListofHeaders:
-                col = self.filter_table.columnCount()
-                self.filter_table.insertColumn(col)
-                self.filter_table.setColumnWidth(col, 600)
-                for row in range(0, len(unique_name_dvh[title])):
-                    str_value = str(unique_name_dvh[title][row])
-                    # filters out blank options
-                    if str_value == "":
-                        continue
-                    filter_value = QtWidgets.QTableWidgetItem(str_value)
+    def _on_dvh_path_changed(self):
+        options = self.read_in_dvh_data()
+        self.set_dvh_dropdown_menu_data(options)
 
-                    if row >= self.filter_table.rowCount():
-                        self.filter_table.insertRow(row)
-
-                    self.filter_table.setItem(row, col, filter_value)
-
-
-        # set column Names
-            self.filter_table.setHorizontalHeaderLabels(titleListofHeaders)
-        else:
-            logging.debug("Can not load DVH and pyRadiomics ROI to table")
-
-
-    def select_value_cell(self, row, column):
-        """
-        Allows user to rename values of the target
-        :param row: row index that was clicked
-        :param column: column index that was clicked
-        """
-        header = self.filter_table.horizontalHeaderItem(column).text()
-        if header == "Selected Value":
-            if (row == 3):
-                if self.combox_target.currentText() != "":
-                    rename = self.rename_values(self.combox_target.currentText())
-                    comment = QtWidgets.QTableWidgetItem(rename)
-                    self.filter_table.setItem(3, 1, comment)
-        if header == "Function Name":
-                if (row == 3):
-                    self.get_rename()
+    def _on_pyrad_path_changed(self):
+        options = self.read_in_pyrad_data()
+        self.set_pyrad_dropdown_menu_data(options)
 
     # Function for DVH Data
-    def set_csv_output_location_dvhData(self, path, enable=True,
+    def set_csv_input_location_dvhData(self, path, enable=True,
                                         change_if_modified=False):
         """
         Set the location for the dvh .csv file.
@@ -167,8 +127,10 @@ class MachineLearningDataSelection(QtWidgets.QWidget):
         elif change_if_modified:
             self.directory_input_dvhData.setText(path)
             self.directory_input_dvhData.setEnabled(enable)
+        
+        self._on_dvh_path_changed()
 
-    def get_csv_output_location_dvhData(self):
+    def get_csv_input_location_dvh_data(self):
         """
         Get the location of the desired output directory.
         """
@@ -195,10 +157,10 @@ class MachineLearningDataSelection(QtWidgets.QWidget):
             path = self.directory_input_dvhData.text()
 
         # Update file path
-        self.set_csv_output_location_dvhData(path, change_if_modified=True)
+        self.set_csv_input_location_dvhData(path, change_if_modified=True)
 
     # Function for Pyrad Data
-    def set_csv_output_location_pyrad(self, path, enable=True,
+    def set_csv_input_location_pyrad(self, path, enable=True,
                                       change_if_modified=False):
         """
         Set the location for the pyradiomics .csv file.
@@ -214,13 +176,15 @@ class MachineLearningDataSelection(QtWidgets.QWidget):
             self.directory_input_pyrad.setText(path)
             self.directory_input_pyrad.setEnabled(enable)
 
-    def get_csv_output_location_payrad(self):
+        self._on_pyrad_path_changed()
+
+    def get_csv_input_location_pyrad(self):
         """
         Get the location of the desired output directory.
         """
         return self.directory_input_pyrad.text()
 
-    def show_file_browser_payrad(self):
+    def show_file_browser_pyrad(self):
         """
         Show the file browser for selecting a folder for the Onko
         default directory.
@@ -241,6 +205,16 @@ class MachineLearningDataSelection(QtWidgets.QWidget):
             path = self.directory_input_pyrad.text()
 
         # Update file path
-        self.set_csv_output_location_pyrad(path, change_if_modified=True)
+        self.set_csv_input_location_pyrad(path, change_if_modified=True)
 
+    def get_selected_dvh_value(self):
+        return self.dvh_dropdown_menu.currentText()
 
+    def get_selected_pyrad_value(self):
+        return self.pyrad_dropdown_menu.currentText()
+
+    def get_selected_options(self):
+        return {"dvh_path": self.get_csv_input_location_dvh_data(),
+                "pyrad_path": self.get_csv_input_location_pyrad(),
+                "dvh_value": self.get_selected_dvh_value(),
+                "pyrad_value": self.get_selected_pyrad_value()}

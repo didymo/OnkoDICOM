@@ -144,7 +144,7 @@ class UIBatchProcessingWindow(object):
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
         self.batchmachinelearning_tab = MachineLearningOptions()
-        self.batchmachinelearning_data_selection = MachineLearningDataSelection()
+        self.batchmachinelearning_data_selection_tab = MachineLearningDataSelection()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -160,7 +160,7 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
-        self.tab_widget.addTab(self.batchmachinelearning_data_selection, 'Machine Learning Data Selection')
+        self.tab_widget.addTab(self.batchmachinelearning_data_selection_tab, 'Machine Learning Data Selection')
         self.tab_widget.addTab(self.batchmachinelearning_tab, 'Machine Learning')
 
 
@@ -319,12 +319,16 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname', 'machine_learning']
+                     'roiname2fmaid', 'fmaid2roiname', 'machine_learning_data_selection',
+                     'machine_learning']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
+
+        ml_data_selection_options = self.batchmachinelearning_data_selection_tab \
+            .get_selected_options()
 
         #Path
         clinical_data_path = self.batchmachinelearning_tab.get_csv_output_location_clinicalData()
@@ -367,6 +371,9 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
         self.batch_processing_controller.set_subgroup_filter_options(
                 subgroup_filter_options)
+        self.batch_processing_controller.set_ml_data_selection_options(
+                ml_data_selection_options)
+
         #Path
         self.batch_processing_controller.set_clinical_data_path(clinical_data_path)
         self.batch_processing_controller.set_dvh_data_path(dvh_data_path)

@@ -6,7 +6,6 @@ import os
 import re
 
 
-
 class BatchprocessMachineLearningDataSelection(BatchProcess):
     """
     This class handles batch processing for the machine learning
@@ -14,7 +13,7 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
     """
 
     def __init__(self, progress_callback, interrupt_flag,
-                  dvh_data_path, pyrad_data_path,pyrad_value,dvh_value,):
+                  dvh_data_path,pyrad_data_path,dvh_value,pyrad_value):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -24,24 +23,22 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         :param dvh_data_path: dvh path to file.
         :param pyrad_data_path: pyradiomics path to file.
         :param pyrad_value: selected value for Pyradiomics
-        :param dvh_value: selected valie for DVH
+        :param dvh_value: selected value for DVH
         """
         # Call the parent class
+        # TODO: 3rd argument here should be patient files?
+        # same in other machine learning process
         super(BatchprocessMachineLearningDataSelection, self).__init__(progress_callback,
-                                                          interrupt_flag)
-
-        # Set class variables
-        self.patient_dict_container = PatientDictContainer()
-        # path
+                                                          interrupt_flag, 
+                                                          dvh_data_path)
         self.dvh_data_path = dvh_data_path
         self.pyrad_data_path = pyrad_data_path
-        #values
+
         self.pyrad_value = pyrad_value
         self.dvh_value = dvh_value
-        #df
+
         self.dvh_data = None
         self.pyrad_data = None
-
 
     def start(self):
         """
@@ -58,7 +55,7 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         self.save_file()
 
         # Set summary
-        self.summary = "Complete Machine learning Process"
+        self.summary = "Completed Machine learning data selection Process"
 
         return True
 
@@ -68,7 +65,6 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
             self.pyrad_data = pd.read_csv(f'{self.pyrad_data_path}')
         else:
             logging.warning('DVH and Pyradiomics Path not selected')
-
 
     def filter_data(self):
         self.dvh_data = self.dvh_data[self.dvh_data['ROI'] == self.pyrad_value]
@@ -98,8 +94,5 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         except FileExistsError:
             logging.warning('Directory already exists')
 
-        try:
-            self.dvh_data.to_csv(f'{dir_name_dvh}/{filename_dvh}', sep=',')
-            self.pyrad_data.to_csv(f'{dir_name_pyrad}/{filename_pyrard}', sep=',')
-        except:
-            logging.warning('error in Saving ML model')
+        self.dvh_data.to_csv(f'{dir_name_dvh}/{filename_dvh}', sep=',')
+        self.pyrad_data.to_csv(f'{dir_name_pyrad}/{filename_pyrard}', sep=',')
