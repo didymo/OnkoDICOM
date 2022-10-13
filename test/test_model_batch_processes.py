@@ -201,37 +201,6 @@ def test_batch_dvh2csv(test_object):
         assert len(rtdose.DVHSequence) > 0
 
 
-def test_batch_pyrad2csv(test_object):
-    """
-    Test asserts creation of CSV as result of PyRad2CSV conversion.
-    :param test_object: test_object function, for accessing the shared
-                            TestObject object.
-    """
-    # Loop through patient datasets
-    for patient in test_object.get_patients():
-        cur_patient_files = BatchProcessingController.get_patient_files(
-            patient)
-
-        # Create and setup the Batch Process
-        process = BatchProcessPyRad2CSV(test_object.DummyProgressWindow,
-                                        test_object.DummyProgressWindow,
-                                        cur_patient_files,
-                                        test_object.batch_dir)
-
-        # Target filename
-        filename = 'Pyradiomics_' + test_object.timestamp + '.csv'
-
-        # Set the filename
-        process.set_filename(filename)
-
-        # Start the process
-        process.start()
-
-        # Assert the resulting .csv file exists
-        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
-                                            filename))
-
-
 def test_batch_pyrad2pyradsr(test_object):
     """
     Test that a DICOM file 'PyRadiomics-SR.dcm' is created from
@@ -261,7 +230,45 @@ def test_batch_pyrad2pyradsr(test_object):
         path = Path(directory).joinpath(file_name)
         assert os.path.exists(str(path))
 
-        # Delete Pyradiomics SR
+
+def test_batch_pyrad2csv(test_object):
+    """
+    Test asserts creation of CSV as result of PyRad2CSV conversion.
+    :param test_object: test_object function, for accessing the shared
+                            TestObject object.
+    """
+    # Loop through patient datasets
+    for patient in test_object.get_patients():
+        cur_patient_files = BatchProcessingController.get_patient_files(
+            patient)
+
+        # Create and setup the Batch Process
+        process = BatchProcessPyRad2CSV(test_object.DummyProgressWindow,
+                                        test_object.DummyProgressWindow,
+                                        cur_patient_files,
+                                        test_object.batch_dir)
+
+        # Target filename
+        filename = 'Pyradiomics_' + test_object.timestamp + '.csv'
+
+        # Set the filename
+        process.set_filename(filename)
+
+        # Start the process
+        process.start()
+
+        # Assert the resulting .csv file exists
+        assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
+                                            filename))
+        
+        # Get dataset directory
+        directory = process.patient_dict_container.path
+
+        # Prepare to delete Pyrad-SR file
+        file_name = 'Pyradiomics-SR.dcm'
+        path = Path(directory).joinpath(file_name)
+
+        # Delete Pyrad-SR file
         os.remove(path)
 
 
