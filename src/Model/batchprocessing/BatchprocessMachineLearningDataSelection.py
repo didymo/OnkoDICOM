@@ -1,5 +1,4 @@
 from src.Model.batchprocessing.BatchProcess import BatchProcess
-from src.Model.PatientDictContainer import PatientDictContainer
 import logging
 import pandas as pd
 import os
@@ -13,7 +12,7 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
     """
 
     def __init__(self, progress_callback, interrupt_flag,
-                  dvh_data_path,pyrad_data_path,dvh_value,pyrad_value):
+                 dvh_data_path, pyrad_data_path, dvh_value, pyrad_value):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -26,11 +25,10 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         :param dvh_value: selected value for DVH
         """
         # Call the parent class
-        # TODO: 3rd argument here should be patient files?
-        # same in other machine learning process
-        super(BatchprocessMachineLearningDataSelection, self).__init__(progress_callback,
-                                                          interrupt_flag, 
-                                                          dvh_data_path)
+        super(BatchprocessMachineLearningDataSelection, self).__init__(
+            progress_callback,
+            interrupt_flag,
+            None)
         self.dvh_data_path = dvh_data_path
         self.pyrad_data_path = pyrad_data_path
 
@@ -46,13 +44,22 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         :return: True if successful, False if not.
         """
         # reading file
-        self.progress_callback.emit(("Reading Pyradiomics and DVH Data..", 20))
-        self.read_csv()
+        self.progress_callback.emit(
+            ("Reading Pyradiomics and DVH Data..", 20)
+            )
+
+        if not self.read_csv():
+            self.summary = "Failed Machine learning data selection" \
+                "Process. Files incorrectly selected."
+            return False
+
         # Machine learning
-        self.progress_callback.emit(("Filtering DVH and Pyradiomics Model..", 50))
+        self.progress_callback.emit(
+            ("Filtering DVH and Pyradiomics Model..", 50)
+            )
         self.filter_data()
         self.progress_callback.emit(("Saving results...", 80))
-        self.save_file()
+        self.save_files()
 
         # Set summary
         self.summary = "Completed Machine learning data selection Process"
@@ -60,15 +67,20 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         return True
 
     def read_csv(self):
-        if self.dvh_data_path != None and self.pyrad_data_path != None:
-            self.dvh_data = pd.read_csv(f'{self.dvh_data_path}', on_bad_lines='skip')
+        if self.dvh_data_path is not None and self.pyrad_data_path is not None:
+            self.dvh_data = pd.read_csv(
+                f'{self.dvh_data_path}',
+                on_bad_lines='skip'
+                )
             self.pyrad_data = pd.read_csv(f'{self.pyrad_data_path}')
+            return True
         else:
-            logging.warning('DVH and Pyradiomics Path not selected')
+            return False
 
     def filter_data(self):
         self.dvh_data = self.dvh_data[self.dvh_data['ROI'] == self.pyrad_value]
-        self.pyrad_data = self.pyrad_data[self.pyrad_data['ROI'] == self.dvh_value]
+        self.pyrad_data = \
+            self.pyrad_data[self.pyrad_data['ROI'] == self.dvh_value]
 
     def split_path(self, path_to_file):
         pattern = r'/'
@@ -76,10 +88,11 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         modified_path = "/".join(path)
         return modified_path
 
-    def save_file(self):
+    def save_files(self):
         # Create directory
         dir_name_dvh = f'{self.split_path(self.dvh_data_path)}/dvh_modifed'
-        dir_name_pyrad = f'{self.split_path(self.pyrad_data_path)}/pyradiomics_modifed'
+        dir_name_pyrad = f'{self.split_path(self.pyrad_data_path)}" \
+            "/pyradiomics_modifed'
         filename_dvh = "OnkoDICOM.DVH_Clinical_Data.csv"
         filename_pyrard = "OnkoDICOM.Pyradiomics_Clinical_Data.csv"
 
@@ -87,12 +100,12 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
             # Create Pyradiomics Directory
             os.mkdir(dir_name_pyrad)
         except FileExistsError:
-            logging.warning('Directory already exists')
+            logging.debug('Directory already exists')
         try:
             # Create dvh Directory
             os.mkdir(dir_name_dvh)
         except FileExistsError:
-            logging.warning('Directory already exists')
+            logging.debug('Directory already exists')
 
         self.dvh_data.to_csv(f'{dir_name_dvh}/{filename_dvh}', sep=',')
         self.pyrad_data.to_csv(f'{dir_name_pyrad}/{filename_pyrard}', sep=',')
