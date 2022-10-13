@@ -273,7 +273,7 @@ class UIDrawROIWindow:
         # Create a slider for zooming in and out
         self.draw_roi_zoom_slider = QSlider(Qt.Horizontal)
         self.draw_roi_zoom_slider.setMinimum(50)
-        self.draw_roi_zoom_slider.setMaximum(1050)
+        self.draw_roi_zoom_slider.setMaximum(2050)
         self.draw_roi_zoom_slider.setSingleStep(10)
         self.draw_roi_zoom_slider.setTickPosition(QSlider.TicksBothSides)
         self.draw_roi_zoom_slider.setTickInterval(100)
