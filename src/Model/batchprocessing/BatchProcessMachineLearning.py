@@ -79,12 +79,24 @@ class BatchProcessMachineLearning(BatchProcess):
         return True
 
     def get_results_values(self):
+        """
+        Function return result of Model.
+        """
         return self.machine_learning_options
 
     def get_run_model_accept(self):
+        """
+        Function return if Training model function were used
+        if so then it will display the result of the model.
+        """
         return self.run_model_accept
 
     def preprocessing_for_ml(self):
+        """
+        Function does preprocessing of provided data
+        for all descriptions of Preprocessing class and functions
+        please refer to class Preprocessing.
+        """
         self.preprocessing = Preprocessing(
             path_clinical_data=self.clinical_data_path,
             path_pyr_data=self.pyrad_data_path,
@@ -107,6 +119,11 @@ class BatchProcessMachineLearning(BatchProcess):
             self.preprocessing.permission
 
     def run_model(self):
+        """
+        Function train machine learning model
+        for all descriptions of Machine learning class and functions
+        please refer to class MachineLearningTrainingStage.py.
+        """
         if self.run_model_accept is None:
             self.run_ml = MlModeling(
                 self.X_train,
@@ -115,7 +132,7 @@ class BatchProcessMachineLearning(BatchProcess):
                 self.y_test,
                 self.preprocessing.target,
                 self.preprocessing.type_column,
-                tunning=self.machine_learning_options['tune'],
+                tuning=self.machine_learning_options['tune'],
                 permission=self.run_model_accept)
 
             self.run_ml.run_model()

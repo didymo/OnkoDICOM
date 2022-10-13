@@ -12,34 +12,26 @@ import ast
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-"""
-Following class does preprocessing of the data
-it selects all selected columns by the Doctor.
-It checks if the type is category and
-rename values in target is not null then it renames columns
-if type is numerical or renamed values
-in target is null the it skips function.
-Then it cleans and preprocess data for Machine learning
-At the end it returns merged data
-"""
-
 
 class Preprocessing:
+    """
+    Following class does preprocessing of the data
+    it selects all selected columns by the Doctor.
+    It checks if the type is category and
+    rename values in target is not null then it renames columns
+    if type is numerical or renamed values
+    in target is null the it skips function.
+    Then it cleans and preprocess data for Machine learning
+    At the end it returns merged data
+    """
 
-    # gets path of (Clinical Data,Pyrad,DVH),
-    # selected column name, type of the target, renamed columns
     def __init__(self,
-                 # Path
-                 path_clinical_data=None,  # clinical data
-                 path_pyr_data=None,  # Pyradiomics
-                 path_dvh_data=None,  # DVH
-                 # Selected Columns
+                 path_clinical_data=None,
+                 path_pyr_data=None,
+                 path_dvh_data=None,
                  column_names=None,
-                 # Type of the Column (category/numerical)
                  type_column=None,
-                 # Rename values list []
                  target=None,
-                 # column Name for target
                  rename_values=None):
 
         self.path_clinical_data = path_clinical_data
@@ -54,8 +46,25 @@ class Preprocessing:
         self.permission = None
         self.permission_ids = None
 
-    # read csv files and return 3 CSV files as pandas DF
+        """
+        Class initializer function.
+        :param path_clinical_data: path to clinical csv file.
+        :param path_pyr_data: path to Pyradiomics csv file.
+        :param path_dvh_data: path to DVH csv file.
+        :param column_names: list of columns that
+                             will be selected from clinical data.
+        :param type_column: indicate if the ML model
+                            should be classification or regression.
+        :param target: column name of the target.
+        :param rename_values: List of Values that will be renamed in target
+        (will be used only if target is binary).
+        """
+
     def read_csv(self):
+        """
+        Function reads csv files
+        and return 3 CSV files as pandas DF
+        """
         # Check if Path was provided
         if self.column_names is not None:
             self.column_names.append('HASHidentifier')
@@ -86,16 +95,16 @@ class Preprocessing:
                 rename(columns={"Hash ID": "HASHidentifier"})
         return data_clinical, data_dvh, data_py
 
-    """
-    following function get 3 parameters
-    Clinical Data pandas DF, Target Column, list of Values
-    If type of the column is category and List of values not null
-    then it renames to set values.
-    If it is numeric or list is empty it return
-    initial pandas DF that was provided.
-    """
-
     def rename(self, clinical_data):
+        """
+        following function gets 3 parameters
+        Clinical Data pandas DF, Target Column, list of Values
+        If type of the column is category and List of values not null
+        then it renames to set values.
+        If it is numeric or list is empty it return
+        initial pandas DF that was provided.
+        """
+
         if self.type_column == 'category' and self.rename_values is not None:
             for i in range(len(self.rename_values)):
                 clinical_data.loc[
@@ -107,21 +116,22 @@ class Preprocessing:
                           'allowed for numerical values')
             return clinical_data
 
-    """
-    Following function does preprocessing of the Clinical Data
-    1.Rename -> if needed
-    2.Clean -> if needed
-    3.Fill missing values -> if needed
-    4.Removes duplivates -> if needed
-    5.Replace values ->if needed
-    6.drop empty columns if exists
-    """
-
     def pre_processing_clinical_data(self, clinical_data):
+        """
+        Following function does preprocessing of the Clinical Data
+        1.Rename -> if needed
+        2.Clean -> if needed
+        3.Fill missing values -> if needed
+        4.Removes duplivates -> if needed
+        5.Replace values ->if needed
+        6.drop empty columns if exists
+        """
 
-        # Function checks % of missing values in a column.
-        # Those Columns that are less than 5% will be removed from DF
         def check_percentage_missing_values(data):
+            """
+        Function checks % of missing values in a column.
+        Those Columns that are less than 5% will be removed from DF
+            """
             drop_columns = []
             for x in data.columns:
                 percentage = (100 - (data[x].isna().sum() / len(data) * 100))
@@ -130,9 +140,11 @@ class Preprocessing:
 
             return drop_columns
 
-        # Function to replace 2nd value in string
         def replace_nth_occurance(some_str, original, replacement, n):
-            """ Replace nth occurance of a string with another string"""
+            """
+            Function Replace nth occurrence
+            of a string with another string
+            """
             all_replaced = \
                 some_str.replace(
                     original,
@@ -208,6 +220,11 @@ class Preprocessing:
 
     # Preprocessing DVH data
     def pre_processing_dvh_data(self, dvh_data):
+        """
+        Function preprocess DVH data
+        1. Fill all empty columns
+        2. Removes duplicates from ID and ROI
+        """
         dvh_data = dvh_data.fillna(0)
         dvh_data = dvh_data.drop_duplicates(
             subset=['HASHidentifier', 'ROI'],
@@ -216,6 +233,13 @@ class Preprocessing:
 
     # Preprocessing Pyrad data
     def pre_processing_pyrad_data(self, pyrad):
+        """
+        Function preprocess Pyradiomics data
+        1.Removes columns with version
+        that used if they are present.
+        2.Replace with mean in the columns
+        that contain array instead of 1 value.
+        """
         list_columns_remove = ['diagnostics_Versions_PyRadiomics',
                                'diagnostics_Versions_Numpy',
                                'diagnostics_Versions_SimpleITK',
@@ -238,20 +262,21 @@ class Preprocessing:
 
         if 'diagnostics_Mask-original_CenterOfMassIndex' in pyrad.columns:
             pyrad['diagnostics_Mask-original_CenterOfMassIndex'] = pyrad[
-                'diagnostics_Mask-original_CenterOfMassIndex']. \
-                apply(lambda x: ast.literal_eval(x)). \
-                apply(lambda x: sum(x) / len(x))
+                'diagnostics_Mask-original_CenterOfMassIndex']\
+                .apply(lambda x: ast.literal_eval(x)) \
+                .apply(lambda x: sum(x) / len(x))
 
         if 'diagnostics_Mask-original_BoundingBox' in pyrad.columns:
             pyrad['diagnostics_Mask-original_BoundingBox'] = pyrad[
-                'diagnostics_Mask-original_BoundingBox']. \
-                apply(lambda x: ast.literal_eval(x)). \
-                apply(lambda x: sum(x) / len(x))
+                'diagnostics_Mask-original_BoundingBox'] \
+                .apply(lambda x: ast.literal_eval(x)) \
+                .apply(lambda x: sum(x) / len(x))
 
         if 'diagnostics_Mask-original_CenterOfMass' in pyrad.columns:
             pyrad['diagnostics_Mask-original_CenterOfMass'] = \
-                pyrad['diagnostics_Mask-original_CenterOfMass'].apply(lambda x: ast.literal_eval(x)).apply(
-                    lambda x: sum(x) / len(x))
+                pyrad['diagnostics_Mask-original_CenterOfMass'] \
+                .apply(lambda x: ast.literal_eval(x)) \
+                .apply(lambda x: sum(x) / len(x))
 
         return pyrad
 
@@ -259,6 +284,13 @@ class Preprocessing:
                                                 clinical_data,
                                                 dvh_data,
                                                 pyrad_data):
+        """
+        Function returns clinical data with ids
+        that are present in DVH and Pyradomics
+        Those Ids that are missing are set in a list
+        and will be reported after the preprocessing
+        """
+
         # get all List of unique IDs in Clinical Data
         clinical_data_id = \
             clinical_data['HASHidentifier'].unique().tolist()
@@ -290,8 +322,12 @@ class Preprocessing:
                 dvh_data['HASHidentifier'])]
         return clinical_data
 
-    # Reading Clinical,DVG,Pyrad and Preprocess it
     def pre_processing_data(self):
+        """
+        Function reads csv files
+        and preprocess clinical data,
+        DVH and Pyradiomics.
+        """
         clinical_data, dvh_data, pyrad_data = \
             self.read_csv()
         clinical_data = \
@@ -309,8 +345,12 @@ class Preprocessing:
 
         return clinical_data, dvh_data, pyrad_data
 
-    # Following function Merge 3 DFs into 1 Data Frame
     def merging_data(self, clinical_data, dvh_data, pyrad_data):
+        """
+        Function Merges clinical,
+        DVH and pyradiomics
+        into 1 Data Frame
+        """
         # get all List of unique IDs in Clinical Data
         clinical_dvh = \
             clinical_data.merge(
@@ -327,15 +367,11 @@ class Preprocessing:
 
         return clinical_dvh_pyrad
 
-    """
-    Following functions checks if we need
-    to do up sampling for DataFrame
-    to prevent imbalanced data
-    This Function Should Take
-    only selected target column.
-    """
-
     def check_preprocessing_data(self):
+        """
+        Function checks if it is possible
+        to do splitting into train and test dataset
+        """
         clinical_data, dvh, pyrad_data = self.pre_processing_data()
         if len(clinical_data) <= 1:
             return False
@@ -343,6 +379,13 @@ class Preprocessing:
         return True
 
     def check_percentage_value_counts(self, data):
+        """
+        Following functions checks if we need
+        to do up sampling for DataFrame
+        to prevent imbalanced data
+        This Function Should Take
+        only selected target column.
+        """
         count = 0
         min_p = 100.0  # find min % of the values in DF
         min_v = None  # to set this Value for upsampling
@@ -362,8 +405,10 @@ class Preprocessing:
         else:
             return False, min_v
 
-    # Following Function does upsampling for dataset Only if it is needed
     def up_sampling(self, data):
+        """
+        Following Function does upsampling for dataset Only if it is needed
+        """
         result = self.check_percentage_value_counts(data[self.target])
         if result[0]:
             # Separate majority and minority classes
@@ -383,13 +428,13 @@ class Preprocessing:
 
         return data
 
-    """
-    Following function Merge the data into 1 Dataset
-    Then it checks if Target was specified for Use case 1 (Train Model)
-    If so, then it does Scaling Data and Upsampling(if needed)
-    """
-
     def prepare_for_ml(self):
+        """
+        Following function Merge the clinical,
+        DVH and Pyradiomics into 1 Dataset
+        Then it checks if Target was specified for Training Model
+        If so, then it does Scaling and Upsampling(if needed)
+        """
         clinical_data, dvh, pyrad_data = self.pre_processing_data()
         # Used only for Training if it is Testing Then returns Merged DF
         if self.target is not None and len(clinical_data) > 1:
@@ -446,6 +491,12 @@ class Preprocessing:
     # Should be saved in txt (columnNames),
     # 2 value name of the Model (self.target+'_ML')
     def get_params_clinical_data(self):
+        """
+        Function that saves parameters
+         that were selected at the beginning
+         1. Column names
+         2. Target Column name
+        """
         # if columnNames not empty
         if self.column_names is not None:
             self.column_names.remove(self.target)
