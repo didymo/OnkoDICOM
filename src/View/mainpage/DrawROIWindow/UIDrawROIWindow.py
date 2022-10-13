@@ -419,7 +419,6 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_button_row_layout.addWidget(self.image_slice_number_draw_button)
 
-        # TODO: Create Clear button
         # Create a clear button(clear single slice)
         self.image_slice_number_clear_button = QPushButton()
         self.image_slice_number_clear_button.setObjectName("ImageSliceNumberClearButton")
