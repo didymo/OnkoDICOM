@@ -47,7 +47,7 @@ class MLTab(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
-    def set_csv_output_location_clinical_data(self,
+    def set_csv_input_location_clinical_data(self,
                                               path,
                                               enable=True,
                                               change_if_modified=False):
@@ -67,7 +67,7 @@ class MLTab(QtWidgets.QWidget):
 
         self.clinical_data_csv_path = path
 
-    def get_csv_output_location_clinical_data(self):
+    def get_csv_input_location_clinical_data(self):
         """
         Get the location of the desired output directory.
         """
@@ -97,7 +97,7 @@ class MLTab(QtWidgets.QWidget):
             path = self.directory_input_clinical_data.text()
 
         # Update file path
-        self.set_csv_output_location_clinical_data(
+        self.set_csv_input_location_clinical_data(
             path, change_if_modified=True)
 
     def show_file_browser_saved_model(self):
@@ -109,24 +109,12 @@ class MLTab(QtWidgets.QWidget):
         path = QtWidgets.QFileDialog.getExistingDirectory(
             None, "Open Directory")
 
-        self.selected_model_directory = path
-
-        # If chosen directory is nothing (user clicked cancel) set to
-        # user home
-        if (path == "" and
-                self.directory_input_ml_model.text() == 'No file selected'):
-            path = expanduser("~")
-        elif (path == ""
-              and
-              (self.directory_input_ml_model.text() != 'No file selected'
-               or self.directory_input_ml_model.text() != expanduser("~"))):
-            path = self.directory_input_ml_model.text()
-
         # Update file path
         self.directory_input_ml_model.setText(path)
+        self.selected_model_directory = path
+
         self.on_model_directory_changed()
 
-    # Function for DVH Data
     def set_csv_output_location_dvh_data(self, path, enable=True,
                                          change_if_modified=False):
         """
@@ -158,13 +146,13 @@ class MLTab(QtWidgets.QWidget):
         """
         # Open a file dialog and return chosen directory
         path = QtWidgets.QFileDialog.getOpenFileName(
-            None, "Open Clinical Data File", "",
+            None, "Open DVH Data File", "",
             "CSV data files (*.csv *.CSV)")[0]
 
         # If chosen directory is nothing (user clicked cancel) set to
         # user home
         if (path == "" and
-                self.directory_input_ml_model.text() == 'No file selected'):
+                self.directory_input_dvh_data.text() == 'No file selected'):
             path = expanduser("~")
         elif (path == ""
               and
@@ -175,7 +163,6 @@ class MLTab(QtWidgets.QWidget):
         # Update file path
         self.set_csv_output_location_dvh_data(path, change_if_modified=True)
 
-    # Function for Pyrad Data
     def set_csv_output_location_pyrad(self, path, enable=True,
                                       change_if_modified=False):
         """
@@ -207,13 +194,13 @@ class MLTab(QtWidgets.QWidget):
         """
         # Open a file dialog and return chosen directory
         path = QtWidgets.QFileDialog.getOpenFileName(
-            None, "Open Clinical Data File", "",
+            None, "Open Pyrad File", "",
             "CSV data files (*.csv *.CSV)")[0]
 
         # If chosen directory is nothing (user clicked cancel) set to
         # user home
         if (path == "" and
-                self.directory_input_ml_model.text() == 'No file selected'):
+                self.directory_input_pyrad.text() == 'No file selected'):
             path = expanduser("~")
         elif (path == ""
               and
@@ -225,6 +212,9 @@ class MLTab(QtWidgets.QWidget):
         self.set_csv_output_location_pyrad(path, change_if_modified=True)
 
     def navigate_to_select_csvs(self):
+        """
+        Updates UI to show all options to select csv data inputs.
+        """
         self.clear_current_widgets()
 
         self.label_clinical_data = QtWidgets.QLabel(
@@ -320,11 +310,22 @@ class MLTab(QtWidgets.QWidget):
         self.current_widgets.append(self.next_button)
 
     def clear_current_widgets(self):
+        """
+        Clears all widgets in self.current_widgets.
+        This should be all widgets within this tab
+        but requires they are all added to self.current_widgets
+        when created.
+        """
         for widget in self.current_widgets:
             widget.setParent(None)
 
     def navigate_to_model_selection(self):
-        if any((self.get_csv_output_location_clinical_data() == "No file selected",
+        """
+        Checks if something has been selected for each directory input
+        and will open a message box if not all paths are supplied.
+        Then will update UI with model selection options.
+        """
+        if any((self.get_csv_input_location_clinical_data() == "No file selected",
                 self.get_csv_output_location_dvh_data() == "No file selected",
                 self.get_csv_output_location_pyrad() == "No file selected")):
             dlg = QMessageBox(self)
@@ -356,8 +357,7 @@ class MLTab(QtWidgets.QWidget):
         self.change_button_ml_model.setMaximumWidth(100)
         self.change_button_ml_model.clicked.connect(
             self.show_file_browser_saved_model)
-        # self.change_button_clinical_data.setStyleSheet(self.stylesheet)
-        self.current_widgets.append(self.change_button_clinical_data)
+        self.current_widgets.append(self.change_button_ml_model)
         self.directory_layout.addRow(self.change_button_ml_model)
 
         # create dropdown menu
@@ -385,12 +385,25 @@ class MLTab(QtWidgets.QWidget):
         self.directory_layout.addWidget(self.back_button)
 
     def on_model_directory_changed(self):
+        """
+        Called when model directory changed. Searches the
+        selected directory and any directorys at a depth of 1
+        below this selected directory for folders containing
+        the necessary model files. ["_ml.pkl", "_params.txt",
+        "_scaler.pkl"]. Updates the dropdown with these model
+        names.
+        """
         # search directory for all necessary files
         model_options = []
 
         directories = [self.selected_model_directory]
 
         logging.debug(f"MLTab.selected_model_directory: {self.selected_model_directory}")
+
+        if not os.path.isdir(self.selected_model_directory):
+            self.combobox.clear()
+            self.combobox.setEnabled(False)
+            return
 
         for directory in os.listdir(self.selected_model_directory):
             subdirectory = f"{self.selected_model_directory}/{directory}"
@@ -435,10 +448,21 @@ class MLTab(QtWidgets.QWidget):
         self.combobox.addItems(model_options)
 
     def get_selected_model(self):
+        """
+        Gets the selected model string in the dropdown
+        Returns:
+            string of the model name selected from the dropdown
+        """
         if self.combobox.isEnabled():
             return self.combobox.currentText()
 
     def get_model_path(self):
+        """
+        Gets the model path that was selected
+        Returns:
+            string of the directory that contains the saved model
+            files
+        """
         if (self.directory_input_ml_model.text().endswith(
                 self.get_selected_model()
                 )):
@@ -448,11 +472,17 @@ class MLTab(QtWidgets.QWidget):
                 f"{self.get_selected_model()}"
 
     def run_prediction(self):
+        """
+        Predict values for specified target column using
+        specified csv datasets provided and opens window with
+        results
+        """
         model_path = self.get_model_path()
         logging.debug(f"MLTab.get_model_path(): {model_path}")
 
         # trigger ML model to run
         # requires the directory for the 3 csvs + selected model directory
+        
         ml_tester = MachineLearningTester(
             self.clinical_data_csv_path,
             self.dvh_data_csv_path,
@@ -461,13 +491,15 @@ class MLTab(QtWidgets.QWidget):
             self.get_selected_model()
         )
 
-        ml_tester.predict_values()
-
-        results = f"According to the '{ml_tester.get_model_name()}' " \
+        try:
+            ml_tester.predict_values()
+            results = f"According to the '{ml_tester.get_model_name()}' " \
             f"model located in '{self.get_model_path()}'," \
             "the following values " \
             f"have been predicted: '{ml_tester.get_predicted_values()}' " \
             f"for the column: '{ml_tester.get_target()}'"
+        except Exception as e:
+            results = f"Failed to predict value because of: {e}"
 
         logging.debug(f"Results: {results}")
 
@@ -486,6 +518,9 @@ class MLResultsWindow(QtWidgets.QDialog):
     """
 
     def __init__(self):
+        """
+        Initialises class.
+        """
         QtWidgets.QDialog.__init__(self)
         self.ml_tester = None
         self.params = None
@@ -558,18 +593,22 @@ class MLResultsWindow(QtWidgets.QDialog):
     def set_results_values(self, results_string):
         """
         Sets the summary text.
-        :param batch_summary: List where first index is a dictionary where key
-                              is a patient, and value is a dictionary of
-                              process name and status key-value pairs, and
-                              second index is a batch ROI name cleaning summary
+        :param results_string: text string describing the prediction
+        results
         """
 
         self.summary_label.setText(results_string)
 
     def set_ml_tester(self, ml_tester):
+        """
+        Sets model intance in popup.
+        """
         self.ml_tester = ml_tester
 
     def save_ml_csv_with_predicted_values_clicked(self):
+        """
+        Saves a csv including the predicted values.
+        """
         file_path = QtWidgets.QFileDialog.getExistingDirectory(
             self,
             "Open Directory",
@@ -581,6 +620,9 @@ class MLResultsWindow(QtWidgets.QDialog):
             self.ml_tester.save_into_csv(f'{file_path}/')
 
     def save_ml_txt_with_predicted_values_clicked(self):
+        """
+        Saves a text file with the results_string.
+        """
         file_path = QtWidgets.QFileDialog.getExistingDirectory(
             self,
             "Open Directory",
