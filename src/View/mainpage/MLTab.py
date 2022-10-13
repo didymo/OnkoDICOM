@@ -432,7 +432,7 @@ class MLTab(QtWidgets.QWidget):
                     valid = False
 
             if valid:
-                model_name = "".join(save_file_names[0].split("_")[:-1])
+                model_name = "_".join(save_file_names[0].split("_")[:-1])
                 model_options.append(model_name)
 
         # display all found models in dropdown to be selected from
