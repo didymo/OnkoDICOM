@@ -227,18 +227,18 @@ class MLTab(QtWidgets.QWidget):
     def navigate_to_select_csvs(self):
         self.clear_current_widgets()
 
-        self.label_clinical_data = QtWidgets.QLabel("Please \
-        choose the CSV file location for Clinical Data:")
+        self.label_clinical_data = QtWidgets.QLabel(
+            "Please choose the CSV file location for Clinical Data:")
         self.label_clinical_data.setStyleSheet(self.stylesheet)
         self.current_widgets.append(self.label_clinical_data)
 
-        self.label_DVG = QtWidgets.QLabel("Please choose the \
-        CSV file location for DVH Data:")
+        self.label_DVG = QtWidgets.QLabel(
+            "Please choose the CSV file location for DVH Data:")
         self.label_DVG.setStyleSheet(self.stylesheet)
         self.current_widgets.append(self.label_DVG)
 
-        self.label_Pyrad = QtWidgets.QLabel("Please choose the \
-        CSV file location for Pyradiomics Data:")
+        self.label_Pyrad = QtWidgets.QLabel(
+            "Please choose the CSV file location for Pyradiomics Data:")
         self.label_Pyrad.setStyleSheet(self.stylesheet)
         self.current_widgets.append(self.label_Pyrad)
 
@@ -324,9 +324,9 @@ class MLTab(QtWidgets.QWidget):
             widget.setParent(None)
 
     def navigate_to_model_selection(self):
-        if not all((self.get_csv_output_location_clinical_data(),
-                    self.get_csv_output_location_dvh_data(),
-                    self.get_csv_output_location_pyrad())):
+        if any((self.get_csv_output_location_clinical_data() == "No file selected",
+                self.get_csv_output_location_dvh_data() == "No file selected",
+                self.get_csv_output_location_pyrad() == "No file selected")):
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Error!")
             dlg.setText("Please Provide a path for each file")
@@ -334,7 +334,6 @@ class MLTab(QtWidgets.QWidget):
 
             if button == QMessageBox.Ok:
                 print("Try Again")
-
             return
 
         self.clear_current_widgets()
@@ -463,7 +462,6 @@ class MLTab(QtWidgets.QWidget):
         )
 
         ml_tester.predict_values()
-        # TODO: return True/False if successful or error
 
         results = f"According to the '{ml_tester.get_model_name()}' " \
             f"model located in '{self.get_model_path()}'," \

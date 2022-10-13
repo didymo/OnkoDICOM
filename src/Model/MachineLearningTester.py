@@ -106,7 +106,7 @@ class MachineLearningTester:
             subset=['HASHidentifier', 'ROI']).reset_index(drop=True)
         final_data.to_csv(
             f"{path_to_save}/Clinical_data_with_predicted_"
-            "{self.get_target()}.csv",
+            f"{self.get_target()}.csv",
             index=False
             )
 
@@ -124,33 +124,20 @@ class MachineLearningTester:
         return content_list[:-1], content_list[len(content_list)-1]
 
     def get_saved_model(self, path_pipline):
-        try:
-            pipline_joblib = joblib.load(path_pipline)
-            return pipline_joblib
-        except:
-            logging.debug('error in getting file for pipline')
+        pipline_joblib = joblib.load(path_pipline)
+        return pipline_joblib
 
     def scale(self, pipline_joblib, data):
-        try:
-            # this returns the scaled data
-            scaled_data = pipline_joblib.transform(data)
-            return scaled_data
-        except:
-            logging.debug('error in transformation of data throught pipline')
+        scaled_data = pipline_joblib.transform(data)
+        return scaled_data
 
     def get_model_file(self, ml_modelfile):
-        try:
-            ml_model = joblib.load(ml_modelfile)
-            return ml_model
-        except:
-            logging.debug('error in getting file for Saved Model')
+        ml_model = joblib.load(ml_modelfile)
+        return ml_model
 
     def predict(self, save_model, scaledata):
-        try:
-            predicted = save_model.predict(scaledata)
-            return predicted
-        except:
-            logging.debug('error while predicting data from Save ML model')
+        predicted = save_model.predict(scaledata)
+        return predicted
 
 class Preprocessing:
     ##gets path of (Clinical Data,Pyrad,DVH), selected column name, type of the target, renamed columns
@@ -179,33 +166,29 @@ class Preprocessing:
     
     #read csv files and return 3 CSV files as pandas DF
     def read_csv(self):
-        try:
-            #Check if Path was provided for Clinical data and selected Columns Names
-            if (self.columnNames != None):
-                self.columnNames.append('HASHidentifier')
-                
-                #check if Target not NULL
-                if (self.target != None):
-                    self.columnNames.append(self.target)
+        # Check if Path was provided for Clinical data and selected Columns Names
+        if (self.columnNames != None):
+            self.columnNames.append('HASHidentifier')
             
-                if self.pathClinicalData!=None:
-                    data_Clinical = pd.read_csv(f'{self.pathClinicalData}',usecols=self.columnNames)
-            else:
-                if self.pathClinicalData!=None:
-                    data_Clinical = pd.read_csv(f'{self.pathClinicalData}')
-                
+            #check if Target not NULL
+            if (self.target != None):
+                self.columnNames.append(self.target)
+        
+            if self.pathClinicalData!=None:
+                data_Clinical = pd.read_csv(f'{self.pathClinicalData}',usecols=self.columnNames)
+        else:
+            if self.pathClinicalData!=None:
+                data_Clinical = pd.read_csv(f'{self.pathClinicalData}')
             
-        #Check if Path was provided for DVH data        
-            if self.pathDVHData!=None:
-                data_DVH = pd.read_csv(f'{self.pathDVHData}',on_bad_lines='skip').rename(columns={"Patient ID":"HASHidentifier"})
-            
-        #Check if Path was provided for PyRad data    
-            if self.pathPyrData!=None:
-                data_Py = pd.read_csv(f'{self.pathPyrData}').rename(columns={"Hash ID":"HASHidentifier"})
-                              
-        except:
-            logging.debug('Error in loading Files')
-            
+        
+        # Check if Path was provided for DVH data        
+        if self.pathDVHData!=None:
+            data_DVH = pd.read_csv(f'{self.pathDVHData}',on_bad_lines='skip').rename(columns={"Patient ID":"HASHidentifier"})
+        
+        # Check if Path was provided for PyRad data    
+        if self.pathPyrData!=None:
+            data_Py = pd.read_csv(f'{self.pathPyrData}').rename(columns={"Hash ID":"HASHidentifier"})
+
         return data_Clinical, data_DVH, data_Py
         
     
