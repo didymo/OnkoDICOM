@@ -272,6 +272,10 @@ class UIMainWindow:
                 self.image_fusion_view_coronal.update_view()
                 self.image_fusion_view_sagittal.update_view()
 
+        if hasattr(self, 'draw_roi'):
+            if self.draw_roi is not None:
+                self.draw_roi.update_draw_roi_pixmaps()
+
     def toggle_cut_lines(self):
         if self.dicom_axial_view.horizontal_view is None or \
                 self.dicom_axial_view.vertical_view is None or \
@@ -491,3 +495,33 @@ class UIMainWindow:
 
         # Close progress window
         self.suv2roi_progress_window.close()
+
+    def add_draw_roi_instance(self):
+        """Use ROIDrawOption controller to add the roi instance to the main window"""
+        logging.debug("add_draw_roi_instance started")
+
+        self.splitter.setVisible(False)
+        self.draw_roi = self.roi_draw_handler.show_roi_draw_window()
+        self.main_content.addWidget(self.draw_roi)
+        self.draw_roi_toggle_toolbar_items(True)
+
+    def remove_draw_roi_instance(self):
+        """removes the draw roi instance from the main window,
+        also removing the instance from the ROIDrawOption controller"""
+        logging.debug("remove_draw_roi_instance started")
+
+        self.roi_draw_handler.remove_roi_draw_window()
+        self.main_content.removeWidget(self.draw_roi)
+        delattr(self, 'draw_roi')
+        self.draw_roi_toggle_toolbar_items(False)
+        self.splitter.setVisible(True)
+
+    def draw_roi_toggle_toolbar_items(self, disabled):
+        """Called to disable toolbar options when they do not apply / cannot be used in the current draw roi context"""
+        self.action_handler.action_save_structure.setDisabled(disabled)
+        self.action_handler.action_save_as_anonymous.setDisabled(disabled)
+
+        self.action_handler.action_one_view.setDisabled(disabled)
+        self.action_handler.action_four_views.setDisabled(disabled)
+        self.action_handler.action_show_cut_lines.setDisabled(disabled)
+        self.action_handler.action_image_fusion.setDisabled(disabled)
