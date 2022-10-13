@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot, Signal
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
-    QMessageBox, QComboBox, QGraphicsPixmapItem, QSlider
+    QMessageBox, QSlider
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
@@ -15,7 +15,6 @@ from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.mainpage.DicomAxialView import DicomAxialView
-from src.View.mainpage.DicomGraphicsScene import GraphicsScene
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
@@ -933,8 +932,6 @@ class UIDrawROIWindow:
             self.is_drawing.connect(self.drawingROI.set_is_drawing)
             self.is_drawing.emit(False)
             self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
-
-
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         if self.min_pixel_density_line_edit.text() == "" \
@@ -1072,7 +1069,7 @@ class UIDrawROIWindow:
                     self.dicom_view.view.setScene(self.drawingROI)
                     self.enable_cursor_diameter_transparency()
 
-                    if self.drawingROI._display_pixel_color() != True:
+                    if not self.drawingROI._display_pixel_color():
                         break
         else:
             dt = self.patient_dict_container.dataset[id]
@@ -1113,9 +1110,9 @@ class UIDrawROIWindow:
         """
         self.seed = s
         self.create_drawing_3D(float(self.min_pixel_density_line_edit.text()),
-                            float(self.max_pixel_density_line_edit.text()),
-                            self.patient_dict_container.get("pixmaps_axial"),
-                            self.current_slice)
+                               float(self.max_pixel_density_line_edit.text()),
+                               self.patient_dict_container.get("pixmaps_axial"),
+                               self.current_slice)
 
     def onBoxDrawClicked(self):
         """
@@ -1155,20 +1152,8 @@ class UIDrawROIWindow:
         """
         This function is used when reset button is clicked
         """
-        self.dicom_view.image_display()
-        self.dicom_view.update_view()
-        self.isthmus_width_max_line_edit.setText("5")
-        self.internal_hole_max_line_edit.setText("9")
-        self.min_pixel_density_line_edit.setText("")
-        self.max_pixel_density_line_edit.setText("")
+        self.onClearClicked()
         self.drawn_roi_list = {}
-        if hasattr(self, 'bounds_box_draw'):
-            delattr(self, 'bounds_box_draw')
-        if hasattr(self, 'drawingROI'):
-            delattr(self, 'drawingROI')
-        self.ds = None
-        if hasattr(self, 'seed'):
-            delattr(self, 'seed')
 
     def onSaveClicked(self):
         """
