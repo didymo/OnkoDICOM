@@ -2,9 +2,12 @@ import math
 import numpy
 import logging
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsEllipseItem
+from PySide6.QtCore import Slot
 
+import src.constants as constant
 from src.constants import DEFAULT_WINDOW_SIZE
 from src.Model.Transform import linear_transform, get_pixel_coords, \
     get_first_entry, inv_linear_transform
@@ -12,14 +15,16 @@ from src.Model.Transform import linear_transform, get_pixel_coords, \
 
 class Drawing(QtWidgets.QGraphicsScene):
     """
-        Class responsible for the ROI drawing functionality
-        """
+    Class responsible for the ROI drawing functionality
+    """
+
+    seed = Signal(list)
 
     # Initialisation function  of the class
     def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
                  draw_roi_window_instance, slice_changed,
                  current_slice, drawing_tool_radius, keep_empty_pixel, pixel_transparency,
-                 target_pixel_coords=set()):
+                 target_pixel_coords=set(), **kwargs):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary
@@ -65,6 +70,11 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.max_bounds_x = self.rows
         self.max_bounds_y = self.cols
         self.fill_source = None
+        self.is_drawing = False
+        if 'xy' in kwargs:
+            self.fill_source = kwargs.get('xy')
+        if 'UI' in kwargs:
+            self.seed.connect(kwargs.get('UI').set_seed)
 
     def set_bounds(self):
         """
@@ -113,12 +123,10 @@ class Drawing(QtWidgets.QGraphicsScene):
                             queue.append([element[0], element[1]])
                             self.target_pixel_coords.add((element[0], element[1]))
 
-        """
-        For the meantime, a new image is created and the pixels 
+        """For the meantime, a new image is created and the pixels 
         specified are coloured. The _set_colour_of_pixels function
          is then called to colour the newly drawn pixels and blend in
-         transparency.
-         """
+         transparency."""
         # Convert QPixMap into Qimage
         for x_coord, y_coord in self.target_pixel_coords:
             temp = set()
@@ -130,8 +138,11 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.according_color_dict[(x_coord, y_coord)] = colors
 
         points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+
         self._set_color_of_pixels(points)
         self.refresh_image()
+        return False if len(points) < 1 else True
+
 
     def _set_color_of_pixels(self, points):
         """
@@ -176,6 +187,19 @@ class Drawing(QtWidgets.QGraphicsScene):
                 if self.min_pixel < self.pixel_array[int(coords[1])][int(coords[0])] < self.max_pixel:
                     return True
         return False
+
+    def update_dicom_image(self):
+        """
+        Updates the dicom image data, recalculating the roi pixel colour and displaying changes
+        """
+        logging.debug("update_dicom_image started for slice %s", self.current_slice)
+
+        self.q_image = self.img.toImage()
+
+        points = get_pixel_coords(self.according_color_dict, self.rows, self.cols)
+        self._set_color_of_pixels(points)
+
+        self.refresh_image()
 
     def getValues(self):
         """
@@ -391,6 +415,16 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         self.fill_source = [round(event.scenePos().x()), round(event.scenePos().y())]
         self._display_pixel_color()
+        self.seed.emit(self.fill_source)
+
+    @Slot(bool)
+    def set_is_drawing(self, is_drawing):
+        """
+        Function triggered when either the Draw or Fill button is pressed from the menu.
+        Sets the is_drawing bool, allows for filling or drawing from separate button presses
+        """
+        logging.debug("set_is_drawing started")
+        self.is_drawing = is_drawing
 
     def manual_draw_roi(self, event):
         """
@@ -422,10 +456,41 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def mousePressEvent(self, event):
         """
-            This method is called to handle a mouse press event
+            This method is called to handle the drawing mouse press event
             :param event: the mouse event
         """
-        if self.fill_source is None:
+        if self.cursor:
+            self.removeItem(self.cursor)
+
+        self.isPressed = True
+        if (
+                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
+                < self.rect.width()
+        ):
+            self.drag_position = event.pos() - self.rect.topLeft()
+        super().mousePressEvent(event)
+        x, y = linear_transform(
+            math.floor(event.scenePos().x()), math.floor(event.scenePos().y()),
+            self.rows, self.cols)
+        is_coloured = (x, y) in self.according_color_dict
+        self.is_current_pixel_coloured = is_coloured
+        self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
+                         self.draw_tool_radius, new_circle=True)
+
+        if self.is_current_pixel_coloured:
+            self.fill_pixels_within_circle(event.scenePos().x(),
+                                           event.scenePos().y())
+        else:
+            self.remove_pixels_within_circle(event.scenePos().x(),
+                                             event.scenePos().y())
+        self.update()
+
+    def mousePressEvent(self, event):
+        """
+            This method is called to handle the BFS mousePressEvent
+            :param event: the mouse event
+        """
+        if not self.is_drawing:
             self.set_source(event)
         else:
             self.manual_draw_roi(event)
