@@ -144,7 +144,8 @@ class UIBatchProcessingWindow(object):
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
         self.batchmachinelearning_tab = MachineLearningOptions()
-        self.batchmachinelearning_data_selection_tab = MachineLearningDataSelectionOptions()
+        self.batchmachinelearning_data_selection_tab = \
+            MachineLearningDataSelectionOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -160,15 +161,16 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
-        self.tab_widget.addTab(self.batchmachinelearning_data_selection_tab, 'Machine Learning Data Selection')
+        self.tab_widget.addTab(
+            self.batchmachinelearning_data_selection_tab,
+            'Machine Learning Data Selection'
+            )
         self.tab_widget.addTab(self.batchmachinelearning_tab, 'Machine Learning')
-
-
 
         # == Bottom widgets
         # Info text
-        info_text = "Batch Processing will be performed on datasets in the "
-        info_text += "selected directory."
+        info_text = "Batch Processing will be performed on datasets in the " \
+            "selected directory."
         self.info_label = QtWidgets.QLabel(info_text)
         self.info_label.setFont(label_font)
 
@@ -319,22 +321,22 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname', 'machine_learning_data_selection',
-                     'machine_learning']
+                     'roiname2fmaid', 'fmaid2roiname',
+                     'machine_learning_data_selection', 'machine_learning']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
 
-        ml_data_selection_options = self.batchmachinelearning_data_selection_tab \
-            .get_selected_options()
+        ml_data_selection_options = \
+            self.batchmachinelearning_data_selection_tab.get_selected_options()
 
-        #Path
+        # Path
         clinical_data_path = self.batchmachinelearning_tab.get_csv_output_location_clinicalData()
         dvh_data_path = self.batchmachinelearning_tab.get_csv_output_location_dvhData()
         pyrad_data_path = self.batchmachinelearning_tab.get_csv_output_location_payrad()
-        #Parameters
+        # Parameters
         machine_learning_features = self.batchmachinelearning_tab.get_feature()
         machine_learning_target = self.batchmachinelearning_tab.get_target()
         machine_learning_type = self.batchmachinelearning_tab.get_type()
@@ -383,7 +385,6 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_machine_learning_type(machine_learning_type)
         self.batch_processing_controller.set_machine_learning_rename(machine_learning_rename)
         self.batch_processing_controller.set_machine_learning_tune(machine_learning_tune)
-
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:
