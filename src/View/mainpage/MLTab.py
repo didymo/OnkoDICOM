@@ -391,7 +391,7 @@ class MLTab(QtWidgets.QWidget):
 
         directories = [self.selected_model_directory]
 
-        logging.Debug(f"MLTab.selected_model_directory: {self.selected_model_directory}")
+        logging.debug(f"MLTab.selected_model_directory: {self.selected_model_directory}")
 
         for directory in os.listdir(self.selected_model_directory):
             subdirectory = f"{self.selected_model_directory}/{directory}"
@@ -431,7 +431,7 @@ class MLTab(QtWidgets.QWidget):
         else:
             self.combobox.setEnabled(False)
 
-        logging.Debug(f"Model_options found in selected directory: {model_options}")
+        logging.debug(f"Model_options found in selected directory: {model_options}")
 
         self.combobox.addItems(model_options)
 
@@ -450,7 +450,7 @@ class MLTab(QtWidgets.QWidget):
 
     def run_prediction(self):
         model_path = self.get_model_path()
-        logging.Debug(f"MLTab.get_model_path(): {model_path}")
+        logging.debug(f"MLTab.get_model_path(): {model_path}")
 
         # trigger ML model to run
         # requires the directory for the 3 csvs + selected model directory
@@ -471,7 +471,7 @@ class MLTab(QtWidgets.QWidget):
             f"have been predicted: '{ml_tester.get_predicted_values()}' " \
             f"for the column: '{ml_tester.get_target()}'"
 
-        logging.Debug(f"Results: {results}")
+        logging.debug(f"Results: {results}")
 
         # once run will trigger results popup window
         ml_results_window = MLResultsWindow()

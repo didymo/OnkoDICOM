@@ -45,7 +45,7 @@ class MachineLearningTester:
         return self.model_name
 
     def predict_values(self):
-        logging.Debug(f"MachineLearningTester.predict_values() function called")
+        logging.debug(f"MachineLearningTester.predict_values() function called")
         scaler_file_name = \
             f"{self.saved_model_path}/{self.model_name}_scaler.pkl"
         params_file_name = \
@@ -53,16 +53,16 @@ class MachineLearningTester:
         ml_file_name = \
             f"{self.saved_model_path}/{self.model_name}_ml.pkl"
 
-        logging.Debug(f"Scaler file name: {scaler_file_name}")
-        logging.Debug(f"Params file name: {params_file_name}")
-        logging.Debug(f"ML Model file name: {ml_file_name}")
+        logging.debug(f"Scaler file name: {scaler_file_name}")
+        logging.debug(f"Params file name: {params_file_name}")
+        logging.debug(f"ML Model file name: {ml_file_name}")
 
         column_names_being_used, self.predicted_column_name = self.read_txt_ml_params(
             params_file_name
             )
 
-        logging.Debug(f"Columns being used in ML: {column_names_being_used}")
-        logging.Debug(f"Predicted column name: {self.predicted_column_name}")
+        logging.debug(f"Columns being used in ML: {column_names_being_used}")
+        logging.debug(f"Predicted column name: {self.predicted_column_name}")
 
         testing_data = Preprocessing(
             pathClinicalData=self.clinical_data_csv_path,
@@ -72,8 +72,8 @@ class MachineLearningTester:
         )
 
         self.data, self.ID = testing_data.prepareforML()
-        logging.Debug(f"MachineLearningTester.data: {self.data}")
-        logging.Debug(f"MachineLearningTester.ID: {column_names_being_used}")
+        logging.debug(f"MachineLearningTester.data: {self.data}")
+        logging.debug(f"MachineLearningTester.ID: {column_names_being_used}")
 
         scaler = self.get_saved_model(scaler_file_name)
 
@@ -82,7 +82,7 @@ class MachineLearningTester:
         saved_model = self.get_model_file(ml_file_name)
 
         self.predictions = self.predict(saved_model, scaled_data)
-        logging.Debug(f"MachineLearningTester.predictions: {self.predictions}")
+        logging.debug(f"MachineLearningTester.predictions: {self.predictions}")
 
         return True
 
@@ -128,7 +128,7 @@ class MachineLearningTester:
             pipline_joblib = joblib.load(path_pipline)
             return pipline_joblib
         except:
-            logging.Debug('error in getting file for pipline')
+            logging.debug('error in getting file for pipline')
 
     def scale(self, pipline_joblib, data):
         try:
@@ -136,21 +136,21 @@ class MachineLearningTester:
             scaled_data = pipline_joblib.transform(data)
             return scaled_data
         except:
-            logging.Debug('error in transformation of data throught pipline')
+            logging.debug('error in transformation of data throught pipline')
 
     def get_model_file(self, ml_modelfile):
         try:
             ml_model = joblib.load(ml_modelfile)
             return ml_model
         except:
-            logging.Debug('error in getting file for Saved Model')
+            logging.debug('error in getting file for Saved Model')
 
     def predict(self, save_model, scaledata):
         try:
             predicted = save_model.predict(scaledata)
             return predicted
         except:
-            logging.Debug('error while predicting data from Save ML model')
+            logging.debug('error while predicting data from Save ML model')
 
 class Preprocessing:
     ##gets path of (Clinical Data,Pyrad,DVH), selected column name, type of the target, renamed columns
@@ -204,7 +204,7 @@ class Preprocessing:
                 data_Py = pd.read_csv(f'{self.pathPyrData}').rename(columns={"Hash ID":"HASHidentifier"})
                               
         except:
-            logging.Debug('Error in loading Files')
+            logging.debug('Error in loading Files')
             
         return data_Clinical, data_DVH, data_Py
         
@@ -221,7 +221,7 @@ class Preprocessing:
                 clinicalData.loc[clinicalData[self.target]==i, self.target] = self.renameValues[i]
             return clinicalData
         else:
-            logging.Debug('Function rename is not allowed for numerical values')
+            logging.debug('Function rename is not allowed for numerical values')
             return clinicalData
     
     """
@@ -305,12 +305,12 @@ class Preprocessing:
                     data_Clinical = data_Clinical.drop(listTodrop, axis=1)
                     print(f'columns to drop : {listTodrop}')
             except:
-                logging.Debug('error in dropping empty columns ')
+                logging.debug('error in dropping empty columns ')
                 
             
             
         except:
-            logging.Debug('error in Preprocessing Clinical Data columns')
+            logging.debug('error in Preprocessing Clinical Data columns')
             
         return data_Clinical
 
@@ -321,7 +321,7 @@ class Preprocessing:
             dvhData = dvhData.drop_duplicates(subset=['HASHidentifier', 'ROI'], keep='last')
     
         except:
-            logging.Debug('error in Preprocessing DVH Data columns')
+            logging.debug('error in Preprocessing DVH Data columns')
             
         return dvhData
     
@@ -347,7 +347,7 @@ class Preprocessing:
             if 'diagnostics_Mask-original_CenterOfMass' in Pyrad.columns:    
                 Pyrad['diagnostics_Mask-original_CenterOfMass'] = Pyrad['diagnostics_Mask-original_CenterOfMass'].apply(lambda x :ast.literal_eval(x)).apply(lambda x:sum(x)/len(x))
         except:
-            logging.Debug('error in Preprocessing Pyrad Data columns')
+            logging.debug('error in Preprocessing Pyrad Data columns')
         
         return Pyrad
     
@@ -369,7 +369,7 @@ class Preprocessing:
         #Find Missing IDs
         diff1 = list((Counter(Clinical_data) - Counter(DVH_data)).elements())
         #Need to use here Logging to display IDs which is missing
-        #logging.Debug(data_Clinical[data_Clinical['HASHidentifier'].isin(diff1)][['HASHidentifier']])
+        #logging.debug(data_Clinical[data_Clinical['HASHidentifier'].isin(diff1)][['HASHidentifier']])
         #merge
         clinicalData = clinicalData[clinicalData['HASHidentifier'].isin(dvhData['HASHidentifier'])]
         clnical_DVH = clinicalData.merge(dvhData, how="left", on="HASHidentifier")
@@ -476,14 +476,12 @@ class Preprocessing:
         
     #Should be saved in txt (columnNames), 2 value name of the Model (self.target+'_ML')
     def saveParam(self):
-        #if columnNames not empty 
+        #if columnNames not empty
         if  self.columnNames != None:
             self.columnNames.remove(self.target)
             self.columnNames.remove('HASHidentifier')
-       
-        #If columnNames is Empty    
+        #If columnNames is Empty 
         else:
-            
             data1,data2,data3 = self.read_csv()
             self.columnNames = list(data1.columns)
             self.columnNames.remove(self.target)
