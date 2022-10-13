@@ -101,6 +101,8 @@ class UIDrawROIWindow:
             _translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(
             _translate("ImageSliceNumberDrawButton", "Draw"))
+        self.image_slice_number_clear_button.setText(
+            _translate("ImageSliceNumberClearButton", "Clear"))
         self.image_slice_number_fill_button.setText(
             _translate("ImageSliceNumberFillButton", "Fill"))
         self.image_slice_number_move_forward_button.setText(
@@ -419,6 +421,23 @@ class UIDrawROIWindow:
         self.draw_button_row_layout.addWidget(self.image_slice_number_draw_button)
 
         # TODO: Create Clear button
+        # Create a clear button(clear single slice)
+        self.image_slice_number_clear_button = QPushButton()
+        self.image_slice_number_clear_button.setObjectName("ImageSliceNumberClearButton")
+        self.image_slice_number_clear_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
+        self.image_slice_number_clear_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_clear_button.resize(
+            self.image_slice_number_clear_button.sizeHint().width(),
+            self.image_slice_number_clear_button.sizeHint().height())
+        self.image_slice_number_clear_button.clicked.connect(self.onClearClicked)
+        self.image_slice_number_clear_button.setEnabled(False)
+        icon_clear = QtGui.QIcon()
+        icon_clear.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/clear_icon.png')))
+        self.image_slice_number_clear_button.setIcon(icon_clear)
+        self.draw_button_row_layout.addWidget(self.image_slice_number_clear_button)
 
         # Create a fill button
         self.image_slice_number_fill_button = QPushButton()
@@ -835,26 +854,6 @@ class UIDrawROIWindow:
                 # position
                 self.dicom_view.slider.setValue(image_slice_number + 1)
 
-    def onResetClicked(self):
-        """
-        This function is used when reset button is clicked
-        """
-        self.dicom_view.image_display()
-        self.dicom_view.update_view()
-        self.isthmus_width_max_line_edit.setText("5")
-        self.internal_hole_max_line_edit.setText("9")
-        self.min_pixel_density_line_edit.setText("")
-        self.max_pixel_density_line_edit.setText("")
-        if hasattr(self, 'bounds_box_draw'):
-            delattr(self, 'bounds_box_draw')
-        if hasattr(self, 'drawingROI'):
-            delattr(self, 'drawingROI')
-            self.has_drawing = False
-        if hasattr(self, 'seed'):
-            delattr(self, 'seed')
-
-        self.ds = None
-
     def transect_handler(self):
         """
         Function triggered when the Transect button is pressed from the menu.
@@ -1132,6 +1131,45 @@ class UIDrawROIWindow:
         self.disable_cursor_diameter_transparency()
         self.has_drawing = False
 
+    def onClearClicked(self):
+        """
+        This function is used when reset button is clicked
+        """
+        self.dicom_view.image_display()
+        self.dicom_view.update_view()
+        self.isthmus_width_max_line_edit.setText("5")
+        self.internal_hole_max_line_edit.setText("9")
+        self.min_pixel_density_line_edit.setText("")
+        self.max_pixel_density_line_edit.setText("")
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+            self.has_drawing = False
+        if hasattr(self, 'seed'):
+            delattr(self, 'seed')
+
+        self.ds = None
+
+    def onResetClicked(self):
+        """
+        This function is used when reset button is clicked
+        """
+        self.dicom_view.image_display()
+        self.dicom_view.update_view()
+        self.isthmus_width_max_line_edit.setText("5")
+        self.internal_hole_max_line_edit.setText("9")
+        self.min_pixel_density_line_edit.setText("")
+        self.max_pixel_density_line_edit.setText("")
+        self.drawn_roi_list = {}
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+        self.ds = None
+        if hasattr(self, 'seed'):
+            delattr(self, 'seed')
+
     def onSaveClicked(self):
         """
             Function triggered when Save button is clicked
@@ -1244,6 +1282,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_diameter_slider.setEnabled(
             False)
         self.image_slice_number_draw_button.setEnabled(False)
+        self.image_slice_number_clear_button.setEnabled(False)
         self.transparency_slider.setEnabled(False)
 
     def enable_cursor_diameter_transparency(self):
@@ -1253,6 +1292,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_diameter_slider.setEnabled(
             True)
         self.image_slice_number_draw_button.setEnabled(True)
+        self.image_slice_number_clear_button.setEnabled(True)
         self.transparency_slider.setEnabled(True)
 
     def show_roi_type_options(self):
