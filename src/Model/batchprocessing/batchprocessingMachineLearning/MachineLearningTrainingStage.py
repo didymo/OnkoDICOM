@@ -24,14 +24,14 @@ import joblib
 
 class MlModeling():
     def __init__(self,
-                 train_feature
-                 , test_feature
-                 , train_label
-                 , test_label
-                 , target
-                 , type_model
-                 , tunning=False
-                 , permission=None):
+                 train_feature,
+                 test_feature,
+                 train_label,
+                 test_label,
+                 target,
+                 type_model,
+                 tunning=False,
+                 permission=None):
         self.train_feature = train_feature
         self.test_feature = test_feature
         self.train_label = train_label
@@ -49,14 +49,19 @@ class MlModeling():
         }
 
     """
-    Below 3 Functions that helps identify what perfomance calculation should be used for the Model
+    Below 3 Functions that helps identify
+    what perfomance calculation should be used for the Model
     """
 
-    def cal_perfomance_gm(self, predictions):
-        return 'geometric mean', geometric_mean_score(self.test_label, predictions)
+    def cal_perfomance_gm(self,
+                          predictions):
+        return 'geometric mean', geometric_mean_score(self.test_label,
+                                                      predictions)
 
     def cal_perfomance_f1_macro(self, predictions):
-        return 'f1_macro', f1_score(self.test_label, predictions, average='macro')
+        return 'f1_macro', f1_score(self.test_label,
+                                    predictions,
+                                    average='macro')
 
     def cal_perfomance_accuracy(self, predictions):
         return 'accuracy', accuracy_score(self.test_label, predictions)
@@ -68,15 +73,20 @@ class MlModeling():
         balance = True
 
         for i in range(len(self.test_label.unique())):
-            if round(self.test_label.value_counts()[i] / len(self.test_label) * 100, 2) < 15:
+            if round(self.test_label.value_counts()[i] /
+                     len(self.test_label) * 100, 2) < 15:
                 balance = False
 
         return balance
 
-    def castom_confusion_matrix(self, predictions):
-        unique_label = np.unique([self.test_label, predictions])
+    def castom_confusion_matrix(self,
+                                predictions):
+        unique_label = np.unique([self.test_label,
+                                  predictions])
         cmtx = pd.DataFrame(
-            confusion_matrix(self.test_label, predictions, labels=unique_label),
+            confusion_matrix(self.test_label,
+                             predictions,
+                             labels=unique_label),
             index=['true:{:}'.format(x) for x in unique_label],
             columns=['pred:{:}'.format(x) for x in unique_label]
         )
@@ -90,15 +100,24 @@ class MlModeling():
     def classification_ml_tunned(self):
         # Tunning Random Forest
         param_grid_rf = [
-            {'n_estimators': [400, 500, 600], 'max_depth': [5, None], 'criterion': ['gini', 'entropy', 'log_loss']},
-            {'bootstrap': [False], 'n_estimators': [400, 500, 600], 'criterion': ['gini', 'entropy', 'log_loss'],
+            {'n_estimators': [400, 500, 600],
+             'max_depth': [5, None],
+             'criterion': ['gini', 'entropy', 'log_loss']},
+            {'bootstrap': [False],
+             'n_estimators': [400, 500, 600],
+             'criterion': ['gini', 'entropy', 'log_loss'],
              'max_depth': [5, None]}]
 
         param_grid_mlp = [
-            {'hidden_layer_sizes': [(100,), (200,), (300,)], 'activation': ['identity', 'logistic', 'tanh', 'relu']
-                , 'solver': ['sgd', 'adam'], 'alpha': [0.01, 0.1], 'learning_rate_init': [0.01, 0.1]},
-            {'hidden_layer_sizes': [(100,), (200,), (300,)], 'activation': ['identity', 'logistic', 'tanh', 'relu']
-                , 'solver': ['lbfgs'], 'alpha': [0.01, 0.1]}]
+            {'hidden_layer_sizes': [(100,), (200,), (300,)],
+             'activation': ['identity', 'logistic',
+                            'tanh', 'relu'],
+             'solver': ['sgd', 'adam'],
+             'alpha': [0.01, 0.1],
+             'learning_rate_init': [0.01, 0.1]},
+            {'hidden_layer_sizes': [(100,), (200,), (300,)],
+             'activation': ['identity', 'logistic', 'tanh', 'relu'],
+             'solver': ['lbfgs'], 'alpha': [0.01, 0.1]}]
 
         # Call Random Forest
         forest_clas = RandomForestClassifier(random_state=42)
@@ -109,33 +128,51 @@ class MlModeling():
         if len(self.test_label.unique()) == 2:
             print('running self.testLabel.unique()) == 2')
             f1_scorer = make_scorer(f1_score, pos_label=self.test_label[0])
-            grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5
-                                          , scoring=f1_scorer, return_train_score=True)
+            grid_search_rf = GridSearchCV(forest_clas,
+                                          param_grid_rf,
+                                          cv=5,
+                                          scoring=f1_scorer,
+                                          return_train_score=True)
 
-            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5
-                                           , scoring=f1_scorer, return_train_score=True)
+            grid_search_mlp = GridSearchCV(mlp_cla,
+                                           param_grid_mlp,
+                                           cv=5,
+                                           scoring=f1_scorer,
+                                           return_train_score=True)
 
             perfomance = self.cal_perfomance_gm
 
         # check it is not Balanced
         elif not self.calculate_balance():
             print('running not self.calculateBalance()')
-            grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5
-                                          , scoring='f1_macro', return_train_score=True)
+            grid_search_rf = GridSearchCV(forest_clas,
+                                          param_grid_rf,
+                                          cv=5,
+                                          scoring='f1_macro',
+                                          return_train_score=True)
 
-            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5
-                                           , scoring='f1_macro', return_train_score=True)
+            grid_search_mlp = GridSearchCV(mlp_cla,
+                                           param_grid_mlp,
+                                           cv=5,
+                                           scoring='f1_macro',
+                                           return_train_score=True)
 
             perfomance = self.cal_perfomance_f1_macro
 
         # if Balanced
         else:
             print('else')
-            grid_search_rf = GridSearchCV(forest_clas, param_grid_rf, cv=5
-                                          , scoring='accuracy', return_train_score=True)
+            grid_search_rf = GridSearchCV(forest_clas,
+                                          param_grid_rf,
+                                          cv=5,
+                                          scoring='accuracy',
+                                          return_train_score=True)
 
-            grid_search_mlp = GridSearchCV(mlp_cla, param_grid_mlp, cv=5
-                                           , scoring='accuracy', return_train_score=True)
+            grid_search_mlp = GridSearchCV(mlp_cla,
+                                           param_grid_mlp,
+                                           cv=5,
+                                           scoring='accuracy',
+                                           return_train_score=True)
             perfomance = self.cal_perfomance_accuracy
 
         # RANDOM FOREST
@@ -151,12 +188,14 @@ class MlModeling():
         mlp_score = perfomance(mlp_pred)
 
         if mlp_score > random_forest_score:
-            self.confusion_matrix = self.castom_confusion_matrix(mlp_pred)
+            self.confusion_matrix = self.castom_confusion_matrix(
+                mlp_pred)
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_model
 
-        self.confusion_matrix = self.castom_confusion_matrix(random_forest_pred)
+        self.confusion_matrix = self.castom_confusion_matrix(
+            random_forest_pred)
         self.score = random_forest_score
         self.accuracy['accuracy'] = f'{self.score}'
         return rf_tree
@@ -196,7 +235,8 @@ class MlModeling():
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_cla
 
-        self.confusion_matrix = self.castom_confusion_matrix(random_forest_pred)
+        self.confusion_matrix = self.castom_confusion_matrix(
+            random_forest_pred)
         self.score = random_forest_score
         self.accuracy['accuracy'] = f'{self.score}'
         return forest_clas
@@ -204,17 +244,41 @@ class MlModeling():
     def regression_ml_tunned(self):
         # Tunning Random Forest
         param_grid_rf = [
-            {'n_estimators': [400, 500, 600], 'max_depth': [5, None], 'criterion': ['gini', 'entropy', 'log_loss']},
-            {'bootstrap': [False], 'n_estimators': [400, 500, 600], 'criterion': ['gini', 'entropy', 'log_loss'],
+            {'n_estimators': [400, 500, 600],
+             'max_depth': [5, None],
+             'criterion': ['gini',
+                           'entropy',
+                           'log_loss']},
+            {'bootstrap': [False],
+             'n_estimators': [400, 500, 600],
+             'criterion': ['gini',
+                           'entropy',
+                           'log_loss'],
              'max_depth': [5, None]}]
 
-        param_grid_mlp = [{'hidden_layer_sizes': [(100,), (200,), (300,)],
-                           'activation': ['identity', 'logistic', 'tanh', 'relu'],
-                           'solver': ['sgd', 'adam'], 'alpha': [0.0001, 0.001, 0.01, 0.1],
-                           'learning_rate_init': [0.001, 0.01, 0.1, 1]},
-                          {'hidden_layer_sizes': [(100,), (200,), (300,)
-                                                  ], 'activation': ['identity', 'logistic', 'tanh', 'relu']
-                              , 'solver': ['lbfgs'], 'alpha': [0.0001, 0.001, 0.01, 0.1]}]
+        param_grid_mlp = [{'hidden_layer_sizes': [(100,),
+                                                  (200,),
+                                                  (300,)],
+                           'activation': ['identity',
+                                          'logistic',
+                                          'tanh',
+                                          'relu'],
+                           'solver': ['sgd',
+                                      'adam'],
+                           'alpha': [0.0001, 0.001, 0.01, 0.1],
+                           'learning_rate_init': [0.001,
+                                                  0.01,
+                                                  0.1,
+                                                  1]},
+                          {'hidden_layer_sizes': [(100,),
+                                                  (200,),
+                                                  (300,)],
+                           'activation': ['identity',
+                                          'logistic',
+                                          'tanh',
+                                          'relu'],
+                           'solver': ['lbfgs'],
+                           'alpha': [0.0001, 0.001, 0.01, 0.1]}]
 
         # Random Forest Regression
         forest_clas = RandomForestRegressor(random_state=42)
@@ -290,22 +354,22 @@ class MlModeling():
             os.mkdir(dir_name)
             print("Directory ", dir_name, " Created ")
         except FileExistsError:
-            print("Directory ", dir_name, " already exists")
+            logging.debug("Directory ", dir_name, " already exists")
 
             # Save Params for Clinical Data
-        with open(f'{dir_name}/{params_model_name["saveModel"]}_params.txt', 'w') as f:
+        with open(f'{dir_name}/'
+                  f'{params_model_name["saveModel"]}_params.txt',
+                  'w') as f:
             print(list_ToSave, file=f)
 
-        try:
-            # the location, If you want to save in local directory then just add filename
+            # save in local directory
             job_ml_file_ml = f'{dir_name}/' \
                              f'{params_model_name["saveModel"]}_ml.pkl'
-            jobfile_scale = f'{dir_name}/{params_model_name["saveModel"]}_scaler.pkl'
+            jobfile_scale = f'{dir_name}/' \
+                            f'{params_model_name["saveModel"]}_scaler.pkl'
             joblib.dump(scaling, jobfile_scale)
             # Save the model as a pickle in a file
             joblib.dump(self.model, job_ml_file_ml)
-        except:
-            logging.warning('error in Saving ML model')
 
     def save_model_parameters(self, path):
         path += f'{self.target}_ML_params.txt'
@@ -319,8 +383,10 @@ class MlModeling():
         path += f'{self.target}_ML_RiskTable.txt'
         headers = ['RISK TABLE', 'ML PERFOMANCE']
         with open(path, 'w') as f:
-            print(f'{headers[0]}\n', file=f)
-            df_as_string = self.confusion_matrix.to_string(header=True, index=True)
+            print(f'{headers[0]}\n',
+                  file=f)
+            df_as_string = self.confusion_matrix.to_string(header=True,
+                                                           index=True)
             f.write(df_as_string)
             print(f'\n\n{headers[1]}\n', file=f)
             print(f'{self.score[0]}: {self.score[1]}', file=f)

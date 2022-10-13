@@ -1,7 +1,9 @@
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.batchprocessing.batchprocessingMachineLearning.Preprocessing import Preprocessing
-from src.Model.batchprocessing.batchprocessingMachineLearning.MachineLearningTrainingStage import MlModeling
+from src.Model.batchprocessing.batchprocessingMachineLearning.\
+    Preprocessing import Preprocessing
+from src.Model.batchprocessing.batchprocessingMachineLearning.\
+    MachineLearningTrainingStage import MlModeling
 import logging
 
 
@@ -68,7 +70,8 @@ class BatchProcessMachineLearning(BatchProcess):
         if self.run_model_accept is not None:
             self.summary = "Failed Machine learning Process.\n" \
                            "Your Dataset is too small.\n" \
-                           "According to DVH and Pyradiomics Datasets found less than 2 cross IDs:\n" \
+                           "According to DVH and Pyradiomics Datasets" \
+                           "found less than 2 cross IDs:\n" \
                            f"{self.preprocessing.permission_ids}"
         else:
             self.summary = "Complete Machine learning Process"
@@ -82,40 +85,41 @@ class BatchProcessMachineLearning(BatchProcess):
         return self.run_model_accept
 
     def preprocessing_for_ml(self):
-        print('self.machine_learning_options["features"]',self.machine_learning_options['features'])
         self.preprocessing = Preprocessing(
-            path_clinical_data=self.clinical_data_path  # Path to Clinical Data
-            , path_pyr_data=self.pyrad_data_path  # Path to Pyrad Data
-            , path_dvh_data=self.dvh_data_path  # Path to DVH Data
-            , column_names=self.machine_learning_options['features']  # DR. Selects Columns
-            , type_column=self.machine_learning_options['type']  # Type of Column (Category/Numerical)
-            , target=self.machine_learning_options['target']  # Target Column to be predicted for training
-            , rename_values=self.machine_learning_options['renameValues']  # Dr. rename values in Target Column
+            path_clinical_data=self.clinical_data_path,
+            path_pyr_data=self.pyrad_data_path,
+            path_dvh_data=self.dvh_data_path,
+            column_names=self.machine_learning_options['features'],
+            type_column=self.machine_learning_options['type'],
+            target=self.machine_learning_options['target'],
+            rename_values=self.machine_learning_options['renameValues']
         )
-        print('True or False check preprocessing',self.preprocessing.check_preprocessing_data())
         if self.preprocessing.check_preprocessing_data():
-            self.X_train, self.X_test, self.y_train, self.y_test = self.preprocessing.prepare_for_ml()
-            self.params = self.preprocessing.get_params_clinical_data()
-            self.scaling = self.preprocessing.scaling
-            self.machine_learning_options['features'] = self.preprocessing.column_names
-        self.run_model_accept = self.preprocessing.permission
+            self.X_train, self.X_test, self.y_train, self.y_test =\
+                self.preprocessing.prepare_for_ml()
+            self.params =\
+                self.preprocessing.get_params_clinical_data()
+            self.scaling =\
+                self.preprocessing.scaling
+            self.machine_learning_options['features'] =\
+                self.preprocessing.column_names
+        self.run_model_accept =\
+            self.preprocessing.permission
 
     def run_model(self):
-        print('True or False',self.run_model_accept)
         if self.run_model_accept is None:
             self.run_ml = MlModeling(
-                self.X_train  # Dataset X_train that we got from preprocessing class
-                , self.X_test  # Dataset X_test that we got from preprocessing class
-                , self.y_train  # Dataset Y_train that we got from preprocessing class
-                , self.y_test  # Dataset Y_train that we got from preprocessing class
-                , self.preprocessing.target  # Label Column (can be exported from Preprocessing )
-                , self.preprocessing.type_column  # type of the ML
-                , tunning=self.machine_learning_options['tune']  # Tunning
-                , permission=self.run_model_accept)
+                self.X_train,
+                self.X_test,
+                self.y_train,
+                self.y_test,
+                self.preprocessing.target,
+                self.preprocessing.type_column,
+                tunning=self.machine_learning_options['tune'],
+                permission=self.run_model_accept)
 
             self.run_ml.run_model()
             self.ml_model = self.run_ml
-            print(self.run_ml.accuracy)
             # Set outputs
             self.machine_learning_options.update(self.run_ml.accuracy)
 

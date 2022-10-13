@@ -278,7 +278,9 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
-                if process in ["roinamecleaning", "select_subgroup", "machine_learning"]:
+                if process in ["roinamecleaning",
+                               "select_subgroup",
+                               "machine_learning"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -299,8 +301,6 @@ class BatchProcessingController:
                 self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
 
-        # TODO: replace this with a set_method which will be called from
-        # BatchProcessingWindow.confirm_button_clicked()
         ml_data = {
             "features": self.machine_learning_features,
             "target": self.machine_learning_target,
@@ -311,12 +311,14 @@ class BatchProcessingController:
         self.machine_learning_options = ml_data
 
         if "machine_learning" in self.processes:
-            self.machine_learning_process = BatchProcessMachineLearning(progress_callback,
-                                                                        interrupt_flag,
-                                                                        self.machine_learning_options,
-                                                                        self.clinical_data_path,
-                                                                        self.dvh_data_path,
-                                                                        self.pyrad_data_path)
+            self.machine_learning_process = \
+                BatchProcessMachineLearning(
+                    progress_callback,
+                    interrupt_flag,
+                    self.machine_learning_options,
+                    self.clinical_data_path,
+                    self.dvh_data_path,
+                    self.pyrad_data_path)
             self.machine_learning_process.start()
             self.batch_summary[1] = self.machine_learning_process.summary
             progress_callback.emit(("Completed ML Training Cleaning", 100))
@@ -691,14 +693,20 @@ class BatchProcessingController:
         self.progress_window.close()
 
         if self.machine_learning_process is not None \
-                and self.machine_learning_process.get_run_model_accept() is not False:
+                and self.machine_learning_process. \
+                get_run_model_accept() is not False:
             # Create window to store ML results
             ml_results_window = BatchMLResultsWindow()
-            ml_results_window.set_results_values(self.machine_learning_process.get_results_values())
-            ml_results_window.set_ml_model(self.machine_learning_process.ml_model)
+            ml_results_window. \
+                set_results_values(self.machine_learning_process.
+                                   get_results_values())
+            ml_results_window.set_ml_model(self.machine_learning_process.
+                                           ml_model)
 
-            ml_results_window.set_df_parameters(self.machine_learning_process.params)
-            ml_results_window.set_df_scaling(self.machine_learning_process.scaling)
+            ml_results_window.set_df_parameters(self.machine_learning_process.
+                                                params)
+            ml_results_window.set_df_scaling(self.machine_learning_process.
+                                             scaling)
 
             ml_results_window.exec_()
 
