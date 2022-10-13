@@ -126,7 +126,6 @@ class MlModeling():
 
         # check if it is binary labels (2 classes)
         if len(self.test_label.unique()) == 2:
-            print('running self.testLabel.unique()) == 2')
             f1_scorer = make_scorer(f1_score, pos_label=self.test_label[0])
             grid_search_rf = GridSearchCV(forest_clas,
                                           param_grid_rf,
@@ -144,7 +143,6 @@ class MlModeling():
 
         # check it is not Balanced
         elif not self.calculate_balance():
-            print('running not self.calculateBalance()')
             grid_search_rf = GridSearchCV(forest_clas,
                                           param_grid_rf,
                                           cv=5,
@@ -161,7 +159,6 @@ class MlModeling():
 
         # if Balanced
         else:
-            print('else')
             grid_search_rf = GridSearchCV(forest_clas,
                                           param_grid_rf,
                                           cv=5,
