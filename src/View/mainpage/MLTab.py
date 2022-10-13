@@ -463,9 +463,14 @@ class MLTab(QtWidgets.QWidget):
             string of the directory that contains the saved model
             files
         """
+        print(self.directory_input_ml_model.text())
+        print(self.get_selected_model())
         if (self.directory_input_ml_model.text().endswith(
                 self.get_selected_model()
                 )):
+            return self.directory_input_ml_model.text()
+        elif self.directory_input_ml_model.text().endswith(
+            f"{self.get_selected_model()}/"):
             return self.directory_input_ml_model.text()
         else:
             return f"{self.directory_input_ml_model.text()}/" \
