@@ -26,11 +26,9 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         :param dvh_value: selected value for DVH
         """
         # Call the parent class
-        # TODO: 3rd argument here should be patient files?
-        # same in other machine learning process
         super(BatchprocessMachineLearningDataSelection, self).__init__(progress_callback,
                                                           interrupt_flag, 
-                                                          dvh_data_path)
+                                                          None)
         self.dvh_data_path = dvh_data_path
         self.pyrad_data_path = pyrad_data_path
 
@@ -48,11 +46,12 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         # reading file
         self.progress_callback.emit(("Reading Pyradiomics and DVH Data..", 20))
         self.read_csv()
+        
         # Machine learning
         self.progress_callback.emit(("Filtering DVH and Pyradiomics Model..", 50))
         self.filter_data()
         self.progress_callback.emit(("Saving results...", 80))
-        self.save_file()
+        self.save_files()
 
         # Set summary
         self.summary = "Completed Machine learning data selection Process"
@@ -76,7 +75,7 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         modified_path = "/".join(path)
         return modified_path
 
-    def save_file(self):
+    def save_files(self):
         # Create directory
         dir_name_dvh = f'{self.split_path(self.dvh_data_path)}/dvh_modifed'
         dir_name_pyrad = f'{self.split_path(self.pyrad_data_path)}/pyradiomics_modifed'
@@ -87,12 +86,12 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
             # Create Pyradiomics Directory
             os.mkdir(dir_name_pyrad)
         except FileExistsError:
-            logging.warning('Directory already exists')
+            logging.debug('Directory already exists')
         try:
             # Create dvh Directory
             os.mkdir(dir_name_dvh)
         except FileExistsError:
-            logging.warning('Directory already exists')
+            logging.debug('Directory already exists')
 
         self.dvh_data.to_csv(f'{dir_name_dvh}/{filename_dvh}', sep=',')
         self.pyrad_data.to_csv(f'{dir_name_pyrad}/{filename_pyrard}', sep=',')

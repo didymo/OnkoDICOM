@@ -23,8 +23,8 @@ from src.View.batchprocessing.FMAID2ROINameOptions import \
     FMAID2ROINameOptions
 from src.View.batchprocessing.MachineLearningOptions import \
     MachineLearningOptions
-from src.View.batchprocessing.MachineLearningDataSelection import \
-    MachineLearningDataSelection
+from src.View.batchprocessing.MachineLearningDataSelectionOptions import \
+    MachineLearningDataSelectionOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -144,7 +144,7 @@ class UIBatchProcessingWindow(object):
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
         self.batchmachinelearning_tab = MachineLearningOptions()
-        self.batchmachinelearning_data_selection_tab = MachineLearningDataSelection()
+        self.batchmachinelearning_data_selection_tab = MachineLearningDataSelectionOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
