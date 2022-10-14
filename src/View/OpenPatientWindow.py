@@ -161,8 +161,7 @@ class UIOpenPatientWindow(object):
             QHBoxLayout()
         self.open_patient_window_patient_open_actions_horizontal_box. \
             setObjectName("OpenPatientWindowPatientOpenActionsHorizontalBox")
-        self.open_patient_window_patient_open_actions_horizontal_box. \
-            addStretch(1)
+
 
         # Create Button to force a link
         self.open_patient_window_link_button = QPushButton()
@@ -175,6 +174,9 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_link_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.open_patient_window_link_button.clicked.connect(self.force_link_on_nodes)
         self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_link_button)
+        self.open_patient_window_link_button.setDisabled(True)
+        self.open_patient_window_patient_open_actions_horizontal_box. \
+            addStretch(1)
 
         # Add a button to go back/exit from the application
         self.open_patient_window_exit_button = QPushButton()
@@ -437,6 +439,7 @@ class UIOpenPatientWindow(object):
 
         # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
+        self.open_patient_window_link_button.setDisabled(True)
         if total_selected_image_series < 1:
             header = "Cannot proceed without an image."
             proceed = False
@@ -444,7 +447,7 @@ class UIOpenPatientWindow(object):
             header = "Cannot proceed with more than 1 selected image."
             proceed = False
         elif not self.check_selected_items_referencing(checked_nodes):
-            # Check that selected items properly reference each other
+            self.open_patient_window_link_button.setEnabled(True)
             header = "Selected series do not reference each other."
             proceed = False
         elif 'RTSTRUCT' not in selected_series_types:
@@ -457,7 +460,6 @@ class UIOpenPatientWindow(object):
             header = ""
 
         self.open_patient_window_confirm_button.setDisabled(not proceed)
-
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
@@ -507,7 +509,7 @@ class UIOpenPatientWindow(object):
 
             if series["SR"] and series["SR"].parent() != series["IMAGE"]:
                 return False
-
+        self.open_patient_window_link_button .setDisabled(True)
         return True
 
     def get_existing_rtss(self, image_series):
@@ -641,6 +643,8 @@ class UIOpenPatientWindow(object):
             logging.debug("Force link unsuccessful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Unsuccessful")
+        self.open_patient_window_link_button.setDisabled(True)
+        self.scan_directory_for_patient()
 
 
 class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
