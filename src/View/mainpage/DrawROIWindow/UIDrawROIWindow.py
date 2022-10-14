@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot, Signal
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
-    QMessageBox, QComboBox, QGraphicsPixmapItem, QSlider
+    QMessageBox, QSlider
 
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.PathHandler import resource_path
@@ -15,7 +15,6 @@ from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.mainpage.DicomAxialView import DicomAxialView
-from src.View.mainpage.DicomGraphicsScene import GraphicsScene
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
@@ -101,6 +100,8 @@ class UIDrawROIWindow:
             _translate("ImageSliceNumberBoxDrawButton", "Set Bounds"))
         self.image_slice_number_draw_button.setText(
             _translate("ImageSliceNumberDrawButton", "Draw"))
+        self.image_slice_number_clear_button.setText(
+            _translate("ImageSliceNumberClearButton", "Clear"))
         self.image_slice_number_fill_button.setText(
             _translate("ImageSliceNumberFillButton", "Fill"))
         self.image_slice_number_move_forward_button.setText(
@@ -272,7 +273,7 @@ class UIDrawROIWindow:
         # Create a slider for zooming in and out
         self.draw_roi_zoom_slider = QSlider(Qt.Horizontal)
         self.draw_roi_zoom_slider.setMinimum(50)
-        self.draw_roi_zoom_slider.setMaximum(1050)
+        self.draw_roi_zoom_slider.setMaximum(2050)
         self.draw_roi_zoom_slider.setSingleStep(10)
         self.draw_roi_zoom_slider.setTickPosition(QSlider.TicksBothSides)
         self.draw_roi_zoom_slider.setTickInterval(100)
@@ -418,7 +419,23 @@ class UIDrawROIWindow:
         self.image_slice_number_draw_button.setIcon(icon_draw)
         self.draw_button_row_layout.addWidget(self.image_slice_number_draw_button)
 
-        # TODO: Create Clear button
+        # Create a clear button(clear single slice)
+        self.image_slice_number_clear_button = QPushButton()
+        self.image_slice_number_clear_button.setObjectName("ImageSliceNumberClearButton")
+        self.image_slice_number_clear_button. \
+            setProperty("QPushButtonClass", "draw-roi-button")
+        self.image_slice_number_clear_button.setSizePolicy(
+            QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        self.image_slice_number_clear_button.resize(
+            self.image_slice_number_clear_button.sizeHint().width(),
+            self.image_slice_number_clear_button.sizeHint().height())
+        self.image_slice_number_clear_button.clicked.connect(self.onClearClicked)
+        self.image_slice_number_clear_button.setEnabled(False)
+        icon_clear = QtGui.QIcon()
+        icon_clear.addPixmap(QtGui.QPixmap(
+            resource_path('res/images/btn-icons/clear_icon.png')))
+        self.image_slice_number_clear_button.setIcon(icon_clear)
+        self.draw_button_row_layout.addWidget(self.image_slice_number_clear_button)
 
         # Create a fill button
         self.image_slice_number_fill_button = QPushButton()
@@ -835,26 +852,6 @@ class UIDrawROIWindow:
                 # position
                 self.dicom_view.slider.setValue(image_slice_number + 1)
 
-    def onResetClicked(self):
-        """
-        This function is used when reset button is clicked
-        """
-        self.dicom_view.image_display()
-        self.dicom_view.update_view()
-        self.isthmus_width_max_line_edit.setText("5")
-        self.internal_hole_max_line_edit.setText("9")
-        self.min_pixel_density_line_edit.setText("")
-        self.max_pixel_density_line_edit.setText("")
-        if hasattr(self, 'bounds_box_draw'):
-            delattr(self, 'bounds_box_draw')
-        if hasattr(self, 'drawingROI'):
-            delattr(self, 'drawingROI')
-            self.has_drawing = False
-        if hasattr(self, 'seed'):
-            delattr(self, 'seed')
-
-        self.ds = None
-
     def transect_handler(self):
         """
         Function triggered when the Transect button is pressed from the menu.
@@ -934,8 +931,6 @@ class UIDrawROIWindow:
             self.is_drawing.connect(self.drawingROI.set_is_drawing)
             self.is_drawing.emit(False)
             self.is_drawing.disconnect(self.drawingROI.set_is_drawing)
-
-
         pixmaps = self.patient_dict_container.get("pixmaps_axial")
 
         if self.min_pixel_density_line_edit.text() == "" \
@@ -1073,7 +1068,7 @@ class UIDrawROIWindow:
                     self.dicom_view.view.setScene(self.drawingROI)
                     self.enable_cursor_diameter_transparency()
 
-                    if self.drawingROI._display_pixel_color() != True:
+                    if not self.drawingROI._display_pixel_color():
                         break
         else:
             dt = self.patient_dict_container.dataset[id]
@@ -1114,9 +1109,9 @@ class UIDrawROIWindow:
         """
         self.seed = s
         self.create_drawing_3D(float(self.min_pixel_density_line_edit.text()),
-                            float(self.max_pixel_density_line_edit.text()),
-                            self.patient_dict_container.get("pixmaps_axial"),
-                            self.current_slice)
+                               float(self.max_pixel_density_line_edit.text()),
+                               self.patient_dict_container.get("pixmaps_axial"),
+                               self.current_slice)
 
     def onBoxDrawClicked(self):
         """
@@ -1131,6 +1126,33 @@ class UIDrawROIWindow:
         self.dicom_view.view.setScene(self.bounds_box_draw)
         self.disable_cursor_diameter_transparency()
         self.has_drawing = False
+
+    def onClearClicked(self):
+        """
+        This function is used when reset button is clicked
+        """
+        self.dicom_view.image_display()
+        self.dicom_view.update_view()
+        self.isthmus_width_max_line_edit.setText("5")
+        self.internal_hole_max_line_edit.setText("9")
+        self.min_pixel_density_line_edit.setText("")
+        self.max_pixel_density_line_edit.setText("")
+        if hasattr(self, 'bounds_box_draw'):
+            delattr(self, 'bounds_box_draw')
+        if hasattr(self, 'drawingROI'):
+            delattr(self, 'drawingROI')
+            self.has_drawing = False
+        if hasattr(self, 'seed'):
+            delattr(self, 'seed')
+
+        self.ds = None
+
+    def onResetClicked(self):
+        """
+        This function is used when reset button is clicked
+        """
+        self.onClearClicked()
+        self.drawn_roi_list = {}
 
     def onSaveClicked(self):
         """
@@ -1244,6 +1266,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_diameter_slider.setEnabled(
             False)
         self.image_slice_number_draw_button.setEnabled(False)
+        self.image_slice_number_clear_button.setEnabled(False)
         self.transparency_slider.setEnabled(False)
 
     def enable_cursor_diameter_transparency(self):
@@ -1253,6 +1276,7 @@ class UIDrawROIWindow:
         self.draw_roi_window_cursor_diameter_slider.setEnabled(
             True)
         self.image_slice_number_draw_button.setEnabled(True)
+        self.image_slice_number_clear_button.setEnabled(True)
         self.transparency_slider.setEnabled(True)
 
     def show_roi_type_options(self):
