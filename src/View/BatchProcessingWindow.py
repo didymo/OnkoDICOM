@@ -21,6 +21,8 @@ from src.View.batchprocessing.ROINameCleaningOptions import \
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
 from src.View.batchprocessing.FMAID2ROINameOptions import \
     FMAID2ROINameOptions
+from src.View.batchprocessing.MachineLearningDataSelectionOptions import \
+    MachineLearningDataSelectionOptions
 
 
 class CheckableTabWidget(QtWidgets.QTabWidget):
@@ -139,6 +141,8 @@ class UIBatchProcessingWindow(object):
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
+        self.batchmachinelearning_data_selection_tab = \
+            MachineLearningDataSelectionOptions()
 
         # Add tabs to tab widget
         self.tab_widget.addTab(self.select_subgroup_tab, "Select Subgroup")
@@ -154,7 +158,10 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
-
+        self.tab_widget.addTab(
+            self.batchmachinelearning_data_selection_tab,
+            'Machine Learning Data Selection'
+            )
         # == Bottom widgets
         # Info text
         info_text = "Batch Processing will be performed on datasets in the "
@@ -306,12 +313,16 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname']
+                     'roiname2fmaid', 'fmaid2roiname',
+                     'machine_learning_data_selection']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
+
+        ml_data_selection_options = \
+            self.batchmachinelearning_data_selection_tab.get_selected_options()
 
         # Return if SUV2ROI weights is None. Alert user weights are incorrect.
         if suv2roi_weights is None:
@@ -343,6 +354,8 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
         self.batch_processing_controller.set_subgroup_filter_options(
                 subgroup_filter_options)
+        self.batch_processing_controller.set_ml_data_selection_options(
+                ml_data_selection_options)
 
         # Set batch ROI name cleaning options if selected
         if 'roinamecleaning' in selected_processes:

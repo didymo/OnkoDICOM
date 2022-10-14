@@ -2,6 +2,7 @@ import csv
 import os
 import pytest
 import os.path
+import pandas as pd
 from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -26,6 +27,9 @@ from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 
+from src.Model.batchprocessing.\
+    BatchprocessMachineLearningDataSelection \
+    import BatchprocessMachineLearningDataSelection
 
 class TestObject:
 
@@ -333,6 +337,57 @@ def test_batch_csv2clinicaldatasr(test_object):
     os.remove(csv_path)
     os.remove(sr_path)
 
+def test_batch_machinelearning_dataselection(test_object):
+    """
+    Test asserts creation of filltered CSV for DVH and Pyradiomics
+
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    dvh_data_path = Path.cwd().joinpath('data', 'csv', 'dvh_data.csv')
+    pyradiomics_data_path = Path.cwd().joinpath('data', 'csv', 'pyradiomics_data.csv')
+    selected_value_dvh = 'C'
+    selected_value_pyrad = 'B'
+
+    process = BatchprocessMachineLearningDataSelection(
+        test_object.DummyProgressWindow,
+        test_object.DummyProgressWindow,
+        dvh_data_path,
+        pyradiomics_data_path,
+        selected_value_dvh,
+        selected_value_pyrad
+    )
+    process.start()
+
+    full_path_dvh_modified = process.full_path_dvh
+    full_path_pyrad_modified = process.full_path_pyrad
+
+    # check if dvh file was created
+    assert os.path.exists(full_path_dvh_modified)
+
+    # check if pyrad file was created
+    assert os.path.exists(full_path_pyrad_modified)
+
+    dvh_data_modifed = pd.read_csv(full_path_dvh_modified)
+    pyrad_data_modifed = pd.read_csv(full_path_pyrad_modified)
+
+    # test dvh csv file has 4 rows with only 2 same ROI names
+    assert len(dvh_data_modifed) == 2
+
+    # test pyradiomics csv file has 4 rows with different ROI names
+    assert len(pyrad_data_modifed) == 1
+
+    # delete file dvh
+    os.remove(full_path_dvh_modified)
+
+    # delete file pyradiomics
+    os.remove(full_path_pyrad_modified)
+
+    # delete created folder for dvh
+    os.rmdir(process.split_path(full_path_dvh_modified))
+
+    # delete created folder for Pyradiomics
+    os.rmdir(process.split_path(full_path_pyrad_modified))
 
 def test_batch_selectsubgroup(test_object):
     """
