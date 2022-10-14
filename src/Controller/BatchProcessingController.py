@@ -470,7 +470,7 @@ class BatchProcessingController:
         if patient not in self.batch_summary[0].keys():
             self.batch_summary[0][patient] = {}
         self.batch_summary[0][patient]['pyrad2csv'] = reason
-        progress_callback.emit(("Completed PyRad2CSV", 100))
+        progress_callback.emit(("Completed PyRad-SR2CSV", 100))
 
     def batch_pyrad2pyradsr_handler(self, interrupt_flag,
                                     progress_callback, patient):
