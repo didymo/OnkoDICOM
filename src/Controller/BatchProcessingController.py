@@ -278,7 +278,6 @@ class BatchProcessingController:
         if "machine_learning_data_selection" in self.processes:
             process = BatchprocessMachineLearningDataSelection(
                 progress_callback,
-                interrupt_flag,
                 self.ml_data_selection_options["dvh_path"],
                 self.ml_data_selection_options["pyrad_path"],
                 self.ml_data_selection_options["dvh_value"],

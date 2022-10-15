@@ -11,14 +11,14 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
     data selection process. Inherits from the BatchProcessing class.
     """
 
-    def __init__(self, progress_callback, interrupt_flag,
-                 dvh_data_path, pyrad_data_path, dvh_value, pyrad_value):
+    def __init__(self, progress_callback,
+                 dvh_data_path, pyrad_data_path,
+                 dvh_value, pyrad_value):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
                                   progress of the loading.
-        :param interrupt_flag: A threading.Event() object that tells the
-                               function to stop loading.
+
         :param dvh_data_path: dvh path to file.
         :param pyrad_data_path: pyradiomics path to file.
         :param dvh_value: selected value for DVH
@@ -27,7 +27,7 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         # Call the parent class
         super(BatchprocessMachineLearningDataSelection, self).__init__(
             progress_callback,
-            interrupt_flag,
+            None,
             None)
         self.dvh_data_path = dvh_data_path
         self.pyrad_data_path = pyrad_data_path

@@ -58,13 +58,13 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.directory_input_pyrad.setEnabled(False)
 
         # Button For Pyradiomics Data to set location
-        self.change_button_pyradiomicsData = QtWidgets.QPushButton(
+        self.change_button_pyradiomics_data = QtWidgets.QPushButton(
             "Change")
-        self.change_button_pyradiomicsData.setMaximumWidth(100)
-        self.change_button_pyradiomicsData.clicked.connect(
+        self.change_button_pyradiomics_data.setMaximumWidth(100)
+        self.change_button_pyradiomics_data.clicked.connect(
             self.show_file_browser_pyrad)
-        self.change_button_pyradiomicsData.setObjectName("NormalButton")
-        self.change_button_pyradiomicsData.setStyleSheet(self.stylesheet)
+        self.change_button_pyradiomics_data.setObjectName("NormalButton")
+        self.change_button_pyradiomics_data.setStyleSheet(self.stylesheet)
 
         # Set DVH data
         self.directory_layout.addWidget(label_dvh)
@@ -74,7 +74,7 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         # Set Pyradiomics data
         self.directory_layout.addWidget(label_pyrad)
         self.directory_layout.addRow(self.directory_input_pyrad)
-        self.directory_layout.addRow(self.change_button_pyradiomicsData)
+        self.directory_layout.addRow(self.change_button_pyradiomics_data)
 
         # create dropdown menu for dvh values to select from
         self.dvh_dropdown_menu = QtWidgets.QComboBox()

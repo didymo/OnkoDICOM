@@ -337,20 +337,26 @@ def test_batch_csv2clinicaldatasr(test_object):
     os.remove(csv_path)
     os.remove(sr_path)
 
-def test_batch_machinelearning_dataselection(test_object):
+def test_batch_machinelearning_dataselection(): #test_object
     """
     Test asserts creation of filltered CSV for DVH and Pyradiomics
 
     :param test_object: test_object function, for accessing the shared
                         TestObject object.
     """
-    dvh_data_path = Path.cwd().joinpath('data', 'csv', 'dvh_data.csv')
-    pyradiomics_data_path = Path.cwd().joinpath('data', 'csv', 'pyradiomics_data.csv')
+    dvh_data_path = Path.cwd().joinpath('data',
+                                        'csv',
+                                        'dvh_data.csv')
+
+    pyradiomics_data_path = Path.cwd().joinpath('data',
+                                                'csv',
+                                                'pyradiomics_data.csv')
+
+
     selected_value_dvh = 'C'
     selected_value_pyrad = 'B'
 
     process = BatchprocessMachineLearningDataSelection(
-        test_object.DummyProgressWindow,
         test_object.DummyProgressWindow,
         dvh_data_path,
         pyradiomics_data_path,
@@ -368,8 +374,10 @@ def test_batch_machinelearning_dataselection(test_object):
     # check if pyrad file was created
     assert os.path.exists(full_path_pyrad_modified)
 
-    dvh_data_modifed = pd.read_csv(full_path_dvh_modified)
-    pyrad_data_modifed = pd.read_csv(full_path_pyrad_modified)
+    dvh_data_modifed = pd.read_csv(
+        full_path_dvh_modified)
+    pyrad_data_modifed = pd.read_csv(
+        full_path_pyrad_modified)
 
     # test dvh csv file has 4 rows with only 2 same ROI names
     assert len(dvh_data_modifed) == 2
@@ -384,10 +392,12 @@ def test_batch_machinelearning_dataselection(test_object):
     os.remove(full_path_pyrad_modified)
 
     # delete created folder for dvh
-    os.rmdir(process.split_path(full_path_dvh_modified))
+    os.rmdir(process.split_path(
+        full_path_dvh_modified))
 
     # delete created folder for Pyradiomics
-    os.rmdir(process.split_path(full_path_pyrad_modified))
+    os.rmdir(process.split_path(
+        full_path_pyrad_modified))
 
 def test_batch_selectsubgroup(test_object):
     """
