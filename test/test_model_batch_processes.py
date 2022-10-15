@@ -2,6 +2,7 @@ import csv
 import os
 import pytest
 import os.path
+import pandas as pd
 from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -26,15 +27,19 @@ from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 
+from src.Model.batchprocessing. \
+    BatchprocessMachineLearningDataSelection \
+    import BatchprocessMachineLearningDataSelection
+
 
 class TestObject:
 
     def __init__(self):
         self.batch_dir = Path.cwd().joinpath('test', 'batchtestdata')
         self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
-                                                self.batch_dir,
-                                                self.DummyProgressWindow,
-                                                self.DummyProgressWindow)
+            self.batch_dir,
+            self.DummyProgressWindow,
+            self.DummyProgressWindow)
         self.iso_levels = self.get_iso_levels()
         self.timestamp = BatchProcessingController.create_timestamp()
         self.application = QApplication()
@@ -341,6 +346,93 @@ def test_batch_csv2clinicaldatasr(test_object):
     os.remove(sr_path)
 
 
+def test_batch_machinelearning_dataselection(test_object):
+    """
+    Test asserts creation of filltered CSV for DVH and Pyradiomics
+
+    :param test_object: test_object function, for accessing the shared
+                        TestObject object.
+    """
+    dvh_data_path = Path.cwd().joinpath('data',
+                                        'csv',
+                                        'dvh_data.csv')
+
+    pyradiomics_data_path = Path.cwd().joinpath('data',
+                                                'csv',
+                                                'pyradiomics_data.csv')
+
+    # check if dvh file is exists if not then create new one
+    if not os.path.exists(dvh_data_path):
+        dvh_data_test_set = {
+            "HASHidentifier": ['1H', '2H', '3H', '42H'],
+            "ROI": ['A', 'B', 'C', 'C'],
+            "dvh_example1": ['Example2', 'Example2', 'Example2', 'Example2'],
+            "dvh_example2": ['Example3', 'Example3', 'Example3', 'Example3']
+        }
+        dvh_data = pd.DataFrame.from_dict(dvh_data_test_set)
+        dvh_data.to_csv(dvh_data_path, sep=',')
+
+    # check if pyradiomics file is exists if not then create new one
+    if not os.path.exists(pyradiomics_data_path):
+        pyradiomics_data_test_set = {
+            "HASHidentifier": ['1H', '2H', '3H'],
+            "ROI": ['A', 'B', 'C'],
+            "pyrad_example1": ['Example2', 'Example2', 'Example2'],
+            "payrad_example2": ['Example3', 'Example3', 'Example3']
+        }
+        dvh_data = pd.DataFrame.from_dict(pyradiomics_data_test_set)
+        dvh_data.to_csv(pyradiomics_data_path, sep=',')
+
+
+    selected_value_dvh = 'C'
+    selected_value_pyrad = 'B'
+
+    process = BatchprocessMachineLearningDataSelection(
+        test_object.DummyProgressWindow,
+        dvh_data_path,
+        pyradiomics_data_path,
+        selected_value_dvh,
+        selected_value_pyrad
+    )
+    process.start()
+
+    full_path_dvh_modified = process.full_path_dvh
+    full_path_pyrad_modified = process.full_path_pyrad
+
+    # check if dvh file was created
+    assert os.path.exists(full_path_dvh_modified)
+
+    # check if pyrad file was created
+    assert os.path.exists(full_path_pyrad_modified)
+
+    dvh_data_modifed = pd.read_csv(
+        full_path_dvh_modified)
+    pyrad_data_modifed = pd.read_csv(
+        full_path_pyrad_modified)
+
+    # test dvh csv file has 4 rows with only 2 same ROI names
+    assert len(dvh_data_modifed) == 2
+
+    # test pyradiomics csv file has 4 rows with different ROI names
+    assert len(pyrad_data_modifed) == 1
+
+    # delete file dvh
+    os.remove(full_path_dvh_modified)
+    os.remove(dvh_data_path)
+
+    # delete file pyradiomics
+    os.remove(full_path_pyrad_modified)
+    os.remove(pyradiomics_data_path)
+
+    # delete created folder for dvh
+    os.rmdir(process.split_path(
+        full_path_dvh_modified))
+
+    # delete created folder for Pyradiomics
+    os.rmdir(process.split_path(
+        full_path_pyrad_modified))
+
+
 def test_batch_selectsubgroup(test_object):
     """
     Test asserts filter is created with dummy clinical data.
@@ -359,14 +451,14 @@ def test_batch_selectsubgroup(test_object):
 
         # Create Batch Clinical Data SR to CSV object
         process = BatchProcessSelectSubgroup(test_object.DummyProgressWindow,
-                                           test_object.DummyProgressWindow,
-                                           cur_patient_files,
-                                           selected_filters)
+                                             test_object.DummyProgressWindow,
+                                             cur_patient_files,
+                                             selected_filters)
 
         # Start the process, assert it finished successfully
         status = process.start()
         assert status == False
-        
+
         assert process.within_filter == False
 
     # No filter options are selected so nothing should be within filter
@@ -419,16 +511,16 @@ def test_batch_selectsubgroup(test_object):
 
         # Create Batch Clinical Data SR to CSV object
         process = BatchProcessSelectSubgroup(test_object.DummyProgressWindow,
-                                           test_object.DummyProgressWindow,
-                                           cur_patient_files,
-                                           selected_filters)
+                                             test_object.DummyProgressWindow,
+                                             cur_patient_files,
+                                             selected_filters)
 
         # Start the process, assert it finished successfully
         status = process.start()
         assert status
-        
+
         if process.within_filter:
-            MATCHES+=1
+            MATCHES += 1
 
     assert MATCHES == EXPECTED_MATCH_COUNT
 
