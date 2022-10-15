@@ -440,8 +440,11 @@ class Preprocessing:
         if self.target is not None and len(clinical_data) > 1:
             x_train, x_test = train_test_split(
                 clinical_data,
-                test_size=0.3,
-                random_state=42)
+                test_size=0.4,
+                random_state=42,
+                stratify=clinical_data[self.target]
+            )
+
             x_train = self.merging_data(x_train, dvh, pyrad_data)
             x_test = self.merging_data(x_test, dvh, pyrad_data)
 

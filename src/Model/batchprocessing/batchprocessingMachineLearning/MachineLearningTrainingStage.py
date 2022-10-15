@@ -396,7 +396,7 @@ class MlModeling():
         rf_tree = grid_search_rf.best_estimator_
         random_forest_pred = rf_tree.predict(self.test_feature)
 
-        rmse_rf = np.sqrt(np.mean((self.test_label - random_forest_pred) ** 2))
+        rms_error_rf = np.sqrt(np.mean((self.test_label - random_forest_pred) ** 2))
         score_rf = rf_tree.score(self.test_feature, self.test_label)
 
         # MLP
@@ -404,10 +404,10 @@ class MlModeling():
         mlp_model = grid_search_mlp.best_estimator_
         mlp_pred = mlp_model.predict(self.test_feature)
 
-        rmse_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
+        rms_error_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
         mlp_score = mlp_model.score(self.test_feature, self.test_label)
 
-        if rmse_mlp < rmse_rf:
+        if rms_error_mlp < rms_error_rf:
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_model
@@ -435,7 +435,7 @@ class MlModeling():
         forest_clas_reg.fit(self.train_feature, self.train_label)
         random_forest_pred = forest_clas_reg.predict(self.test_feature)
 
-        rmse_rf = np.sqrt(np.mean((self.test_label - random_forest_pred) ** 2))
+        rms_error_rf = np.sqrt(np.mean((self.test_label - random_forest_pred) ** 2))
         score_rf = forest_clas_reg.score(self.test_feature, self.test_label)
 
         # MLP
@@ -443,10 +443,10 @@ class MlModeling():
         mlp_reg.fit(self.train_feature, self.train_label)
         mlp_pred = mlp_reg.predict(self.test_feature)
 
-        rmse_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
+        rms_error_mlp = np.sqrt(np.mean((self.test_label - mlp_pred) ** 2))
         mlp_score = mlp_reg.score(self.test_feature, self.test_label)
 
-        if rmse_mlp < rmse_rf:
+        if rms_error_mlp < rms_error_rf:
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_reg
