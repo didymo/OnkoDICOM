@@ -149,7 +149,7 @@ class UIBatchProcessingWindow(object):
         self.tab_widget.addTab(self.iso2roi_tab, "ISO2ROI")
         self.tab_widget.addTab(self.suv2roi_tab, "SUV2ROI")
         self.tab_widget.addTab(self.dvh2csv_tab, "DVH2CSV")
-        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad2CSV")
+        self.tab_widget.addTab(self.pyrad2csv_tab, "PyRad-SR2CSV")
         self.tab_widget.addTab(self.pyrad2pyradSR_tab, "Pyrad2Pyrad-SR")
         self.tab_widget.addTab(self.csv2clinicaldatasr_tab,
                                "CSV2ClinicalData-SR")
