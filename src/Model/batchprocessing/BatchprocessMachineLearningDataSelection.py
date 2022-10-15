@@ -99,9 +99,10 @@ class BatchprocessMachineLearningDataSelection(BatchProcess):
         Function split path
         provided for DVH and Pyradiomics
         """
-        pattern = r'/'
-        path = re.split(pattern, path_to_file)[:-1]
-        modified_path = "/".join(path)
+        pattern = '/'
+        path = re.split(pattern, str(path_to_file))
+
+        modified_path = "/".join(path[:-1])
         return modified_path
 
     def save_files(self):
