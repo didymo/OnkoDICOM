@@ -23,7 +23,7 @@ def test_preprocessing():
     # check if it has all rows
     sum_of_rows = len(clinical_data)+len(dvh)+len(pyradiomics)
     # check if it has all rows rows
-    assert sum_of_rows == 10
+    assert sum_of_rows == 13
 
     # check if it has all columns
     assert clinical_data.shape[1] == 3
@@ -34,7 +34,7 @@ def test_preprocessing():
     full_data_set = test_preprocessing.merging_data(clinical_data, dvh, pyradiomics)
 
     # check if it merges correctly
-    assert len(full_data_set) == 3
+    assert len(full_data_set) == 4
     assert full_data_set.shape[1] == 9
 
     # check rename
@@ -49,4 +49,4 @@ def test_preprocessing():
     x_train, x_test, y_train, y_test = test_preprocessing.prepare_for_ml()
 
     # check if it is correctly split on test and train
-    assert len(x_train) == 2 and len(x_test) == 1
+    assert len(x_train) == 2 and len(x_test) == 2
