@@ -21,11 +21,14 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
+from src.Model.batchprocessing.BatchProcessMachineLearning import \
+    BatchProcessMachineLearning
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Model.DICOM.Structure.DICOMImage import Image
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
+from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
 
@@ -35,6 +38,7 @@ class BatchProcessingController:
     This class is the controller for batch processing. It starts and
     ends processes, and controls the progress window.
     """
+
     def __init__(self):
         """
         Class initialiser function.
@@ -53,6 +57,19 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
+
+        # Path
+        self.clinical_data_path = ""
+        self.dvh_data_path = ""
+        self.pyrad_data_path = ""
+        # Parameters
+        self.machine_learning_features = []
+        self.machine_learning_target = []
+        self.machine_learning_type = ""
+        self.machine_learning_rename = []
+        self.machine_learning_tune = ""
+
+        self.machine_learning_process = None
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -156,6 +173,32 @@ class BatchProcessingController:
         logging.debug(f"'options' set to: {options}")
         self.subgroup_filter_options = options
 
+    # Path
+    def set_clinical_data_path(self, clinical_path):
+        self.clinical_data_path = clinical_path
+
+    def set_dvh_data_path(self, dvh_path):
+        self.dvh_data_path = dvh_path
+
+    def set_pyrad_data_path(self, pyrad_path):
+        self.pyrad_data_path = pyrad_path
+
+    # Params
+    def set_machine_learning_features(self, machine_learning_features):
+        self.machine_learning_features = machine_learning_features
+
+    def set_machine_learning_target(self, machine_learning_target):
+        self.machine_learning_target = machine_learning_target
+
+    def set_machine_learning_type(self, machine_learning_type):
+        self.machine_learning_type = machine_learning_type
+
+    def set_machine_learning_rename(self, machine_learning_rename):
+        self.machine_learning_rename = machine_learning_rename
+
+    def set_machine_learning_tune(self, machine_learning_tune):
+        self.machine_learning_tune = machine_learning_tune
+
     @staticmethod
     def get_patient_files(patient):
         """
@@ -220,14 +263,14 @@ class BatchProcessingController:
             cur_patient_num += 1
 
             progress_callback.emit(("Loading patient ({}/{}) .. ".format(
-                                     cur_patient_num, patient_count), 20))
+                cur_patient_num, patient_count), 20))
 
-            if 'select_subgroup' in self.processes:
+            if "select_subgroup" in self.processes:
                 in_subgroup = self.process_functions["select_subgroup"](
                     interrupt_flag,
                     progress_callback,
                     patient
-                    )
+                )
 
                 if not in_subgroup:
                     # dont complete processes on this patient
@@ -235,7 +278,9 @@ class BatchProcessingController:
 
             # Perform processes on patient
             for process in self.processes:
-                if process in ['roinamecleaning',  'select_subgroup']:
+                if process in ["roinamecleaning",
+                               "select_subgroup",
+                               "machine_learning"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -255,6 +300,28 @@ class BatchProcessingController:
                 # Append process summary
                 self.batch_summary[1] = process.summary
                 progress_callback.emit(("Completed ROI Name Cleaning", 100))
+
+        ml_data = {
+            "features": self.machine_learning_features,
+            "target": self.machine_learning_target,
+            "type": self.machine_learning_type,
+            "tune": self.machine_learning_tune,
+            "renameValues": self.machine_learning_rename
+        }
+        self.machine_learning_options = ml_data
+
+        if "machine_learning" in self.processes:
+            self.machine_learning_process = \
+                BatchProcessMachineLearning(
+                    progress_callback,
+                    interrupt_flag,
+                    self.machine_learning_options,
+                    self.clinical_data_path,
+                    self.dvh_data_path,
+                    self.pyrad_data_path)
+            self.machine_learning_process.start()
+            self.batch_summary[1] = self.machine_learning_process.summary
+            progress_callback.emit(("Completed ML Training Cleaning", 100))
 
         PatientDictContainer().clear()
 
@@ -299,7 +366,7 @@ class BatchProcessingController:
         :param patient: The patient to perform this process on.
         """
         logging.debug(f"{self.__class__.__name__}" \
-        ".batch_select_subgroup_handler() called")
+                      ".batch_select_subgroup_handler() called")
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
         process = \
@@ -625,6 +692,24 @@ class BatchProcessingController:
         self.progress_window.update_progress(("Processing complete!", 100))
         self.progress_window.close()
 
+        if self.machine_learning_process is not None \
+                and self.machine_learning_process. \
+                get_run_model_accept() is not False:
+            # Create window to store ML results
+            ml_results_window = BatchMLResultsWindow()
+            ml_results_window. \
+                set_results_values(self.machine_learning_process.
+                                   get_results_values())
+            ml_results_window.set_ml_model(self.machine_learning_process.
+                                           ml_model)
+
+            ml_results_window.set_df_parameters(self.machine_learning_process.
+                                                params)
+            ml_results_window.set_df_scaling(self.machine_learning_process.
+                                             scaling)
+
+            ml_results_window.exec_()
+
         # Create window to store summary info
         batch_summary_window = BatchSummaryWindow()
         batch_summary_window.set_summary_text(self.batch_summary)
@@ -646,13 +731,13 @@ class BatchProcessingController:
         column name and a list of values found
         """
         logging.debug(f"{self.__class__.__name__}" \
-        ".get_all_clinical_data() called")
+                      ".get_all_clinical_data() called")
 
         clinical_data_dict = {}
 
         for patient in self.dicom_structure.patients.values():
             logging.debug(f"{len(self.dicom_structure.patients.values())}" \
-            "patient(s) in dicom_structure object")
+                          "patient(s) in dicom_structure object")
 
             cur_patient_files = \
                 BatchProcessingController.get_patient_files(patient)
@@ -700,6 +785,6 @@ class BatchProcessingController:
         sec = cur_time.second
 
         time_stamp = str(year) + str(month) + str(day) + str(hour) + \
-            str(min) + str(sec)
+                     str(min) + str(sec)
 
         return time_stamp
