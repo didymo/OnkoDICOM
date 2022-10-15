@@ -48,9 +48,9 @@ class MLTab(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def set_csv_input_location_clinical_data(self,
-                                              path,
-                                              enable=True,
-                                              change_if_modified=False):
+                                             path,
+                                             enable=True,
+                                             change_if_modified=False):
         """
         Set the location for the clinical_data-SR2CSV resulting .csv file.
         :param path: desired path.
@@ -325,7 +325,8 @@ class MLTab(QtWidgets.QWidget):
         and will open a message box if not all paths are supplied.
         Then will update UI with model selection options.
         """
-        if any((self.get_csv_input_location_clinical_data() == "No file selected",
+        if any(
+            (self.get_csv_input_location_clinical_data() == "No file selected",
                 self.get_csv_output_location_dvh_data() == "No file selected",
                 self.get_csv_output_location_pyrad() == "No file selected")):
             dlg = QMessageBox(self)
@@ -398,7 +399,8 @@ class MLTab(QtWidgets.QWidget):
 
         directories = [self.selected_model_directory]
 
-        logging.debug(f"MLTab.selected_model_directory: {self.selected_model_directory}")
+        logging.debug(
+            f"MLTab.selected_model_directory: {self.selected_model_directory}")
 
         if not os.path.isdir(self.selected_model_directory):
             self.combobox.clear()
@@ -443,7 +445,9 @@ class MLTab(QtWidgets.QWidget):
         else:
             self.combobox.setEnabled(False)
 
-        logging.debug(f"Model_options found in selected directory: {model_options}")
+        logging.debug(
+            f"Model_options found in selected directory: {model_options}"
+        )
 
         self.combobox.addItems(model_options)
 
@@ -482,7 +486,6 @@ class MLTab(QtWidgets.QWidget):
 
         # trigger ML model to run
         # requires the directory for the 3 csvs + selected model directory
-        
         ml_tester = MachineLearningTester(
             self.clinical_data_csv_path,
             self.dvh_data_csv_path,
@@ -494,10 +497,10 @@ class MLTab(QtWidgets.QWidget):
         try:
             ml_tester.predict_values()
             results = f"According to the '{ml_tester.get_model_name()}' " \
-            f"model located in '{self.get_model_path()}'," \
-            "the following values " \
-            f"have been predicted: '{ml_tester.get_predicted_values()}' " \
-            f"for the column: '{ml_tester.get_target()}'"
+                f"model located in '{self.get_model_path()}'," \
+                "the following values " \
+                f"have been predicted: '{ml_tester.get_predicted_values()}' " \
+                f"for the column: '{ml_tester.get_target()}'"
         except Exception as e:
             results = f"Failed to predict value because of: {e}"
 
