@@ -21,6 +21,9 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
+from src.Model.batchprocessing.\
+    BatchprocessMachineLearningDataSelection\
+    import BatchprocessMachineLearningDataSelection
 from src.Model.batchprocessing.BatchProcessMachineLearning import \
     BatchProcessMachineLearning
 from src.Model.DICOM.Structure.DICOMSeries import Series
@@ -53,6 +56,7 @@ class BatchProcessingController:
         self.suv2roi_weights = None
         self.name_cleaning_options = None
         self.subgroup_filter_options = None
+        self.ml_data_selection_options = None
         self.patient_files_loaded = False
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
@@ -172,6 +176,20 @@ class BatchProcessingController:
         .set_subgroup_filter_options(options) called")
         logging.debug(f"'options' set to: {options}")
         self.subgroup_filter_options = options
+
+    def set_ml_data_selection_options(self, options):
+        """
+        Set ml data selection options for batch process.
+        :param options: Dictionary of:
+        {"dvh_path": "",
+        "pyrad_path": "",
+        "dvh_value": "",
+        "pyrad_value": ""}
+        """
+        logging.debug(f"{self.__class__.__name__} \
+        .set_ml_data_selection_options(options) called")
+        logging.debug(f"'options' set to: {options}")
+        self.ml_data_selection_options = options
 
     # Path
     def set_clinical_data_path(self, clinical_path):
@@ -322,6 +340,18 @@ class BatchProcessingController:
             self.machine_learning_process.start()
             self.batch_summary[1] = self.machine_learning_process.summary
             progress_callback.emit(("Completed ML Training Cleaning", 100))
+
+        if "machine_learning_data_selection" in self.processes:
+            process = BatchprocessMachineLearningDataSelection(
+                progress_callback,
+                self.ml_data_selection_options["dvh_path"],
+                self.ml_data_selection_options["pyrad_path"],
+                self.ml_data_selection_options["dvh_value"],
+                self.ml_data_selection_options["pyrad_value"])
+
+            process.start()
+            self.batch_summary[1] = process.summary
+            progress_callback.emit(("Completed ML Data selection", 100))
 
         PatientDictContainer().clear()
 
