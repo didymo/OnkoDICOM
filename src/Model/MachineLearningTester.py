@@ -101,7 +101,6 @@ class MachineLearningTester:
         Parameters:
             str : path_to_save : location to save csv
         """
-        # TODO: is all this necessary?
         new_data = pd.read_csv(self.clinical_data_csv_path)
         new_data = new_data[['HASHidentifier']]
         pyrad = pd.read_csv(self.pyrad_csv_path).rename(
