@@ -852,26 +852,6 @@ class UIDrawROIWindow:
                 # position
                 self.dicom_view.slider.setValue(image_slice_number + 1)
 
-    def onResetClicked(self):
-        """
-        This function is used when reset button is clicked
-        """
-        self.dicom_view.image_display()
-        self.dicom_view.update_view()
-        self.isthmus_width_max_line_edit.setText("5")
-        self.internal_hole_max_line_edit.setText("5")
-        self.min_pixel_density_line_edit.setText("")
-        self.max_pixel_density_line_edit.setText("")
-        if hasattr(self, 'bounds_box_draw'):
-            delattr(self, 'bounds_box_draw')
-        if hasattr(self, 'drawingROI'):
-            delattr(self, 'drawingROI')
-            self.has_drawing = False
-        if hasattr(self, 'seed'):
-            delattr(self, 'seed')
-
-        self.ds = None
-
     def transect_handler(self):
         """
         Function triggered when the Transect button is pressed from the menu.
@@ -1174,7 +1154,7 @@ class UIDrawROIWindow:
         self.dicom_view.image_display()
         self.dicom_view.update_view()
         self.isthmus_width_max_line_edit.setText("5")
-        self.internal_hole_max_line_edit.setText("9")
+        self.internal_hole_max_line_edit.setText("5")
         self.min_pixel_density_line_edit.setText("")
         self.max_pixel_density_line_edit.setText("")
         if hasattr(self, 'bounds_box_draw'):
