@@ -18,5 +18,3 @@ matplotlib
 shapely==1.8a3
 python-Levenshtein
 opencv-python<=4.5.3.56
-kaplanmeier
-matplotlib

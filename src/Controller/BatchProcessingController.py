@@ -54,9 +54,9 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
-        self.kaplanmeier_targetCol =""
-        self.kaplanmeier_DurationOfLifeCol = ""
-        self.kaplanmeier_AliveOrDeadCol = ""
+        self.kaplanmeier_target_col =""
+        self.kaplanmeier_duration_of_life_col = ""
+        self.kaplanmeier_alive_or_dead_col = ""
 
         # Threadpool for file loading
         self.threadpool = QThreadPool()
@@ -709,14 +709,14 @@ class BatchProcessingController:
 
         return time_stamp
 
-    def set_kaplanmeier_targetCol(self, target):
-        self.kaplanmeier_targetCol = target
+    def set_kaplanmeier_target_col(self, target):
+        self.kaplanmeier_target_col = target
 
-    def set_kaplanmeier_DurationOfLifeCol(self, duration):
-        self.kaplanmeier_DurationOfLifeCol = duration
+    def set_kaplanmeier_duration_of_life_col(self, duration):
+        self.kaplanmeier_duration_of_life_col = duration
 
-    def set_kaplanmeier_AliveOrDeadCol(self, AliveOrDead):
-        self.kaplanmeier_AliveOrDeadCol = AliveOrDead
+    def set_kaplanmeier_alive_or_dead_col(self, alive_or_dead):
+        self.kaplanmeier_alive_or_dead_col = alive_or_dead
 
     def batch_kaplanmeier_handler(self, interrupt_flag,
                                     progress_callback, patient):
@@ -736,8 +736,8 @@ class BatchProcessingController:
         process = BatchProcessKaplanMeier(progress_callback,
                                             interrupt_flag,
                                             cur_patient_files,self.get_all_clinical_data(),
-                                            self.kaplanmeier_targetCol,
-                                            self.kaplanmeier_DurationOfLifeCol, self.kaplanmeier_AliveOrDeadCol)
+                                            self.kaplanmeier_target_col,
+                                            self.kaplanmeier_duration_of_life_col, self.kaplanmeier_alive_or_dead_col)
         success = process.start()
 
         # Set summary message

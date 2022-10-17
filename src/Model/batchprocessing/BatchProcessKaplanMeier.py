@@ -6,7 +6,7 @@ import pandas as pd
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import logging
-
+import numpy as np
 
 class BatchProcessKaplanMeier(BatchProcess):
     """
@@ -22,8 +22,8 @@ class BatchProcessKaplanMeier(BatchProcess):
         }
     }
 
-    def __init__(self, progress_callback, interrupt_flag, patient_files, data_Dict,
-                 kaplanmeier_targetCol, kaplanmeier_DurationOfLifeCol, kaplanmeier_AliveOrDeadCol):
+    def __init__(self, progress_callback, interrupt_flag, patient_files, data_dict,
+                 kaplanmeier_target_col, kaplanmeier_duration_of_life_col, kaplanmeier_alive_or_dead_col):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -42,12 +42,12 @@ class BatchProcessKaplanMeier(BatchProcess):
         self.patient_dict_container = PatientDictContainer()
         self.required_classes = ['sr']
         self.ready = self.load_images(patient_files, self.required_classes)
-        self.kaplanmeier_targetCol = kaplanmeier_targetCol
-        self.kaplanmeier_ = kaplanmeier_targetCol
-        self.kaplanmeier_targetCol = kaplanmeier_targetCol
-        self.kaplanmeier_DurationOfLifeCol = kaplanmeier_DurationOfLifeCol
-        self.kaplanmeier_AliveOrDeadCol = kaplanmeier_AliveOrDeadCol
-        self.dataDict = data_Dict
+        self.kaplanmeier_target_col = kaplanmeier_target_col
+        self.kaplanmeier_ = kaplanmeier_target_col
+        self.kaplanmeier_target_col = kaplanmeier_target_col
+        self.kaplanmeier_duration_of_life_col = kaplanmeier_duration_of_life_col
+        self.kaplanmeier_alive_or_dead_col = kaplanmeier_alive_or_dead_col
+        self.data_dict = data_dict
 
     def start(self):
         """
@@ -90,7 +90,7 @@ class BatchProcessKaplanMeier(BatchProcess):
 
         # Write clinical data to CSV
         self.progress_callback.emit(("Writing clinical data to CSV...", 80))
-        self.plot(data_dict, self.kaplanmeier_targetCol, self.kaplanmeier_DurationOfLifeCol, self.kaplanmeier_AliveOrDeadCol)
+        self.plot(data_dict, self.kaplanmeier_target_col, self.kaplanmeier_duration_of_life_col, self.kaplanmeier_alive_or_dead_col)
         return True
 
     def find_clinical_data_sr(self):
@@ -132,18 +132,17 @@ class BatchProcessKaplanMeier(BatchProcess):
 
         return data_dict
 
-    def plot(self,data_dict, target, DurationOfLife, AliveOfDead):
+    def plot(self,data_dict, target, duration_of_life, alive_or_dead):
         """
             Creates plot based off input columns
         """
-        logging.debug("Plot function called")
         try:
             logging.debug("Creating/Displaying plot")
             # creates dataframe based on patient records
-            df = pd.DataFrame.from_dict(self.dataDict)
+            df = pd.DataFrame.from_dict(self.data_dict)
             # creates input parameters for the km.fit() function
-            time_event = df[DurationOfLife]
-            censoring = df[AliveOfDead]
+            time_event = df[duration_of_life]
+            censoring = df[alive_or_dead]
             y = df[target]
             # create kaplanmeier plot
             results = km.fit(time_event, censoring, y)
@@ -159,5 +158,6 @@ class BatchProcessKaplanMeier(BatchProcess):
             #displays plot
             plt.show()
         except:
+
             logging.debug("failed to create plot")
             self.summary = "INTERRUPT"

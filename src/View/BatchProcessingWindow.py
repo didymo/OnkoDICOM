@@ -314,9 +314,9 @@ class UIBatchProcessingWindow(object):
                      'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid', 'kaplanmeier']
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
-        kaplanmeier_targetCol = self.kaplanmeier_tab.getTargetCol()
-        kaplanmeier_DurationOfLifeCol = self.kaplanmeier_tab.getDurationOfLifeCol()
-        kaplanmeier_AliveOrDeadCol = self.kaplanmeier_tab.getAliveOrDeadCol()
+        kaplanmeier_target_col = self.kaplanmeier_tab.get_target_col()
+        kaplanmeier_duration_of_life_col = self.kaplanmeier_tab.get_duration_of_life_col()
+        kaplanmeier_alive_or_dead_col = self.kaplanmeier_tab.get_alive_or_dead_col()
         # WARNING: the order of this list is important.
         # TODO: this should be replaced with something more global
         # as currently this is very flaky. ie. changing the order of
@@ -326,7 +326,7 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname']
+                     'roiname2fmaid', 'kaplanmeier', 'fmaid2roiname']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
@@ -361,9 +361,9 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
-        self.batch_processing_controller.set_kaplanmeier_targetCol(kaplanmeier_targetCol)
-        self.batch_processing_controller.set_kaplanmeier_DurationOfLifeCol(kaplanmeier_DurationOfLifeCol)
-        self.batch_processing_controller.set_kaplanmeier_AliveOrDeadCol(kaplanmeier_AliveOrDeadCol)
+        self.batch_processing_controller.set_kaplanmeier_target_col(kaplanmeier_target_col)
+        self.batch_processing_controller.set_kaplanmeier_duration_of_life_col(kaplanmeier_duration_of_life_col)
+        self.batch_processing_controller.set_kaplanmeier_alive_or_dead_col(kaplanmeier_alive_or_dead_col)
         self.batch_processing_controller.set_subgroup_filter_options(
                 subgroup_filter_options)
 
