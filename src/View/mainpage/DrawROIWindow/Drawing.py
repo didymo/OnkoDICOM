@@ -76,9 +76,9 @@ class Drawing(QtWidgets.QGraphicsScene):
             self.is_hole_filling = True
         else:
             self.is_hole_filling = False
-        if 'xy' in kwargs:
+        if 'xy' in kwargs and kwargs.get('xy') is not None:
             self.fill_source = kwargs.get('xy')
-        if 'UI' in kwargs:
+        if 'UI' in kwargs and kwargs.get('UI') is not None:
             self.seed.connect(kwargs.get('UI').set_seed)
 
     def set_bounds(self):

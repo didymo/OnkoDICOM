@@ -55,15 +55,16 @@ class ProgressWindow(QDialog):
         self.threadpool = QThreadPool()
         self.interrupt_flag = threading.Event()
 
-    def start(self, funct):
+    def start(self, funct, *args):
         """
         Function that executes 'funct' on new thread
         :param funct: function to execute.
+        :param args: args to pass to the function
         :param progress_callback: signal that receives the current
                                   progress of the loading.
         """
         self.interrupt_flag.clear()
-        worker = Worker(funct, self.interrupt_flag, progress_callback=True)
+        worker = Worker(funct, *args, self.interrupt_flag, progress_callback=True)
         worker.signals.result.connect(self.on_finish)
         worker.signals.error.connect(self.on_error)
         worker.signals.progress.connect(self.update_progress)
