@@ -1000,7 +1000,7 @@ class UIDrawROIWindow:
                 if is_3d:
                     if hasattr(self, 'seed'):
                         delattr(self, 'seed')
-                    self.create_drawing_3D(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size, True)
+                    self.create_drawing(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size, True)
                 else:
                     self.create_drawing(min_pixel, max_pixel, pixmaps, id, max_internal_hole_size)
 
@@ -1151,7 +1151,7 @@ class UIDrawROIWindow:
         roi_processing_window.start(self.process_3D_roi, float(self.min_pixel_density_line_edit.text()),
                                     float(self.max_pixel_density_line_edit.text()),
                                     self.patient_dict_container.get("pixmaps_axial"),
-                                    self.current_slice, int(self.internal_hole_max_line_edit.text(), QThread.currentThread())
+                                    self.current_slice, int(self.internal_hole_max_line_edit.text()), QThread.currentThread())
 
     def onBoxDrawClicked(self):
         """
