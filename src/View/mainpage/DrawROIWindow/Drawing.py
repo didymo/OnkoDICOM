@@ -24,7 +24,7 @@ class Drawing(QtWidgets.QGraphicsScene):
     def __init__(self, imagetoPaint, pixmapdata, min_pixel, max_pixel, dataset,
                  draw_roi_window_instance, slice_changed,
                  current_slice, drawing_tool_radius, keep_empty_pixel, pixel_transparency,
-                 target_pixel_coords=set(), **kwargs):
+                 max_internal_hole_size, target_pixel_coords=set(), **kwargs):
         super(Drawing, self).__init__()
 
         # create the canvas to draw the line on and all its necessary
@@ -71,9 +71,14 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.max_bounds_y = self.cols
         self.fill_source = None
         self.is_drawing = False
-        if 'xy' in kwargs:
+        self.max_internal_hole_size = max_internal_hole_size
+        if self.max_internal_hole_size > 0:
+            self.is_hole_filling = True
+        else:
+            self.is_hole_filling = False
+        if 'xy' in kwargs and kwargs.get('xy') is not None:
             self.fill_source = kwargs.get('xy')
-        if 'UI' in kwargs:
+        if 'UI' in kwargs and kwargs.get('UI') is not None:
             self.seed.connect(kwargs.get('UI').set_seed)
 
     def set_bounds(self):
@@ -111,6 +116,9 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.q_image = self.img.toImage()
         queue = [self.fill_source]
 
+        if self.is_hole_filling:
+            outlines = set()
+
         while len(queue) > 0:
             current = queue.pop(0)
 
@@ -122,6 +130,13 @@ class Drawing(QtWidgets.QGraphicsScene):
                         if (element[0], element[1]) not in self.target_pixel_coords:
                             queue.append([element[0], element[1]])
                             self.target_pixel_coords.add((element[0], element[1]))
+                    else:
+                        if self.is_hole_filling:
+                            if (element[0], element[1]) not in outlines:
+                                outlines.add((element[0], element[1]))
+
+        if self.is_hole_filling:
+            self.fill_holes(outlines)
 
         """For the meantime, a new image is created and the pixels 
         specified are coloured. The _set_colour_of_pixels function
@@ -143,6 +158,98 @@ class Drawing(QtWidgets.QGraphicsScene):
         self.refresh_image()
         return False if len(points) < 1 else True
 
+    def fill_holes(self, outlines):
+        """
+        Finds holes that have a size that matches the specified max internal hole value or less, and
+        updates the targeted pixel coords with the pixels of the holes to be filled in.
+
+        :param outlines:  Set of x and y co-ordinates of pixels that outline all the holes in the selected ROI region.
+        """
+        hole_outline_list = []
+
+        while len(outlines) != 0:
+            for first_element in outlines:
+                break
+
+            queue = [first_element]
+            hole_outline = set()
+
+            while len(queue) > 0:
+                current = queue.pop(0)
+
+                # Catches hole's that have the volume of 1
+                if (current[0], current[1]) in outlines:
+                    if (current[0], current[1]) not in hole_outline:
+                        hole_outline.add((current[0], current[1]))
+                        outlines.remove((current[0], current[1]))
+
+                # Check left, right
+                for x_neighbour in range(-1, 2, 2):
+                    element = [current[0] + x_neighbour, current[1]]
+
+                    if (element[0], element[1]) in outlines:
+                        if (element[0], element[1]) not in hole_outline:
+                            queue.append([element[0], element[1]])
+                            hole_outline.add((element[0], element[1]))
+                            outlines.remove((element[0], element[1]))
+
+                # Check down, up
+                for y_neighbour in range(-1, 2, 2):
+                    element = [current[0], current[1] + y_neighbour]
+
+                    if (element[0], element[1]) in outlines:
+                        if (element[0], element[1]) not in hole_outline:
+                            queue.append([element[0], element[1]])
+                            hole_outline.add((element[0], element[1]))
+                            outlines.remove((element[0], element[1]))
+
+            if len(hole_outline) <= self.max_internal_hole_size:
+                hole_outline_list.append(hole_outline)
+
+        for i in range(len(hole_outline_list)):
+            hole_outline = hole_outline_list[i]
+
+            for first_element in hole_outline:
+                break
+
+            # If the hole_outline a single pixel
+            if len(hole_outline) == 1:
+                if 1 <= self.max_internal_hole_size:
+                    self.target_pixel_coords.add((first_element[0], first_element[1]))
+                continue
+
+            queue = [first_element]
+            volume = 0
+            hole_pixel_coords = set()
+
+            while len(queue) > 0:
+                current = queue.pop(0)
+
+                # Check left, right
+                for x_neighbour in range(-1, 2, 2):
+                    element = [current[0] + x_neighbour, current[1]]
+
+                    if (element[0], element[1]) not in hole_pixel_coords:
+                        if (element[0], element[1]) not in self.target_pixel_coords:
+                            queue.append([element[0], element[1]])
+                            hole_pixel_coords.add((element[0], element[1]))
+                            volume = volume + 1
+
+                # Check down, up
+                for y_neighbour in range(-1, 2, 2):
+                    element = [current[0], current[1] + y_neighbour]
+
+                    if (element[0], element[1]) not in hole_pixel_coords:
+                        if (element[0], element[1]) not in self.target_pixel_coords:
+                            queue.append([element[0], element[1]])
+                            hole_pixel_coords.add((element[0], element[1]))
+                            volume = volume + 1
+
+                if volume > self.max_internal_hole_size:
+                    break
+
+            if volume <= self.max_internal_hole_size:
+                self.target_pixel_coords.update(hole_pixel_coords)
 
     def _set_color_of_pixels(self, points):
         """
@@ -456,38 +563,7 @@ class Drawing(QtWidgets.QGraphicsScene):
 
     def mousePressEvent(self, event):
         """
-            This method is called to handle the drawing mouse press event
-            :param event: the mouse event
-        """
-        if self.cursor:
-            self.removeItem(self.cursor)
-
-        self.isPressed = True
-        if (
-                2 * QtGui.QVector2D(event.pos() - self.rect.center()).length()
-                < self.rect.width()
-        ):
-            self.drag_position = event.pos() - self.rect.topLeft()
-        super().mousePressEvent(event)
-        x, y = linear_transform(
-            math.floor(event.scenePos().x()), math.floor(event.scenePos().y()),
-            self.rows, self.cols)
-        is_coloured = (x, y) in self.according_color_dict
-        self.is_current_pixel_coloured = is_coloured
-        self.draw_cursor(event.scenePos().x(), event.scenePos().y(),
-                         self.draw_tool_radius, new_circle=True)
-
-        if self.is_current_pixel_coloured:
-            self.fill_pixels_within_circle(event.scenePos().x(),
-                                           event.scenePos().y())
-        else:
-            self.remove_pixels_within_circle(event.scenePos().x(),
-                                             event.scenePos().y())
-        self.update()
-
-    def mousePressEvent(self, event):
-        """
-            This method is called to handle the BFS mousePressEvent
+            This method is called to handle a mouse press event
             :param event: the mouse event
         """
         if not self.is_drawing:
