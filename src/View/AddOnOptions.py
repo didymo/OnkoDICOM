@@ -282,7 +282,7 @@ class UIAddOnOptions(object):
         elif type == "Draw ROI configuration":
             for item in self.observer_array:
                 item.setVisible(False)
-
+            # Update the alpha value before displaying, can change value in DrawROI window
             with open(data_path("draw_roi_configuration"), "r") as draw_roi_cfg_file:
                 options = draw_roi_cfg_file.read().splitlines()
                 if len(options) > 0:
@@ -817,12 +817,12 @@ class LineFillOptions(object):
 
 class DrawROIOptions(object):
     """
-    Manage the UI of Draw ROI options.
+    Manage the UI of the Draw ROI options.
     """
 
     def __init__(self, window_options, alpha_value):
         """
-        Create the components for the UI of Line and Fill options and
+        Create the components for the UI of the Draw ROI options and
         set the layout.
         """
         self.window = window_options
@@ -848,7 +848,7 @@ class DrawROIOptions(object):
 
     def create_slider_alpha_value(self):
         """
-        Create slider to determine the opacity of the fill for ROIs
+        Create slider for setting the alpha value
         """
         self.window.alpha_value_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self.window.draw_roi)
         self.window.alpha_value_slider.setMinimum(2)
@@ -863,7 +863,7 @@ class DrawROIOptions(object):
 
     def update_alpha_value(self):
         """
-        Update the percentage on slider change for ROIs.
+        Update the label display when slider is changed
         """
         self.window.alpha_value_label.setText("Alpha Value: \t {}".format(
             self.window.alpha_value_slider.value() / 10))
