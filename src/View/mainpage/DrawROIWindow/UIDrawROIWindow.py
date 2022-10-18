@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
     QMessageBox, QSlider
 
 from src.Controller.MainPageController import MainPageCallClass
-from src.Controller.PathHandler import resource_path
+from src.Controller.PathHandler import resource_path, data_path
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
@@ -523,16 +523,25 @@ class UIDrawROIWindow:
 
         # Create input line edit for alpha value
         self.label_alpha_value = QtWidgets.QLabel("Alpha value:")
-        self.input_alpha_value = QtWidgets.QLineEdit("0.2")
+        self.input_alpha_value = QtWidgets.QDoubleSpinBox()
         self.input_alpha_value.setObjectName("AlphaValueInput")
         self.input_alpha_value. \
             setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.input_alpha_value.resize(
             self.input_alpha_value.sizeHint().width(),
             self.input_alpha_value.sizeHint().height())
-        self.input_alpha_value.setValidator(
-            QRegularExpressionValidator(
-                QRegularExpression("^[0-9]*[.]?[0-9]*$")))
+        self.input_alpha_value.setDecimals(1)
+        self.input_alpha_value.setMinimum(0.2)
+        self.input_alpha_value.setMaximum(0.9)
+        self.input_alpha_value.setSingleStep(0.1)
+        # Import the alpha value from config file
+        with open(data_path("draw_roi_configuration"), "r") as draw_roi_cfg_file:
+            options = draw_roi_cfg_file.read().splitlines()
+            if len(options) > 0:
+                alpha_value = float(options[0])
+            else:
+                alpha_value = 0.5
+        self.input_alpha_value.setValue(alpha_value)
         self.draw_roi_window_input_container_box. \
             addRow(self.label_alpha_value, self.input_alpha_value)
 
@@ -882,7 +891,7 @@ class UIDrawROIWindow:
             if hasattr(self, 'drawingROI') and self.drawingROI \
                     and self.ds is not None \
                     and len(self.drawingROI.target_pixel_coords) != 0:
-                alpha = float(self.input_alpha_value.text())
+                alpha = self.input_alpha_value.value()
                 pixel_hull_list = calculate_concave_hull_of_points(
                     self.drawingROI.target_pixel_coords, alpha)
                 coord_list = []
@@ -1222,7 +1231,7 @@ class UIDrawROIWindow:
         """
         if hasattr(self, 'drawingROI') and self.drawingROI and len(
                 self.drawingROI.target_pixel_coords) > 0:
-            alpha = float(self.input_alpha_value.text())
+            alpha = self.input_alpha_value.value()
             polygon_list = calculate_concave_hull_of_points(
                 self.drawingROI.target_pixel_coords, alpha)
             self.drawingROI.draw_contour_preview(polygon_list)
@@ -1311,6 +1320,11 @@ class UIDrawROIWindow:
         """
         function to close draw roi window
         """
+        # Save the alpha value to the config file
+        with open(data_path("draw_roi_configuration"), "w") as stream:
+            stream.write(str(self.input_alpha_value.value()))
+            stream.write("\n")
+
         self.drawn_roi_list = {}
         if hasattr(self, 'bounds_box_draw'):
             delattr(self, 'bounds_box_draw')

@@ -42,10 +42,18 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 iso_opacity = 5
                 line_width = 2.0
             stream.close()
+
+        with open(data_path("draw_roi_configuration"), "r") as draw_roi_cfg_file:
+            options = draw_roi_cfg_file.read().splitlines()
+            if len(options) > 0:
+                alpha_value = float(options[0])
+            else:
+                alpha_value = 0.5
+
         # initialise the UI
         self.window = window
         self.setup_ui(self, roi_line, roi_opacity, iso_line,
-                      iso_opacity, line_width)
+                      iso_opacity, line_width, alpha_value)
         # This data is used to create the tree view of functionalities
         # on the left of the window. Each entry will be used as a button
         # to change the view on the right accordingly.
@@ -91,6 +99,12 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
                 "dbID": 523,
                 "parent_ID": 442,
                 "short_name": "Line & Fill configuration",
+            },
+            {
+                "level": 1,
+                "dbID": 525,
+                "parent_ID": 442,
+                "short_name": "Draw ROI configuration",
             },
             {
                 "level": 0,
@@ -419,6 +433,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             stream.write(str(self.line_width.currentText()))
             stream.write("\n")
             stream.close()
+
+        with open(data_path("draw_roi_configuration"), "w") as stream:
+            stream.write(str(self.alpha_value_slider.value() / 10))
+            stream.write("\n")
 
         # Save the default directory and clinical data CSV directory
         configuration = Configuration()
