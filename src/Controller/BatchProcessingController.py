@@ -298,7 +298,8 @@ class BatchProcessingController:
             for process in self.processes:
                 if process in ["roinamecleaning",
                                "select_subgroup",
-                               "machine_learning"]:
+                               "machine_learning",
+                               "machine_learning_data_selection"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
