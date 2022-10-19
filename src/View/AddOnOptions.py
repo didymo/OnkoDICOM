@@ -288,7 +288,7 @@ class UIAddOnOptions(object):
                 if len(options) > 0:
                     alpha_value = float(options[0])
                 else:
-                    alpha_value = 0.5
+                    alpha_value = 0.9
             self.draw_roi_options.window.alpha_value_slider.setValue(alpha_value * 10)
             self.draw_roi.setVisible(True)
 

@@ -540,7 +540,7 @@ class UIDrawROIWindow:
             if len(options) > 0:
                 alpha_value = float(options[0])
             else:
-                alpha_value = 0.5
+                alpha_value = 0.9
         self.input_alpha_value.setValue(alpha_value)
         self.draw_roi_window_input_container_box. \
             addRow(self.label_alpha_value, self.input_alpha_value)

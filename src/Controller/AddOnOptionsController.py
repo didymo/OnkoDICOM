@@ -48,7 +48,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             if len(options) > 0:
                 alpha_value = float(options[0])
             else:
-                alpha_value = 0.5
+                alpha_value = 0.9
 
         # initialise the UI
         self.window = window
