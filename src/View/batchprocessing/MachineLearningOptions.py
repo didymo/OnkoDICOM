@@ -4,6 +4,7 @@ from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 import numpy as np
 
+
 class CheckableCombox(QtWidgets.QComboBox):
     def __init__(self):
         super().__init__()
@@ -39,7 +40,7 @@ class CheckableCombox(QtWidgets.QComboBox):
     def hidePopup(self):
         super().hidePopup()
         self.startTimer(100)
-        self.updateLineEditFiled()
+        self.update_line_edit_filed()
         self.closeOnLineEditClick = False
 
     def showPopup(self):
@@ -47,32 +48,31 @@ class CheckableCombox(QtWidgets.QComboBox):
         # When the popup is displayed, a click on the lineedit should close it
         self.closeOnLineEditClick = True
 
-
-    def addItems(self, items, itemList=None):
+    def addItems(self, items, item_list=None):
         for indx, text in enumerate(items):
             try:
-                data = itemList[indx]
+                data = item_list[indx]
             except (TypeError, IndexError):
                 data = None
             self.addItem(text, data)
 
-    def addItem(self, text, userData=None):
+    def addItem(self, text, user_data=None):
         item = QtGui.QStandardItem()
         item.setText(text)
-        if not userData is None:
-            item.setData(userData)
+        if user_data is not None:
+            item.setData(user_data)
         # enable checkbox setting
         item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         item.setData(QtCore.Qt.Unchecked, QtCore.Qt.CheckStateRole)
         self.model().appendRow(item)
 
-    def updateLineEditFiled(self):
+    def update_line_edit_filed(self):
         text_container = []
 
         for i in range(self.model().rowCount()):
             if self.model().item(i).checkState() == QtCore.Qt.Checked:
                 text_container.append(self.model().item(i).text())
-        if len(text_container)>0:
+        if len(text_container) > 0:
             text_string = ", ".join(text_container)
             self.lineEdit().setText(text_string)
         else:
@@ -81,7 +81,7 @@ class CheckableCombox(QtWidgets.QComboBox):
 
 class MachineLearningOptions(QtWidgets.QWidget):
     """
-    DVH2CSV options for batch processing.
+    Machine Learning options for batch processing.
     """
 
     def __init__(self):
@@ -102,65 +102,82 @@ class MachineLearningOptions(QtWidgets.QWidget):
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
-        label_clinicalData = QtWidgets.QLabel("Please choose the CSV file location for Clinical Data:")
-        label_clinicalData.setStyleSheet(self.stylesheet)
+        label_clinical_data = QtWidgets.QLabel("Please choose the CSV file"
+                                               " location for Clinical Data:")
+        label_clinical_data.setStyleSheet(self.stylesheet)
 
-        label_DVG = QtWidgets.QLabel("Please choose the CSV file location for DVH Data:")
-        label_DVG.setStyleSheet(self.stylesheet)
+        label_dvg = QtWidgets.QLabel("Please choose the CSV"
+                                     " file location for DVH Data:")
+        label_dvg.setStyleSheet(self.stylesheet)
 
-        label_Pyrad = QtWidgets.QLabel("Please choose the CSV file location for Pyradiomics Data:")
-        label_Pyrad.setStyleSheet(self.stylesheet)
+        label_pyrad = QtWidgets.QLabel("Please choose the CSV"
+                                       " file location for Pyradiomics Data:")
+        label_pyrad.setStyleSheet(self.stylesheet)
 
-        self.directory_layout = QtWidgets.QFormLayout()
+        self.directory_layout = \
+            QtWidgets.QFormLayout()
 
         # Directory text box for clinical Data
-        self.directory_input_clinicalData = QtWidgets.QLineEdit("No file selected")
-        self.directory_input_clinicalData.setStyleSheet(self.stylesheet)
+        self.directory_input_clinicalData = \
+            QtWidgets.QLineEdit("No file selected")
+        self.directory_input_clinicalData. \
+            setStyleSheet(self.stylesheet)
         self.directory_input_clinicalData.setEnabled(False)
 
         # Button For clinical Data to set location
         self.change_button_clinicalData = QtWidgets.QPushButton("Change")
         self.change_button_clinicalData.setMaximumWidth(100)
-        self.change_button_clinicalData.clicked.connect(self.show_file_browser_clinicalData)
+        self.change_button_clinicalData.clicked. \
+            connect(self.show_file_browser_clinical_data)
         self.change_button_clinicalData.setObjectName("NormalButton")
         self.change_button_clinicalData.setStyleSheet(self.stylesheet)
 
         # Directory text box for DVH Data
-        self.directory_input_dvhData = QtWidgets.QLineEdit("No file selected")
+        self.directory_input_dvhData = \
+            QtWidgets.QLineEdit("No file selected")
         self.directory_input_dvhData.setStyleSheet(self.stylesheet)
         self.directory_input_dvhData.setEnabled(False)
 
         # Button For DVH Data to set location
-        self.change_button_dvhData = QtWidgets.QPushButton("Change")
-        self.change_button_dvhData.setMaximumWidth(100)
-        self.change_button_dvhData.clicked.connect(self.show_file_browser_dvhData)
+        self.change_button_dvhData = \
+            QtWidgets.QPushButton("Change")
+        self.change_button_dvhData.\
+            setMaximumWidth(100)
+        self.change_button_dvhData.clicked.\
+            connect(self.show_file_browser_dvh_data)
         self.change_button_dvhData.setObjectName("NormalButton")
         self.change_button_dvhData.setStyleSheet(self.stylesheet)
 
         # Directory text box for Pyradiomics Data
-        self.directory_input_pyrad = QtWidgets.QLineEdit("No file selected")
+        self.directory_input_pyrad = \
+            QtWidgets.QLineEdit("No file selected")
         self.directory_input_pyrad.setStyleSheet(self.stylesheet)
         self.directory_input_pyrad.setEnabled(False)
 
         # Button For Pyradiomics Data to set location
-        self.change_button_pyradiomicsData = QtWidgets.QPushButton("Change")
-        self.change_button_pyradiomicsData.setMaximumWidth(100)
-        self.change_button_pyradiomicsData.clicked.connect(self.show_file_browser_payrad)
-        self.change_button_pyradiomicsData.setObjectName("NormalButton")
-        self.change_button_pyradiomicsData.setStyleSheet(self.stylesheet)
+        self.change_button_pyradiomicsData = \
+            QtWidgets.QPushButton("Change")
+        self.change_button_pyradiomicsData.\
+            setMaximumWidth(100)
+        self.change_button_pyradiomicsData.\
+            clicked.connect(self.show_file_browser_payrad)
+        self.change_button_pyradiomicsData.\
+            setObjectName("NormalButton")
+        self.change_button_pyradiomicsData.\
+            setStyleSheet(self.stylesheet)
 
         # Set Clinical Data
-        self.directory_layout.addWidget(label_clinicalData)
+        self.directory_layout.addWidget(label_clinical_data)
         self.directory_layout.addRow(self.directory_input_clinicalData)
         self.directory_layout.addRow(self.change_button_clinicalData)
 
         # Set DVH data
-        self.directory_layout.addWidget(label_DVG)
+        self.directory_layout.addWidget(label_dvg)
         self.directory_layout.addRow(self.directory_input_dvhData)
         self.directory_layout.addRow(self.change_button_dvhData)
 
         # Set Pyradiomics data
-        self.directory_layout.addWidget(label_Pyrad)
+        self.directory_layout.addWidget(label_pyrad)
         self.directory_layout.addRow(self.directory_input_pyrad)
         self.directory_layout.addRow(self.change_button_pyradiomicsData)
 
@@ -171,39 +188,53 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.filter_table.setStyleSheet(self.stylesheet)
 
         # Modify Table
-        titleListofHeaders = ["Function Name", "Selected Value", "Comment"]
-        for title in titleListofHeaders:
+        title_listof_headers = ["Function Name", "Selected Value", "Comment"]
+        for title in title_listof_headers:
             col = self.filter_table.columnCount()
             self.filter_table.insertColumn(col)
             self.filter_table.setColumnWidth(col, 600)
         # set column Names
-        self.filter_table.setHorizontalHeaderLabels(titleListofHeaders)
+        self.filter_table.setHorizontalHeaderLabels(title_listof_headers)
 
         # Set 1st Column
-        functionNames = ["Features", "Target",
-                         "Choose Type of the Target Column",
-                         "Rename Values in Target",
-                         "ML with Tuning"]
+        function_names = ["Features", "Target",
+                          "Choose Type of the"
+                          " Target Column",
+                          "Rename Values "
+                          "in Target",
+                          "ML with Tuning"]
         # set 3rd Column
-        comments = ["Please select columns to pass to the ML model",
-                    "Please select a column for the target to ML model",
-                    "Please select a column type for the ML model based on that column will be chosen ML",
-                    "Only if the Category type is binary [0,1]!",
-                    "Usually, Running improves the model, but it takes between 20 - 40 min to Tune the Model."
-                    "It does not guarantee better performance compared to default ML"
+        comments = ["Please select columns "
+                    "to pass to the ML model."
+                    "If you won't select any columns "
+                    "then it takes all columns and passes to ML",
+                    "Please select a column "
+                    "for the target to ML model",
+                    "Please select a column type "
+                    "for the ML model based on that column"
+                    " will be chosen ML",
+                    "Only if the Category type"
+                    " is binary [0,1]!",
+                    "Usually, Running improves the model,"
+                    " but it takes between 20 - 40 min"
+                    " to Tune the Model."
+                    "It does not guarantee better "
+                    "performance compared to default ML"
                     ]
 
-        for i in range(len(functionNames)):
-            function_names = QtWidgets.QTableWidgetItem(functionNames[i])
+        for i in range(len(function_names)):
+            function_name = QtWidgets.QTableWidgetItem(function_names[i])
             comment = QtWidgets.QTableWidgetItem(comments[i])
             self.filter_table.insertRow(i)
             self.filter_table.setRowHeight(i, 50)
-            self.filter_table.setItem(i, 0, function_names)
+            self.filter_table.setItem(i, 0, function_name)
             self.filter_table.setItem(i, 2, comment)
 
         # add features
         self.combox_feature = CheckableCombox()
-        comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR files located in current selected directory")
+        comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR"
+                                             "files located in current"
+                                             "selected directory")
         self.filter_table.setItem(0, 1, comment)
 
         # add target
@@ -211,7 +242,9 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.combox_target.setStyleSheet(self.stylesheet)
         self.combox_target.setEditable(True)
         self.combox_target.lineEdit().setReadOnly(True)
-        comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR files located in current selected directory")
+        comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR"
+                                             "files located in current"
+                                             "selected directory")
         self.filter_table.setItem(1, 1, comment)
 
         # add Type
@@ -235,9 +268,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         self.filter_table.cellClicked.connect(self.select_rename_value_cell)
 
-
-
-    def store_data(self, dataDic):
+    def store_data(self, data_dic):
         """
                 Gets User Selected Columns
         """
@@ -246,16 +277,19 @@ class MachineLearningOptions(QtWidgets.QWidget):
         # As the column name may be changing we cannot hard code the
         # column name
         # not a necessary filter option as specified in requirements
-        self.dataDictionary = dataDic.copy()
-        self.dataDictionary.pop(list(self.dataDictionary)[0])
+        if len(data_dic) > 0:
+            self.dataDictionary = data_dic.copy()
+            self.dataDictionary.pop(list(self.dataDictionary)[0])
 
-        self.combox_feature.addItems(self.dataDictionary.keys())
-        self.combox_target.addItems(self.dataDictionary.keys())
+            self.combox_feature.addItems(self.dataDictionary.keys())
+            self.combox_target.addItems(self.dataDictionary.keys())
 
-        self.filter_table.setCellWidget(0, 1, self.combox_feature)
-        self.combox_feature.updateLineEditFiled()
+            self.filter_table.setCellWidget(0, 1, self.combox_feature)
+            self.combox_feature.update_line_edit_filed()
 
-        self.filter_table.setCellWidget(1, 1, self.combox_target)
+            self.filter_table.setCellWidget(1, 1, self.combox_target)
+        else:
+            pass
 
     def check_binary(self, dict):
         """
@@ -278,29 +312,31 @@ class MachineLearningOptions(QtWidgets.QWidget):
             self.binaryData = False
             return False
 
-
-    def rename_values(self, targetName):
-        self.binaryData = self.check_binary(self.dataDictionary[targetName])
+    def rename_values(self, target_name):
+        self.binaryData = self.check_binary(self.dataDictionary[target_name])
         if self.binaryData:
             output = set()
-            for x in self.dataDictionary[targetName]:
+            for x in self.dataDictionary[target_name]:
                 output.add(str(x))
             text_rename = str(sorted(list(output)))
             return text_rename
         else:
-            return f"Selected column is not Binary {targetName}"
+            return f"Selected column is not Binary {target_name}"
 
-    def select_rename_value_cell(self, row, column):
+    def select_rename_value_cell(self,
+                                 row, column):
         """
         Allows user to rename values of the target
         :param row: row index that was clicked
         :param column: column index that was clicked
         """
+
         header = self.filter_table.horizontalHeaderItem(column).text()
         if header == "Selected Value":
-            if (row == 3):
+            if row == 3:
                 if self.combox_target.currentText() != "":
-                    rename = self.rename_values(self.combox_target.currentText())
+                    rename = self.rename_values(
+                        self.combox_target.currentText())
                     comment = QtWidgets.QTableWidgetItem(rename)
                     self.filter_table.setItem(3, 1, comment)
         if header == "Function Name":
@@ -308,8 +344,9 @@ class MachineLearningOptions(QtWidgets.QWidget):
                     self.get_rename()
 
     # Function for Clinical Data
-    def set_csv_output_location_clinicalData(self, path, enable=True,
-                                             change_if_modified=False):
+    def set_csv_output_location_clinical_data(self,
+                                              path, enable=True,
+                                              change_if_modified=False):
         """
         Set the location for the ClinicalData .csv file.
         :param path: desired path.
@@ -324,13 +361,13 @@ class MachineLearningOptions(QtWidgets.QWidget):
             self.directory_input_clinicalData.setText(path)
             self.directory_input_clinicalData.setEnabled(enable)
 
-    def get_csv_output_location_clinicalData(self):
+    def get_csv_output_location_clinical_data(self):
         """
         Get the location of the desired output directory.
         """
         return self.directory_input_clinicalData.text()
 
-    def show_file_browser_clinicalData(self):
+    def show_file_browser_clinical_data(self):
         """
         Show the file browser for selecting a folder for the Onko
         default directory.
@@ -342,20 +379,25 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # If chosen directory is nothing (user clicked cancel) set to
         # user home
-        if path == "" and self.directory_input_clinicalData.text() == 'No file selected':
+        if path == "" and \
+                self.directory_input_clinicalData.text() \
+                == 'No file selected':
             path = expanduser("~")
         elif (path == ""
               and
-              (self.directory_input_clinicalData.text() != 'No file selected'
-               or self.directory_input_clinicalData.text() != expanduser("~"))):
+              (self.directory_input_clinicalData.text() != 'No file'
+                                                           ' selected'
+               or self.directory_input_clinicalData.text() != expanduser(
+                          "~"))):
             path = self.directory_input_clinicalData.text()
 
         # Update file path
-        self.set_csv_output_location_clinicalData(path, change_if_modified=True)
+        self.set_csv_output_location_clinical_data(path,
+                                                   change_if_modified=True)
 
     # Function for DVH Data
-    def set_csv_output_location_dvhData(self, path, enable=True,
-                                        change_if_modified=False):
+    def set_csv_output_location_dvh_data(self, path, enable=True,
+                                         change_if_modified=False):
         """
         Set the location for the dvh .csv file.
         :param path: desired path.
@@ -370,13 +412,13 @@ class MachineLearningOptions(QtWidgets.QWidget):
             self.directory_input_dvhData.setText(path)
             self.directory_input_dvhData.setEnabled(enable)
 
-    def get_csv_output_location_dvhData(self):
+    def get_csv_output_location_dvh_data(self):
         """
         Get the location of the desired output directory.
         """
         return self.directory_input_dvhData.text()
 
-    def show_file_browser_dvhData(self):
+    def show_file_browser_dvh_data(self):
         """
         Show the file browser for selecting a folder for the Onko
         default directory.
@@ -388,16 +430,18 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # If chosen directory is nothing (user clicked cancel) set to
         # user home
-        if path == "" and self.directory_input_dvhData.text() == 'No file selected':
+        if path == "" and self.directory_input_dvhData.text() == 'No file' \
+                                                                 ' selected':
             path = expanduser("~")
         elif (path == ""
               and
-              (self.directory_input_dvhData.text() != 'No file selected'
+              (self.directory_input_dvhData.text() != 'No file '
+                                                      'selected'
                or self.directory_input_dvhData.text() != expanduser("~"))):
             path = self.directory_input_dvhData.text()
 
         # Update file path
-        self.set_csv_output_location_dvhData(path, change_if_modified=True)
+        self.set_csv_output_location_dvh_data(path, change_if_modified=True)
 
     # Function for Pyrad Data
     def set_csv_output_location_pyrad(self, path, enable=True,
@@ -434,7 +478,8 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # If chosen directory is nothing (user clicked cancel) set to
         # user home
-        if path == "" and self.directory_input_pyrad.text() == 'No file selected':
+        if path == "" and self.directory_input_pyrad.text() == 'No file ' \
+                                                               'selected':
             path = expanduser("~")
         elif (path == ""
               and
@@ -445,14 +490,21 @@ class MachineLearningOptions(QtWidgets.QWidget):
         # Update file path
         self.set_csv_output_location_pyrad(path, change_if_modified=True)
 
-
     def get_feature(self):
         """
         get selected columns
         """
         features = self.combox_feature.currentText()
-        features = features.replace('[', '').replace(']', '').replace("'", "").replace('\n', "").replace(" ", "")
+        features = features.replace('[', '').\
+            replace(']', '').\
+            replace("'", "").\
+            replace('\n', "").\
+            replace(" ", "")
         features = features.split(',')
+        # if user do not select any features then it reads all features
+        if 'NotSelected' in features:
+            return None
+
         return features
 
     def get_target(self):
@@ -486,5 +538,3 @@ class MachineLearningOptions(QtWidgets.QWidget):
             return False
         else:
             return True
-
-

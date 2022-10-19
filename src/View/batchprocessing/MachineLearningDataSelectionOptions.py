@@ -4,6 +4,7 @@ from PySide6 import QtWidgets
 from os.path import expanduser
 from src.Controller.PathHandler import resource_path
 import pandas as pd
+
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
@@ -24,15 +25,15 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
             self.stylesheet_path = "res/stylesheet-win-linux.qss"
         self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
-        label_DVG = QtWidgets.QLabel(
+        label_dvh = QtWidgets.QLabel(
             "Please choose the input CSV file location for DVH Data:"
-            )
-        label_DVG.setStyleSheet(self.stylesheet)
+        )
+        label_dvh.setStyleSheet(self.stylesheet)
 
-        label_Pyrad = QtWidgets.QLabel(
+        label_pyrad = QtWidgets.QLabel(
             "Please choose the input CSV file location for Pyradiomics Data:"
-            )
-        label_Pyrad.setStyleSheet(self.stylesheet)
+        )
+        label_pyrad.setStyleSheet(self.stylesheet)
 
         self.directory_layout = QtWidgets.QFormLayout()
 
@@ -57,31 +58,35 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.directory_input_pyrad.setEnabled(False)
 
         # Button For Pyradiomics Data to set location
-        self.change_button_pyradiomicsData = QtWidgets.QPushButton(
+        self.change_button_pyradiomics_data = QtWidgets.QPushButton(
             "Change")
-        self.change_button_pyradiomicsData.setMaximumWidth(100)
-        self.change_button_pyradiomicsData.clicked.connect(
+        self.change_button_pyradiomics_data.setMaximumWidth(100)
+        self.change_button_pyradiomics_data.clicked.connect(
             self.show_file_browser_pyrad)
-        self.change_button_pyradiomicsData.setObjectName("NormalButton")
-        self.change_button_pyradiomicsData.setStyleSheet(self.stylesheet)
+        self.change_button_pyradiomics_data.setObjectName("NormalButton")
+        self.change_button_pyradiomics_data.setStyleSheet(self.stylesheet)
 
         # Set DVH data
-        self.directory_layout.addWidget(label_DVG)
-        self.directory_layout.addWidget(self.directory_input_dvh_data)
-        self.directory_layout.addWidget(self.change_button_dvh_data)
+        self.directory_layout.addWidget(label_dvh)
+        self.directory_layout.addRow(self.directory_input_dvh_data)
+        self.directory_layout.addRow(self.change_button_dvh_data)
 
         # Set Pyradiomics data
-        self.directory_layout.addWidget(label_Pyrad)
-        self.directory_layout.addWidget(self.directory_input_pyrad)
-        self.directory_layout.addWidget(self.change_button_pyradiomicsData)
+        self.directory_layout.addWidget(label_pyrad)
+        self.directory_layout.addRow(self.directory_input_pyrad)
+        self.directory_layout.addRow(self.change_button_pyradiomics_data)
 
         # create dropdown menu for dvh values to select from
         self.dvh_dropdown_menu = QtWidgets.QComboBox()
         self.dvh_dropdown_menu.setStyleSheet(self.stylesheet)
+        self.dvh_dropdown_menu.setEditable(True)
+        self.dvh_dropdown_menu.lineEdit().setReadOnly(True)
 
         # create dropdown menu for dvh values to select from
         self.pyrad_dropdown_menu = QtWidgets.QComboBox()
         self.pyrad_dropdown_menu.setStyleSheet(self.stylesheet)
+        self.pyrad_dropdown_menu.setEditable(True)
+        self.pyrad_dropdown_menu.lineEdit().setReadOnly(True)
 
         # create labels for dropdown menus
         self.dvh_dropdown_label = QtWidgets.QLabel(
@@ -92,10 +97,10 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.pyrad_dropdown_label.setStyleSheet(self.stylesheet)
 
         # add dropdowns to main_layout
-        self.directory_layout.addWidget(self.dvh_dropdown_label)
-        self.directory_layout.addWidget(self.dvh_dropdown_menu)
-        self.directory_layout.addWidget(self.pyrad_dropdown_label)
-        self.directory_layout.addWidget(self.pyrad_dropdown_menu)
+        self.directory_layout.addRow(self.dvh_dropdown_label)
+        self.directory_layout.addRow(self.dvh_dropdown_menu)
+        self.directory_layout.addRow(self.pyrad_dropdown_label)
+        self.directory_layout.addRow(self.pyrad_dropdown_menu)
 
         self.main_layout.addLayout(self.directory_layout)
         self.setLayout(self.main_layout)
@@ -109,19 +114,25 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.pyrad_dropdown_menu.addItems(options)
 
     def read_in_dvh_data(self):
-        data_dvh = pd.read_csv(
-            f'{self.get_csv_input_location_dvh_data()}',
-            on_bad_lines='skip')
-        return list(
-            data_dvh[data_dvh['ROI'].str.contains('PTV')]['ROI'].unique()
+        if self.get_csv_input_location_dvh_data() is not None:
+            data_dvh = pd.read_csv(
+                f'{self.get_csv_input_location_dvh_data()}',
+                on_bad_lines='skip')
+            return list(
+                data_dvh[data_dvh['ROI'].str.contains('PTV')]['ROI'].unique()
             )
+        else:
+            return "-"
 
     def read_in_pyrad_data(self):
-        data_Py = pd.read_csv(
-            f'{self.get_csv_input_location_pyrad()}')
-        return list(
-            data_Py[data_Py['ROI'].str.contains('GTV')]['ROI'].unique()
+        if self.get_csv_input_location_pyrad() is not None:
+            data_Py = pd.read_csv(
+                f'{self.get_csv_input_location_pyrad()}')
+            return list(
+                data_Py[data_Py['ROI'].str.contains('GTV')]['ROI'].unique()
             )
+        else:
+            return "-"
 
     def _on_dvh_path_changed(self):
         options = self.read_in_dvh_data()
@@ -154,7 +165,11 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         """
         Get the location of the desired output directory.
         """
-        return self.directory_input_dvh_data.text()
+        if (self.directory_input_dvh_data.text() != 'No file selected'
+                and self.directory_input_dvh_data.text() != expanduser("~")):
+            return self.directory_input_dvh_data.text()
+        else:
+            return None
 
     def show_file_browser_dvh_data(self):
         """
@@ -203,7 +218,11 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         """
         Get the location of the desired output directory.
         """
-        return self.directory_input_pyrad.text()
+        if (self.directory_input_pyrad.text() != 'No file selected'
+                and self.directory_input_pyrad.text() != expanduser("~")):
+            return self.directory_input_pyrad.text()
+        else:
+            return None
 
     def show_file_browser_pyrad(self):
         """
