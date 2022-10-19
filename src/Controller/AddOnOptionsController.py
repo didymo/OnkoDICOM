@@ -724,6 +724,9 @@ class AddOptions:
 
     def show_add_on_options(self):
         self.options_window.fill_tables()
+        self.options_window.treeList.clearSelection()
+        self.options_window.optionTitle.setText("User Options")
+        self.options_window.change_display("User Options")
         self.options_window.show()
 
     def update_ui(self):
