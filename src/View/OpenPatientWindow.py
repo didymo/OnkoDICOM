@@ -11,10 +11,12 @@ from src.Model.Worker import Worker
 from src.View.OpenPatientProgressWindow import OpenPatientProgressWindow
 from src.View.resources_open_patient_rc import *
 from src.Model import ImageLoading
+from src.Model.ForceLink import force_link
 
 from src.Controller.PathHandler import resource_path
 import platform
 
+import logging
 
 class UIOpenPatientWindow(object):
     patient_info_initialized = QtCore.Signal(object)
@@ -157,10 +159,25 @@ class UIOpenPatientWindow(object):
         # Create a horizontal box to hold the Cancel and Open button
         self.open_patient_window_patient_open_actions_horizontal_box = \
             QHBoxLayout()
-        self.open_patient_window_patient_open_actions_horizontal_box.\
+        self.open_patient_window_patient_open_actions_horizontal_box. \
             setObjectName("OpenPatientWindowPatientOpenActionsHorizontalBox")
-        self.open_patient_window_patient_open_actions_horizontal_box.\
+
+
+        # Create Button to force a link
+        self.open_patient_window_link_button = QPushButton()
+        self.open_patient_window_link_button.setObjectName(
+            "OpenPatientWindowLinkButton")
+        self.open_patient_window_link_button.setSizePolicy(QSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
+        self.open_patient_window_link_button.resize(self.open_patient_window_stop_button.sizeHint().width(),
+                                                    self.open_patient_window_stop_button.sizeHint().height())
+        self.open_patient_window_link_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.open_patient_window_link_button.clicked.connect(self.force_link_on_nodes)
+        self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_link_button)
+        self.open_patient_window_link_button.setDisabled(True)
+        self.open_patient_window_patient_open_actions_horizontal_box. \
             addStretch(1)
+
         # Add a button to go back/exit from the application
         self.open_patient_window_exit_button = QPushButton()
         self.open_patient_window_exit_button.setObjectName(
@@ -170,7 +187,6 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_exit_button.resize(self.open_patient_window_stop_button.sizeHint().width(),
                                                     self.open_patient_window_stop_button.sizeHint().height())
         self.open_patient_window_exit_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.open_patient_window_exit_button.clicked.connect(self.exit_button_clicked)
         self.open_patient_window_exit_button.setProperty("QPushButtonClass", "fail-button")
         self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_exit_button)
 
@@ -203,7 +219,7 @@ class UIOpenPatientWindow(object):
 
         # Set the vertical box fourth element, the tree view, to stretch out as
         # far as possible
-        self.open_patient_window_instance_vertical_box.setStretch(3, 4) # Stretch the treeview out as far as possible
+        self.open_patient_window_instance_vertical_box.setStretch(3, 4)  # Stretch the treeview out as far as possible
         self.open_patient_window_instance_central_widget = QWidget()
         self.open_patient_window_instance_central_widget.setObjectName(
             "OpenPatientWindowInstanceCentralWidget")
@@ -252,6 +268,8 @@ class UIOpenPatientWindow(object):
         self.open_patient_directory_result_label.setText(
             "The selected directory(s) above will be opened in the OnkoDICOM "
             "program.")
+        self.open_patient_window_link_button.setText(
+            _translate("OpenPatientWindowInstance", "Force Link"))
         self.open_patient_window_stop_button.setText(
             _translate("OpenPatientWindowInstance", "Stop Search"))
         self.open_patient_window_exit_button.setText(
@@ -259,8 +277,10 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_confirm_button.setText(
             _translate("OpenPatientWindowInstance", "Confirm"))
 
+
     def exit_button_clicked(self):
         QCoreApplication.exit(0)
+
 
     def scan_directory_for_patient(self):
         # Reset tree view header and last patient
@@ -412,7 +432,6 @@ class UIOpenPatientWindow(object):
             self.open_patient_window_patients_tree.invisibleRootItem())
         selected_series_types = [checked_node.dicom_object.get_series_type()
                                  for checked_node in checked_nodes]
-
         # Total number of selected image series
         total_selected_image_series = selected_series_types.count('CT') + \
                                       selected_series_types.count('MR') + \
@@ -420,6 +439,7 @@ class UIOpenPatientWindow(object):
 
         # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
+        self.open_patient_window_link_button.setDisabled(True)
         if total_selected_image_series < 1:
             header = "Cannot proceed without an image."
             proceed = False
@@ -427,7 +447,7 @@ class UIOpenPatientWindow(object):
             header = "Cannot proceed with more than 1 selected image."
             proceed = False
         elif not self.check_selected_items_referencing(checked_nodes):
-            # Check that selected items properly reference each other
+            self.open_patient_window_link_button.setEnabled(True)
             header = "Selected series do not reference each other."
             proceed = False
         elif 'RTSTRUCT' not in selected_series_types:
@@ -440,7 +460,6 @@ class UIOpenPatientWindow(object):
             header = ""
 
         self.open_patient_window_confirm_button.setDisabled(not proceed)
-
         # Set the tree header
         self.open_patient_window_patients_tree.setHeaderLabel(header)
 
@@ -469,7 +488,6 @@ class UIOpenPatientWindow(object):
                 series[series_type] = item
             else:
                 series["IMAGE"] = item
-
         # Check if the RTSTRUCT, RTPLAN, and RTDOSE are a child item of the
         # image series
         if series["IMAGE"]:
@@ -491,7 +509,7 @@ class UIOpenPatientWindow(object):
 
             if series["SR"] and series["SR"].parent() != series["IMAGE"]:
                 return False
-
+        self.open_patient_window_link_button .setDisabled(True)
         return True
 
     def get_existing_rtss(self, image_series):
@@ -563,10 +581,74 @@ class UIOpenPatientWindow(object):
         recurse(root)
         return checked_items
 
+    def force_link_on_nodes(self):
+        """
+        for the selected nodes, overwrite the RTPlan and RTDose Series
+        ID to match the RT image and RT struct
+        """
+        series = {
+            "IMAGE": None,
+            "RTSTRUCT": None,
+            "RTPLAN": None,
+            "RTDOSE": None,
+            "SR": None
+        }
 
-# This is to allow for dropping a directory into the input text.
+        checked = self.get_checked_nodes(
+            self.open_patient_window_patients_tree.invisibleRootItem())
+        dicom_objects = [checked_node.dicom_object for checked_node in checked]
+        logging.debug("DICOM array populated for force link function")
+        if len(dicom_objects) < 1:
+            return -1
+
+        for item in dicom_objects:
+            series_type = item.get_series_type()
+            if series_type in series:
+                series[series_type] = item
+            else:
+                series["IMAGE"] = item
+        force_check = -1
+        force_continue = 0
+        try:
+            if series["IMAGE"].frame_of_reference_uid:
+                new_id = series["IMAGE"].frame_of_reference_uid
+                force_continue = 1
+            if(series["IMAGE"].frame_of_reference_uid ==
+                        series["RTSTRUCT"].frame_of_reference_uid):
+                    new_id = series["RTSTRUCT"].frame_of_reference_uid
+                    force_continue = 1
+            else:
+                QMessageBox.about(self, "Force Link",
+                                 "Force Link aborted")
+                return -1
+        except AttributeError:
+            logging.debug("Attribute error in force link, no frame of reference "
+                         "ID in dicom item")
+            if force_continue == 0:
+                logging.debug("Force link aborted")
+                return -1
+            logging.debug("Force link continuing")
+
+        logging.debug("Initiating force link")
+        force_check = force_link(new_id,
+                                 self.open_patient_directory_input_box.text(),
+                                 dicom_objects)
+
+        if force_check == 1:
+            logging.debug("Force link successful")
+            QMessageBox.about(self, "Force Link",
+                              "Force Link Successful")
+
+        else:
+            logging.debug("Force link unsuccessful")
+            QMessageBox.about(self, "Force Link",
+                              "Force Link Unsuccessful")
+        self.open_patient_window_link_button.setDisabled(True)
+        self.scan_directory_for_patient()
+
+
 class UIOpenPatientWindowDragAndDropEvent(QLineEdit):
-
+    """This is to allow for dropping a directory into the input text"""
     parent_window = None
 
     def __init__(self, UIOpenPatientWindowInstance):

@@ -23,6 +23,7 @@ from src.View.mainpage.Toolbar import Toolbar
 from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
+from src.View.mainpage.MLTab import MLTab
 from src.View.PTCTFusion.PETCTView import PetCtView
 from src.View.ProgressWindow import ProgressWindow
 
@@ -212,6 +213,10 @@ class UIMainWindow:
         self.splitter.addWidget(self.left_panel)
         self.splitter.addWidget(self.right_panel)
 
+        # Add ML to right panel as a tab
+        self.MLTab= MLTab()
+        self.right_panel.addTab(self.MLTab, "Use ML Model")
+
         # Create footer
         self.footer = QtWidgets.QWidget()
         self.create_footer()
@@ -252,7 +257,6 @@ class UIMainWindow:
         structures tab is selected, this method needs to be called in order
         for the DICOM view window to be updated to show the new region of
         interest.
-
         :param update_3d_window: a boolean to mark if 3d model
         needs to be updated
         """
