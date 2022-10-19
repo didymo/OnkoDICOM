@@ -1,11 +1,12 @@
 import kaplanmeier as km
-import matplotlib as mp1
-mp1.use("TkAgg")
+#import matplotlib as mp1
+#mp1.use("TkAgg")
 from matplotlib import pyplot as plt
 import pandas as pd
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import logging
+import os
 import numpy as np
 
 class BatchProcessKaplanMeier(BatchProcess):
@@ -43,10 +44,9 @@ class BatchProcessKaplanMeier(BatchProcess):
         self.required_classes = ['sr']
         self.ready = self.load_images(patient_files, self.required_classes)
         self.kaplanmeier_target_col = kaplanmeier_target_col
-        self.kaplanmeier_ = kaplanmeier_target_col
-        self.kaplanmeier_target_col = kaplanmeier_target_col
         self.kaplanmeier_duration_of_life_col = kaplanmeier_duration_of_life_col
         self.kaplanmeier_alive_or_dead_col = kaplanmeier_alive_or_dead_col
+        self.my_plt = None
         self.data_dict = data_dict
 
     def start(self):
@@ -156,7 +156,16 @@ class BatchProcessKaplanMeier(BatchProcess):
                                 hspace=0.2,
                                 wspace=0.2)
             #displays plot
-            plt.show()
+            #self.my_plt = plt
+            #plt.show()
+            try:
+                # Create Pyradiomics Directory
+                os.mkdir('./data/kaplan')
+
+            except FileExistsError:
+                logging.debug('Directory already exists')
+            plt.savefig('./data/kaplan/plot.png')
+
         except:
 
             logging.debug("failed to create plot")

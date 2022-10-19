@@ -1,6 +1,7 @@
 import platform
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QComboBox
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QComboBox, QLabel
 from src.Controller.PathHandler import resource_path
 
 class KaplanMeierOptions(QtWidgets.QWidget):
@@ -85,3 +86,30 @@ class KaplanMeierOptions(QtWidgets.QWidget):
 
     def get_alive_or_dead_col(self):
         return self.combobox_alive_or_dead.currentText()
+
+class plot_window(QtWidgets.QWidget):
+    """
+        ClinicalData-SR2CSV options for batch processing.
+        """
+
+    def __init__(self, image_path):
+
+        QtWidgets.QWidget.__init__(self)
+        self.dataDictionary = {}
+        self.image_path = image_path
+
+        # Create the main layout
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        # Get the stylesheet
+        if platform.system() == 'Darwin':
+            self.stylesheet_path = "res/stylesheet.qss"
+        else:
+            self.stylesheet_path = "res/stylesheet-win-linux.qss"
+        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+
+        label = QLabel(self)
+        pximap = QPixmap("")
+
+
+

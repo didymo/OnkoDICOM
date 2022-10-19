@@ -20,6 +20,7 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
     BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessKaplanMeier import BatchProcessKaplanMeier
+from src.View.batchprocessing.KaplanMeierOptions import plot_window
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
 from src.Model.DICOM.Structure.DICOMSeries import Series
@@ -739,6 +740,7 @@ class BatchProcessingController:
                                             self.kaplanmeier_target_col,
                                             self.kaplanmeier_duration_of_life_col, self.kaplanmeier_alive_or_dead_col)
         success = process.start()
+        result_plot = plot_window()
 
         # Set summary message
         if success:
