@@ -28,6 +28,10 @@ from src.View.batchprocessing.MachineLearningOptions import \
 
 
 class TabBar(QtWidgets.QTabBar):
+    """
+    Custom tabbar to work on the left side of the window
+    with horizontal text.
+    """
     def tabSizeHint(self, index):
         s = QtWidgets.QTabBar.tabSizeHint(self, index)
         s.transpose()
@@ -58,19 +62,6 @@ class TabBar(QtWidgets.QTabBar):
             painter.restore()
 
 
-# class ProxyStyle(QtWidgets.QProxyStyle):
-#     def drawControl(self, element, opt, painter, widget):
-#         if element == QtWidgets.QStyle.CE_TabBarTabLabel:
-#             ic = self.pixelMetric(QtWidgets.QStyle.PM_TabBarIconSize)
-#             r = QtCore.QRect(opt.rect)
-#             w = opt.rect.width() + self.pixelMetric(QtWidgets.QStyle.PM_TabBarIconSize)
-#             r.setHeight(opt.fontMetrics.horizontalAdvance(" "*50))
-#             r.moveBottom(opt.rect.bottom())
-#             opt.rect = r
-
-#         QtWidgets.QProxyStyle.drawControl(self, element, opt, painter, widget)
-
-
 class CheckableTabWidget(QtWidgets.QTabWidget):
     """
     Creates a clickable tab widget.
@@ -81,7 +72,6 @@ class CheckableTabWidget(QtWidgets.QTabWidget):
         QtWidgets.QTabWidget.__init__(self, *args, **kwargs)
         self.setTabBar(TabBar(self))
         self.setTabPosition(QtWidgets.QTabWidget.West)
-        # self.setStyle(ProxyStyle())
 
     def addTab(self, widget, title):
         """
