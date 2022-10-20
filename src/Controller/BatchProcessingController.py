@@ -34,6 +34,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
 from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
+from src.View.batchprocessing.BatchKaplanMeierResultsWindow import BatchKaplanMeierResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
 
@@ -267,7 +268,6 @@ class BatchProcessingController:
             "csv2clinicaldata-sr": self.batch_csv2clinicaldatasr_handler,
             "clinicaldata-sr2csv": self.batch_clinicaldatasr2csv_handler,
             "roiname2fmaid": self.batch_roiname2fmaid_handler,
-            "kaplanmeier": self.batch_kaplanmeier_handler,
             "fmaid2roiname": self.batch_fmaid2roiname_handler,
         }
 
@@ -305,7 +305,8 @@ class BatchProcessingController:
                 if process in ["roinamecleaning",
                                "select_subgroup",
                                "machine_learning",
-                               "machine_learning_data_selection"]:
+                               "machine_learning_data_selection",
+                               "kaplanmeier"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -359,6 +360,18 @@ class BatchProcessingController:
             process.start()
             self.batch_summary[1] = process.summary
             progress_callback.emit(("Completed ML Data selection", 100))
+
+        if "kaplanmeier" in self.processes:
+            process = BatchProcessKaplanMeier(progress_callback,
+                                             interrupt_flag,
+                                             self.get_data_for_kaplan_meier(),
+                                             self.kaplanmeier_target_col,
+                                             self.kaplanmeier_duration_of_life_col,
+                                             self.kaplanmeier_alive_or_dead_col)
+
+            process.start()
+            self.batch_summary[1] = process.summary
+            progress_callback.emit(("Completed Kaplan Meier Production", 100))
 
         PatientDictContainer().clear()
 
@@ -729,6 +742,13 @@ class BatchProcessingController:
         self.progress_window.update_progress(("Processing complete!", 100))
         self.progress_window.close()
 
+        if "kaplanmeier" in self.processes:
+            kaplan_results_window = BatchKaplanMeierResultsWindow()
+            kaplan_results_window.set_image(self.kaplan_meir_process.
+                                   get_image())
+
+            kaplan_results_window.exec_()
+
         if self.machine_learning_process is not None \
                 and self.machine_learning_process. \
                 get_run_model_accept() is not False:
@@ -835,37 +855,49 @@ class BatchProcessingController:
     def set_kaplanmeier_alive_or_dead_col(self, alive_or_dead):
         self.kaplanmeier_alive_or_dead_col = alive_or_dead
 
-    def batch_kaplanmeier_handler(self, interrupt_flag,
-                                    progress_callback, patient):
+    def get_data_for_kaplan_meier(self):
         """
-        Handles creating, starting, and processing the results of batch
-        ROIName2FMA-ID.
-        :param interrupt_flag: A threading.Event() object that tells the
-                               function to stop loading.
-        :param progress_callback: A signal that receives the current
-                                  progress of the loading.
-        :param patient: The patient to perform this process on.
+        Reads in all clinical data from a directory which may
+        contain multiple patients.
+        :return: only unique values in a dictionary with keys as the
+        column name and a list of values found
         """
-        # Get patient files and start process
-        # Get current files
-        cur_patient_files = \
-            BatchProcessingController.get_patient_files(patient)
-        process = BatchProcessKaplanMeier(progress_callback,
-                                            interrupt_flag,
-                                            cur_patient_files,self.get_all_clinical_data(),
-                                            self.kaplanmeier_target_col,
-                                            self.kaplanmeier_duration_of_life_col, self.kaplanmeier_alive_or_dead_col)
-        success = process.start()
-        result_plot = plot_window()
+        logging.debug(f"{self.__class__.__name__}" \
+                      ".get_all_clinical_data() called")
 
-        # Set summary message
-        if success:
-            reason = "SUCCESS"
-        else:
-            reason = process.summary
+        clinical_data_dict = {}
 
-        # Append process summary
-        if patient not in self.batch_summary[0].keys():
-            self.batch_summary[0][patient] = {}
-        self.batch_summary[0][patient]['pyrad2pyradSR'] = reason
-        progress_callback.emit(("Completed PyRad2PyRad-SR", 100))
+        for patient in self.dicom_structure.patients.values():
+            logging.debug(f"{len(self.dicom_structure.patients.values())}" \
+                          "patient(s) in dicom_structure object")
+
+            cur_patient_files = \
+                BatchProcessingController.get_patient_files(patient)
+            process = \
+                BatchProcessSelectSubgroup(None, None, cur_patient_files, None)
+
+            cd_sr = process.find_clinical_data_sr()
+
+            # if they do then get the data
+            if cd_sr:
+                single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                # adds all the current titles
+                titles = list(single_patient_data)
+
+                for title in titles:
+                    data = single_patient_data[title]
+
+                    if title not in clinical_data_dict.keys():
+                        clinical_data_dict[title] = [data]
+                    else:
+                        combined_data = clinical_data_dict[title]
+                        combined_data.append(data)
+
+                        # removes duplicates
+                        combined_data = list(dict.fromkeys(combined_data))
+
+                        clinical_data_dict[title] = combined_data
+
+        logging.debug(f"clinical_data_dict: {clinical_data_dict}")
+
+        return clinical_data_dict
