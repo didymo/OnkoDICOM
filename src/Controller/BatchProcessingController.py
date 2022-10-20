@@ -362,15 +362,15 @@ class BatchProcessingController:
             progress_callback.emit(("Completed ML Data selection", 100))
 
         if "kaplanmeier" in self.processes:
-            process = BatchProcessKaplanMeier(progress_callback,
+            self.kaplan_meier_process = BatchProcessKaplanMeier(progress_callback,
                                              interrupt_flag,
                                              self.get_data_for_kaplan_meier(),
                                              self.kaplanmeier_target_col,
                                              self.kaplanmeier_duration_of_life_col,
                                              self.kaplanmeier_alive_or_dead_col)
 
-            process.start()
-            self.batch_summary[1] = process.summary
+            self.kaplan_meier_process.start()
+            self.batch_summary[1] = self.kaplan_meier_process.summary
             progress_callback.emit(("Completed Kaplan Meier Production", 100))
 
         PatientDictContainer().clear()
@@ -743,11 +743,12 @@ class BatchProcessingController:
         self.progress_window.close()
 
         if "kaplanmeier" in self.processes:
-            kaplan_results_window = BatchKaplanMeierResultsWindow()
-            kaplan_results_window.set_image(self.kaplan_meir_process.
-                                   get_image())
+            self.kaplan_meier_process.get_plot().show()
+            # kaplan_results_window = BatchKaplanMeierResultsWindow()
+            # kaplan_results_window.set_image(self.kaplan_meir_process.
+            #                        get_image())
 
-            kaplan_results_window.exec_()
+            # kaplan_results_window.exec_()
 
         if self.machine_learning_process is not None \
                 and self.machine_learning_process. \
@@ -881,6 +882,7 @@ class BatchProcessingController:
             # if they do then get the data
             if cd_sr:
                 single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                
                 # adds all the current titles
                 titles = list(single_patient_data)
 
@@ -892,9 +894,6 @@ class BatchProcessingController:
                     else:
                         combined_data = clinical_data_dict[title]
                         combined_data.append(data)
-
-                        # removes duplicates
-                        combined_data = list(dict.fromkeys(combined_data))
 
                         clinical_data_dict[title] = combined_data
 

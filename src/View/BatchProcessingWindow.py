@@ -322,14 +322,6 @@ class UIBatchProcessingWindow(object):
         """
         Executes when the confirm button is clicked.
         """
-        processes = ['iso2roi', 'suv2roi', 'dvh2csv', 'pyrad2csv',
-                     'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
-                     'clinicaldata-sr2csv', 'roinamecleaning', 'roiname2fmaid', 'kaplanmeier']
-        selected_processes = []
-        suv2roi_weights = self.suv2roi_tab.get_patient_weights()
-        kaplanmeier_target_col = self.kaplanmeier_tab.get_target_col()
-        kaplanmeier_duration_of_life_col = self.kaplanmeier_tab.get_duration_of_life_col()
-        kaplanmeier_alive_or_dead_col = self.kaplanmeier_tab.get_alive_or_dead_col()
         # WARNING: the order of this list is important.
         # TODO: this should be replaced with something more global
         # as currently this is very flaky. ie. changing the order of
@@ -339,12 +331,16 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname',
-                     'machine_learning_data_selection',
-                    'machine_learning', 'kaplanmeier']
+                     'roiname2fmaid', 'kaplanmeier',
+                     'fmaid2roiname', 'machine_learning_data_selection',
+                     'machine_learning']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+        kaplanmeier_target_col = self.kaplanmeier_tab.get_target_col()
+        kaplanmeier_duration_of_life_col = self.kaplanmeier_tab.get_duration_of_life_col()
+        kaplanmeier_alive_or_dead_col = self.kaplanmeier_tab.get_alive_or_dead_col()
+        
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
 
