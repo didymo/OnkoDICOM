@@ -1,6 +1,8 @@
 import datetime
 import threading
 from PySide6.QtCore import QThreadPool
+from PySide6.QtWidgets import QMessageBox
+
 from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
@@ -20,7 +22,6 @@ from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
     BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
 from src.Model.batchprocessing.BatchProcessKaplanMeier import BatchProcessKaplanMeier
-from src.View.batchprocessing.KaplanMeierOptions import plot_window
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
 from src.Model.batchprocessing.\
@@ -34,7 +35,6 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
 from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
 from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
-from src.View.batchprocessing.BatchKaplanMeierResultsWindow import BatchKaplanMeierResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
 import pandas as pd
@@ -733,31 +733,36 @@ class BatchProcessingController:
         self.progress_window.close()
 
         if "kaplanmeier" in self.processes:
-            # creates dataframe based on patient records
-            df = pd.DataFrame.from_dict(self.get_data_for_kaplan_meier())
-            
-            # creates input parameters for the km.fit() function
-            
-            time_event = df[self.kaplanmeier_duration_of_life_col]
-            
-            censoring = df[self.kaplanmeier_alive_or_dead_col]
-            
-            y = df[self.kaplanmeier_target_col]
-            
-            # create kaplanmeier plot
-            results = km.fit(time_event, censoring, y)
-            km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
-            
-            # specifies plot layout
-            plt.tight_layout()
-            plt.subplots_adjust(top=0.903,
-                                bottom=0.423,
-                                left=0.085,
-                                right=0.965,
-                                hspace=0.2,
-                                wspace=0.2)
+            try:
+                # creates dataframe based on patient records
+                df = pd.DataFrame.from_dict(self.get_data_for_kaplan_meier())
 
-            plt.show()
+                # creates input parameters for the km.fit() function
+
+                time_event = df[self.kaplanmeier_duration_of_life_col]
+
+                censoring = df[self.kaplanmeier_alive_or_dead_col]
+
+                y = df[self.kaplanmeier_target_col]
+
+                # create kaplanmeier plot
+                results = km.fit(time_event, censoring, y)
+                km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
+
+                # specifies plot layout
+                plt.tight_layout()
+                plt.subplots_adjust(top=0.903,
+                                    bottom=0.423,
+                                    left=0.085,
+                                    right=0.965,
+                                    hspace=0.2,
+                                    wspace=0.2)
+
+                plt.show()
+            except Exception as e:
+
+                #button = QMessageBox.question(self, "Question dialog", "The longer message")
+
 
         if self.machine_learning_process is not None \
                 and self.machine_learning_process. \
