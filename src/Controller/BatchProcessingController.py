@@ -1,8 +1,6 @@
 import datetime
 import threading
 from PySide6.QtCore import QThreadPool
-from PySide6.QtWidgets import QMessageBox
-
 from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.batchprocessing.BatchProcessClinicalDataSR2CSV import \
     BatchProcessClinicalDataSR2CSV
@@ -21,11 +19,12 @@ from src.Model.batchprocessing.BatchProcessROINameCleaning import \
 from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
     BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
-from src.Model.batchprocessing.BatchProcessKaplanMeier import BatchProcessKaplanMeier
+from src.Model.batchprocessing.BatchProcessKaplanMeier import \
+    BatchProcessKaplanMeier
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
-from src.Model.batchprocessing.\
-    BatchprocessMachineLearningDataSelection\
+from src.Model.batchprocessing. \
+    BatchprocessMachineLearningDataSelection \
     import BatchprocessMachineLearningDataSelection
 from src.Model.batchprocessing.BatchProcessMachineLearning import \
     BatchProcessMachineLearning
@@ -40,6 +39,7 @@ import logging
 import pandas as pd
 import kaplanmeier as km
 import matplotlib.pyplot as plt
+
 
 class BatchProcessingController:
     """
@@ -66,7 +66,7 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
-        self.kaplanmeier_target_col =""
+        self.kaplanmeier_target_col = ""
         self.kaplanmeier_duration_of_life_col = ""
         self.kaplanmeier_alive_or_dead_col = ""
 
@@ -405,7 +405,7 @@ class BatchProcessingController:
                                   progress of the loading.
         :param patient: The patient to perform this process on.
         """
-        logging.debug(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}"
                       ".batch_select_subgroup_handler() called")
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
@@ -747,7 +747,8 @@ class BatchProcessingController:
 
                 # create kaplanmeier plot
                 results = km.fit(time_event, censoring, y)
-                km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
+                km.plot(results, cmap='Set1', cii_lines='dense',
+                        cii_alpha=0.10)
 
                 # specifies plot layout
                 plt.tight_layout()
@@ -760,9 +761,7 @@ class BatchProcessingController:
 
                 plt.show()
             except Exception as e:
-
-            #button = QMessageBox.question(self, "Question dialog", "The longer message")
-
+                logging.debug(e)
 
         if self.machine_learning_process is not None \
                 and self.machine_learning_process. \
@@ -802,13 +801,13 @@ class BatchProcessingController:
         :return: only unique values in a dictionary with keys as the
         column name and a list of values found
         """
-        logging.debug(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}"
                       ".get_all_clinical_data() called")
 
         clinical_data_dict = {}
 
         for patient in self.dicom_structure.patients.values():
-            logging.debug(f"{len(self.dicom_structure.patients.values())}" \
+            logging.debug(f"{len(self.dicom_structure.patients.values())}"
                           "patient(s) in dicom_structure object")
 
             cur_patient_files = \
@@ -877,13 +876,13 @@ class BatchProcessingController:
         :return: only unique values in a dictionary with keys as the
         column name and a list of values found
         """
-        logging.debug(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}"
                       ".get_all_clinical_data() called")
 
         clinical_data_dict = {}
 
         for patient in self.dicom_structure.patients.values():
-            logging.debug(f"{len(self.dicom_structure.patients.values())}" \
+            logging.debug(f"{len(self.dicom_structure.patients.values())}"
                           "patient(s) in dicom_structure object")
 
             cur_patient_files = \
@@ -896,7 +895,6 @@ class BatchProcessingController:
             # if they do then get the data
             if cd_sr:
                 single_patient_data = process.read_clinical_data_from_sr(cd_sr)
-                
                 # adds all the current titles
                 titles = list(single_patient_data)
 
@@ -912,5 +910,4 @@ class BatchProcessingController:
                         clinical_data_dict[title] = combined_data
 
         logging.debug(f"clinical_data_dict: {clinical_data_dict}")
-
         return clinical_data_dict
