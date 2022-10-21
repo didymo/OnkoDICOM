@@ -884,7 +884,7 @@ class BatchProcessingController:
             cur_patient_files = \
                 BatchProcessingController.get_patient_files(patient)
             process = \
-                BatchProcessSelectSubgroup(None, None, cur_patient_files, None)
+                BatchProcessKaplanMeier(None, None, cur_patient_files)
 
             cd_sr = process.find_clinical_data_sr()
 

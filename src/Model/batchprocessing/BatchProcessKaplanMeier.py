@@ -1,25 +1,23 @@
-import kaplanmeier as km
-import pandas as pd
+from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import logging
-import os
-import numpy as np
-import matplotlib.pyplot as plt
 
 class BatchProcessKaplanMeier(BatchProcess):
     """
     This class handles batch processing for the Clinical Data 2 CSV
     process. Inherits from the BatchProcessing class.
     """
+    # Allowed classes for ClinicalDataSR2CSV
+    allowed_classes = {
+        # Comprehensive SR
+        "1.2.840.10008.5.1.4.1.1.88.33": {
+            "name": "sr",
+            "sliceable": False
+        }
+    }
 
-    def __init__(self,
-                 progress_callback,
-                 interrupt_flag,
-                 data_dict,
-                 kaplanmeier_target_col,
-                 kaplanmeier_duration_of_life_col,
-                 kaplanmeier_alive_or_dead_col):
+    def __init__(self, progress_callback, interrupt_flag, patient_files):
         """
         Class initialiser function.
         :param progress_callback: A signal that receives the current
@@ -32,58 +30,51 @@ class BatchProcessKaplanMeier(BatchProcess):
         # Call the parent class
         super(BatchProcessKaplanMeier, self).__init__(progress_callback,
                                                              interrupt_flag,
-                                                             None)
+                                                             patient_files)
 
         # Set class variables
-        self.target = kaplanmeier_target_col
-        self.duration_of_life = kaplanmeier_duration_of_life_col
-        self.alive_or_dead = kaplanmeier_alive_or_dead_col
-        self.my_plt = None
-        self.data_dict = {"Gender": [1, 2, 3, 4],
-         "DurationOfLife": [1, 2, 3, 4],
-         "AliveOrDead": [1, 2, 3, 4],}
+        self.patient_dict_container = PatientDictContainer()
+        self.required_classes = ['sr']
+        self.ready = self.load_images(patient_files, self.required_classes)
 
-    def start(self):
+    def find_clinical_data_sr(self):
         """
-        Goes through the steps of the ClinicalData-SR2CSV conversion.
-        :return: True if successful, False if not.
+        Searches the patient dict container for any SR files containing
+        clinical data. Returns the first SR with clinical data found.
+        :return: ds, SR dataset containing clinical data, or None if
+                 nothing found.
         """
-        self.progress_callback.emit(("Writing clinical data to CSV...", 80))
-        self.plot()
-        
-        return True
+        datasets = self.patient_dict_container.dataset
 
-    def get_plot(self):
-        return self.plot
+        if not datasets:
+            return None
 
-    def plot(self):
+        for ds in datasets:
+            # Check for SR files
+            if datasets[ds].SOPClassUID == '1.2.840.10008.5.1.4.1.1.88.33':
+                # Check to see if it is a clinical data SR
+                if datasets[ds].SeriesDescription == "CLINICAL-DATA":
+                    return datasets[ds]
+
+        return None
+
+    def read_clinical_data_from_sr(self, sr_cd):
         """
-            Creates plot based off input columns
+        Reads clinical data from the found SR file.
+        :param sr_cd: the clinical data SR dataset.
+        :return: dictionary of clinical data, where keys are attributes
+                 and values are data.
         """
-        logging.debug("Creating/Displaying plot")
+        data = sr_cd.ContentSequence[0].TextValue
 
-        # creates dataframe based on patient records
-        df = pd.DataFrame.from_dict(self.data_dict)
-        
-        # creates input parameters for the km.fit() function
-        
-        time_event = df[self.duration_of_life]
-        
-        censoring = df[self.alive_or_dead]
-        
-        y = df[self.target]
-        
-        # create kaplanmeier plot
-        results = km.fit(time_event, censoring, y)
-        km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
-        
-        # specifies plot layout
-        plt.tight_layout()
-        plt.subplots_adjust(top=0.903,
-                            bottom=0.423,
-                            left=0.085,
-                            right=0.965,
-                            hspace=0.2,
-                            wspace=0.2)
+        data_dict = {}
 
-        self.plot = plt
+        data_list = data.split("\n")
+        for row in range(len(data_list)):
+            if data_list[row] == '':
+                continue
+            # Assumes neither data nor attributes have colons
+            row_data = data_list[row].split(":")
+            data_dict[row_data[0]] = row_data[1][1:]
+
+        return data_dict
