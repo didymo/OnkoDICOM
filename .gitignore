@@ -1,5 +1,6 @@
 # Ignore venv
 venv/
+.venv/
 
 # Ignore .idea
 .idea/
@@ -22,3 +23,6 @@ Hash_map.csv
 # Ignore compile results
 build/
 dist/
+
+*.lock
+

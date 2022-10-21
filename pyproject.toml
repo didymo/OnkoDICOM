@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "onkodicom"
+version = "0.1.0"
+description = ""
+authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
+license = "LGPL"
+
+[poetry.virtualenvs]
+create = true
+in-project = true
+
+[tool.poetry.dependencies]
+python =  ">=3.8,<3.10" 
+cython = { version = "*"}  # groups = ["user", "dev"]
+numpy = { version = "*"}  # groups = ["user", "dev"]
+platipy = { version = "0.2.1"}  # groups = ["user", "dev"]
+alphashape = { version = "*"}  # groups = ["user", "dev"]
+pandas = { version = "*"}  # groups = ["user", "dev"]
+scikit-build = { version = "*"}  # groups = ["user", "dev"]
+scipy = { version = "*"}  # groups = ["user", "dev"]
+dicompyler-core = { version = "*"}  # groups = ["user", "dev"]
+pydicom = { version = "*"}  # groups = ["user", "dev"]
+country-list = { version = "*"}  # groups = ["user", "dev"]
+scikit-image = { version = "*"}  # groups = ["user", "dev"]
+fuzzywuzzy = { version = "*"}  # groups = ["user", "dev"]
+PyWavelets = { version = "^1.1.1"}  # groups = ["user", "dev"]
+networkx = { version = "*"}  # groups = ["user", "dev"]
+pymedphys =  { version = ">=0.35,<=0.37.1"}  # groups = ["user", "dev"]
+pytest-qt = { version = ">=4.0.2"}  # groups = ["user", "dev"]
+pytest = { version = "*"}  # groups = ["user", "dev"]
+pyside6 = { version = "6.2.0"}  # groups = ["user", "dev"]
+vtk = { version = "*"}  # groups = ["user", "dev"] 
+shapely = ">=1.8.1"  # groups = ["user", "dev"]
+python-Levenshtein = { version = "*"}  # groups = ["user", "dev"]
+opencv-python = { version = "<=4.5.3.56"}  # groups = ["user", "dev"]
+matplotlib = { version = "*"}  # groups = ["user", "dev"]
+pyradiomics = { version = "*"}  # groups = ["user", "dev"]
+sklearn = { version = "*"}  # groups = ["user", "dev"]
+imblearn = { version = "*"}  # groups = ["user", "dev"]
+kaplanmeier = { version = "*"}  # groups = ["user", "dev"]
+pyinstaller = "^5.5"
+
+[tool.poetry.dev-dependencies]
+pylint = { version = "*", optional = false }  # groups = ["dev"]
+pytest = { version = "*", optional = false }  # groups = ["dev"]
+pytest-black = { version = "*", optional = false }  # groups = ["dev"]
+pytest-cov = { version = "*", optional = false }  # groups = ["dev"]
+pytest-pylint = { version = "*", optional = false }  # groups = ["dev"]
+pytest-isort = { version = "*", optional = false }  # groups = ["dev"]
+pytest-mypy = { version = "*", optional = false }  # groups = ["dev"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+ 
