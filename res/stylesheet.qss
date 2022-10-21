@@ -270,6 +270,26 @@ QTabBar::tab:selected {
 }
 
 
+QTabWidget::pane#batch-tabs {
+    border: 0;
+    padding-top: 2px;
+    background-color: white;
+}
+QTabBar#batch-tabs {
+    background-color: rgb(244, 245, 245);
+}
+QTabBar::tab#batch-tabs {
+    padding: 0 10px;
+    background-color: rgb(244, 245, 245);
+    text-align: center;
+    width: 36px;
+    height: 150px;
+}
+QTabBar::tab:selected#batch-tabs {
+    font-weight: bold;
+}
+
+
 QToolBar, QToolButton {
     background-color: rgb(244, 245, 245);
     border: 0;
