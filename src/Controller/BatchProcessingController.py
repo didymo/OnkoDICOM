@@ -761,7 +761,7 @@ class BatchProcessingController:
                 plt.show()
             except Exception as e:
 
-                #button = QMessageBox.question(self, "Question dialog", "The longer message")
+            #button = QMessageBox.question(self, "Question dialog", "The longer message")
 
 
         if self.machine_learning_process is not None \

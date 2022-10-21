@@ -1,7 +1,5 @@
-from pathlib import Path
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
-import logging
 
 class BatchProcessKaplanMeier(BatchProcess):
     """
