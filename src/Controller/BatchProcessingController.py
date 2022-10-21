@@ -37,7 +37,9 @@ from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
 from src.View.batchprocessing.BatchKaplanMeierResultsWindow import BatchKaplanMeierResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
-
+import pandas as pd
+import kaplanmeier as km
+import matplotlib.pyplot as plt
 
 class BatchProcessingController:
     """
@@ -360,18 +362,6 @@ class BatchProcessingController:
             process.start()
             self.batch_summary[1] = process.summary
             progress_callback.emit(("Completed ML Data selection", 100))
-
-        if "kaplanmeier" in self.processes:
-            self.kaplan_meier_process = BatchProcessKaplanMeier(progress_callback,
-                                             interrupt_flag,
-                                             self.get_data_for_kaplan_meier(),
-                                             self.kaplanmeier_target_col,
-                                             self.kaplanmeier_duration_of_life_col,
-                                             self.kaplanmeier_alive_or_dead_col)
-
-            self.kaplan_meier_process.start()
-            self.batch_summary[1] = self.kaplan_meier_process.summary
-            progress_callback.emit(("Completed Kaplan Meier Production", 100))
 
         PatientDictContainer().clear()
 
@@ -743,12 +733,31 @@ class BatchProcessingController:
         self.progress_window.close()
 
         if "kaplanmeier" in self.processes:
-            self.kaplan_meier_process.get_plot().show()
-            # kaplan_results_window = BatchKaplanMeierResultsWindow()
-            # kaplan_results_window.set_image(self.kaplan_meir_process.
-            #                        get_image())
+            # creates dataframe based on patient records
+            df = pd.DataFrame.from_dict(self.get_data_for_kaplan_meier())
+            
+            # creates input parameters for the km.fit() function
+            
+            time_event = df[self.kaplanmeier_duration_of_life_col]
+            
+            censoring = df[self.kaplanmeier_alive_or_dead_col]
+            
+            y = df[self.kaplanmeier_target_col]
+            
+            # create kaplanmeier plot
+            results = km.fit(time_event, censoring, y)
+            km.plot(results, cmap='Set1', cii_lines='dense', cii_alpha=0.10)
+            
+            # specifies plot layout
+            plt.tight_layout()
+            plt.subplots_adjust(top=0.903,
+                                bottom=0.423,
+                                left=0.085,
+                                right=0.965,
+                                hspace=0.2,
+                                wspace=0.2)
 
-            # kaplan_results_window.exec_()
+            plt.show()
 
         if self.machine_learning_process is not None \
                 and self.machine_learning_process. \
