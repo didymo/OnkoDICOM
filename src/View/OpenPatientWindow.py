@@ -174,7 +174,6 @@ class UIOpenPatientWindow(object):
         self.open_patient_window_link_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.open_patient_window_link_button.clicked.connect(self.force_link_on_nodes)
         self.open_patient_window_patient_open_actions_horizontal_box.addWidget(self.open_patient_window_link_button)
-        self.open_patient_window_link_button.setDisabled(True)
         self.open_patient_window_patient_open_actions_horizontal_box. \
             addStretch(1)
 
@@ -408,7 +407,6 @@ class UIOpenPatientWindow(object):
                 for checked_item in last_patient_checked_items:
                     checked_item.setCheckState(0, Qt.Unchecked)
             self.last_patient = selected_patient
-
         # Check selected items and display warning messages
         self.check_selected_items()
 
@@ -439,15 +437,15 @@ class UIOpenPatientWindow(object):
 
         # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
-        self.open_patient_window_link_button.setDisabled(True)
         if total_selected_image_series < 1:
+
             header = "Cannot proceed without an image."
             proceed = False
         elif total_selected_image_series > 1:
             header = "Cannot proceed with more than 1 selected image."
             proceed = False
         elif not self.check_selected_items_referencing(checked_nodes):
-            self.open_patient_window_link_button.setEnabled(True)
+
             header = "Selected series do not reference each other."
             proceed = False
         elif 'RTSTRUCT' not in selected_series_types:
@@ -509,7 +507,7 @@ class UIOpenPatientWindow(object):
 
             if series["SR"] and series["SR"].parent() != series["IMAGE"]:
                 return False
-        self.open_patient_window_link_button .setDisabled(True)
+        #self.open_patient_window_link_button .setDisabled(True)
         return True
 
     def get_existing_rtss(self, image_series):
@@ -586,6 +584,7 @@ class UIOpenPatientWindow(object):
         for the selected nodes, overwrite the RTPlan and RTDose Series
         ID to match the RT image and RT struct
         """
+        #self.open_patient_window_link_button.setDisabled(True)
         series = {
             "IMAGE": None,
             "RTSTRUCT": None,
@@ -613,22 +612,13 @@ class UIOpenPatientWindow(object):
             if series["IMAGE"].frame_of_reference_uid:
                 new_id = series["IMAGE"].frame_of_reference_uid
                 force_continue = 1
-            if(series["IMAGE"].frame_of_reference_uid ==
-                        series["RTSTRUCT"].frame_of_reference_uid):
-                    new_id = series["RTSTRUCT"].frame_of_reference_uid
-                    force_continue = 1
-            else:
-                QMessageBox.about(self, "Force Link",
-                                 "Force Link aborted")
-                return -1
         except AttributeError:
-            logging.debug("Attribute error in force link, no frame of reference "
+            logging.debug("Attribute error in force link, no study instance ID "
                          "ID in dicom item")
-            if force_continue == 0:
-                logging.debug("Force link aborted")
-                return -1
-            logging.debug("Force link continuing")
-
+        if force_continue == 0:
+            logging.debug("Force link aborted")
+            return -1
+        logging.debug("Force link continuing")
         logging.debug("Initiating force link")
         force_check = force_link(new_id,
                                  self.open_patient_directory_input_box.text(),
@@ -643,7 +633,7 @@ class UIOpenPatientWindow(object):
             logging.debug("Force link unsuccessful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Unsuccessful")
-        self.open_patient_window_link_button.setDisabled(True)
+        #self.open_patient_window_link_button.setDisabled(True)
         self.scan_directory_for_patient()
 
 
