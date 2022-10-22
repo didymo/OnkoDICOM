@@ -507,7 +507,6 @@ class UIOpenPatientWindow(object):
 
             if series["SR"] and series["SR"].parent() != series["IMAGE"]:
                 return False
-        #self.open_patient_window_link_button .setDisabled(True)
         return True
 
     def get_existing_rtss(self, image_series):
@@ -584,7 +583,6 @@ class UIOpenPatientWindow(object):
         for the selected nodes, overwrite the RTPlan and RTDose Series
         ID to match the RT image and RT struct
         """
-        #self.open_patient_window_link_button.setDisabled(True)
         series = {
             "IMAGE": None,
             "RTSTRUCT": None,
@@ -633,7 +631,6 @@ class UIOpenPatientWindow(object):
             logging.debug("Force link unsuccessful")
             QMessageBox.about(self, "Force Link",
                               "Force Link Unsuccessful")
-        #self.open_patient_window_link_button.setDisabled(True)
         self.scan_directory_for_patient()
 
 
