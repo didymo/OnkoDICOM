@@ -773,12 +773,10 @@ class BatchProcessingController:
                                    get_results_values())
             ml_results_window.set_ml_model(self.machine_learning_process.
                                            ml_model)
-
             ml_results_window.set_df_parameters(self.machine_learning_process.
                                                 params)
             ml_results_window.set_df_scaling(self.machine_learning_process.
                                              scaling)
-
             ml_results_window.exec_()
 
         # Create window to store summary info
