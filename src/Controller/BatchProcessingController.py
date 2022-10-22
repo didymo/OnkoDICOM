@@ -740,6 +740,8 @@ class BatchProcessingController:
                                              scaling)
 
             ml_results_window.exec_()
+            self.machine_learning_process = None
+
 
         # Create window to store summary info
         batch_summary_window = BatchSummaryWindow()
