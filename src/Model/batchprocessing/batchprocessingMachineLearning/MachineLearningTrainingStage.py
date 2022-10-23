@@ -56,6 +56,7 @@ class MlModeling():
             "accuracy": '',
             "model": ''
         }
+        self.model_names = ['RandomForestClassifier', 'MLPClassifier']
 
     """
     Class initializer function.
@@ -535,27 +536,32 @@ class MlModeling():
         """
         path += f'{self.target}_ML_RiskTable.txt'
         headers = ['TRAIN DATASET RISK TABLE', 'TEST DATASET RISK TABLE', 'ML PERFOMANCE']
-        with open(path, 'w') as f:
-            print(f'{headers[0]}\n',
-                  file=f)
-            df_as_string_train = self.train_dataset_confusion_matrix.to_string(
-                header=True,
-                index=True)
-            f.write(df_as_string_train)
+        if type(self.model).__name__ in self.model_names:
+            with open(path, 'w') as f:
+                print(f'{headers[0]}\n',
+                    file=f)
+                df_as_string_train = self.train_dataset_confusion_matrix.to_string(
+                    header=True,
+                    index=True)
+                f.write(df_as_string_train)
 
-            print(f'\n\n{headers[1]}\n',
-                  file=f)
-            df_as_string_test = self.confusion_matrix.to_string(header=True,
+                print(f'\n\n{headers[1]}\n',
+                    file=f)
+                df_as_string_test = self.confusion_matrix.to_string(header=True,
                                                            index=True)
-            f.write(df_as_string_test)
-            print(f'\n\n{headers[2]}\n', file=f)
-            print(f'{self.score[0]}: {self.score[1]}', file=f)
+                f.write(df_as_string_test)
+                print(f'\n\n{headers[2]}\n', file=f)
+                print(f'{self.score[0]}: {self.score[1]}', file=f)
+        else:
+            with open(path, 'w') as f:
+                print(f'\n\n{headers[2]}\n', file=f)
+                print(f'Accuracy: {self.score}', file=f)
+
 
     def run_model(self):
         """
         Function Runs machine learning Models
         """
-        model_names = ['RandomForestClassifier', 'MLPClassifier']
         if self.permission is False:
             self.accuracy['model'] = 'None'
             self.accuracy['accuracy'] = 'None'
@@ -571,7 +577,7 @@ class MlModeling():
                 self.model = self.regression_ml_tuned()
             else:
                 self.model = self.regression_ml()
-        if type(self.model).__name__ in model_names:
+        if type(self.model).__name__ in self.model_names:
             train_predictions_for_confusion_matrix = self.model.predict(
                 self.train_feature_dataset_for_confusion_matrix)
 
