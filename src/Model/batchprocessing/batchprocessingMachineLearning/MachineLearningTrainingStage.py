@@ -30,6 +30,8 @@ class MlModeling():
     def __init__(self,
                  train_feature,
                  test_feature,
+                 train_feature_dataset_for_confusion_matrix,
+                 train_label_dataset_for_confusion_matrix,
                  train_label,
                  test_label,
                  target,
@@ -38,6 +40,8 @@ class MlModeling():
                  permission=None):
         self.train_feature = train_feature
         self.test_feature = test_feature
+        self.train_feature_dataset_for_confusion_matrix = train_feature_dataset_for_confusion_matrix
+        self.train_label_dataset_for_confusion_matrix = train_label_dataset_for_confusion_matrix
         self.train_label = train_label
         self.test_label = test_label
         self.target = target
@@ -45,12 +49,14 @@ class MlModeling():
         self.tuning = tuning
         self.permission = permission
         self.confusion_matrix = None
+        self.train_dataset_confusion_matrix = None
         self.model = None
         self.score = None
         self.accuracy = {
             "accuracy": '',
             "model": ''
         }
+        self.model_names = ['RandomForestClassifier', 'MLPClassifier']
 
     """
     Class initializer function.
@@ -127,6 +133,7 @@ class MlModeling():
         return balance
 
     def custom_confusion_matrix(self,
+                                test_label,
                                 predictions):
         """
         The function creates a confusion matrix
@@ -136,10 +143,10 @@ class MlModeling():
         see here: https://towardsdatascience.com
                     /understanding-confusion-matrix-a9ad42dcfd62
         """
-        unique_label = np.unique([self.test_label,
+        unique_label = np.unique([test_label,
                                   predictions])
         cmtx = pd.DataFrame(
-            confusion_matrix(self.test_label,
+            confusion_matrix(test_label,
                              predictions,
                              labels=unique_label),
             index=['true:{:}'.format(x) for x in unique_label],
@@ -256,12 +263,14 @@ class MlModeling():
 
         if mlp_score > random_forest_score:
             self.confusion_matrix = self.custom_confusion_matrix(
+                self.test_label,
                 mlp_pred)
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_model
 
         self.confusion_matrix = self.custom_confusion_matrix(
+            self.test_label,
             random_forest_pred)
         self.score = random_forest_score
         self.accuracy['accuracy'] = f'{self.score}'
@@ -308,12 +317,15 @@ class MlModeling():
         mlp_score = perfomance(mlp_pred)
 
         if mlp_score > random_forest_score:
-            self.confusion_matrix = self.custom_confusion_matrix(mlp_pred)
+            self.confusion_matrix = self.custom_confusion_matrix(
+                self.test_label,
+                mlp_pred)
             self.score = mlp_score
             self.accuracy['accuracy'] = f'{self.score}'
             return mlp_cla
 
         self.confusion_matrix = self.custom_confusion_matrix(
+            self.test_label,
             random_forest_pred)
         self.score = random_forest_score
         self.accuracy['accuracy'] = f'{self.score}'
@@ -523,15 +535,28 @@ class MlModeling():
         :param path: path were file will be saved.
         """
         path += f'{self.target}_ML_RiskTable.txt'
-        headers = ['RISK TABLE', 'ML PERFOMANCE']
-        with open(path, 'w') as f:
-            print(f'{headers[0]}\n',
-                  file=f)
-            df_as_string = self.confusion_matrix.to_string(header=True,
+        headers = ['TRAIN DATASET RISK TABLE', 'TEST DATASET RISK TABLE', 'ML PERFOMANCE']
+        if type(self.model).__name__ in self.model_names:
+            with open(path, 'w') as f:
+                print(f'{headers[0]}\n',
+                    file=f)
+                df_as_string_train = self.train_dataset_confusion_matrix.to_string(
+                    header=True,
+                    index=True)
+                f.write(df_as_string_train)
+
+                print(f'\n\n{headers[1]}\n',
+                    file=f)
+                df_as_string_test = self.confusion_matrix.to_string(header=True,
                                                            index=True)
-            f.write(df_as_string)
-            print(f'\n\n{headers[1]}\n', file=f)
-            print(f'{self.score[0]}: {self.score[1]}', file=f)
+                f.write(df_as_string_test)
+                print(f'\n\n{headers[2]}\n', file=f)
+                print(f'{self.score[0]}: {self.score[1]}', file=f)
+        else:
+            with open(path, 'w') as f:
+                print(f'\n\n{headers[2]}\n', file=f)
+                print(f'Accuracy: {self.score}', file=f)
+
 
     def run_model(self):
         """
@@ -552,5 +577,12 @@ class MlModeling():
                 self.model = self.regression_ml_tuned()
             else:
                 self.model = self.regression_ml()
+        if type(self.model).__name__ in self.model_names:
+            train_predictions_for_confusion_matrix = self.model.predict(
+                self.train_feature_dataset_for_confusion_matrix)
+
+            self.train_dataset_confusion_matrix = self.custom_confusion_matrix(
+                self.train_label_dataset_for_confusion_matrix,
+                train_predictions_for_confusion_matrix)
 
         self.accuracy['model'] = type(self.model).__name__

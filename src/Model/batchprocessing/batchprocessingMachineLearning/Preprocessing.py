@@ -45,6 +45,8 @@ class Preprocessing:
         self.missing_id = []
         self.permission = None
         self.permission_ids = None
+        self.x_train_for_confusion_matrix = None
+        self.y_train_for_confusion_matrix = None
 
         """
         Class initializer function.
@@ -472,6 +474,9 @@ class Preprocessing:
                 ("cat", OneHotEncoder(handle_unknown='ignore'), final_cat)
             ])
 
+            self.x_train_for_confusion_matrix = x_train.copy()
+            self.y_train_for_confusion_matrix = self.x_train_for_confusion_matrix[self.target]
+
             # Check if label is imbalanced, if so,
             # then it does Up sampling on train
             if result[0]:
@@ -482,6 +487,7 @@ class Preprocessing:
             y_test = x_test[self.target]
             x_train = full_pipeline.fit_transform(x_train)
             x_test = full_pipeline.transform(x_test)
+            self.x_train_for_confusion_matrix = full_pipeline.transform(self.x_train_for_confusion_matrix)
             self.scaling = full_pipeline
 
             return x_train, x_test, y_train, y_test

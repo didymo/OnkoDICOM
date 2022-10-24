@@ -45,8 +45,10 @@ class BatchProcessMachineLearning(BatchProcess):
         self.preprocessing = None
         self.run_ml = None
         self.X_train = None
+        self.X_train_for_confusion_matrix = None
         self.X_test = None
         self.y_train = None
+        self.y_train_for_confusion_matrix = None
         self.y_test = None
         self.params = None
         self.scaling = None
@@ -115,6 +117,8 @@ class BatchProcessMachineLearning(BatchProcess):
                 self.preprocessing.scaling
             self.machine_learning_options['features'] =\
                 self.preprocessing.column_names
+            self.X_train_for_confusion_matrix = self.preprocessing.x_train_for_confusion_matrix
+            self.y_train_for_confusion_matrix = self.preprocessing.y_train_for_confusion_matrix
         self.run_model_accept =\
             self.preprocessing.permission
 
@@ -128,6 +132,8 @@ class BatchProcessMachineLearning(BatchProcess):
             self.run_ml = MlModeling(
                 self.X_train,
                 self.X_test,
+                self.X_train_for_confusion_matrix,
+                self.y_train_for_confusion_matrix,
                 self.y_train,
                 self.y_test,
                 self.preprocessing.target,
