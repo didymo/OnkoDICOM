@@ -10,10 +10,10 @@ create = true
 in-project = true
 
 [tool.poetry.dependencies]
-python =  ">=3.8,<3.10" 
+python =  ">3.9,<3.11"
 cython = { version = "*"}  # groups = ["user", "dev"]
 numpy = { version = "*"}  # groups = ["user", "dev"]
-platipy = { version = "*"}  # groups = ["user", "dev"]
+platipy = { version = "0.2.1"}  # groups = ["user", "dev"]
 alphashape = { version = "*"}  # groups = ["user", "dev"]
 pandas = { version = "*"}  # groups = ["user", "dev"]
 scikit-build = { version = "*"}  # groups = ["user", "dev"]
@@ -23,20 +23,22 @@ pydicom = { version = "*"}  # groups = ["user", "dev"]
 country-list = { version = "*"}  # groups = ["user", "dev"]
 scikit-image = { version = "*"}  # groups = ["user", "dev"]
 fuzzywuzzy = { version = "*"}  # groups = ["user", "dev"]
-PyWavelets = { version = "*"}  # groups = ["user", "dev"]
-dataclasses = { version = "*", python = "~3.6" }  # groups = ["user", "dev"]
+PyWavelets = { version = "^1.1.1"}  # groups = ["user", "dev"]
 networkx = { version = "*"}  # groups = ["user", "dev"]
-pymedphys =  { version = "*"}  # groups = ["user", "dev"]
-pytest-qt = { version = "*"}  # groups = ["user", "dev"]
+pymedphys =  { version = ">=0.35,<=0.37.1"}  # groups = ["user", "dev"]
+pytest-qt = { version = ">=4.0.2"}  # groups = ["user", "dev"]
 pytest = { version = "*"}  # groups = ["user", "dev"]
-pyside6 = { version = "*"}  # groups = ["user", "dev"]
-vtk = "*"  # groups = ["user", "dev"] 
-shapely = { version = "*"}  # groups = ["user", "dev"]
+pyside6 = { version = "6.2.0"}  # groups = ["user", "dev"]
+vtk = { version = "*"}  # groups = ["user", "dev"] 
+shapely = ">=1.8.1"  # groups = ["user", "dev"]
 python-Levenshtein = { version = "*"}  # groups = ["user", "dev"]
-opencv-python = { version = "*"}  # groups = ["user", "dev"]
+opencv-python = { version = ">=4.5.3.56"}  # groups = ["user", "dev"]
 matplotlib = { version = "*"}  # groups = ["user", "dev"]
 pyradiomics = { version = "*"}  # groups = ["user", "dev"]
-
+sklearn = { version = "*"}  # groups = ["user", "dev"]
+imblearn = { version = "*"}  # groups = ["user", "dev"]
+kaplanmeier = { version = "*"}  # groups = ["user", "dev"]
+pyinstaller = "^5.5"
 
 [tool.poetry.dev-dependencies]
 pylint = { version = "*", optional = false }  # groups = ["dev"]
@@ -46,36 +48,6 @@ pytest-cov = { version = "*", optional = false }  # groups = ["dev"]
 pytest-pylint = { version = "*", optional = false }  # groups = ["dev"]
 pytest-isort = { version = "*", optional = false }  # groups = ["dev"]
 pytest-mypy = { version = "*", optional = false }  # groups = ["dev"]
-
-
-[tool.poetry.extras]
-
-
-#lots of pylint options available
-[tool.pylint]
-
-
-
-
-[tool.black]
-
-
-[tool.pytest]  # general options go here
-strict = true
-
-
-[tool.pytest.reporting]  # and afterward we have sections analogous to the `--help` output
-tb = 'long'
-showlocals = true
-
-
-[tool.coverage.run]
-omit = ["test/*"]
-
-
-[tool.coverage.report]
-fail_under = 50
-
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
