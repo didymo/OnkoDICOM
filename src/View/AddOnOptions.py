@@ -152,8 +152,8 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.note, 2, 0, 1, 3)
 
         self.layout.addWidget(self.option_widget, 0, 1, 1, 3)
-        hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding,
-                                        QtWidgets.QSizePolicy.Minimum)
+        hspacer = QtWidgets.QSpacerItem(1,1) #QtWidgets.QSizePolicy.Expanding,
+                                       # QtWidgets.QSizePolicy.Minimum)
         self.layout.addItem(hspacer, 1, 1)
         self.layout.addWidget(self.apply_button, 1, 2)
         self.layout.addWidget(self.cancel_button, 1, 3)
