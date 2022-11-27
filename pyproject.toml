@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "onkodicom"
-version = "0.1.0"
+version = "0.5.2"
 description = ""
 authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
 license = "LGPL"
@@ -32,7 +32,7 @@ pyside6 = { version = "6.2.0"}  # groups = ["user", "dev"]
 vtk = { version = "*"}  # groups = ["user", "dev"] 
 shapely = ">=1.8.1"  # groups = ["user", "dev"]
 python-Levenshtein = { version = "*"}  # groups = ["user", "dev"]
-opencv-python = { version = "<=4.5.3.56"}  # groups = ["user", "dev"]
+opencv-python = { version = "*"}  # groups = ["user", "dev"]
 matplotlib = { version = "*"}  # groups = ["user", "dev"]
 pyradiomics = { version = "*"}  # groups = ["user", "dev"]
 sklearn = { version = "*"}  # groups = ["user", "dev"]

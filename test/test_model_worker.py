@@ -1,10 +1,10 @@
 from unittest import mock
 from unittest.mock import Mock
+import pytest
 
 from PySide6.QtCore import QThreadPool
 
 from src.Model.Worker import Worker
-
 
 class FakeClass:
     def func_result(self, result):
@@ -82,14 +82,14 @@ def test_worker_result_signal(qtbot, monkeypatch):
         thing.func_to_test.assert_called_with("test", 3)
         mock_func_result.assert_called_with(5)
 
-
+@pytest.mark.qt_no_exception_capture
 def test_worker_error_signal(qtbot):
     """
     Testing return value of worker's called function through result signal.
     """
 
     thing = FakeClass()
-    thing.func_to_test = Mock(side_effect=ValueError())
+    thing.func_to_test = Mock(side_effect=ValueError("Some Error"))
 
     w = Worker(thing.func_to_test, "test", 3)
 
@@ -100,7 +100,10 @@ def test_worker_error_signal(qtbot):
             threadpool.start(w)
 
         kall = thing.func_error.call_args
+        print("kall returned")
         args, kwargs = kall
+        print(kwargs)
+        print(args)
 
         thing.func_to_test.assert_called_with("test", 3)
         assert isinstance(args[0][1], ValueError)
