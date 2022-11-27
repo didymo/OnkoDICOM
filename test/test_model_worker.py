@@ -1,6 +1,8 @@
+import pytest
+import sys
+
 from unittest import mock
 from unittest.mock import Mock
-import pytest
 
 from PySide6.QtCore import QThreadPool
 
@@ -22,7 +24,7 @@ def test_worker_progress_callback(qtbot):
     """
     func_to_test = Mock()
     w = Worker(func_to_test, "test", 3, progress_callback=True)
-
+    
     # This starts the Worker in the threadpool and then blocks the test from progressing until the finished signal is
     # emitted. qtbot is a pytest fixture used to test PyQt5.
     threadpool = QThreadPool()
@@ -93,7 +95,13 @@ def test_worker_error_signal(qtbot):
     thing.func_to_test = Mock(side_effect=ValueError())
 
     w = Worker(thing.func_to_test, "test", 3)
-
+    
+    # from https://github.com/pytest-dev/pytest-qt/blob/master/tests/test_exceptions.py
+    # PyQt 5.5+ will crash if there's no custom exception handler installed
+    # wrapping storage of original excepthook and putting it back in case this would linger.
+    old_excepthook = sys.excepthook
+    sys.excepthook = lambda *args: None
+    
     with mock.patch.object(FakeClass, 'func_error', wraps=thing.func_error):
         w.signals.error.connect(thing.func_error)
         threadpool = QThreadPool()
@@ -105,3 +113,4 @@ def test_worker_error_signal(qtbot):
 
         thing.func_to_test.assert_called_with("test", 3)
         assert isinstance(args[0][1], ValueError)
+    sys.excepthook = old_excepthook
