@@ -100,10 +100,7 @@ def test_worker_error_signal(qtbot):
             threadpool.start(w)
 
         kall = thing.func_error.call_args
-        print("kall returned")
         args, kwargs = kall
-        print(kwargs)
-        print(args)
 
         thing.func_to_test.assert_called_with("test", 3)
         assert isinstance(args[0][1], ValueError)
