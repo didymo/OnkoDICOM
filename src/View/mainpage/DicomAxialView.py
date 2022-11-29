@@ -249,7 +249,7 @@ class DicomAxialView(DicomView):
         col_img = dataset['Columns'].value
         window = self.patient_dict_container.get("window")
         level = self.patient_dict_container.get("level")
-        slice_pos = dataset['SliceLocation'].value
+        slice_pos = dataset['ImagePositionPatient'].value[2]
 
         if hasattr(dataset, 'PatientPosition'):
             patient_pos = dataset['PatientPosition'].value

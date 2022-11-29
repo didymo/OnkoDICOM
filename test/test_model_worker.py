@@ -1,12 +1,12 @@
 import sys
 from unittest import mock
 from unittest.mock import Mock
+import pytest
 
 import pytest
 from PySide6.QtCore import QThreadPool
 
 from src.Model.Worker import Worker
-
 
 class FakeClass:
     def func_result(self, result):
@@ -93,7 +93,7 @@ def test_worker_error_signal(qtbot):
     """
 
     thing = FakeClass()
-    thing.func_to_test = Mock(side_effect=ValueError())
+    thing.func_to_test = Mock(side_effect=ValueError("Some Error"))
 
     w = Worker(thing.func_to_test, "test", 3)
     

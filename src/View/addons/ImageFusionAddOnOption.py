@@ -68,8 +68,14 @@ class ImageFusionOptions(object):
         self.gridLayout.setVerticalSpacing(0)
 
         # Create horizontal spacer in the middle of the grid
-        hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding,
-                                        QtWidgets.QSizePolicy.Minimum)
+        try:
+            # PySide6 worked on Windows
+            hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Minimum)
+        except TypeError:
+            # PySide6 needed for Ubuntu 22.04 (perhaps due to PySide 6.4.0.1)
+            # no idea if these are appropriate default values
+            hspacer = QtWidgets.QSpacerItem(16,5) 
+        
         self.gridLayout.addItem(hspacer, 0, 5, 16, 1)
 
         # Labels
