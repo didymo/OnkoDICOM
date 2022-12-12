@@ -13,6 +13,7 @@ from matplotlib.backend_bases import MouseEvent
 import src.constants as constant
 try:
     from src.Model.Anon import anonymize
+    FEATURE_TOGGLE_PSEUDONYMISE = True # need to have declared either way
 except ImportError as ePymedphysImportFailed:
     FEATURE_TOGGLE_PSEUDONYMISE = False
     logging.error(ePymedphysImportFailed)
