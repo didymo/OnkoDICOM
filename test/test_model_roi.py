@@ -224,7 +224,6 @@ def test_roi_manipulation(test_object):
     assert len(result_contours.keys()) == \
            len(dict_rois_contours['LUNG_R'].keys())
 
-
 def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
     # Create a test rtss
     path = test_object.patient_dict_container.path
@@ -278,3 +277,18 @@ def test_create_initial_rtss_from_ct(qtbot, test_object, init_config):
     # Checking type 1 sequence tags
     for tag in type_1_sequence_tags:
         assert (tag in rtss) is True
+
+def should_return_ValueError_when_no_StudyID_in_dicom(test_object):
+    # Arrange test data
+    rtss_path = Path(test_object.patient_dict_container.path).joinpath('rtss.dcm')
+    uid_list = ImageLoading.get_image_uid_list(
+        test_object.patient_dict_container.dataset)
+    test_object.patient_dict_container.dataset[1].pop("StudyID")
+    
+    # Act
+    rtss = create_initial_rtss_from_ct(
+        test_object.patient_dict_container.dataset[1], rtss_path, uid_list)
+    
+    # Assert
+    with pytest.raises(ValueError) as error:
+        assert "StudyID is missing from the DICOM file" in str(error.value)

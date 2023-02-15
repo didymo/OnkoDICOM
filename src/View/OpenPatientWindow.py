@@ -546,16 +546,17 @@ class UIOpenPatientWindow(object):
         """
         Error handling for progress window.
         """
+        errorMessage = ""
+                
         if type(exception[1]) == ImageLoading.NotRTSetError:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
-                              "Selected files cannot be opened as they are not"
-                              " a DICOM-RT set.")
-            self.progress_window.close()
+            errorMessage = "Selected files cannot be opened as they are not a DICOM-RT set."
         elif type(exception[1]) == ImageLoading.NotAllowedClassError:
-            QMessageBox.about(self.progress_window, "Unable to open selection",
-                              "Selected files cannot be opened as they contain"
-                              " unsupported DICOM classes.")
-            self.progress_window.close()
+            errorMessage = "Selected files cannot be opened as they contain unsupported DICOM classes."
+        else:
+            errorMessage = "An error occurred while loading the selected files. Please try again."
+        
+        QMessageBox.about(self.progress_window, "Unable to open selection", errorMessage)
+        self.progress_window.close()
 
     def get_checked_nodes(self, root):
         """

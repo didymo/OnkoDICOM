@@ -871,6 +871,8 @@ def ordered_list_rois(rois):
     return sorted(res)
 
 
+# TODO: There is currently no way to propagate the error message to higher level
+# level and any message will be lost. This should be fixed in the future.
 def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
                                 filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
@@ -953,6 +955,9 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
         raise ValueError(
             "The given dataset is missing a required tag 'StudyInstanceUID'")
 
+    if hasattr(rt_ss, "StudyID") is False or rt_ss.StudyID == "":
+        raise ValueError("The given dataset is missing a required tag 'StudyID'")
+    
     # RT Series Module
     rt_ss.SeriesDate = dicom_date
     rt_ss.SeriesTime = dicom_time

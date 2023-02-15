@@ -166,8 +166,11 @@ class ImageLoader(QtCore.QObject):
 
                     return True
         else:
-            self.load_temp_rtss(path, progress_callback, interrupt_flag)
-
+            try:
+                self.load_temp_rtss(path, progress_callback, interrupt_flag)
+            except ValueError as e:
+                raise ImageLoading.NotAllowedClassError(e)
+                
         return True
 
     def load_temp_rtss(self, path, progress_callback, interrupt_flag):
