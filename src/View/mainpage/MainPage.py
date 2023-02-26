@@ -35,7 +35,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
-
+from src._version import __version__
 
 class UIMainWindow:
     """
@@ -244,7 +244,7 @@ class UIMainWindow:
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
         layout_footer.setContentsMargins(0, 0, 0, 0)
 
-        label_footer = QtWidgets.QLabel("@OnkoDICOM2021")
+        label_footer = QtWidgets.QLabel("@OnkoDICOM2021 v"+ __version__)
         label_footer.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
 
         layout_footer.addWidget(label_footer)
