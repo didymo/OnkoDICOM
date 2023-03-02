@@ -15,7 +15,7 @@ pyradiomics
 pyside6==6.2.0
 vtk
 matplotlib
-shapely>=1.8.1,<=1.8.5
+shapely>=1.8.1,<2.0
 python-Levenshtein
 opencv-python<=4.5.3.56
 sklearn
