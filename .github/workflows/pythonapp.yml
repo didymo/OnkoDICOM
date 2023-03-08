@@ -3,16 +3,48 @@ name: Python application
 on: [push, pull_request]
 
 jobs:
-  build:
+  fetch_cache:
+    name: fetch cache
+    runs-on: 'ubuntu-latest'
+    env:
+      TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
+      
+    steps:
+    - name: Cache Test Data
+      id: cache-TestData
+      uses: actions/cache@v3
+      with:
+        enableCrossOsArchive: true
+        lookup-only: true
+        path: DICOM-RT-02.zip
+        key: ${{ env.TestDataUrl }}
+
+    - name: Download Test Data
+      if: steps.cache-TestData.outputs.cache-hit != 'true'
+      run: |
+        sudo apt-get install wget
+        wget -O DICOM-RT-02.zip $TestDataUrl
+
+
+  build_Linux:
+    needs: fetch_cache
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.9', '3.10']
-    runs-on: ubuntu-20.04
-    timeout-minutes: 60
+        python:
+          - '3.9'
+          - '3.10'
+        os:
+          - 'ubuntu-20.04'
+          # - 'ubuntu-22.04'
+
+    name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
 
     env:
       DISPLAY: ':99.0'
+      TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
 
     steps:
     - uses: actions/checkout@v3
@@ -25,7 +57,8 @@ jobs:
 
     - name: Install plastimatch
       run: |
-       sudo apt-get install plastimatch
+        sudo apt-get update
+        sudo apt-get install plastimatch
 
     - name: Install dependencies
       run: |
@@ -33,6 +66,7 @@ jobs:
         pip install -r pre-requirements.txt
         pip install -r requirements.txt
         pip install -r dev-requirements.txt
+        pip install pytest-xvfb pytest-cov pytest-isort pytest-pylint pytest-durations
 
     - name: Linting setup
       run: |
@@ -45,42 +79,26 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - uses: actions/cache/restore@v3
-      name: restore test data
-      id: restore
+    - name: Download Cached Test Data
+      uses: actions/cache@v3
       with:
-        path: ~/DICOM-RT-02.zip
-        # remember to update the key when changing the test dataset
-        key: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-
-    - name: download test data
-      if: steps.restore.outputs.cache-hit != 'true'
-      run: |
-        sudo apt-get install wget
-        wget -P ~ https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
-
-    # save the test data to cache ASAP, even when the entire workflow fail
-    - name: save new cache
-      uses: actions/cache/save@v3
-      if: steps.restore.outputs.cache-hit != 'true'
-      with:
-        path: ~/DICOM-RT-02.zip
-        # remember to update the key when changing the test dataset
-        key: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
+        enableCrossOsArchive: true
+        fail-on-cache-miss: true
+        path: DICOM-RT-02.zip
+        key: ${{ env.TestDataUrl }}
 
     - name: install test data
       run: |
         sudo apt-get install unzip
         mkdir test/testdata
         mkdir test/batchtestdata
-        unzip ~/DICOM-RT-02.zip -d test/testdata
-        unzip ~/DICOM-RT-02.zip -d test/batchtestdata
+        unzip DICOM-RT-02.zip -d test/testdata
+        unzip DICOM-RT-02.zip -d test/batchtestdata
         sudo chmod -R 777 test/testdata
         sudo chmod -R 777 test/batchtestdata
 
     - name: Testing setup
       run: |
-        pip install pytest-xvfb pytest-cov
         sudo apt-get update
         sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
         # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
@@ -93,3 +111,91 @@ jobs:
       run: |
         # Append this for fail under x percent "--cov-fail-under=80"
         python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=.
+
+
+
+  build_Windows:
+    needs: fetch_cache
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.9'
+          - '3.10'
+        os:
+          # - 'windows-2019'
+          - 'windows-2022'
+
+    name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+
+    env:
+      DISPLAY: ':99.0'
+      TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
+      PlastimatchWindowsUrl: 'https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.0-win64.msi'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python }}
+        # cache: 'pip'
+
+    - name: Install plastimatch
+      run: |
+        Invoke-WebRequest -Uri ${{ env.PlastimatchWindowsUrl }} -OutFile Plastimatch.msi
+        Start-Process -Wait msiexec -ArgumentList '/i Plastimatch.msi /passive'
+        $Env:PATH += ";C:\Program Files\Plastimatch"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip wheel setuptools
+        pip install -r pre-requirements.txt
+        pip install -r requirements.txt
+        pip install -r dev-requirements.txt
+        pip install pytest-cov pytest-isort pytest-pylint pytest-durations pytest-timeout
+
+    - name: Linting setup
+      run: |
+        pip install flake8
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Download Cached Test Data
+      uses: actions/cache@v3
+      with:
+        enableCrossOsArchive: true
+        fail-on-cache-miss: true
+        path: DICOM-RT-02.zip
+        key: ${{ env.TestDataUrl }}
+
+    - name: install test data
+      run: |
+        7z x DICOM-RT-02.zip -o${{ github.workspace }}\test\testdata
+        7z x DICOM-RT-02.zip -o${{ github.workspace }}\test\batchtestdata
+
+    # - name: Testing setup
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
+    #     # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+    #     /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+    #     sleep 3
+    #     herbstluftwm &
+    #     sleep 1
+
+    - name: Testing and Coverage with pytest
+      continue-on-error: true
+      run: |
+        # Append this for fail under x percent "--cov-fail-under=80"
+        # todo: currently in Windows some test cases halt. Set timeout as a workaround.
+        cd ${{ github.workspace }}
+        python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=. --timeout=60
