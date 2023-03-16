@@ -203,11 +203,12 @@ def test_roi_to_geometry(test_object):
                 assert len(geometry.exterior.coords) - \
                        len(dict_rois_contours[roi_name][slice_id][0]) <= 1
             else:
-                for i in range(len(geometry)):
-                    if geometry.geom_type == "Polygon":
-                        assert len(geometry[i].exterior.coords) - \
-                               len(dict_rois_contours[roi_name][slice_id][i]) \
-                               <= 1
+                if len(geometry) != 0:
+                    for i in range(len(geometry)):
+                        if geometry.geom_type == "Polygon":
+                            assert len(geometry[i].exterior.coords) - \
+                                len(dict_rois_contours[roi_name][slice_id][i]) \
+                                <= 1
 
 
 def test_roi_manipulation(test_object):
