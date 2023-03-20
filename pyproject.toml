@@ -12,7 +12,7 @@ in-project = true
 [tool.poetry.dependencies]
 python =  ">3.9,<3.11"
 cython = { version = "*"}  # groups = ["user", "dev"]
-numpy = { version = "*"}  # groups = ["user", "dev"]
+numpy = { version = "1.22"}  # groups = ["user", "dev"]
 platipy = { version = "0.2.1"}  # groups = ["user", "dev"]
 alphashape = { version = "*"}  # groups = ["user", "dev"]
 pandas = { version = "*"}  # groups = ["user", "dev"]
