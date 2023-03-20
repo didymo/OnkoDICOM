@@ -1,6 +1,7 @@
 # This file handles all the processes within the Main page window of the
 # software
 import csv
+import logging
 import math
 
 import matplotlib.cbook
@@ -10,7 +11,13 @@ from dateutil.relativedelta import relativedelta
 from matplotlib.backend_bases import MouseEvent
 
 import src.constants as constant
-from src.Model.Anon import anonymize
+try:
+    from src.Model.Anon import anonymize
+    FEATURE_TOGGLE_PSEUDONYMISE = True # need to have declared either way
+except ImportError as ePymedphysImportFailed:
+    FEATURE_TOGGLE_PSEUDONYMISE = False
+    logging.error(ePymedphysImportFailed)
+    
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Transform import linear_transform
 from src.Controller.PathHandler import data_path
@@ -391,6 +398,8 @@ class MainPageCallClass:
 
     # This function runs Anonymization on button click
     def run_anonymization(self, raw_dvh):
+        if not FEATURE_TOGGLE_PSEUDONYMISE:
+            raise ImportError("Unable to import pymedphys")
         path = self.patient_dict_container.path
         dataset = self.patient_dict_container.dataset
         filepaths = self.patient_dict_container.filepaths

@@ -19,10 +19,12 @@ from src.Model.batchprocessing.BatchProcessROINameCleaning import \
 from src.Model.batchprocessing.BatchProcessFMAID2ROIName import \
     BatchProcessFMAID2ROIName
 from src.Model.batchprocessing.BatchProcessSUV2ROI import BatchProcessSUV2ROI
+from src.Model.batchprocessing.BatchProcessKaplanMeier import \
+    BatchProcessKaplanMeier
 from src.Model.batchprocessing.BatchProcessSelectSubgroup import \
     BatchProcessSelectSubgroup
-from src.Model.batchprocessing.\
-    BatchprocessMachineLearningDataSelection\
+from src.Model.batchprocessing. \
+    BatchprocessMachineLearningDataSelection \
     import BatchprocessMachineLearningDataSelection
 from src.Model.batchprocessing.BatchProcessMachineLearning import \
     BatchProcessMachineLearning
@@ -34,6 +36,9 @@ from src.View.batchprocessing.BatchSummaryWindow import BatchSummaryWindow
 from src.View.batchprocessing.BatchMLResultsWindow import BatchMLResultsWindow
 from src.View.ProgressWindow import ProgressWindow
 import logging
+import pandas as pd
+import kaplanmeier as km
+import matplotlib.pyplot as plt
 
 
 class BatchProcessingController:
@@ -61,6 +66,9 @@ class BatchProcessingController:
         self.progress_window = ProgressWindow(None)
         self.timestamp = ""
         self.batch_summary = [{}, ""]
+        self.kaplanmeier_target_col = ""
+        self.kaplanmeier_duration_of_life_col = ""
+        self.kaplanmeier_alive_or_dead_col = ""
 
         # Path
         self.clinical_data_path = ""
@@ -298,7 +306,9 @@ class BatchProcessingController:
             for process in self.processes:
                 if process in ["roinamecleaning",
                                "select_subgroup",
-                               "machine_learning"]:
+                               "machine_learning",
+                               "machine_learning_data_selection",
+                               "kaplanmeier"]:
                     continue
 
                 self.process_functions[process](interrupt_flag,
@@ -395,7 +405,7 @@ class BatchProcessingController:
                                   progress of the loading.
         :param patient: The patient to perform this process on.
         """
-        logging.debug(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}"
                       ".batch_select_subgroup_handler() called")
         cur_patient_files = \
             BatchProcessingController.get_patient_files(patient)
@@ -722,6 +732,37 @@ class BatchProcessingController:
         self.progress_window.update_progress(("Processing complete!", 100))
         self.progress_window.close()
 
+        if "kaplanmeier" in self.processes:
+            try:
+                # creates dataframe based on patient records
+                df = pd.DataFrame.from_dict(self.get_data_for_kaplan_meier())
+
+                # creates input parameters for the km.fit() function
+
+                time_event = df[self.kaplanmeier_duration_of_life_col]
+
+                censoring = df[self.kaplanmeier_alive_or_dead_col]
+
+                y = df[self.kaplanmeier_target_col]
+
+                # create kaplanmeier plot
+                results = km.fit(time_event, censoring, y)
+                km.plot(results, cmap='Set1', cii_lines='dense',
+                        cii_alpha=0.10)
+
+                # specifies plot layout
+                plt.tight_layout()
+                plt.subplots_adjust(top=0.903,
+                                    bottom=0.423,
+                                    left=0.085,
+                                    right=0.965,
+                                    hspace=0.2,
+                                    wspace=0.2)
+
+                plt.show()
+            except Exception as e:
+                logging.debug(e)
+
         if self.machine_learning_process is not None \
                 and self.machine_learning_process. \
                 get_run_model_accept() is not False:
@@ -732,13 +773,13 @@ class BatchProcessingController:
                                    get_results_values())
             ml_results_window.set_ml_model(self.machine_learning_process.
                                            ml_model)
-
             ml_results_window.set_df_parameters(self.machine_learning_process.
                                                 params)
             ml_results_window.set_df_scaling(self.machine_learning_process.
                                              scaling)
-
             ml_results_window.exec_()
+
+            self.machine_learning_process = None
 
         # Create window to store summary info
         batch_summary_window = BatchSummaryWindow()
@@ -760,13 +801,13 @@ class BatchProcessingController:
         :return: only unique values in a dictionary with keys as the
         column name and a list of values found
         """
-        logging.debug(f"{self.__class__.__name__}" \
+        logging.debug(f"{self.__class__.__name__}"
                       ".get_all_clinical_data() called")
 
         clinical_data_dict = {}
 
         for patient in self.dicom_structure.patients.values():
-            logging.debug(f"{len(self.dicom_structure.patients.values())}" \
+            logging.debug(f"{len(self.dicom_structure.patients.values())}"
                           "patient(s) in dicom_structure object")
 
             cur_patient_files = \
@@ -818,3 +859,55 @@ class BatchProcessingController:
                      str(min) + str(sec)
 
         return time_stamp
+
+    def set_kaplanmeier_target_col(self, target):
+        self.kaplanmeier_target_col = target
+
+    def set_kaplanmeier_duration_of_life_col(self, duration):
+        self.kaplanmeier_duration_of_life_col = duration
+
+    def set_kaplanmeier_alive_or_dead_col(self, alive_or_dead):
+        self.kaplanmeier_alive_or_dead_col = alive_or_dead
+
+    def get_data_for_kaplan_meier(self):
+        """
+        Reads in all clinical data from a directory which may
+        contain multiple patients.
+        :return: only unique values in a dictionary with keys as the
+        column name and a list of values found
+        """
+        logging.debug(f"{self.__class__.__name__}"
+                      ".get_all_clinical_data() called")
+
+        clinical_data_dict = {}
+
+        for patient in self.dicom_structure.patients.values():
+            logging.debug(f"{len(self.dicom_structure.patients.values())}"
+                          "patient(s) in dicom_structure object")
+
+            cur_patient_files = \
+                BatchProcessingController.get_patient_files(patient)
+            process = \
+                BatchProcessKaplanMeier(None, None, cur_patient_files)
+
+            cd_sr = process.find_clinical_data_sr()
+
+            # if they do then get the data
+            if cd_sr:
+                single_patient_data = process.read_clinical_data_from_sr(cd_sr)
+                # adds all the current titles
+                titles = list(single_patient_data)
+
+                for title in titles:
+                    data = single_patient_data[title]
+
+                    if title not in clinical_data_dict.keys():
+                        clinical_data_dict[title] = [data]
+                    else:
+                        combined_data = clinical_data_dict[title]
+                        combined_data.append(data)
+
+                        clinical_data_dict[title] = combined_data
+
+        logging.debug(f"clinical_data_dict: {clinical_data_dict}")
+        return clinical_data_dict

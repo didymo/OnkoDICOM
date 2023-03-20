@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "onkodicom"
-version = "0.1.0"
+version = "0.5.2"
 description = ""
 authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
 license = "LGPL"
@@ -25,17 +25,17 @@ scikit-image = { version = "*"}  # groups = ["user", "dev"]
 fuzzywuzzy = { version = "*"}  # groups = ["user", "dev"]
 PyWavelets = { version = "^1.1.1"}  # groups = ["user", "dev"]
 networkx = { version = "*"}  # groups = ["user", "dev"]
-pymedphys =  { version = ">=0.35,<=0.37.1"}  # groups = ["user", "dev"]
+pymedphys = {extras = ["user"], version = "^0.39.3"} # groups = ["user", "dev"]
 pytest-qt = { version = ">=4.0.2"}  # groups = ["user", "dev"]
 pytest = { version = "*"}  # groups = ["user", "dev"]
-pyside6 = { version = "6.2.0"}  # groups = ["user", "dev"]
+pyside6 = { version = "6.3.0"}  # groups = ["user", "dev"]
 vtk = { version = "*"}  # groups = ["user", "dev"] 
 shapely = ">=1.8.1"  # groups = ["user", "dev"]
 python-Levenshtein = { version = "*"}  # groups = ["user", "dev"]
-opencv-python = { version = ">=4.5.3.56"}  # groups = ["user", "dev"]
+opencv-python = { version = "*"}  # groups = ["user", "dev"]
 matplotlib = { version = "*"}  # groups = ["user", "dev"]
 pyradiomics = { version = "*"}  # groups = ["user", "dev"]
-sklearn = { version = "*"}  # groups = ["user", "dev"]
+scikit-learn = { version = "*"}  # groups = ["user", "dev"]
 imblearn = { version = "*"}  # groups = ["user", "dev"]
 kaplanmeier = { version = "*"}  # groups = ["user", "dev"]
 pyinstaller = "^5.5"

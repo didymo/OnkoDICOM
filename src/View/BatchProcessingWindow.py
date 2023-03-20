@@ -19,6 +19,7 @@ from src.View.batchprocessing.ROIName2FMAIDOptions import \
 from src.View.batchprocessing.ROINameCleaningOptions import \
     ROINameCleaningOptions, ROINameCleaningPrefixEntryField
 from src.View.batchprocessing.SUV2ROIOptions import SUV2ROIOptions
+from src.View.batchprocessing.KaplanMeierOptions import KaplanMeierOptions
 from src.View.batchprocessing.FMAID2ROINameOptions import \
     FMAID2ROINameOptions
 from src.View.batchprocessing.MachineLearningDataSelectionOptions import \
@@ -27,11 +28,51 @@ from src.View.batchprocessing.MachineLearningOptions import \
     MachineLearningOptions
 
 
+class TabBar(QtWidgets.QTabBar):
+    """
+    Custom tabbar to work on the left side of the window
+    with horizontal text.
+    """
+    def tabSizeHint(self, index):
+        s = QtWidgets.QTabBar.tabSizeHint(self, index)
+        s.transpose()
+        return s
+
+    def paintEvent(self, event):
+        painter = QtWidgets.QStylePainter(self)
+        opt = QtWidgets.QStyleOptionTab()
+
+        for i in range(self.count()):
+            self.initStyleOption(opt, i)
+            painter.rotate(90)
+            painter.drawControl(QtWidgets.QStyle.CE_TabBarTabShape, opt)
+            painter.rotate(-90)
+            painter.save()
+
+            s = opt.rect.size()
+            s.transpose()
+            r = QtCore.QRect(QtCore.QPoint(), s)
+            r.moveCenter(opt.rect.center())
+            opt.rect = r
+
+            c = self.tabRect(i).center()
+            painter.translate(c)
+            painter.rotate(90)
+            painter.translate(-c)
+            painter.drawControl(QtWidgets.QStyle.CE_TabBarTabLabel, opt)
+            painter.restore()
+
+
 class CheckableTabWidget(QtWidgets.QTabWidget):
     """
     Creates a clickable tab widget.
     """
     checked_list = []
+
+    def __init__(self, *args, **kwargs):
+        QtWidgets.QTabWidget.__init__(self, *args, **kwargs)
+        self.setTabBar(TabBar(self))
+        self.setTabPosition(QtWidgets.QTabWidget.West)
 
     def addTab(self, widget, title):
         """
@@ -143,6 +184,7 @@ class UIBatchProcessingWindow(object):
         self.clinicaldatasr2csv_tab = ClinicalDataSR2CSVOptions()
         self.batchnamecleaning_tab = ROINameCleaningOptions()
         self.batchname2fma_tab = ROIName2FMAIDOptions()
+        self.kaplanmeier_tab = KaplanMeierOptions()
         self.batchfma2name_tab = FMAID2ROINameOptions()
         self.batchmachinelearning_data_selection_tab = \
             MachineLearningDataSelectionOptions()
@@ -161,6 +203,7 @@ class UIBatchProcessingWindow(object):
                                "ClinicalData-SR2CSV")
         self.tab_widget.addTab(self.batchnamecleaning_tab, "ROI Name Cleaning")
         self.tab_widget.addTab(self.batchname2fma_tab, "ROI Name to FMA ID")
+        self.tab_widget.addTab(self.kaplanmeier_tab,"Kaplan Meier Plot")
         self.tab_widget.addTab(self.batchfma2name_tab, "FMA ID to ROI Name")
         self.tab_widget.addTab(
             self.batchmachinelearning_data_selection_tab,
@@ -300,6 +343,13 @@ class UIBatchProcessingWindow(object):
             # Update tables
             self.suv2roi_tab.populate_table(dicom_structure)
 
+            # Get column headings
+            clinical_data = self.batch_processing_controller \
+                .get_all_clinical_data()
+            self.kaplanmeier_tab.store_data(
+                clinical_data
+                )
+
             # Update the batch name cleaning table
             batch_directory = self.directory_input.text()
             self.batchnamecleaning_tab.populate_table(dicom_structure,
@@ -321,11 +371,16 @@ class UIBatchProcessingWindow(object):
         processes = ['select_subgroup', 'iso2roi', 'suv2roi', 'dvh2csv',
                      'pyrad2csv', 'pyrad2pyrad-sr', 'csv2clinicaldata-sr',
                      'clinicaldata-sr2csv', 'roinamecleaning',
-                     'roiname2fmaid', 'fmaid2roiname',
-                     'machine_learning_data_selection', 'machine_learning']
+                     'roiname2fmaid', 'kaplanmeier',
+                     'fmaid2roiname', 'machine_learning_data_selection',
+                     'machine_learning']
 
         selected_processes = []
         suv2roi_weights = self.suv2roi_tab.get_patient_weights()
+        kaplanmeier_target_col = self.kaplanmeier_tab.get_target_col()
+        kaplanmeier_duration_of_life_col = self.kaplanmeier_tab.get_duration_of_life_col()
+        kaplanmeier_alive_or_dead_col = self.kaplanmeier_tab.get_alive_or_dead_col()
+        
         subgroup_filter_options = self.select_subgroup_tab \
             .get_selected_filter_options()
 
@@ -377,6 +432,9 @@ class UIBatchProcessingWindow(object):
         self.batch_processing_controller.set_file_paths(file_directories)
         self.batch_processing_controller.set_processes(selected_processes)
         self.batch_processing_controller.set_suv2roi_weights(suv2roi_weights)
+        self.batch_processing_controller.set_kaplanmeier_target_col(kaplanmeier_target_col)
+        self.batch_processing_controller.set_kaplanmeier_duration_of_life_col(kaplanmeier_duration_of_life_col)
+        self.batch_processing_controller.set_kaplanmeier_alive_or_dead_col(kaplanmeier_alive_or_dead_col)
         self.batch_processing_controller.set_subgroup_filter_options(
             subgroup_filter_options)
         # Path
