@@ -66,7 +66,6 @@ jobs:
         pip install -r pre-requirements.txt
         pip install -r requirements.txt
         pip install -r dev-requirements.txt
-        pip install pytest-xvfb pytest-cov pytest-isort pytest-pylint pytest-durations
 
     - name: Linting setup
       run: |
@@ -128,10 +127,12 @@ jobs:
 
     name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 30
+    # Tests on Windows are unstable. We do not want it to fail the entire test result
+    continue-on-error: true
 
     env:
-      DISPLAY: ':99.0'
+      DISPLAY: ':99.0' # do we need this in Windows?
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
       PlastimatchWindowsUrl: 'https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.0-win64.msi'
 
@@ -156,7 +157,6 @@ jobs:
         pip install -r pre-requirements.txt
         pip install -r requirements.txt
         pip install -r dev-requirements.txt
-        pip install pytest-cov pytest-isort pytest-pylint pytest-durations pytest-timeout
 
     - name: Linting setup
       run: |
@@ -182,20 +182,10 @@ jobs:
         7z x DICOM-RT-02.zip -o${{ github.workspace }}\test\testdata
         7z x DICOM-RT-02.zip -o${{ github.workspace }}\test\batchtestdata
 
-    # - name: Testing setup
-    #   run: |
-    #     sudo apt-get update
-    #     sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 freeglut3 freeglut3-dev
-    #     # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-    #     /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
-    #     sleep 3
-    #     herbstluftwm &
-    #     sleep 1
-
     - name: Testing and Coverage with pytest
       continue-on-error: true
       run: |
         # Append this for fail under x percent "--cov-fail-under=80"
-        # todo: currently in Windows some test cases halt. Set timeout as a workaround.
+        # todo: currently in Windows some tests halt. Set timeout (in seconds) as a workaround.
         cd ${{ github.workspace }}
         python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=. --timeout=60
