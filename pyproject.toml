@@ -10,9 +10,9 @@ create = true
 in-project = true
 
 [tool.poetry.dependencies]
-python =  ">=3.8,<3.11"
+python =  ">3.9,<3.11"
 cython = { version = "*"}  # groups = ["user", "dev"]
-numpy = { version = "*"}  # groups = ["user", "dev"]
+numpy = { version = "1.22"}  # groups = ["user", "dev"]
 platipy = { version = "0.2.1"}  # groups = ["user", "dev"]
 alphashape = { version = "*"}  # groups = ["user", "dev"]
 pandas = { version = "*"}  # groups = ["user", "dev"]
@@ -25,12 +25,12 @@ scikit-image = { version = "*"}  # groups = ["user", "dev"]
 fuzzywuzzy = { version = "*"}  # groups = ["user", "dev"]
 PyWavelets = { version = "^1.1.1"}  # groups = ["user", "dev"]
 networkx = { version = "*"}  # groups = ["user", "dev"]
-pymedphys =  { version = ">=0.35,<=0.37.1"}  # groups = ["user", "dev"]
+pymedphys = {extras = ["user"], version = "^0.39.3"} # groups = ["user", "dev"]
 pytest-qt = { version = ">=4.0.2"}  # groups = ["user", "dev"]
 pytest = { version = "*"}  # groups = ["user", "dev"]
 pyside6 = { version = "6.3.0"}  # groups = ["user", "dev"]
 vtk = { version = "*"}  # groups = ["user", "dev"] 
-shapely = ">=1.8.1,<2.0"  # groups = ["user", "dev"]
+shapely = ">=1.8.1"  # groups = ["user", "dev"]
 python-Levenshtein = { version = "*"}  # groups = ["user", "dev"]
 opencv-python = { version = "*"}  # groups = ["user", "dev"]
 matplotlib = { version = "*"}  # groups = ["user", "dev"]
