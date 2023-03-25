@@ -1,3 +1,8 @@
 pylint
 pytest-qt>=4.0.2
 pytest
+pytest-cov
+pytest-isort
+pytest-pylint
+pytest-durations
+pytest-timeout
