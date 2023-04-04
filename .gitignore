@@ -5,10 +5,6 @@ venv/
 # Ignore .idea
 .idea/
 
-# Ignore pyc
-*.pyc
-*.pyc
-
 # Ignore testdata
 test/testdata
 test/batchtestdata
@@ -23,6 +19,3 @@ Hash_map.csv
 # Ignore compile results
 build/
 dist/
-
-*.lock
-

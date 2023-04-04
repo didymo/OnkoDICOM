@@ -1,2 +1,5 @@
 [virtualenvs]
 create = true
+
+[experimental]
+new-installer = false
