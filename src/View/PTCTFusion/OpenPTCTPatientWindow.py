@@ -250,8 +250,8 @@ class UIOpenPTCTPatientWindow(object):
                        "to load Patient's details:"))
         self.open_patient_directory_input_box.setPlaceholderText(
             _translate("OpenPatientWindowInstance",
-                       "Enter DICOM Files Path (For example, C:\path\\to\your"
-                       "\DICOM\Files)"))
+                       "Enter DICOM Files Path (For example, C:\\path\\to\\your"
+                       "\\DICOM\\Files)"))
         self.open_patient_directory_choose_button.setText(
             _translate("OpenPatientWindowInstance", "Choose"))
         self.open_patient_directory_appear_prompt.setText(

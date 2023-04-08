@@ -213,7 +213,7 @@ class UIFirstTimeWelcomeWindow(object):
                                                       "OnkoDICOM - the solution for producing data for analysis from your oncology plans and scans."))
         self.first_time_welcome_default_dir_prompt.setText(_translate("FirstTimeWelcomeWindowInstance","Choose the path of the default directory containing all DICOM files:"))
         self.first_time_welcome_input_box.setPlaceholderText(_translate("FirstTimeWelcomeWindowInstance",
-                                                                            "Enter DICOM Files Path (For example, C:\path\\to\your\DICOM\Files)"))
+                                                                            "Enter DICOM Files Path (For example, C:\\path\\to\\your\\DICOM\\Files)"))
         self.first_time_welcome_choose_button.setText(_translate("FirstTimeWelcomeWindowInstance", "Choose"))
 
         # Clinical data CSV widgets
@@ -223,7 +223,7 @@ class UIFirstTimeWelcomeWindow(object):
         )
         self.clinical_data_csv_input_box.setPlaceholderText(
             _translate("FirstTimeWelcomeWindowInstance",
-                       "Enter CSV File Path (for example, C:\CSV\\file.csv)"))
+                       "Enter CSV File Path (for example, C:\\CSV\\file.csv)"))
         self.clinical_data_csv_choose_button.setText(
             _translate("FirstTimeWelcomeWindowInstance", "Choose"))
 

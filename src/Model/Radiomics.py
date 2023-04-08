@@ -123,7 +123,7 @@ def clean_patient_id(patient_id):
     :param patient_id: patients ID
     return: cleaned up patient_id
     """
-    invalid_characters = '/\:*?"<>|'
+    invalid_characters = r'/\:*?"<>|'
 
     filename = ''
 
