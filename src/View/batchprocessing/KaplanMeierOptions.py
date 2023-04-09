@@ -31,7 +31,7 @@ class KaplanMeierOptions(QtWidgets.QWidget):
         self.message = QtWidgets.QLabel(
             "No files located in current selected directory"
         )
-        #creates layouts
+        # creates layouts
         self.target_layout = QtWidgets.QFormLayout()
         self.duration_layout = QtWidgets.QFormLayout()
         self.alive_or_dead_layout = QtWidgets.QFormLayout()
@@ -63,7 +63,7 @@ class KaplanMeierOptions(QtWidgets.QWidget):
         self.alive_or_dead_layout.addWidget(alive_or_dead_label)
         self.alive_or_dead_layout.addRow(self.combobox_alive_or_dead)
 
-        #adds Layout
+        # adds Layout
         self.main_layout.addLayout(self.target_layout)
         self.main_layout.addLayout(self.duration_layout)
         self.main_layout.addLayout(self.alive_or_dead_layout)

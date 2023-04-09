@@ -260,7 +260,7 @@ class UIImageFusionWindow(object):
         self.open_patient_directory_input_box.setPlaceholderText(
             _translate("OpenPatientWindowInstance",
                        "Enter DICOM Files Path (For example, "
-                       "C:\path\\to\your\DICOM\Files)"))
+                       "C:\\path\\to\\your\\DICOM\\Files)"))
         self.open_patient_directory_choose_button.setText(_translate(
             "OpenPatientWindowInstance",
             "Choose"))
