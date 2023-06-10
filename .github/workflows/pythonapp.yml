@@ -74,10 +74,10 @@ jobs:
         # python -m pip install --upgrade pip wheel setuptools
         poetry install --no-root
 
-    # - name: Workaround Install pyradiomics (no-use-pep517)
-    #     # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
-    #   run: |
-    #     poetry run pip install pyradiomics==3.0.1 --no-use-pep517
+    - name: Workaround Install pyradiomics (no-use-pep517)
+        # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
+      run: |
+        poetry run pip install pyradiomics
 
     - name: Lint with flake8
       run: |
@@ -171,10 +171,10 @@ jobs:
       run: |
         poetry install --no-root
   
-    # - name: Workaround Install pyradiomics (no-use-pep517)
-    #     # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
-    #   run: |
-    #     poetry run pip install pyradiomics==3.0.1 --no-use-pep517
+    - name: Workaround Install pyradiomics (no-use-pep517)
+        # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
+      run: |
+        poetry run pip install pyradiomics
 
     - name: Lint with flake8
       run: |
