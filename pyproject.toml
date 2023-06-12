@@ -29,7 +29,8 @@ fuzzywuzzy = "*"
 PyWavelets = "1.3.0"
 networkx = "*"
 pymedphys = ">=0.35,<=0.37.1"
-pyradiomics = "*"
+# until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
+pyradiomics = {version = "*", python = "<3.10"}
 pyside6 = "6.3.0"
 vtk = "*"
 shapely = ">=1.8.1,<2.0"
