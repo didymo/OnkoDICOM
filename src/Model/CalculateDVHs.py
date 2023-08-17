@@ -188,7 +188,6 @@ def dvh2pandas(dict_dvh, patient_id):
     pddf = pd.DataFrame(dvh_csv_list).round(2)
     # Fill empty blocks with 0.0
     pddf.fillna(0.0, inplace=True)
-    pddf.set_index('Patient ID', inplace=True)
 
     # Return pandas dataframe
     return pddf
