@@ -175,7 +175,7 @@ def dvh2pandas(dict_dvh, patient_id):
                 break
             if (dose[j] >= current_percentage_range):
                 cGy = str(j) + 'cGy: ' + str(dose[j])
-                current_cGy_list.append(cGy)
+                current_cGy_list.extend(cGy)
             else:
                 dvh_roi_list.append(current_cGy_list)
                 current_percentage_range -= 0.5                
