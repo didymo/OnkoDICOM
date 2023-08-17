@@ -154,33 +154,7 @@ def dvh2pandas(dict_dvh, patient_id):
 
     # DVH.CSV EXPORT
     
-    #Row in centiGray cGy
-    for i in dict_dvh:
-        dvh_roi_list = []
-
-        dvh = dict_dvh[i]
-        name = dvh.name
-        volume = dvh.volume
-
-        dvh_roi_list.append(patient_id)
-        dvh_roi_list.append(name)
-        dvh_roi_list.append(volume)
-
-        dose = dvh.relative_volume.counts
-
-        current_cGy_list = []
-        current_percentage_range = 100
-        for j in range(0, len(dose), 10):
-            if (current_percentage_range < 0):
-                break
-            if (dose[j] >= current_percentage_range):
-                cGy = str(j) + 'cGy: ' + str(dose[j])
-                current_cGy_list.extend(cGy)
-            else:
-                dvh_roi_list.append(current_cGy_list)
-                current_percentage_range -= 0.5                
-
-        dvh_csv_list.append(dvh_roi_list)
+    
     
     #Column in percentage %
     for i in np.arange(100, 0 - 0.5, -0.5):
