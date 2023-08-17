@@ -169,9 +169,9 @@ def dvh2pandas(dict_dvh, patient_id):
         current_percentage_range = 100
         for j in range(0, len(dose), 10):
             print(current_percentage_range)
-            if current_percentage_range < -0.5:
+            if current_percentage_range < 0:
                 break
-            if dose[j] >= current_percentage_range:
+            elif dose[j] >= current_percentage_range:
                 cGy = '[' + str(j) + 'cGy: ' + str(dose[j]) + ']'
                 current_cGy_list += cGy
             else:
