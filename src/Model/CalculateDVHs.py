@@ -168,8 +168,8 @@ def dvh2pandas(dict_dvh, patient_id):
         for m in np.arange(100, -0.5, -0.5):
             current_cGy_list = ''
             for n in range(0, len(dose), 10):
-                if dose[n] < m + 0.5 and dose[n] >= m:
-                    cGy = '[' + str(n) + 'cGy: ' + str(dose[n].round(2)) + ']'
+                if dose[n] < (m + 0.5) and dose[n] >= m:
+                    cGy = '[' + str(n) + 'cGy: ' + str(dose[n]) + ']'
                     current_cGy_list += cGy
             dvh_roi_list.append(current_cGy_list)  
              
