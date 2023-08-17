@@ -170,15 +170,15 @@ def dvh2pandas(dict_dvh, patient_id):
 
         current_cGy_list = []
         current_percentage_range = 100
-        for i in range(0, len(dose), 10):
+        for j in range(0, len(dose), 10):
             if (current_percentage_range < 0):
                 break
-            if (dose[i] >= current_percentage_range):
-                cGy = str(i) + 'cGy: ' + str(dose[0])
+            if (dose[j] >= current_percentage_range):
+                cGy = str(j) + 'cGy: ' + str(dose[j])
                 current_cGy_list.append(cGy)
             else:
                 dvh_roi_list.append(current_cGy_list)
-                current_percentage_range = current_percentage_range - 0.5                
+                current_percentage_range -= 0.5                
 
         dvh_csv_list.append(dvh_roi_list)
     
@@ -187,7 +187,7 @@ def dvh2pandas(dict_dvh, patient_id):
         csv_header.append(str(i) + '%')
 
     # Convert the list into pandas dataframe, with 2 digit rounding.
-    pddf = pd.DataFrame(dvh_csv_list, columns=csv_header)
+    pddf = pd.DataFrame(dvh_csv_list, columns=csv_header).round(2)
     # Fill empty blocks with 0.0
     pddf.fillna(0.0, inplace=True)
     pddf.set_index('Patient ID', inplace=True)
