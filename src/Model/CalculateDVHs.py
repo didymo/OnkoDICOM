@@ -181,7 +181,7 @@ def dvh2pandas(dict_dvh, patient_id):
         dvh_csv_list.append(dvh_roi_list)
     
     #Column in percentage %
-    for i in np.arange(100, -0.5, -0.5):
+    for i in np.arange(100, 0, -0.5):
         csv_header.append(str(i) + '%')
 
     # Convert the list into pandas dataframe, with 2 digit rounding.
