@@ -187,7 +187,7 @@ def dvh2pandas(dict_dvh, patient_id):
         csv_header.append(str(i) + '%')
 
     # Convert the list into pandas dataframe, with 2 digit rounding.
-    pddf = pd.DataFrame(dvh_csv_list, columns=csv_header).round(2)
+    pddf = pd.DataFrame(dvh_csv_list, columns=csv_header)
     # Fill empty blocks with 0.0
     pddf.fillna(0.0, inplace=True)
     pddf.set_index('Patient ID', inplace=True)
