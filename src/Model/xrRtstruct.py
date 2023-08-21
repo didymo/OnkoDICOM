@@ -10,7 +10,7 @@ import datetime
 #AttributeError: 'Dataset' object has no attribute 'FrameOfReferenceUID'
 #removed 2 lines relating to this error, might need to be looked at if this is required
 
-def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
+def create_initial_rtss_from_cr(img_ds: pydicom.dataset.Dataset,
                                 filepath: Path,
                                 uid_list: list) -> pydicom.dataset.FileDataset:
     """
@@ -40,7 +40,7 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     """
 
     if img_ds is None:
-        raise ValueError("No CT data to initialize RT SS")
+        raise ValueError("No CR data to initialize RT SS")
 
     now = datetime.datetime.now()
     dicom_date = now.strftime("%Y%m%d")
@@ -163,14 +163,3 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_ss.is_little_endian = True
     rt_ss.is_implicit_VR = True
     return rt_ss
-
-fname = "IM000001"
-file = dcmread(fname)
-#converts pydicom.dataset.FileDataset to pydicom.dataset.Dataset
-data = pydicom.Dataset()
-for i in file:
-    data.add(i)
-savepath="/home/admin/OnkoDICOM/src/Model"
-rtstruct=create_initial_rtss_from_ct(img_ds=data,filepath=savepath,uid_list=[])
-print(rtstruct)
-rtstruct.save_as("XR-RTSTRUCT")

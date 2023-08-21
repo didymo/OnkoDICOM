@@ -176,7 +176,7 @@ def get_dict_sort_on_displacement(item):
     """
     img_dataset = item[1]
 
-    if img_dataset.Modality == 'CR':
+    if img_dataset.Modality == "CR":
         img_dataset = add_missing_cr_components(img_dataset)
 
     orientation = img_dataset.ImageOrientationPatient
@@ -188,8 +188,8 @@ def get_dict_sort_on_displacement(item):
 
 def add_missing_cr_components(cr):
     """
-    CR files seem to be missing important tags
-    Add them on here
+    :param cr: a dictionary key, value item that represents a CR file
+    :return: cr with required missing fields
     """
     cr_update = {
         'ImageOrientationPatient': [1, 0, 0, 0, 0, 1],

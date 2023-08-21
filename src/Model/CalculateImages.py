@@ -6,13 +6,14 @@ from PySide6 import QtCore, QtGui
 import src.constants as constant
 
 
-def convert_raw_data(ds, rescaled=True, is_ct=False):
+def convert_raw_data(ds, rescaled=True, is_ct=False, inverted=False):
     """
     Convert the raw pixel data to readable pixel data in every image dataset
     :param ds: A dictionary of datasets of all the DICOM files of the patient
     :param rescaled: A boolean to determine if the data has already
     been rescaled
     :param is_ct: Boolean to determine if data is CT for rescaling
+    :param inverted: Boolean to invert pixel colours (for CRs)
     :return: np_pixels, a list of pixel arrays of all slices of the patient
     """
     non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
@@ -35,6 +36,14 @@ def convert_raw_data(ds, rescaled=True, is_ct=False):
                     # Store the rescaled data
                     ds[key]._pixel_array = data_arr
                 np_pixels.append(np_tmp._pixel_array)
+
+    # Invert the colours based on max value
+    if inverted:
+        max_val = np.amax(np_pixels)
+        np_pixels_inverted = np.multiply(np_pixels, -1)
+        np_pixels_inverted = np.add(np_pixels_inverted, max_val)
+        return np_pixels_inverted
+
     return np_pixels
 
 
