@@ -176,7 +176,7 @@ jobs:
     - name: Workaround Install pyradiomics (no-use-pep517)
         # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
       run: |
-        poetry run pip install pyradiomics
+        poetry run pip install pyradiomics==3.0.1
 
     - name: Lint with flake8
       run: |
