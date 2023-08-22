@@ -164,6 +164,15 @@ def dvh2pandas(dict_dvh, patient_id):
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
         dose = dvh.relative_volume.counts
+        
+        last_volume = '0cGy'
+        high_dose = dose[0]
+        for i in range(0, len(dose), 10):
+            if percentage >= dose[0]:
+                high_dose =  str(n) + 'cGy'
+            else:
+                
+                percentage = dose[0]
 
         for m in np.arange(100, -0.5, -0.5):
             current_cGy_list = ''
