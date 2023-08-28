@@ -69,7 +69,7 @@ allowed_classes = {
         "name": "sr",
         "sliceable": False
     },
-    # XR Image
+    # CR Image
     "1.2.840.10008.5.1.4.1.1.1": {
         "name": "cr",
         "sliceable": True
@@ -169,6 +169,9 @@ def img_stack_displacement(orientation, position):
 
 def get_dict_sort_on_displacement(item):
     """
+    The passed item is modified.
+    Returns a reference, not a copy.
+
     :param item: dictionary key, value item with value of a PyDicom
         dataset
     :return: Float of the projection of the image position patient on
@@ -188,7 +191,7 @@ def get_dict_sort_on_displacement(item):
 
 def add_missing_cr_components(cr):
     """
-    :param cr: a dictionary key, value item that represents a CR file
+    :param cr: a pydicom.Dataset, value item that represents a CR file
     :return: cr with required missing fields
     """
     cr_update = {

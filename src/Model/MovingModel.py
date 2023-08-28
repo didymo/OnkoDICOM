@@ -41,11 +41,6 @@ def create_moving_model():
     if dataset[0].Modality == "CT":
         is_ct = True
 
-    # Determine if dataset is CR for grayscale inverting
-    is_cr = False
-    if dataset[0].Modality == "CR":
-        is_cr = True
-
     if 'WindowWidth' in dataset[0]:
         if isinstance(dataset[0].WindowWidth, pydicom.valuerep.DSfloat):
             window = int(dataset[0].WindowWidth)
@@ -92,7 +87,7 @@ def create_moving_model():
 
     if not moving_dict_container.has_attribute("scaled"):
         moving_dict_container.set("scaled", True)
-        pixel_values = convert_raw_data(dataset, False, is_ct, is_cr)
+        pixel_values = convert_raw_data(dataset, False, is_ct)
     else:
         pixel_values = convert_raw_data(dataset, True)
 

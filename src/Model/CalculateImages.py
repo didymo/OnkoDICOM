@@ -6,18 +6,20 @@ from PySide6 import QtCore, QtGui
 import src.constants as constant
 
 
-def convert_raw_data(ds, rescaled=True, is_ct=False, inverted=False):
+def convert_raw_data(ds, rescaled=True, is_ct=False):
     """
     Convert the raw pixel data to readable pixel data in every image dataset
     :param ds: A dictionary of datasets of all the DICOM files of the patient
     :param rescaled: A boolean to determine if the data has already
     been rescaled
     :param is_ct: Boolean to determine if data is CT for rescaling
-    :param inverted: Boolean to invert pixel colours (for CRs)
     :return: np_pixels, a list of pixel arrays of all slices of the patient
     """
     non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
     np_pixels = []
+
+    # Invert pixel colour of MONOCHROME1-style images
+    inverted = (ds[0].PhotometricInterpretation == "MONOCHROME1")
 
     # Do the conversion to every slice (except RTSS, RTDOSE, RTPLAN)
     for key in ds:
@@ -242,6 +244,7 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect,
             fusion,
             color)
 
+    for i in range(pixel_array_3d.shape[2]):
         dict_pixmaps_sagittal[i] = scaled_pixmap(
             pixel_array_3d[:, :, i],
             window,
