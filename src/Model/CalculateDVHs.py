@@ -171,20 +171,22 @@ def dvh2pandas(dict_dvh, patient_id):
         current_dose_index = 0
         tempt_peak_dose_index = 0
         for percent in np.arange(100, -0.5, -0.5):
-            last_volume = 0
+            last_volume = -1
             for centiGray in range(current_dose_index, len(dose), 10):
                 if dose[centiGray] == percent:
                     last_volume = centiGray
+                '''
                 else:
                     if dose[centiGray] >= percent - 0.5:
-                        current_dose_index = centiGray
                         tempt_peak_dose_index = centiGray
-                        break
                     else:
                         volume_drop_per = 10 * (dose[tempt_peak_dose_index] - dose[centiGray])/(tempt_peak_dose_index - centiGray)
                         drop_per = percent - dose[tempt_peak_dose_index]
                         substract_amount = drop_per/volume_drop_per * 10
                         last_volume = centiGray - substract_amount
+                        
+                        current_dose_index = centiGray
+                '''
             dvh_roi_list.append(str(last_volume) + 'cGy')
         
         dvh_csv_list.append(dvh_roi_list)
