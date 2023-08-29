@@ -157,33 +157,37 @@ def dvh2pandas(dict_dvh, patient_id):
     #Row in centiGray cGy
     for i in dict_dvh:
         dvh_roi_list = []
+        
         dvh = dict_dvh[i]
         name = dvh.name
         volume = dvh.volume
+        
         dvh_roi_list.append(patient_id)
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
+        
         dose = dvh.relative_volume.counts
         
-        last_volume = '0cGy'
-        high_dose = dose[0]
-        for i in range(0, len(dose), 10):
-            if percentage >= dose[0]:
-                high_dose =  str(n) + 'cGy'
-            else:
-                
-                percentage = dose[0]
-
-        for m in np.arange(100, -0.5, -0.5):
-            current_cGy_list = ''
-            for n in range(0, len(dose), 10):
-                if dose[n] < (m + 0.5) and dose[n] >= m:
-                    cGy = '[' + str(n) + 'cGy: ' + str(dose[n]) + ']'
-                    current_cGy_list += cGy
-            dvh_roi_list.append(current_cGy_list)  
-             
-        dvh_csv_list.append(dvh_roi_list)
-    
+        current_dose_index = 0
+        tempt_peak_dose_index = 0
+        for percent in np.arange(100, -0.5, -0.5):
+            last_volume = 0
+            for centiGray in range(current_dose_index, len(dose), 10):
+                if dose[centiGray] == percent:
+                    last_volume = centiGray
+                else:
+                    if dose[centiGray] >= percent - 0.5:
+                        current_dose_index = centiGray
+                        tempt_peak_dose_index = centiGray
+                        break
+                    else:
+                        volume_drop_per = 10 * (dose[tempt_peak_dose_index] - dose[centiGray])/(tempt_peak_dose_index - centiGray)
+                        drop_per = percent - dose[tempt_peak_dose_index]
+                        substract_amount = drop_per/volume_drop_per * 10
+                        last_volume = centiGray - substract_amount
+            dvh_csv_list.append(str(last_volume) + 'cGy')
+            
+            
     #Column in percentage %
     for i in np.arange(100, -0.5, -0.5):
         csv_header.append(str(i) + '%')
