@@ -169,9 +169,9 @@ def dvh2pandas(dict_dvh, patient_id):
         dose = dvh.relative_volume.counts
         
         current_dose_index = 0
+        tempt_peak_dose_index = 0
         for percent in np.arange(100, -0.5, -0.5):
             last_volume = -1
-            tempt_peak_dose_index = 0
             for cgy in range(current_dose_index, len(dose), 10):
                 if dose[cgy] == percent:
                     last_volume = cgy
