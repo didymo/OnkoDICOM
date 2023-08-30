@@ -177,7 +177,7 @@ def dvh2pandas(dict_dvh, patient_id):
                     last_volume = cgy
                 elif dose[cgy] > percent:
                     tempt_peak_dose_index = cgy
-                elif dose[cgy] < percent or current_dose_index == len(dose) - 1:
+                elif dose[cgy] < percent or cgy == len(dose) - 1:
                     if last_volume == -1 and tempt_peak_dose_index != 0:
                         volume_drop_per = 10 * (dose[tempt_peak_dose_index] - dose[cgy])/(tempt_peak_dose_index - cgy)
                         drop_per = percent - dose[tempt_peak_dose_index]
