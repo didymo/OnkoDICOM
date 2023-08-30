@@ -171,18 +171,21 @@ def dvh2pandas(dict_dvh, patient_id):
         for percent in np.arange(100, -0.5, -0.5):
             last_volume = -1
             for cgy in range(trough_i, len(dose), 10):
+                trough_i = cgy
                 if dose[cgy] == percent:
                     last_volume = cgy
                 elif dose[cgy] > percent:
                     peak_i = cgy
                 elif dose[cgy] < percent:
-                    trough_i = cgy
                     break
             if last_volume == -1 and peak_i != 0:
-                volume_drop_per = 10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
-                drop_per = percent - dose[peak_i]
-                substract_amount = drop_per/volume_drop_per * 10
-                last_volume = trough_i - substract_amount
+                if dose[peak_i] != dose[trough_i]:
+                    volume_per_drop = 10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
+                    per_drop = dose[peak_i] - percent
+                    substract_amount = per_drop/volume_per_drop * 10
+                    last_volume = trough_i - substract_amount
+                else:
+                    last_volume = dose[trough_i]
             if last_volume != -1:
                 dvh_roi_list.append(str(last_volume // 1) + 'cGy')
             else:
