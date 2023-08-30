@@ -180,7 +180,7 @@ def dvh2pandas(dict_dvh, patient_id):
                     break
             if last_volume == -1 and peak_i != 0:
                 if dose[peak_i] != dose[trough_i]:
-                    volume_per_drop = 10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
+                    volume_per_drop = -10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
                     per_drop = dose[peak_i] - percent
                     substract_amount = per_drop/volume_per_drop * 10
                     last_volume = trough_i - substract_amount
