@@ -187,7 +187,7 @@ def dvh2pandas(dict_dvh, patient_id):
                 else:
                     last_volume = trough_i
             if last_volume != -1:
-                dvh_roi_list.append(str(last_volume) + 'cGy')
+                dvh_roi_list.append(str(round(last_volume)) + 'cGy')
             else:
                 dvh_roi_list.append('')
         dvh_csv_list.append(dvh_roi_list)
