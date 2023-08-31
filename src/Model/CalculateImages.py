@@ -18,6 +18,9 @@ def convert_raw_data(ds, rescaled=True, is_ct=False):
     non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
     np_pixels = []
 
+    # Invert pixel colour of MONOCHROME1-style images
+    inverted = (ds[0].PhotometricInterpretation == "MONOCHROME1")
+
     # Do the conversion to every slice (except RTSS, RTDOSE, RTPLAN)
     for key in ds:
         if key not in non_img_list:
@@ -35,6 +38,14 @@ def convert_raw_data(ds, rescaled=True, is_ct=False):
                     # Store the rescaled data
                     ds[key]._pixel_array = data_arr
                 np_pixels.append(np_tmp._pixel_array)
+
+    # Invert the colours based on max value
+    if inverted:
+        max_val = np.amax(np_pixels)
+        np_pixels_inverted = np.multiply(np_pixels, -1)
+        np_pixels_inverted = np.add(np_pixels_inverted, max_val)
+        return np_pixels_inverted
+
     return np_pixels
 
 
@@ -233,6 +244,7 @@ def get_pixmaps(pixel_array, window, level, pixmap_aspect,
             fusion,
             color)
 
+    for i in range(pixel_array_3d.shape[2]):
         dict_pixmaps_sagittal[i] = scaled_pixmap(
             pixel_array_3d[:, :, i],
             window,

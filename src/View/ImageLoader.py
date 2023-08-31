@@ -9,6 +9,7 @@ from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2rtdose, rtdose2dvh
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import create_initial_rtss_from_ct
+from src.Model.xrRtstruct import create_initial_rtss_from_cr
 from src.Model.GetPatientInfo import DicomTree
 
 
@@ -185,8 +186,17 @@ class ImageLoader(QtCore.QObject):
         rtss_path = Path(path).joinpath('rtss.dcm')
         uid_list = ImageLoading.get_image_uid_list(
             patient_dict_container.dataset)
-        rtss = create_initial_rtss_from_ct(
-            patient_dict_container.dataset[0], rtss_path, uid_list)
+
+        if patient_dict_container.dataset[0].Modality == 'CR':
+            # XR files
+            rtss = create_initial_rtss_from_cr(
+                patient_dict_container.dataset[0], rtss_path, uid_list)
+            # Code for saving the file automatically
+            #rtss_path = patient_dict_container.filepaths[0] + "_XR-RTSTRUCT"
+            #rtss.save_as(rtss_path)
+        else:
+            rtss = create_initial_rtss_from_ct(
+                patient_dict_container.dataset[0], rtss_path, uid_list)
 
         if interrupt_flag.is_set():  # Stop loading.
             print("stopped")

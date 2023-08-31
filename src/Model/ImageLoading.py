@@ -68,6 +68,11 @@ allowed_classes = {
     "1.2.840.10008.5.1.4.1.1.88.33": {
         "name": "sr",
         "sliceable": False
+    },
+    # CR Image
+    "1.2.840.10008.5.1.4.1.1.1": {
+        "name": "cr",
+        "sliceable": True
     }
 }
 
@@ -164,17 +169,39 @@ def img_stack_displacement(orientation, position):
 
 def get_dict_sort_on_displacement(item):
     """
+    The passed item is modified.
+    Returns a reference, not a copy.
+
     :param item: dictionary key, value item with value of a PyDicom
         dataset
     :return: Float of the projection of the image position patient on
         the axis through the image stack
     """
     img_dataset = item[1]
+
+    if img_dataset.Modality == "CR":
+        img_dataset = add_missing_cr_components(img_dataset)
+
     orientation = img_dataset.ImageOrientationPatient
     position = img_dataset.ImagePositionPatient
     sort_key = img_stack_displacement(orientation, position)
 
     return sort_key
+
+
+def add_missing_cr_components(cr):
+    """
+    :param cr: a pydicom.Dataset, value item that represents a CR file
+    :return: cr with required missing fields
+    """
+    cr_update = {
+        'ImageOrientationPatient': [1, 0, 0, 0, 0, 1],
+        'ImagePositionPatient': [0, 0, 0],
+        'SliceThickness': 1
+    }
+    cr.update(cr_update)
+
+    return cr
 
 
 def image_stack_sort(read_data_dict, file_names_dict):

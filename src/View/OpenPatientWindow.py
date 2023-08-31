@@ -433,7 +433,8 @@ class UIOpenPatientWindow(object):
         # Total number of selected image series
         total_selected_image_series = selected_series_types.count('CT') + \
                                       selected_series_types.count('MR') + \
-                                      selected_series_types.count('PT')
+                                      selected_series_types.count('PT') + \
+                                      selected_series_types.count('CR')
 
         # Check the existence of IMAGE, RTSTRUCT, RTPLAN and RTDOSE files
         proceed = True
