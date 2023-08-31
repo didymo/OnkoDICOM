@@ -149,11 +149,12 @@ def dvh2pandas(dict_dvh, patient_id):
     csv_header.append('Patient ID')
     csv_header.append('ROI')
     csv_header.append('Volume (mL)')
-
-    max_roi_dose = 0
-
+    
     dvh_csv_list = []
 
+    # DVH.CSV EXPORT
+    
+    #Row in centiGray cGy
     for i in dict_dvh:
         dvh_roi_list = []
         dvh = dict_dvh[i]
@@ -162,19 +163,38 @@ def dvh2pandas(dict_dvh, patient_id):
         dvh_roi_list.append(patient_id)
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
+        
         dose = dvh.relative_volume.counts
-
-        for i in range(0, len(dose), 10):
-            dvh_roi_list.append(dose[i])
-            # Update the maximum dose value, if current dose
-            # exceeds the current maximum dose
-            if i > max_roi_dose:
-                max_roi_dose = i
-
+        
+        trough_i = 0
+        peak_i = 0
+        for percent in np.arange(100, -0.5, -0.5):
+            last_volume = -1
+            for cgy in range(trough_i, len(dose), 10):
+                trough_i = cgy
+                if dose[cgy] == percent:
+                    last_volume = cgy
+                elif dose[cgy] > percent:
+                    peak_i = cgy
+                elif dose[cgy] < percent:
+                    break
+            if last_volume == -1 and peak_i != 0:
+                if dose[peak_i] != dose[trough_i]:
+                    volume_per_drop = -10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
+                    per_drop = dose[peak_i] - percent
+                    substract_amount = per_drop/volume_per_drop * 10
+                    last_volume = trough_i - substract_amount
+                else:
+                    last_volume = trough_i
+            if last_volume != -1:
+                dvh_roi_list.append(str(round(last_volume)))
+            else:
+                dvh_roi_list.append('')
         dvh_csv_list.append(dvh_roi_list)
-
-    for i in range(0, max_roi_dose + 1, 10):
-        csv_header.append(str(i) + 'cGy')
+            
+    #Column in percentage %
+    for i in np.arange(100, -0.5, -0.5):
+        csv_header.append(str(i) + '%')
 
     # Convert the list into pandas dataframe, with 2 digit rounding.
     pddf = pd.DataFrame(dvh_csv_list, columns=csv_header).round(2)
