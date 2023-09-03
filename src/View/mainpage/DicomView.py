@@ -8,8 +8,7 @@ from src.Controller.PathHandler import data_path
 class CustomGraphicsView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
-    
-    self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+        self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
 
     def wheelEvent(self, event: QtGui.QWheelEvent):
         modifiers = event.modifiers()
