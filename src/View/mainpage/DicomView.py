@@ -70,21 +70,24 @@ class DicomView(QtWidgets.QWidget):
         self.view.setBackgroundBrush(background_brush)
     
     def wheelEvent(self, event: QtGui.QWheelEvent):
+        degree = 8
+        step = 15
+        #https://doc.qt.io/qt-6/qwheelevent.html#angleDelta
         modifiers = event.modifiers()
         if modifiers == QtCore.Qt.ShiftModifier:
             super().wheelEvent(event)
         elif modifiers == QtCore.Qt.AltModifier:
             super().wheelEvent(event)
         elif modifiers == QtCore.Qt.ControlModifier:
-            angle = event.angleDelta() / 8
-            delta = angle.y() / 15
+            angle = event.angleDelta() / degree
+            delta = angle.y() / step
             if delta > 0:
                 self.zoom_in()
             else:
                 self.zoom_out()
         else:
-            num_degrees = event.angleDelta() / 8
-            num_steps = num_degrees / 15
+            num_degrees = event.angleDelta() / degree
+            num_steps = num_degrees / step
             delta = int(num_steps.y())
             self.change_slice(delta)
 
