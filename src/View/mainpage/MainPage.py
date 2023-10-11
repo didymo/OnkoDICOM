@@ -16,6 +16,7 @@ from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DicomCoronalView import DicomCoronalView
 from src.View.mainpage.DicomSagittalView import DicomSagittalView
+from src.View.mainpage.WindowingSlider import WindowingSlider
 from src.View.mainpage.IsodoseTab import IsodoseTab
 from src.View.mainpage.MenuBar import MenuBar
 from src.View.mainpage.DicomView3D import DicomView3D
@@ -162,6 +163,7 @@ class UIMainWindow:
             roi_color=roi_color_dict, iso_color=iso_color_dict,
             cut_line_color=QtGui.QColor(0, 0, 255))
         self.three_dimension_view = DicomView3D()
+        self.windowing_slider = WindowingSlider()
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_axial_view.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -173,6 +175,7 @@ class UIMainWindow:
 
         self.dicom_four_views = QWidget()
         self.dicom_four_views_layout = QGridLayout()
+
         for i in range(2):
             self.dicom_four_views_layout.setColumnStretch(i, 1)
             self.dicom_four_views_layout.setRowStretch(i, 1)
@@ -180,11 +183,24 @@ class UIMainWindow:
         self.dicom_four_views_layout.addWidget(self.dicom_sagittal_view, 0, 1)
         self.dicom_four_views_layout.addWidget(self.dicom_coronal_view, 1, 0)
         self.dicom_four_views_layout.addWidget(self.three_dimension_view, 1, 1)
+
         self.dicom_four_views.setLayout(self.dicom_four_views_layout)
 
-        self.dicom_view.addWidget(self.dicom_four_views)
-        self.dicom_view.addWidget(self.dicom_single_view)
-        self.dicom_view.setCurrentWidget(self.dicom_single_view)
+        self.dicom_four_views_slider = QWidget()
+        self.dicom_four_views_slider_layout = QGridLayout()
+        self.dicom_four_views_slider_layout.addWidget(self.dicom_four_views, 0, 1)
+
+        self.dicom_four_views_slider.setLayout(self.dicom_four_views_slider_layout)
+
+        self.dicom_single_view_widget = QWidget()
+        self.dicom_single_view_layout = QGridLayout()
+        self.dicom_single_view_layout.addWidget(self.windowing_slider, 0, 0)
+        self.dicom_single_view_layout.addWidget(self.dicom_single_view, 0, 1)
+        self.dicom_single_view_widget.setLayout(self.dicom_single_view_layout)
+
+        self.dicom_view.addWidget(self.dicom_four_views_slider)
+        self.dicom_view.addWidget(self.dicom_single_view_widget)
+        self.dicom_view.setCurrentWidget(self.dicom_single_view_widget)
 
         # Add DICOM View to right panel as a tab
         self.right_panel.addTab(self.dicom_view, "DICOM View")
