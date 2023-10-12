@@ -4,6 +4,7 @@ from src.Model import ImageLoading
 from src.Model.batchprocessing.BatchProcess import BatchProcess
 from src.Model.PatientDictContainer import PatientDictContainer
 import pandas as pd
+import numpy as np
 
 
 class BatchProcessDVH2CSV(BatchProcess):
