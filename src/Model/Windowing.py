@@ -23,17 +23,17 @@ def windowing_model(text, init):
     window = windowing_limits[0]
     level = windowing_limits[1]
 
-    windowing_model_direct(window, level, init)
+    windowing_model_direct(level, window, init)
 
 
 def windowing_model_direct(level, window, init):
     """
-        Function triggered when a window is selected from the menu,
-        or when the windowing slider bars are adjusted
-        :param level: The desired level
-        :param window: The desired window
-        :param init: list of bool to determine which views are chosen
-        """
+    Function triggered when a window is selected from the menu,
+    or when the windowing slider bars are adjusted
+    :param level: The desired level
+    :param window: The desired window
+    :param init: list of bool to determine which views are chosen
+    """
     patient_dict_container = PatientDictContainer()
     moving_dict_container = MovingDictContainer()
     pt_ct_dict_container = PTCTDictContainer()

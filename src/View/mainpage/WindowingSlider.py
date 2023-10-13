@@ -37,10 +37,11 @@ class WindowingSlider(QWidget):
     def __init__(self, width=50):
         """
         Initialise the slider
-        :pram width: the fixed width of the widget
+        :param width: the fixed width of the widget
         """
 
         super().__init__()
+        self.action_handler = None
         if WindowingSlider.SINGLETON is None:
             WindowingSlider.SINGLETON = self
             set_windowing_slider(self)
@@ -92,7 +93,7 @@ class WindowingSlider(QWidget):
 
         # Get the values for window and level from the dict
         patient_dict_container = PatientDictContainer()
-        # print(patient_dict_container.get("dict_windowing"))  # testing
+        print(patient_dict_container.get("dict_windowing"))  # testing
         windowing_limits = patient_dict_container.get("dict_windowing")['Normal']
 
         # Set window and level to the new values
@@ -110,6 +111,14 @@ class WindowingSlider(QWidget):
 
         # Test
         self.set_density_histogram(gen_random_histogram())
+
+    def set_action_handler(self, action_handler):
+        """
+        Sets the action handler.
+        The action handler can call update_views()
+        :param action_handler: the action handler
+        """
+        self.action_handler = action_handler
 
     def resizeEvent(self, event):
         self.histogram.setPlotArea(
@@ -132,11 +141,21 @@ class WindowingSlider(QWidget):
         Converts a window value to a slider index
         :param val: a 0-2000 value
         """
-        normalized_val = val / 2000
-        # print(normalized_val)
+        normalized_val = val / 4096
+        print(normalized_val)
         index = ceil(self.slider_density * (1 - normalized_val)) - 1
-        # print(index)
+        print(index)
         return index
+
+    def index_to_window(self, index):
+        """
+        Converts a slider index to a window value
+        :param index: a 0-2000 value
+        """
+
+        percent = index / self.slider_density
+        val = round((1 - percent) * 4096)
+        return val
 
     def set_bars_from_window(self, window, level):
         """
@@ -169,6 +188,10 @@ class WindowingSlider(QWidget):
         :param index: the index to move to
         :param top_bar: whether to move the top or bottom bar
         """
+
+        # Clamp index to range
+        index = max(index, 0)
+        index = min(index, self.slider_density-1)
 
         if top_bar:
             self.slider_bars[self.top].setColor("white")
@@ -251,9 +274,17 @@ class WindowingSlider(QWidget):
             False,
             False,
             False]
-        level = 100
-        window = 100
-        # windowing_model_direct(level, window, send)
+
+        top_bar = self.index_to_window(self.top)
+        bottom_bar = self.index_to_window(self.bottom)
+
+        level = (top_bar + bottom_bar) * 0.5
+        window = 2 * (bottom_bar - level)
+        level = level - 1000
+
+        windowing_model_direct(level, window, send)
+        if self.action_handler is not None:
+            self.action_handler.update_views()
 
     def update_bar_position(self, event):
         if self.selected_bar == "middle":

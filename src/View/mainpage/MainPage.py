@@ -103,6 +103,8 @@ class UIMainWindow:
         self.toolbar = Toolbar(self.action_handler)
         self.main_window_instance.addToolBar(
             QtCore.Qt.TopToolBarArea, self.toolbar)
+        self.windowing_slider.set_action_handler(
+            self.action_handler)
         self.main_window_instance.setWindowTitle("OnkoDICOM")
 
     def setup_central_widget(self):
