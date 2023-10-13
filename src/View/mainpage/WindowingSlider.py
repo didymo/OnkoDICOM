@@ -32,6 +32,10 @@ class WindowingSlider(QWidget):
     MAX_CLICK_DIST = 5
     # Minimum rendering height for bottom bar
     MIN_BOTTOM_INDEX = 4
+    # Window/Level consts
+    MAX_PIXEL_VALUE = 4096
+    LEVEL_OFFSET = 1000
+
     SINGLETON = None
 
     def __init__(self, width=50):
@@ -139,22 +143,20 @@ class WindowingSlider(QWidget):
     def window_to_index(self, val):
         """
         Converts a window value to a slider index
-        :param val: a 0-2000 value
+        :param val: a value
         """
-        normalized_val = val / 4096
-        print(normalized_val)
+        normalized_val = val / WindowingSlider.MAX_PIXEL_VALUE
         index = ceil(self.slider_density * (1 - normalized_val)) - 1
-        print(index)
         return index
 
     def index_to_window(self, index):
         """
         Converts a slider index to a window value
-        :param index: a 0-2000 value
+        :param index: a value
         """
 
         percent = index / self.slider_density
-        val = round((1 - percent) * 4096)
+        val = round((1 - percent) * WindowingSlider.MAX_PIXEL_VALUE)
         return val
 
     def set_bars_from_window(self, window, level):
@@ -164,7 +166,7 @@ class WindowingSlider(QWidget):
         :param window: the window value of the preset
         :param level: the level value of the preset
         """
-        level = level + 1000
+        level = level + WindowingSlider.LEVEL_OFFSET
         self.update_bar(
             self.window_to_index(level - window * 0.5), top_bar=True)
         self.update_bar(
