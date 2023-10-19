@@ -75,7 +75,7 @@ class TestStructureTab:
         self.main_window = MainWindow()
         self.main_window.show()
 
-        self.dicom_view = self.main_window.dicom_single_view_widget
+        self.dicom_view = self.main_window.dicom_single_view
         self.new_polygons = {}
         slider_id = self.dicom_view.slider.value()
         self.curr_slice = self.dicom_view.patient_dict_container.get("dict_uid")[slider_id]

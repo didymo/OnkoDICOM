@@ -108,10 +108,11 @@ class WindowingSlider(QWidget):
         # Middle drag
         self.mouse_held = False
         self.selected_bar = "top"
-        self.middle_drag_bounds = {
-            "top_origin": 0,
-            "bottom_origin": 0
-        }
+        self.drag_start = 0
+        self.drag_upper_limit = 0
+        self.drag_lower_limit = 0
+        self.drag_upper_offset = 0
+        self.drag_lower_offset = 0
 
         # Test
         self.set_density_histogram(gen_random_histogram())
@@ -238,8 +239,11 @@ class WindowingSlider(QWidget):
             if index - self.top > 0 or index - self.bottom > 0:
                 self.selected_bar = "middle"
                 self.mouse_held = True
-                self.middle_drag_bounds['top_origin'] = self.top
-                self.middle_drag_bounds['bottom_origin'] = self.bottom
+                self.drag_start = index
+                self.drag_upper_limit = self.slider_density - self.top
+                self.drag_lower_limit = self.bottom
+                self.drag_upper_offset = self.top - index
+                self.drag_lower_offset = index - self.bottom
             return
 
         self.mouse_held = True
@@ -282,27 +286,29 @@ class WindowingSlider(QWidget):
 
         level = (top_bar + bottom_bar) * 0.5
         window = 2 * (bottom_bar - level)
-        level = level - 1000
+        level = level - WindowingSlider.LEVEL_OFFSET
 
         windowing_model_direct(level, window, send)
         if self.action_handler is not None:
             self.action_handler.update_views()
 
     def update_bar_position(self, event):
-        if self.selected_bar == "middle":
-            self.update_bar_middle_drag(event)
-            return
-
         # move selected bar to the closest valid position
         index = int(self.height_to_index(event.position().y()))
         if self.selected_bar == "top":
             if index <= self.bottom:
                 index = self.bottom + 1
             self.update_bar(index, top_bar=True)
-        else:
+        elif self.selected_bar == "bottom":
             if index >= self.top:
                 index = self.top - 1
             self.update_bar(index, top_bar=False)
+        else:
+            # middle drag
+            top_index = index + self.drag_upper_offset
+            bot_index = index - self.drag_lower_offset
+            self.update_bar(top_index, top_bar=True)
+            self.update_bar(bot_index, top_bar=False)
 
     def update_bar_middle_drag(self, event):
         """"""
