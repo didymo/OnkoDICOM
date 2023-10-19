@@ -74,7 +74,7 @@ def test_object():
 def test_one_view_handling(qtbot, test_object, init_config):
     test_object.main_window.show()
     test_object.main_window.action_handler.action_one_view.trigger()
-    assert isinstance(test_object.main_window.dicom_single_view_widget, DicomView) is True
+    assert isinstance(test_object.main_window.dicom_single_view, DicomView) is True
     assert test_object.main_window.dicom_view.currentWidget() == test_object.main_window.dicom_single_view_widget
 
 

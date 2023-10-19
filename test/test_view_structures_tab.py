@@ -153,7 +153,7 @@ def test_structure_tab_uncheck_checkboxes(test_object):
         del test_object.new_polygons[name]
 
         # Get the actual selected ROIs
-        selected_rois = test_object.main_window.dicom_single_view_widget.patient_dict_container.get("selected_rois")
+        selected_rois = test_object.main_window.dicom_single_view.patient_dict_container.get("selected_rois")
         selected_roi_names = []
         for selected_roi in selected_rois:
             selected_roi_names.append(test_object.rois[selected_roi]["name"])
