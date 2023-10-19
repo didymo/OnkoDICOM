@@ -5,6 +5,9 @@ from src.Model.CalculateImages import get_pixmaps
 from src.Model.ImageFusion import get_fused_window
 
 
+windowing_slider = None
+
+
 def windowing_model(text, init):
     """
     Function triggered when a window is selected from the menu.
@@ -12,8 +15,6 @@ def windowing_model(text, init):
     :param init: list of bool to determine which views are chosen
     """
     patient_dict_container = PatientDictContainer()
-    moving_dict_container = MovingDictContainer()
-    pt_ct_dict_container = PTCTDictContainer()
 
     # Get the values for window and level from the dict
     windowing_limits = patient_dict_container.get("dict_windowing")[text]
@@ -21,6 +22,21 @@ def windowing_model(text, init):
     # Set window and level to the new values
     window = windowing_limits[0]
     level = windowing_limits[1]
+
+    windowing_model_direct(level, window, init)
+
+
+def windowing_model_direct(level, window, init):
+    """
+    Function triggered when a window is selected from the menu,
+    or when the windowing slider bars are adjusted
+    :param level: The desired level
+    :param window: The desired window
+    :param init: list of bool to determine which views are chosen
+    """
+    patient_dict_container = PatientDictContainer()
+    moving_dict_container = MovingDictContainer()
+    pt_ct_dict_container = PTCTDictContainer()
 
     # Update the dictionary of pixmaps with the update window and
     # level values
@@ -72,3 +88,12 @@ def windowing_model(text, init):
         patient_dict_container.set("color_coronal", fusion_coronal)
         patient_dict_container.set("color_sagittal", fusion_sagittal)
         moving_dict_container.set("tfm", tfm)
+
+    # Update Slider
+    if windowing_slider is not None:
+        windowing_slider.set_bars_from_window(window, level)
+
+
+def set_windowing_slider(slider):
+    global windowing_slider
+    windowing_slider = slider

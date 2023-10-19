@@ -14,6 +14,7 @@ from src.Model.Anon import (
     _create_reidentification_spreadsheet,
     _trim_bracketing_single_quotes,
     anonymize,
+    anon_file_name,
 )
 
 
@@ -117,3 +118,11 @@ def test_create_hash_csv():
             os.chdir(orig_cwd_path)
     finally:
         os.chdir(orig_cwd_path)
+
+def test_anon_file_name():
+    hashed_patient_id = "./mybad\@:;filename$with%problematic~chara&ters"
+    file_name_hashed_patient_id = "__mybad_@__filename_with%problematic_chara_ters"
+    all_special_characters = ".!@#$%^&*()[]{};:,./<>?\|`~-=_+"
+    file_name_all_special_characters = "_!@#_%^__()[]{}___.______`_-=_+"
+    assert file_name_hashed_patient_id == anon_file_name(hashed_patient_id)
+    assert file_name_all_special_characters == anon_file_name(all_special_characters)

@@ -9,6 +9,7 @@ import uuid
 
 import pandas as pd
 import pydicom
+import re
 
 try:
     import pymedphys.experimental.pseudonymisation as pseudonymise
@@ -768,9 +769,8 @@ def anonymize(path, datasets, file_paths, rawdvh):
     else:
         # not bothering to check if the data itself was already pseudonymised.
         # if it was, just  apply (another round of) pseudonymisation.
-        hashed_patient_id = pseudonymise.pseudonymisation_dispatch["LO"](
-            original_p_id
-        ).replace("/", "")
+        hashed_patient_id = anon_file_name(pseudonymise.pseudonymisation_dispatch["LO"](
+            original_p_id))
         # hashed_patient_name = pseudonymise.pseudonymisation_dispatch[
         # "PN"](patient_name_in_dataset) changing the approach a bit with
         # pseudonymisation instead of using a hash of the patient name for
@@ -864,6 +864,28 @@ def anonymize(path, datasets, file_paths, rawdvh):
 
     return str(anonymised_patient_full_path)
 
+def anon_file_name(hashed_patient_id):
+    """
+    Validate the Anonymous File Name. 
+    Read and modify (if needed) the hashed_patient_id string into a valid string 
+    for file name (Linux and Windows) by replacing forbidden characters into an
+    _ (underscore)
+    
+    Parameters
+    ----------
+    hashed_patient_id : ``str``
+        The hashed id using to name the anon file
+    """
+    file_name = hashed_patient_id
+    # Avoid forbidden characters in directory names
+    file_name = re.sub('["<", ">" , ":", """, "/", "\" , "|", "?" , "*", "&", "~", "$", ";"]', "_", file_name)
+    file_name = file_name.replace("\\", "_")
+    # Avoid hidden directory
+    if file_name[0] == '.':
+        file_name_asList = list(file_name)
+        file_name_asList[0] = "_"
+        file_name = ''.join(file_name_asList)
+    return file_name
 
 def _export_anonymised_clinical_data(
         current_patient_id,
