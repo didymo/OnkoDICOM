@@ -1,23 +1,11 @@
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Windowing import windowing_model_direct, set_windowing_slider
 from PySide6.QtWidgets import QWidget, QLabel, QApplication, QGridLayout, QSizePolicy
 from PySide6.QtCharts import QChart, QChartView, QLineSeries, QHorizontalBarSeries, QBarSet
 from PySide6.QtGui import QPixmap, QPainter
 from PySide6 import QtCore
 from math import ceil
-
-from src.Model.Windowing import windowing_model_direct, set_windowing_slider
-
-import random
-
-
-def gen_random_histogram():
-    """
-    Temporary function to populate histogram
-    """
-    d = [0.5]
-    for n in range(0, 599):
-        d.append((d[-1] + random.random()) * random.random())
-    return d
+import numpy as np
 
 
 class WindowingSlider(QWidget):
@@ -38,9 +26,10 @@ class WindowingSlider(QWidget):
 
     SINGLETON = None
 
-    def __init__(self, width=50):
+    def __init__(self, dicom_view, width=50):
         """
         Initialise the slider
+        :param dicom_view: A DICOM View
         :param width: the fixed width of the widget
         """
 
@@ -49,6 +38,10 @@ class WindowingSlider(QWidget):
         if WindowingSlider.SINGLETON is None:
             WindowingSlider.SINGLETON = self
             set_windowing_slider(self)
+
+        self.set_dicom_view(dicom_view)
+        patient_dict_container = PatientDictContainer()
+        self.pixel_values = patient_dict_container.get("pixel_values")
 
         # Manage size of whole widget
         self.fixed_width = width
@@ -59,18 +52,18 @@ class WindowingSlider(QWidget):
         self.setFixedWidth(self.fixed_width)
 
         # Histogram
+        self.densities = None
         self.histogram_view = HistogramChart(self)
         self.histogram_view.windowing_slider = self
         self.histogram = QChart()
         self.histogram_view.setChart(self.histogram)
         self.histogram.setPlotArea(
-            QtCore.QRectF(0, 0, self.fixed_width, self.height()))
+            QtCore.QRectF(0, 0, self.fixed_width-10, self.height()))
 
         self.histogram_view.resize(self.fixed_width, self.height())
         self.histogram_view.setMouseTracking(True)
         self.histogram_view.viewport().installEventFilter(self)
 
-        self.density = QLineSeries()
         self.slider_density = int(self.height() / 3)
 
         # Create sliders
@@ -85,6 +78,7 @@ class WindowingSlider(QWidget):
             self.sliders.append(self.slider_bars[-1])
         self.histogram.addSeries(self.sliders)
         self.histogram.zoom(2)  # at default zoom bars don't fill the chart
+        self.histogram.addSeries(self.density)
 
         # Layout
         self.layout = QGridLayout()
@@ -96,8 +90,6 @@ class WindowingSlider(QWidget):
         self.bottom = 0
 
         # Get the values for window and level from the dict
-        patient_dict_container = PatientDictContainer()
-        print(patient_dict_container.get("dict_windowing"))  # testing
         windowing_limits = patient_dict_container.get("dict_windowing")['Normal']
 
         # Set window and level to the new values
@@ -114,8 +106,9 @@ class WindowingSlider(QWidget):
         self.drag_upper_offset = 0
         self.drag_lower_offset = 0
 
-        # Test
-        self.set_density_histogram(gen_random_histogram())
+        # Generate the histogram
+        self.initialise_density_histogram()
+        self.update_density_histogram()
 
     def set_action_handler(self, action_handler):
         """
@@ -125,9 +118,14 @@ class WindowingSlider(QWidget):
         """
         self.action_handler = action_handler
 
+    def set_dicom_view(self, dicom_view):
+        self.dicom_view = dicom_view
+        self.slice_slider = dicom_view.slider
+        self.dicom_view.windowing_slider = self
+
     def resizeEvent(self, event):
         self.histogram.setPlotArea(
-            QtCore.QRectF(0, 0, self.fixed_width, event.size().height()))
+            QtCore.QRectF(0, 0, self.fixed_width-10, event.size().height()))
 
     def height_to_index(self, pos):
         """
@@ -179,11 +177,48 @@ class WindowingSlider(QWidget):
         Index 0 is for the lowest density.
         :param densities: a list of values from 0-1
         """
-
+        self.histogram.removeSeries(self.density)
+        self.density = QLineSeries()
         self.density.setColor("grey")
         for i in range(0, len(densities)):
             self.density.append(2-densities[i], i)
         self.histogram.addSeries(self.density)
+
+    def update_density_histogram(self):
+        """
+        Updates the histogram display.
+        """
+        slice_index = self.slice_slider.value()
+        histogram_values = self.densities[slice_index]
+        self.set_density_histogram(histogram_values)
+
+    def initialise_density_histogram(self):
+        """
+        Initialises the density histograms.
+        """
+        slices = len(self.pixel_values)
+        self.densities = [[]] * slices
+        for s in range(slices):
+            self.densities[s] = [0] * WindowingSlider.MAX_PIXEL_VALUE
+
+            # Count each pixel value
+            pixels_flat = np.array(self.pixel_values[s]).flat
+            for pixel in pixels_flat:
+                # Clamp value between 0 and MAX_PIXEL_VALUE
+                p = min(pixel, WindowingSlider.MAX_PIXEL_VALUE)
+                p = max(p, 0)
+                p = round(p)
+                self.densities[s][p] += 1
+            max_value = max(self.densities[s])
+            min_value = min(self.densities[s])
+            avg_value = np.average(self.densities[s])
+
+            # Normalise values
+            for i in range(WindowingSlider.MAX_PIXEL_VALUE):
+                self.densities[s][i] = self.densities[s][i] / max_value * 10000
+                self.densities[s][i] = min(self.densities[s][i], 1)
+                self.densities[s][i] = max(self.densities[s][i], 0)
+        self.update_density_histogram()
 
     def update_bar(self, index, top_bar=True):
         """

@@ -165,7 +165,7 @@ class UIMainWindow:
             roi_color=roi_color_dict, iso_color=iso_color_dict,
             cut_line_color=QtGui.QColor(0, 0, 255))
         self.three_dimension_view = DicomView3D()
-        self.windowing_slider = WindowingSlider()
+        self.windowing_slider = WindowingSlider(self.dicom_single_view)
 
         # Rescale the size of the scenes inside the 3-slice views
         self.dicom_axial_view.zoom = INITIAL_FOUR_VIEW_ZOOM
