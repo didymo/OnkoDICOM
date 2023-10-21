@@ -34,6 +34,7 @@ class DicomView(QtWidgets.QWidget):
         self.vertical_view = None
         self.cut_lines_color = cut_line_color
         self.dicom_view_layout = QtWidgets.QHBoxLayout()
+        self.windowing_slider = None
 
         # Create components
         self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
@@ -108,6 +109,8 @@ class DicomView(QtWidgets.QWidget):
         if self.horizontal_view is not None and self.vertical_view is not None:
             self.horizontal_view.update_view()
             self.vertical_view.update_view()
+        if self.windowing_slider is not None:
+            self.windowing_slider.update_density_histogram()
 
     def update_view(self, zoom_change=False):
         """
