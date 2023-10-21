@@ -208,7 +208,8 @@ class WindowingSlider(QWidget):
                 p = min(pixel, WindowingSlider.MAX_PIXEL_VALUE)
                 p = max(p, 0)
                 p = round(p)
-                self.densities[s][p] += 1
+                if p>=0 and p < WindowingSlider.MAX_PIXEL_VALUE:
+                    self.densities[s][p] += 1
             max_value = max(self.densities[s])
             min_value = min(self.densities[s])
             avg_value = np.average(self.densities[s])
