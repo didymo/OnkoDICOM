@@ -61,7 +61,7 @@ class WindowingSlider(QWidget):
             QtCore.QRectF(0, 0, self.fixed_width-10, self.height()))
 
         self.histogram_view.resize(self.fixed_width, self.height())
-        #self.histogram_view.setMouseTracking(True)
+        self.histogram_view.setMouseTracking(True)
         self.histogram_view.viewport().installEventFilter(self)
 
         self.slider_density = int(self.height() / 3)
