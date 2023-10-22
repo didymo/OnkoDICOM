@@ -33,7 +33,7 @@ class WindowingSlider(QWidget):
         :param width: the fixed width of the widget
         """
 
-        super().__init__()
+        super(WindowingSlider,self).__init__()
         self.action_handler = None
         if WindowingSlider.SINGLETON is None:
             WindowingSlider.SINGLETON = self
@@ -61,7 +61,7 @@ class WindowingSlider(QWidget):
             QtCore.QRectF(0, 0, self.fixed_width-10, self.height()))
 
         self.histogram_view.resize(self.fixed_width, self.height())
-        self.histogram_view.setMouseTracking(True)
+        #self.histogram_view.setMouseTracking(True)
         self.histogram_view.viewport().installEventFilter(self)
 
         self.slider_density = int(self.height() / 3)
@@ -359,8 +359,9 @@ class HistogramChart(QChartView):
     WindowingSlider class.
     """
 
-    def __int__(self, parent):
+    def __init__(self, parent):
         self.windowing_slider = parent
+        super().__init__()
 
     def mousePressEvent(self, event):
         self.windowing_slider.mouse_press(event)
