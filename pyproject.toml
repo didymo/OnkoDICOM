@@ -29,7 +29,7 @@ fuzzywuzzy = "*"
 PyWavelets = "1.3.0"
 networkx = "*"
 # pymedphys has reinstated psuedonymisation in 0.39
-pymedphys = "^0.39.3" 
+pymedphys = { extras = ["user"], version =  "^0.39.3" }
 # until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
 # pyradiomics = [
 #    { version = "==3.0.1", python = "<3.10"},
