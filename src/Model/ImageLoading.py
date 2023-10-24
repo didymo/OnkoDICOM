@@ -49,6 +49,11 @@ allowed_classes = {
         "name": "rtplan",
         "sliceable": False
     },
+    # RT Ion Plan
+    "1.2.840.10008.5.1.4.1.1.481.8": {
+        "name": "rtplan",
+        "sliceable": False
+    },
     # RT Image
     "1.2.840.10008.5.1.4.1.1.481.1": {
         "name": "rtimage",
