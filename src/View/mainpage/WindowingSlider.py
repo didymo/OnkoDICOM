@@ -1,12 +1,28 @@
-from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.Windowing import windowing_model_direct, set_windowing_slider
-from PySide6.QtWidgets import QWidget, QLabel, QApplication, QGridLayout, QSizePolicy
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QHorizontalBarSeries, QBarSet
-from PySide6.QtGui import QPixmap, QPainter
-from PySide6 import QtCore
-from math import ceil
 import numpy as np
 
+from contextlib import contextmanager
+from math import ceil
+
+from PySide6.QtWidgets import QWidget, QLabel, QApplication, QGridLayout, QSizePolicy
+from PySide6.QtCharts import QChart, QChartView, QLineSeries, QHorizontalBarSeries, QBarSet
+from PySide6.QtGui import QCursor, QPixmap, QPainter, Qt
+from PySide6 import QtCore
+
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Windowing import windowing_model_direct, set_windowing_slider
+
+@contextmanager
+def wait_cursor():
+    """context for wrapping a long running function 
+    with wait_cursor():
+        # do lengthy process
+        pass
+    """
+    try:
+        QApplication.setOverrideCursor(Qt.BusyCursor)
+        yield
+    finally:
+        QApplication.restoreOverrideCursor()
 
 class WindowingSlider(QWidget):
     """
@@ -324,9 +340,12 @@ class WindowingSlider(QWidget):
         window = 2 * (bottom_bar - level)
         level = level - WindowingSlider.LEVEL_OFFSET
 
-        windowing_model_direct(level, window, send)
-        if self.action_handler is not None:
-            self.action_handler.update_views()
+        with wait_cursor():
+            windowing_model_direct(level, window, send)
+            if self.action_handler is not None:    
+                self.action_handler.update_views()
+            pass
+
 
     def update_bar_position(self, event):
         # move selected bar to the closest valid position

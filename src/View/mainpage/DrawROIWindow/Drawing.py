@@ -317,7 +317,11 @@ class Drawing(QtWidgets.QGraphicsScene):
             for j in range(DEFAULT_WINDOW_SIZE):
                 x, y = linear_transform(
                     i, j, self.rows, self.cols)
-                self.values.append(self.data[x][y])
+                if (x <self.cols and y < self.rows and x>=0 and y>=0):
+                    self.values.append(self.data[x][y])
+                else:
+                    msg = f"x {x} or y {y} value out of range while drawing, cols={self.cols} rows={self.rows}"
+                    logging.warning(msg)
 
     def refresh_image(self):
         """
@@ -326,9 +330,13 @@ class Drawing(QtWidgets.QGraphicsScene):
         """
         if self.q_pixmaps:
             self.removeItem(self.q_pixmaps)
+        if (self.q_image is None):
+            logging.error("Self.q_image is Null in Drawing.py refresh_image(), resetting to img")
+            self.q_image = self.img.toImage()
         self.q_pixmaps = QtWidgets.QGraphicsPixmapItem(
             QtGui.QPixmap.fromImage(self.q_image))
         self.addItem(self.q_pixmaps)
+            
 
     def remove_pixels_within_circle(self, clicked_x, clicked_y):
         """
