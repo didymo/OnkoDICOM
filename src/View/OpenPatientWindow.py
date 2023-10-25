@@ -556,6 +556,13 @@ class UIOpenPatientWindow(object):
             QMessageBox.about(self.progress_window, "Unable to open selection",
                               "Selected files cannot be opened as they contain"
                               " unsupported DICOM classes.")
+        elif isinstance(exception[1],ImageLoading.NotInteroperableWithOnkoDICOMError):
+            msg = "Selected files cannot be opened as they are missing values "\
+                  "for DICOM elements needed by OnkoDICOM: "
+            msg += repr(exception[1])
+            QMessageBox.about(self.progress_window, "Unable to open selection",
+                              msg
+                              )
             self.progress_window.close()
 
     def get_checked_nodes(self, root):

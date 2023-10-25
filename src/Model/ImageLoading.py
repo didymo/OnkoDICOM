@@ -19,13 +19,15 @@ not the case, however this alternative function promotes scalability and
 durability of the process).
 """
 import collections
+import logging
 import math
 import re
+import os
 from multiprocessing import Queue, Process
 
 import numpy as np
 from dicompylercore import dvhcalc
-from pydicom import dcmread
+from pydicom import dcmread, DataElement
 from pydicom.errors import InvalidDicomError
 
 allowed_classes = {
@@ -81,13 +83,40 @@ allowed_classes = {
     }
 }
 
+all_iods_required_attributes = [ "StudyID" ]
+
+iod_specific_required_attributes = {
+    # CT must have SliceLocation
+    "1.2.840.10008.5.1.4.1.1.2": [ "SliceLocation" ],
+}
 
 class NotRTSetError(Exception):
+    """Error to indicate that the types of data required for the intended use are not present
+
+    Args:
+        Exception (_type_): _description_
+    """
     pass
 
 
 class NotAllowedClassError(Exception):
+    """Error to indicate that the SOP Class of the object is not supported by OnkoDICOM
+
+    Args:
+        Exception (_type_): _description_
+    """
     pass
+
+class NotInteroperableWithOnkoDICOMError(Exception):
+    """OnkoDICOM requires certain DICOM elements/values that
+    are not DICOM Type 1 (required).  
+    For data that lack said elements (DICOM Type 3) 
+    or lack values in those elements (DICOM Type 2)
+    raise an exception/error to indicate the data is lacking 
+
+    Args:
+        Exception (_type_): _description_
+    """
 
 
 def get_datasets(filepath_list, file_type=None):
@@ -116,6 +145,17 @@ def get_datasets(filepath_list, file_type=None):
         else:
             if read_file.SOPClassUID in allowed_classes:
                 allowed_class = allowed_classes[read_file.SOPClassUID]
+                is_interoperable = True
+                is_missing = missing_interop_elements(read_file)
+                is_interoperable = len(is_missing) == 0
+                if not is_interoperable:
+                    missing_elements = ', '.join(is_missing)
+                    error_message = "Interoperability failure:"
+                    error_message += f"<br>{file} "
+                    error_message += "<br>is missing " + missing_elements
+                    error_message += f"<br>needed for SOP Class {read_file.SOPClassUID}"
+                    logging.error(error_message)
+                    raise NotInteroperableWithOnkoDICOMError(error_message)
                 if allowed_class["sliceable"]:
                     slice_name = slice_count
                     slice_count += 1
@@ -143,6 +183,29 @@ def get_datasets(filepath_list, file_type=None):
         image_stack_sort(read_data_dict, file_names_dict)
 
     return sorted_read_data_dict, sorted_file_names_dict
+
+
+def missing_interop_elements(read_file) -> bool:
+    """Check for element values that are missing but needed by OnkoDICOM
+
+    Args:
+        read_file (pydicom.DataSet): DICOM Object/dataset
+
+    Returns:
+        list: list of attribute names whose values are needed by OnkoDICOM
+         but not present in the data
+    """
+    is_missing = []
+    for onko_required_attribute in all_iods_required_attributes:
+        if (not hasattr(read_file, onko_required_attribute)
+            or read_file[onko_required_attribute].is_empty):
+            is_missing.append(onko_required_attribute)
+    if read_file.SOPClassUID in iod_specific_required_attributes:
+        for onko_required_attribute in iod_specific_required_attributes[read_file.SOPClassUID]:
+            if (not hasattr(read_file, onko_required_attribute)
+                            or read_file[onko_required_attribute].is_empty):
+                is_missing.append(onko_required_attribute)
+    return is_missing
 
 
 def img_stack_displacement(orientation, position):
@@ -190,6 +253,13 @@ def get_dict_sort_on_displacement(item):
     orientation = img_dataset.ImageOrientationPatient
     position = img_dataset.ImagePositionPatient
     sort_key = img_stack_displacement(orientation, position)
+    # SliceLocation is a type 3 attribute (optional), but it is relied upon elsewhere in OnkoDICOM
+    # So if it isn't present, the displacement along the stack (in mm, rounded here to mm precision)
+    #   is a reasonable value
+    if not hasattr(img_dataset,"SliceLocation"):
+        slice_location = f"{round(sort_key)}"
+        elem = DataElement(0x00201041, 'DS', slice_location)
+        img_dataset.add(elem)
 
     return sort_key
 
