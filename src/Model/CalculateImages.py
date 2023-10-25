@@ -115,7 +115,11 @@ def scaled_pixmap(np_pixels, window, level, width, height,
     :return: pixmap, a QPixmap of the slice
     """
 
-    # Rescale pixel arrays
+    ''' The numpy pixel array is converted to a signed int before any additional operations are applied.
+    This is due to the pydicom.dataset.Dataset.convert_pixel_data() function returning a numpy array of dtype uint16.
+    The dtype is dependent on the DICOM elements: BitsAllocated and PixelRepresentation.
+    dtype could theoretically return any combination of unsigned/signed 1, 8, 16, 32, or 64 bit values.
+    Undefined behaviour when np_pixels is any type other than uint16 or int16. '''
     np_pixels = np_pixels.astype(np.int16)
     if window != 0 and level != 0:
         # Transformation applied to each individual pixel to unique
