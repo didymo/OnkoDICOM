@@ -22,6 +22,7 @@ import collections
 import logging
 import math
 import re
+import os
 from multiprocessing import Queue, Process
 
 import numpy as np
@@ -85,8 +86,8 @@ allowed_classes = {
 all_iods_required_attributes = [ "StudyID" ]
 
 iod_specific_required_attributes = {
-    # # CT must have SliceLocation
-    # "1.2.840.10008.5.1.4.1.1.2": [ "SliceLocation" ],
+    # CT must have SliceLocation
+    "1.2.840.10008.5.1.4.1.1.2": [ "SliceLocation" ],
 }
 
 class NotRTSetError(Exception):
@@ -145,18 +146,14 @@ def get_datasets(filepath_list, file_type=None):
             if read_file.SOPClassUID in allowed_classes:
                 allowed_class = allowed_classes[read_file.SOPClassUID]
                 is_interoperable = True
-                is_missing = []
-                for onko_required_attribute in all_iods_required_attributes:
-                    if not hasattr(read_file, onko_required_attribute):
-                        is_interoperable = False
-                        is_missing.append(onko_required_attribute)
-                if read_file.SOPClassUID in iod_specific_required_attributes:
-                    for onko_required_attribute in iod_specific_required_attributes[read_file.SOPClassUID]:
-                        if not hasattr(read_file, onko_required_attribute):
-                            is_interoperable = False
-                            is_missing.append(onko_required_attribute)
+                is_missing = missing_interop_elements(read_file)
+                is_interoperable = len(is_missing) == 0
                 if not is_interoperable:
-                    error_message = f"Interoperability failure: {file} of SOP Class {read_file.SOPClassUID} is missing {', '.join(is_missing)}"
+                    missing_elements = ', '.join(is_missing)
+                    error_message = "Interoperability failure:"
+                    error_message += f"<br>{file} "
+                    error_message += "<br>is missing " + missing_elements
+                    error_message += f"<br>needed for SOP Class {read_file.SOPClassUID}"
                     logging.error(error_message)
                     raise NotInteroperableWithOnkoDICOMError(error_message)
                 if allowed_class["sliceable"]:
@@ -186,6 +183,29 @@ def get_datasets(filepath_list, file_type=None):
         image_stack_sort(read_data_dict, file_names_dict)
 
     return sorted_read_data_dict, sorted_file_names_dict
+
+
+def missing_interop_elements(read_file) -> bool:
+    """Check for element values that are missing but needed by OnkoDICOM
+
+    Args:
+        read_file (pydicom.DataSet): DICOM Object/dataset
+
+    Returns:
+        list: list of attribute names whose values are needed by OnkoDICOM
+         but not present in the data
+    """
+    is_missing = []
+    for onko_required_attribute in all_iods_required_attributes:
+        if (not hasattr(read_file, onko_required_attribute)
+            or read_file[onko_required_attribute].is_empty):
+            is_missing.append(onko_required_attribute)
+    if read_file.SOPClassUID in iod_specific_required_attributes:
+        for onko_required_attribute in iod_specific_required_attributes[read_file.SOPClassUID]:
+            if (not hasattr(read_file, onko_required_attribute)
+                            or read_file[onko_required_attribute].is_empty):
+                is_missing.append(onko_required_attribute)
+    return is_missing
 
 
 def img_stack_displacement(orientation, position):
