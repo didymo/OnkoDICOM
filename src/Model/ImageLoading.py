@@ -22,7 +22,7 @@ import collections
 import logging
 import math
 import re
-import os
+
 from multiprocessing import Queue, Process
 
 import numpy as np
@@ -86,8 +86,8 @@ allowed_classes = {
 all_iods_required_attributes = [ "StudyID" ]
 
 iod_specific_required_attributes = {
-    # CT must have SliceLocation
-    "1.2.840.10008.5.1.4.1.1.2": [ "SliceLocation" ],
+    # # CT must have SliceLocation
+    # "1.2.840.10008.5.1.4.1.1.2": [ "SliceLocation" ],
 }
 
 class NotRTSetError(Exception):
