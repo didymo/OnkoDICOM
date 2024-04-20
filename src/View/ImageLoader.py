@@ -3,10 +3,10 @@ import platform
 from pathlib import Path
 
 from PySide6 import QtCore
-from pydicom import dcmread
+from pydicom import dcmread, dcmwrite
 
 from src.Model import ImageLoading
-from src.Model.CalculateDVHs import dvh2rtdose, rtdose2dvh
+from src.Model.CalculateDVHs import dvh2rtdose, rtdose2dvh, create_initial_rtdose_from_ct
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.xrRtstruct import create_initial_rtss_from_cr
@@ -102,6 +102,9 @@ class ImageLoader(QtCore.QObject):
             patient_dict_container.set("raw_contour", dict_raw_contour_data)
             patient_dict_container.set("num_points", dict_numpoints)
             patient_dict_container.set("pixluts", dict_pixluts)
+
+            if 'rtdose' not in file_names_dict:
+                self.load_temp_rtdose(path,progress_callback,interrupt_flag)
 
             if 'rtdose' in file_names_dict:
                 # Check to see if DVH data exists in the RT Dose. If
@@ -221,6 +224,59 @@ class ImageLoader(QtCore.QObject):
         ordered_dict = DicomTree(None).dataset_to_dict(rtss)
         patient_dict_container.set("dict_dicom_tree_rtss", ordered_dict)
         patient_dict_container.set("selected_rois", [])
+
+
+    def load_temp_rtdose(self, path, progress_callback, interrupt_flag):
+        """
+        Generate a temporary rtdose and load its data into
+        PatientDictContainer
+        :param path: str. The common root folder of all DICOM files.
+        :param progress_callback: A signal that receives the current
+        progress of the loading.
+        :param interrupt_flag: A threading.Event() object that tells the
+        function to stop loading.
+        """
+        progress_callback.emit(("Generating temporary rtdose...", 20))
+        patient_dict_container = PatientDictContainer()
+        rtdose_path = Path(path).joinpath('rtdose.dcm')
+        if patient_dict_container.dataset[0].Modality == 'CR':
+            print("Unable to generate temporary RT Dose based on CR image")
+            return False
+        
+        uid_list = ImageLoading.get_image_uid_list(
+            patient_dict_container.dataset)
+
+        
+
+        rtdose = create_initial_rtdose_from_ct(patient_dict_container.dataset[0], rtdose_path, uid_list)
+
+        if interrupt_flag.is_set():  # Stop loading.
+            print("stopped")
+            return False
+
+        progress_callback.emit(("Loading temporary rtdose...", 50))
+        # Set ROIs
+        
+        # rois = ImageLoading.get_roi_info(rtdose)
+        # patient_dict_container.set("rois", rois)
+
+        # Set pixluts
+        dict_pixluts = ImageLoading.get_pixluts(patient_dict_container.dataset)
+        patient_dict_container.set("pixluts", dict_pixluts)
+
+        # write the half baked RT Dose to file so future business logic will find it.
+        dcmwrite(rtdose_path,rtdose,False)
+        # Add RT Dose file path and dataset to patient dict container
+        patient_dict_container.filepaths['rtdose'] = rtdose_path
+        patient_dict_container.dataset['rtdose'] = rtdose
+
+        # Set some patient dict container attributes
+        patient_dict_container.set("file_rtdose", rtdose_path)
+        patient_dict_container.set("dataset_rtdose", rtdose)
+        ordered_dict = DicomTree(None).dataset_to_dict(rtdose)
+        patient_dict_container.set("dict_dicom_tree_rtdose", ordered_dict)
+        # patient_dict_container.set("selected_rois", [])
+
 
     def update_calc_dvh(self, advice):
         self.advised_calc_dvh = True

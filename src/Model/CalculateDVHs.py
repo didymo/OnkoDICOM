@@ -1,14 +1,20 @@
+import datetime
 import multiprocessing
 
-from dicompylercore.dvh import DVH
 import numpy as np
 import pandas as pd
+import pydicom
+
+from copy import deepcopy
+from pathlib import Path
+from dicompylercore.dvh import DVH
 from dicompylercore import dvhcalc
-from pydicom.dataset import Dataset
+from pydicom.dataset import Dataset, FileMetaDataset, validate_file_meta
 from pydicom.sequence import Sequence
 from pydicom.tag import Tag
+from pydicom.uid import generate_uid, ImplicitVRLittleEndian
 from src.Model.PatientDictContainer import PatientDictContainer
-
+from src import _version
 
 def get_roi_info(ds_rtss):
     """
@@ -316,3 +322,192 @@ def rtdose2dvh():
             pass
 
     return dvh_seq
+
+
+def create_initial_rtdose_from_ct(img_ds: pydicom.dataset.Dataset,
+                                filepath: Path,
+                                uid_list: list) -> pydicom.dataset.FileDataset:
+    """
+    Pre-populate an RT Dose  based on the volumetric image datasets.
+    
+    Parameters
+    ----------
+    img_ds : pydicom.dataset.Dataset
+        A CT or MR image that the RT Dose will be registered to
+    uid_list : list
+        list of UIDs (as strings) of the entire image volume that the
+        RT Dose references
+    filepath: str
+        A path where the RTDose will be saved
+    Returns
+    -------
+    pydicom.dataset.FileDataset
+        the half-baked RT Dose, ready for DVH calculations
+    Raises
+    ------
+    ValueError
+        [description]
+    """
+
+    if img_ds is None:
+        raise ValueError("No CT or MR data to initialize RT Dose")
+
+    now = datetime.datetime.now()
+    dicom_date = now.strftime("%Y%m%d")
+    dicom_time = now.strftime("%H%M")
+    read_data_dict = PatientDictContainer().dataset
+
+    new_image_dict = {key: value for (key, value)
+                      in read_data_dict.items()
+                      if str(key).isnumeric()}
+    
+    displacement_dict = dict()
+
+    for i in range(1,len(new_image_dict)-1):
+        delta= np.array(list(map(float,new_image_dict[i].ImagePositionPatient))) - np.array(list(map(float,new_image_dict[i-1].ImagePositionPatient)))
+        displacement_dict[i] = delta.dot(delta)
+
+    # File Meta module
+    file_meta = FileMetaDataset()
+    file_meta.FileMetaInformationGroupLength = 238
+    file_meta.FileMetaInformationVersion = b'\x00\x01'
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
+    file_meta.MediaStorageSOPInstanceUID = generate_uid()
+    file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
+    validate_file_meta(file_meta)
+
+    rt_dose = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128,
+                                        file_meta=file_meta)
+    rt_dose.fix_meta_info()
+
+    top_level_tags_to_copy: list = [Tag("PatientName"),
+                                    Tag("PatientID"),
+                                    Tag("PatientBirthDate"),
+                                    Tag("PatientSex"),
+                                    Tag("StudyDate"),
+                                    Tag("StudyTime"),
+                                    Tag("AccessionNumber"),
+                                    Tag("ReferringPhysicianName"),
+                                    Tag("StudyDescription"),
+                                    Tag("StudyInstanceUID"),
+                                    Tag("StudyID"),
+                                    Tag("RequestingService"),
+                                    Tag("PatientAge"),
+                                    Tag("PatientSize"),
+                                    Tag("PatientWeight"),
+                                    Tag("MedicalAlerts"),
+                                    Tag("Allergies"),
+                                    Tag("PregnancyStatus"),
+                                    Tag("FrameOfReferenceUID"),
+                                    Tag("PositionReferenceIndicator"),
+                                    Tag("InstitutionName"),
+                                    Tag("InstitutionAddress"),
+                                    Tag("OperatorsName")
+                                    ]
+
+    for tag in top_level_tags_to_copy:
+        if tag in img_ds:
+            rt_dose[tag] = deepcopy(img_ds[tag])
+
+    if rt_dose.StudyInstanceUID == "":
+        raise ValueError(
+            "The given dataset is missing a required tag 'StudyInstanceUID'")
+
+    # RT Series Module
+    rt_dose.SeriesDate = dicom_date
+    rt_dose.SeriesTime = dicom_time
+    rt_dose.Modality = "RTDOSE"
+    rt_dose.OperatorsName = ""
+    rt_dose.SeriesInstanceUID = pydicom.uid.generate_uid()
+    rt_dose.SeriesNumber = "1"
+
+    # General Equipment Module
+    rt_dose.Manufacturer = "OnkoDICOM"
+    rt_dose.ManufacturerModelName = "OnkoDICOM"
+    # Pull this off the top level version for OnkoDICOM
+    rt_dose.SoftwareVersions = _version.__version__
+
+    # Frame of Reference module
+    rt_dose.FrameOfReferenceUID = img_ds.FrameOfReferenceUID
+    rt_dose.PositionReferenceIndicator = ""
+
+    # RT Dose  module
+
+    rt_dose.DoseComment = "OnkoDICOM rtdose of " + rt_dose.StudyID
+    rt_dose.ContentDate = dicom_date
+    rt_dose.ContentTime = dicom_time
+    rt_dose.SamplesPerPixel = 1
+    rt_dose.PhotometricInterpretation = "MONOCHROME2"
+    rt_dose.BitsAllocated = 16
+    rt_dose.BitsStored = rt_dose.BitsAllocated
+    rt_dose.HighBit = rt_dose.BitsStored - 1
+    rt_dose.DoseUnits = "Gy"
+    rt_dose.DoseType = "PHYSICAL"
+    rt_dose.DoseSummationType = "PLAN"
+    grid_frame_offset_list = [0.0]
+    grid_frame_offset_list.extend(displacement_dict.values())
+    rt_dose.GridFrameOffsetVector = grid_frame_offset_list  # need to calculate this based on the volumetric image data stack
+    rt_dose.DoseGridScaling = str(1.0/256.0)  # The units are gray, and we have 16 bits.  Use the top 8 bits for up to 256 Gy
+    # and leave the bottom 8 bits for fractional representation down to ~ 0.25 cGy.
+
+    # MultiFrame Module
+    rt_dose.NumberOfFrames = len(new_image_dict) # use same number as volumetric image slices
+    rt_dose.FrameIncrementPointer = 0x3004000C
+
+    # Image Pixel Module (not including elements already specified above for RT Dose module)
+    rt_dose.Rows = img_ds.Rows
+    rt_dose.Columns = img_ds.Columns
+    rt_dose.PixelData = bytes(2 * rt_dose.Rows * rt_dose.Columns * rt_dose.NumberOfFrames)
+
+    # Image Plane Module
+    rt_dose.ImagePositionPatient = new_image_dict[0].ImagePositionPatient
+    rt_dose.ImageOrientationPatient = img_ds.ImageOrientationPatient
+    rt_dose.PixelSpacing = img_ds.PixelSpacing
+    rt_dose.PixelRepresentation = 0
+
+    # # Contour Image Sequence
+    # contour_image_sequence = []
+    # for uid in uid_list:
+    #     contour_image_sequence_item = pydicom.dataset.Dataset()
+    #     contour_image_sequence_item.ReferencedSOPClassUID = img_ds.SOPClassUID
+    #     contour_image_sequence_item.ReferencedSOPInstanceUID = uid
+    #     contour_image_sequence.append(contour_image_sequence_item)
+
+    # # RT Referenced Series Sequence
+    # rt_referenced_series = pydicom.dataset.Dataset()
+    # rt_referenced_series.SeriesInstanceUID = img_ds.SeriesInstanceUID
+    # rt_referenced_series.ContourImageSequence = contour_image_sequence
+    # rt_referenced_series_sequence = [rt_referenced_series]
+
+    # # RT Referenced Study Sequence
+    # rt_referenced_study = pydicom.dataset.Dataset()
+    # rt_referenced_study.ReferencedSOPClassUID = "1.2.840.10008.3.1.2.3.1"
+    # rt_referenced_study.ReferencedSOPInstanceUID = img_ds.StudyInstanceUID
+    # rt_referenced_study.RTReferencedSeriesSequence = \
+    #     rt_referenced_series_sequence
+    # rt_referenced_study_sequence = [rt_referenced_study]
+
+    # # RT Referenced Frame Of Reference Sequence, Structure Set Module
+    # referenced_frame_of_reference = pydicom.dataset.Dataset()
+    # referenced_frame_of_reference.FrameOfReferenceUID = \
+    #     img_ds.FrameOfReferenceUID
+    # referenced_frame_of_reference.RTReferencedStudySequence = \
+    #     rt_referenced_study_sequence
+    # rt_dose.ReferencedFrameOfReferenceSequence = [referenced_frame_of_reference]
+
+    # # Sequence modules
+    # rt_dose.StructureSetROISequence = []
+    # rt_dose.ROIContourSequence = []
+    # rt_dose.RTROIObservationsSequence = []
+
+    # SOP Common module
+    rt_dose.SOPClassUID = rt_dose.file_meta.MediaStorageSOPClassUID
+    rt_dose.SOPInstanceUID = rt_dose.file_meta.MediaStorageSOPInstanceUID
+
+    # Add required elements
+    rt_dose.InstanceCreationDate = dicom_date
+    rt_dose.InstanceCreationTime = dicom_time
+
+    rt_dose.is_little_endian = True
+    rt_dose.is_implicit_VR = True
+    return rt_dose
