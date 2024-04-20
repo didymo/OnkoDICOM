@@ -60,8 +60,14 @@ def force_link(frame_overwrite, file_path, dicom_array_in):
     new_id = ""
     new_study_id = ""
     for dicom_file in dicom:
-        if dicom_file.FrameOfReferenceUID == frame_overwrite and \
-                dicom_file.SOPClassUID == src.dicom_constants.CT_IMAGE:
+        if (
+            (dicom_file.FrameOfReferenceUID == frame_overwrite)
+            and
+            (dicom_file.SOPClassUID == src.dicom_constants.CT_IMAGE
+            or
+            dicom_file.SOPClassUID == src.dicom_constants.MR_IMAGE)
+            ):
+
             new_id = dicom_file.FrameOfReferenceUID
             new_study_id = dicom_file.StudyInstanceUID
             break
