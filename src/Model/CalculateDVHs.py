@@ -1,4 +1,5 @@
 import datetime
+import math
 import multiprocessing
 
 import numpy as np
@@ -365,7 +366,7 @@ def create_initial_rtdose_from_ct(img_ds: pydicom.dataset.Dataset,
 
     for i in range(1,len(new_image_dict)-1):
         delta= np.array(list(map(float,new_image_dict[i].ImagePositionPatient))) - np.array(list(map(float,new_image_dict[i-1].ImagePositionPatient)))
-        displacement_dict[i] = delta.dot(delta)
+        displacement_dict[i] = math.sqrt(delta.dot(delta))
 
     # File Meta module
     file_meta = FileMetaDataset()
@@ -444,6 +445,7 @@ def create_initial_rtdose_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_dose.DoseUnits = "Gy"
     rt_dose.DoseType = "PHYSICAL"
     rt_dose.DoseSummationType = "PLAN"
+    # assuming matching the volumetric image slice spacing
     grid_frame_offset_list = [0.0]
     grid_frame_offset_list.extend(displacement_dict.values())
     rt_dose.GridFrameOffsetVector = grid_frame_offset_list  # need to calculate this based on the volumetric image data stack
@@ -454,16 +456,43 @@ def create_initial_rtdose_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_dose.NumberOfFrames = len(new_image_dict) # use same number as volumetric image slices
     rt_dose.FrameIncrementPointer = 0x3004000C
 
-    # Image Pixel Module (not including elements already specified above for RT Dose module)
-    rt_dose.Rows = img_ds.Rows
-    rt_dose.Columns = img_ds.Columns
-    rt_dose.PixelData = bytes(2 * rt_dose.Rows * rt_dose.Columns * rt_dose.NumberOfFrames)
-
     # Image Plane Module
     rt_dose.ImagePositionPatient = new_image_dict[0].ImagePositionPatient
     rt_dose.ImageOrientationPatient = img_ds.ImageOrientationPatient
-    rt_dose.PixelSpacing = img_ds.PixelSpacing
     rt_dose.PixelRepresentation = 0
+
+    # The first pass was to use the same pixel spacing and grid size as the image data
+    # But that is a ridiculously fine grid (overly computation intensive and not how things are done in a TPS)
+    # finding appropriate pixel spacing and grid size 
+    
+    pixel_spacing = np.array(list(map(float,img_ds.PixelSpacing)))
+    image_pixel_width = pixel_spacing[0] *1.0
+    min_grid_spacing = 2.0 # mm
+    # max_grid_spacing = 4.0 # mm
+    grid_spacing = image_pixel_width
+    binary_scaling_factor = 1
+    while grid_spacing < min_grid_spacing:
+        grid_spacing *= 2
+        binary_scaling_factor *=2
+    
+    # divide the thickness by the grid spacing from above to get cubic voxels.
+    # That will work even if the slice spacing isn't even.
+    # worst case we have to dose grid going just a bit outside the image volume
+    # but... this is an empty/zero filled dose grid anyway.
+    image_volume_thickness = sum(grid_frame_offset_list) 
+    number_frames_with_grid_spacing = round( (image_volume_thickness / grid_spacing) +0.5)
+
+    
+    rt_dose.NumberOfFrames = int(number_frames_with_grid_spacing)
+    rt_dose.GridFrameOffsetVector = [ grid_spacing * x for x in range(rt_dose.NumberOfFrames) ]
+    rt_dose.PixelSpacing = [grid_spacing, grid_spacing]
+
+    # Image Pixel Module (not including elements already specified above for RT Dose module)
+    rt_dose.Rows = int(img_ds.Rows / binary_scaling_factor)
+    rt_dose.Columns = int(img_ds.Columns / binary_scaling_factor)
+
+
+    rt_dose.PixelData = bytes(2 * rt_dose.Rows * rt_dose.Columns * rt_dose.NumberOfFrames)
 
     # # Contour Image Sequence
     # contour_image_sequence = []
