@@ -1,3 +1,6 @@
+import sys
+import logging
+
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtCore import Qt, QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
@@ -7,6 +10,8 @@ from PySide6.QtWidgets import QWidget, QLayout, QLabel, QSpinBox, \
 from src.Model.GetPatientInfo import DicomTree
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
+
+logger = logging.getLogger(__name__)
 
 
 class ImageFusionOptions(object):
@@ -67,13 +72,19 @@ class ImageFusionOptions(object):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setVerticalSpacing(0)
 
+        hspacer = None
         # Create horizontal spacer in the middle of the grid
         try:
             # PySide6 worked on Windows
-            hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Minimum)
+            hspacer = QtWidgets.QSpacerItem(5,
+                                            16,
+                                            QtWidgets.QSizePolicy.Policy.Expanding,
+                                            QtWidgets.QSizePolicy.Policy.Minimum
+                                            )
         except TypeError:
             # PySide6 needed for Ubuntu 22.04 (perhaps due to PySide 6.4.0.1)
             # no idea if these are appropriate default values
+            logger.error("Type Error when defining spacer item")
             hspacer = QtWidgets.QSpacerItem(16,5) 
         
         self.gridLayout.addItem(hspacer, 0, 5, 16, 1)
