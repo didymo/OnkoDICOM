@@ -42,7 +42,7 @@ class TestObject:
             self.DummyProgressWindow)
         self.iso_levels = self.get_iso_levels()
         self.timestamp = BatchProcessingController.create_timestamp()
-        self.application = QApplication()
+        self.application = QApplication.instance() or QApplication()  # QApplication now in conftest.py
 
     def get_patients(self):
         return self.dicom_structure.patients.values()
@@ -265,7 +265,7 @@ def test_batch_pyrad2csv(test_object):
         # Assert the resulting .csv file exists
         assert os.path.isfile(Path.joinpath(test_object.batch_dir, 'CSV',
                                             filename))
-        
+
         # Get dataset directory
         directory = process.patient_dict_container.path
 

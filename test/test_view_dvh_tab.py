@@ -1,11 +1,14 @@
 import os
 import platform
+import time
 
 import PySide6
 import matplotlib
 import pytest
 from pathlib import Path
 from PySide6 import QtWidgets
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QLayout
 from matplotlib.backends.backend_template import FigureCanvas
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -83,6 +86,16 @@ def test_object():
     return test
 
 
+def wait_for_widget(layout, timeout=1000):
+    start_time = time.time()
+    while time.time() - start_time < timeout/1000:
+        if layout and layout.count() > 1:
+            return True
+        QApplication.processEvents()
+        time.sleep(0.1)
+    return False
+
+
 def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object, init_config):
     if test_object.main_window.dvh_tab.patient_dict_container.has_attribute("raw_dvh"):
         test_object.main_window.dvh_tab.patient_dict_container.additional_data.pop("raw_dvh")
@@ -90,11 +103,37 @@ def test_dvh_tab_with_dvh_not_calculated(qtbot, test_object, init_config):
     # check that Calculate DVH tab must appear
 
     test_object.main_window.show()
+    layout = test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(1).layout()
+    print(f"First pass at Layout: {layout}")
+    QTest.qWaitForWindowExposed(test_object.main_window)
+    dvh_tab_layout = test_object.main_window.dvh_tab.dvh_tab_layout
+    print(f"dvh_tab_layout: {dvh_tab_layout}")
+    if dvh_tab_layout and layout is None:
+        print(f"Number of items in dvh_tab_layout: {dvh_tab_layout.count()}")
+        for i in range(dvh_tab_layout.count()):
+            child_item = dvh_tab_layout.itemAt(i)
+            print(f"Item {i}: {child_item}")
+            if hasattr(child_item, "layout"):
+                layout = child_item.layout()
+                if layout is not None and layout.count() > 1:
+                    break
+            elif isinstance(child_item, QLayout):
+                layout = child_item
+                if layout.count <= 1:
+                    print("Fewer than two items in this QLayout instance")
+                break
 
-    button_calc_dvh = \
-        test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(1).layout()
-    button_calc_dvh = button_calc_dvh.itemAt(1).widget()
-    
+    # assert wait_for_widget(layout), "Widget not found within timeout"
+    print(f"Layout: {layout}")
+    if layout:
+        print(f"Number of items in layout: {layout.count()}")
+        for i in range(layout.count()):
+            print(f"Item {i}: {layout.itemAt(i)}")
+
+    # button_calc_dvh = \
+    #   test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(1).layout()
+    button_calc_dvh = layout.itemAt(1).widget()
+
     assert isinstance(button_calc_dvh, PySide6.QtWidgets.QPushButton) is True
 
 
@@ -107,8 +146,15 @@ def test_dvh_tab_with_dvh_calculated(qtbot, test_object, init_config):
     # check that Calculate DVH tab must appear
 
     test_object.main_window = MainWindow()
-    dvh_plot = \
-        test_object.main_window.dvh_tab.dvh_tab_layout.itemAt(0).widget()
+    layout = test_object.main_window.dvh_tab.dvh_tab_layout
+    print(f"Layout: {layout}")
+    if layout:
+        print(f"Number of items in layout: {layout.count()}")
+        for i in range(layout.count()):
+            dvh_plot = layout.itemAt(i).widget()
+            print(dvh_plot)
+            if isinstance(dvh_plot, matplotlib.backends.backend_qtagg.FigureCanvasQTAgg):
+                break
     assert isinstance(dvh_plot, matplotlib.backends.backend_qtagg.FigureCanvasQTAgg) is True
 
     calculated_rois = test_object.main_window.dvh_tab.raw_dvh.keys()

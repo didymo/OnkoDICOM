@@ -47,7 +47,12 @@ def test_check_specific_csv_file_exists():
             assert not os.path.exists(full_path_to_file)
             expected_path = test_path.joinpath("data", "csv", csv_filename)
             specified_path = pathlib.Path().joinpath(full_path_to_file)
-            assert expected_path == specified_path
+            # MacOS uses a symbolic link with TemporaryDirectory()
+            # instead of checking that the paths are ==, test to see if they have the same
+            # fully resolved path (i.e. following symbolic links)
+
+            assert os.path.realpath(expected_path) == os.path.realpath(specified_path)
+            # assert expected_path == specified_path
             os.makedirs(os.path.dirname(specified_path))
             f = open(specified_path, mode="x")
             f.close()
@@ -120,9 +125,9 @@ def test_create_hash_csv():
         os.chdir(orig_cwd_path)
 
 def test_anon_file_name():
-    hashed_patient_id = "./mybad\@:;filename$with%problematic~chara&ters"
+    hashed_patient_id = r"./mybad\@:;filename$with%problematic~chara&ters"
     file_name_hashed_patient_id = "__mybad_@__filename_with%problematic_chara_ters"
-    all_special_characters = ".!@#$%^&*()[]{};:,./<>?\|`~-=_+"
+    all_special_characters = r".!@#$%^&*()[]{};:,./<>?\|`~-=_+"
     file_name_all_special_characters = "_!@#_%^__()[]{}___.______`_-=_+"
     assert file_name_hashed_patient_id == anon_file_name(hashed_patient_id)
     assert file_name_all_special_characters == anon_file_name(all_special_characters)
