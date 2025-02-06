@@ -2668,13 +2668,13 @@ files = [
 
 [[package]]
 name = "narwhals"
-version = "1.25.0"
+version = "1.25.1"
 description = "Extremely lightweight compatibility layer between dataframe libraries"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "narwhals-1.25.0-py3-none-any.whl", hash = "sha256:73c595179c95f1ebe87f2f8487b090223cde23409710a0f48a0f987c1f4ff775"},
-    {file = "narwhals-1.25.0.tar.gz", hash = "sha256:bce0f713831106dde3c7f66b610a104c9d0b7fba7739e8056f29f0aa831891ea"},
+    {file = "narwhals-1.25.1-py3-none-any.whl", hash = "sha256:a1838f2725523da54c093849e93a8b2a57d2310f0bbc26be35d223f5eef60417"},
+    {file = "narwhals-1.25.1.tar.gz", hash = "sha256:9c0e27be46e186526878286b442a3dd2ee9fe723456457feff42316288732b96"},
 ]
 
 [package.extras]
@@ -2923,8 +2923,8 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.2", markers = "python_version >= \"3.9\" and platform_system == \"Darwin\" and platform_machine == \"arm64\""},
-    {version = ">=1.19.3", markers = "python_version >= \"3.8\" and platform_system == \"Linux\" and platform_machine == \"aarch64\" or python_version >= \"3.9\" and platform_system != \"Darwin\" or python_version >= \"3.9\" and platform_machine != \"arm64\""},
+    {version = ">=1.21.2", markers = "python_version >= \"3.10\" or python_version >= \"3.9\" and platform_system == \"Darwin\" and platform_machine == \"arm64\""},
+    {version = ">=1.19.3", markers = "python_version >= \"3.8\" and platform_system == \"Linux\" and platform_machine == \"aarch64\" and python_version < \"3.10\" or python_version >= \"3.9\" and python_version < \"3.10\" and platform_system != \"Darwin\" or python_version >= \"3.9\" and python_version < \"3.10\" and platform_machine != \"arm64\""},
 ]
 
 [[package]]
@@ -2986,7 +2986,10 @@ files = [
 ]
 
 [package.dependencies]
-numpy = {version = ">=1.20.3", markers = "python_version < \"3.10\""}
+numpy = [
+    {version = ">=1.20.3", markers = "python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
+]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
 
@@ -3948,7 +3951,10 @@ files = [
 attrs = ">=19.0"
 filelock = ">=3.0"
 mypy = {version = ">=0.780", markers = "python_version >= \"3.9\" and python_version < \"3.11\""}
-pytest = {version = ">=4.6", markers = "python_version >= \"3.6\" and python_version < \"3.10\""}
+pytest = [
+    {version = ">=4.6", markers = "python_version >= \"3.6\" and python_version < \"3.10\""},
+    {version = ">=6.2", markers = "python_version >= \"3.10\""},
+]
 
 [[package]]
 name = "pytest-pylint"
@@ -6158,5 +6164,5 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.9,<3.10"
-content-hash = "f82100e060193c1864ec0b436bc5b4dea94bb8e34f37a91c3aa8c994fae081c1"
+python-versions = ">=3.9.19,<3.11"
+content-hash = "bd119d15caaf95faabc04104387f3bca80d1506d1c63f62c69e0e958a52f13cd"
