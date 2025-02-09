@@ -51,7 +51,7 @@ jobs:
 
     - name: Install Poetry
       run: |
-        curl -sSL https://install.python-poetry.org | python -
+        curl -sSL https://install.python-poetry.org | python - --version 1.8.5
         poetry --version
 
     - name: Set up Python ${{ matrix.python }}

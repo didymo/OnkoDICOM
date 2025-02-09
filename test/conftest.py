@@ -1,4 +1,5 @@
 import os
+import sys
 import sqlite3
 from pathlib import Path
 import pytest
@@ -22,3 +23,10 @@ def init_config(request):
 
     request.addfinalizer(tear_down)
     return connection
+
+
+@pytest.fixture(scope="session", autouse=True)
+def qapp_auto():
+    app = QApplication(sys.argv)
+    yield app
+    app.quit()

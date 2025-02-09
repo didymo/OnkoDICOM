@@ -154,7 +154,10 @@ class UIAddOnOptions(object):
         self.layout.addWidget(self.option_widget, 0, 1, 1, 3)
         try:
             # PySide6 worked on Windows
-            hspacer = QtWidgets.QSpacerItem(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Minimum)
+            hspacer = QtWidgets.QSpacerItem(1,
+                                            1,
+                                            QtWidgets.QSizePolicy.Policy.Expanding,
+                                            QtWidgets.QSizePolicy.Policy.Minimum)
         except TypeError:
             # PySide6 needed for Ubuntu 22.04 (perhaps due to PySide 6.4.0.1)
             hspacer = QtWidgets.QSpacerItem(1,1) 
