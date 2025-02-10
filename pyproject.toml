@@ -13,7 +13,7 @@ create = true
 in-project = true
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.9.13,<3.12"
 cython = "*"
 numpy = "^1.26.0"
 platipy = "*"

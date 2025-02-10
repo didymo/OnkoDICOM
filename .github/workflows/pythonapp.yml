@@ -1,6 +1,6 @@
 name: Python APP
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   fetch_cache:
@@ -32,8 +32,9 @@ jobs:
       fail-fast: false
       matrix:
         python:
-          - '3.11'
+          - '3.9'
           - '3.10'
+          - '3.11'
         os:
           - 'ubuntu-20.04'
           # - 'ubuntu-22.04'
@@ -129,6 +130,7 @@ jobs:
         python:
           - '3.9'
           - '3.10'
+          - '3.11'
         os:
           # - 'windows-2019'
           - 'windows-2022'
