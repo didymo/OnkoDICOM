@@ -4,8 +4,17 @@ import sqlite3
 from pathlib import Path
 import pytest
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import qInstallMessageHandler
+import traceback
 
 from src.Model.Configuration import Configuration
+
+
+def qt_message_handler(msg_type, context, message):
+    print(f"Qt Message - Type: {msg_type}")
+    print(f"Context: {context}")
+    print(f"Message: {message}")
+    print(f"Stack trace: {traceback.format_stack()}")
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -28,6 +37,7 @@ def init_config(request):
 @pytest.fixture(scope="session", autouse=True)
 def qapp_auto():
     app = QApplication(sys.argv)
+    qInstallMessageHandler(qt_message_handler)
     yield app
     app.processEvents()
     app.quit()

@@ -32,12 +32,12 @@ jobs:
       fail-fast: false
       matrix:
         python:
-          - '3.9'
+          - '3.12'
           - '3.10'
           - '3.11'
         os:
-          - 'ubuntu-20.04'
-          # - 'ubuntu-22.04'
+          # - 'ubuntu-20.04'
+          - 'ubuntu-24.04'
 
     name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -75,11 +75,12 @@ jobs:
         # python -m pip install --upgrade pip wheel setuptools
         poetry install --no-root
 
-    - name: Workaround Install pyradiomics (no-use-pep517)
-        # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
-        # pyradiomics 3.1.0 has a metadata mismatch
-      run: |
-        poetry run pip install pyradiomics==3.0.1
+    # currently having poetry going straight to the github main branch for pyradiomics ~ 3.1.1
+    # - name: Workaround Install pyradiomics (no-use-pep517)
+    #     # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
+    #     # pyradiomics 3.1.0 has a metadata mismatch
+    #   run: |
+    #     poetry run pip install pyradiomics==3.0.1
 
     - name: Lint with flake8
       run: |
@@ -128,7 +129,7 @@ jobs:
       fail-fast: false
       matrix:
         python:
-          - '3.9'
+          - '3.12'
           - '3.10'
           - '3.11'
         os:
@@ -174,10 +175,11 @@ jobs:
       run: |
         poetry install --no-root
 
-    - name: Workaround Install pyradiomics (no-use-pep517)
+    # currently having poetry going straight to the github main branch for pyradiomics ~ 3.1.1
+    #    - name: Workaround Install pyradiomics (no-use-pep517)
         # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
-      run: |
-        poetry run pip install pyradiomics==3.0.1
+    #  run: |
+    #    poetry run pip install pyradiomics==3.0.1
 
     - name: Lint with flake8
       run: |
