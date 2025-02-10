@@ -29,4 +29,5 @@ def init_config(request):
 def qapp_auto():
     app = QApplication(sys.argv)
     yield app
+    app.processEvents()
     app.quit()
