@@ -276,7 +276,7 @@ def _create_reidentification_spreadsheet(p_name, sha1_p_name, csv_filename):
         )
         # print("Before updating:")
         # print(df_identifier)
-        updated_df = df_identifier.append(sheet, ignore_index=True)
+        updated_df = pd.concat([df_identifier, sheet], ignore_index=True)
         # print("after updating:")
         # print(updated_df)
 
@@ -866,11 +866,11 @@ def anonymize(path, datasets, file_paths, rawdvh):
 
 def anon_file_name(hashed_patient_id):
     """
-    Validate the Anonymous File Name. 
-    Read and modify (if needed) the hashed_patient_id string into a valid string 
+    Validate the Anonymous File Name.
+    Read and modify (if needed) the hashed_patient_id string into a valid string
     for file name (Linux and Windows) by replacing forbidden characters into an
     _ (underscore)
-    
+
     Parameters
     ----------
     hashed_patient_id : ``str``

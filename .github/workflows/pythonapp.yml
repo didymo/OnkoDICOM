@@ -1,6 +1,6 @@
 name: Python APP
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   fetch_cache:
@@ -8,7 +8,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     env:
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-      
+
     steps:
     - name: Cache Test Data
       id: cache-TestData
@@ -34,6 +34,7 @@ jobs:
         python:
           - '3.9'
           - '3.10'
+          - '3.11'
         os:
           - 'ubuntu-20.04'
           # - 'ubuntu-22.04'
@@ -59,7 +60,7 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
         cache: 'poetry'
-    
+
     - name: Upgrade pip and setuptools
       run: |
         pip install --upgrade pip wheel setuptools
@@ -79,7 +80,7 @@ jobs:
         # pyradiomics 3.1.0 has a metadata mismatch
       run: |
         poetry run pip install pyradiomics==3.0.1
-   
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -129,6 +130,7 @@ jobs:
         python:
           - '3.9'
           - '3.10'
+          - '3.11'
         os:
           # - 'windows-2019'
           - 'windows-2022'
@@ -171,7 +173,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install --no-root
-  
+
     - name: Workaround Install pyradiomics (no-use-pep517)
         # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
       run: |
