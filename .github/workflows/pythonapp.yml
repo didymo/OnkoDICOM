@@ -110,7 +110,7 @@ jobs:
     - name: Testing setup
       run: |
         sudo apt-get update
-        sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 libglut3.12 libglut-dev freeglut3-dev libgeos-c1t64 libgeos++-dev libgeos-dev
+        sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 libglut3.12 libglut-dev freeglut3-dev libgeos-3.12.0 libgeos-c1t64 libgeos++-dev libgeos-dev
         # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
         /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
         sleep 3
