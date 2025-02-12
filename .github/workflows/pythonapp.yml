@@ -46,7 +46,7 @@ jobs:
     env:
       DISPLAY: ':99.0'
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-
+      USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
     steps:
     - uses: actions/checkout@v3
 
@@ -109,6 +109,8 @@ jobs:
 
     - name: Testing setup
       run: |
+        sudo mkdir -p /tmp/.onkodicom
+        sudo chmod 777 /tmp/.onkodicom
         sudo apt-get update
         sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 libglut3.12 libglut-dev freeglut3-dev libgeos-c1v5 libgeos++-dev libgeos-dev
         # sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
@@ -116,9 +118,16 @@ jobs:
         sleep 3
         herbstluftwm &
         sleep 1
+        # Check system resources
+        free -m
+        ulimit -a
 
     - name: Testing and Coverage with pytest
       run: |
+        # First try single test file without coverage as part of debugging Ubuntu 24.04 build
+        export QT_DEBUG_PLUGINS=1
+        poetry run python -m pytest "test/test_machine_learning_preprocessing.py" -v -s
+
         # Append this for fail under x percent "--cov-fail-under=80"
         poetry run python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=.
 
