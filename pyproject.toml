@@ -40,7 +40,7 @@ pymedphys = { extras = ["all"], version =  "^0.41.0", python = ">=3.10,<3.13" }
 pyside6 = { version = ">=6.4.0,<6.9", python =">=3.10,<3.13" }
 vtk = "*"
 # shapely 1.8.3 through 1.8.5.post1 have build failures.  v2.0 has API changes.
-shapely = "=1.8.2"
+shapely = ">=2.0"
 python-Levenshtein = "*"
 opencv-python = "<4.6"
 matplotlib = "*"
