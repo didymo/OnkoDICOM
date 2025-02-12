@@ -41,3 +41,17 @@ def qapp_auto():
     yield app
     app.processEvents()
     app.quit()
+
+
+def pytest_configure(config):
+    """Configure pytest with settings that may help prevent segfaults"""
+    config.option.tb_locals = False  # Disable locals in tracebacks
+    config.option.showlocals = False  # Disable showing locals in output
+
+
+@pytest.fixture(autouse=True)
+def cleanup_after_test():
+    """Cleanup after each test"""
+    yield
+    import gc
+    gc.collect()
