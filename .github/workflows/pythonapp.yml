@@ -33,8 +33,8 @@ jobs:
       matrix:
         python:
           - '3.12'
-        #   - '3.10'
-        #   - '3.11'
+          - '3.10'
+          - '3.11'
         os:
           # - 'ubuntu-20.04'
           - 'ubuntu-24.04'
@@ -46,7 +46,8 @@ jobs:
     env:
       DISPLAY: ':99.0'
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-      USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
+      # USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
+
     steps:
     - uses: actions/checkout@v3
 
@@ -109,8 +110,8 @@ jobs:
 
     - name: Testing setup
       run: |
-        sudo mkdir -p /tmp/.onkodicom
-        sudo chmod 777 /tmp/.onkodicom
+        # sudo mkdir -p /tmp/.onkodicom
+        # sudo chmod 777 /tmp/.onkodicom
         sudo apt-get update
         sudo apt-get install xvfb libxkbcommon-x11-0 herbstluftwm libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0 libglut3.12 libglut-dev freeglut3-dev libgeos-c1v5 libgeos++-dev libgeos-dev libxcb-cursor0
         # install everything related to xcb.  libxcb-cursor0 is required for Qt >=6.5 and it has numerous dependencies
@@ -126,6 +127,7 @@ jobs:
 
     - name: Testing and Coverage with pytest
       run: |
+
         # First try single test file without coverage as part of debugging Ubuntu 24.04 build
         # export QT_DEBUG_PLUGINS=1
         # export PYTHONFAULTHANDLER=1
@@ -142,8 +144,8 @@ jobs:
       matrix:
         python:
           - '3.12'
-          # - '3.10'
-          # - '3.11'
+          - '3.10'
+          - '3.11'
         os:
           # - 'windows-2019'
           - 'windows-2022'
