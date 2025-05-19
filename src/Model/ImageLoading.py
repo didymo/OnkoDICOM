@@ -381,10 +381,11 @@ def get_roi_info(dataset_rtss):
     """
     dict_roi = {}
     for sequence in dataset_rtss.StructureSetROISequence:
-        dict_temp = {}
-        dict_temp["uid"] = sequence.ReferencedFrameOfReferenceUID
-        dict_temp["name"] = sequence.ROIName
-        dict_temp["algorithm"] = sequence.ROIGenerationAlgorithm
+        dict_temp = {
+            "uid": sequence.ReferencedFrameOfReferenceUID,
+            "name": sequence.ROIName,
+            "algorithm": sequence.ROIGenerationAlgorithm,
+        }
         dict_roi[sequence.ROINumber] = dict_temp
 
     return dict_roi
@@ -510,8 +511,7 @@ def calc_dvhs(
 
 
 def calc_dvh_worker(rtss, dose, roi, queue, thickness, dose_limit=None):
-    dvh = {}
-    dvh[roi] = dvhcalc.get_dvh(rtss, dose, roi, dose_limit, thickness=thickness)
+    dvh = {roi: dvhcalc.get_dvh(rtss, dose, roi, dose_limit, thickness=thickness)}
     queue.put(dvh)
 
 
@@ -524,9 +524,7 @@ def multi_calc_dvh(dataset_rtss, dataset_rtdose, rois, dict_thickness, dose_limi
     dict_dvh = {}
 
     roi_list = []
-    for key in rois:
-        roi_list.append(key)
-
+    roi_list.extend(iter(rois))
     for i in range(len(roi_list)):
         thickness = None
         if roi_list[i] in dict_thickness:
@@ -744,10 +742,10 @@ def get_pixluts(read_data_dict):
     return dict_pixluts
 
 
-def get_image_uid_list(dataset):
+def get_image_uid_list(dataset_dict):
     """
     Extract the SOPInstanceUIDs from every image dataset
-    :param dataset: A dictionary of datasets of all the DICOM files of
+    :param dataset_dict: A dictionary of datasets of all the DICOM files of
         the patient
     :return: uid_list, a list of SOPInstanceUIDs of all image slices of
         the patient
@@ -756,13 +754,11 @@ def get_image_uid_list(dataset):
     uid_list = []
 
     # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE,
-    # RTPLAN)
-    for key in dataset:
-        if key not in non_img_list:
-            if isinstance(key, str):
-                if key[0:3] != "sr-":
-                    uid_list.append(dataset[key].SOPInstanceUID)
-            else:
-                uid_list.append(dataset[key].SOPInstanceUID)
-
+    # RTPLAN, RTImage, and SR by filename prefix)
+    uid_list.extend(
+        dataset_dict[key].SOPInstanceUID
+        for key in dataset_dict
+        if key not in non_img_list
+        and (isinstance(key, str) and key[:3] != "sr-" or not isinstance(key, str))
+    )
     return uid_list

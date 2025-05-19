@@ -165,9 +165,7 @@ class WindowingSlider(QWidget):
         )
         if index < 0:
             return 0
-        if index >= self.slider_density:
-            return self.slider_density - 1
-        return index
+        return self.slider_density - 1 if index >= self.slider_density else index
 
     def window_to_index(self, val):
         """

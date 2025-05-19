@@ -1,20 +1,21 @@
+import logging
 import os
 import platform
 from pathlib import Path
 
-from PySide6 import QtCore
 from pydicom import dcmread, dcmwrite
+from PySide6 import QtCore
 
 from src.Model import ImageLoading
 from src.Model.CalculateDVHs import (
+    create_initial_rtdose_from_ct,
     dvh2rtdose,
     rtdose2dvh,
-    create_initial_rtdose_from_ct,
 )
+from src.Model.GetPatientInfo import DicomTree
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.xrRtstruct import create_initial_rtss_from_cr
-from src.Model.GetPatientInfo import DicomTree
 
 
 class ImageLoader(QtCore.QObject):
@@ -49,8 +50,9 @@ class ImageLoader(QtCore.QObject):
             read_data_dict, file_names_dict = ImageLoading.get_datasets(
                 self.selected_files
             )
-        except ImageLoading.NotAllowedClassError:
-            raise ImageLoading.NotAllowedClassError
+        except ImageLoading.NotAllowedClassError as e:
+            logging.error(f"ImageLoader.load: {repr(e)}")
+            raise ImageLoading.NotAllowedClassError from e
 
         # Populate the initial values in the PatientDictContainer singleton.
         patient_dict_container = PatientDictContainer()
@@ -99,7 +101,7 @@ class ImageLoader(QtCore.QObject):
 
             progress_callback.emit(("Getting pixel LUTs...", 50))
             dict_pixluts = ImageLoading.get_pixluts(read_data_dict)
-            progress_callback.emit(("Getting pixel LUTS...", 99))
+            progress_callback.emit(("Getting pixel LUTs...", 99))
             if interrupt_flag.is_set():  # Stop loading.
                 return False
 
