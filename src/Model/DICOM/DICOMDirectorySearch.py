@@ -37,10 +37,10 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
     files_with_no_patient_id = 1
 
     for root, dirs, files in os.walk(path, topdown=True):
-        files = [f for f in files if not f[0] == '.']
-        dirs[:] = [d for d in dirs if not d[0] == '.']
+        files = [f for f in files if not f[0] == "."]
+        dirs[:] = [d for d in dirs if not d[0] == "."]
         for file in files:
-            if file[0] == '.':
+            if file[0] == ".":
                 break
             if interrupt_flag.is_set():
                 return
@@ -53,7 +53,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
             progress_callback.emit(files_searched)
 
             # Fix to program crashing when encountering DICOMDIR files
-            if file == 'DICOMDIR':
+            if file == "DICOMDIR":
                 continue
 
             file_path = root + os.sep + file
@@ -62,16 +62,16 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
             except (InvalidDicomError, FileNotFoundError, PermissionError):
                 pass
             else:
-                if 'PatientID' in dicom_file:
+                if "PatientID" in dicom_file:
                     patient_id = dicom_file.PatientID
                 else:
-                    patient_id = 'no_id_' + str(files_with_no_patient_id)
+                    patient_id = "no_id_" + str(files_with_no_patient_id)
                     files_with_no_patient_id += 1
 
                 if (
-                    'SOPInstanceUID' in dicom_file
-                    and 'SOPClassUID' in dicom_file
-                    and 'Modality' in dicom_file
+                    "SOPInstanceUID" in dicom_file
+                    and "SOPClassUID" in dicom_file
+                    and "Modality" in dicom_file
                 ):
                     new_image = Image(
                         file_path,
@@ -80,18 +80,18 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                         dicom_file.Modality,
                     )
                     if not dicom_structure.has_patient(patient_id):
-                        if 'SeriesInstanceUID' not in dicom_file:
-                            logging.error('No SeriesInstanceUID found in %s', file_path)
+                        if "SeriesInstanceUID" not in dicom_file:
+                            logging.error("No SeriesInstanceUID found in %s", file_path)
                             continue
                         new_series = Series(dicom_file.SeriesInstanceUID)
                         new_series.series_description = dicom_file.get(
-                            'SeriesDescription'
+                            "SeriesDescription"
                         )
                         new_series.add_referenced_objects(dicom_file)
                         new_series.add_image(new_image)
 
                         new_study = Study(dicom_file.StudyInstanceUID)
-                        new_study.study_description = dicom_file.get('StudyDescription')
+                        new_study.study_description = dicom_file.get("StudyDescription")
                         new_study.add_series(new_series)
 
                         new_patient = Patient(patient_id, dicom_file.PatientName)
@@ -105,14 +105,14 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                         if not existing_patient.has_study(dicom_file.StudyInstanceUID):
                             new_series = Series(dicom_file.SeriesInstanceUID)
                             new_series.series_description = dicom_file.get(
-                                'SeriesDescription'
+                                "SeriesDescription"
                             )
                             new_series.add_referenced_objects(dicom_file)
                             new_series.add_image(new_image)
 
                             new_study = Study(dicom_file.StudyInstanceUID)
                             new_study.study_description = dicom_file.get(
-                                'StudyDescription'
+                                "StudyDescription"
                             )
                             new_study.add_series(new_series)
 
@@ -126,7 +126,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                             ):
                                 new_series = Series(dicom_file.SeriesInstanceUID)
                                 new_series.series_description = dicom_file.get(
-                                    'SeriesDescription'
+                                    "SeriesDescription"
                                 )
                                 new_series.add_referenced_objects(dicom_file)
                                 new_series.add_image(new_image)
@@ -140,7 +140,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                                     dicom_file.SOPInstanceUID
                                 ):
                                     existing_series.series_description = dicom_file.get(
-                                        'SeriesDescription'
+                                        "SeriesDescription"
                                     )
                                     existing_series.add_image(new_image)
 

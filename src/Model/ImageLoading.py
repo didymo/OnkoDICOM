@@ -33,58 +33,58 @@ from pydicom.errors import InvalidDicomError
 
 allowed_classes = {
     # CT Image
-    '1.2.840.10008.5.1.4.1.1.2': {
-        'name': 'ct',
-        'sliceable': True,
+    "1.2.840.10008.5.1.4.1.1.2": {
+        "name": "ct",
+        "sliceable": True,
     },
     # RT Structure Set
-    '1.2.840.10008.5.1.4.1.1.481.3': {
-        'name': 'rtss',
-        'sliceable': False,
+    "1.2.840.10008.5.1.4.1.1.481.3": {
+        "name": "rtss",
+        "sliceable": False,
     },
     # RT Dose
-    '1.2.840.10008.5.1.4.1.1.481.2': {
-        'name': 'rtdose',
-        'sliceable': False,
+    "1.2.840.10008.5.1.4.1.1.481.2": {
+        "name": "rtdose",
+        "sliceable": False,
     },
     # RT Plan
-    '1.2.840.10008.5.1.4.1.1.481.5': {
-        'name': 'rtplan',
-        'sliceable': False,
+    "1.2.840.10008.5.1.4.1.1.481.5": {
+        "name": "rtplan",
+        "sliceable": False,
     },
     # RT Ion Plan
-    '1.2.840.10008.5.1.4.1.1.481.8': {
-        'name': 'rtplan',
-        'sliceable': False,
+    "1.2.840.10008.5.1.4.1.1.481.8": {
+        "name": "rtplan",
+        "sliceable": False,
     },
     # RT Image
-    '1.2.840.10008.5.1.4.1.1.481.1': {
-        'name': 'rtimage',
-        'sliceable': False,
+    "1.2.840.10008.5.1.4.1.1.481.1": {
+        "name": "rtimage",
+        "sliceable": False,
     },
     # MR Image
-    '1.2.840.10008.5.1.4.1.1.4': {
-        'name': 'mr',
-        'sliceable': True,
+    "1.2.840.10008.5.1.4.1.1.4": {
+        "name": "mr",
+        "sliceable": True,
     },
     # PET Image
-    '1.2.840.10008.5.1.4.1.1.128': {
-        'name': 'pet',
-        'sliceable': True,
+    "1.2.840.10008.5.1.4.1.1.128": {
+        "name": "pet",
+        "sliceable": True,
     },
     # Comprehensive SR
-    '1.2.840.10008.5.1.4.1.1.88.33': {
-        'name': 'sr',
-        'sliceable': False,
+    "1.2.840.10008.5.1.4.1.1.88.33": {
+        "name": "sr",
+        "sliceable": False,
     },
     # CR Image
-    '1.2.840.10008.5.1.4.1.1.1': {
-        'name': 'cr',
-        'sliceable': True,
+    "1.2.840.10008.5.1.4.1.1.1": {
+        "name": "cr",
+        "sliceable": True,
     },
 }
 
-all_iods_required_attributes = ['StudyID']
+all_iods_required_attributes = ["StudyID"]
 
 iod_specific_required_attributes = {
     # # CT must have SliceLocation
@@ -154,29 +154,29 @@ def get_datasets(filepath_list, file_type=None):
                 is_missing = missing_interop_elements(read_file)
                 is_interoperable = len(is_missing) == 0
                 if not is_interoperable:
-                    missing_elements = ', '.join(is_missing)
-                    error_message = 'Interoperability failure:'
-                    error_message += f'<br>{file} '
-                    error_message += '<br>is missing ' + missing_elements
-                    error_message += f'<br>needed for SOP Class {read_file.SOPClassUID}'
+                    missing_elements = ", ".join(is_missing)
+                    error_message = "Interoperability failure:"
+                    error_message += f"<br>{file} "
+                    error_message += "<br>is missing " + missing_elements
+                    error_message += f"<br>needed for SOP Class {read_file.SOPClassUID}"
                     logging.error(error_message)
                     raise NotInteroperableWithOnkoDICOMError(error_message)
-                if allowed_class['sliceable']:
+                if allowed_class["sliceable"]:
                     slice_name = slice_count
                     slice_count += 1
                 else:
                     # Read from Series Description to determine what is
                     # stored in the SR file.
-                    if allowed_class['name'] == 'sr':
-                        if read_file.SeriesDescription == 'CLINICAL-DATA':
-                            slice_name = 'sr-cd'
-                        elif read_file.SeriesDescription == 'PYRADIOMICS':
-                            slice_name = 'sr-rad'
+                    if allowed_class["name"] == "sr":
+                        if read_file.SeriesDescription == "CLINICAL-DATA":
+                            slice_name = "sr-cd"
+                        elif read_file.SeriesDescription == "PYRADIOMICS":
+                            slice_name = "sr-rad"
                         else:
-                            slice_name = 'sr-other-' + str(sr_count)
+                            slice_name = "sr-other-" + str(sr_count)
                             sr_count += 1
                     else:
-                        slice_name = allowed_class['name']
+                        slice_name = allowed_class["name"]
 
                 if file_type is None or read_file.Modality == file_type:
                     read_data_dict[slice_name] = read_file
@@ -184,7 +184,9 @@ def get_datasets(filepath_list, file_type=None):
             else:
                 raise NotAllowedClassError
 
-    sorted_read_data_dict, sorted_file_names_dict = image_stack_sort(read_data_dict, file_names_dict)
+    sorted_read_data_dict, sorted_file_names_dict = image_stack_sort(
+        read_data_dict, file_names_dict
+    )
 
     return sorted_read_data_dict, sorted_file_names_dict
 
@@ -201,15 +203,23 @@ def missing_interop_elements(read_file) -> bool:
     """
     is_missing = []
     for onko_required_attribute in all_iods_required_attributes:
-        if not hasattr(read_file, onko_required_attribute) or read_file[onko_required_attribute].is_empty:
-            if onko_required_attribute == 'StudyID':
-                logging.warning(f'StudyID is missing from {read_file.filename}')
-                read_file['StudyID'] = 'MissingStudyID'
+        if (
+            not hasattr(read_file, onko_required_attribute)
+            or read_file[onko_required_attribute].is_empty
+        ):
+            if onko_required_attribute == "StudyID":
+                logging.warning(f"StudyID is missing from {read_file.filename}")
+                read_file["StudyID"] = "MissingStudyID"
                 continue
             is_missing.append(onko_required_attribute)
     if read_file.SOPClassUID in iod_specific_required_attributes:
-        for onko_required_attribute in iod_specific_required_attributes[read_file.SOPClassUID]:
-            if not hasattr(read_file, onko_required_attribute) or read_file[onko_required_attribute].is_empty:
+        for onko_required_attribute in iod_specific_required_attributes[
+            read_file.SOPClassUID
+        ]:
+            if (
+                not hasattr(read_file, onko_required_attribute)
+                or read_file[onko_required_attribute].is_empty
+            ):
                 is_missing.append(onko_required_attribute)
     return is_missing
 
@@ -253,7 +263,7 @@ def get_dict_sort_on_displacement(item):
     """
     img_dataset = item[1]
 
-    if img_dataset.Modality == 'CR':
+    if img_dataset.Modality == "CR":
         img_dataset = add_missing_cr_components(img_dataset)
 
     orientation = img_dataset.ImageOrientationPatient
@@ -262,9 +272,9 @@ def get_dict_sort_on_displacement(item):
     # SliceLocation is a type 3 attribute (optional), but it is relied upon elsewhere in OnkoDICOM
     # So if it isn't present, the displacement along the stack (in mm, rounded here to mm precision)
     #   is a reasonable value
-    if not hasattr(img_dataset, 'SliceLocation'):
-        slice_location = f'{round(sort_key)}'
-        elem = DataElement(0x00201041, 'DS', slice_location)
+    if not hasattr(img_dataset, "SliceLocation"):
+        slice_location = f"{round(sort_key)}"
+        elem = DataElement(0x00201041, "DS", slice_location)
         img_dataset.add(elem)
 
     return sort_key
@@ -276,9 +286,9 @@ def add_missing_cr_components(cr):
     :return: cr with required missing fields
     """
     cr_update = {
-        'ImageOrientationPatient': [1, 0, 0, 0, 0, 1],
-        'ImagePositionPatient': [0, 0, 0],
-        'SliceThickness': 1,
+        "ImageOrientationPatient": [1, 0, 0, 0, 0, 1],
+        "ImagePositionPatient": [0, 0, 0],
+        "SliceThickness": 1,
     }
     cr.update(cr_update)
 
@@ -292,13 +302,27 @@ def image_stack_sort(read_data_dict, file_names_dict):
     coordinate.
     :return: Tuple of sorted dictionaries
     """
-    new_image_dict = {key: value for (key, value) in read_data_dict.items() if str(key).isnumeric()}
-    new_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if str(key).isnumeric()}
-    new_non_image_dict = {key: value for (key, value) in read_data_dict.items() if not str(key).isnumeric()}
-    new_non_image_file_names_dict = {key: value for (key, value) in file_names_dict.items() if not str(key).isnumeric()}
+    new_image_dict = {
+        key: value for (key, value) in read_data_dict.items() if str(key).isnumeric()
+    }
+    new_image_file_names_dict = {
+        key: value for (key, value) in file_names_dict.items() if str(key).isnumeric()
+    }
+    new_non_image_dict = {
+        key: value
+        for (key, value) in read_data_dict.items()
+        if not str(key).isnumeric()
+    }
+    new_non_image_file_names_dict = {
+        key: value
+        for (key, value) in file_names_dict.items()
+        if not str(key).isnumeric()
+    }
 
     new_items = new_image_dict.items()
-    sorted_dict_on_displacement = sorted(new_items, key=get_dict_sort_on_displacement, reverse=True)
+    sorted_dict_on_displacement = sorted(
+        new_items, key=get_dict_sort_on_displacement, reverse=True
+    )
 
     new_read_data_dict = {}
     new_file_names_dict = {}
@@ -327,11 +351,11 @@ def is_dataset_dicom_rt(read_data_dict):
     class_names = []
 
     for key, item in read_data_dict.items():
-        if allowed_classes[item.SOPClassUID]['name'] not in class_names:
-            class_names.append(allowed_classes[item.SOPClassUID]['name'])
+        if allowed_classes[item.SOPClassUID]["name"] not in class_names:
+            class_names.append(allowed_classes[item.SOPClassUID]["name"])
 
     class_names.sort()
-    return class_names == ['ct', 'rtdose', 'rtplan', 'rtss']
+    return class_names == ["ct", "rtdose", "rtplan", "rtss"]
 
 
 def natural_sort(strings):
@@ -345,7 +369,7 @@ def natural_sort(strings):
         return int(text) if text.isdigit() else text.lower()
 
     def alphanum_key(key):
-        return [convert(c) for c in re.split('([0-9]+)', key)]
+        return [convert(c) for c in re.split("([0-9]+)", key)]
 
     return sorted(strings, key=alphanum_key)
 
@@ -358,9 +382,9 @@ def get_roi_info(dataset_rtss):
     dict_roi = {}
     for sequence in dataset_rtss.StructureSetROISequence:
         dict_temp = {}
-        dict_temp['uid'] = sequence.ReferencedFrameOfReferenceUID
-        dict_temp['name'] = sequence.ROIName
-        dict_temp['algorithm'] = sequence.ROIGenerationAlgorithm
+        dict_temp["uid"] = sequence.ReferencedFrameOfReferenceUID
+        dict_temp["name"] = sequence.ROIName
+        dict_temp["algorithm"] = sequence.ROIGenerationAlgorithm
         dict_roi[sequence.ROINumber] = dict_temp
 
     return dict_roi
@@ -384,7 +408,9 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
         try:
             if len(contour.ContourSequence) == 1:
                 single_contour_rois[contour.ReferencedROINumber] = (
-                    contour.ContourSequence[0].ContourImageSequence[0].ReferencedSOPInstanceUID
+                    contour.ContourSequence[0]
+                    .ContourImageSequence[0]
+                    .ReferencedSOPInstanceUID
                 )
 
         except AttributeError:
@@ -401,8 +427,12 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
 
         # Get the Image Position (Patient) from the two slices.
         try:
-            position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
-            position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+            position_before = np.array(
+                read_data_dict[slice_key - 1].ImagePositionPatient
+            )
+            position_after = np.array(
+                read_data_dict[slice_key + 1].ImagePositionPatient
+            )
 
             # Calculate displacement between slices
             displacement = position_after - position_before
@@ -414,12 +444,20 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
 
             # If the image slice is at the bottom of set.
             if slice_key == 1:
-                position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
-                position_after = np.array(read_data_dict[slice_key + 1].ImagePositionPatient)
+                position_current = np.array(
+                    read_data_dict[slice_key].ImagePositionPatient
+                )
+                position_after = np.array(
+                    read_data_dict[slice_key + 1].ImagePositionPatient
+                )
                 displacement = position_after - position_current
             elif slice_key > 0:
-                position_current = np.array(read_data_dict[slice_key].ImagePositionPatient)
-                position_before = np.array(read_data_dict[slice_key - 1].ImagePositionPatient)
+                position_current = np.array(
+                    read_data_dict[slice_key].ImagePositionPatient
+                )
+                position_before = np.array(
+                    read_data_dict[slice_key - 1].ImagePositionPatient
+                )
                 displacement = position_current - position_before
             else:
                 continue
@@ -427,7 +465,9 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
         # Finally, calculate thickness.
         thickness = (
             math.sqrt(
-                displacement[0] * displacement[0] + displacement[1] * displacement[1] + displacement[2] * displacement[2]
+                displacement[0] * displacement[0]
+                + displacement[1] * displacement[1]
+                + displacement[2] * displacement[2]
             )
             / 2
         )
@@ -437,7 +477,9 @@ def get_thickness_dict(dataset_rtss, read_data_dict):
     return dict_thickness
 
 
-def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None):
+def calc_dvhs(
+    dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag, dose_limit=None
+):
     """
     :param dataset_rtss: RTSTRUCT DICOM dataset object.
     :param dataset_rtdose: RTDOSE DICOM dataset object.
@@ -458,7 +500,9 @@ def calc_dvhs(dataset_rtss, dataset_rtdose, rois, dict_thickness, interrupt_flag
         thickness = None
         if roi in dict_thickness:
             thickness = dict_thickness[roi]
-        dict_dvh[roi] = dvhcalc.get_dvh(dataset_rtss, dataset_rtdose, roi, dose_limit, thickness=thickness)
+        dict_dvh[roi] = dvhcalc.get_dvh(
+            dataset_rtss, dataset_rtdose, roi, dose_limit, thickness=thickness
+        )
         if interrupt_flag.is_set():  # Stop calculating at the next DVH.
             return
 
@@ -530,7 +574,9 @@ def converge_to_0_dvh(raw_dvh):
                     tmp_bincenters.append(dvh.bincenters[-1] + i)
 
                 tmp_bincenters = np.array(tmp_bincenters)
-                tmp_bincenters = np.concatenate((dvh.bincenters.flatten(), tmp_bincenters))
+                tmp_bincenters = np.concatenate(
+                    (dvh.bincenters.flatten(), tmp_bincenters)
+                )
                 bincenters = np.array(tmp_bincenters)
                 counts = np.concatenate((dvh.counts.flatten(), np.array(zeros)))
 
@@ -542,8 +588,8 @@ def converge_to_0_dvh(raw_dvh):
             bincenters = dvh.bincenters
             counts = dvh.counts
 
-        res[roi]['bincenters'] = bincenters
-        res[roi]['counts'] = counts
+        res[roi]["bincenters"] = bincenters
+        res[roi]["counts"] = counts
 
     return res
 
@@ -567,11 +613,13 @@ def get_raw_contour_data(dataset_rtss):
         roi_name = dict_id[referenced_roi_number]
         dict_contour = collections.defaultdict(list)
         roi_points_count = 0
-        if 'ContourSequence' in roi:
+        if "ContourSequence" in roi:
             for roi_slice in roi.ContourSequence:
-                if 'ContourImageSequence' in roi_slice:
+                if "ContourImageSequence" in roi_slice:
                     for contour_img in roi_slice.ContourImageSequence:
-                        referenced_sop_instance_uid = contour_img.ReferencedSOPInstanceUID
+                        referenced_sop_instance_uid = (
+                            contour_img.ReferencedSOPInstanceUID
+                        )
                     contour_geometric_type = roi_slice.ContourGeometricType
                     number_of_contour_points = roi_slice.NumberOfContourPoints
                     roi_points_count += int(number_of_contour_points)
@@ -683,10 +731,10 @@ def get_pixluts(read_data_dict):
     :return: Dictionary of pixluts for the transformation from 3D to 2D.
     """
     dict_pixluts = {}
-    non_img_type = ['rtdose', 'rtplan', 'rtss', 'rtimage']
+    non_img_type = ["rtdose", "rtplan", "rtss", "rtimage"]
     for ds in read_data_dict:
         if ds not in non_img_type:
-            if isinstance(ds, str) and ds[0:3] == 'sr-':
+            if isinstance(ds, str) and ds[0:3] == "sr-":
                 continue
             else:
                 img_ds = read_data_dict[ds]
@@ -704,7 +752,7 @@ def get_image_uid_list(dataset):
     :return: uid_list, a list of SOPInstanceUIDs of all image slices of
         the patient
     """
-    non_img_list = ['rtss', 'rtdose', 'rtplan', 'rtimage']
+    non_img_list = ["rtss", "rtdose", "rtplan", "rtimage"]
     uid_list = []
 
     # Extract the SOPInstanceUID of every image (except RTSS, RTDOSE,
@@ -712,7 +760,7 @@ def get_image_uid_list(dataset):
     for key in dataset:
         if key not in non_img_list:
             if isinstance(key, str):
-                if key[0:3] != 'sr-':
+                if key[0:3] != "sr-":
                     uid_list.append(dataset[key].SOPInstanceUID)
             else:
                 uid_list.append(dataset[key].SOPInstanceUID)
