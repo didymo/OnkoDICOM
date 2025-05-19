@@ -4,7 +4,13 @@ from contextlib import contextmanager
 from math import ceil
 
 from PySide6.QtWidgets import QWidget, QLabel, QApplication, QGridLayout, QSizePolicy
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QHorizontalBarSeries, QBarSet
+from PySide6.QtCharts import (
+    QChart,
+    QChartView,
+    QLineSeries,
+    QHorizontalBarSeries,
+    QBarSet,
+)
 from PySide6.QtGui import QCursor, QPixmap, QPainter, Qt
 from PySide6 import QtCore
 
@@ -59,7 +65,7 @@ class WindowingSlider(QWidget):
 
         self.set_dicom_view(dicom_view)
         patient_dict_container = PatientDictContainer()
-        self.pixel_values = patient_dict_container.get('pixel_values')
+        self.pixel_values = patient_dict_container.get("pixel_values")
 
         # Manage size of whole widget
         self.fixed_width = width
@@ -75,7 +81,9 @@ class WindowingSlider(QWidget):
         self.histogram_view.windowing_slider = self
         self.histogram = QChart()
         self.histogram_view.setChart(self.histogram)
-        self.histogram.setPlotArea(QtCore.QRectF(0, 0, self.fixed_width - 10, self.height()))
+        self.histogram.setPlotArea(
+            QtCore.QRectF(0, 0, self.fixed_width - 10, self.height())
+        )
 
         self.histogram_view.resize(self.fixed_width, self.height())
         self.histogram_view.setMouseTracking(True)
@@ -89,9 +97,9 @@ class WindowingSlider(QWidget):
         self.sliders.setLabelsVisible(False)
         self.slider_bars = []
         for i in range(0, self.slider_density):
-            self.slider_bars.append(QBarSet(''))
+            self.slider_bars.append(QBarSet(""))
             self.slider_bars[-1].append(1)
-            self.slider_bars[-1].setColor('white')
+            self.slider_bars[-1].setColor("white")
             self.sliders.append(self.slider_bars[-1])
         self.histogram.addSeries(self.sliders)
         self.histogram.zoom(2)  # at default zoom bars don't fill the chart
@@ -107,7 +115,7 @@ class WindowingSlider(QWidget):
         self.bottom = 0
 
         # Get the values for window and level from the dict
-        windowing_limits = patient_dict_container.get('dict_windowing')['Normal']
+        windowing_limits = patient_dict_container.get("dict_windowing")["Normal"]
 
         # Set window and level to the new values
         window = windowing_limits[0]
@@ -116,7 +124,7 @@ class WindowingSlider(QWidget):
 
         # Middle drag
         self.mouse_held = False
-        self.selected_bar = 'top'
+        self.selected_bar = "top"
         self.drag_start = 0
         self.drag_upper_limit = 0
         self.drag_lower_limit = 0
@@ -143,14 +151,18 @@ class WindowingSlider(QWidget):
         self.dicom_view.windowing_slider = self
 
     def resizeEvent(self, event):
-        self.histogram.setPlotArea(QtCore.QRectF(0, 0, self.fixed_width - 10, event.size().height()))
+        self.histogram.setPlotArea(
+            QtCore.QRectF(0, 0, self.fixed_width - 10, event.size().height())
+        )
 
     def height_to_index(self, pos):
         """
         Converts graph coordinates to a slider index
         :param pos: a local coordinate on the graph
         """
-        index = self.slider_density - 1 - int(pos / (self.height() / self.slider_density))
+        index = (
+            self.slider_density - 1 - int(pos / (self.height() / self.slider_density))
+        )
         if index < 0:
             return 0
         if index >= self.slider_density:
@@ -195,7 +207,7 @@ class WindowingSlider(QWidget):
         """
         self.histogram.removeSeries(self.density)
         self.density = QLineSeries()
-        self.density.setColor('grey')
+        self.density.setColor("grey")
         for i in range(0, len(densities)):
             self.density.append(2 - densities[i], i)
         self.histogram.addSeries(self.density)
@@ -256,15 +268,19 @@ class WindowingSlider(QWidget):
         index = min(index, self.slider_density - 1)
 
         if top_bar:
-            self.slider_bars[self.top].setColor('white')
+            self.slider_bars[self.top].setColor("white")
             self.top = index
-            self.slider_bars[index].setColor('red')
+            self.slider_bars[index].setColor("red")
         else:
             # Ensure the bottom bar is actually rendered
             # Functionally the bar will still be correct
-            self.slider_bars[max(self.bottom, WindowingSlider.MIN_BOTTOM_INDEX)].setColor('white')
+            self.slider_bars[
+                max(self.bottom, WindowingSlider.MIN_BOTTOM_INDEX)
+            ].setColor("white")
             self.bottom = index
-            self.slider_bars[max(index, WindowingSlider.MIN_BOTTOM_INDEX)].setColor('red')
+            self.slider_bars[max(index, WindowingSlider.MIN_BOTTOM_INDEX)].setColor(
+                "red"
+            )
 
     def set_bars(self, top_index, bottom_index):
         """
@@ -292,7 +308,7 @@ class WindowingSlider(QWidget):
         if min_dist > WindowingSlider.MAX_CLICK_DIST:
             # Check for middle drag
             if index - self.top > 0 or index - self.bottom > 0:
-                self.selected_bar = 'middle'
+                self.selected_bar = "middle"
                 self.mouse_held = True
                 self.drag_start = index
                 self.drag_upper_limit = self.slider_density - self.top
@@ -303,9 +319,9 @@ class WindowingSlider(QWidget):
 
         self.mouse_held = True
         if dist_to_top < dist_to_bottom:
-            self.selected_bar = 'top'
+            self.selected_bar = "top"
         else:
-            self.selected_bar = 'bottom'
+            self.selected_bar = "bottom"
 
     def mouse_move(self, event):
         """
@@ -353,11 +369,11 @@ class WindowingSlider(QWidget):
     def update_bar_position(self, event):
         # move selected bar to the closest valid position
         index = int(self.height_to_index(event.position().y()))
-        if self.selected_bar == 'top':
+        if self.selected_bar == "top":
             if index <= self.bottom:
                 index = self.bottom + 1
             self.update_bar(index, top_bar=True)
-        elif self.selected_bar == 'bottom':
+        elif self.selected_bar == "bottom":
             if index >= self.top:
                 index = self.top - 1
             self.update_bar(index, top_bar=False)
