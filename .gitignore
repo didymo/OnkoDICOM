@@ -19,3 +19,7 @@ Hash_map.csv
 # Ignore compile results
 build/
 dist/
+.qodo
+
+# Ignore Apple specific files
+.DS_Store

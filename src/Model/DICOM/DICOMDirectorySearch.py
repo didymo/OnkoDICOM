@@ -2,6 +2,8 @@
 File to handle the DICOM directory search functionality
 Searches a given directory to extract a Patient>Study>Series>Image structure
 """
+
+import logging
 import os
 
 from pydicom import dcmread
@@ -51,7 +53,7 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
             progress_callback.emit(files_searched)
 
             # Fix to program crashing when encountering DICOMDIR files
-            if file == "DICOMDIR":
+            if file == 'DICOMDIR':
                 continue
 
             file_path = root + os.sep + file
@@ -63,70 +65,83 @@ def get_dicom_structure(path, interrupt_flag, progress_callback):
                 if 'PatientID' in dicom_file:
                     patient_id = dicom_file.PatientID
                 else:
-                    patient_id = "no_id_" + str(files_with_no_patient_id)
+                    patient_id = 'no_id_' + str(files_with_no_patient_id)
                     files_with_no_patient_id += 1
 
-                if "SOPInstanceUID" in dicom_file \
-                        and "SOPClassUID" in dicom_file \
-                        and "Modality" in dicom_file:
-                    new_image = Image(file_path,
-                                      dicom_file.SOPInstanceUID,
-                                      dicom_file.SOPClassUID,
-                                      dicom_file.Modality)
+                if (
+                    'SOPInstanceUID' in dicom_file
+                    and 'SOPClassUID' in dicom_file
+                    and 'Modality' in dicom_file
+                ):
+                    new_image = Image(
+                        file_path,
+                        dicom_file.SOPInstanceUID,
+                        dicom_file.SOPClassUID,
+                        dicom_file.Modality,
+                    )
                     if not dicom_structure.has_patient(patient_id):
+                        if 'SeriesInstanceUID' not in dicom_file:
+                            logging.error('No SeriesInstanceUID found in %s', file_path)
+                            continue
                         new_series = Series(dicom_file.SeriesInstanceUID)
                         new_series.series_description = dicom_file.get(
-                            "SeriesDescription")
+                            'SeriesDescription'
+                        )
                         new_series.add_referenced_objects(dicom_file)
                         new_series.add_image(new_image)
 
                         new_study = Study(dicom_file.StudyInstanceUID)
-                        new_study.study_description = dicom_file.get(
-                            "StudyDescription")
+                        new_study.study_description = dicom_file.get('StudyDescription')
                         new_study.add_series(new_series)
 
-                        new_patient = Patient(patient_id,
-                                              dicom_file.PatientName)
+                        new_patient = Patient(patient_id, dicom_file.PatientName)
                         new_patient.add_study(new_study)
 
                         dicom_structure.add_patient(new_patient)
                     else:
                         existing_patient = dicom_structure.get_patient(
-                            dicom_file.PatientID)
-                        if not existing_patient.has_study(
-                                dicom_file.StudyInstanceUID):
+                            dicom_file.PatientID
+                        )
+                        if not existing_patient.has_study(dicom_file.StudyInstanceUID):
                             new_series = Series(dicom_file.SeriesInstanceUID)
                             new_series.series_description = dicom_file.get(
-                                "SeriesDescription")
+                                'SeriesDescription'
+                            )
                             new_series.add_referenced_objects(dicom_file)
                             new_series.add_image(new_image)
 
                             new_study = Study(dicom_file.StudyInstanceUID)
                             new_study.study_description = dicom_file.get(
-                                "StudyDescription")
+                                'StudyDescription'
+                            )
                             new_study.add_series(new_series)
 
                             existing_patient.add_study(new_study)
                         else:
                             existing_study = existing_patient.get_study(
-                                dicom_file.StudyInstanceUID)
+                                dicom_file.StudyInstanceUID
+                            )
                             if not existing_study.has_series(
-                                    dicom_file.SeriesInstanceUID):
-                                new_series = Series(
-                                    dicom_file.SeriesInstanceUID)
+                                dicom_file.SeriesInstanceUID
+                            ):
+                                new_series = Series(dicom_file.SeriesInstanceUID)
                                 new_series.series_description = dicom_file.get(
-                                    "SeriesDescription")
+                                    'SeriesDescription'
+                                )
                                 new_series.add_referenced_objects(dicom_file)
                                 new_series.add_image(new_image)
 
                                 existing_study.add_series(new_series)
                             else:
                                 existing_series = existing_study.get_series(
-                                    dicom_file.SeriesInstanceUID)
+                                    dicom_file.SeriesInstanceUID
+                                )
                                 if not existing_series.has_image(
-                                        dicom_file.SOPInstanceUID):
-                                    existing_series.series_description = \
-                                        dicom_file.get("SeriesDescription")
+                                    dicom_file.SOPInstanceUID
+                                ):
+                                    existing_series.series_description = dicom_file.get(
+                                        'SeriesDescription'
+                                    )
                                     existing_series.add_image(new_image)
-                                    
+
     return dicom_structure
