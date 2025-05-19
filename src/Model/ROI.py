@@ -717,8 +717,7 @@ def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
     if isinstance(hull, Polygon):
         polygon_list.append(hull_to_points(hull))
     elif isinstance(hull, MultiPolygon):
-        for polygon in hull.geoms:
-            polygon_list.append(hull_to_points(polygon))
+        polygon_list.extend(hull_to_points(polygon) for polygon in hull.geoms)
     return polygon_list
 
 
