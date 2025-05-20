@@ -4,16 +4,23 @@ from contextlib import contextmanager
 from math import ceil
 
 from PySide6.QtWidgets import QWidget, QLabel, QApplication, QGridLayout, QSizePolicy
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QHorizontalBarSeries, QBarSet
+from PySide6.QtCharts import (
+    QChart,
+    QChartView,
+    QLineSeries,
+    QHorizontalBarSeries,
+    QBarSet,
+)
 from PySide6.QtGui import QCursor, QPixmap, QPainter, Qt
 from PySide6 import QtCore
 
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Windowing import windowing_model_direct, set_windowing_slider
 
+
 @contextmanager
 def wait_cursor():
-    """context for wrapping a long running function 
+    """context for wrapping a long running function
     with wait_cursor():
         # do lengthy process
         pass
@@ -23,6 +30,7 @@ def wait_cursor():
         yield
     finally:
         QApplication.restoreOverrideCursor()
+
 
 class WindowingSlider(QWidget):
     """
@@ -49,7 +57,7 @@ class WindowingSlider(QWidget):
         :param width: the fixed width of the widget
         """
 
-        super(WindowingSlider,self).__init__()
+        super(WindowingSlider, self).__init__()
         self.action_handler = None
         if WindowingSlider.SINGLETON is None:
             WindowingSlider.SINGLETON = self
@@ -74,7 +82,8 @@ class WindowingSlider(QWidget):
         self.histogram = QChart()
         self.histogram_view.setChart(self.histogram)
         self.histogram.setPlotArea(
-            QtCore.QRectF(0, 0, self.fixed_width-10, self.height()))
+            QtCore.QRectF(0, 0, self.fixed_width - 10, self.height())
+        )
 
         self.histogram_view.resize(self.fixed_width, self.height())
         self.histogram_view.setMouseTracking(True)
@@ -106,7 +115,7 @@ class WindowingSlider(QWidget):
         self.bottom = 0
 
         # Get the values for window and level from the dict
-        windowing_limits = patient_dict_container.get("dict_windowing")['Normal']
+        windowing_limits = patient_dict_container.get("dict_windowing")["Normal"]
 
         # Set window and level to the new values
         window = windowing_limits[0]
@@ -123,8 +132,10 @@ class WindowingSlider(QWidget):
         self.drag_lower_offset = 0
 
         # Generate the histogram
-        self.initialise_density_histogram()
-        self.update_density_histogram()
+        disable_histogram = True  # turning off because performance is not acceptable
+        if not disable_histogram:
+            self.initialise_density_histogram()
+            self.update_density_histogram()
 
     def set_action_handler(self, action_handler):
         """
@@ -141,19 +152,20 @@ class WindowingSlider(QWidget):
 
     def resizeEvent(self, event):
         self.histogram.setPlotArea(
-            QtCore.QRectF(0, 0, self.fixed_width-10, event.size().height()))
+            QtCore.QRectF(0, 0, self.fixed_width - 10, event.size().height())
+        )
 
     def height_to_index(self, pos):
         """
         Converts graph coordinates to a slider index
         :param pos: a local coordinate on the graph
         """
-        index = self.slider_density-1-int(pos/(self.height()/self.slider_density))
+        index = (
+            self.slider_density - 1 - int(pos / (self.height() / self.slider_density))
+        )
         if index < 0:
             return 0
-        if index >= self.slider_density:
-            return self.slider_density-1
-        return index
+        return self.slider_density - 1 if index >= self.slider_density else index
 
     def window_to_index(self, val):
         """
@@ -182,10 +194,8 @@ class WindowingSlider(QWidget):
         :param level: the level value of the preset
         """
         level = level + WindowingSlider.LEVEL_OFFSET
-        self.update_bar(
-            self.window_to_index(level - window * 0.5), top_bar=True)
-        self.update_bar(
-            self.window_to_index(level + window * 0.5), top_bar=False)
+        self.update_bar(self.window_to_index(level - window * 0.5), top_bar=True)
+        self.update_bar(self.window_to_index(level + window * 0.5), top_bar=False)
 
     def set_density_histogram(self, densities):
         """
@@ -197,7 +207,7 @@ class WindowingSlider(QWidget):
         self.density = QLineSeries()
         self.density.setColor("grey")
         for i in range(0, len(densities)):
-            self.density.append(2-densities[i], i)
+            self.density.append(2 - densities[i], i)
         self.histogram.addSeries(self.density)
 
     def update_density_histogram(self):
@@ -205,6 +215,13 @@ class WindowingSlider(QWidget):
         Updates the histogram display.
         """
         slice_index = self.slice_slider.value()
+        # self.densities won't be set if (CT) initialise_density_histogram() hasn't been called
+        # and it's been turned off because of performance issues.  However, this is a useful
+        # guard even if CT histogram feature gets turned back on.  And may provide
+        # a useful way to deal with lazy histogram calculation if we decide to do that and
+        # turn it back on.
+        if not self.densities:
+            return
         histogram_values = self.densities[slice_index]
         self.set_density_histogram(histogram_values)
 
@@ -224,7 +241,7 @@ class WindowingSlider(QWidget):
                 p = min(pixel, WindowingSlider.MAX_PIXEL_VALUE)
                 p = max(p, 0)
                 p = round(p)
-                if p>=0 and p < WindowingSlider.MAX_PIXEL_VALUE:
+                if p >= 0 and p < WindowingSlider.MAX_PIXEL_VALUE:
                     self.densities[s][p] += 1
             max_value = max(self.densities[s])
             min_value = min(self.densities[s])
@@ -246,7 +263,7 @@ class WindowingSlider(QWidget):
 
         # Clamp index to range
         index = max(index, 0)
-        index = min(index, self.slider_density-1)
+        index = min(index, self.slider_density - 1)
 
         if top_bar:
             self.slider_bars[self.top].setColor("white")
@@ -257,11 +274,11 @@ class WindowingSlider(QWidget):
             # Functionally the bar will still be correct
             self.slider_bars[
                 max(self.bottom, WindowingSlider.MIN_BOTTOM_INDEX)
-                ].setColor("white")
+            ].setColor("white")
             self.bottom = index
-            self.slider_bars[
-                max(index, WindowingSlider.MIN_BOTTOM_INDEX)
-                ].setColor("red")
+            self.slider_bars[max(index, WindowingSlider.MIN_BOTTOM_INDEX)].setColor(
+                "red"
+            )
 
     def set_bars(self, top_index, bottom_index):
         """
@@ -331,7 +348,8 @@ class WindowingSlider(QWidget):
             True,
             False,
             False,
-            False]
+            False,
+        ]
 
         top_bar = self.index_to_window(self.top)
         bottom_bar = self.index_to_window(self.bottom)
@@ -342,10 +360,9 @@ class WindowingSlider(QWidget):
 
         with wait_cursor():
             windowing_model_direct(level, window, send)
-            if self.action_handler is not None:    
+            if self.action_handler is not None:
                 self.action_handler.update_views()
             pass
-
 
     def update_bar_position(self, event):
         # move selected bar to the closest valid position

@@ -1,35 +1,37 @@
 import collections
 import datetime
-import random
 import logging
+import random
 from copy import deepcopy
 from pathlib import Path
+
 import pydicom
+import numpy as np
 from alphashape import alphashape
-from pydicom.uid import generate_uid
 from pydicom import Dataset, Sequence
 from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
-from pydicom.uid import generate_uid, ImplicitVRLittleEndian
+from pydicom.uid import ImplicitVRLittleEndian, generate_uid
+from PySide6 import QtCore, QtGui
 from scipy.spatial.qhull import QhullError
-from shapely.geometry import Polygon, MultiPolygon, GeometryCollection
+from shapely.geometry import GeometryCollection, MultiPolygon, Polygon
 from shapely.validation import make_valid
 
-from src.Model.MovingDictContainer import MovingDictContainer
-from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 from src.constants import DEFAULT_WINDOW_SIZE
-from src.Model.CalculateImages import *
+from src.Model.MovingDictContainer import MovingDictContainer
+
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Transform import inv_linear_transform
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 
 # Disable INFO logging of shapely
-logging.getLogger('shapely.geos').setLevel(logging.CRITICAL)
+logging.getLogger("shapely.geos").setLevel(logging.CRITICAL)
 
 # Dictionary of lambda functions for ROI Manipulation
 geometry_manipulation = {
-    'INTERSECTION': lambda geom_1, geom_2: geom_1.intersection(geom_2),
-    'UNION': lambda geom_1, geom_2: geom_1.union(geom_2),
-    'DIFFERENCE': lambda geom_1, geom_2: rois_difference(geom_1, geom_2)
+    "INTERSECTION": lambda geom_1, geom_2: geom_1.intersection(geom_2),
+    "UNION": lambda geom_1, geom_2: geom_1.union(geom_2),
+    "DIFFERENCE": lambda geom_1, geom_2: rois_difference(geom_1, geom_2),
 }
 
 
@@ -92,12 +94,12 @@ def delete_roi(rtss, roi_name):
 
 def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
     """
-        Add new contour image sequence ROI to rtss
-        :param rtss: dataset of RTSS
-        :param roi_name: ROIName
-        :param roi_coordinates: Coordinates of pixels for new ROI
-        :param data_set: Data Set of selected DICOM image file
-        :return: rtss, with added ROI
+    Add new contour image sequence ROI to rtss
+    :param rtss: dataset of RTSS
+    :param roi_name: ROIName
+    :param roi_coordinates: Coordinates of pixels for new ROI
+    :param data_set: Data Set of selected DICOM image file
+    :return: rtss, with added ROI
     """
 
     # Creating a new ROIContourSequence, ContourSequence,
@@ -121,33 +123,27 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
         if contour.ReferencedROINumber == existing_roi_number:
             position = index
 
-    new_contour_number = len(
-        rtss.ROIContourSequence[position].ContourSequence) + 1
+    new_contour_number = len(rtss.ROIContourSequence[position].ContourSequence) + 1
 
     # ROI Sequence
     for contour in contour_sequence:
         # if data_set.get("ReferencedImageSequence"):
-        contour.add_new(Tag("ContourImageSequence"),
-                        "SQ", contour_image_sequence)
+        contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
 
         # Contour Sequence
         for contour_image in contour_image_sequence:
             # CT Image Storage
-            contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI",
-                                  referenced_sop_class_uid)
-            contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI",
-                                  referenced_sop_instance_uid)
+            contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI", referenced_sop_class_uid)
+            contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
         contour.add_new(Tag("ContourNumber"), "IS", new_contour_number)
         if not _is_closed_contour(roi_coordinates):
             contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
-            contour.add_new(Tag("NumberOfContourPoints"), "IS",
-                            number_of_contour_points)
+            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
             contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
         else:
             contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
-            contour.add_new(Tag("NumberOfContourPoints"), "IS",
-                            number_of_contour_points - 1)
+            contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points - 1)
             contour.add_new(Tag("ContourData"), "DS", roi_coordinates[0:-3])
 
     rtss.ROIContourSequence[position].ContourSequence.extend(contour_sequence)
@@ -155,8 +151,7 @@ def add_to_roi(rtss, roi_name, roi_coordinates, data_set):
     return rtss
 
 
-def create_roi(rtss, roi_name, roi_list,
-               rt_roi_interpreted_type="ORGAN", rtss_owner="PATIENT"):
+def create_roi(rtss, roi_name, roi_list, rt_roi_interpreted_type="ORGAN", rtss_owner="PATIENT"):
     """
     Create new contours of an ROI to rtss :param rtss: dataset of RTSS
     :param roi_name: ROIName :param roi_list: the list of contours to be
@@ -181,11 +176,10 @@ def create_roi(rtss, roi_name, roi_list,
         if value["name"] == roi_name:
             roi_exists = True
     for roi_info in roi_list:
-        data_set = roi_info['ds']
-        roi_coordinates = roi_info['coords']
+        data_set = roi_info["ds"]
+        roi_coordinates = roi_info["coords"]
         if not roi_exists:
-            rtss = add_new_roi(rtss, roi_name, roi_coordinates, data_set,
-                               rt_roi_interpreted_type)
+            rtss = add_new_roi(rtss, roi_name, roi_coordinates, data_set, rt_roi_interpreted_type)
             roi_exists = True
         else:
             # Add contour image data to existing ROI
@@ -194,8 +188,7 @@ def create_roi(rtss, roi_name, roi_list,
     return rtss
 
 
-def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
-                rt_roi_interpreted_type):
+def add_new_roi(rtss, roi_name, roi_coordinates, data_set, rt_roi_interpreted_type):
     """
     Add the information of a new ROI to the rtss
     :param rtss: dataset of RTSS
@@ -215,10 +208,8 @@ def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
         roi_number = 1
     else:
         first_roi_sequence = rtss["StructureSetROISequence"].value[0]
-        referenced_frame_of_reference_uid = \
-            first_roi_sequence.ReferencedFrameOfReferenceUID
-        roi_number = \
-            rtss["StructureSetROISequence"].value[-1].ROINumber + 1
+        referenced_frame_of_reference_uid = first_roi_sequence.ReferencedFrameOfReferenceUID
+        roi_number = rtss["StructureSetROISequence"].value[-1].ROINumber + 1
 
     # Colour TBC
     red = random.randint(0, 255)
@@ -232,16 +223,14 @@ def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
     original_structure_set = rtss.StructureSetROISequence
 
     for structure_set in structure_set_sequence:
-        structure_set.add_new(Tag("ROINumber"), 'IS', roi_number)
-        structure_set.add_new(Tag("ReferencedFrameOfReferenceUID"), 'UI',
-                              referenced_frame_of_reference_uid)
-        structure_set.add_new(Tag("ROIName"), 'LO', roi_name)
-        structure_set.add_new(Tag("ROIGenerationAlgorithm"), 'CS', "")
+        structure_set.add_new(Tag("ROINumber"), "IS", roi_number)
+        structure_set.add_new(Tag("ReferencedFrameOfReferenceUID"), "UI", referenced_frame_of_reference_uid)
+        structure_set.add_new(Tag("ROIName"), "LO", roi_name)
+        structure_set.add_new(Tag("ROIGenerationAlgorithm"), "CS", "")
 
     # Combine old and new structure set
     original_structure_set.extend(structure_set_sequence)
-    rtss.add_new(Tag("StructureSetROISequence"), "SQ",
-                 original_structure_set)
+    rtss.add_new(Tag("StructureSetROISequence"), "SQ", original_structure_set)
 
     # Saving a new ROIContourSequence, ContourSequence,
     # ContourImageSequence
@@ -260,31 +249,22 @@ def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
         # ROI Sequence
         for contour in contour_sequence:
             # if data_set.get("ReferencedImageSequence"):
-            contour.add_new(Tag("ContourImageSequence"), "SQ",
-                            contour_image_sequence)
+            contour.add_new(Tag("ContourImageSequence"), "SQ", contour_image_sequence)
 
             # Contour Sequence
             for contour_image in contour_image_sequence:
-                contour_image.add_new(
-                    Tag("ReferencedSOPClassUID"), "UI",
-                    referenced_sop_class_uid)  # CT Image Storage
-                contour_image.add_new(Tag("ReferencedSOPInstanceUID"),
-                                      "UI", referenced_sop_instance_uid)
+                contour_image.add_new(Tag("ReferencedSOPClassUID"), "UI", referenced_sop_class_uid)  # CT Image Storage
+                contour_image.add_new(Tag("ReferencedSOPInstanceUID"), "UI", referenced_sop_instance_uid)
 
             contour.add_new(Tag("ContourNumber"), "IS", 1)
             if not _is_closed_contour(roi_coordinates):
-                contour.add_new(Tag("ContourGeometricType"), "CS",
-                                "OPEN_PLANAR")
-                contour.add_new(Tag("NumberOfContourPoints"), "IS",
-                                number_of_contour_points)
+                contour.add_new(Tag("ContourGeometricType"), "CS", "OPEN_PLANAR")
+                contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points)
                 contour.add_new(Tag("ContourData"), "DS", roi_coordinates)
             else:
-                contour.add_new(Tag("ContourGeometricType"), "CS",
-                                "CLOSED_PLANAR")
-                contour.add_new(Tag("NumberOfContourPoints"), "IS",
-                                number_of_contour_points - 1)
-                contour.add_new(Tag("ContourData"), "DS",
-                                roi_coordinates[0:-3])
+                contour.add_new(Tag("ContourGeometricType"), "CS", "CLOSED_PLANAR")
+                contour.add_new(Tag("NumberOfContourPoints"), "IS", number_of_contour_points - 1)
+                contour.add_new(Tag("ContourData"), "DS", roi_coordinates[0:-3])
 
         roi_contour.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
 
@@ -302,18 +282,13 @@ def add_new_roi(rtss, roi_name, roi_coordinates, data_set,
         # TODO: Check to make sure that there aren't multiple
         #  observations per ROI, e.g. increment from existing
         #  Observation Numbers?
-        ROI_observations.add_new(Tag("ObservationNumber"), 'IS',
-                                 roi_number)
-        ROI_observations.add_new(Tag("ReferencedROINumber"), 'IS',
-                                 roi_number)
-        ROI_observations.add_new(Tag("RTROIInterpretedType"), 'CS',
-                                 rt_roi_interpreted_type)
-        ROI_observations.add_new(Tag("ROIInterpreter"), 'CS',
-                                 "")
+        ROI_observations.add_new(Tag("ObservationNumber"), "IS", roi_number)
+        ROI_observations.add_new(Tag("ReferencedROINumber"), "IS", roi_number)
+        ROI_observations.add_new(Tag("RTROIInterpretedType"), "CS", rt_roi_interpreted_type)
+        ROI_observations.add_new(Tag("ROIInterpreter"), "CS", "")
 
     original_roi_observation_sequence.extend(rt_roi_observations_sequence)
-    rtss.add_new(Tag("RTROIObservationsSequence"), "SQ",
-                 original_roi_observation_sequence)
+    rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_roi_observation_sequence)
     return rtss
 
 
@@ -357,8 +332,7 @@ def get_raw_contour_data(rtss):
         for roi_slice in roi.ContourSequence:
             referenced_sop_instance_uid = None
             for contour_img in roi_slice.ContourImageSequence:
-                referenced_sop_instance_uid = \
-                    contour_img.ReferencedSOPInstanceUID
+                referenced_sop_instance_uid = contour_img.ReferencedSOPInstanceUID
             number_of_contour_points = roi_slice.NumberOfContourPoints
             roi_points_count += int(number_of_contour_points)
             contour_data = roi_slice.ContourData
@@ -395,12 +369,9 @@ def calculate_matrix(img_ds):
         shape=(4, 4),
         buffer=np.array(
             [
-                [orientation[0] * dist_row, orientation[3] * dist_col, 0,
-                 position[0]],
-                [orientation[1] * dist_row, orientation[4] * dist_col, 0,
-                 position[1]],
-                [orientation[2] * dist_row, orientation[5] * dist_col, 0,
-                 position[2]],
+                [orientation[0] * dist_row, orientation[3] * dist_col, 0, position[0]],
+                [orientation[1] * dist_row, orientation[4] * dist_col, 0, position[1]],
+                [orientation[2] * dist_row, orientation[5] * dist_col, 0, position[2]],
                 [0, 0, 0, 1],
             ],
             dtype=float,
@@ -412,20 +383,14 @@ def calculate_matrix(img_ds):
     for i in range(0, img_ds.Columns):
         i_mat = np.matmul(
             matrix_m,
-            np.ndarray(
-                shape=(4, 1),
-                buffer=np.array([[i], [0], [0], [1]], dtype=float)
-            ),
+            np.ndarray(shape=(4, 1), buffer=np.array([[i], [0], [0], [1]], dtype=float)),
         )
         x.append(float(i_mat[0]))
 
     for j in range(0, img_ds.Rows):
         j_mat = np.matmul(
             matrix_m,
-            np.ndarray(
-                shape=(4, 1),
-                buffer=np.array([[0], [j], [0], [1]], dtype=float)
-            ),
+            np.ndarray(shape=(4, 1), buffer=np.array([[0], [j], [0], [1]], dtype=float)),
         )
         y.append(float(j_mat[1]))
 
@@ -442,7 +407,7 @@ def get_pixluts(dict_ds):
     non_img_type = ["rtdose", "rtplan", "rtss"]
     for ds in dict_ds:
         if ds not in non_img_type:
-            if isinstance(ds, str) and ds[0:3] == 'sr-':
+            if isinstance(ds, str) and ds[0:3] == "sr-":
                 continue
             else:
                 img_ds = dict_ds[ds]
@@ -542,21 +507,14 @@ def convert_hull_list_to_contours_data(rois_to_save, patient_dict_container):
     if rois_to_save == {}:
         return []
     for slice_id, slice_info in rois_to_save.items():
-        pixel_hull_list = slice_info['coords']
+        pixel_hull_list = slice_info["coords"]
         for pixel_hull in pixel_hull_list:
-            single_array = convert_hull_to_single_array_of_rcs(
-                patient_dict_container,
-                pixel_hull, slice_id
-            )
-            roi_list.append({
-                'ds': slice_info['ds'],
-                'coords': single_array
-            })
+            single_array = convert_hull_to_single_array_of_rcs(patient_dict_container, pixel_hull, slice_id)
+            roi_list.append({"ds": slice_info["ds"], "coords": single_array})
     return roi_list
 
 
-def convert_hull_to_single_array_of_rcs(patient_dict_container, pixel_hull,
-                                        slider_id):
+def convert_hull_to_single_array_of_rcs(patient_dict_container, pixel_hull, slider_id):
     """
     Convert border coordinate to contour data for one slice
     :param patient_dict_container: Dictionary container for
@@ -590,8 +548,7 @@ def convert_hull_to_rcs(patient_dict_container, hull_pts, slider_id):
 
     """
     dataset = patient_dict_container.dataset[slider_id]
-    pixlut = patient_dict_container.get("pixluts")[
-        dataset.SOPInstanceUID]
+    pixlut = patient_dict_container.get("pixluts")[dataset.SOPInstanceUID]
     z_coord = dataset.SliceLocation
     points = []
 
@@ -628,12 +585,12 @@ def pixel_to_rcs(pixlut, x, y):
 
 
 def get_contour_pixel(
-        dict_raw_contour_data,
-        roi_selected,
-        dict_pixluts,
-        curr_slice,
-        prone=False,
-        feetfirst=False,
+    dict_raw_contour_data,
+    roi_selected,
+    dict_pixluts,
+    curr_slice,
+    prone=False,
+    feetfirst=False,
 ):
     """
     Get pixels of contours of all rois selected within current slice.
@@ -655,9 +612,7 @@ def get_contour_pixel(
         raw_contours = dict_raw_contour_data[roi]
         number_of_contours = len(raw_contours[curr_slice])
         for i in range(number_of_contours):
-            contour_pixels = calculate_pixels(
-                pixlut, raw_contours[curr_slice][i], prone, feetfirst
-            )
+            contour_pixels = calculate_pixels(pixlut, raw_contours[curr_slice][i], prone, feetfirst)
             dict_pixels_of_roi[curr_slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
 
@@ -681,8 +636,7 @@ def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
             pixlut = dict_pixluts[roi_slice]
             number_of_contours = len(raw_contour[roi_slice])
             for i in range(number_of_contours):
-                contour_pixels = calculate_pixels(pixlut,
-                                                  raw_contour[roi_slice][i])
+                contour_pixels = calculate_pixels(pixlut, raw_contour[roi_slice][i])
                 dict_pixels_of_roi[roi_slice].append(contour_pixels)
         dict_pixels[roi] = dict_pixels_of_roi
     return dict_pixels
@@ -690,10 +644,10 @@ def get_roi_contour_pixel(dict_raw_contour_data, roi_list, dict_pixluts):
 
 def transform_rois_contours(axial_rois_contours):
     """
-       Transform the axial ROI contours into coronal and sagittal
-       contours
-       :param axial_rois_contours: the dictionary of axial ROI contours
-       :return: Tuple of coronal and sagittal ROI contours
+    Transform the axial ROI contours into coronal and sagittal
+    contours
+    :param axial_rois_contours: the dictionary of axial ROI contours
+    :return: Tuple of coronal and sagittal ROI contours
     """
     coronal_rois_contours = {}
     sagittal_rois_contours = {}
@@ -706,25 +660,19 @@ def transform_rois_contours(axial_rois_contours):
             for contour in contours:
                 for i in range(len(contour)):
                     if contour[i][1] in coronal_rois_contours[name]:
-                        coronal_rois_contours[name][contour[i][1]][0] \
-                            .append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
                     else:
                         coronal_rois_contours[name][contour[i][1]] = [[]]
-                        coronal_rois_contours[name][contour[i][1]][0] \
-                            .append([contour[i][0], slice_ids[slice_id]])
+                        coronal_rois_contours[name][contour[i][1]][0].append([contour[i][0], slice_ids[slice_id]])
 
                     if contour[i][0] in sagittal_rois_contours[name]:
-                        sagittal_rois_contours[name][contour[i][0]][0] \
-                            .append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
                     else:
                         sagittal_rois_contours[name][contour[i][0]] = [[]]
-                        sagittal_rois_contours[name][contour[i][0]][0] \
-                            .append([contour[i][1], slice_ids[slice_id]])
+                        sagittal_rois_contours[name][contour[i][0]][0].append([contour[i][1], slice_ids[slice_id]])
 
-    coronal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
-        coronal_rois_contours)
-    sagittal_rois_contours = convert_coordinates_map_to_polygon_of_rois(
-        sagittal_rois_contours)
+    coronal_rois_contours = convert_coordinates_map_to_polygon_of_rois(coronal_rois_contours)
+    sagittal_rois_contours = convert_coordinates_map_to_polygon_of_rois(sagittal_rois_contours)
     return coronal_rois_contours, sagittal_rois_contours
 
 
@@ -749,15 +697,14 @@ def convert_coordinates_map_to_polygon_of_rois(contours_map):
 
 def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
     """
-        Return the alpha shape of the highlighted pixels using the alpha
-        entered by the user.
-        :param pixel_coords: the coordinates of the contour pixels
-        :return: List of lists of points ordered to form polygon(s).
-        """
+    Return the alpha shape of the highlighted pixels using the alpha
+    entered by the user.
+    :param pixel_coords: the coordinates of the contour pixels
+    :return: List of lists of points ordered to form polygon(s).
+    """
     # Get all the pixels in the drawing window's list of highlighted
     # pixels, excluding the removed pixels.
-    target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in
-                           pixel_coords]
+    target_pixel_coords = [(item[0] + 1, item[1] + 1) for item in pixel_coords]
     # Calculate the concave hull of the points.
     # TODO: auto-generate an optimized alpha value
     # alpha = 0.95 * alphashape.optimizealpha(points)
@@ -770,8 +717,7 @@ def calculate_concave_hull_of_points(pixel_coords, alpha=0.2):
     if isinstance(hull, Polygon):
         polygon_list.append(hull_to_points(hull))
     elif isinstance(hull, MultiPolygon):
-        for polygon in hull:
-            polygon_list.append(hull_to_points(polygon))
+        polygon_list.extend(hull_to_points(polygon) for polygon in hull.geoms)
     return polygon_list
 
 
@@ -789,8 +735,7 @@ def hull_to_points(hull):
     return points
 
 
-def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
-                     pixmap_aspect=1):
+def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours, pixmap_aspect=1):
     """
     Calculate a list of polygons to display for a given ROI and a given
     slice.
@@ -826,16 +771,14 @@ def calc_roi_polygon(curr_roi, curr_slice, dict_rois_contours,
     list_polygons = []
     pixel_list = dict_rois_contours[curr_roi][curr_slice]
     dataset = PatientDictContainer().dataset[0]
-    different_sizes = (dataset['Rows'].value != DEFAULT_WINDOW_SIZE)
+    different_sizes = dataset["Rows"].value != DEFAULT_WINDOW_SIZE
 
     if different_sizes:
         for i in range(len(pixel_list)):
             list_qpoints = []
             contour = pixel_list[i]
             for point in contour:
-                x_t, y_t = inv_linear_transform(
-                    point[0], point[1],
-                    dataset['Rows'].value, dataset['Columns'].value)
+                x_t, y_t = inv_linear_transform(point[0], point[1], dataset["Rows"].value, dataset["Columns"].value)
                 for x in x_t:
                     for y in y_t:
                         curr_qpoint = QtCore.QPoint(x, y * pixmap_aspect)
@@ -871,9 +814,9 @@ def ordered_list_rois(rois):
     return sorted(res)
 
 
-def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
-                                filepath: Path,
-                                uid_list: list) -> pydicom.dataset.FileDataset:
+def create_initial_rtss_from_ct(
+    img_ds: pydicom.dataset.Dataset, filepath: Path, uid_list: list
+) -> pydicom.dataset.FileDataset:
     """
     Pre-populate an RT Structure Set based on a single CT (or MR) and a
     list of image UIDs The caller should update the Structure Set Label,
@@ -910,48 +853,47 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     # File Meta module
     file_meta = FileMetaDataset()
     file_meta.FileMetaInformationGroupLength = 238
-    file_meta.FileMetaInformationVersion = b'\x00\x01'
-    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+    file_meta.FileMetaInformationVersion = b"\x00\x01"
+    file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.481.3"
     file_meta.MediaStorageSOPInstanceUID = generate_uid()
     file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
     validate_file_meta(file_meta)
 
-    rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128,
-                                        file_meta=file_meta)
+    rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128, file_meta=file_meta)
     rt_ss.fix_meta_info()
 
-    top_level_tags_to_copy: list = [Tag("PatientName"),
-                                    Tag("PatientID"),
-                                    Tag("PatientBirthDate"),
-                                    Tag("PatientSex"),
-                                    Tag("StudyDate"),
-                                    Tag("StudyTime"),
-                                    Tag("AccessionNumber"),
-                                    Tag("ReferringPhysicianName"),
-                                    Tag("StudyDescription"),
-                                    Tag("StudyInstanceUID"),
-                                    Tag("StudyID"),
-                                    Tag("RequestingService"),
-                                    Tag("PatientAge"),
-                                    Tag("PatientSize"),
-                                    Tag("PatientWeight"),
-                                    Tag("MedicalAlerts"),
-                                    Tag("Allergies"),
-                                    Tag("PregnancyStatus"),
-                                    Tag("FrameOfReferenceUID"),
-                                    Tag("PositionReferenceIndicator"),
-                                    Tag("InstitutionName"),
-                                    Tag("InstitutionAddress"),
-                                    Tag("OperatorsName")
-                                    ]
+    top_level_tags_to_copy: list = [
+        Tag("PatientName"),
+        Tag("PatientID"),
+        Tag("PatientBirthDate"),
+        Tag("PatientSex"),
+        Tag("StudyDate"),
+        Tag("StudyTime"),
+        Tag("AccessionNumber"),
+        Tag("ReferringPhysicianName"),
+        Tag("StudyDescription"),
+        Tag("StudyInstanceUID"),
+        Tag("StudyID"),
+        Tag("RequestingService"),
+        Tag("PatientAge"),
+        Tag("PatientSize"),
+        Tag("PatientWeight"),
+        Tag("MedicalAlerts"),
+        Tag("Allergies"),
+        Tag("PregnancyStatus"),
+        Tag("FrameOfReferenceUID"),
+        Tag("PositionReferenceIndicator"),
+        Tag("InstitutionName"),
+        Tag("InstitutionAddress"),
+        Tag("OperatorsName"),
+    ]
 
     for tag in top_level_tags_to_copy:
         if tag in img_ds:
             rt_ss[tag] = deepcopy(img_ds[tag])
 
     if rt_ss.StudyInstanceUID == "":
-        raise ValueError(
-            "The given dataset is missing a required tag 'StudyInstanceUID'")
+        raise ValueError("The given dataset is missing a required tag 'StudyInstanceUID'")
 
     # RT Series Module
     rt_ss.SeriesDate = dicom_date
@@ -999,16 +941,13 @@ def create_initial_rtss_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_referenced_study = pydicom.dataset.Dataset()
     rt_referenced_study.ReferencedSOPClassUID = "1.2.840.10008.3.1.2.3.1"
     rt_referenced_study.ReferencedSOPInstanceUID = img_ds.StudyInstanceUID
-    rt_referenced_study.RTReferencedSeriesSequence = \
-        rt_referenced_series_sequence
+    rt_referenced_study.RTReferencedSeriesSequence = rt_referenced_series_sequence
     rt_referenced_study_sequence = [rt_referenced_study]
 
     # RT Referenced Frame Of Reference Sequence, Structure Set Module
     referenced_frame_of_reference = pydicom.dataset.Dataset()
-    referenced_frame_of_reference.FrameOfReferenceUID = \
-        img_ds.FrameOfReferenceUID
-    referenced_frame_of_reference.RTReferencedStudySequence = \
-        rt_referenced_study_sequence
+    referenced_frame_of_reference.FrameOfReferenceUID = img_ds.FrameOfReferenceUID
+    referenced_frame_of_reference.RTReferencedStudySequence = rt_referenced_study_sequence
     rt_ss.ReferencedFrameOfReferenceSequence = [referenced_frame_of_reference]
 
     # Sequence modules
@@ -1055,8 +994,7 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
         index += 1
 
     # Remove old values out of the original sequences
-    rm_indices = [old_duplicated_roi_indexes[name]
-                  for name in duplicated_names]
+    rm_indices = [old_duplicated_roi_indexes[name] for name in duplicated_names]
     for index in sorted(rm_indices, reverse=True):
         # Remove the old value out of the original structure set
         # sequence
@@ -1074,15 +1012,12 @@ def merge_rtss(old_rtss, new_rtss, duplicated_names):
     # Renumber the ROINumber and ReferencedROINumber tags
     original_structure_set = renumber_roi_number(original_structure_set)
     original_roi_contour = renumber_roi_number(original_roi_contour)
-    original_roi_observation_sequence = \
-        renumber_roi_number(original_roi_observation_sequence)
+    original_roi_observation_sequence = renumber_roi_number(original_roi_observation_sequence)
 
     # Set the new value
-    old_rtss.add_new(Tag("StructureSetROISequence"), "SQ",
-                     original_structure_set)
+    old_rtss.add_new(Tag("StructureSetROISequence"), "SQ", original_structure_set)
     old_rtss.add_new(Tag("ROIContourSequence"), "SQ", original_roi_contour)
-    old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ",
-                     original_roi_observation_sequence)
+    old_rtss.add_new(Tag("RTROIObservationsSequence"), "SQ", original_roi_observation_sequence)
 
     return old_rtss
 
@@ -1091,7 +1026,7 @@ def renumber_roi_number(sequence):
     roi_number = 1
     for item in sequence:
         if item.get("ROINumber") is not None:
-            item.add_new(Tag("ROINumber"), 'IS', str(roi_number))
+            item.add_new(Tag("ROINumber"), "IS", str(roi_number))
         elif item.get("ReferencedROINumber") is not None:
             item.add_new(Tag("ReferencedROINumber"), "IS", str(roi_number))
         roi_number += 1
@@ -1109,9 +1044,7 @@ def roi_to_geometry(dict_rois_contours):
 
     for slice_uid, contour_sequence in dict_rois_contours.items():
         # convert contour data to polygon omitting data with less than 3 points
-        polygon_list = [Polygon(contour_data)
-                        for contour_data in contour_sequence
-                        if len(contour_data) >= 3]
+        polygon_list = [Polygon(contour_data) for contour_data in contour_sequence if len(contour_data) >= 3]
         result_geometry = make_valid(MultiPolygon(polygon_list))
         dict_geometry[slice_uid] = result_geometry
 
@@ -1125,19 +1058,15 @@ def rois_difference(geom1, geom2):
     :param geom2: shapely Geometry
     :return: shapely Geometry
     """
-    if geom2.geom_type in ['MultiPolygon', 'GeometryCollection'] and \
-            not geom2.is_empty:
+    if geom2.geom_type in ["MultiPolygon", "GeometryCollection"] and not geom2.is_empty:
         inner_geoms = []
         other_geoms = []
         for sub_geometry in geom2:
-            if sub_geometry.geom_type == "Polygon" \
-                    and not sub_geometry.is_empty \
-                    and geom1.contains(sub_geometry):
+            if sub_geometry.geom_type == "Polygon" and not sub_geometry.is_empty and geom1.contains(sub_geometry):
                 inner_geoms.append(sub_geometry)
             elif sub_geometry.geom_type == "Polygon":
                 other_geoms.append(sub_geometry)
-        return add_rois(geom1.difference(MultiPolygon(other_geoms)),
-                        MultiPolygon(inner_geoms))
+        return add_rois(geom1.difference(MultiPolygon(other_geoms)), MultiPolygon(inner_geoms))
     elif geom1.contains(geom2):
         return add_rois(geom1, geom2)
     else:
@@ -1159,9 +1088,7 @@ def manipulate_rois(first_geometry_dict, second_geometry_dict, operation):
         first_geometry = first_geometry_dict.get(slice_uid, Polygon())
         second_geometry = second_geometry_dict.get(slice_uid, Polygon())
         try:
-            result_geometry_dict[slice_uid] = \
-                geometry_manipulation[operation](first_geometry,
-                                                 second_geometry)
+            result_geometry_dict[slice_uid] = geometry_manipulation[operation](first_geometry, second_geometry)
         except KeyError:
             raise Exception("Invalid operation string")
     return result_geometry_dict
@@ -1194,12 +1121,9 @@ def add_rois(geom1, geom2):
     :param geom2: Second geometry
     :return: GeometryCollection
     """
-    polygon_list = list([geom1]
-                        if geom1.geom_type == 'Polygon'
-                        else geom1) + \
-                   list([geom2]
-                        if geom2.geom_type == 'Polygon'
-                        else geom2)
+    polygon_list = list([geom1] if geom1.geom_type == "Polygon" else geom1) + list(
+        [geom2] if geom2.geom_type == "Polygon" else geom2
+    )
     return GeometryCollection(polygon_list)
 
 
@@ -1232,23 +1156,18 @@ def geometry_to_roi(geometry_dict):
     roi_contour_sequence = {}
     for slice_id, geometry in geometry_dict.items():
         contour_sequence = []
-        if geometry.geom_type == 'Polygon' and not geometry.is_empty:
-            contour_data = [list(map(int, coord))
-                            for coord in geometry.exterior.coords]
+        if geometry.geom_type == "Polygon" and not geometry.is_empty:
+            contour_data = [list(map(int, coord)) for coord in geometry.exterior.coords]
             contour_sequence.append(contour_data)
-        elif geometry.geom_type in ['MultiPolygon', 'GeometryCollection']:
+        elif geometry.geom_type in ["MultiPolygon", "GeometryCollection"]:
             for sub_geometry in geometry.geoms:
                 contour_data = []
-                if sub_geometry.geom_type == 'Polygon' \
-                        and not sub_geometry.is_empty:
-                    contour_data = [list(map(int, coord))
-                                    for coord in sub_geometry.exterior.coords]
+                if sub_geometry.geom_type == "Polygon" and not sub_geometry.is_empty:
+                    contour_data = [list(map(int, coord)) for coord in sub_geometry.exterior.coords]
                 # It is possible for MultiPolygon to be inside
                 # GeometryCollection
-                elif sub_geometry.geom_type == 'MultiPolygon':
-                    contour_data = [list(map(int, coord))
-                                    for polygon in sub_geometry
-                                    for coord in polygon.exterior.coords]
+                elif sub_geometry.geom_type == "MultiPolygon":
+                    contour_data = [list(map(int, coord)) for polygon in sub_geometry for coord in polygon.exterior.coords]
                 if contour_data:
                     contour_sequence.append(contour_data)
         if contour_sequence:
