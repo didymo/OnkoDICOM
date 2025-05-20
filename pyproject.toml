@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "onkodicom"
-version = "0.6.0-dev1"
+version = "0.6.1"
 description = "OnkoDICOM is an extensible open source radiation therapy research platform based on the DICOM standard"
 authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
 license = "LGPL"
