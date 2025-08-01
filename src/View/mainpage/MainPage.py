@@ -10,6 +10,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
@@ -25,6 +26,7 @@ from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 from src.View.mainpage.MLTab import MLTab
+from src.View.mainpage.AutoSegmentationTab import AutoSegmentationTab
 from src.View.PTCTFusion.PETCTView import PetCtView
 from src.View.ProgressWindow import ProgressWindow
 
@@ -62,6 +64,8 @@ class UIMainWindow:
     image_fusion_main_window = QtCore.Signal()
 
     def setup_ui(self, main_window_instance):
+
+
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
@@ -69,18 +73,17 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        # Getting Style Sheet Information
+        self.stylesheet: StyleSheetReader = StyleSheetReader()
+
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
             "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
+        self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(self.stylesheet)
+        self.main_window_instance.setStyleSheet(self.stylesheet())
 
         self.setup_central_widget()
         self.setup_actions()
@@ -132,6 +135,7 @@ class UIMainWindow:
             self.structures_tab.update_ui()
         self.left_panel.addTab(self.structures_tab, "Structures")
 
+        # Add Isodoses to the left panel
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(
@@ -141,6 +145,10 @@ class UIMainWindow:
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
+
+        # Add Auto-Segmentation to the left panel
+        self.left_panel.addTab(AutoSegmentationTab(self.stylesheet), "Auto-Seg")
+
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
@@ -219,8 +227,7 @@ class UIMainWindow:
             del self.dvh_tab
 
         # Add DICOM Tree View tab
-        self.dicom_tree = DicomTreeView()
-        self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
+        self.right_panel.addTab(DicomTreeView(), "DICOM Tree")
 
         # Connect SUV2ROI signal to handler function
         self.dicom_single_view.suv2roi_signal.connect(self.perform_suv2roi)
@@ -232,8 +239,7 @@ class UIMainWindow:
         self.splitter.addWidget(self.right_panel)
 
         # Add ML to right panel as a tab
-        self.MLTab= MLTab()
-        self.right_panel.addTab(self.MLTab, "Use ML Model")
+        self.right_panel.addTab(MLTab(), "Use ML Model")
 
         # Create footer
         self.footer = QtWidgets.QWidget()
@@ -525,7 +531,7 @@ class UIMainWindow:
                     QtWidgets.QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
-                self.stylesheet)
+                self.stylesheet())
             button_reply.exec_()
 
         # Close progress window
