@@ -36,9 +36,9 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         # there should only be one instance
         # which is created when MainPage class is created
         if AutoSegmentationTab._controller is None:
-            AutoSegmentationTab._controller = AutoSegmentationController(self)
+            AutoSegmentationTab._controller = AutoSegmentationController(self) # Circular Reference may not be a good idea
         else:
-            AutoSegmentationTab._controller.set_view(self)
+            AutoSegmentationTab._controller.set_view(self) # Circular Reference may not be a good idea
 
     def _make_segmentation_task_selection(self) -> None:
         """
