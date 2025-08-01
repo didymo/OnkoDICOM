@@ -81,7 +81,6 @@ class UIMainWindow:
             "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
-        self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
         self.main_window_instance.setStyleSheet(self.stylesheet())
 
@@ -148,7 +147,6 @@ class UIMainWindow:
 
         # Add Auto-Segmentation to the left panel
         self.left_panel.addTab(AutoSegmentationTab(self.stylesheet), "Auto-Seg")
-
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
