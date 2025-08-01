@@ -53,7 +53,7 @@ QCheckBox::indicator:indeterminate:pressed {
 }
 
 QLabel {
-    color: black;
+    color: #000000;
 }
 QLabel[QLabelClass="window-title"] {
     margin: 8px;
@@ -203,7 +203,7 @@ QLineEdit {
     border-bottom: 3px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
-    color: black;
+    color: #000000;
     background-color: #f4f5f5;
 }
 
@@ -228,7 +228,7 @@ QLineEdit#ImageSliceNumberLineEdit,
 
 QLineEdit:disabled {
     background-color: #b9b9b9;
-    color: black;
+    color: #000000;
 }
 QLineEdit:hover {
     background-color: #e6e6eb;
@@ -254,12 +254,12 @@ QTreeView::item {
 }
 QTreeView::item:selected:focus {
     background-color: #ffffff;
-    color: black;
+    color: #000000;
     border: 2px solid #9370DB;
 }
 QTreeView::item:selected:!focus {
     background-color: #5c2eb8;
-    color: white;
+    color: #ffffff;
     border: 2px solid #9370DB;
 }
 QTreeView::item:hover:!focus:!selected, QTreeView::item:hover:selected {
@@ -308,7 +308,7 @@ QTabWidget::tab-bar {
 QTabWidget::pane {
     border: 0;
     padding-top: 2px;
-    background-color: white;
+    background-color: #ffffff;
 }
 QTabBar {
     background-color: #f4f5f5;
@@ -320,6 +320,7 @@ QTabBar::tab {
     border-left: 0;
     margin: 0;
     padding: 0 12px;
+    color: #000000;
     background-color: #f4f5f5;
     text-align: center;
     height: 36px;
@@ -333,7 +334,7 @@ QTabBar::tab:pressed {
     background-color: #5c2eb8;
 }
 QTabBar::tab:selected {
-    background-color: white;
+    background-color: #ffffff;
     border-bottom: 3px solid #5c2eb8;
 }
 
@@ -341,7 +342,7 @@ QTabBar::tab:selected {
 QTabWidget::pane#batch-tabs {
     border: 0;
     padding-top: 2px;
-    background-color: white;
+    background-color: #ffffff;
 }
 QTabBar#batch-tabs {
     background-color: #f4f5f5;
@@ -383,7 +384,7 @@ QComboBox, QDateEdit {
     border-radius: 0;
     font-size: 14px;
     background-color: #f4f5f5;
-    color: black;
+    color: #000000;
 }
 
 QComboBox#BatchROICleaning {
@@ -423,20 +424,20 @@ QComboBox::down-arrow, QDateEdit::down-arrow {
 
 QComboBox#DicomTreeviewComboBox {
     margin: 0;
-    background-color: white;
-    color: black
+    background-color: #ffffff;
+    color: #000000
 }
 
 
 QCalendarWidget QTableView, QTableView {
-    background-color: white;
-    color: black;
+    background-color: #ffffff;
+    color: #000000;
     alternate-background-color: #e6e6eb;
     selection-background-color: #b299e6;
 }
 QCalendarWidget QMenu {
-    color: black;
-    background-color: white;
+    color: #000000;
+    background-color: #ffffff;
 }
 QCalendarWidget QMenu::item {
     padding: 8px 4px 8px 4px;
@@ -448,18 +449,18 @@ QCalendarWidget QMenu::item:selected {
     background-color: #b299e6;
 }
 QCalendarWidget QMenu::item:pressed {
-    color: white;
+    color: #ffffff;
     background-color: #5c2eb8;
 }
 QCalendarWidget QSpinBox {
-    color: black;
-    background-color: white;
-    selection-color: white;
+    color: #000000;
+    background-color: #ffffff;
+    selection-color: #ffffff;
     selection-background-color: #5c2eb8;
 }
 QCalendarWidget QToolButton {
     background-color: #e6e6eb;
-    color: black;
+    color: #000000;
     font-size: 14px;
 }
 QCalendarWidget QToolButton:hover:!focus {
@@ -473,7 +474,7 @@ QCalendarWidget QToolButton:pressed:hover:!focus {
 }
 QCalendarWidget QWidget#qt_calendar_navigationbar {
     background-color: #e6e6eb;
-    color: black;
+    color: #000000;
 }
 QCalendarWidget QToolButton#qt_calendar_prevmonth {
     icon-size: 24px;
