@@ -175,7 +175,12 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._progress_text.setText(text)
 
     def _check_task_is_fast_compatible(self):
-
+        """
+        Protected method to check if the currently selected task
+        is compatible with the fast option. If the task is not
+        compatible then the fast checkbox is disabled and unchecked.
+        :rtype: None
+        """
         if self._task_combo.currentText() in [
             "lung_vessels",
             "pleural_pericard_effusion",
