@@ -24,6 +24,14 @@ QCheckBox::indicator {
     height: 18px;
 }
 
+QCheckBox::active {
+    color: #000000;
+}
+
+QCheckBox::disabled {
+    color: #777777;
+}
+
 QCheckBox::indicator:unchecked {
     image: url(./res/images/widget-icons/checkbox_unchecked.png);
 }
@@ -55,6 +63,12 @@ QCheckBox::indicator:indeterminate:pressed {
 QLabel {
     color: #000000;
 }
+
+QTextEdit {
+    color: #000000;
+    background-color: #ffffff;
+}
+
 QLabel[QLabelClass="window-title"] {
     margin: 8px;
     padding: 4px;
@@ -338,7 +352,6 @@ QTabBar::tab:selected {
     border-bottom: 3px solid #5c2eb8;
 }
 
-
 QTabWidget::pane#batch-tabs {
     border: 0;
     padding-top: 2px;
@@ -358,6 +371,9 @@ QTabBar::tab:selected#batch-tabs {
     font-weight: bold;
 }
 
+QTabBar QToolButton {
+    color: #000000;
+}
 
 QToolBar, QToolButton {
     background-color: #f4f5f5;
@@ -512,7 +528,7 @@ QSlider::sub-page:horizontal {
 
 QSlider::add-page:horizontal {
     background: #dadbdb;
-    border: 0px solid #777;
+    border: 0px solid #777777;
     border-radius: 7px;
     margin-top:5px;
     margin-bottom:5px;
