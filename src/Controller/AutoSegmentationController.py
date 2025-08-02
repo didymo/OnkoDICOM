@@ -1,4 +1,3 @@
-from src.View.mainpage.AutoSegmentationTab import AutoSegmentationTab
 
 class AutoSegmentationController:
     """
@@ -6,17 +5,17 @@ class AutoSegmentationController:
     As well as modifying data to communicate between the View and Model Classes
     """
 
-    def __init__(self, view: AutoSegmentationTab) -> None:
+    def __init__(self, view) -> None:
         """
         Initialising the Controller for Auto Segmentation Feature.
         Creating the requirements to run the feature
         :param view: AutoSegmentationTab
         :rtype: None
         """
-        self._view = view # Circular Reference: not a good idea need to think of a different way to do this
+        self._view = view
         self._model = None
 
-    def set_view(self, view: AutoSegmentationTab) -> None:
+    def set_view(self, view) -> None:
         """
         To change the view reference if a new view is
         constructed to replace the old view
@@ -59,4 +58,5 @@ class AutoSegmentationController:
         :param fast: bool
         :rtype: None
         """
-        pass # to run the task in the model class
+        # to run the task in the model class
+        print(f'Running task: {task} with Fast set to {fast}')

@@ -11,34 +11,37 @@ class AutoSegmentationTab(QtWidgets.QWidget):
 
     # Static member maintain the controller outside a specific instance
     _controller: AutoSegmentationController | None = None
-    
+
     def __init__(self, style_sheet: StyleSheetReader) -> None:
         """
         Initialising the User Interface for the Auto Segmentation Feature.
         Creating all the required elements for the User Interface to function.
-        :param style_sheet: 
+        :param style_sheet:
         :rtype: None
         """
         QtWidgets.QWidget.__init__(self)
 
-        self.style_sheet: StyleSheetReader = style_sheet                                # Making Member for Style Sheet
-        self._auto_segmentation_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout() # Declaring the layout of the User interface
-        self._make_segmentation_task_selection()                                        # Adding Segmentation Task Combo Box
-        self._make_fast_checkbox()                                                      # Adding Fast Option Checkbox
-        self._make_progress_bar()                                                       # Adding a progress bar
-        self._make_progress_text()                                                      # Adding Progress Text
-        self._make_start_button(self._start_button_clicked)                             # Adding Start Button Button
+        self.style_sheet: StyleSheetReader = style_sheet  # Making Member for Style Sheet
+        self._auto_segmentation_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout()  # Declaring the layout of the User interface
+        self._make_segmentation_task_selection()  # Adding Segmentation Task Combo Box
+        self._make_fast_checkbox()  # Adding Fast Option Checkbox
+        self._make_progress_bar()  # Adding a progress bar
+        self._make_progress_text()  # Adding Progress Text
+        self._make_start_button(self._start_button_clicked)  # Adding Start Button Button
 
-        self.setLayout(self._auto_segmentation_layout)                                  # Setting the layout to the Main Window
+        self.setLayout(self._auto_segmentation_layout)  # Setting the layout to the Main Window
 
         # Create Controller Class if one does not already exist
         # or Change view to new instance of view
         # there should only be one instance
         # which is created when MainPage class is created
         if AutoSegmentationTab._controller is None:
-            AutoSegmentationTab._controller = AutoSegmentationController(self) # Circular Reference may not be a good idea
+            AutoSegmentationTab._controller = AutoSegmentationController(self)
         else:
-            AutoSegmentationTab._controller.set_view(self) # Circular Reference may not be a good idea
+            AutoSegmentationTab._controller.set_view(self)
+
+        # Check task setting against fast mode - set check box false if not compatible
+        self._task_combo.currentIndexChanged.connect(self._check_task_is_fast_compatible)
 
     def _make_segmentation_task_selection(self) -> None:
         """
@@ -59,10 +62,10 @@ class AutoSegmentationTab(QtWidgets.QWidget):
             "headneck_muscles", "liver_vessels", "oculomotor_muscles",
             "lung_nodules", "kidney_cysts", "breasts", "liver_segments",
             "liver_segments_mr", "craniofacial_structures", "abdominal_muscles"
-        ]) # Need to figure out if we can make this an Enum
+        ])  # Need to figure out if we can make this an Enum
         self._task_combo.setCurrentIndex(0)
         self._task_combo.setToolTip("Select for Segmentation Task to be completed.\n"
-                                     "This will be the specific area of the body to create a segment for")
+                                    "This will be the specific area of the body to create a segment for")
         self._task_combo.setStyleSheet(self.style_sheet())
         self._auto_segmentation_layout.addWidget(self._task_combo)
 
@@ -74,10 +77,10 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         """
         self._fast_checkbox: QtWidgets.QCheckBox = QtWidgets.QCheckBox("Fast")
         self._fast_checkbox.setToolTip("When Activated this will allow for faster processing times with the \n"
-                                      "downside of lower resolution of the resulting segmentations.\n"
-                                      "This option is only available on particular tasks such as total. \n"
-                                      "BENEFIT: Faster Segmentations\n"
-                                      "DOWNSIDE: Not as Accurate Segmentations")
+                                       "downside of lower resolution of the resulting segmentations.\n"
+                                       "This option is only available on particular tasks such as total. \n"
+                                       "BENEFIT: Faster Segmentations\n"
+                                       "DOWNSIDE: Not as Accurate Segmentations")
         self._fast_checkbox.setStyleSheet(self.style_sheet())
         self._auto_segmentation_layout.addWidget(self._fast_checkbox)
 
@@ -170,3 +173,22 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         :rtype: None
         """
         self._progress_text.setText(text)
+
+    def _check_task_is_fast_compatible(self):
+
+        if self._task_combo.currentText() in [
+            "lung_vessels",
+            "pleural_pericard_effusion",
+            "cerebral_bleed",
+            "headneck_bones_vessels",
+            "liver_vessels",
+            "breasts",
+            "liver_segments",
+            "liver_segments_mr",
+            "craniofacial_structures",
+            "abdominal_muscles"
+        ]:
+            self._fast_checkbox.setChecked(False)
+            self._fast_checkbox.setEnabled(False)
+        else:
+            self._fast_checkbox.setEnabled(True)
