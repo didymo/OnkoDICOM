@@ -577,7 +577,7 @@ class UIImageFusionWindow(object):
         def recurse(parent_item: QTreeWidgetItem):
             for i in range(parent_item.childCount()):
                 child = parent_item.child(i)
-                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and \
+                if (child.flags() & Qt.ItemIsUserCheckable) and \
                         child.checkState(0) == Qt.Checked:
                     checked_items.append(child)
                 grand_children = child.childCount()
