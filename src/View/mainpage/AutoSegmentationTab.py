@@ -13,14 +13,13 @@ class AutoSegmentationTab(QtWidgets.QWidget):
     _controller: AutoSegmentationController | None = None
 
     def __init__(self, style_sheet: StyleSheetReader) -> None:
+        super().__init__()
         """
         Initialising the User Interface for the Auto Segmentation Feature.
         Creating all the required elements for the User Interface to function.
         :param style_sheet:
         :rtype: None
         """
-        QtWidgets.QWidget.__init__(self)
-
         self.style_sheet: StyleSheetReader = style_sheet  # Making Member for Style Sheet
         self._auto_segmentation_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout()  # Declaring the layout of the User interface
         self._make_segmentation_task_selection()  # Adding Segmentation Task Combo Box
@@ -137,7 +136,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         Protected method to be called when the start button is clicked.
         :rtype: None
         """
-        AutoSegmentationTab._controller.start_button_clicked()
+        self._controller.start_button_clicked()
 
     def get_segmentation_task(self) -> str:
         """
@@ -172,7 +171,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         :param text: str
         :rtype: None
         """
-        self._progress_text.setText(text)
+        self._progress_text.append(text)
 
     def _check_task_is_fast_compatible(self):
         """
