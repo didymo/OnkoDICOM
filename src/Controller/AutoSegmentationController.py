@@ -1,3 +1,4 @@
+from src.Model.AutoSegmentation import AutoSegmentation
 
 class AutoSegmentationController:
     """
@@ -58,5 +59,11 @@ class AutoSegmentationController:
         :param fast: bool
         :rtype: None
         """
+        # Run tasks on separate thread
+
+        # Instantiate AutoSegmentation passing the required settings from the UI
+        auto_segmentation = AutoSegmentation(task, fast, controller=self)
+        auto_segmentation.run_segmentation_workflow()
+
         # to run the task in the model class
         print(f'Running task: {task} with Fast set to {fast}')
