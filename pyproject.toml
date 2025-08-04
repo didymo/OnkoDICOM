@@ -22,7 +22,7 @@ alphashape = "*"
 pandas = "^2.2.3"
 scikit-build = "*"
 scipy = "<2.0"
-dicompyler-core = "*"
+dicompyler-core = "0.5.6"
 # pydicom 3.x has changed some API and dicompyler-core breaks on that
 pydicom = "3.0.1"
 country-list = "*"
