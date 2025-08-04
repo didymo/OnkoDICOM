@@ -1,3 +1,4 @@
+import threading
 from src.Model.AutoSegmentation import AutoSegmentation
 
 class AutoSegmentationController:
@@ -15,6 +16,7 @@ class AutoSegmentationController:
         """
         self._view = view
         self._model = None
+        # self.threadpool = QThreadPool() - Raises Seg Fault
 
     def set_view(self, view) -> None:
         """
@@ -59,11 +61,9 @@ class AutoSegmentationController:
         :param fast: bool
         :rtype: None
         """
-        # Run tasks on separate thread
-
         # Instantiate AutoSegmentation passing the required settings from the UI
         auto_segmentation = AutoSegmentation(task, fast, controller=self)
-        auto_segmentation.run_segmentation_workflow()
 
-        # to run the task in the model class
-        print(f'Running task: {task} with Fast set to {fast}')
+        # Run tasks on separate thread
+        auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow)
+        auto_seg_thread.start() # Will auto terminate at the called functions conclusion

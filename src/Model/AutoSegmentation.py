@@ -93,14 +93,15 @@ class AutoSegmentation:
                              )
         except Exception as e:
             self.controller.update_progress_text(f"Failed to segment DICOM files.{e}")
-            QMessageBox.information(self, "Error", "Segmentation failed.")
+            logger.error(f"Failed to segment DICOM files.{e}")
 
         try:
-            nifti_to_rtstruct_conversion(output_dir, self.dicom_dir, output_rt)
-            QMessageBox.information(None, "Success",
-                                    f"Segmentation complete for '{self.task}'\nOutput: {output_rt}")
+            nifti_to_rtstruct_conversion(output_dir, self.temp_dir, output_rt)
+            self.controller.update_progress_text("Segmentation complete.")
+
         except Exception as e:
-            QMessageBox.information(self, "Error", "Segmentation conversion failed.")
+            self.controller.update_progress_text("Segmentation conversion failed.")
+            logger.error(f"Segmentation conversion failed.{e}")
 
 
 # This function is specific to loading the dcm image files for Total Segmnetator API
