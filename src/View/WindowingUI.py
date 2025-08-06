@@ -9,6 +9,7 @@ from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 
 from src.Model.Windowing import windowing_model
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class Windowing(QDialog):
@@ -24,19 +25,14 @@ class Windowing(QDialog):
         self.pt_ct_dict_container = PTCTDictContainer()
         self.moving_dict_container = MovingDictContainer()
 
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
-
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
 
         self.setWindowIcon(window_icon)
-        self.setStyleSheet(self.stylesheet)
+
+        stylesheet = StyleSheetReader()
+        self.setStyleSheet(stylesheet())
 
         self.text = text
 
