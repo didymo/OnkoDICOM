@@ -547,3 +547,22 @@ QSlider::add-page:vertical {
     margin-left:5px;
     margin-right:5px;
 }
+
+QRadioButton#FusionModeRadio {
+    font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    font-size: 16px;
+    color: black;
+    font-weight: semi-bold;
+}
+
+QLabel#FusionModeLabel {
+    font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    font-size: 16px;
+    color: black;
+    font-weight: bold;
+}
+
+QRadioButton#FusionModeRadio:disabled, QLabel#FusionModeLabel:disabled {
+    color: #a0a0a0;
+    opacity: 0.35;
+}

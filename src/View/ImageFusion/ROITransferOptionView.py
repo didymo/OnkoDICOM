@@ -2,7 +2,6 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QPushButton
 
 from src.Controller.ROIOptionsController import ROITransferOption
-from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
 
 class ROITransferOptionView(QtWidgets.QWidget):
     def __init__(self, fixed_dict_structure_modified_function,
@@ -18,7 +17,6 @@ class ROITransferOptionView(QtWidgets.QWidget):
 
         self.stacked_layout = QtWidgets.QStackedLayout()
         self.init_main_menu(fixed_dict_structure_modified_function, moving_dict_structure_modified_function)
-        self.init_translate_rotate_menu()
 
         self.setLayout(self.stacked_layout)
 
@@ -30,27 +28,14 @@ class ROITransferOptionView(QtWidgets.QWidget):
             ROITransferOption(fixed_dict_structure_modified_function,
                               moving_dict_structure_modified_function)
 
-        self.translate_rotate_button = QPushButton("Translate/Rotate")
         self.roi_transfer_option_button = QPushButton("Open ROI Transfer Options")
-
-        for btn in [self.translate_rotate_button, self.roi_transfer_option_button]:
-            btn.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-            btn.setMinimumWidth(150)
-
-        self.translate_rotate_button.clicked.connect(self.show_translate_rotate_menu)
+        self.roi_transfer_option_button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.roi_transfer_option_button.setMinimumWidth(150)
         self.roi_transfer_option_button.clicked.connect(self.open_roi_transfer_option)
 
-        layout.addWidget(self.translate_rotate_button)
         layout.addWidget(self.roi_transfer_option_button)
         self.main_menu_widget.setLayout(layout)
         self.stacked_layout.addWidget(self.main_menu_widget)
-
-    def init_translate_rotate_menu(self):
-        self.translate_rotate_menu = TranslateRotateMenu(self.show_main_menu)
-        self.stacked_layout.addWidget(self.translate_rotate_menu)
-
-    def show_translate_rotate_menu(self):
-        self.stacked_layout.setCurrentWidget(self.translate_rotate_menu)
 
     def show_main_menu(self):
         self.stacked_layout.setCurrentWidget(self.main_menu_widget)

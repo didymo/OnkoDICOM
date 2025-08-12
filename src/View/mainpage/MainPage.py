@@ -438,13 +438,15 @@ class UIMainWindow:
             cut_line_color=QtGui.QColor(0, 255, 0))
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255))
+        self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
+            self.structures_tab.fixed_container_structure_modified,
+            self.structures_tab.moving_container_structure_modified)
 
         # --- Fusion Options Tab with Translate/Rotate Menu ---
         from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
         self.fusion_options_tab = TranslateRotateMenu(lambda: None)
         self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
         self.left_panel.setCurrentWidget(self.fusion_options_tab)
-
 
         # If manual fusion images are available, display them
         if hasattr(self, "fixed_image_sitk") and hasattr(self, "moving_image_sitk"):
@@ -486,7 +488,7 @@ class UIMainWindow:
             self.image_fusion_view_axial.image_display()
             self.image_fusion_view_coronal.image_display()
             self.image_fusion_view_sagittal.image_display()
-            
+
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -507,7 +509,9 @@ class UIMainWindow:
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
 
-        # Remove ROITransferOptionView from fusion layout for manual fusion
+        self.image_fusion_four_views_layout.addWidget(
+            self.image_fusion_roi_transfer_option_view, 1, 1
+        )
 
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
