@@ -116,6 +116,21 @@ class Controller:
         # time), close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
+
+        # If this is a manual fusion, set the images and update the fusion tab
+        if hasattr(progress_window, "images"):
+            images = progress_window.images
+            if hasattr(self.main_window, "fixed_image_sitk"):
+                self.main_window.fixed_image_sitk = images.get("fixed_image")
+            else:
+                setattr(self.main_window, "fixed_image_sitk", images.get("fixed_image"))
+            if hasattr(self.main_window, "moving_image_sitk"):
+                self.main_window.moving_image_sitk = images.get("moving_image")
+            else:
+                setattr(self.main_window, "moving_image_sitk", images.get("moving_image"))
+            if hasattr(self.main_window, "create_image_fusion_tab"):
+                self.main_window.create_image_fusion_tab()
+
         self.main_window.show()
         self.open_patient_window.close()
         self.image_fusion_window.close()

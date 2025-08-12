@@ -413,8 +413,9 @@ class UIMainWindow:
     def create_image_fusion_tab(self):
         """
         This function is used to create the tab for image fusion.
-        Function checks if the moving dict container contains rtss to
-        load rtss. Views are created and stacked into three window view.
+        For manual fusion, overlays the base and overlay images without autofusion.
+        Adds a "Fusion Options" tab with the Translate/Rotate menu.
+        Uses self.fixed_image_sitk and self.moving_image_sitk if available.
         """
         # Set a flag for Zooming
         self.action_handler.has_image_registration_four = True
@@ -422,14 +423,12 @@ class UIMainWindow:
         # Instance of Moving Model
         moving_dict_container = MovingDictContainer()
 
-        if moving_dict_container.has_modality("rtss"):
+        # Only check for modality if dataset is not None
+        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss"):
             if len(self.structures_tab.rois.items()) == 0:
                 self.structures_tab.update_ui(moving=True)
-            # else:
-            # TODO: Display both ROIs in the same tab
 
-        self.image_fusion_single_view \
-            = ImageFusionAxialView()
+        self.image_fusion_single_view = ImageFusionAxialView()
 
         self.image_fusion_view = QStackedWidget()
         self.image_fusion_view_axial = ImageFusionAxialView(
@@ -439,10 +438,55 @@ class UIMainWindow:
             cut_line_color=QtGui.QColor(0, 255, 0))
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255))
-        self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
-            self.structures_tab.fixed_container_structure_modified,
-            self.structures_tab.moving_container_structure_modified)
 
+        # --- Fusion Options Tab with Translate/Rotate Menu ---
+        from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
+        self.fusion_options_tab = TranslateRotateMenu(lambda: None)
+        self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
+        self.left_panel.setCurrentWidget(self.fusion_options_tab)
+
+
+        # If manual fusion images are available, display them
+        if hasattr(self, "fixed_image_sitk") and hasattr(self, "moving_image_sitk"):
+            import SimpleITK as sitk
+            import numpy as np
+
+            # Convert images to numpy arrays for display
+            fixed_arr = sitk.GetArrayFromImage(self.fixed_image_sitk)
+            moving_arr = sitk.GetArrayFromImage(self.moving_image_sitk)
+
+            def numpy_to_qpixmap(arr):
+                from PySide6.QtGui import QImage, QPixmap
+                arr = np.clip(arr, 0, 255).astype(np.uint8)
+                h, w = arr.shape
+                qimg = QImage(arr.data, w, h, w, QImage.Format_Grayscale8)
+                return QPixmap.fromImage(qimg)
+
+            # Axial: slices along z
+            axial_images = [numpy_to_qpixmap(fixed_arr[i, :, :]) for i in range(fixed_arr.shape[0])]
+            # Coronal: slices along y
+            coronal_images = [numpy_to_qpixmap(fixed_arr[:, i, :]) for i in range(fixed_arr.shape[1])]
+            # Sagittal: slices along x
+            sagittal_images = [numpy_to_qpixmap(fixed_arr[:, :, i]) for i in range(fixed_arr.shape[2])]
+
+            # Store overlays for slider use
+            self.image_fusion_view_axial.overlay_images = axial_images
+            self.image_fusion_view_coronal.overlay_images = coronal_images
+            self.image_fusion_view_sagittal.overlay_images = sagittal_images
+
+            # Connect slider to update overlay
+            self.image_fusion_view_axial.slider.valueChanged.connect(
+                lambda: self.image_fusion_view_axial.image_display())
+            self.image_fusion_view_coronal.slider.valueChanged.connect(
+                lambda: self.image_fusion_view_coronal.image_display())
+            self.image_fusion_view_sagittal.slider.valueChanged.connect(
+                lambda: self.image_fusion_view_sagittal.image_display())
+
+            # Initial display
+            self.image_fusion_view_axial.image_display()
+            self.image_fusion_view_coronal.image_display()
+            self.image_fusion_view_sagittal.image_display()
+            
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -463,9 +507,8 @@ class UIMainWindow:
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
 
-        self.image_fusion_four_views_layout.addWidget(
-            self.image_fusion_roi_transfer_option_view, 1, 1
-        )
+        # Remove ROITransferOptionView from fusion layout for manual fusion
+
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
 
