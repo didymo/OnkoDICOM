@@ -1,5 +1,4 @@
 import logging
-import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
@@ -237,7 +236,7 @@ class UIMainWindow:
         self.splitter.addWidget(self.right_panel)
 
         # Add ML to right panel as a tab
-        self.right_panel.addTab(MLTab(), "Use ML Model")
+        self.right_panel.addTab(MLTab(self.stylesheet), "Use ML Model")
 
         # Create footer
         self.footer = QtWidgets.QWidget()

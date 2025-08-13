@@ -8,12 +8,12 @@ from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout, QComboBox, 
 
 from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid
 from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path
-import platform
 
 
 class UIManipulateROIWindow:
@@ -94,11 +94,8 @@ class UIManipulateROIWindow:
         """
 
         # Initialise a ManipulateROIWindow
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
+        stylesheet = StyleSheetReader()
+
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
@@ -352,7 +349,7 @@ class UIManipulateROIWindow:
             self.manipulate_roi_window_main_box)
 
         self.retranslate_ui(self.manipulate_roi_window_instance)
-        self.manipulate_roi_window_instance.setStyleSheet(stylesheet)
+        self.manipulate_roi_window_instance.setStyleSheet(stylesheet())
         self.manipulate_roi_window_instance.setCentralWidget(
             self.manipulate_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(

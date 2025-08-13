@@ -7,6 +7,7 @@ from src.Controller.PathHandler import resource_path
 import platform
 
 from src.Model.Worker import Worker
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class RenameROIWindow(QDialog):
@@ -15,12 +16,8 @@ class RenameROIWindow(QDialog):
                  suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
-        self.setStyleSheet(stylesheet)
+        stylesheet = StyleSheetReader()
+        self.setStyleSheet(stylesheet())
 
         self.standard_volume_names = standard_volume_names
         self.standard_organ_names = standard_organ_names
