@@ -1,4 +1,5 @@
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtGui import QTextCursor
 
 from src.Controller.AutoSegmentationController import AutoSegmentationController
 from src.View.StyleSheetReader import StyleSheetReader
@@ -172,6 +173,10 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         :rtype: None
         """
         self._progress_text.append(text)
+        cursor = self._progress_text.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self._progress_text.setTextCursor(cursor)
+        self._progress_text.ensureCursorVisible()
 
     def _check_task_is_fast_compatible(self):
         """
