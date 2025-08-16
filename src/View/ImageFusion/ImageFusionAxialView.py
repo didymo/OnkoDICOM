@@ -168,18 +168,27 @@ class ImageFusionAxialView(DicomView):
                 stylesheet = "QLabel { color : white; }"
             self.format_metadata_labels(stylesheet)
 
-    def image_display(self):
+    def image_display(self, overlay_image=None):
         """
         Update the image to be displayed on the DICOM View.
+        If overlay_image is provided, use it as the overlay for this view.
         """
-        pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
-        slider_id = self.slider.value()
-        image = pixmaps[slider_id]
+        if overlay_image is not None:
+            image = overlay_image
+        elif hasattr(self, "overlay_images"):
+            slider_id = self.slider.value()
+            image = self.overlay_images[slider_id]
+        else:
+            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+            if pixmaps is None:
+                return  # Prevent NoneType subscriptable error
+            slider_id = self.slider.value()
+            image = pixmaps[slider_id]
 
         label = QtWidgets.QGraphicsPixmapItem(image)
         self.scene = GraphicsScene(
             label, self.horizontal_view, self.vertical_view)
-
+        
     def update_view(self, zoom_change=False):
         """
         Update the view of the DICOM Image.

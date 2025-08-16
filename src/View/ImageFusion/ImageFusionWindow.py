@@ -17,7 +17,7 @@ from src.View.resources_open_patient_rc import *
 
 from src.Controller.PathHandler import resource_path
 import platform
-
+from PySide6.QtWidgets import QHBoxLayout, QButtonGroup, QRadioButton
 
 class UIImageFusionWindow(object):
     image_fusion_info_initialized = QtCore.Signal(object)
@@ -41,7 +41,7 @@ class UIImageFusionWindow(object):
         self.open_patient_window_instance_vertical_box = QVBoxLayout()
         self.open_patient_window_instance_vertical_box.setObjectName(
             "OpenPatientWindowInstanceVerticalBox")
-
+        
         # Create a label to prompt the user to enter the path to the
         # directory that contains the DICOM files
         self.open_patient_directory_prompt = QLabel()
@@ -159,8 +159,35 @@ class UIImageFusionWindow(object):
         self.open_patient_directory_result_label.setObjectName(
             "OpenPatientDirectoryResultLabel")
         self.open_patient_directory_result_label.setAlignment(Qt.AlignLeft)
+
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_directory_result_label)
+
+        # Fusion Mode Switch Selector (radio buttons) - place after the result label
+        fusion_mode_container = QtWidgets.QWidget()
+        fusion_mode_container_layout = QHBoxLayout()
+        fusion_mode_container_layout.setContentsMargins(10, 0, 0, 0)
+        fusion_mode_container_layout.setSpacing(10)
+        fusion_mode_container.setLayout(fusion_mode_container_layout)
+
+        fusion_mode_label = QLabel("Fusion Mode:")
+        fusion_mode_label.setObjectName("FusionModeLabel")
+        fusion_mode_container_layout.addWidget(fusion_mode_label)
+
+        self.fusion_mode_group = QButtonGroup()
+        self.manual_radio = QRadioButton("Manual Fusion")
+        self.manual_radio.setObjectName("FusionModeRadio")
+        self.auto_radio = QRadioButton("Auto Fusion")
+        self.auto_radio.setObjectName("FusionModeRadio")
+        self.fusion_mode_group.addButton(self.manual_radio)
+        self.fusion_mode_group.addButton(self.auto_radio)
+        self.manual_radio.setChecked(True)
+        self.manual_radio.setEnabled(False)
+        self.auto_radio.setEnabled(False)
+        fusion_mode_container_layout.addWidget(self.manual_radio)
+        fusion_mode_container_layout.addWidget(self.auto_radio)
+
+        self.open_patient_window_instance_vertical_box.addWidget(fusion_mode_container)
 
         # Create a horizontal box to hold the Cancel and Open button
         self.open_patient_window_patient_open_actions_horizontal_box = \
@@ -590,23 +617,39 @@ class UIImageFusionWindow(object):
     def confirm_button_clicked(self):
         """
         Begins loading of the selected files.
+        For manual fusion, skips autofusion and emits the loaded images via the progress window.
         """
         selected_files = []
         for item in self.get_checked_nodes(
                 self.open_patient_window_patients_tree.invisibleRootItem()):
             selected_files += item.dicom_object.get_files()
 
+        # Use the progress window and a manual loader for manual fusion
+        from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
         self.progress_window = ImageFusionProgressWindow(self)
-        self.progress_window.signal_loaded.connect(self.on_loaded)
-        self.progress_window.signal_error.connect(self.on_loading_error)
-        self.progress_window.start_loading(selected_files)
+        loader = ManualFusionLoader(selected_files, self.progress_window)
+        loader.signal_loaded.connect(self.on_loaded)
+        loader.signal_error.connect(self.on_loading_error)
+        # Start loading in a thread (simulate progress window behavior)
+        self.progress_window.start(loader.load)
 
     def on_loaded(self, results):
         """
         Executes when the progress bar finishes loaded the selected files.
+        Emits a wrapper object that provides update_progress for compatibility with the main window.
         """
         if results[0] is True:  # Will be NoneType if loading was interrupted.
-            self.image_fusion_info_initialized.emit(results[1])
+            class FusionResultWrapper:
+                def __init__(self, images, progress_window):
+                    self.images = images
+                    self._progress_window = progress_window
+                def update_progress(self, *args, **kwargs):
+                    if hasattr(self._progress_window, "update_progress"):
+                        self._progress_window.update_progress(*args, **kwargs)
+                def close(self):
+                    if hasattr(self._progress_window, "close"):
+                        self._progress_window.close()
+            self.image_fusion_info_initialized.emit(FusionResultWrapper(results[1], self.progress_window))
 
     def on_loading_error(self, exception):
         """
