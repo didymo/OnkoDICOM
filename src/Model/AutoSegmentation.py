@@ -99,7 +99,6 @@ class AutoSegmentation:
         except Exception as e:
             self.signals.error.emit(str(e))  # Emit the error message
             logger.exception(f"Segmentation workflow failed: {e}") # Log the full exception
-            raise # Re-raise the exception to be handled by the caller if necessary.
 
         finally:
             if self.dicom_temp_dir is not None:
