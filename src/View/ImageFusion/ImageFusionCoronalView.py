@@ -24,7 +24,7 @@ class ImageFusionCoronalView(DicomView):
             slider_id = self.slider.value()
             image = self.overlay_images[slider_id]
         else:
-            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+            pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
             if pixmaps is None:
                 return  # Prevent NoneType subscriptable error
             slider_id = self.slider.value()
@@ -44,9 +44,7 @@ class ImageFusionCoronalView(DicomView):
         selected_rois = self.patient_dict_container.get("selected_rois")
         rois = self.patient_dict_container.get("rois")
         selected_rois_name = []
-        for roi in selected_rois:
-            selected_rois_name.append(rois[roi]['name'])
-
+        selected_rois_name.extend(rois[roi]['name'] for roi in selected_rois)
         for roi in selected_rois:
             roi_name = rois[roi]['name']
             polygons = self.patient_dict_container.get("dict_polygons_axial")[

@@ -424,9 +424,8 @@ class UIMainWindow:
         moving_dict_container = MovingDictContainer()
 
         # Only check for modality if dataset is not None
-        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss"):
-            if len(self.structures_tab.rois.items()) == 0:
-                self.structures_tab.update_ui(moving=True)
+        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss") and len(self.structures_tab.rois.items()) == 0:
+            self.structures_tab.update_ui(moving=True)
 
         self.image_fusion_single_view = ImageFusionAxialView()
 

@@ -179,7 +179,7 @@ class ImageFusionAxialView(DicomView):
             slider_id = self.slider.value()
             image = self.overlay_images[slider_id]
         else:
-            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+            pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
             if pixmaps is None:
                 return  # Prevent NoneType subscriptable error
             slider_id = self.slider.value()
