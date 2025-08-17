@@ -67,6 +67,9 @@ class ManualFusionLoader(QtCore.QObject):
             raise ValueError("No DICOM files provided.")
 
         # Collect (filepath, z) for valid CT files in a single pass
+        import logging
+        logger = logging.getLogger(__name__)
+
         valid_files_with_z = []
         for f in filepaths:
             try:
@@ -79,7 +82,8 @@ class ManualFusionLoader(QtCore.QObject):
                             ipp = img.GetMetaData("0020|0032").split("\\")
                             z = float(ipp[2])
                         valid_files_with_z.append((f, z))
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Failed to process DICOM file '{f}': {e}", exc_info=True)
                 continue
 
         if not valid_files_with_z:
