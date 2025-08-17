@@ -29,8 +29,8 @@ class AutoSegmentation:
     def __init__(self, controller):
         self.controller = controller
         self.patient_dict_container = PatientDictContainer()
-        self.dicom_dir = self.patient_dict_container.path # Get the current loaded dir to DICOM series
-        self.temp_dir = tempfile.mkdtemp()
+        self.dicom_dir = self.patient_dict_container.path  # Get the current loaded dir to DICOM series
+        self.dicom_temp_dir = None
 
         self.signals = SegmentationWorkerSignals()
 
@@ -40,15 +40,17 @@ class AutoSegmentation:
         self.signals.error.connect(self.controller.on_segmentation_error)
 
     def _create_copied_temporary_directory(self, dicom_dir):
+        self.dicom_temp_dir = tempfile.TemporaryDirectory()
+
         if not dicom_dir:
-            self.signals.error.emit(f'No dicom directory found. Received dicom_dir={dicom_dir!r}')
-            return
+            error_message = f'No dicom directory found. Received dicom_dir={dicom_dir!r}'
+            raise ValueError(error_message)
 
         try:
-            shutil.copytree(dicom_dir, self.temp_dir, ignore=_ignore_func, dirs_exist_ok=True)
+            shutil.copytree(dicom_dir, self.dicom_temp_dir.name, ignore=_exclude_files_from_copy, dirs_exist_ok=True)
         except Exception as e:
-            logger.exception("Failed to copy DICOM files.")
-            self.signals.error.emit("Failed to copy DICOM files.")
+            copy_error_message = f"Failed to copy DICOM files: {e}"
+            raise ValueError(copy_error_message) from e
 
     def _connect_terminal_stream_to_gui(self):
         """
@@ -70,9 +72,6 @@ class AutoSegmentation:
         # Update text GUI for visual user feedback
         self.signals.progress_updated.emit("Starting segmentation workflow...")
 
-        # Copy contents from selected dir to temp dir (excludes rt*.dcm files)
-        self._create_copied_temporary_directory(self.dicom_dir)
-
         # Connect the terminal stream output to the progress text gui element
         self._connect_terminal_stream_to_gui()
 
@@ -81,34 +80,33 @@ class AutoSegmentation:
         os.makedirs(output_dir, exist_ok=True)
         output_rt = os.path.join(self.dicom_dir, "rtss.dcm")
 
-        # Call total segmentator API
         try:
-            totalsegmentator(input=self.temp_dir,
+            # Copy contents from selected dir to temp dir (excludes rt*.dcm files)
+            self._create_copied_temporary_directory(self.dicom_dir)
+
+            # Call total segmentator API
+            totalsegmentator(input=self.dicom_temp_dir.name,
                              output=output_dir,
                              task=task,
-                             output_type="nifti",  # output to dicom
-                             device="cpu",  # Run on cpu
+                             output_type="nifti",
+                             device="cpu",
                              fastest=fast
                              )
 
-            output_rt = os.path.join(self.dicom_dir, "rtss.dcm")
+            nifti_to_rtstruct_conversion(output_dir, self.dicom_temp_dir.name, output_rt)
+            self.signals.finished.emit()
 
         except Exception as e:
-            self.signals.error.emit("Failed to run segmentation workflow.")
-            logger.exception(e)
-            shutil.rmtree(output_dir)
+            self.signals.error.emit(str(e))  # Emit the error message
+            logger.exception(f"Segmentation workflow failed: {e}") # Log the full exception
 
-        try:
-            nifti_to_rtstruct_conversion(output_dir, self.temp_dir, output_rt)
-            self.controller.update_progress_text("Segmentation complete.")
-
-        except Exception as e:
-            self.controller.update_progress_text("Segmentation conversion failed.")
-            logger.error(f"Segmentation conversion failed.{e}")
+        finally:
+            if self.dicom_temp_dir is not None:
+                self.dicom_temp_dir.cleanup()
 
 
 # This function is specific to loading the dcm image files for Total Segmnetator API
-def _ignore_func(directory, contents):
+def _exclude_files_from_copy(directory, contents):
     """Filters files and directories to be excluded when copying.
 
     This function is used with `shutil.copytree` to ignore specific files
@@ -122,18 +120,15 @@ def _ignore_func(directory, contents):
     Returns:
         A list of files and directories to be ignored.
     """
-    ignored_items = []
     exclude_patterns = ["rt*.dcm"]
 
-    for pattern in exclude_patterns:
-        if pattern.endswith('/'):
-            dir_name = pattern.rstrip('/')
-            if dir_name in contents and os.path.isdir(os.path.join(directory, dir_name)):
-                ignored_items.append(dir_name)
-        elif '*' in pattern or '?' in pattern:
-            ignored_items.extend(
-                item for item in contents if fnmatch.fnmatch(item, pattern)
-            )
-        elif pattern in contents and os.path.isfile(os.path.join(directory, pattern)):
-            ignored_items.append(pattern)
-    return ignored_items
+    filtered_files = []
+    filtered_files.extend(
+        file
+        for file in contents
+        if any(
+            fnmatch.fnmatch(file.lower(), pattern)
+            for pattern in exclude_patterns
+        )
+    )
+    return filtered_files

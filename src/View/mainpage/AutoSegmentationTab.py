@@ -1,3 +1,5 @@
+from typing import Callable
+
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QTextCursor
 
@@ -28,6 +30,9 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._make_progress_bar()  # Adding a progress bar
         self._make_progress_text()  # Adding Progress Text
         self._make_start_button(self._start_button_clicked)  # Adding Start Button Button
+        self._fast_compatible_tasks = {"total",
+                                       "body",
+        }
 
         self.setLayout(self._auto_segmentation_layout)  # Setting the layout to the Main Window
 
@@ -117,7 +122,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._progress_text.setStyleSheet(self.style_sheet())
         self._auto_segmentation_layout.addWidget(self._progress_text)
 
-    def _make_start_button(self, button_action: ()) -> None:
+    def _make_start_button(self, button_action: Callable[[], None]) -> None:
         """
         Protected Method to create the start button
         To start the auto-segmentation task which has been selected.
@@ -127,7 +132,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
         self._start_button.setObjectName("start_button")
         self._start_button.setStyleSheet(self.style_sheet())
-        self._start_button.Alignment = QtCore.Qt.AlignmentFlag.AlignBottom
+        # self._start_button.Alignment = QtCore.Qt.AlignmentFlag.AlignBottom
         # Button Action
         self._start_button.clicked.connect(button_action)
         self._auto_segmentation_layout.addWidget(self._start_button)
@@ -149,7 +154,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
 
     def get_fast_value(self) -> bool:
         """
-        Public Method to retrieve the balue of the fast checkbox.
+        Public Method to retrieve the value of the fast checkbox.
         TO see if the fast option has been selected.
         :rtype: bool
         """
@@ -178,17 +183,23 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._progress_text.setTextCursor(cursor)
         self._progress_text.ensureCursorVisible()
 
-    def set_start_button_status(self):
+    def enable_start_button(self):
+        """Enables the start button and sets its text to "Start".
 
-        self._start_button_enabled = not self._start_button_enabled
+        This method is used to reactivate the start button after it has been
+        disabled, typically after a segmentation task has completed or failed.
+        """
+        self._start_button.setEnabled(True)
+        self._start_button.setText("Start")
 
-        if self._start_button_enabled:
-            self._start_button.setEnabled(self._start_button_enabled)
-            self._start_button.setText("Start")
-        else:
-            #TODO: Set this to stop to end thread?
-            self._start_button.setEnabled(self._start_button_enabled)
-            self._start_button.setText("Wait")
+    def disable_start_button(self):
+        """Disables the start button and sets its text to "Wait".
+
+        This method is used to deactivate the start button,
+        typically during the segmentation process.
+        """
+        self._start_button.setEnabled(False)
+        self._start_button.setText("Wait")
 
     def _check_task_is_fast_compatible(self):
         """
@@ -197,18 +208,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         compatible then the fast checkbox is disabled and unchecked.
         :rtype: None
         """
-        if self._task_combo.currentText() in [
-            "lung_vessels",
-            "pleural_pericard_effusion",
-            "cerebral_bleed",
-            "headneck_bones_vessels",
-            "liver_vessels",
-            "breasts",
-            "liver_segments",
-            "liver_segments_mr",
-            "craniofacial_structures",
-            "abdominal_muscles"
-        ]:
+        if self._task_combo.currentText() not in self._fast_compatible_tasks:
             self._fast_checkbox.setChecked(False)
             self._fast_checkbox.setEnabled(False)
         else:

@@ -1,4 +1,5 @@
 import threading
+import logging
 from PySide6.QtCore import Slot
 from src.Model.AutoSegmentation import AutoSegmentation
 
@@ -35,7 +36,7 @@ class AutoSegmentationController:
         :rtype: None
         """
         # Disable start button while segmentation processes
-        self._view.set_start_button_status()
+        self._view.disable_start_button()
 
         self.run_task(self._view.get_segmentation_task(), self._view.get_fast_value())
 
@@ -78,12 +79,11 @@ class AutoSegmentationController:
         self.update_progress_bar_value(100)
         self.update_progress_text("Segmentation Finished")
 
-        # Enable start button while segmentation processes
-        self._view.set_start_button_status()
+        # Enable once segmentation complete
+        self._view.enable_start_button()
 
     @Slot()
     def on_segmentation_error(self, error) -> None:
-        print("Segmentation Error from controller.")
-
-        # Enable start button while segmentation processes
-        self._view.set_start_button_status()
+        logging.error(error)
+        # Enable once segmentation complete
+        self._view.enable_start_button()
