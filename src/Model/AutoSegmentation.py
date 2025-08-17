@@ -41,7 +41,7 @@ class AutoSegmentation:
 
     def _create_copied_temporary_directory(self, dicom_dir):
         if not dicom_dir:
-            self.signals.error.emit('No dicom directory found')
+            self.signals.error.emit(f'No dicom directory found. Received dicom_dir={dicom_dir!r}')
             return
 
         try:
