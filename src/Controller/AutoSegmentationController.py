@@ -1,4 +1,5 @@
 import threading
+from PySide6.QtCore import Slot
 from src.Model.AutoSegmentation import AutoSegmentation
 
 class AutoSegmentationController:
@@ -33,6 +34,9 @@ class AutoSegmentationController:
         To be called when the button to start the selected segmentation task is clicked
         :rtype: None
         """
+        # Disable start button while segmentation processes
+        self._view.set_start_button_status()
+
         self.run_task(self._view.get_segmentation_task(), self._view.get_fast_value())
 
     def update_progress_bar_value(self, value: int) -> None:
@@ -62,8 +66,24 @@ class AutoSegmentationController:
         :rtype: None
         """
         # Instantiate AutoSegmentation passing the required settings from the UI
-        auto_segmentation = AutoSegmentation(task, fast, controller=self)
+        auto_segmentation = AutoSegmentation(self)
 
         # Run tasks on separate thread
-        auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow)
+        auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow, args=(task, fast))
         auto_seg_thread.start() # Will auto terminate at the called functions conclusion
+
+    @Slot()
+    def on_segmentation_finished(self) -> None:
+        # Update the text edit UI
+        self.update_progress_bar_value(100)
+        self.update_progress_text("Segmentation Finished")
+
+        # Enable start button while segmentation processes
+        self._view.set_start_button_status()
+
+    @Slot()
+    def on_segmentation_error(self, error) -> None:
+        print("Segmentation Error from controller.")
+
+        # Enable start button while segmentation processes
+        self._view.set_start_button_status()
