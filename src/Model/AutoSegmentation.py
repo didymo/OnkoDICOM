@@ -91,21 +91,20 @@ class AutoSegmentation:
                              fastest=fast
                              )
 
-            output_rt = os.path.join(self.dicom_dir, "rtss.dcm")
-
         except Exception as e:
             self.signals.error.emit("Failed to run segmentation workflow.")
             logger.exception(e)
-            shutil.rmtree(output_dir)
+            shutil.rmtree(self.temp_dir)
 
         try:
             nifti_to_rtstruct_conversion(output_dir, self.temp_dir, output_rt)
-            self.controller.update_progress_text("Segmentation complete.")
+            shutil.rmtree(self.temp_dir)
+            self.signals.finished.emit()
 
         except Exception as e:
-            self.controller.update_progress_text("Segmentation conversion failed.")
+            self.signals.error.emit("Segmentation conversion failed.")
             logger.error(f"Segmentation conversion failed.{e}")
-
+            shutil.rmtree(self.temp_dir)
 
 # This function is specific to loading the dcm image files for Total Segmnetator API
 def _ignore_func(directory, contents):

@@ -178,17 +178,15 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._progress_text.setTextCursor(cursor)
         self._progress_text.ensureCursorVisible()
 
-    def set_start_button_status(self):
+    def enable_start_button(self):
+        # Set start button to enabled
+        self._start_button.setEnabled(True)
+        self._start_button.setText("Start")
 
-        self._start_button_enabled = not self._start_button_enabled
-
-        if self._start_button_enabled:
-            self._start_button.setEnabled(self._start_button_enabled)
-            self._start_button.setText("Start")
-        else:
-            #TODO: Set this to stop to end thread?
-            self._start_button.setEnabled(self._start_button_enabled)
-            self._start_button.setText("Wait")
+    def disable_start_button(self):
+        # TODO: Set this to stop to end thread?
+        self._start_button.setEnabled(False)
+        self._start_button.setText("Wait")
 
     def _check_task_is_fast_compatible(self):
         """
