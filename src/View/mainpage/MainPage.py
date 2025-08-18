@@ -38,6 +38,8 @@ from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
 from src._version import __version__
 
+
+
 class UIMainWindow:
     """
     The central class responsible for initializing most of the values stored
@@ -483,11 +485,12 @@ class UIMainWindow:
             self.image_fusion_view_sagittal.slider.valueChanged.connect(
                 lambda: self.image_fusion_view_sagittal.image_display())
 
-            # Initial display
+            # # Initial display
             self.image_fusion_view_axial.image_display()
             self.image_fusion_view_coronal.image_display()
             self.image_fusion_view_sagittal.image_display()
 
+        #TODO Fix duplicate
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -522,6 +525,9 @@ class UIMainWindow:
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
+
+        # Add the panel to the fusion options tab (or wherever you want in the GUI)
+        # self.fusion_options_tab.layout().addWidget(self.translation_control_panel)
 
         # Update the Add On Option GUI
         self.add_on_options_controller.update_ui()

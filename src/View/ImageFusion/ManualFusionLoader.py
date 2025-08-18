@@ -1,5 +1,6 @@
 from PySide6 import QtCore
 import SimpleITK as sitk
+import logging
 from src.Model.PatientDictContainer import PatientDictContainer
 
 class ManualFusionLoader(QtCore.QObject):
@@ -40,13 +41,16 @@ class ManualFusionLoader(QtCore.QObject):
         # Load moving image as a sorted DICOM series
         moving_image = self._load_dicom_series(self.selected_files)
 
+        # add 50% opacity
+        moving_image = sitk.Cast(moving_image, sitk.sitkFloat32) * 0.5
+
         if progress_callback is not None:
             progress_callback.emit(("Finished loading images", 100))
 
         # Emit loaded images
         self.signal_loaded.emit((True, {
             "fixed_image": fixed_image,
-            "moving_image": moving_image
+            "moving_image": moving_image,
         }))
 
     def _load_dicom_series(self, filepaths):
@@ -67,9 +71,7 @@ class ManualFusionLoader(QtCore.QObject):
             raise ValueError("No DICOM files provided.")
 
         # Collect (filepath, z) for valid CT files in a single pass
-        import logging
         logger = logging.getLogger(__name__)
-
         valid_files_with_z = []
         for f in filepaths:
             try:
