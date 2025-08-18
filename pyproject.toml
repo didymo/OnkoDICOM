@@ -51,6 +51,7 @@ kaplanmeier = "*"
 pyinstaller = "*"
 lifelines = "0.29.0"
 pyradiomics = { git = "https://github.com/AIM-Harvard/pyradiomics.git" }
+totalsegmentator = "^2.10.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "*"
