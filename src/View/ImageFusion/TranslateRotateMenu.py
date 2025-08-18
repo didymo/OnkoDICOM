@@ -27,8 +27,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             slider.setMinimum(-100)
             slider.setMaximum(100)
             slider.setValue(0)
-            slider.valueChanged.connect(lambda value, idx=i:
-                                        self.on_offset_change(idx, value))
+            slider.valueChanged.connect(self._make_offset_change_handler(i))
             value_label = QtWidgets.QLabel("0 px")
             value_label.setFixedWidth(50)
 
@@ -103,6 +102,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             Args:
                 offsets: A tuple or list containing the new x and y offset values.
         """
+
         for i in range(2):
             self.translate_sliders[i].blockSignals(True)
             self.translate_sliders[i].setValue(offsets[i])
@@ -119,3 +119,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             slider.setValue(0)
             label.setText("0 px")
             slider.blockSignals(False)
+
+    def _make_offset_change_handler(self, idx):
+        return lambda value: self.on_offset_change(idx, value)

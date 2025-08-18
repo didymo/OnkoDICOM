@@ -445,7 +445,22 @@ class UIMainWindow:
 
         # --- Fusion Options Tab with Translate/Rotate Menu ---
         from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
-        self.fusion_options_tab = TranslateRotateMenu(lambda: None)
+        # Create a single menu for all views
+        self.fusion_options_tab = TranslateRotateMenu()
+
+        # Define a callback that updates all three views
+        def update_all_views(offset):
+            print(f"[FusionOptions] Updating all views with offset: {offset}")
+            for view in [
+                # self.image_fusion_view_axial,
+                self.image_fusion_view_sagittal,
+                self.image_fusion_view_coronal,
+            ]:
+                view.image_display()
+                view.update_overlay_offset(offset)
+
+        self.fusion_options_tab.set_offset_changed_callback(update_all_views)
+
         self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
         self.left_panel.setCurrentWidget(self.fusion_options_tab)
 
