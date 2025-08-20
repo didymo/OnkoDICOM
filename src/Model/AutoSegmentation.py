@@ -4,9 +4,8 @@ import tempfile
 import logging
 
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Worker import SegmentationWorkerSignals
 import fnmatch
-
-from PySide6.QtWidgets import QMessageBox
 
 # TODO: Move this to own module?
 # from ignore_files_in_dir import ignore_func
@@ -27,29 +26,31 @@ class AutoSegmentation:
     output to DICOM RTSTRUCT format.
     """
 
-    def __init__(self, task: str, fast: bool, controller):
-        self.task = task
-        self.fast = fast
+    def __init__(self, controller):
         self.controller = controller
         self.patient_dict_container = PatientDictContainer()
-        self.dicom_dir = self.patient_dict_container.path
-        self.temp_dir = tempfile.mkdtemp()
+        self.dicom_dir = self.patient_dict_container.path  # Get the current loaded dir to DICOM series
+        self.dicom_temp_dir = None
 
+        self.signals = SegmentationWorkerSignals()
 
-    def _create_copied_temporary_directory(self):
-        """
-        Creates a copy of the current working directory and moves it to
-        a temp directory with the purpose of excluding files
-        listed in the ignore_files function
-        """
-        if not self.dicom_dir:
-            self.controller.update_progress_text("No DICOM directory found.")
-            return
+        # Connect worker signals to controller slots
+        self.signals.progress_updated.connect(self.controller.update_progress_text)
+        self.signals.finished.connect(self.controller.on_segmentation_finished)
+        self.signals.error.connect(self.controller.on_segmentation_error)
+
+    def _create_copied_temporary_directory(self, dicom_dir):
+        self.dicom_temp_dir = tempfile.TemporaryDirectory()
+
+        if not dicom_dir:
+            error_message = f'No dicom directory found. Received dicom_dir={dicom_dir!r}'
+            raise ValueError(error_message)
 
         try:
-            shutil.copytree(self.dicom_dir, self.temp_dir, ignore=_ignore_func, dirs_exist_ok=True)
+            shutil.copytree(dicom_dir, self.dicom_temp_dir.name, ignore=_exclude_files_from_copy, dirs_exist_ok=True)
         except Exception as e:
-            self.controller.update_progress_text("Failed to copy DICOM files.")
+            copy_error_message = f"Failed to copy DICOM files: {e}"
+            raise ValueError(copy_error_message) from e
 
     def _connect_terminal_stream_to_gui(self):
         """
@@ -61,18 +62,15 @@ class AutoSegmentation:
         redirect_output_to_gui(output_stream)
         setup_logging(output_stream)
 
-    def run_segmentation_workflow(self):
+    def run_segmentation_workflow(self, task, fast):
         """
         Executes the segmentation workflow.
 
         This method handles the entire segmentation process, from selecting the DICOM
         directory to running the segmentation task and converting the output to DICOM RTSTRUCT.
         """
-        # Clear previous progress text
-        self.controller.update_progress_text("Starting segmentation workflow...")
-
-        # Copy contents from selected dir to temp dir (excludes rt*.dcm files)
-        self._create_copied_temporary_directory()
+        # Update text GUI for visual user feedback
+        self.signals.progress_updated.emit("Starting segmentation workflow...")
 
         # Connect the terminal stream output to the progress text gui element
         self._connect_terminal_stream_to_gui()
@@ -82,29 +80,33 @@ class AutoSegmentation:
         os.makedirs(output_dir, exist_ok=True)
         output_rt = os.path.join(self.dicom_dir, "rtss.dcm")
 
-        # Call total segmentator API
         try:
-            totalsegmentator(input=self.temp_dir,
-                             output=output_dir,
-                             task=self.task,
-                             output_type="nifti",  # output to dicom
-                             device="cpu",  # Run on cpu
-                             fastest=self.fast
-                             )
-        except Exception as e:
-            self.controller.update_progress_text(f"Failed to segment DICOM files.{e}")
-            QMessageBox.information(self, "Error", "Segmentation failed.")
+            # Copy contents from selected dir to temp dir (excludes rt*.dcm files)
+            self._create_copied_temporary_directory(self.dicom_dir)
 
-        try:
-            nifti_to_rtstruct_conversion(output_dir, self.dicom_dir, output_rt)
-            QMessageBox.information(None, "Success",
-                                    f"Segmentation complete for '{self.task}'\nOutput: {output_rt}")
+            # Call total segmentator API
+            totalsegmentator(input=self.dicom_temp_dir.name,
+                             output=output_dir,
+                             task=task,
+                             output_type="nifti",
+                             device="cpu",
+                             fastest=fast
+                             )
+
+            nifti_to_rtstruct_conversion(output_dir, self.dicom_temp_dir.name, output_rt)
+            self.signals.finished.emit()
+
         except Exception as e:
-            QMessageBox.information(self, "Error", "Segmentation conversion failed.")
+            self.signals.error.emit(str(e))  # Emit the error message
+            logger.exception(f"Segmentation workflow failed: {e}") # Log the full exception
+
+        finally:
+            if self.dicom_temp_dir is not None:
+                self.dicom_temp_dir.cleanup()
 
 
 # This function is specific to loading the dcm image files for Total Segmnetator API
-def _ignore_func(directory, contents):
+def _exclude_files_from_copy(directory, contents):
     """Filters files and directories to be excluded when copying.
 
     This function is used with `shutil.copytree` to ignore specific files
@@ -118,18 +120,15 @@ def _ignore_func(directory, contents):
     Returns:
         A list of files and directories to be ignored.
     """
-    ignored_items = []
     exclude_patterns = ["rt*.dcm"]
 
-    for pattern in exclude_patterns:
-        if pattern.endswith('/'):
-            dir_name = pattern.rstrip('/')
-            if dir_name in contents and os.path.isdir(os.path.join(directory, dir_name)):
-                ignored_items.append(dir_name)
-        elif '*' in pattern or '?' in pattern:
-            ignored_items.extend(
-                item for item in contents if fnmatch.fnmatch(item, pattern)
-            )
-        elif pattern in contents and os.path.isfile(os.path.join(directory, pattern)):
-            ignored_items.append(pattern)
-    return ignored_items
+    filtered_files = []
+    filtered_files.extend(
+        file
+        for file in contents
+        if any(
+            fnmatch.fnmatch(file.lower(), pattern)
+            for pattern in exclude_patterns
+        )
+    )
+    return filtered_files

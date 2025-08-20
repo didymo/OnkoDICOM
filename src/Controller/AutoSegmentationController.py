@@ -1,3 +1,6 @@
+import threading
+import logging
+from PySide6.QtCore import Slot
 from src.Model.AutoSegmentation import AutoSegmentation
 
 class AutoSegmentationController:
@@ -15,6 +18,7 @@ class AutoSegmentationController:
         """
         self._view = view
         self._model = None
+        # self.threadpool = QThreadPool() - Raises Seg Fault
 
     def set_view(self, view) -> None:
         """
@@ -31,6 +35,9 @@ class AutoSegmentationController:
         To be called when the button to start the selected segmentation task is clicked
         :rtype: None
         """
+        # Disable start button while segmentation processes
+        self._view.disable_start_button()
+
         self.run_task(self._view.get_segmentation_task(), self._view.get_fast_value())
 
     def update_progress_bar_value(self, value: int) -> None:
@@ -59,11 +66,24 @@ class AutoSegmentationController:
         :param fast: bool
         :rtype: None
         """
-        # Run tasks on separate thread
-
         # Instantiate AutoSegmentation passing the required settings from the UI
-        auto_segmentation = AutoSegmentation(task, fast, controller=self)
-        auto_segmentation.run_segmentation_workflow()
+        auto_segmentation = AutoSegmentation(self)
 
-        # to run the task in the model class
-        print(f'Running task: {task} with Fast set to {fast}')
+        # Run tasks on separate thread
+        auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow, args=(task, fast))
+        auto_seg_thread.start() # Will auto terminate at the called functions conclusion
+
+    @Slot()
+    def on_segmentation_finished(self) -> None:
+        # Update the text edit UI
+        self.update_progress_bar_value(100)
+        self.update_progress_text("Segmentation Finished")
+
+        # Enable once segmentation complete
+        self._view.enable_start_button()
+
+    @Slot()
+    def on_segmentation_error(self, error) -> None:
+        logging.error(error)
+        # Enable once segmentation complete
+        self._view.enable_start_button()
