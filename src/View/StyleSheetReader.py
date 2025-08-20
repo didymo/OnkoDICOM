@@ -1,3 +1,4 @@
+import pathlib
 import platform
 
 from numpy.f2py.auxfuncs import throw_error
@@ -45,10 +46,9 @@ class StyleSheetReader:
         :rtype: str
         """
         if running_platform == "Darwin":
-            path_stylesheet: str = "res/stylesheet.qss"
+            return "res/stylesheet.qss"
         else:
-            path_stylesheet: str = "res/stylesheet-win-linux.qss"
-        return path_stylesheet
+            return "res/stylesheet-win-linux.qss"
 
     def _get_layout_data(self) -> str:
         """
@@ -56,4 +56,4 @@ class StyleSheetReader:
         :rtype: str
         """
         path_stylesheet = self._get_platform_stylesheet(platform.system())
-        return open(resource_path(path_stylesheet)).read()
+        return pathlib.Path(resource_path(path_stylesheet)).read_text()
