@@ -1,8 +1,6 @@
 import pathlib
 import platform
 
-from numpy.f2py.auxfuncs import throw_error
-
 from src.Controller.PathHandler import resource_path
 
 class StyleSheetReader:
