@@ -643,20 +643,18 @@ class UIImageFusionWindow(object):
             loader = ManualFusionLoader(selected_files, self.progress_window)
             start_method = lambda: self.progress_window.start(loader.load)
             signal_source = loader
-            manual = True
 
         elif self.auto_radio.isChecked():
             loader = None  # No separate loader needed
             start_method = lambda: self.progress_window.start_loading(selected_files)
             signal_source = self.progress_window
-            manual = False
 
         else:
             QMessageBox.warning(self.progress_window, "Fusion Mode",
                                 "Please select a fusion mode.")
             return
 
-        signal_source.signal_loaded.connect(lambda results: self.on_loaded(results, manual))
+        signal_source.signal_loaded.connect(lambda results: self.on_loaded(results))
         signal_source.signal_error.connect(self.on_loading_error)
 
     # Start loading
