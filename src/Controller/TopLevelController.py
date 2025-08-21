@@ -104,7 +104,7 @@ class Controller:
 
         if isinstance(self.image_fusion_window, ImageFusionWindow):
             progress_window.update_progress(
-                ("Registering Images...\nThis may take a few minutes.", 
+                ("Registering Images...\nThis may take a few minutes.",
                 90))
             self.main_window.update_image_fusion_ui()
 
@@ -116,6 +116,7 @@ class Controller:
         # time), close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
+
 
         # If this is a manual fusion, set the images and update the fusion tab
         if hasattr(progress_window, "images"):
@@ -130,6 +131,7 @@ class Controller:
                 setattr(self.main_window, "moving_image_sitk", images.get("moving_image"))
             if hasattr(self.main_window, "create_image_fusion_tab"):
                 self.main_window.create_image_fusion_tab()
+
 
         self.main_window.show()
         self.open_patient_window.close()
