@@ -38,6 +38,8 @@ from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
 from src._version import __version__
 
+
+
 class UIMainWindow:
     """
     The central class responsible for initializing most of the values stored
@@ -424,9 +426,8 @@ class UIMainWindow:
         moving_dict_container = MovingDictContainer()
 
         # Only check for modality if dataset is not None
-        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss"):
-            if len(self.structures_tab.rois.items()) == 0:
-                self.structures_tab.update_ui(moving=True)
+        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss") and len(self.structures_tab.rois.items()) == 0:
+            self.structures_tab.update_ui(moving=True)
 
         self.image_fusion_single_view = ImageFusionAxialView()
 
@@ -444,7 +445,22 @@ class UIMainWindow:
 
         # --- Fusion Options Tab with Translate/Rotate Menu ---
         from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
-        self.fusion_options_tab = TranslateRotateMenu(lambda: None)
+        # Create a single menu for all views
+        self.fusion_options_tab = TranslateRotateMenu()
+
+        # Define a callback that updates all three views
+        def update_all_views(offset):
+            print(f"[FusionOptions] Updating all views with offset: {offset}")
+            for view in [
+                # self.image_fusion_view_axial,
+                self.image_fusion_view_sagittal,
+                self.image_fusion_view_coronal,
+            ]:
+                view.image_display()
+                view.update_overlay_offset(offset)
+
+        self.fusion_options_tab.set_offset_changed_callback(update_all_views)
+
         self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
         self.left_panel.setCurrentWidget(self.fusion_options_tab)
 
@@ -484,11 +500,12 @@ class UIMainWindow:
             self.image_fusion_view_sagittal.slider.valueChanged.connect(
                 lambda: self.image_fusion_view_sagittal.image_display())
 
-            # Initial display
+            # # Initial display
             self.image_fusion_view_axial.image_display()
             self.image_fusion_view_coronal.image_display()
             self.image_fusion_view_sagittal.image_display()
 
+        #TODO Fix duplicate
         # Rescale the size of the scenes inside the 3-slice views
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -523,6 +540,9 @@ class UIMainWindow:
         # Add Image Fusion Tab
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
+
+        # Add the panel to the fusion options tab (or wherever you want in the GUI)
+        # self.fusion_options_tab.layout().addWidget(self.translation_control_panel)
 
         # Update the Add On Option GUI
         self.add_on_options_controller.update_ui()

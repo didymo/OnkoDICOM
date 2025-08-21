@@ -179,7 +179,7 @@ class ImageFusionAxialView(DicomView):
             slider_id = self.slider.value()
             image = self.overlay_images[slider_id]
         else:
-            pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
+            pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
             if pixmaps is None:
                 return  # Prevent NoneType subscriptable error
             slider_id = self.slider.value()
@@ -220,17 +220,15 @@ class ImageFusionAxialView(DicomView):
 
         if hasattr(dataset, 'PatientPosition'):
             patient_pos = dataset['PatientPosition'].value
-            self.label_patient_pos.setText(
-                "Patient Position: %s" % (str(patient_pos)))
+            self.label_patient_pos.setText(f"Patient Position: {str(patient_pos)}")
 
         # Update labels
         self.label_image_id.setText(
-            "Image: %s / %s" % (str(self.current_slice_number),
-                                str(total_slices)))
-        self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
-        self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
-        self.label_image_size.setText(
-            "Image Size: %sx%spx" % (str(row_img), str(col_img)))
+            f"Image: {str(self.current_slice_number)} / {total_slices}"
+        )
+        self.label_image_pos.setText(f"Position: {str(slice_pos)} mm")
+        self.label_wl.setText(f"W/L: {str(window)}/{str(level)}")
+        self.label_image_size.setText(f"Image Size: {str(row_img)}x{str(col_img)}px")
         self.label_zoom.setText(
             "Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
 
@@ -244,9 +242,7 @@ class ImageFusionAxialView(DicomView):
         selected_rois = self.patient_dict_container.get("selected_rois")
         rois = self.patient_dict_container.get("rois")
         selected_rois_name = []
-        for roi in selected_rois:
-            selected_rois_name.append(rois[roi]['name'])
-
+        selected_rois_name.extend(rois[roi]['name'] for roi in selected_rois)
         for roi in selected_rois:
             roi_name = rois[roi]['name']
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
