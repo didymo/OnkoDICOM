@@ -11,6 +11,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import ImageLoading
 from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
+from src.View.ImageFusion.FusionResultWrapper import FusionResultWrapper
 from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
 from src.View.resources_open_patient_rc import *
@@ -666,21 +667,11 @@ class UIImageFusionWindow(object):
         Executes when the progress bar finishes loaded the selected files.
         Emits a wrapper object that provides update_progress for compatibility with the main window.
         """
-        if manual and results[0] is True:
-            # Will be NoneType if loading was interrupted.
-            
-            class FusionResultWrapper:
-                def __init__(self, images, progress_window):
-                    self.images = images
-                    self._progress_window = progress_window
-                def update_progress(self, *args, **kwargs):
-                    if hasattr(self._progress_window, "update_progress"):
-                        self._progress_window.update_progress(*args, **kwargs)
-                def close(self):
-                    if hasattr(self._progress_window, "close"):
-                        self._progress_window.close()
+        if results[0] is True:
+            wrapper = FusionResultWrapper(results[1], self.progress_window)
+            self.image_fusion_info_initialized.emit(wrapper)
 
-            self.image_fusion_info_initialized.emit(FusionResultWrapper(results[1], self.progress_window))
+
 
 
     def on_loading_error(self, exception):

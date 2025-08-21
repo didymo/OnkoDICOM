@@ -1,3 +1,4 @@
+import contextlib
 from PySide6 import QtWidgets
 
 from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
@@ -117,18 +118,18 @@ class Controller:
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
 
-
-        # If this is a manual fusion, set the images and update the fusion tab
-        if hasattr(progress_window, "images"):
+        with contextlib.suppress(AttributeError):
             images = progress_window.images
             if hasattr(self.main_window, "fixed_image_sitk"):
                 self.main_window.fixed_image_sitk = images.get("fixed_image")
             else:
                 setattr(self.main_window, "fixed_image_sitk", images.get("fixed_image"))
+
             if hasattr(self.main_window, "moving_image_sitk"):
                 self.main_window.moving_image_sitk = images.get("moving_image")
             else:
                 setattr(self.main_window, "moving_image_sitk", images.get("moving_image"))
+
             if hasattr(self.main_window, "create_image_fusion_tab"):
                 self.main_window.create_image_fusion_tab()
 
