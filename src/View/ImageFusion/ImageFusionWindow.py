@@ -660,7 +660,7 @@ class UIImageFusionWindow(object):
     # Start loading
         start_method()
 
-    def on_loaded(self, results, manual):
+    def on_loaded(self, results):
         """
         Executes when the progress bar finishes loaded the selected files.
         Emits a wrapper object that provides update_progress for compatibility with the main window.
