@@ -11,6 +11,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import ImageLoading
 from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
+from src.View.ImageFusion.FusionResultWrapper import FusionResultWrapper
 from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
 from src.View.resources_open_patient_rc import *
@@ -182,8 +183,8 @@ class UIImageFusionWindow(object):
         self.fusion_mode_group.addButton(self.manual_radio)
         self.fusion_mode_group.addButton(self.auto_radio)
         self.manual_radio.setChecked(True)
-        self.manual_radio.setEnabled(False)
-        self.auto_radio.setEnabled(False)
+        self.manual_radio.setEnabled(True)
+        self.auto_radio.setEnabled(True)
         fusion_mode_container_layout.addWidget(self.manual_radio)
         fusion_mode_container_layout.addWidget(self.auto_radio)
 
@@ -624,32 +625,52 @@ class UIImageFusionWindow(object):
                 self.open_patient_window_patients_tree.invisibleRootItem()):
             selected_files += item.dicom_object.get_files()
 
-        # Use the progress window and a manual loader for manual fusion
-        from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
+        if not selected_files:
+            QMessageBox.warning(None, "No files selected",
+                                "Please select at least one image series to fuse.")
+            return
+
         self.progress_window = ImageFusionProgressWindow(self)
-        loader = ManualFusionLoader(selected_files, self.progress_window)
-        loader.signal_loaded.connect(self.on_loaded)
-        loader.signal_error.connect(self.on_loading_error)
-        # Start loading in a thread (simulate progress window behavior)
-        self.progress_window.start(loader.load)
+
+        if self.manual_radio.isChecked():
+            # Use the progress window and a manual loader for manual fusion
+            # loader = ManualFusionLoader(selected_files, self.progress_window)
+            # loader.signal_loaded.connect(self.on_loaded)
+            # loader.signal_error.connect(self.on_loading_error)
+            # # Start loading in a thread (simulate progress window behavior)
+            # self.progress_window.start(loader.load)
+            from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
+            loader = ManualFusionLoader(selected_files, self.progress_window)
+            start_method = lambda: self.progress_window.start(loader.load)
+            signal_source = loader
+
+        elif self.auto_radio.isChecked():
+            loader = None  # No separate loader needed
+            start_method = lambda: self.progress_window.start_loading(selected_files)
+            signal_source = self.progress_window
+
+        else:
+            QMessageBox.warning(self.progress_window, "Fusion Mode",
+                                "Please select a fusion mode.")
+            return
+
+        signal_source.signal_loaded.connect(lambda results: self.on_loaded(results))
+        signal_source.signal_error.connect(self.on_loading_error)
+
+    # Start loading
+        start_method()
 
     def on_loaded(self, results):
         """
         Executes when the progress bar finishes loaded the selected files.
         Emits a wrapper object that provides update_progress for compatibility with the main window.
         """
-        if results[0] is True:  # Will be NoneType if loading was interrupted.
-            class FusionResultWrapper:
-                def __init__(self, images, progress_window):
-                    self.images = images
-                    self._progress_window = progress_window
-                def update_progress(self, *args, **kwargs):
-                    if hasattr(self._progress_window, "update_progress"):
-                        self._progress_window.update_progress(*args, **kwargs)
-                def close(self):
-                    if hasattr(self._progress_window, "close"):
-                        self._progress_window.close()
-            self.image_fusion_info_initialized.emit(FusionResultWrapper(results[1], self.progress_window))
+        if results[0] is True:
+            wrapper = FusionResultWrapper(results[1], self.progress_window)
+            self.image_fusion_info_initialized.emit(wrapper)
+
+
+
 
     def on_loading_error(self, exception):
         """
