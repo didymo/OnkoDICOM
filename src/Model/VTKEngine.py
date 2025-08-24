@@ -16,6 +16,7 @@ class VTKEngine:
         self._blend_dirty = True
         self._cached_scalars = None
         self._cached_extent = None
+        self.fixed_bg_value = 0.0
 
         # Transform parameters
         self._tx = self._ty = self._tz = 0.0
@@ -26,7 +27,7 @@ class VTKEngine:
         # Reslice moving image
         self.reslice3d = vtk.vtkImageReslice()
         self.reslice3d.SetInterpolationModeToLinear()
-        self.reslice3d.SetBackgroundLevel(0.0)
+        self.reslice3d.SetBackgroundLevel(self.fixed_bg_value)
         self.reslice3d.SetAutoCropOutput(1)
 
         # Blend
@@ -50,6 +51,15 @@ class VTKEngine:
         r.SetDirectoryName(str(Path(dicom_dir)))
         r.Update()
         self.fixed_reader = r
+
+        # automatically set background to minimum pixel value
+        img_data = self.fixed_reader.GetOutput()
+        if img_data is not None:
+            scalars = img_data.GetPointData().GetScalars()
+            if scalars is not None:
+                self.fixed_bg_value = float(np.min(numpy_support.vtk_to_numpy(scalars)))
+        self.reslice3d.SetBackgroundLevel(self.fixed_bg_value)
+
         self._wire_blend()
         self._sync_reslice_output_to_fixed()
         return True
