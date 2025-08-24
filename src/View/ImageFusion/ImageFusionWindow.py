@@ -666,7 +666,13 @@ class UIImageFusionWindow(object):
         Emits a wrapper object that provides update_progress for compatibility with the main window.
         """
         if results[0] is True:
-            wrapper = FusionResultWrapper(results[1], self.progress_window)
+            # Patch: always provide "fixed_image" and "moving_image" keys for main window compatibility
+            images = results[1]
+            if "vtk_engine" in images:
+                # Manual fusion: add dummy keys for main window compatibility
+                images["fixed_image"] = None
+                images["moving_image"] = None
+            wrapper = FusionResultWrapper(images, self.progress_window)
             self.image_fusion_info_initialized.emit(wrapper)
 
 

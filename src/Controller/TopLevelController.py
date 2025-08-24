@@ -120,6 +120,9 @@ class Controller:
 
         with contextlib.suppress(AttributeError):
             images = progress_window.images
+            # Always set images dict for use in create_image_fusion_tab
+            self.main_window.images = images
+
             if hasattr(self.main_window, "fixed_image_sitk"):
                 self.main_window.fixed_image_sitk = images.get("fixed_image")
             else:
@@ -129,9 +132,6 @@ class Controller:
                 self.main_window.moving_image_sitk = images.get("moving_image")
             else:
                 setattr(self.main_window, "moving_image_sitk", images.get("moving_image"))
-
-            if hasattr(self.main_window, "create_image_fusion_tab"):
-                self.main_window.create_image_fusion_tab()
 
 
         self.main_window.show()
@@ -183,10 +183,31 @@ class Controller:
                 self.default_directory)
             self.image_fusion_window.go_next_window.connect(
                 self.show_main_window)
+            # Connect the fusion info signal to a handler that sets images and opens the tab
+            self.image_fusion_window.image_fusion_info_initialized.connect(
+                self.on_image_fusion_info_initialized)
         else:
             self.image_fusion_window.update_ui()
 
         self.image_fusion_window.show()
+
+    def on_image_fusion_info_initialized(self, wrapper):
+        """
+        Receives the wrapper from ImageFusionWindow and opens the fusion tab.
+        """
+        # Set images for main window
+        self.main_window.images = wrapper.images
+        # Set fixed/moving images for compatibility
+        if "fixed_image" in wrapper.images:
+            self.main_window.fixed_image_sitk = wrapper.images.get("fixed_image")
+        if "moving_image" in wrapper.images:
+            self.main_window.moving_image_sitk = wrapper.images.get("moving_image")
+        # Open the fusion tab
+        if hasattr(self.main_window, "create_image_fusion_tab"):
+            self.main_window.create_image_fusion_tab()
+        # Show the main window and close the fusion window
+        self.main_window.show()
+        self.image_fusion_window.close()
 
     def show_pt_ct_select_window(self):
         """

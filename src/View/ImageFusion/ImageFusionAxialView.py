@@ -3,20 +3,22 @@ from PySide6 import QtWidgets, QtCore
 from src.View.mainpage.DicomView import DicomView, GraphicsScene
 
 
-class ImageFusionAxialView(DicomView):
+from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
+
+class ImageFusionAxialView(BaseFusionView):
     def __init__(self, roi_color=None,
                  iso_color=None,
                  metadata_formatted=False,
-                 cut_line_color=None):
+                 cut_line_color=None,
+                 vtk_engine=None,
+                 translation_menu=None):
         """
         metadata_formatted: whether the metadata needs to be formatted 
         (only metadata in the four view need to be formatted)
         """
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
-        super(ImageFusionAxialView, self).__init__(roi_color,
-                                                   iso_color,
-                                                   cut_line_color)
+        super().__init__('axial', roi_color, iso_color, cut_line_color, vtk_engine=vtk_engine, translation_menu=translation_menu)
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
@@ -28,7 +30,9 @@ class ImageFusionAxialView(DicomView):
         self.label_patient_pos = QtWidgets.QLabel()
         self.init_metadata()
 
+        # Only call update_view after all labels are created
         self.update_view()
+
 
     def init_metadata(self):
         """
@@ -167,27 +171,6 @@ class ImageFusionAxialView(DicomView):
             else:
                 stylesheet = "QLabel { color : white; }"
             self.format_metadata_labels(stylesheet)
-
-    def image_display(self, overlay_image=None):
-        """
-        Update the image to be displayed on the DICOM View.
-        If overlay_image is provided, use it as the overlay for this view.
-        """
-        if overlay_image is not None:
-            image = overlay_image
-        elif hasattr(self, "overlay_images"):
-            slider_id = self.slider.value()
-            image = self.overlay_images[slider_id]
-        else:
-            pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
-            if pixmaps is None:
-                return  # Prevent NoneType subscriptable error
-            slider_id = self.slider.value()
-            image = pixmaps[slider_id]
-
-        label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(
-            label, self.horizontal_view, self.vertical_view)
         
     def update_view(self, zoom_change=False):
         """

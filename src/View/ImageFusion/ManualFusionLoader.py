@@ -1,7 +1,7 @@
 from PySide6 import QtCore
-import SimpleITK as sitk
 import logging
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.VTKEngine import VTKEngine
 
 class ManualFusionLoader(QtCore.QObject):
     signal_loaded = QtCore.Signal(object)
@@ -13,89 +13,43 @@ class ManualFusionLoader(QtCore.QObject):
 
     def load(self, interrupt_flag=None, progress_callback=None):
         try:
-            self._extracted_from_load_4(progress_callback)
+            self._load_with_vtk(progress_callback)
         except Exception as e:
             if progress_callback is not None:
                 progress_callback.emit(("Error loading images", e))
             self.signal_error.emit((False, e))
 
-    # TODO Rename this here and in `load`
-    def _extracted_from_load_4(self, progress_callback):
+    def _load_with_vtk(self, progress_callback):
         # Progress: loading fixed image
         if progress_callback is not None:
-            progress_callback.emit(("Loading fixed image...", 10))
+            progress_callback.emit(("Loading fixed image (VTK)...", 10))
 
-        # Gather fixed filepaths
+        # Gather fixed filepaths (directory)
         patient_dict_container = PatientDictContainer()
-        fixed_filepaths = [
-            patient_dict_container.filepaths[i]
-            for i in range(len(patient_dict_container.filepaths))
-            if i in patient_dict_container.filepaths
-        ]
+        fixed_dir = patient_dict_container.path
+        moving_dir = None
+        if self.selected_files:
+            # Assume all selected files are from the same directory
+            import os
+            moving_dir = os.path.dirname(self.selected_files[0])
 
-        # Load fixed image as a sorted DICOM series
-        fixed_image = self._load_dicom_series(fixed_filepaths)
+        # Use VTKEngine to load images
+        engine = VTKEngine()
+        fixed_loaded = engine.load_fixed(fixed_dir)
+        if not fixed_loaded:
+            raise RuntimeError("Failed to load fixed image with VTK.")
+
         if progress_callback is not None:
-            progress_callback.emit(("Loading overlay image...", 50))
+            progress_callback.emit(("Loading overlay image (VTK)...", 50))
 
-        # Load moving image as a sorted DICOM series
-        moving_image = self._load_dicom_series(self.selected_files)
-
-        # add 50% opacity
-        moving_image = sitk.Cast(moving_image, sitk.sitkFloat32) * 0.5
+        moving_loaded = engine.load_moving(moving_dir)
+        if not moving_loaded:
+            raise RuntimeError("Failed to load moving image with VTK.")
 
         if progress_callback is not None:
             progress_callback.emit(("Finished loading images", 100))
 
-        # Emit loaded images
+        # Only emit the VTKEngine for downstream use; overlays will be generated on-the-fly
         self.signal_loaded.emit((True, {
-            "fixed_image": fixed_image,
-            "moving_image": moving_image,
+            "vtk_engine": engine,
         }))
-
-    def _load_dicom_series(self, filepaths):
-        """
-        Loads a DICOM series robustly for image fusion.
-
-        - Filters out files that are not valid CT DICOM images.
-        - Sorts the valid files by their Z position (ImagePositionPatient tag).
-        - Reads the sorted series into a 3D SimpleITK image.
-
-        Args:
-            filepaths (list): List of file paths to DICOM files.
-
-        Returns:
-            SimpleITK.Image: The loaded 3D image volume.
-        """
-        if not filepaths:
-            raise ValueError("No DICOM files provided.")
-
-        # Collect (filepath, z) for valid CT files in a single pass
-        logger = logging.getLogger(__name__)
-        valid_files_with_z = []
-        for f in filepaths:
-            try:
-                img = sitk.ReadImage(f)
-                if img.HasMetaDataKey("0008|0060"):
-                    modality = img.GetMetaData("0008|0060")
-                    if modality.upper() == "CT":
-                        z = 0.0
-                        if img.HasMetaDataKey("0020|0032"):
-                            ipp = img.GetMetaData("0020|0032").split("\\")
-                            z = float(ipp[2])
-                        valid_files_with_z.append((f, z))
-            except Exception as e:
-                logger.warning(f"Failed to process DICOM file '{f}': {e}", exc_info=True)
-                continue
-
-        if not valid_files_with_z:
-            raise ValueError("No valid CT DICOM files found.")
-
-        # Sort by Z position
-        valid_files_with_z.sort(key=lambda x: x[1])
-        sorted_files = [f for f, _ in valid_files_with_z]
-
-        # Read the sorted series into a 3D image
-        reader = sitk.ImageSeriesReader()
-        reader.SetFileNames(sorted_files)
-        return reader.Execute()
