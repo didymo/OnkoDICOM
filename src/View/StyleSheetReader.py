@@ -17,9 +17,9 @@ class StyleSheetReader:
         Initialising the StyleSheetReader and getting the data from the style sheet
         :rtype: None
         """
-        if self.style_sheet is None:
+        if StyleSheetReader.style_sheet is None:
             StyleSheetReader.style_sheet = self._get_layout_data()
-        if self.style_sheet is None:
+        if StyleSheetReader.style_sheet is None:
             raise ValueError("No StyleSheet")
 
     def __call__(self) -> str:
