@@ -224,7 +224,7 @@ class MLTab(QtWidgets.QWidget):
 
         self.label_Pyrad = QtWidgets.QLabel(
             "Please choose the CSV file location for Pyradiomics Data:")
-        self.label_Pyrad.setStyleSheet(self.stylesheet)
+        self.label_Pyrad.setStyleSheet(self.stylesheet())
         self.current_widgets.append(self.label_Pyrad)
 
         # Directory text box for clinical Data
