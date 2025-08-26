@@ -197,11 +197,14 @@ class Controller:
         """
         # Set images for main window
         self.main_window.images = wrapper.images
-        # Set fixed/moving images for compatibility
-        if "fixed_image" in wrapper.images:
-            self.main_window.fixed_image_sitk = wrapper.images.get("fixed_image")
-        if "moving_image" in wrapper.images:
-            self.main_window.moving_image_sitk = wrapper.images.get("moving_image")
+
+        # Ensure wrapper.images is a dict before checking for keys
+        images = wrapper.images
+        if isinstance(images, dict):
+            if "fixed_image" in images:
+                self.main_window.fixed_image_sitk = images.get("fixed_image")
+            if "moving_image" in images:
+                self.main_window.moving_image_sitk = images.get("moving_image")
         # Open the fusion tab
         if hasattr(self.main_window, "create_image_fusion_tab"):
             self.main_window.create_image_fusion_tab()
