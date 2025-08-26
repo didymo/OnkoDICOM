@@ -14,9 +14,6 @@ class VTKEngine:
         self.fixed_reader = None
         self.moving_reader = None
         self._blend_dirty = True
-        self._cached_scalars = None
-        self._cached_extent = None
-        self.fixed_bg_value = 0.0
 
         # Transform parameters
         self._tx = self._ty = self._tz = 0.0
@@ -27,7 +24,7 @@ class VTKEngine:
         # Reslice moving image
         self.reslice3d = vtk.vtkImageReslice()
         self.reslice3d.SetInterpolationModeToLinear()
-        self.reslice3d.SetBackgroundLevel(self.fixed_bg_value)
+        self.reslice3d.SetBackgroundLevel(0.0)
         self.reslice3d.SetAutoCropOutput(1)
 
         # Blend
@@ -52,13 +49,12 @@ class VTKEngine:
         r.Update()
         self.fixed_reader = r
 
-        # automatically set background to minimum pixel value
-        img_data = self.fixed_reader.GetOutput()
-        if img_data is not None:
-            scalars = img_data.GetPointData().GetScalars()
-            if scalars is not None:
-                self.fixed_bg_value = float(np.min(numpy_support.vtk_to_numpy(scalars)))
-        self.reslice3d.SetBackgroundLevel(self.fixed_bg_value)
+        # --- Set background level to lowest pixel value in fixed DICOM ---
+        img = r.GetOutput()
+        scalars = numpy_support.vtk_to_numpy(img.GetPointData().GetScalars())
+        if scalars is not None and scalars.size > 0:
+            min_val = float(scalars.min())
+            self.reslice3d.SetBackgroundLevel(min_val)
 
         self._wire_blend()
         self._sync_reslice_output_to_fixed()
@@ -102,79 +98,118 @@ class VTKEngine:
             return None
         return self.fixed_reader.GetOutput().GetExtent()
 
-    def get_slice_qimage(self, orientation: str, slice_idx: int) -> QtGui.QImage:
+    # ---------------- NEW FUNCTION ----------------
+    def get_slice_numpy(self, orientation: str, slice_idx: int) -> tuple[np.ndarray | None, np.ndarray | None]:
+        """
+        Returns (fixed_slice, moving_slice) as numpy arrays (uint8 2D), both aligned
+        to the fixed volume’s geometry. Each can be None if missing.
+        """
         if self.fixed_reader is None:
-            return QtGui.QImage()
-        # Only update VTK pipeline when dirty
-        if self._blend_dirty:
-            self.blend.Modified()
-            self.blend.Update()
-            self._blend_dirty = False
-            # refresh cached scalars
-            img_data = self.blend.GetOutput()
-            if img_data is None or img_data.GetPointData() is None:
-                self._cached_scalars = None
-                return QtGui.QImage()
-            scalars = numpy_support.vtk_to_numpy(img_data.GetPointData().GetScalars())
+            return None, None
+
+        fixed_img = self.fixed_reader.GetOutput()
+        moving_img = self.reslice3d.GetOutput() if self.moving_reader else None
+
+        # Update reslice if moving present
+        if self.moving_reader:
+            self.reslice3d.Update()
+
+        def vtk_to_np_slice(img, orientation, slice_idx, window_center=40, window_width=400):
+            if img is None or img.GetPointData() is None:
+                return None
+            extent = img.GetExtent()
+            nx = extent[1] - extent[0] + 1
+            ny = extent[3] - extent[2] + 1
+            nz = extent[5] - extent[4] + 1
+            scalars = numpy_support.vtk_to_numpy(img.GetPointData().GetScalars())
             if scalars is None:
-                self._cached_scalars = None
-                return QtGui.QImage()
-            extent = img_data.GetExtent()
-            nx = extent[1] - extent[0] + 1
-            ny = extent[3] - extent[2] + 1
-            nz = extent[5] - extent[4] + 1
-            try:
-                self._cached_scalars = scalars.reshape((nz, ny, nx))
-                self._cached_extent = extent
-                self._cached_spacing = img_data.GetSpacing()
-            except Exception:
-                self._cached_scalars = None
-                return QtGui.QImage()
-        else:
-            # reuse cached scalars
-            if self._cached_scalars is None:
-                return QtGui.QImage()
-            extent = self._cached_extent
-            nx = extent[1] - extent[0] + 1
-            ny = extent[3] - extent[2] + 1
-            nz = extent[5] - extent[4] + 1
+                return None
+            arr = scalars.reshape((nz, ny, nx))
 
-        arr = self._cached_scalars
-        sx, sy, sz = self._cached_spacing
+            if orientation == VTKEngine.ORI_AXIAL:
+                z = int(np.clip(slice_idx - extent[4], 0, nz - 1))
+                arr2d = np.flipud(arr[z, :, :])
+            elif orientation == VTKEngine.ORI_CORONAL:
+                y = int(np.clip(slice_idx - extent[2], 0, ny - 1))
+                arr2d = arr[:, y, :]
+            elif orientation == VTKEngine.ORI_SAGITTAL:
+                x = int(np.clip(slice_idx - extent[0], 0, nx - 1))
+                arr2d = arr[:, :, x]
+            else:
+                return None
 
-        # Extract requested 2D slice from cached 3D array
-        if orientation == self.ORI_AXIAL:
-            z = int(np.clip(slice_idx - extent[4], 0, nz - 1))
-            arr2d = np.flipud(arr[z, :, :])
-            aspect_ratio = float(sx) / float(sy)
-        elif orientation == self.ORI_CORONAL:
-            y = int(np.clip(slice_idx - extent[2], 0, ny - 1))
-            arr2d = arr[:, y, :]
-            aspect_ratio = float(sx) / float(sz)
-        elif orientation == self.ORI_SAGITTAL:
-            x = int(np.clip(slice_idx - extent[0], 0, nx - 1))
-            arr2d = arr[:, :, x]
-            aspect_ratio = float(sy) / float(sz)
-        else:
+            # --- Apply CT windowing ---
+            arr2d = arr2d.astype(np.float32)
+            c = window_center
+            w = window_width
+            arr2d = np.clip((arr2d - (c - 0.5)) / (w - 1) + 0.5, 0, 1)
+            arr2d = (arr2d * 255.0).astype(np.uint8)
+            return np.ascontiguousarray(arr2d)
+
+        fixed_slice = vtk_to_np_slice(fixed_img, orientation, slice_idx, window_center=40, window_width=400)
+        moving_slice = vtk_to_np_slice(moving_img, orientation, slice_idx, window_center=40, window_width=400) if moving_img else None
+        return fixed_slice, moving_slice
+
+    # ---------------- REFACTORED OLD FUNCTION ----------------
+    def get_slice_qimage(self, orientation: str, slice_idx: int) -> QtGui.QImage:
+        fixed_slice, moving_slice = self.get_slice_numpy(orientation, slice_idx)
+        if fixed_slice is None:
             return QtGui.QImage()
 
-        # Normalize and convert once per slice
-        arr2d = arr2d.astype(np.float32)
-        mn = float(arr2d.min())
-        arr2d -= mn
-        mx = float(arr2d.max())
-        if mx > 0.0:
-            arr2d /= mx
-        arr2d = (arr2d * 255.0).astype(np.uint8)
-        arr2d = np.ascontiguousarray(arr2d)
-        h, w = arr2d.shape
-        qimg = QtGui.QImage(arr2d.data, w, h, w, QtGui.QImage.Format_Grayscale8)
-        try:
-            new_w = max(1, int(round(w * aspect_ratio)))
-        except Exception:
-            new_w = w
-        qimg = qimg.scaled(new_w, h, QtCore.Qt.IgnoreAspectRatio)
-        return qimg.copy()
+        h, w = fixed_slice.shape
+
+        # Get current blend factor for moving image (0.0 = only fixed, 1.0 = only moving)
+        blend = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.0
+
+        rgb = np.zeros((h, w, 3), dtype=np.uint8)
+        if moving_slice is None:
+            # Only fixed: purple
+            rgb[..., 0] = fixed_slice  # Red
+            rgb[..., 2] = fixed_slice  # Blue
+        else:
+            # Custom fusion: 0-0.5 fades in moving, 0.5-1 fades out fixed
+            fixed_f = fixed_slice.astype(np.float32)
+            moving_f = moving_slice.astype(np.float32)
+            if blend <= 0.5:
+                fixed_opacity = 1.0
+                moving_opacity = blend * 2.0
+            else:
+                fixed_opacity = 2.0 * (1.0 - blend)
+                moving_opacity = 1.0
+            rgb[..., 0] = np.clip(fixed_opacity * fixed_f, 0, 255).astype(np.uint8)   # Red: fixed
+            rgb[..., 1] = np.clip(moving_opacity * moving_f, 0, 255).astype(np.uint8) # Green: moving
+            rgb[..., 2] = np.clip(fixed_opacity * fixed_f, 0, 255).astype(np.uint8)   # Blue: fixed
+
+        qimg = QtGui.QImage(rgb.data, w, h, 3 * w, QtGui.QImage.Format_RGB888)
+        qimg = qimg.copy()
+
+        # --- Aspect ratio correction ---
+        if self.fixed_reader is not None:
+            spacing = self.fixed_reader.GetOutput().GetSpacing()
+            # spacing: (sx, sy, sz)
+            if orientation == VTKEngine.ORI_AXIAL:
+                # arr2d shape: (y, x) → spacing: (sy, sx)
+                spacing_y, spacing_x = spacing[1], spacing[0]
+            elif orientation == VTKEngine.ORI_CORONAL:
+                # arr2d shape: (z, x) → spacing: (sz, sx)
+                spacing_y, spacing_x = spacing[2], spacing[0]
+            elif orientation == VTKEngine.ORI_SAGITTAL:
+                # arr2d shape: (z, y) → spacing: (sz, sy)
+                spacing_y, spacing_x = spacing[2], spacing[1]
+            else:
+                spacing_y, spacing_x = 1.0, 1.0
+
+            # Calculate the physical size of the image
+            phys_h = h * spacing_y
+            phys_w = w * spacing_x
+
+            # Scale the image so that the displayed aspect ratio matches the physical aspect ratio
+            aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
+            display_h = h
+            display_w = int(round(h * aspect_ratio))
+            qimg = qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+
+        return qimg
 
     # -------- Internals --------
     def _apply_transform(self):
@@ -217,4 +252,3 @@ class VTKEngine:
             self.reslice3d.SetInterpolationModeToLinear()
         else:
             self.reslice3d.SetInterpolationModeToNearestNeighbor()
-

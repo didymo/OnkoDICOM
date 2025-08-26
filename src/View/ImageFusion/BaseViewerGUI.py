@@ -6,6 +6,8 @@ from src.Model.VTKEngine import VTKEngine
 from PySide6 import QtCore
 
 class BaseFusionView(DicomView):
+    DEBOUNCE_MS = 5  # adjust debounce time as needed
+
     def __init__(self, slice_view, roi_color=None, iso_color=None, cut_line_color=None, vtk_engine=None, translation_menu=None):
         # Always initialize these attributes first
         self.base_item = None
@@ -131,7 +133,7 @@ class BaseFusionView(DicomView):
         """
         Debounced repaint of the overlay image with the applied offset or transform.
         """
-        self._refresh_timer.start(30)  # 30 ms debounce
+        self._refresh_timer.start(self.DEBOUNCE_MS) 
 
     def refresh_overlay_now(self):
         """
