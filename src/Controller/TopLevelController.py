@@ -205,9 +205,15 @@ class Controller:
                 self.main_window.fixed_image_sitk = images.get("fixed_image")
             if "moving_image" in images:
                 self.main_window.moving_image_sitk = images.get("moving_image")
+
+        # determine if manual or auto fusion
+        manual = False
+        if hasattr(self.image_fusion_window, "manual_fusion") and self.image_fusion_window.manual_fusion.isChecked():
+            manual = True
+
         # Open the fusion tab
         if hasattr(self.main_window, "create_image_fusion_tab"):
-            self.main_window.create_image_fusion_tab()
+            self.main_window.create_image_fusion_tab(manual=manual)
         # Show the main window and close the fusion window
         self.main_window.show()
         self.image_fusion_window.close()

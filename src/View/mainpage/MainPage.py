@@ -33,6 +33,8 @@ from src.View.ImageFusion.ImageFusionSagittalView import \
     ImageFusionSagittalView
 from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
 from src.Model.MovingDictContainer import MovingDictContainer
+from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
+
 
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
@@ -412,7 +414,7 @@ class UIMainWindow:
         """
         self.dicom_axial_view.format_metadata(size)
 
-    def create_image_fusion_tab(self):
+    def create_image_fusion_tab(self, manual=False):
         """
         This function is used to create the tab for image fusion.
         For manual fusion, overlays the base and overlay images without autofusion.
@@ -429,10 +431,6 @@ class UIMainWindow:
         if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss") and len(self.structures_tab.rois.items()) == 0:
             self.structures_tab.update_ui(moving=True)
 
-        # --- Fusion Options Tab with Translate/Rotate Menu ---
-        from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
-        self.fusion_options_tab = TranslateRotateMenu()
-
         # Define a callback that updates all three views for translation
         def update_all_views(offset):
             for view in [
@@ -441,8 +439,6 @@ class UIMainWindow:
                 self.image_fusion_view_coronal,
             ]:
                 view.update_overlay_offset(offset)
-
-        self.fusion_options_tab.set_offset_changed_callback(update_all_views)
 
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
@@ -453,10 +449,16 @@ class UIMainWindow:
             ]:
                 view.update_overlay_rotation(rotation_tuple)
 
-        self.fusion_options_tab.set_rotation_changed_callback(update_all_rotations)
+        # --- Fusion Options Tab with Translate/Rotate Menu ---
+        self.fusion_options_tab = None
 
-        self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
-        self.left_panel.setCurrentWidget(self.fusion_options_tab)
+        if manual:
+            self.fusion_options_tab = TranslateRotateMenu()
+            self.fusion_options_tab.set_offset_changed_callback(update_all_views)
+            self.fusion_options_tab.set_rotation_changed_callback(update_all_rotations)
+            self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
+            self.left_panel.setCurrentWidget(self.fusion_options_tab)
+    
 
         # --- VTKEngine integration ---
         vtk_engine = None
