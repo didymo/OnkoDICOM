@@ -208,7 +208,7 @@ class Controller:
 
         # determine if manual or auto fusion
         manual = False
-        if hasattr(self.image_fusion_window, "manual_fusion") and self.image_fusion_window.manual_fusion.isChecked():
+        if hasattr(self.image_fusion_window, "manual_radio") and self.image_fusion_window.manual_radio.isChecked():
             manual = True
 
         # Open the fusion tab

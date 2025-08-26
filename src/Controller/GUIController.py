@@ -211,7 +211,6 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         mvd = MovingDictContainer()
         if not mvd.is_empty():
             read_images_for_fusion()
-            self.create_image_fusion_tab()
 
     def pyradiomics_handler(self, path, filepaths, hashed_path):
         """
