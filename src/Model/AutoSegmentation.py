@@ -94,6 +94,9 @@ class AutoSegmentation:
                              )
 
             nifti_to_rtstruct_conversion(output_dir, self.dicom_temp_dir.name, output_rt)
+            self.signals.progress_updated.emit("Conversion to RTSTRUCT complete.")
+            shutil.rmtree(output_dir)
+            self.signals.progress_updated.emit("Nifti files removed.")
             self.signals.finished.emit()
 
         except Exception as e:

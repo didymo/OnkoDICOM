@@ -1,12 +1,15 @@
 import logging
 from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtCore import Slot
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
+from src.Controller.AutoSegmentationController import AutoSegmentationController
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.ROIOptionsController import ROIDrawOption
+from src.Model.AutoSegmentation import AutoSegmentation
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.View.StyleSheetReader import StyleSheetReader
@@ -145,7 +148,15 @@ class UIMainWindow:
             del self.isodoses_tab
 
         # Add Auto-Segmentation to the left panel
-        self.left_panel.addTab(AutoSegmentationTab(self.stylesheet), "Auto-Seg")
+        if not hasattr(self, 'auto_segmentation_tab'):
+            self.auto_segmentation_tab = AutoSegmentationTab(self.stylesheet)
+            # Obtain controller from auto segment tab
+            self._controller = self.auto_segmentation_tab.get_autoseg_controller()
+
+            # Connect update structures signal to main slot
+            self._controller.update_structure_list.connect(self.update_structure_list_in_tab)
+
+        self.left_panel.addTab(self.auto_segmentation_tab, "Auto-Seg")
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
@@ -563,3 +574,7 @@ class UIMainWindow:
         self.action_handler.action_four_views.setDisabled(disabled)
         self.action_handler.action_show_cut_lines.setDisabled(disabled)
         self.action_handler.action_image_fusion.setDisabled(disabled)
+
+    # Slot for updating the structure tab with new
+    def update_structure_list_in_tab(self):
+        self.structures_tab.update_ui()
