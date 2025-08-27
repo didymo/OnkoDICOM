@@ -1,15 +1,20 @@
 import threading
 import logging
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, QObject, Signal
 from src.Model.AutoSegmentation import AutoSegmentation
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
 
-class AutoSegmentationController:
+
+class AutoSegmentationController(QObject):
     """
     For the controlling of the UI elements in the View Class and the sending data to the Model class
     As well as modifying data to communicate between the View and Model Classes
     """
+    update_structure_list = Signal()
 
     def __init__(self, view) -> None:
+        super().__init__()
         """
         Initialising the Controller for Auto Segmentation Feature.
         Creating the requirements to run the feature
@@ -18,6 +23,7 @@ class AutoSegmentationController:
         """
         self._view = view
         self._model = None
+        self.patient_dict_container = PatientDictContainer()
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
     def set_view(self, view) -> None:
@@ -76,8 +82,15 @@ class AutoSegmentationController:
     @Slot()
     def on_segmentation_finished(self) -> None:
         # Update the text edit UI
+        self.update_progress_bar_value(80)
+
+        self.update_progress_text("Loading the RTSTRUCT file")
+        load_rtss_file_to_patient_dict(self.patient_dict_container)
+        self.update_progress_bar_value(90)
+        self.update_progress_text("Populating Structures Tab.")
+        self.update_structure_list.emit()
         self.update_progress_bar_value(100)
-        self.update_progress_text("Segmentation Finished")
+        self.update_progress_text("Structures Loaded")
 
         # Enable once segmentation complete
         self._view.enable_start_button()

@@ -1,8 +1,6 @@
 from typing import Callable
-
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtWidgets
 from PySide6.QtGui import QTextCursor
-
 from src.Controller.AutoSegmentationController import AutoSegmentationController
 from src.View.StyleSheetReader import StyleSheetReader
 
@@ -213,3 +211,6 @@ class AutoSegmentationTab(QtWidgets.QWidget):
             self._fast_checkbox.setEnabled(False)
         else:
             self._fast_checkbox.setEnabled(True)
+
+    def get_autoseg_controller(self):
+        return self._controller

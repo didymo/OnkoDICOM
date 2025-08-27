@@ -145,7 +145,15 @@ class UIMainWindow:
             del self.isodoses_tab
 
         # Add Auto-Segmentation to the left panel
-        self.left_panel.addTab(AutoSegmentationTab(self.stylesheet), "Auto-Seg")
+        if not hasattr(self, 'auto_segmentation_tab'):
+            self.auto_segmentation_tab = AutoSegmentationTab(self.stylesheet)
+            # Obtain controller from auto segment tab
+            self._controller = self.auto_segmentation_tab.get_autoseg_controller()
+
+            # Connect update structures signal to main slot
+            self._controller.update_structure_list.connect(self.structures_tab.update_ui)
+
+        self.left_panel.addTab(self.auto_segmentation_tab, "Auto-Seg")
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
