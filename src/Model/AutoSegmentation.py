@@ -95,8 +95,14 @@ class AutoSegmentation:
 
             nifti_to_rtstruct_conversion(output_dir, self.dicom_temp_dir.name, output_rt)
             self.signals.progress_updated.emit("Conversion to RTSTRUCT complete.")
-            shutil.rmtree(output_dir)
-            self.signals.progress_updated.emit("Nifti files removed.")
+            try:
+                if os.path.exists(output_dir):
+                    shutil.rmtree(output_dir)
+                    self.signals.progress_updated.emit("Nifti files removed.")
+                else:
+                    self.signals.progress_updated.emit("Nifti files not found for removal.")
+            except Exception as remove_err:
+                self.signals.progress_updated.emit(f"Failed to remove Nifti files: {remove_err}")
             self.signals.finished.emit()
 
         except Exception as e:
