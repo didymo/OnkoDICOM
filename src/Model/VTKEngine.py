@@ -1,9 +1,12 @@
 from __future__ import annotations
+import sys
 from pathlib import Path
 import numpy as np
+from PySide6 import QtCore, QtWidgets, QtGui
 import vtk
 from vtkmodules.util import numpy_support
-from PySide6 import QtCore, QtGui
+
+# ------------------------------ VTK Processing Engine ------------------------------
 
 class VTKEngine:
     ORI_AXIAL = "axial"
@@ -82,9 +85,9 @@ class VTKEngine:
         self._tx, self._ty, self._tz = float(tx), float(ty), float(tz)
         self._apply_transform()
 
-    def set_rotation_deg(self, rx: float, ry: float, rz: float):
+    def set_rotation_deg(self, rx: float, ry: float, rz: float, orientation=None, slice_idx=None):
         self._rx, self._ry, self._rz = float(rx), float(ry), float(rz)
-        self._apply_transform()
+        self._apply_transform(orientation, slice_idx)
 
     def reset_transform(self):
         self._tx = self._ty = self._tz = 0.0
@@ -151,7 +154,7 @@ class VTKEngine:
         return fixed_slice, moving_slice
 
     # ---------------- REFACTORED OLD FUNCTION ----------------
-    def get_slice_qimage(self, orientation: str, slice_idx: int) -> QtGui.QImage:
+    def get_slice_qimage(self, orientation: str, slice_idx: int, fixed_color="Purple", moving_color="Green", coloring_enabled=True) -> QtGui.QImage:
         fixed_slice, moving_slice = self.get_slice_numpy(orientation, slice_idx)
         if fixed_slice is None:
             return QtGui.QImage()
@@ -161,14 +164,77 @@ class VTKEngine:
         # Get current blend factor for moving image (0.0 = only fixed, 1.0 = only moving)
         blend = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.0
 
+        # Color mapping dictionary
+        color_map = {
+            "Grayscale":   lambda arr: arr,  # No coloring, just the original grayscale array
+            "Green":       lambda arr: np.stack([np.zeros_like(arr), arr, np.zeros_like(arr)], axis=-1),
+            "Purple":      lambda arr: np.stack([arr, np.zeros_like(arr), arr], axis=-1),
+            "Blue":        lambda arr: np.stack([np.zeros_like(arr), np.zeros_like(arr), arr], axis=-1),
+            "Yellow":      lambda arr: np.stack([arr, arr, np.zeros_like(arr)], axis=-1),
+            "Red":         lambda arr: np.stack([arr, np.zeros_like(arr), np.zeros_like(arr)], axis=-1),
+            "Cyan":        lambda arr: np.stack([np.zeros_like(arr), arr, arr], axis=-1),
+        }
+
+        # If coloring is disabled, always show both layers as standard grayscale and blend as uint8, no color mapping
+        if not coloring_enabled:
+            if moving_slice is None:
+                arr2d = fixed_slice
+            else:
+                # Use the blend opacity as a true alpha for the moving image
+                alpha = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.5
+                arr2d = (fixed_slice.astype(np.float32) * (1 - alpha) +
+                         moving_slice.astype(np.float32) * alpha).astype(np.uint8)
+            h, w = arr2d.shape
+            qimg = QtGui.QImage(arr2d.data, w, h, w, QtGui.QImage.Format_Grayscale8)
+            qimg = qimg.copy()
+            # Aspect ratio correction (unchanged)
+            if self.fixed_reader is not None:
+                spacing = self.fixed_reader.GetOutput().GetSpacing()
+                if orientation == VTKEngine.ORI_AXIAL:
+                    spacing_y, spacing_x = spacing[1], spacing[0]
+                elif orientation == VTKEngine.ORI_CORONAL:
+                    spacing_y, spacing_x = spacing[2], spacing[0]
+                elif orientation == VTKEngine.ORI_SAGITTAL:
+                    spacing_y, spacing_x = spacing[2], spacing[1]
+                else:
+                    spacing_y, spacing_x = 1.0, 1.0
+                phys_h = h * spacing_y
+                phys_w = w * spacing_x
+                aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
+                display_h = h
+                display_w = int(round(h * aspect_ratio))
+                qimg = qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+            return qimg
+
         rgb = np.zeros((h, w, 3), dtype=np.uint8)
+        fixed_f = fixed_slice.astype(np.float32)
         if moving_slice is None:
-            # Only fixed: purple
-            rgb[..., 0] = fixed_slice  # Red
-            rgb[..., 2] = fixed_slice  # Blue
+            # Only fixed: use selected color
+            if fixed_color == "Grayscale":
+                # Show as single-channel grayscale
+                qimg = QtGui.QImage(fixed_slice.data, w, h, w, QtGui.QImage.Format_Grayscale8)
+                qimg = qimg.copy()
+                # Aspect ratio correction (unchanged)
+                if self.fixed_reader is not None:
+                    spacing = self.fixed_reader.GetOutput().GetSpacing()
+                    if orientation == VTKEngine.ORI_AXIAL:
+                        spacing_y, spacing_x = spacing[1], spacing[0]
+                    elif orientation == VTKEngine.ORI_CORONAL:
+                        spacing_y, spacing_x = spacing[2], spacing[0]
+                    elif orientation == VTKEngine.ORI_SAGITTAL:
+                        spacing_y, spacing_x = spacing[2], spacing[1]
+                    else:
+                        spacing_y, spacing_x = 1.0, 1.0
+                    phys_h = h * spacing_y
+                    phys_w = w * spacing_x
+                    aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
+                    display_h = h
+                    display_w = int(round(h * aspect_ratio))
+                    qimg = qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+                return qimg
+            else:
+                rgb = np.clip(color_map.get(fixed_color, color_map["Purple"])(fixed_slice), 0, 255).astype(np.uint8)
         else:
-            # Custom fusion: 0-0.5 fades in moving, 0.5-1 fades out fixed
-            fixed_f = fixed_slice.astype(np.float32)
             moving_f = moving_slice.astype(np.float32)
             if blend <= 0.5:
                 fixed_opacity = 1.0
@@ -176,9 +242,15 @@ class VTKEngine:
             else:
                 fixed_opacity = 2.0 * (1.0 - blend)
                 moving_opacity = 1.0
-            rgb[..., 0] = np.clip(fixed_opacity * fixed_f, 0, 255).astype(np.uint8)   # Red: fixed
-            rgb[..., 1] = np.clip(moving_opacity * moving_f, 0, 255).astype(np.uint8) # Green: moving
-            rgb[..., 2] = np.clip(fixed_opacity * fixed_f, 0, 255).astype(np.uint8)   # Blue: fixed
+            if fixed_color == "Grayscale":
+                fixed_rgb = np.stack([np.clip(fixed_opacity * fixed_f, 0, 255).astype(np.uint8)]*3, axis=-1)
+            else:
+                fixed_rgb = color_map.get(fixed_color, color_map["Purple"])(np.clip(fixed_opacity * fixed_f, 0, 255).astype(np.uint8))
+            if moving_color == "Grayscale":
+                moving_rgb = np.stack([np.clip(moving_opacity * moving_f, 0, 255).astype(np.uint8)]*3, axis=-1)
+            else:
+                moving_rgb = color_map.get(moving_color, color_map["Green"])(np.clip(moving_opacity * moving_f, 0, 255).astype(np.uint8))
+            rgb = np.clip(fixed_rgb + moving_rgb, 0, 255).astype(np.uint8)
 
         qimg = QtGui.QImage(rgb.data, w, h, 3 * w, QtGui.QImage.Format_RGB888)
         qimg = qimg.copy()
@@ -212,11 +284,38 @@ class VTKEngine:
         return qimg
 
     # -------- Internals --------
-    def _apply_transform(self):
+    def _apply_transform(self, orientation=None, slice_idx=None):
         if not self.fixed_reader or not self.moving_reader:
             return
         img = self.fixed_reader.GetOutput()
         center = np.array(img.GetCenter())
+
+        # If orientation and slice_idx are provided, compute the slice center
+        if orientation is not None and slice_idx is not None:
+            extent = img.GetExtent()
+            spacing = img.GetSpacing()
+            origin = img.GetOrigin()
+            if orientation == VTKEngine.ORI_AXIAL:
+                z = int(np.clip(slice_idx, extent[4], extent[5]))
+                center = np.array([
+                    origin[0] + 0.5 * (extent[0] + extent[1]) * spacing[0],
+                    origin[1] + 0.5 * (extent[2] + extent[3]) * spacing[1],
+                    origin[2] + z * spacing[2]
+                ])
+            elif orientation == VTKEngine.ORI_CORONAL:
+                y = int(np.clip(slice_idx, extent[2], extent[3]))
+                center = np.array([
+                    origin[0] + 0.5 * (extent[0] + extent[1]) * spacing[0],
+                    origin[1] + y * spacing[1],
+                    origin[2] + 0.5 * (extent[4] + extent[5]) * spacing[2]
+                ])
+            elif orientation == VTKEngine.ORI_SAGITTAL:
+                x = int(np.clip(slice_idx, extent[0], extent[1]))
+                center = np.array([
+                    origin[0] + x * spacing[0],
+                    origin[1] + 0.5 * (extent[2] + extent[3]) * spacing[1],
+                    origin[2] + 0.5 * (extent[4] + extent[5]) * spacing[2]
+                ])
         t = vtk.vtkTransform()
         t.PostMultiply()
         t.Translate(-center)

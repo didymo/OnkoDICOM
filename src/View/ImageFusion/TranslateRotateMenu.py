@@ -6,6 +6,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
     A menu for adjusting translation, rotation, and opacity of the overlay image.
     Displays sliders for 'LR', 'PA', and 'IS' for both translation and rotation,
     and an opacity slider. Designed for a portrait layout.
+    Also includes color selection and coloring enable/disable.
     """
 
     def __init__(self, _back_callback=None):
@@ -13,6 +14,29 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.offset_changed_callback = None
 
         layout = QtWidgets.QVBoxLayout()
+
+        # Colour selection and coloring enable
+        color_pair_options = [
+            "No Colors (Grayscale)",
+            "Purple + Green",
+            "Yellow + Blue",
+            "Red + Cyan"
+        ]
+        color_pair_hbox = QtWidgets.QHBoxLayout()
+        color_pair_hbox.addWidget(QtWidgets.QLabel("Overlay Colors:"))
+        self.color_pair_combo = QtWidgets.QComboBox()
+        self.color_pair_combo.addItems(color_pair_options)
+        self.color_pair_combo.setCurrentText("Purple + Green")
+        color_pair_hbox.addWidget(self.color_pair_combo)
+        layout.addLayout(color_pair_hbox)
+
+        # Store current color/enable state
+        self.fixed_color = "Purple"
+        self.moving_color = "Green"
+        self.coloring_enabled = True
+
+        # Connect signal for color pair selection
+        self.color_pair_combo.currentTextChanged.connect(self._on_color_pair_changed)
 
         # Translate section
         layout.addSpacing(4)
@@ -73,6 +97,11 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         layout.addStretch(1)
         self.setLayout(layout)
+
+        # Store current colour/enable state
+        self.fixed_color = "Purple"
+        self.moving_color = "Green"
+        self.coloring_enabled = True
 
     def on_offset_change(self, axis_index, value):
         """
@@ -150,3 +179,26 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def _make_offset_change_handler(self, idx):
         return lambda value: self.on_offset_change(idx, value)
+
+    def _on_color_pair_changed(self, text):
+        if text == "No Colors (Grayscale)":
+            self.coloring_enabled = False
+            self.fixed_color = "Grayscale"
+            self.moving_color = "Grayscale"
+        elif text == "Purple + Green":
+            self.coloring_enabled = True
+            self.fixed_color = "Purple"
+            self.moving_color = "Green"
+        elif text == "Yellow + Blue":
+            self.coloring_enabled = True
+            self.fixed_color = "Yellow"
+            self.moving_color = "Blue"
+        elif text == "Red + Cyan":
+            self.coloring_enabled = True
+            self.fixed_color = "Red"
+            self.moving_color = "Cyan"
+        else:
+            # Default fallback
+            self.coloring_enabled = True
+            self.fixed_color = "Purple"
+            self.moving_color = "Green"

@@ -19,6 +19,23 @@ class BaseFusionView(DicomView):
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
         super().__init__(roi_color, iso_color, cut_line_color)
 
+        # Add color pair selection UI ---
+        color_pair_options = [
+            "No Colors (Grayscale)",
+            "Purple + Green",
+            "Yellow + Blue",
+            "Red + Cyan"
+        ]
+        self.color_pair_combo = QtWidgets.QComboBox()
+        self.color_pair_combo.addItems(color_pair_options)
+        self.color_pair_combo.setCurrentText("Purple + Green")
+        # Store current color/enable state
+        self.fixed_color = "Purple"
+        self.moving_color = "Green"
+        self.coloring_enabled = True
+        # Connect signal
+        self.color_pair_combo.currentTextChanged.connect(self._on_color_pair_changed)
+
         # Use the shared TranslateRotateMenu if provided, else create a new one
         self.translation_menu = translation_menu or TranslateRotateMenu()
         self.translation_menu.opacity_slider.valueChanged.connect(self.update_overlay_opacity)
@@ -59,9 +76,21 @@ class BaseFusionView(DicomView):
         # If using VTKEngine, get both base and overlay from VTK
         if self.vtk_engine is not None:
             orientation = self.slice_view
-            # Get the blended image (fixed + moving) as QImage
-            qimg = self.vtk_engine.get_slice_qimage(orientation, slider_id)
+            # Use selected color and coloring state
+            qimg = self.vtk_engine.get_slice_qimage(
+                orientation, slider_id,
+                fixed_color=self.fixed_color,
+                moving_color=self.moving_color,
+                coloring_enabled=self.coloring_enabled
+            )
             if qimg.isNull():
+                # Log error and show user feedback
+                print(f"[ERROR] Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
+                QtWidgets.QMessageBox.warning(
+                    self, "Image Load Error",
+                    f"Failed to load image for orientation '{orientation}', slice {slider_id}.\n"
+                    "Please check your DICOM data or transformation settings."
+                )
                 return
             pixmap = QtGui.QPixmap.fromImage(qimg)
             # Display as the base image (no overlay needed, since VTKEngine blends)
@@ -147,6 +176,29 @@ class BaseFusionView(DicomView):
         if hasattr(self, "viewport"):
             self.viewport().update()
 
+    def _on_color_pair_changed(self, text):
+        if text == "No Colors (Grayscale)":
+            self.coloring_enabled = False
+            self.fixed_color = "Grayscale"
+            self.moving_color = "Grayscale"
+        elif text == "Purple + Green":
+            self.coloring_enabled = True
+            self.fixed_color = "Purple"
+            self.moving_color = "Green"
+        elif text == "Yellow + Blue":
+            self.coloring_enabled = True
+            self.fixed_color = "Yellow"
+            self.moving_color = "Blue"
+        elif text == "Red + Cyan":
+            self.coloring_enabled = True
+            self.fixed_color = "Red"
+            self.moving_color = "Cyan"
+        else:
+            self.coloring_enabled = True
+            self.fixed_color = "Purple"
+            self.moving_color = "Green"
+        self.refresh_overlay()
+
     def update_overlay_opacity(self, value):
         """
         Update overlay opacity in VTKEngine (manual fusion).
@@ -173,7 +225,10 @@ class BaseFusionView(DicomView):
         """
         if self.vtk_engine is not None:
             rx, ry, rz = rotation_tuple
-            self.vtk_engine.set_rotation_deg(rx, ry, rz)
+            # Determine which orientation and slice to use for rotation center
+            orientation = self.slice_view
+            slice_idx = self.slider.value()
+            self.vtk_engine.set_rotation_deg(rx, ry, rz, orientation=orientation, slice_idx=slice_idx)
         self.refresh_overlay()
 
 
