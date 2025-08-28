@@ -207,9 +207,10 @@ class Controller:
                 self.main_window.moving_image_sitk = images.get("moving_image")
 
         # determine if manual or auto fusion
-        manual = False
-        if hasattr(self.image_fusion_window, "manual_radio") and self.image_fusion_window.manual_radio.isChecked():
-            manual = True
+        manual = bool(
+                hasattr(self.image_fusion_window, "manual_radio")
+                and self.image_fusion_window.manual_radio.isChecked()
+            )
 
         # Open the fusion tab
         if hasattr(self.main_window, "create_image_fusion_tab"):

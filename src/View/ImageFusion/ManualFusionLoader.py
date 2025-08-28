@@ -1,5 +1,6 @@
 from PySide6 import QtCore
 import logging
+import os
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.VTKEngine import VTKEngine
 
@@ -30,7 +31,6 @@ class ManualFusionLoader(QtCore.QObject):
         moving_dir = None
         if self.selected_files:
             # Assume all selected files are from the same directory
-            import os
             moving_dir = os.path.dirname(self.selected_files[0])
 
         # Use VTKEngine to load images

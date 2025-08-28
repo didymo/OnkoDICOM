@@ -30,21 +30,23 @@ class BaseFusionView(DicomView):
         Set the slider min/max to match the VTK extent for this orientation.
         Should be called after VTKEngine is loaded.
         """
-        if self.vtk_engine is not None:
-            extent = self.vtk_engine.fixed_extent()
-            if extent:
-                if self.slice_view == "axial":
-                    self.slider.setMinimum(extent[4])
-                    self.slider.setMaximum(extent[5])
-                    self.slider.setValue((extent[4] + extent[5]) // 2)
-                elif self.slice_view == "coronal":
-                    self.slider.setMinimum(extent[2])
-                    self.slider.setMaximum(extent[3])
-                    self.slider.setValue((extent[2] + extent[3]) // 2)
-                elif self.slice_view == "sagittal":
-                    self.slider.setMinimum(extent[0])
-                    self.slider.setMaximum(extent[1])
-                    self.slider.setValue((extent[0] + extent[1]) // 2)
+        if self.vtk_engine is None:
+            return
+        extent = self.vtk_engine.fixed_extent()
+        if not extent:
+            return
+
+        def set_slider(min_val, max_val):
+            self.slider.setMinimum(min_val)
+            self.slider.setMaximum(max_val)
+            self.slider.setValue((min_val + max_val) // 2)
+
+        if (sv := self.slice_view) == "axial":
+            set_slider(extent[4], extent[5])
+        elif sv == "coronal":
+            set_slider(extent[2], extent[3])
+        elif sv == "sagittal":
+            set_slider(extent[0], extent[1])
 
     def image_display(self, overlay_image=None):
         """
@@ -60,6 +62,13 @@ class BaseFusionView(DicomView):
             # Get the blended image (fixed + moving) as QImage
             qimg = self.vtk_engine.get_slice_qimage(orientation, slider_id)
             if qimg.isNull():
+                # Log error and show user feedback
+                print(f"[ERROR] Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
+                QtWidgets.QMessageBox.warning(
+                    self, "Image Load Error",
+                    f"Failed to load image for orientation '{orientation}', slice {slider_id}.\n"
+                    "Please check your DICOM data or transformation settings."
+                )
                 return
             pixmap = QtGui.QPixmap.fromImage(qimg)
             # Display as the base image (no overlay needed, since VTKEngine blends)
