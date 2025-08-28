@@ -30,7 +30,7 @@ class RoiInitialiser(QtWidgets.QWidget):
 
         # Initalises the calsses
         self.dicom_viewer = DicomAxialView(is_four_view=True)
-        self.canvas_labal = CanvasLabel(self.pen)
+        self.canvas_labal = CanvasLabel(self.pen, self.dicom_viewer)
         self.units_box = UnitsBox(self, self.pen, self.canvas_labal)
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
         toolbar = CutsomToolbar(self,self.canvas_labal,self.left_label)

@@ -2,7 +2,7 @@ import logging
 
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow.UIDrawROIWindow import UIDrawROIWindow
+from src.View.mainpage.DrawROIWindow.ROI_initialiser import RoiInitialiser
 from src.View.mainpage.ManipulateROIWindow import *
 
 
@@ -47,20 +47,16 @@ class ROIDelOption:
         self.options_window.show()
 
 
-class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
+class RoiDrawOptions(QtWidgets.QMainWindow):
     """
     Create the ROI Draw Options class based on the UI from the file in
     View/ROI Draw Option
     """
-    signal_roi_drawn = QtCore.Signal(tuple)
-    signal_draw_roi_closed = QtCore.Signal()
-
-    def __init__(self, rois, dataset_rtss):
-        super(RoiDrawOptions, self).__init__()
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
-
-    def update_ui(self, rois, dataset_rtss):
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
+    def __init__(self, rois, dataset_rtss, parent=None):
+        super().__init__(parent)
+        self.ui = RoiInitialiser(self, rois, dataset_rtss, parent=self)
+        self.setCentralWidget(self.ui)
+        self.addToolBar(self.ui.build_toolbar())      
 
 
 class ROIDrawOption:
@@ -85,13 +81,6 @@ class ROIDrawOption:
 
         if not hasattr(self, "draw_window"):
             self.draw_window = RoiDrawOptions(rois, dataset_rtss)
-            self.draw_window.signal_roi_drawn.connect(
-                self.structure_modified_function)
-            self.draw_window.signal_draw_roi_closed.connect(
-                self.remove_roi_draw_instance
-            )
-        else:
-            self.draw_window.update_ui(rois, dataset_rtss)
 
         return self.draw_window
 

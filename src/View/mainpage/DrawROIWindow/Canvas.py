@@ -33,7 +33,7 @@ class Tool(Enum):
 
 class CanvasLabel(QtWidgets.QLabel):
     """Class for the drawing funnction, creates an invisable layer projected over a dicom image"""
-    def __init__(self, pen: QPen):
+    def __init__(self, pen: QPen, dicom_slice_viewer):
         print("2")
         super().__init__()
         self.pen = pen #the pen object that is used to draw on the canvas, can be changed in other classes
@@ -46,11 +46,12 @@ class CanvasLabel(QtWidgets.QLabel):
         self.slice_num = 0 #this variable represents the current viewable slice
         self.transect_pixmap_copy = None #Becomes a pixmap
         self.patient_dict_container = PatientDictContainer()
-        self.dicom_slices = DicomAxialView()
+        self.dicom_slices = dicom_slice_viewer
         self.dicom_data = self.patient_dict_container.dataset
         print(self.dicom_data)
 
         self.number_of_slices = self.dicom_slices.slider.maximum() #number of image slices
+        print(self.number_of_slices)
 
         # sets the canvas and the mouse tracking
         #genorates a pixmap to draw on then copys that pixmap into an array an equal size of the dicom images
@@ -231,10 +232,10 @@ class CanvasLabel(QtWidgets.QLabel):
         """Changes the slide 1 up or 1 down and copies the slide"""
         if up_or_down:
             self.canvas[self.slice_num+1] = self.canvas[self.slice_num].copy()
-            self.scrol_loader.setValue(self.scrol_loader.value() +1)
+            self.dicom_slices.slider.setValue(self.dicom_slices.slider.value() +1)
         elif not up_or_down & self.slice_num > 1:
             self.canvas[self.slice_num-1] = self.canvas[self.slice_num].copy()
-            self.scrol_loader.setValue(self.scrol_loader.value() -1)
+            self.dicom_slices.slider.setValue(self.dicom_slices.slider.value() -1)
         self.ds_is_active = False
     def erase_roi(self):
         """Erases everything on the current slide"""
