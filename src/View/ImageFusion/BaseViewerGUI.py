@@ -2,43 +2,93 @@ import contextlib
 from PySide6 import QtWidgets, QtGui
 from src.View.mainpage.DicomView import DicomView, GraphicsScene
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
-
+from src.Model.VTKEngine import VTKEngine
+from PySide6 import QtCore
 
 class BaseFusionView(DicomView):
-    def __init__(self, slice_view, roi_color=None, iso_color=None, cut_line_color=None):
-        self.slice_view = slice_view
-        super().__init__(roi_color, iso_color, cut_line_color)
-
-        self.translation_menu = TranslateRotateMenu()
-        self.translation_menu.set_offset_changed_callback(self.update_overlay_offset)
+    def __init__(self, slice_view, roi_color=None, iso_color=None, cut_line_color=None, vtk_engine=None, translation_menu=None):
+        # Always initialize these attributes first
+        self.base_item = None
         self.overlay_item = None
         self.overlay_images = None
-        self.base_item = None
-        self.update_view()
+        self.overlay_offset = (0, 0)
+
+        self.slice_view = slice_view
+        self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
+        super().__init__(roi_color, iso_color, cut_line_color)
+
+        # Use the shared TranslateRotateMenu if provided, else create a new one
+        self.translation_menu = translation_menu or TranslateRotateMenu()
+        self.translation_menu.opacity_slider.valueChanged.connect(self.update_overlay_opacity)
+
+        self._refresh_timer = QtCore.QTimer(self)
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.timeout.connect(self.refresh_overlay_now)
+
+    def set_slider_range_from_vtk(self):
+        """
+        Set the slider min/max to match the VTK extent for this orientation.
+        Should be called after VTKEngine is loaded.
+        """
+        if self.vtk_engine is None:
+            return
+        extent = self.vtk_engine.fixed_extent()
+        if not extent:
+            return
+
+        def set_slider(min_val, max_val):
+            self.slider.setMinimum(min_val)
+            self.slider.setMaximum(max_val)
+            self.slider.setValue((min_val + max_val) // 2)
+
+        if (sv := self.slice_view) == "axial":
+            set_slider(extent[4], extent[5])
+        elif sv == "coronal":
+            set_slider(extent[2], extent[3])
+        elif sv == "sagittal":
+            set_slider(extent[0], extent[1])
 
     def image_display(self, overlay_image=None):
         """
-                Update the image to be displayed on the DICOM View.
-                If overlay_image is provided, use it as the overlay for this view.
-                Also ensures overlay_item is created and positioned correctly.
-                """
+        Update the image to be displayed on the DICOM View.
+        If overlay_image is provided, use it as the overlay for this view.
+        If self.vtk_engine is set, use it to get both the base and overlay images for manual fusion.
+        """
         slider_id = self.slider.value()
 
-        if overlay_image is not None:
-            image = overlay_image
-        elif self.overlay_images is not None:
-            if 0 <= slider_id < len(self.overlay_images):
-                image = self.overlay_images[slider_id]
-            else:
+        # If using VTKEngine, get both base and overlay from VTK
+        if self.vtk_engine is not None:
+            orientation = self.slice_view
+            # Get the blended image (fixed + moving) as QImage
+            qimg = self.vtk_engine.get_slice_qimage(orientation, slider_id)
+            if qimg.isNull():
+                # Log error and show user feedback
+                print(f"[ERROR] Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
+                QtWidgets.QMessageBox.warning(
+                    self, "Image Load Error",
+                    f"Failed to load image for orientation '{orientation}', slice {slider_id}.\n"
+                    "Please check your DICOM data or transformation settings."
+                )
                 return
-        else:
-            pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
-            if pixmaps is None:
-                return  # Prevent NoneType subscriptable error
-            if 0 <= slider_id < len(pixmaps):
-                image = pixmaps[slider_id]
+            pixmap = QtGui.QPixmap.fromImage(qimg)
+            # Display as the base image (no overlay needed, since VTKEngine blends)
+            if self.base_item is None:
+                self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
+                self.scene.addItem(self.base_item)
             else:
-                return
+                self.base_item.setPixmap(pixmap)
+            # Remove overlay item if present
+            if self.overlay_item is not None:
+                self.scene.removeItem(self.overlay_item)
+                self.overlay_item = None
+            return
+
+        # --- Default (non-VTK) logic below ---
+        # Base image (fixed)
+        pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
+        if pixmaps is None or not (0 <= slider_id < len(pixmaps)):
+            return
+        image = pixmaps[slider_id]
 
         # Update or create the base image item
         if self.base_item is None:
@@ -47,9 +97,13 @@ class BaseFusionView(DicomView):
         else:
             self.base_item.setPixmap(image)
 
-            # Update or create the overlay item
+        # Overlay image (moving)
+        overlay_pixmap = None
         if self.overlay_images is not None and 0 <= slider_id < len(self.overlay_images):
             overlay_pixmap = self.overlay_images[slider_id]
+
+        # Update or create the overlay item
+        if overlay_pixmap is not None:
             if self.overlay_item is None:
                 self.overlay_item = QtWidgets.QGraphicsPixmapItem(overlay_pixmap)
                 self.overlay_item.setZValue(1)  # Ensure overlay is below cut lines
@@ -62,7 +116,6 @@ class BaseFusionView(DicomView):
                 self.overlay_item.setPos(offset[0], offset[1])
         else:
             self.overlay_item = None
-
 
 
 
@@ -83,28 +136,51 @@ class BaseFusionView(DicomView):
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
 
-    def update_overlay_offset(self, offset):
-        """
-        Apply translation to the overlay image.
-        offset: tuple (x, y)
-        """
-        self.overlay_offset = offset
-        self.refresh_overlay()
-
     def refresh_overlay(self):
         """
-        Repaint the overlay image with the applied offset.
+        Debounced repaint of the overlay image with the applied offset or transform.
         """
-        if self.overlay_images is not None:
-            slider_id = self.slider.value()
-            if slider_id >= len(self.overlay_images):
-                return
+        self._refresh_timer.start(30)  # 30 ms debounce
 
-            # Only move the overlay_item if it exists
-            if hasattr(self, "overlay_item") and self.overlay_item is not None:
-                self.overlay_item.setPos(self.overlay_offset[0], self.overlay_offset[1])
-                self.scene.update()
-                if hasattr(self, "viewport"):
-                    self.viewport().update()
+    def refresh_overlay_now(self):
+        """
+        Actually repaint the overlay image (called by debounce timer).
+        Also sets VTK interpolation to nearest neighbor for speed.
+        """
+        if self.vtk_engine is not None:
+            self.vtk_engine.set_interpolation_linear(False)
+        self.image_display()
+        self.scene.update()
+        if hasattr(self, "viewport"):
+            self.viewport().update()
+
+    def update_overlay_opacity(self, value):
+        """
+        Update overlay opacity in VTKEngine (manual fusion).
+        """
+        if self.vtk_engine is not None:
+            self.vtk_engine.set_opacity(value / 100.0)
+        self.refresh_overlay()
+
+    def update_overlay_offset(self, offset):
+        """
+        Apply translation to the overlay image (3D GUI offset).
+        Also update VTKEngine translation for manual fusion.
+        """
+        # Accepts (x, y, z)
+        self.overlay_offset = offset
+        if self.vtk_engine is not None:
+            x, y, z = offset
+            self.vtk_engine.set_translation(x, y, z)
+        self.refresh_overlay()
+
+    def update_overlay_rotation(self, rotation_tuple):
+        """
+        Update overlay rotation in VTKEngine (manual fusion).
+        """
+        if self.vtk_engine is not None:
+            rx, ry, rz = rotation_tuple
+            self.vtk_engine.set_rotation_deg(rx, ry, rz)
+        self.refresh_overlay()
 
 

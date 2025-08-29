@@ -665,9 +665,23 @@ class UIImageFusionWindow(object):
         Executes when the progress bar finishes loaded the selected files.
         Emits a wrapper object that provides update_progress for compatibility with the main window.
         """
-        if results[0] is True:
-            wrapper = FusionResultWrapper(results[1], self.progress_window)
+        # Handle both manual and auto fusion result types
+        if isinstance(results, tuple) and results[0] is True:
+            # Manual fusion: results is (True, images_dict)
+            images = results[1]
+            if isinstance(images, dict) and "vtk_engine" in images:
+                # Manual fusion: add dummy keys for main window compatibility
+                images["fixed_image"] = None
+                images["moving_image"] = None
+            wrapper = FusionResultWrapper(images, self.progress_window)
             self.image_fusion_info_initialized.emit(wrapper)
+        elif hasattr(results, "update_progress"):
+            # Autofusion: results is a ProgressWindow or similar
+            wrapper = FusionResultWrapper(results, self.progress_window)
+            self.image_fusion_info_initialized.emit(wrapper)
+        else:
+            # Unexpected result type
+            QMessageBox.warning(self, "Fusion Error", "Unexpected result type returned from fusion loader.")
 
 
 
