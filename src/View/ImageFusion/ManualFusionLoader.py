@@ -47,7 +47,7 @@ class ManualFusionLoader(QtCore.QObject):
             raise RuntimeError("Failed to load moving image with VTK.")
 
         if progress_callback is not None:
-            progress_callback.emit(("Finished loading images", 100))
+            progress_callback.emit(("Finalising", 90))
 
         # Only emit the VTKEngine for downstream use; overlays will be generated on-the-fly
         self.signal_loaded.emit((True, {

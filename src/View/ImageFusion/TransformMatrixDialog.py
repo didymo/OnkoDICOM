@@ -3,7 +3,7 @@ from PySide6 import QtWidgets, QtCore
 class TransformMatrixDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Transformation Matrix (4x4)")
+        self.setWindowTitle("Transformation Matrix")
 
         # Restore default dialog margins for padding
         layout = QtWidgets.QVBoxLayout(self)
