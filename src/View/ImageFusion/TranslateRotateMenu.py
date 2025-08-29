@@ -3,6 +3,21 @@ from PySide6.QtCore import Qt
 from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
 
 
+def get_color_pair_from_text(text):
+    """
+    Utility function to map color pair combo text to (fixed_color, moving_color, coloring_enabled).
+    """
+    if text == "No Colors (Grayscale)":
+        return "Grayscale", "Grayscale", False
+    elif text == "Purple + Green":
+        return "Purple", "Green", True
+    elif text == "Blue + Yellow":
+        return "Blue", "Yellow", True
+    elif text == "Red + Cyan":
+        return "Red", "Cyan", True
+    else:
+        return "Purple", "Green", True
+
 class TranslateRotateMenu(QtWidgets.QWidget):
     """
     A menu for adjusting translation, rotation, and opacity of the overlay image.
@@ -33,9 +48,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         layout.addLayout(color_pair_hbox)
 
         # Store current color/enable state
-        self.fixed_color = "Purple"
-        self.moving_color = "Green"
-        self.coloring_enabled = True
+        self.fixed_color, self.moving_color, self.coloring_enabled = get_color_pair_from_text("Purple + Green")
 
         # Connect signal for color pair selection
         self.color_pair_combo.currentTextChanged.connect(self._on_color_pair_changed)
@@ -45,7 +58,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         layout.addWidget(QtWidgets.QLabel("Translate:"), alignment=Qt.AlignLeft)
         self.translate_sliders = []
         self.translate_labels = []
-        for i, axis in enumerate(['x', 'y', 'z']):
+        for i, axis in enumerate(['LR', 'PA', 'IS']):
             hbox = QtWidgets.QHBoxLayout()
             label = QtWidgets.QLabel(axis)
             label.setFixedWidth(30)
@@ -58,7 +71,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             slider.setTickInterval(0)
             slider.setTracking(True)
             slider.valueChanged.connect(self._make_offset_change_handler(i))
-            value_label = QtWidgets.QLabel("0 px")
+            value_label = QtWidgets.QLabel("0 mm")
             value_label.setFixedWidth(50)
 
             hbox.addWidget(label)
@@ -73,6 +86,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         layout.addSpacing(8)
         layout.addWidget(QtWidgets.QLabel("Rotate:"), alignment=Qt.AlignLeft)
         self.rotate_sliders = []
+        self.rotate_labels = []
         self.rotation_changed_callback = None
         for i, axis in enumerate(['LR', 'PA', 'IS']):
             hbox = QtWidgets.QHBoxLayout()
@@ -83,10 +97,14 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             slider.setMaximum(180)
             slider.setValue(0)
             slider.valueChanged.connect(self._make_rotation_change_handler(i))
+            value_label = QtWidgets.QLabel("0°")
+            value_label.setFixedWidth(50)
             hbox.addWidget(label)
             hbox.addWidget(slider)
+            hbox.addWidget(value_label)
             layout.addLayout(hbox)
             self.rotate_sliders.append(slider)
+            self.rotate_labels.append(value_label)
 
         # Opacity section
         layout.addSpacing(8)
@@ -130,7 +148,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 axis_index: The index of the axis that was changed (0 for x, 1 for y, 2 for z).
                 value: The new value of the changed slider.
         """
-        self.translate_labels[axis_index].setText(f"{value} px")
+        self.translate_labels[axis_index].setText(f"{value} mm")
         if self.offset_changed_callback:
             x = self.translate_sliders[0].value()
             y = self.translate_sliders[1].value()
@@ -176,6 +194,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         """
         Called when a rotation slider value changes.
         """
+        self.rotate_labels[axis_index].setText(f"{value}°")
         if self.rotation_changed_callback:
             rx = self.rotate_sliders[0].value()
             ry = self.rotate_sliders[1].value()
@@ -199,27 +218,28 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         for i in range(3):
             self.translate_sliders[i].blockSignals(True)
             self.translate_sliders[i].setValue(offsets[i])
-            self.translate_labels[i].setText(f"{offsets[i]} px")
+            self.translate_labels[i].setText(f"{offsets[i]} mm")
             self.translate_sliders[i].blockSignals(False)
 
     def reset_trans(self):
         """
         This method sets each translation slider to zero and updates the
-        corresponding label to "0 px".
+        corresponding label to "0 mm".
         """
         for slider, label in zip(self.translate_sliders, self.translate_labels):
             slider.blockSignals(True)
             slider.setValue(0)
-            label.setText("0 px")
+            label.setText("0 mm")
             slider.blockSignals(False)
 
     def reset_rot(self):
         """
         This method sets each rotation slider to zero.
         """
-        for slider in self.rotate_sliders:
+        for slider, label in zip(self.rotate_sliders, self.rotate_labels):
             slider.blockSignals(True)
             slider.setValue(0)
+            label.setText("0°")
             slider.blockSignals(False)
 
     def reset_transform(self):
@@ -253,27 +273,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         Handle changes to the color pair combo box.
         Updates the internal color state and emits a signal/callback if set.
         """
-        if text == "No Colors (Grayscale)":
-            self.coloring_enabled = False
-            self.fixed_color = "Grayscale"
-            self.moving_color = "Grayscale"
-        elif text == "Purple + Green":
-            self.coloring_enabled = True
-            self.fixed_color = "Purple"
-            self.moving_color = "Green"
-        elif text == "Blue + Yellow":
-            self.coloring_enabled = True
-            self.fixed_color = "Blue"
-            self.moving_color = "Yellow"
-        elif text == "Red + Cyan":
-            self.coloring_enabled = True
-            self.fixed_color = "Red"
-            self.moving_color = "Cyan"
-        else:
-            # Default fallback
-            self.coloring_enabled = True
-            self.fixed_color = "Purple"
-            self.moving_color = "Green"
+        self.fixed_color, self.moving_color, self.coloring_enabled = get_color_pair_from_text(text)
 
         # If a callback is set, notify external listeners (e.g., the main view/controller)
         if hasattr(self, "color_pair_changed_callback") and callable(self.color_pair_changed_callback):

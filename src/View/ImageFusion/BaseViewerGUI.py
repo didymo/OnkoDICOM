@@ -4,6 +4,8 @@ from src.View.mainpage.DicomView import DicomView, GraphicsScene
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
 from src.Model.VTKEngine import VTKEngine
 from PySide6 import QtCore
+from src.View.ImageFusion.TranslateRotateMenu import get_color_pair_from_text
+
 
 class BaseFusionView(DicomView):
     DEBOUNCE_MS = 5  # adjust debounce time as needed
@@ -138,8 +140,6 @@ class BaseFusionView(DicomView):
         else:
             self.overlay_item = None
 
-
-
     def roi_display(self):
         """
         Display ROI structures on the DICOM Image.
@@ -176,26 +176,7 @@ class BaseFusionView(DicomView):
             self.viewport().update()
 
     def _on_color_pair_changed(self, text):
-        if text == "No Colors (Grayscale)":
-            self.coloring_enabled = False
-            self.fixed_color = "Grayscale"
-            self.moving_color = "Grayscale"
-        elif text == "Purple + Green":
-            self.coloring_enabled = True
-            self.fixed_color = "Purple"
-            self.moving_color = "Green"
-        elif text == "Blue + Yellow":
-            self.coloring_enabled = True
-            self.fixed_color = "Blue"
-            self.moving_color = "Yellow"
-        elif text == "Red + Cyan":
-            self.coloring_enabled = True
-            self.fixed_color = "Red"
-            self.moving_color = "Cyan"
-        else:
-            self.coloring_enabled = True
-            self.fixed_color = "Purple"
-            self.moving_color = "Green"
+        self.fixed_color, self.moving_color, self.coloring_enabled = get_color_pair_from_text(text)
         self.refresh_overlay()
 
     def update_overlay_opacity(self, value):
