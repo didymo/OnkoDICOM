@@ -2,7 +2,7 @@ import logging
 
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow.ROI_initialiser import RoiInitialiser
+from src.View.mainpage.DrawROIWindow.draw_ROI_initialiser import RoiInitialiser
 from src.View.mainpage.ManipulateROIWindow import *
 
 
@@ -56,7 +56,7 @@ class RoiDrawOptions(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.ui = RoiInitialiser(self, rois, dataset_rtss, parent=self)
         self.setCentralWidget(self.ui)
-        self.addToolBar(self.ui.build_toolbar())      
+        self.addToolBar(self.ui.build_toolbar())
 
 
 class ROIDrawOption:

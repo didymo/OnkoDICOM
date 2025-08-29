@@ -34,7 +34,6 @@ class Tool(Enum):
 class CanvasLabel(QtWidgets.QLabel):
     """Class for the drawing funnction, creates an invisable layer projected over a dicom image"""
     def __init__(self, pen: QPen, dicom_slice_viewer):
-        print("2")
         super().__init__()
         self.pen = pen #the pen object that is used to draw on the canvas, can be changed in other classes
         self.last_point = None #becomes a x,y point
@@ -48,10 +47,8 @@ class CanvasLabel(QtWidgets.QLabel):
         self.patient_dict_container = PatientDictContainer()
         self.dicom_slices = dicom_slice_viewer
         self.dicom_data = self.patient_dict_container.dataset
-        print(self.dicom_data)
 
         self.number_of_slices = self.dicom_slices.slider.maximum() #number of image slices
-        print(self.number_of_slices)
 
         # sets the canvas and the mouse tracking
         #genorates a pixmap to draw on then copys that pixmap into an array an equal size of the dicom images

@@ -30,6 +30,21 @@ class RoiInitialiser(QtWidgets.QWidget):
 
         # Initalises the calsses
         self.dicom_viewer = DicomAxialView(is_four_view=True)
+        
+        #remove the scroll bar and add it to its own widget
+        self.dicom_viewer.layout().removeWidget(self.dicom_viewer.slider)
+        self.dicom_scroller = QtWidgets.QWidget()
+        self.dicom_viewer.slider.setParent(self.dicom_scroller)
+
+        scroller_layout = QtWidgets.QVBoxLayout(self.dicom_scroller)
+        scroller_layout.setContentsMargins(0, 0, 0, 0)
+        scroller_layout.setSpacing(0)
+
+        # 4) reparent + add the slider to the scroller's layout
+        scroller_layout.addWidget(self.dicom_viewer.slider)
+        self.dicom_viewer.slider.show()
+
+        
         self.canvas_labal = CanvasLabel(self.pen, self.dicom_viewer)
         self.units_box = UnitsBox(self, self.pen, self.canvas_labal)
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
@@ -61,28 +76,22 @@ class RoiInitialiser(QtWidgets.QWidget):
         tools_layout.addWidget(self.units_box)
 
         # Create a layout to hold the left panel and the main canvas
-        main_layout = QtWidgets.QHBoxLayout()
-
         # Create a QWidget to hold both the left panel and the central label
-        central_widget = QtWidgets.QWidget()
-        central_widget.setLayout(main_layout)
-
         # Add the left panel to the layout
-        main_layout.addWidget(tools_container)
-        
         # Add the canvas label to the layout
-        main_layout.addWidget(drawing_widget)
-
         # Set the central widget to be our layout container
         main = QtWidgets.QHBoxLayout(self)
         main.setContentsMargins(0, 0, 0, 0)
         main.setSpacing(8)
         main.addWidget(tools_container)
+        main.addWidget(self.dicom_scroller)
         main.addWidget(drawing_widget, 1)
 
         # keep a toolbar factory if you like (QMainWindow will add it)
         self._toolbar = CutsomToolbar(self, self.canvas_labal, self.left_label)
         self._toolbar.colour.connect(self.left_label.update_colour)
+        print("scroller sizeHint:", self.dicom_scroller.sizeHint())
+        print("slider sizeHint:", self.dicom_viewer.slider.sizeHint())
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
         return self._toolbar
@@ -92,6 +101,6 @@ class RoiInitialiser(QtWidgets.QWidget):
             self.dicom_viewer.slider.setValue(self.dicom_viewer.slider.value() +1)
             self.canvas_labal.ds_is_active = False
         if event.key() == Qt.Key_Down:
-            self.dicom_viewer.slider.setValue(self.dicom_viewer.slider() -1)
+            self.dicom_viewer.slider.setValue(self.dicom_viewer.slider.value() -1)
             self.canvas_labal.ds_is_active = False
         return super().keyPressEvent(event)
