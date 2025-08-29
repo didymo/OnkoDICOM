@@ -55,8 +55,11 @@ class RoiDrawOptions(QtWidgets.QMainWindow):
     def __init__(self, rois, dataset_rtss, parent=None):
         super().__init__(parent)
         self.ui = RoiInitialiser(self, rois, dataset_rtss, parent=self)
+        #Connecting slots & signals
+        self.ui._toolbar.colour.connect(self.ui.left_label.update_colour)
         self.setCentralWidget(self.ui)
         self.addToolBar(self.ui.build_toolbar())
+        
 
 
 class ROIDrawOption:

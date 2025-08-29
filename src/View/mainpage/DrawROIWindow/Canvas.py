@@ -7,10 +7,6 @@ mousePressEvent - handles the mouse press event.
                     3rd if the fill tool is active runs the fill tool code
                     4th if the transect tool code runs the transect tool code
 """
-
-
-
-
 from collections import deque
 from enum import Enum, auto
 from scipy import ndimage as ndi
@@ -21,7 +17,6 @@ import numpy as np
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.Transect_Window import TransectWindow
 from src.View.mainpage.DrawROIWindow.Copy_Roi import CopyROI
-from src.View.mainpage.DicomAxialView import DicomAxialView
 
 
 class Tool(Enum):
@@ -47,9 +42,10 @@ class CanvasLabel(QtWidgets.QLabel):
         self.patient_dict_container = PatientDictContainer()
         self.dicom_slices = dicom_slice_viewer
         self.dicom_data = self.patient_dict_container.dataset
+        self.dicom_slices.slider.valueChanged.connect(self.change_layout_bool)
+        self.dicom_slices.slider.valueChanged.connect(self.update_pixmap_layer)
 
         self.number_of_slices = self.dicom_slices.slider.maximum() #number of image slices
-
         # sets the canvas and the mouse tracking
         #genorates a pixmap to draw on then copys that pixmap into an array an equal size of the dicom images
         self.gen_pix_map = QPixmap(512, 512)
@@ -365,8 +361,6 @@ class CanvasLabel(QtWidgets.QLabel):
 
         self._enforce_lock_after_stroke()
 
-
-
     #AI Vibe coded part
     # --------------- NEW: lock enforcement helpers ---------------
 
@@ -438,27 +432,24 @@ class CanvasLabel(QtWidgets.QLabel):
 #end of AI Gen
 
 #This section contain all of the slots that communicate with methods in other files
+    def change_layout_bool(self):
+        """Changes the values of ds_is_active to remind the drawer to reset the pixmap
+        once the scroll loader changes value"""
+        self.ds_is_active = False
 
- #   @Slot(bool)
- #   def change_layout_bool(self, v:bool):
-  #      """Changes the values of ds_is_active to remind the drawer to reset the pixmap
-   #       once the scroll loader changes value"""
-#        self.ds_is_active = v
-#
-#    @Slot(int)
-#    def update_pixmap_layer(self, v:int):
-#        """When the slider changes value the pixmap gets updated"""
-#        self.setPixmap(self.canvas[v])
-#        self.slice_num = v
-#        self.update()
+    def update_pixmap_layer(self, v:int):
+        """When the slider changes value the pixmap gets updated"""
+        self.setPixmap(self.canvas[v])
+        self.slice_num = v
+        self.update()
 
-#    @Slot(int)
-#    def copy_rois_up(self,v):
-#        """Copys any pixmap onto the rois values selcted"""
-#        i = self.slice_num
-#        while v > i:
-#            self.canvas[i] = self.canvas[self.slice_num]
-#            i +=1
+    @Slot(int)
+    def copy_rois_up(self,v):
+        """Copys any pixmap onto the rois values selcted"""
+        i = self.slice_num
+        while v > i:
+            self.canvas[i] = self.canvas[self.slice_num]
+            i +=1
 
     @Slot(int)
     def copy_rois_down(self,v):

@@ -50,9 +50,6 @@ class RoiInitialiser(QtWidgets.QWidget):
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
         toolbar = CutsomToolbar(self,self.canvas_labal,self.left_label)
 
-       #Connecting slots & signals
-        toolbar.colour.connect(self.left_label.update_colour)
-
         #Drawing Widget
         drawing_widget = QtWidgets.QWidget()
         drawing_widget.setFixedSize(512,512)

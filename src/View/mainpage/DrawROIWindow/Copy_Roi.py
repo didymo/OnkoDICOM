@@ -18,7 +18,7 @@ class CopyROI(QWidget):
         self.upper_bounds = QSpinBox()
         self.upper_bounds.setRange(1,slice_num)
         self.upper_bounds.setValue(self.cs)
-        
+
         self.lower_bounds_label = QLabel("Lower Bounds : ")
         self.lower_bounds = QSpinBox()
         self.lower_bounds.setRange(1,slice_num)
@@ -36,9 +36,8 @@ class CopyROI(QWidget):
         layout.addWidget(self.lower_bounds, 1,1)
         layout.addWidget(cancel_button,2,0)
         layout.addWidget(confirm_button, 2,1)
-
         self.setLayout(layout)
-    
+
     def confirm_button(self):
         """If the numbers have changed the ROIs will be coppyed onto the slides"""
         if self.upper_bounds.value() != self.cs:
