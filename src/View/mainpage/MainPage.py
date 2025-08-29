@@ -444,6 +444,7 @@ class UIMainWindow:
                     slice_idx=self.last_fusion_slice_idx
                 )
 
+
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
             for view in [

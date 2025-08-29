@@ -196,8 +196,15 @@ class BaseFusionView(DicomView):
         self.overlay_offset = offset
         if self.vtk_engine is not None:
             x, y, z = offset
-            self.vtk_engine.set_translation(x, y, z)
+            # Pass slice context if available
+            if orientation is not None and slice_idx is not None:
+                self.vtk_engine.set_translation(x, y, z)
+                # reuse the existing apply_transform signature with orientation/slice
+                self.vtk_engine._apply_transform(orientation, slice_idx)
+            else:
+                self.vtk_engine.set_translation(x, y, z)
         self.refresh_overlay()
+
 
     def update_overlay_rotation(self, rotation_tuple, orientation=None, slice_idx=None):
         """
@@ -205,7 +212,6 @@ class BaseFusionView(DicomView):
         """
         if self.vtk_engine is not None:
             rx, ry, rz = rotation_tuple
-            # Use provided orientation/slice_idx if given, else default to this view's
             if orientation is None:
                 orientation = self.slice_view
             if slice_idx is None:
