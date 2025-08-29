@@ -438,7 +438,12 @@ class UIMainWindow:
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
             ]:
-                view.update_overlay_offset(offset)
+                view.update_overlay_offset(
+                    offset,
+                    orientation=self.last_fusion_slice_orientation,
+                    slice_idx=self.last_fusion_slice_idx
+                )
+
 
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
@@ -447,7 +452,32 @@ class UIMainWindow:
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
             ]:
-                view.update_overlay_rotation(rotation_tuple)
+                view.update_overlay_rotation(
+                    rotation_tuple,
+                    orientation=self.last_fusion_slice_orientation,
+                    slice_idx=self.last_fusion_slice_idx
+                )
+
+        # --- Connect color pair change to all fusion views ---
+        def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
+            for view in [
+                self.image_fusion_view_axial,
+                self.image_fusion_view_sagittal,
+                self.image_fusion_view_coronal,
+            ]:
+                if hasattr(view, "_on_color_pair_changed"):
+                    # Compose the text as in the combo box for compatibility
+                    if not coloring_enabled:
+                        text = "No Colors (Grayscale)"
+                    elif fixed_color == "Purple" and moving_color == "Green":
+                        text = "Purple + Green"
+                    elif fixed_color == "Blue" and moving_color == "Yellow":
+                        text = "Blue + Yellow"
+                    elif fixed_color == "Red" and moving_color == "Cyan":
+                        text = "Red + Cyan"
+                    else:
+                        text = "Purple + Green"
+                    view._on_color_pair_changed(text)
 
         # Fusion Options Tab with Translate/Rotate Menu
         self.fusion_options_tab = None
@@ -456,6 +486,8 @@ class UIMainWindow:
             self.fusion_options_tab = TranslateRotateMenu()
             self.fusion_options_tab.set_offset_changed_callback(update_all_views)
             self.fusion_options_tab.set_rotation_changed_callback(update_all_rotations)
+            self.fusion_options_tab.set_color_pair_changed_callback(propagate_color_pair_change)
+            self.fusion_options_tab.set_get_vtk_engine_callback(lambda: vtk_engine)
             self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
             self.left_panel.setCurrentWidget(self.fusion_options_tab)
     
@@ -487,6 +519,22 @@ class UIMainWindow:
             self.structures_tab.fixed_container_structure_modified,
             self.structures_tab.moving_container_structure_modified)
 
+        # Track the last interacted slice orientation and index for rotation axis
+        self.last_fusion_slice_orientation = "axial"
+        self.last_fusion_slice_idx = 0
+
+        def on_slider_changed(orientation, value):
+            self.last_fusion_slice_orientation = orientation
+            self.last_fusion_slice_idx = value
+
+        # Connect each fusion view's slider to update the last interacted orientation/index
+        self.image_fusion_view_axial.slider.valueChanged.connect(
+            lambda v: on_slider_changed("axial", v))
+        self.image_fusion_view_coronal.slider.valueChanged.connect(
+            lambda v: on_slider_changed("coronal", v))
+        self.image_fusion_view_sagittal.slider.valueChanged.connect(
+            lambda v: on_slider_changed("sagittal", v))
+        
         # Set slider ranges to VTK extents for all fusion views 
         for view in [self.image_fusion_view_axial, self.image_fusion_view_coronal, self.image_fusion_view_sagittal]:
             if hasattr(view, "set_slider_range_from_vtk"):

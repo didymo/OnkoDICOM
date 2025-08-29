@@ -4,8 +4,12 @@ from src.View.mainpage.DicomView import DicomView, GraphicsScene
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
 from src.Model.VTKEngine import VTKEngine
 from PySide6 import QtCore
+from src.View.ImageFusion.TranslateRotateMenu import get_color_pair_from_text
+
 
 class BaseFusionView(DicomView):
+    DEBOUNCE_MS = 5  # adjust debounce time as needed
+
     def __init__(self, slice_view, roi_color=None, iso_color=None, cut_line_color=None, vtk_engine=None, translation_menu=None):
         # Always initialize these attributes first
         self.base_item = None
@@ -16,6 +20,22 @@ class BaseFusionView(DicomView):
         self.slice_view = slice_view
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
         super().__init__(roi_color, iso_color, cut_line_color)
+
+        color_pair_options = [
+            "No Colors (Grayscale)",
+            "Purple + Green",
+            "Blue + Yellow",
+            "Red + Cyan"
+        ]
+        self.color_pair_combo = QtWidgets.QComboBox()
+        self.color_pair_combo.addItems(color_pair_options)
+        self.color_pair_combo.setCurrentText("Purple + Green")
+        # Store current color/enable state
+        self.fixed_color = "Purple"
+        self.moving_color = "Green"
+        self.coloring_enabled = True
+        # Connect signal
+        self.color_pair_combo.currentTextChanged.connect(self._on_color_pair_changed)
 
         # Use the shared TranslateRotateMenu if provided, else create a new one
         self.translation_menu = translation_menu or TranslateRotateMenu()
@@ -59,8 +79,13 @@ class BaseFusionView(DicomView):
         # If using VTKEngine, get both base and overlay from VTK
         if self.vtk_engine is not None:
             orientation = self.slice_view
-            # Get the blended image (fixed + moving) as QImage
-            qimg = self.vtk_engine.get_slice_qimage(orientation, slider_id)
+            # Use selected color and coloring state
+            qimg = self.vtk_engine.get_slice_qimage(
+                orientation, slider_id,
+                fixed_color=self.fixed_color,
+                moving_color=self.moving_color,
+                coloring_enabled=self.coloring_enabled
+            )
             if qimg.isNull():
                 # Log error and show user feedback
                 print(f"[ERROR] Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
@@ -117,8 +142,6 @@ class BaseFusionView(DicomView):
         else:
             self.overlay_item = None
 
-
-
     def roi_display(self):
         """
         Display ROI structures on the DICOM Image.
@@ -140,7 +163,7 @@ class BaseFusionView(DicomView):
         """
         Debounced repaint of the overlay image with the applied offset or transform.
         """
-        self._refresh_timer.start(30)  # 30 ms debounce
+        self._refresh_timer.start(self.DEBOUNCE_MS) 
 
     def refresh_overlay_now(self):
         """
@@ -154,6 +177,10 @@ class BaseFusionView(DicomView):
         if hasattr(self, "viewport"):
             self.viewport().update()
 
+    def _on_color_pair_changed(self, text):
+        self.fixed_color, self.moving_color, self.coloring_enabled = get_color_pair_from_text(text)
+        self.refresh_overlay()
+
     def update_overlay_opacity(self, value):
         """
         Update overlay opacity in VTKEngine (manual fusion).
@@ -162,7 +189,7 @@ class BaseFusionView(DicomView):
             self.vtk_engine.set_opacity(value / 100.0)
         self.refresh_overlay()
 
-    def update_overlay_offset(self, offset):
+    def update_overlay_offset(self, offset, orientation=None, slice_idx=None):
         """
         Apply translation to the overlay image (3D GUI offset).
         Also update VTKEngine translation for manual fusion.
@@ -170,16 +197,27 @@ class BaseFusionView(DicomView):
         self.overlay_offset = offset
         if self.vtk_engine is not None:
             x, y, z = offset
-            self.vtk_engine.set_translation(x, y, z)
+            # Pass slice context if available
+            if orientation is not None and slice_idx is not None:
+                self.vtk_engine.set_translation(x, y, z)
+                # reuse the existing apply_transform signature with orientation/slice
+                self.vtk_engine._apply_transform(orientation, slice_idx)
+            else:
+                self.vtk_engine.set_translation(x, y, z)
         self.refresh_overlay()
 
-    def update_overlay_rotation(self, rotation_tuple):
+
+    def update_overlay_rotation(self, rotation_tuple, orientation=None, slice_idx=None):
         """
         Update overlay rotation in VTKEngine (manual fusion).
         """
         if self.vtk_engine is not None:
             rx, ry, rz = rotation_tuple
-            self.vtk_engine.set_rotation_deg(rx, ry, rz)
+            if orientation is None:
+                orientation = self.slice_view
+            if slice_idx is None:
+                slice_idx = self.slider.value()
+            self.vtk_engine.set_rotation_deg(rx, ry, rz, orientation=orientation, slice_idx=slice_idx)
         self.refresh_overlay()
 
 
