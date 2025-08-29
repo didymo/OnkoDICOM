@@ -83,7 +83,7 @@ class BaseFusionView(DicomView):
                 self.overlay_item = None
             return
 
-        # --- Default (non-VTK) logic below ---
+        # Legacy (non-vtk) logic below
         # Base image (fixed)
         pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
         if pixmaps is None or not (0 <= slider_id < len(pixmaps)):
@@ -167,7 +167,6 @@ class BaseFusionView(DicomView):
         Apply translation to the overlay image (3D GUI offset).
         Also update VTKEngine translation for manual fusion.
         """
-        # Accepts (x, y, z)
         self.overlay_offset = offset
         if self.vtk_engine is not None:
             x, y, z = offset
