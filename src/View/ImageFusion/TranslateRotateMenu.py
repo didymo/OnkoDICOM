@@ -1,5 +1,7 @@
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
+from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
+
 
 class TranslateRotateMenu(QtWidgets.QWidget):
     """
@@ -19,7 +21,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         color_pair_options = [
             "No Colors (Grayscale)",
             "Purple + Green",
-            "Yellow + Blue",
+            "Blue + Yellow",
             "Red + Cyan"
         ]
         color_pair_hbox = QtWidgets.QHBoxLayout()
@@ -95,8 +97,24 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.opacity_slider.setValue(50)
         layout.addWidget(self.opacity_slider)
 
+        # Reset Transform Button
+        reset_btn = QtWidgets.QPushButton("Reset Transform")
+        reset_btn.setToolTip("Reset all translation and rotation to zero")
+        reset_btn.clicked.connect(self.reset_transform)
+        layout.addWidget(reset_btn)
+
+        # Show Transform Matrix Button
+        show_matrix_btn = QtWidgets.QPushButton("Show Transform Matrix")
+        show_matrix_btn.setToolTip("Show the current 4x4 transformation matrix")
+        show_matrix_btn.clicked.connect(self.show_transform_matrix)
+        layout.addWidget(show_matrix_btn)
+
         layout.addStretch(1)
         self.setLayout(layout)
+
+        # Matrix dialog instance (created on demand)
+        self._matrix_dialog = None
+        self._get_vtk_engine_callback = None
 
         # Store current colour/enable state
         self.fixed_color = "Purple"
@@ -118,6 +136,11 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             y = self.translate_sliders[1].value()
             z = self.translate_sliders[2].value()
             self.offset_changed_callback((x, y, z))
+        # Update matrix dialog if open
+        if self._matrix_dialog and self._get_vtk_engine_callback:
+            engine = self._get_vtk_engine_callback()
+            if engine is not None and hasattr(engine, "transform"):
+                self._matrix_dialog.set_matrix(engine.transform)
 
     def set_offset_changed_callback(self, callback):
         """
@@ -138,6 +161,14 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         """
         self.rotation_changed_callback = callback
 
+    def set_color_pair_changed_callback(self, callback):
+        """
+        Allows external code to register a callback for color pair changes.
+        Args:
+            callback: A function that takes (fixed_color, moving_color, coloring_enabled).
+        """
+        self.color_pair_changed_callback = callback
+
     def _make_rotation_change_handler(self, idx):
         return lambda value: self.on_rotation_change(idx, value)
 
@@ -150,6 +181,11 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             ry = self.rotate_sliders[1].value()
             rz = self.rotate_sliders[2].value()
             self.rotation_changed_callback((rx, ry, rz))
+        # Update matrix dialog if open
+        if self._matrix_dialog and self._get_vtk_engine_callback:
+            engine = self._get_vtk_engine_callback()
+            if engine is not None and hasattr(engine, "transform"):
+                self._matrix_dialog.set_matrix(engine.transform)
 
     def set_offsets(self, offsets):
         """
@@ -168,19 +204,55 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def reset_trans(self):
         """
-                This method sets each translation slider to zero and updates the
-                corresponding label to "0 px".
-                """
+        This method sets each translation slider to zero and updates the
+        corresponding label to "0 px".
+        """
         for slider, label in zip(self.translate_sliders, self.translate_labels):
             slider.blockSignals(True)
             slider.setValue(0)
             label.setText("0 px")
             slider.blockSignals(False)
 
+    def reset_rot(self):
+        """
+        This method sets each rotation slider to zero.
+        """
+        for slider in self.rotate_sliders:
+            slider.blockSignals(True)
+            slider.setValue(0)
+            slider.blockSignals(False)
+
+    def reset_transform(self):
+        """
+        Resets both translation and rotation sliders to zero and calls callbacks.
+        """
+        self.reset_trans()
+        self.reset_rot()
+        # Call callbacks to update the views/engine
+        if self.offset_changed_callback:
+            x = self.translate_sliders[0].value()
+            y = self.translate_sliders[1].value()
+            z = self.translate_sliders[2].value()
+            self.offset_changed_callback((x, y, z))
+        if self.rotation_changed_callback:
+            rx = self.rotate_sliders[0].value()
+            ry = self.rotate_sliders[1].value()
+            rz = self.rotate_sliders[2].value()
+            self.rotation_changed_callback((rx, ry, rz))
+        # Update matrix dialog if open
+        if self._matrix_dialog and self._get_vtk_engine_callback:
+            engine = self._get_vtk_engine_callback()
+            if engine is not None and hasattr(engine, "transform"):
+                self._matrix_dialog.set_matrix(engine.transform)
+
     def _make_offset_change_handler(self, idx):
         return lambda value: self.on_offset_change(idx, value)
 
     def _on_color_pair_changed(self, text):
+        """
+        Handle changes to the color pair combo box.
+        Updates the internal color state and emits a signal/callback if set.
+        """
         if text == "No Colors (Grayscale)":
             self.coloring_enabled = False
             self.fixed_color = "Grayscale"
@@ -189,10 +261,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.coloring_enabled = True
             self.fixed_color = "Purple"
             self.moving_color = "Green"
-        elif text == "Yellow + Blue":
+        elif text == "Blue + Yellow":
             self.coloring_enabled = True
-            self.fixed_color = "Yellow"
-            self.moving_color = "Blue"
+            self.fixed_color = "Blue"
+            self.moving_color = "Yellow"
         elif text == "Red + Cyan":
             self.coloring_enabled = True
             self.fixed_color = "Red"
@@ -202,3 +274,27 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.coloring_enabled = True
             self.fixed_color = "Purple"
             self.moving_color = "Green"
+
+        # If a callback is set, notify external listeners (e.g., the main view/controller)
+        if hasattr(self, "color_pair_changed_callback") and callable(self.color_pair_changed_callback):
+            self.color_pair_changed_callback(self.fixed_color, self.moving_color, self.coloring_enabled)
+
+    def set_get_vtk_engine_callback(self, callback):
+        """
+        Set a callback that returns the current VTKEngine instance.
+        """
+        self._get_vtk_engine_callback = callback
+
+    def show_transform_matrix(self):
+        """
+        Show the transformation matrix dialog for the current VTKEngine.
+        """
+        if self._matrix_dialog is None:
+            self._matrix_dialog = TransformMatrixDialog(self)
+        # Get the VTKEngine instance from the callback
+        engine = self._get_vtk_engine_callback() if self._get_vtk_engine_callback else None
+        if engine is not None and hasattr(engine, "transform"):
+            self._matrix_dialog.set_matrix(engine.transform)
+        self._matrix_dialog.show()
+        self._matrix_dialog.raise_()
+        self._matrix_dialog.activateWindow()

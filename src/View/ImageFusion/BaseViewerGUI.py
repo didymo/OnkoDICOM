@@ -19,11 +19,10 @@ class BaseFusionView(DicomView):
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
         super().__init__(roi_color, iso_color, cut_line_color)
 
-        # Add color pair selection UI ---
         color_pair_options = [
             "No Colors (Grayscale)",
             "Purple + Green",
-            "Yellow + Blue",
+            "Blue + Yellow",
             "Red + Cyan"
         ]
         self.color_pair_combo = QtWidgets.QComboBox()
@@ -185,10 +184,10 @@ class BaseFusionView(DicomView):
             self.coloring_enabled = True
             self.fixed_color = "Purple"
             self.moving_color = "Green"
-        elif text == "Yellow + Blue":
+        elif text == "Blue + Yellow":
             self.coloring_enabled = True
-            self.fixed_color = "Yellow"
-            self.moving_color = "Blue"
+            self.fixed_color = "Blue"
+            self.moving_color = "Yellow"
         elif text == "Red + Cyan":
             self.coloring_enabled = True
             self.fixed_color = "Red"
@@ -207,7 +206,7 @@ class BaseFusionView(DicomView):
             self.vtk_engine.set_opacity(value / 100.0)
         self.refresh_overlay()
 
-    def update_overlay_offset(self, offset):
+    def update_overlay_offset(self, offset, orientation=None, slice_idx=None):
         """
         Apply translation to the overlay image (3D GUI offset).
         Also update VTKEngine translation for manual fusion.
@@ -219,15 +218,17 @@ class BaseFusionView(DicomView):
             self.vtk_engine.set_translation(x, y, z)
         self.refresh_overlay()
 
-    def update_overlay_rotation(self, rotation_tuple):
+    def update_overlay_rotation(self, rotation_tuple, orientation=None, slice_idx=None):
         """
         Update overlay rotation in VTKEngine (manual fusion).
         """
         if self.vtk_engine is not None:
             rx, ry, rz = rotation_tuple
-            # Determine which orientation and slice to use for rotation center
-            orientation = self.slice_view
-            slice_idx = self.slider.value()
+            # Use provided orientation/slice_idx if given, else default to this view's
+            if orientation is None:
+                orientation = self.slice_view
+            if slice_idx is None:
+                slice_idx = self.slider.value()
             self.vtk_engine.set_rotation_deg(rx, ry, rz, orientation=orientation, slice_idx=slice_idx)
         self.refresh_overlay()
 
