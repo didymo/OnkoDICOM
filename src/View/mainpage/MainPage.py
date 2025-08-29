@@ -478,7 +478,7 @@ class UIMainWindow:
                         text = "Purple + Green"
                     view._on_color_pair_changed(text)
 
-        # --- Fusion Options Tab with Translate/Rotate Menu ---
+        # Fusion Options Tab with Translate/Rotate Menu
         self.fusion_options_tab = None
 
         if manual:
@@ -491,7 +491,7 @@ class UIMainWindow:
             self.left_panel.setCurrentWidget(self.fusion_options_tab)
     
 
-        # --- VTKEngine integration ---
+        # VTKEngine integration
         vtk_engine = None
         # Try to get vtk_engine from loader result (set by TopLevelController)
         if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:

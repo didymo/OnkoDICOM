@@ -50,21 +50,23 @@ class BaseFusionView(DicomView):
         Set the slider min/max to match the VTK extent for this orientation.
         Should be called after VTKEngine is loaded.
         """
-        if self.vtk_engine is not None:
-            extent = self.vtk_engine.fixed_extent()
-            if extent:
-                if self.slice_view == "axial":
-                    self.slider.setMinimum(extent[4])
-                    self.slider.setMaximum(extent[5])
-                    self.slider.setValue((extent[4] + extent[5]) // 2)
-                elif self.slice_view == "coronal":
-                    self.slider.setMinimum(extent[2])
-                    self.slider.setMaximum(extent[3])
-                    self.slider.setValue((extent[2] + extent[3]) // 2)
-                elif self.slice_view == "sagittal":
-                    self.slider.setMinimum(extent[0])
-                    self.slider.setMaximum(extent[1])
-                    self.slider.setValue((extent[0] + extent[1]) // 2)
+        if self.vtk_engine is None:
+            return
+        extent = self.vtk_engine.fixed_extent()
+        if not extent:
+            return
+
+        def set_slider(min_val, max_val):
+            self.slider.setMinimum(min_val)
+            self.slider.setMaximum(max_val)
+            self.slider.setValue((min_val + max_val) // 2)
+
+        if (sv := self.slice_view) == "axial":
+            set_slider(extent[4], extent[5])
+        elif sv == "coronal":
+            set_slider(extent[2], extent[3])
+        elif sv == "sagittal":
+            set_slider(extent[0], extent[1])
 
     def image_display(self, overlay_image=None):
         """
@@ -106,7 +108,7 @@ class BaseFusionView(DicomView):
                 self.overlay_item = None
             return
 
-        # --- Default (non-VTK) logic below ---
+        # Legacy (non-vtk) logic below
         # Base image (fixed)
         pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
         if pixmaps is None or not (0 <= slider_id < len(pixmaps)):
@@ -192,7 +194,6 @@ class BaseFusionView(DicomView):
         Apply translation to the overlay image (3D GUI offset).
         Also update VTKEngine translation for manual fusion.
         """
-        # Accepts (x, y, z)
         self.overlay_offset = offset
         if self.vtk_engine is not None:
             x, y, z = offset
