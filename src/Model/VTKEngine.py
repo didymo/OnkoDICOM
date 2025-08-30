@@ -161,12 +161,10 @@ class VTKEngine:
 
         h, w = fixed_slice.shape
 
-        # Get current blend factor for moving image (0.0 = only fixed, 1.0 = only moving)
         blend = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.0
 
-        # Color mapping dictionary
         color_map = {
-            "Grayscale":   lambda arr: arr,  # No coloring, just the original grayscale array
+            "Grayscale":   lambda arr: arr,
             "Green":       lambda arr: np.stack([np.zeros_like(arr), arr, np.zeros_like(arr)], axis=-1),
             "Purple":      lambda arr: np.stack([arr, np.zeros_like(arr), arr], axis=-1),
             "Blue":        lambda arr: np.stack([np.zeros_like(arr), np.zeros_like(arr), arr], axis=-1),
@@ -175,19 +173,7 @@ class VTKEngine:
             "Cyan":        lambda arr: np.stack([np.zeros_like(arr), arr, arr], axis=-1),
         }
 
-        # If coloring is disabled, always show both layers as standard grayscale and blend as uint8, no color mapping
-        if not coloring_enabled:
-            if moving_slice is None:
-                arr2d = fixed_slice
-            else:
-                # Use the blend opacity as a true alpha for the moving image
-                alpha = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.5
-                arr2d = (fixed_slice.astype(np.float32) * (1 - alpha) +
-                         moving_slice.astype(np.float32) * alpha).astype(np.uint8)
-            h, w = arr2d.shape
-            qimg = QtGui.QImage(arr2d.data, w, h, w, QtGui.QImage.Format_Grayscale8)
-            qimg = qimg.copy()
-            # Aspect ratio correction (unchanged)
+        def aspect_ratio_correct(qimg, h, w, orientation):
             if self.fixed_reader is not None:
                 spacing = self.fixed_reader.GetOutput().GetSpacing()
                 if orientation == VTKEngine.ORI_AXIAL:
@@ -203,35 +189,27 @@ class VTKEngine:
                 aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
                 display_h = h
                 display_w = int(round(h * aspect_ratio))
-                qimg = qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+                return qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
             return qimg
 
-        rgb = np.zeros((h, w, 3), dtype=np.uint8)
+        def grayscale_qimage(arr2d, h, w, orientation):
+            qimg = QtGui.QImage(arr2d.data, w, h, w, QtGui.QImage.Format_Grayscale8)
+            qimg = qimg.copy()
+            return aspect_ratio_correct(qimg, h, w, orientation)
+
+        if not coloring_enabled:
+            if moving_slice is None:
+                return grayscale_qimage(fixed_slice, h, w, orientation)
+            else:
+                alpha = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.5
+                arr2d = (fixed_slice.astype(np.float32) * (1 - alpha) +
+                         moving_slice.astype(np.float32) * alpha).astype(np.uint8)
+                return grayscale_qimage(arr2d, h, w, orientation)
+
         fixed_f = fixed_slice.astype(np.float32)
         if moving_slice is None:
-            # Only fixed: use selected color
             if fixed_color == "Grayscale":
-                # Show as single-channel grayscale
-                qimg = QtGui.QImage(fixed_slice.data, w, h, w, QtGui.QImage.Format_Grayscale8)
-                qimg = qimg.copy()
-                # Aspect ratio correction (unchanged)
-                if self.fixed_reader is not None:
-                    spacing = self.fixed_reader.GetOutput().GetSpacing()
-                    if orientation == VTKEngine.ORI_AXIAL:
-                        spacing_y, spacing_x = spacing[1], spacing[0]
-                    elif orientation == VTKEngine.ORI_CORONAL:
-                        spacing_y, spacing_x = spacing[2], spacing[0]
-                    elif orientation == VTKEngine.ORI_SAGITTAL:
-                        spacing_y, spacing_x = spacing[2], spacing[1]
-                    else:
-                        spacing_y, spacing_x = 1.0, 1.0
-                    phys_h = h * spacing_y
-                    phys_w = w * spacing_x
-                    aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
-                    display_h = h
-                    display_w = int(round(h * aspect_ratio))
-                    qimg = qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
-                return qimg
+                return grayscale_qimage(fixed_slice, h, w, orientation)
             else:
                 rgb = np.clip(color_map.get(fixed_color, color_map["Purple"])(fixed_slice), 0, 255).astype(np.uint8)
         else:
@@ -254,34 +232,7 @@ class VTKEngine:
 
         qimg = QtGui.QImage(rgb.data, w, h, 3 * w, QtGui.QImage.Format_RGB888)
         qimg = qimg.copy()
-
-        # --- Aspect ratio correction ---
-        if self.fixed_reader is not None:
-            spacing = self.fixed_reader.GetOutput().GetSpacing()
-            # spacing: (sx, sy, sz)
-            if orientation == VTKEngine.ORI_AXIAL:
-                # arr2d shape: (y, x) → spacing: (sy, sx)
-                spacing_y, spacing_x = spacing[1], spacing[0]
-            elif orientation == VTKEngine.ORI_CORONAL:
-                # arr2d shape: (z, x) → spacing: (sz, sx)
-                spacing_y, spacing_x = spacing[2], spacing[0]
-            elif orientation == VTKEngine.ORI_SAGITTAL:
-                # arr2d shape: (z, y) → spacing: (sz, sy)
-                spacing_y, spacing_x = spacing[2], spacing[1]
-            else:
-                spacing_y, spacing_x = 1.0, 1.0
-
-            # Calculate the physical size of the image
-            phys_h = h * spacing_y
-            phys_w = w * spacing_x
-
-            # Scale the image so that the displayed aspect ratio matches the physical aspect ratio
-            aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
-            display_h = h
-            display_w = int(round(h * aspect_ratio))
-            qimg = qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
-
-        return qimg
+        return aspect_ratio_correct(qimg, h, w, orientation)
 
     # -------- Internals --------
     def _apply_transform(self, orientation=None, slice_idx=None):

@@ -30,8 +30,19 @@ class ManualFusionLoader(QtCore.QObject):
         fixed_dir = patient_dict_container.path
         moving_dir = None
         if self.selected_files:
-            # Assume all selected files are from the same directory
-            moving_dir = os.path.dirname(self.selected_files[0])
+            # Validate all selected files are from the same directory
+            dirs = {os.path.dirname(f) for f in self.selected_files}
+            if len(dirs) > 1:
+                # Emit error message if invalid
+                error_msg = (
+                    f"Selected files span multiple directories: {dirs}. "
+                    "Manual fusion requires all files to be from the same directory."
+                )
+                if progress_callback is not None:
+                    progress_callback.emit(("Error loading images", error_msg))
+                self.signal_error.emit((False, error_msg))
+                return
+            moving_dir = dirs.pop()
 
         # Use VTKEngine to load images
         engine = VTKEngine()
