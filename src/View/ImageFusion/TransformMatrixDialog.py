@@ -60,8 +60,12 @@ class TransformMatrixDialog(QtWidgets.QDialog):
             self.table.setColumnWidth(col, self._cell_width)
         for row in range(self.table.rowCount()):
             self.table.setRowHeight(row, self._cell_height)
-        width = self.table.verticalHeader().width() + sum([self.table.columnWidth(i) for i in range(self.table.columnCount())])
-        height = self.table.horizontalHeader().height() + sum([self.table.rowHeight(i) for i in range(self.table.rowCount())])
+        width = self.table.verticalHeader().width() + sum(
+            self.table.columnWidth(i) for i in range(self.table.columnCount())
+        )
+        height = self.table.horizontalHeader().height() + sum(
+            self.table.rowHeight(i) for i in range(self.table.rowCount())
+        )
 
         self.table.setFixedSize(width, height)
         # Let the dialog size to its layout (with padding)

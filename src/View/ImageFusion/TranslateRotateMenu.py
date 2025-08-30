@@ -7,16 +7,17 @@ def get_color_pair_from_text(text):
     """
     Utility function to map color pair combo text to (fixed_color, moving_color, coloring_enabled).
     """
-    if text == "No Colors (Grayscale)":
-        return "Grayscale", "Grayscale", False
-    elif text == "Purple + Green":
-        return "Purple", "Green", True
-    elif text == "Blue + Yellow":
-        return "Blue", "Yellow", True
-    elif text == "Red + Cyan":
-        return "Red", "Cyan", True
-    else:
-        return "Purple", "Green", True
+    match text:
+        case "No Colors (Grayscale)":
+            return "Grayscale", "Grayscale", False
+        case "Purple + Green":
+            return "Purple", "Green", True
+        case "Blue + Yellow":
+            return "Blue", "Yellow", True
+        case "Red + Cyan":
+            return "Red", "Cyan", True
+        case _:
+            return "Purple", "Green", True
 
 class TranslateRotateMenu(QtWidgets.QWidget):
     """

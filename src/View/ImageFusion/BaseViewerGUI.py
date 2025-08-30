@@ -1,4 +1,5 @@
 import contextlib
+import logging
 from PySide6 import QtWidgets, QtGui
 from src.View.mainpage.DicomView import DicomView, GraphicsScene
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
@@ -19,6 +20,10 @@ class BaseFusionView(DicomView):
 
         self.slice_view = slice_view
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
+
+        # interpolation mode config: 'linear' or 'nearest'
+        self.overlay_interpolation_mode = "linear"
+
         super().__init__(roi_color, iso_color, cut_line_color)
 
         color_pair_options = [
@@ -61,12 +66,16 @@ class BaseFusionView(DicomView):
             self.slider.setMaximum(max_val)
             self.slider.setValue((min_val + max_val) // 2)
 
-        if (sv := self.slice_view) == "axial":
+        sv = self.slice_view
+        if sv == "axial":
             set_slider(extent[4], extent[5])
-        elif sv == "coronal":
+            return
+        if sv == "coronal":
             set_slider(extent[2], extent[3])
-        elif sv == "sagittal":
+            return
+        if sv == "sagittal":
             set_slider(extent[0], extent[1])
+            return
 
     def image_display(self, overlay_image=None):
         """
@@ -76,38 +85,11 @@ class BaseFusionView(DicomView):
         """
         slider_id = self.slider.value()
 
-        # If using VTKEngine, get both base and overlay from VTK
+        # If using VTKEngine (Manual Fusion), get both base and overlay from VTK
         if self.vtk_engine is not None:
-            orientation = self.slice_view
-            # Use selected color and coloring state
-            qimg = self.vtk_engine.get_slice_qimage(
-                orientation, slider_id,
-                fixed_color=self.fixed_color,
-                moving_color=self.moving_color,
-                coloring_enabled=self.coloring_enabled
-            )
-            if qimg.isNull():
-                # Log error and show user feedback
-                print(f"[ERROR] Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
-                QtWidgets.QMessageBox.warning(
-                    self, "Image Load Error",
-                    f"Failed to load image for orientation '{orientation}', slice {slider_id}.\n"
-                    "Please check your DICOM data or transformation settings."
-                )
-                return
-            pixmap = QtGui.QPixmap.fromImage(qimg)
-            # Display as the base image (no overlay needed, since VTKEngine blends)
-            if self.base_item is None:
-                self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
-                self.scene.addItem(self.base_item)
-            else:
-                self.base_item.setPixmap(pixmap)
-            # Remove overlay item if present
-            if self.overlay_item is not None:
-                self.scene.removeItem(self.overlay_item)
-                self.overlay_item = None
+            self._display_vtk_image(slider_id)
             return
-
+        
         # Legacy (non-vtk) logic below
         # Base image (fixed)
         pixmaps = self.patient_dict_container.get(f"color_{self.slice_view}")
@@ -141,6 +123,39 @@ class BaseFusionView(DicomView):
                 self.overlay_item.setPos(offset[0], offset[1])
         else:
             self.overlay_item = None
+        
+    def _display_vtk_image(self, slider_id):
+        orientation = self.slice_view
+        # Use selected color and coloring state
+        qimg = self.vtk_engine.get_slice_qimage(
+            orientation, slider_id,
+            fixed_color=self.fixed_color,
+            moving_color=self.moving_color,
+            coloring_enabled=self.coloring_enabled
+        )
+        if qimg.isNull():
+            logging.error(f"Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
+            # Create a placeholder image (gray with "No Image" text)
+            qimg = QtGui.QImage(256, 256, QtGui.QImage.Format_RGB32)
+            qimg.fill(QtGui.QColor('gray'))
+            painter = QtGui.QPainter(qimg)
+            painter.setPen(QtGui.QColor('red'))
+            font = QtGui.QFont('Arial', 20)
+            font.setBold(True)
+            painter.setFont(font)
+            painter.drawText(qimg.rect(), QtCore.Qt.AlignCenter, "No Image")
+            painter.end()
+        pixmap = QtGui.QPixmap.fromImage(qimg)
+        # Display as the base image (no overlay needed, since VTKEngine blends)
+        if self.base_item is None:
+            self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
+            self.scene.addItem(self.base_item)
+        else:
+            self.base_item.setPixmap(pixmap)
+        # Remove overlay item if present
+        if self.overlay_item is not None:
+            self.scene.removeItem(self.overlay_item)
+            self.overlay_item = None
 
     def roi_display(self):
         """
@@ -159,19 +174,45 @@ class BaseFusionView(DicomView):
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
 
+    def set_overlay_interpolation_mode(self, mode: str):
+        """
+        Set interpolation mode for overlay ('linear' or 'nearest').
+        """
+        if mode in ("linear", "nearest"):
+            self.overlay_interpolation_mode = mode
+        else:
+            raise ValueError("Interpolation mode must be 'linear' or 'nearest'.")
+
     def refresh_overlay(self):
         """
         Debounced repaint of the overlay image with the applied offset or transform.
+        Uses nearest neighbor interpolation for speed during rapid slider movement.
         """
+        self.set_overlay_interpolation_mode("nearest")
         self._refresh_timer.start(self.DEBOUNCE_MS) 
 
     def refresh_overlay_now(self):
         """
         Actually repaint the overlay image (called by debounce timer).
-        Also sets VTK interpolation to nearest neighbor for speed.
+        Uses the current interpolation mode.
         """
         if self.vtk_engine is not None:
-            self.vtk_engine.set_interpolation_linear(False)
+            self.vtk_engine.set_interpolation_linear(
+                self.overlay_interpolation_mode == "linear"
+            )
+        self.image_display()
+        self.scene.update()
+        if hasattr(self, "viewport"):
+            self.viewport().update()
+
+    def display_final_overlay(self):
+        """
+        Display overlay with linear interpolation for best image quality.
+        Call this after slider movement is finished.
+        """
+        self.set_overlay_interpolation_mode("linear")
+        if self.vtk_engine is not None:
+            self.vtk_engine.set_interpolation_linear(True)
         self.image_display()
         self.scene.update()
         if hasattr(self, "viewport"):
