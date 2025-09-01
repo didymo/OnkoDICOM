@@ -15,7 +15,7 @@ class MLTab(QtWidgets.QWidget):
     Tab for testing Machine learning model
     """
 
-    def __init__(self, style_sheet: StyleSheetReader):
+    def __init__(self):
         """
         Initialise the class
         """
@@ -27,7 +27,7 @@ class MLTab(QtWidgets.QWidget):
         self.selected_model_directory = ""
 
         # Get the stylesheet
-        self.stylesheet = style_sheet
+        self.stylesheet = StyleSheetReader()
 
         self.current_widgets = []
 

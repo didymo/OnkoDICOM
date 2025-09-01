@@ -2,7 +2,6 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 from PySide6.QtGui import QIcon, QPixmap
 
-import platform
 from src.Controller.PathHandler import resource_path
 
 from src.Model.PTCTDictContainer import PTCTDictContainer
@@ -30,7 +29,6 @@ class Windowing(QDialog):
                               QIcon.Normal, QIcon.Off)
 
         self.setWindowIcon(window_icon)
-
         stylesheet = StyleSheetReader()
         self.setStyleSheet(stylesheet())
 

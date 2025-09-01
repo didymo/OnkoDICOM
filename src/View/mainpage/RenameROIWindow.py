@@ -4,7 +4,6 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QVBoxLayout, QWidget, 
 
 from src.Model import ROI
 from src.Controller.PathHandler import resource_path
-import platform
 
 from src.Model.Worker import Worker
 from src.View.StyleSheetReader import StyleSheetReader

@@ -86,8 +86,16 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
         # Orientate the dicom image to dicom standard (Left, Posterior, Superior)
         dicom_img = sitk.DICOMOrient(dicom_img, 'LPS')
 
-        # Build the new rtstruct
-        rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
+        # Build or load the rtstruct
+        if os.path.exists(output_path):
+            logging.info(f"Loading existing RTStruct: {output_path}")
+            rtstruct = RTStructBuilder.create_from(
+                rt_struct_path=output_path,
+                dicom_series_path=dicom_path
+            )
+        else:
+            logging.info("Creating new RTStruct")
+            rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
 
         # Get the list of nifti files from path
         nifti_files_list: list[str] = glob.glob(os.path.join(nifti_path, "*.nii.gz"))
