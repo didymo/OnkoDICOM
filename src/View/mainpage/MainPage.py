@@ -9,8 +9,8 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
-from src.View.StyleSheetReader import StyleSheetReader
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -25,7 +25,6 @@ from src.View.mainpage.PatientBar import PatientBar
 from src.View.mainpage.StructureTab import StructureTab
 from src.View.mainpage.DicomStackedWidget import DicomStackedWidget
 from src.View.mainpage.MLTab import MLTab
-from src.View.mainpage.AutoSegmentationTab import AutoSegmentationTab
 from src.View.PTCTFusion.PETCTView import PetCtView
 from src.View.ProgressWindow import ProgressWindow
 
@@ -63,8 +62,6 @@ class UIMainWindow:
     image_fusion_main_window = QtCore.Signal()
 
     def setup_ui(self, main_window_instance):
-
-
         self.main_window_instance = main_window_instance
         self.call_class = MainPageCallClass()
         self.add_on_options_controller = AddOptions(self)
@@ -72,8 +69,7 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        # Getting Style Sheet Information
-        self.stylesheet: StyleSheetReader = StyleSheetReader()
+        self.stylesheet = StyleSheetReader()
 
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
@@ -133,7 +129,6 @@ class UIMainWindow:
             self.structures_tab.update_ui()
         self.left_panel.addTab(self.structures_tab, "Structures")
 
-        # Add Isodoses to the left panel
         if patient_dict_container.has_modality("rtdose"):
             self.isodoses_tab = IsodoseTab()
             self.isodoses_tab.request_update_isodoses.connect(
@@ -143,9 +138,6 @@ class UIMainWindow:
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
-
-        # Add Auto-Segmentation to the left panel
-        self.left_panel.addTab(AutoSegmentationTab(self.stylesheet), "Auto-Seg")
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
@@ -224,7 +216,8 @@ class UIMainWindow:
             del self.dvh_tab
 
         # Add DICOM Tree View tab
-        self.right_panel.addTab(DicomTreeView(), "DICOM Tree")
+        self.dicom_tree = DicomTreeView()
+        self.right_panel.addTab(self.dicom_tree, "DICOM Tree")
 
         # Connect SUV2ROI signal to handler function
         self.dicom_single_view.suv2roi_signal.connect(self.perform_suv2roi)
@@ -236,7 +229,8 @@ class UIMainWindow:
         self.splitter.addWidget(self.right_panel)
 
         # Add ML to right panel as a tab
-        self.right_panel.addTab(MLTab(self.stylesheet), "Use ML Model")
+        self.MLTab= MLTab()
+        self.right_panel.addTab(self.MLTab, "Use ML Model")
 
         # Create footer
         self.footer = QtWidgets.QWidget()

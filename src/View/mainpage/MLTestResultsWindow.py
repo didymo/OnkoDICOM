@@ -1,4 +1,3 @@
-import platform
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtWidgets, QtCore, QtGui
 import datetime
@@ -12,7 +11,7 @@ class MLTestResultsWindow(QtWidgets.QDialog):
     processing. It inherits from QDialog.
     """
 
-    def __init__(self, style_sheet: StyleSheetReader):
+    def __init__(self):
         """
         Initialises class.
         """
@@ -41,11 +40,14 @@ class MLTestResultsWindow(QtWidgets.QDialog):
             "Save CSV with predicted values"
             )
 
+        # # Get stylesheet
+        self.stylesheet = StyleSheetReader()
+
         # Set stylesheet
-        self.summary_label.setStyleSheet(style_sheet())
-        self.scroll_area.setStyleSheet(style_sheet())
-        self.save_ml_predicted_txt.setStyleSheet(style_sheet())
-        self.save_ml_predicted_csv.setStyleSheet(style_sheet())
+        self.summary_label.setStyleSheet(self.stylesheet())
+        self.scroll_area.setStyleSheet(self.stylesheet())
+        self.save_ml_predicted_txt.setStyleSheet(self.stylesheet())
+        self.save_ml_predicted_csv.setStyleSheet(self.stylesheet())
 
         # Make QLabel wrap text
         self.summary_label.setWordWrap(True)
