@@ -1,4 +1,6 @@
+import pathlib
 import platform
+
 from src.Controller.PathHandler import resource_path
 
 class StyleSheetReader:
@@ -7,19 +9,32 @@ class StyleSheetReader:
     As this information will need to be used for most of the User Interfaces
     This class is intended to reduce the number of times the style sheet is read
     """
+
+    style_sheet: str = None
+
     def __init__(self) -> None:
         """
         Initialising the StyleSheetReader and getting the data from the style sheet
         :rtype: None
         """
-        self.style_sheet: str = self._get_layout_data()
+        if StyleSheetReader.style_sheet is None:
+            StyleSheetReader.style_sheet = self._get_layout_data()
+        if StyleSheetReader.style_sheet is None:
+            raise ValueError("No StyleSheet")
 
     def __call__(self) -> str:
         """
         Returning the style_sheet member if the class is called after initialization
         :rtype: str
         """
-        return self.style_sheet
+        return self.get_stylesheet()
+
+    def get_stylesheet(self) -> str:
+        """
+        Returns the Stylesheet static member
+        :rtype: str
+        """
+        return StyleSheetReader.style_sheet
 
     def _get_platform_stylesheet(self, running_platform: str) -> str:
         """
@@ -29,10 +44,9 @@ class StyleSheetReader:
         :rtype: str
         """
         if running_platform == "Darwin":
-            path_stylesheet: str = "res/stylesheet.qss"
+            return "res/stylesheet.qss"
         else:
-            path_stylesheet: str = "res/stylesheet-win-linux.qss"
-        return path_stylesheet
+            return "res/stylesheet-win-linux.qss"
 
     def _get_layout_data(self) -> str:
         """
@@ -40,4 +54,4 @@ class StyleSheetReader:
         :rtype: str
         """
         path_stylesheet = self._get_platform_stylesheet(platform.system())
-        return open(resource_path(path_stylesheet)).read()
+        return pathlib.Path(resource_path(path_stylesheet)).read_text()
