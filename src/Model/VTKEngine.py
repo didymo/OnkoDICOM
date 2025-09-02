@@ -43,6 +43,7 @@ class VTKEngine:
         self.vtk_image_actor = vtk.vtkImageActor()
         self.renderer.AddActor(self.vtk_image_actor)
 
+
     def load_fixed(self, dicom_dir: str) -> bool:
         files = list(Path(dicom_dir).glob("*"))
         if not any(f.is_file() for f in files):
@@ -50,10 +51,17 @@ class VTKEngine:
         r = vtk.vtkDICOMImageReader()
         r.SetDirectoryName(str(Path(dicom_dir)))
         r.Update()
-        self.fixed_reader = r
+
+        # --- Apply flip to correct orientation ---
+        flip = vtk.vtkImageFlip()
+        flip.SetInputConnection(r.GetOutputPort())
+        flip.SetFilteredAxis(1)  # flip along Y (sagittal/front-back)
+        flip.Update()
+
+        self.fixed_reader = flip
 
         # --- Set background level to lowest pixel value in fixed DICOM ---
-        img = r.GetOutput()
+        img = flip.GetOutput()
         scalars = numpy_support.vtk_to_numpy(img.GetPointData().GetScalars())
         if scalars is not None and scalars.size > 0:
             min_val = float(scalars.min())
@@ -63,6 +71,7 @@ class VTKEngine:
         self._sync_reslice_output_to_fixed()
         return True
 
+
     def load_moving(self, dicom_dir: str) -> bool:
         files = list(Path(dicom_dir).glob("*"))
         if not any(f.is_file() for f in files):
@@ -70,12 +79,22 @@ class VTKEngine:
         r = vtk.vtkDICOMImageReader()
         r.SetDirectoryName(str(Path(dicom_dir)))
         r.Update()
-        self.moving_reader = r
-        self.reslice3d.SetInputConnection(r.GetOutputPort())
+
+        # --- Apply flip to correct orientation ---
+        flip = vtk.vtkImageFlip()
+        flip.SetInputConnection(r.GetOutputPort())
+        flip.SetFilteredAxis(1)  # flip along Y (sagittal/front-back)
+        flip.Update()
+
+        self.moving_reader = flip
+        self.reslice3d.SetInputConnection(flip.GetOutputPort())
         self._apply_transform()
         self._wire_blend()
         self._sync_reslice_output_to_fixed()
         return True
+
+
+
 
     def set_opacity(self, alpha: float):
         self.blend.SetOpacity(1, float(np.clip(alpha, 0.0, 1.0)))
@@ -131,7 +150,7 @@ class VTKEngine:
 
             if orientation == VTKEngine.ORI_AXIAL:
                 z = int(np.clip(slice_idx - extent[4], 0, nz - 1))
-                arr2d = np.flipud(arr[z, :, :])
+                arr2d = arr[z, :, :]
             elif orientation == VTKEngine.ORI_CORONAL:
                 y = int(np.clip(slice_idx - extent[2], 0, ny - 1))
                 arr2d = arr[:, y, :]
