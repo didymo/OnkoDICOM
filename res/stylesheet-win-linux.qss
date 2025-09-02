@@ -1,11 +1,11 @@
 QMainWindow {
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
 }
 
 QProgressBar {
     border-radius: 1px;
     background-color: #b299e6;
-    color: rgb(230, 230, 235);
+    color: #e6e6eb;
     max-height: 32px;
     text-align: center;
     font-weight: semi-bold;
@@ -22,6 +22,14 @@ QCheckBox {
 QCheckBox::indicator {
     width: 18px;
     height: 18px;
+}
+
+QCheckBox::active {
+    color: #000000;
+}
+
+QCheckBox::disabled {
+    color: #777777;
 }
 
 QCheckBox::indicator:unchecked {
@@ -53,8 +61,14 @@ QCheckBox::indicator:indeterminate:pressed {
 }
 
 QLabel {
-    color: black;
+    color: #000000;
 }
+
+QTextEdit {
+    color: #000000;
+    background-color: #ffffff;
+}
+
 QLabel[QLabelClass="window-title"] {
     margin: 8px;
     padding: 4px;
@@ -74,7 +88,7 @@ ROINameCleaningPrefixLabel {
     margin: 4px;
     padding: 0 4px;
     font-size: 14px;
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
 }
 
 ROINameCleaningPrefixLabel:disabled {
@@ -203,7 +217,8 @@ QLineEdit {
     border-bottom: 3px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
-    background-color: rgb(244, 245, 245);
+    color: #000000;
+    background-color: #f4f5f5;
 }
 
 QLineEdit#BatchROICleaning {
@@ -227,10 +242,10 @@ QLineEdit#ImageSliceNumberLineEdit,
 
 QLineEdit:disabled {
     background-color: #b9b9b9;
-    color: black;
+    color: #000000;
 }
 QLineEdit:hover {
-    background-color: rgb(230, 230, 235);
+    background-color: #e6e6eb;
     border-bottom: 3px solid #9370DB;
 }
 QLineEdit:focus {
@@ -240,9 +255,11 @@ QLineEdit:focus {
 /*This part is the styling for QTreeView in general*/
 QTreeView#OpenPatientWindowPatientsTree {
     margin: 0 12px 4px 12px;
+    background-color: #f4f5f5
 }
 QHeaderView {
     color: red;
+    background-color: #f4f5f5
 }
 QTreeView::item {
     color: #000000;
@@ -251,12 +268,12 @@ QTreeView::item {
 }
 QTreeView::item:selected:focus {
     background-color: #ffffff;
-    color: black;
+    color: #000000;
     border: 2px solid #9370DB;
 }
 QTreeView::item:selected:!focus {
     background-color: #5c2eb8;
-    color: white;
+    color: #ffffff;
     border: 2px solid #9370DB;
 }
 QTreeView::item:hover:!focus:!selected, QTreeView::item:hover:selected {
@@ -305,10 +322,10 @@ QTabWidget::tab-bar {
 QTabWidget::pane {
     border: 0;
     padding-top: 2px;
-    background-color: white;
+    background-color: #ffffff;
 }
 QTabBar {
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
 }
 QTabBar::tab {
     border-top: 0;
@@ -317,7 +334,8 @@ QTabBar::tab {
     border-left: 0;
     margin: 0;
     padding: 0 12px;
-    background-color: rgb(244, 245, 245);
+    color: #000000;
+    background-color: #f4f5f5;
     text-align: center;
     height: 36px;
     width: 100%;
@@ -330,22 +348,21 @@ QTabBar::tab:pressed {
     background-color: #5c2eb8;
 }
 QTabBar::tab:selected {
-    background-color: white;
+    background-color: #ffffff;
     border-bottom: 3px solid #5c2eb8;
 }
-
 
 QTabWidget::pane#batch-tabs {
     border: 0;
     padding-top: 2px;
-    background-color: white;
+    background-color: #ffffff;
 }
 QTabBar#batch-tabs {
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
 }
 QTabBar::tab#batch-tabs {
     padding: 0 10px;
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
     text-align: center;
     width: 36px;
     height: 150px;
@@ -354,9 +371,12 @@ QTabBar::tab:selected#batch-tabs {
     font-weight: bold;
 }
 
+QTabBar QToolButton {
+    color: #000000;
+}
 
 QToolBar, QToolButton {
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
     border: 0;
     margin: 0;
     padding: 2px;
@@ -379,8 +399,8 @@ QComboBox, QDateEdit {
     border-bottom: 3px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
-    background-color: rgb(244, 245, 245);
-    color: black;
+    background-color: #f4f5f5;
+    color: #000000;
 }
 
 QComboBox#BatchROICleaning {
@@ -398,7 +418,7 @@ QComboBox:!hover:!focus, QDateEdit:!hover:!focus {
 }
 QComboBox:hover:!focus, QComboBox:hover:focus,
  QDateEdit:hover:!focus, QDateEdit:hover:focus{
-    background-color: rgb(230, 230, 235);
+    background-color: #e6e6eb;
     border-bottom: 3px solid #b299e6;
 }
 QComboBox:focus:!hover, QDateEdit:focus:!hover {
@@ -406,7 +426,7 @@ QComboBox:focus:!hover, QDateEdit:focus:!hover {
 }
 QComboBox:hover:on:!focus, QComboBox:focus:on:!hover,
  QDateEdit:hover:on:!focus, QDateEdit:focus:on:!hover{
-    background: rgb(230, 230, 235);
+    background: #e6e6eb;
     border-bottom: 3px solid #5c2eb8;
 }
 QComboBox::drop-down, QDateEdit::drop-down {
@@ -420,20 +440,20 @@ QComboBox::down-arrow, QDateEdit::down-arrow {
 
 QComboBox#DicomTreeviewComboBox {
     margin: 0;
-    background-color: white;
-    color: black
+    background-color: #ffffff;
+    color: #000000
 }
 
 
 QCalendarWidget QTableView, QTableView {
-    background-color: white;
-    color: black;
-    alternate-background-color: rgb(230, 230, 235);
+    background-color: #ffffff;
+    color: #000000;
+    alternate-background-color: #e6e6eb;
     selection-background-color: #b299e6;
 }
 QCalendarWidget QMenu {
-    color: black;
-    background-color: white;
+    color: #000000;
+    background-color: #ffffff;
 }
 QCalendarWidget QMenu::item {
     padding: 8px 4px 8px 4px;
@@ -445,22 +465,22 @@ QCalendarWidget QMenu::item:selected {
     background-color: #b299e6;
 }
 QCalendarWidget QMenu::item:pressed {
-    color: white;
+    color: #ffffff;
     background-color: #5c2eb8;
 }
 QCalendarWidget QSpinBox {
-    color: black;
-    background-color: white;
-    selection-color: white;
+    color: #000000;
+    background-color: #ffffff;
+    selection-color: #ffffff;
     selection-background-color: #5c2eb8;
 }
 QCalendarWidget QToolButton {
-    background-color: rgb(230, 230, 235);
-    color:black;
+    background-color: #e6e6eb;
+    color: #000000;
     font-size: 14px;
 }
 QCalendarWidget QToolButton:hover:!focus {
-    background-color: rgb(215, 215, 220);
+    background-color: #d7d7dc;
 }
 QCalendarWidget QToolButton:focus:!hover {
     border: 1px solid #5c2eb8;
@@ -469,8 +489,8 @@ QCalendarWidget QToolButton:pressed:hover:!focus {
     background-color: #b299e6;
 }
 QCalendarWidget QWidget#qt_calendar_navigationbar {
-    background-color: rgb(230, 230, 235);
-    color: black;
+    background-color: #e6e6eb;
+    color: #000000;
 }
 QCalendarWidget QToolButton#qt_calendar_prevmonth {
     icon-size: 24px;
@@ -492,7 +512,7 @@ QWidget#DeleteRoiWindowDeleteWidget {
     background-color: #d32f2f ;
 }
 QWidget#ScrollAreaWidgetContents {
-    background-color: rgb(244, 245, 245);
+    background-color: #f4f5f5;
 }
 QSlider::groove:horizontal {
     border:0px solid #bbb;
@@ -508,14 +528,14 @@ QSlider::sub-page:horizontal {
 
 QSlider::add-page:horizontal {
     background: #dadbdb;
-    border: 0px solid #777;
+    border: 0px solid #777777;
     border-radius: 7px;
     margin-top:5px;
     margin-bottom:5px;
 }
 
 QSlider::handle:horizontal {
-    background: rgb(253, 253, 254);
+    background: #fdfdfe;
     width: 10px;
     border: 1px solid #bbbbbb;
     border-radius: 5px;
@@ -532,7 +552,7 @@ QSlider::handle:horizontal:disabled {
 }
 
 QSlider::handle:vertical {
-    background-color: rgb(253, 253, 254);
+    background-color: #fdfdfe;
     border: 1px solid #bbbbbb;
     border-radius: 10px;
 }

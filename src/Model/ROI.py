@@ -860,7 +860,6 @@ def create_initial_rtss_from_ct(
     validate_file_meta(file_meta)
 
     rt_ss = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128, file_meta=file_meta)
-    rt_ss.fix_meta_info()
 
     top_level_tags_to_copy: list = [
         Tag("PatientName"),
