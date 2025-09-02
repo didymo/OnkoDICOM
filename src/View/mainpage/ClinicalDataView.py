@@ -16,6 +16,7 @@ class ClinicalDataView(QtWidgets.QWidget):
     data from a CSV and save it to a DICOM-SR. Only compatible with
     DICOM-SR files generated with OnkoDICOM/this class.
     """
+
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
 
@@ -168,8 +169,26 @@ class ClinicalDataView(QtWidgets.QWidget):
             self.table_cd.setItem(0, 1, value)
             return
 
-        with open(file_path, newline="") as stream:
-            data = list(csv.reader(stream))
+        # Try multiple encodings (utf-8, latin1, utf-16)
+        encodings_to_try = ["utf-8-sig", "latin1", "utf-16"]
+        data = None
+        for enc in encodings_to_try:
+            try:
+                with open(file_path, newline="", encoding=enc) as stream:
+                    data = list(csv.reader(stream))
+                break  # success
+            except (UnicodeDecodeError, csv.Error):
+                continue
+        if data is None:
+            # Clear table and show error if all failed
+            self.clear_table()
+            message = "Failed to read clinical data CSV (unsupported encoding)."
+            attrib = QtWidgets.QTableWidgetItem("Error")
+            value = QtWidgets.QTableWidgetItem(message)
+            self.table_cd.insertRow(0)
+            self.table_cd.setItem(0, 0, attrib)
+            self.table_cd.setItem(0, 1, value)
+            return
 
         # See if CSV data matches patient ID
         patient_in_file = False
