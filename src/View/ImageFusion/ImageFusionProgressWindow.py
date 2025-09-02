@@ -10,7 +10,7 @@ from src.Controller.PathHandler import resource_path
 class ImageFusionProgressWindow(ProgressWindow):
 
     def __init__(self, *args,
-                 kwargs=QtCore.Qt.WindowTitleHint |
+                 kwargs=QtCore.Qt.WindowTitleHint | 
                  QtCore.Qt.WindowCloseButtonHint):
         super(ImageFusionProgressWindow, self).__init__(*args, kwargs)
         self.setFixedSize(250, 100)

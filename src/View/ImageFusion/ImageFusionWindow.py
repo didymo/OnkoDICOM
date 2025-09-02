@@ -11,13 +11,14 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model import ImageLoading
 from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
+from src.View.ImageFusion.FusionResultWrapper import FusionResultWrapper
 from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
 from src.View.resources_open_patient_rc import *
 
 from src.Controller.PathHandler import resource_path
 import platform
-
+from PySide6.QtWidgets import QHBoxLayout, QButtonGroup, QRadioButton
 
 class UIImageFusionWindow(object):
     image_fusion_info_initialized = QtCore.Signal(object)
@@ -41,7 +42,7 @@ class UIImageFusionWindow(object):
         self.open_patient_window_instance_vertical_box = QVBoxLayout()
         self.open_patient_window_instance_vertical_box.setObjectName(
             "OpenPatientWindowInstanceVerticalBox")
-
+        
         # Create a label to prompt the user to enter the path to the
         # directory that contains the DICOM files
         self.open_patient_directory_prompt = QLabel()
@@ -159,8 +160,35 @@ class UIImageFusionWindow(object):
         self.open_patient_directory_result_label.setObjectName(
             "OpenPatientDirectoryResultLabel")
         self.open_patient_directory_result_label.setAlignment(Qt.AlignLeft)
+
         self.open_patient_window_instance_vertical_box.addWidget(
             self.open_patient_directory_result_label)
+
+        # Fusion Mode Switch Selector (radio buttons) - place after the result label
+        fusion_mode_container = QtWidgets.QWidget()
+        fusion_mode_container_layout = QHBoxLayout()
+        fusion_mode_container_layout.setContentsMargins(10, 0, 0, 0)
+        fusion_mode_container_layout.setSpacing(10)
+        fusion_mode_container.setLayout(fusion_mode_container_layout)
+
+        fusion_mode_label = QLabel("Fusion Mode:")
+        fusion_mode_label.setObjectName("FusionModeLabel")
+        fusion_mode_container_layout.addWidget(fusion_mode_label)
+
+        self.fusion_mode_group = QButtonGroup()
+        self.manual_radio = QRadioButton("Manual Fusion")
+        self.manual_radio.setObjectName("FusionModeRadio")
+        self.auto_radio = QRadioButton("Auto Fusion")
+        self.auto_radio.setObjectName("FusionModeRadio")
+        self.fusion_mode_group.addButton(self.manual_radio)
+        self.fusion_mode_group.addButton(self.auto_radio)
+        self.manual_radio.setChecked(True)
+        self.manual_radio.setEnabled(True)
+        self.auto_radio.setEnabled(True)
+        fusion_mode_container_layout.addWidget(self.manual_radio)
+        fusion_mode_container_layout.addWidget(self.auto_radio)
+
+        self.open_patient_window_instance_vertical_box.addWidget(fusion_mode_container)
 
         # Create a horizontal box to hold the Cancel and Open button
         self.open_patient_window_patient_open_actions_horizontal_box = \
@@ -577,7 +605,7 @@ class UIImageFusionWindow(object):
         def recurse(parent_item: QTreeWidgetItem):
             for i in range(parent_item.childCount()):
                 child = parent_item.child(i)
-                if int(child.flags()) & int(Qt.ItemIsUserCheckable) and \
+                if (child.flags() & Qt.ItemIsUserCheckable) and \
                         child.checkState(0) == Qt.Checked:
                     checked_items.append(child)
                 grand_children = child.childCount()
@@ -590,23 +618,73 @@ class UIImageFusionWindow(object):
     def confirm_button_clicked(self):
         """
         Begins loading of the selected files.
+        For manual fusion, skips autofusion and emits the loaded images via the progress window.
         """
         selected_files = []
         for item in self.get_checked_nodes(
                 self.open_patient_window_patients_tree.invisibleRootItem()):
             selected_files += item.dicom_object.get_files()
 
+        if not selected_files:
+            QMessageBox.warning(None, "No files selected",
+                                "Please select at least one image series to fuse.")
+            return
+
         self.progress_window = ImageFusionProgressWindow(self)
-        self.progress_window.signal_loaded.connect(self.on_loaded)
-        self.progress_window.signal_error.connect(self.on_loading_error)
-        self.progress_window.start_loading(selected_files)
+
+        if self.manual_radio.isChecked():
+            # Use the progress window and a manual loader for manual fusion
+            # loader = ManualFusionLoader(selected_files, self.progress_window)
+            # loader.signal_loaded.connect(self.on_loaded)
+            # loader.signal_error.connect(self.on_loading_error)
+            # # Start loading in a thread (simulate progress window behavior)
+            # self.progress_window.start(loader.load)
+            from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
+            loader = ManualFusionLoader(selected_files, self.progress_window)
+            start_method = lambda: self.progress_window.start(loader.load)
+            signal_source = loader
+
+        elif self.auto_radio.isChecked():
+            loader = None  # No separate loader needed
+            start_method = lambda: self.progress_window.start_loading(selected_files)
+            signal_source = self.progress_window
+
+        else:
+            QMessageBox.warning(self.progress_window, "Fusion Mode",
+                                "Please select a fusion mode.")
+            return
+
+        signal_source.signal_loaded.connect(lambda results: self.on_loaded(results))
+        signal_source.signal_error.connect(self.on_loading_error)
+
+    # Start loading
+        start_method()
 
     def on_loaded(self, results):
         """
         Executes when the progress bar finishes loaded the selected files.
+        Emits a wrapper object that provides update_progress for compatibility with the main window.
         """
-        if results[0] is True:  # Will be NoneType if loading was interrupted.
-            self.image_fusion_info_initialized.emit(results[1])
+        # Handle both manual and auto fusion result types
+        if isinstance(results, tuple) and results[0] is True:
+            # Manual fusion: results is (True, images_dict)
+            images = results[1]
+            if isinstance(images, dict) and "vtk_engine" in images:
+                # Manual fusion: add dummy keys for main window compatibility
+                images["fixed_image"] = None
+                images["moving_image"] = None
+            wrapper = FusionResultWrapper(images, self.progress_window)
+            self.image_fusion_info_initialized.emit(wrapper)
+        elif hasattr(results, "update_progress"):
+            # Autofusion: results is a ProgressWindow or similar
+            wrapper = FusionResultWrapper(results, self.progress_window)
+            self.image_fusion_info_initialized.emit(wrapper)
+        else:
+            # Unexpected result type
+            QMessageBox.warning(self, "Fusion Error", "Unexpected result type returned from fusion loader.")
+
+
+
 
     def on_loading_error(self, exception):
         """
