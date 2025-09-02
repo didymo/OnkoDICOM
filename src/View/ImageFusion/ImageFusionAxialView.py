@@ -3,20 +3,22 @@ from PySide6 import QtWidgets, QtCore
 from src.View.mainpage.DicomView import DicomView, GraphicsScene
 
 
-class ImageFusionAxialView(DicomView):
+from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
+
+class ImageFusionAxialView(BaseFusionView):
     def __init__(self, roi_color=None,
                  iso_color=None,
                  metadata_formatted=False,
-                 cut_line_color=None):
+                 cut_line_color=None,
+                 vtk_engine=None,
+                 translation_menu=None):
         """
         metadata_formatted: whether the metadata needs to be formatted 
         (only metadata in the four view need to be formatted)
         """
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
-        super(ImageFusionAxialView, self).__init__(roi_color,
-                                                   iso_color,
-                                                   cut_line_color)
+        super().__init__('axial', roi_color, iso_color, cut_line_color, vtk_engine=vtk_engine, translation_menu=translation_menu)
 
         # Init metadata widgets
         self.metadata_layout = QtWidgets.QVBoxLayout(self.view)
@@ -28,7 +30,9 @@ class ImageFusionAxialView(DicomView):
         self.label_patient_pos = QtWidgets.QLabel()
         self.init_metadata()
 
+        # Only call update_view after all labels are created
         self.update_view()
+
 
     def init_metadata(self):
         """
@@ -167,19 +171,7 @@ class ImageFusionAxialView(DicomView):
             else:
                 stylesheet = "QLabel { color : white; }"
             self.format_metadata_labels(stylesheet)
-
-    def image_display(self):
-        """
-        Update the image to be displayed on the DICOM View.
-        """
-        pixmaps = self.patient_dict_container.get("color_"+self.slice_view)
-        slider_id = self.slider.value()
-        image = pixmaps[slider_id]
-
-        label = QtWidgets.QGraphicsPixmapItem(image)
-        self.scene = GraphicsScene(
-            label, self.horizontal_view, self.vertical_view)
-
+        
     def update_view(self, zoom_change=False):
         """
         Update the view of the DICOM Image.
@@ -211,17 +203,15 @@ class ImageFusionAxialView(DicomView):
 
         if hasattr(dataset, 'PatientPosition'):
             patient_pos = dataset['PatientPosition'].value
-            self.label_patient_pos.setText(
-                "Patient Position: %s" % (str(patient_pos)))
+            self.label_patient_pos.setText(f"Patient Position: {str(patient_pos)}")
 
         # Update labels
         self.label_image_id.setText(
-            "Image: %s / %s" % (str(self.current_slice_number),
-                                str(total_slices)))
-        self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
-        self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
-        self.label_image_size.setText(
-            "Image Size: %sx%spx" % (str(row_img), str(col_img)))
+            f"Image: {str(self.current_slice_number)} / {total_slices}"
+        )
+        self.label_image_pos.setText(f"Position: {str(slice_pos)} mm")
+        self.label_wl.setText(f"W/L: {str(window)}/{str(level)}")
+        self.label_image_size.setText(f"Image Size: {str(row_img)}x{str(col_img)}px")
         self.label_zoom.setText(
             "Zoom: " + "{:.2f}".format(self.zoom * 100) + "%")
 
@@ -235,9 +225,7 @@ class ImageFusionAxialView(DicomView):
         selected_rois = self.patient_dict_container.get("selected_rois")
         rois = self.patient_dict_container.get("rois")
         selected_rois_name = []
-        for roi in selected_rois:
-            selected_rois_name.append(rois[roi]['name'])
-
+        selected_rois_name.extend(rois[roi]['name'] for roi in selected_rois)
         for roi in selected_rois:
             roi_name = rois[roi]['name']
             polygons = self.patient_dict_container.get("dict_polygons_axial")[

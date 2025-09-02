@@ -1,3 +1,4 @@
+import contextlib
 from PySide6 import QtWidgets
 
 from src.Controller.GUIController import WelcomeWindow, OpenPatientWindow, \
@@ -104,7 +105,7 @@ class Controller:
 
         if isinstance(self.image_fusion_window, ImageFusionWindow):
             progress_window.update_progress(
-                ("Registering Images...\nThis may take a few minutes.", 
+                ("Registering Images...\nThis may take a few minutes.",
                 90))
             self.main_window.update_image_fusion_ui()
 
@@ -116,6 +117,23 @@ class Controller:
         # time), close all the other open windows.
         progress_window.update_progress(("Loading complete!", 100))
         progress_window.close()
+
+        with contextlib.suppress(AttributeError):
+            images = progress_window.images
+            # Always set images dict for use in create_image_fusion_tab
+            self.main_window.images = images
+
+            if hasattr(self.main_window, "fixed_image_sitk"):
+                self.main_window.fixed_image_sitk = images.get("fixed_image")
+            else:
+                setattr(self.main_window, "fixed_image_sitk", images.get("fixed_image"))
+
+            if hasattr(self.main_window, "moving_image_sitk"):
+                self.main_window.moving_image_sitk = images.get("moving_image")
+            else:
+                setattr(self.main_window, "moving_image_sitk", images.get("moving_image"))
+
+
         self.main_window.show()
         self.open_patient_window.close()
         self.image_fusion_window.close()
@@ -165,10 +183,41 @@ class Controller:
                 self.default_directory)
             self.image_fusion_window.go_next_window.connect(
                 self.show_main_window)
+            # Connect the fusion info signal to a handler that sets images and opens the tab
+            self.image_fusion_window.image_fusion_info_initialized.connect(
+                self.on_image_fusion_info_initialized)
         else:
             self.image_fusion_window.update_ui()
 
         self.image_fusion_window.show()
+
+    def on_image_fusion_info_initialized(self, wrapper):
+        """
+        Receives the wrapper from ImageFusionWindow and opens the fusion tab.
+        """
+        # Set images for main window
+        self.main_window.images = wrapper.images
+
+        # Ensure wrapper.images is a dict before checking for keys
+        images = wrapper.images
+        if isinstance(images, dict):
+            if "fixed_image" in images:
+                self.main_window.fixed_image_sitk = images.get("fixed_image")
+            if "moving_image" in images:
+                self.main_window.moving_image_sitk = images.get("moving_image")
+
+        # determine if manual or auto fusion
+        manual = bool(
+                hasattr(self.image_fusion_window, "manual_radio")
+                and self.image_fusion_window.manual_radio.isChecked()
+            )
+
+        # Open the fusion tab
+        if hasattr(self.main_window, "create_image_fusion_tab"):
+            self.main_window.create_image_fusion_tab(manual=manual)
+        # Show the main window and close the fusion window
+        self.main_window.show()
+        self.image_fusion_window.close()
 
     def show_pt_ct_select_window(self):
         """
