@@ -146,14 +146,12 @@ class BaseFusionView(DicomView):
             painter.drawText(qimg.rect(), QtCore.Qt.AlignCenter, "No Image")
             painter.end()
         pixmap = QtGui.QPixmap.fromImage(qimg)
-
-        # Recreate GraphicsScene so cut lines are kept in sync
-        self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
-        self.base_item.setPos(0,0)
-        self.base_item.setZValue(0)
-
-        self.scene = GraphicsScene(self.base_item, self.horizontal_view, self.vertical_view)
-        self.view.setScene(self.scene)
+        # Display as the base image (no overlay needed, since VTKEngine blends)
+        if self.base_item is None:
+            self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
+            self.scene.addItem(self.base_item)
+        else:
+            self.base_item.setPixmap(pixmap)
         # Remove overlay item if present
         if self.overlay_item is not None:
             self.scene.removeItem(self.overlay_item)
