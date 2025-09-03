@@ -14,6 +14,7 @@ from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path
+import platform
 
 
 class UIManipulateROIWindow:
