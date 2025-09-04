@@ -1,5 +1,4 @@
 import logging
-import platform
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
@@ -11,6 +10,7 @@ from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -73,18 +73,15 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        self.stylesheet = StyleSheetReader()
+
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
             "res/images/icon.ico")), QIcon.Normal, QIcon.Off)
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(self.stylesheet)
+        self.main_window_instance.setStyleSheet(self.stylesheet())
 
         self.setup_central_widget()
         self.setup_actions()
@@ -664,7 +661,7 @@ class UIMainWindow:
                     QtWidgets.QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
-                self.stylesheet)
+                self.stylesheet())
             button_reply.exec_()
 
         # Close progress window
