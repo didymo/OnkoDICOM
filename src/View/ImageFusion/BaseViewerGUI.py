@@ -302,121 +302,65 @@ class BaseFusionView(DicomView):
         scene_pos: QPointF of click
         scene_size: QSizeF of scene
         """
-        # Always get the mode from the translation_menu
         mode = self.get_mouse_mode()
-
         if mode not in ("translate", "rotate"):
             return  # Ignore if not in mouse mode
 
-        # Determine which axes to move based on view and click region
         x = scene_pos.x()
         y = scene_pos.y()
         w = scene_size.width()
         h = scene_size.height()
-        dx = dy = dz = 0.0
 
-        # Axes mapping for each view
-        # Axial: LR (x), PA (y)
-        # Sagittal: PA (x), IS (y)
-        # Coronal: LR (x), IS (y)
         if mode == "translate":
-            if self.slice_view == "axial":
-                # Axial: LR (left/right), PA (top/bottom)
-                if abs(x - w/2) > abs(y - h/2):
-                    # Left/right = LR
-                    if x < w/2:
-                        dx = 1.0  # LR+
-                    else:
-                        dx = -1.0   # LR-
-                else:
-                    # Top/bottom = PA
-                    if y < h/2:
-                        dy = 1.0  # PA+
-                    else:
-                        dy = -1.0   # PA-
-            elif self.slice_view == "sagittal":
-                # Sagittal: PA (left/right), IS (top/bottom)
-                if abs(x - w/2) > abs(y - h/2):
-                    # Left/right = PA
-                    if x < w/2:
-                        dy = 1.0  # PA+
-                    else:
-                        dy = -1.0   # PA-
-                else:
-                    # Top/bottom = IS
-                    if y < h/2:
-                        dz = 1.0  # IS+
-                    else:
-                        dz = -1.0   # IS-
-            elif self.slice_view == "coronal":
-                # Coronal: LR (left/right), IS (top/bottom)
-                if abs(x - w/2) > abs(y - h/2):
-                    # Left/right = LR
-                    if x < w/2:
-                        dx = 1.0  # LR+
-                    else:
-                        dx = -1.0   # LR-
-                else:
-                    # Top/bottom = IS
-                    if y < h/2:
-                        dz = 1.0  # IS+
-                    else:
-                        dz = -1.0   # IS-
-            curr = [self.vtk_engine._tx, self.vtk_engine._ty, self.vtk_engine._tz] if self.vtk_engine else [0.0, 0.0, 0.0]
-            new_offset = (curr[0] + dx, curr[1] + dy, curr[2] + dz)
-            self.translation_menu.set_offsets(new_offset)
-            self.update_overlay_offset(new_offset, orientation=self.slice_view, slice_idx=self.slider.value())
+            self._handle_translate_click(x, y, w, h)
         elif mode == "rotate":
-            # ROTATION AXIS MAPPING:
-            # Axial: Left/Right = IS+, IS-; Up/Down = LR-, LR+
-            # Sagittal: Left/Right = LR+, LR-; Up/Down = PA-, PA+
-            # Coronal: Left/Right = PA-, PA+; Up/Down = LR-, LR+
-            rx = ry = rz = 0.0
-            if self.slice_view == "axial":
-                if abs(x - w/2) > abs(y - h/2):
-                    # Left/right = IS
-                    if x < w/2:
-                        rz = 0.5  # IS+
-                    else:
-                        rz = -0.5 # IS-
-                else:
-                    # Up/down = LR
-                    if y < h/2:
-                        rx = -0.5  # LR-
-                    else:
-                        rx = 0.5   # LR+
-            elif self.slice_view == "sagittal":
-                if abs(x - w/2) > abs(y - h/2):
-                    # Left/right = LR
-                    if x < w/2:
-                        rx = 0.5  # LR+
-                    else:
-                        rx = -0.5 # LR-
-                else:
-                    # Up/down = PA
-                    if y < h/2:
-                        ry = -0.5 # PA-
-                    else:
-                        ry = 0.5  # PA+
-            elif self.slice_view == "coronal":
-                if abs(x - w/2) > abs(y - h/2):
-                    # Left/right = PA
-                    if x < w/2:
-                        ry = -0.5 # PA-
-                    else:
-                        ry = 0.5  # PA+
-                else:
-                    # Up/down = LR
-                    if y < h/2:
-                        rx = -0.5 # LR-
-                    else:
-                        rx = 0.5  # LR+
-            curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
-            new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
-            self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0]*10)))
-            self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1]*10)))
-            self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2]*10)))
-            self.update_overlay_rotation(new_rot, orientation=self.slice_view, slice_idx=self.slider.value())
+            self._handle_rotate_click(x, y, w, h)
+
+    def _handle_translate_click(self, x, y, w, h):
+        dx, dy, dz = 0.0, 0.0, 0.0
+        if self.slice_view == "axial":
+            if abs(x - w/2) > abs(y - h/2):
+                dx = 1.0 if x < w/2 else -1.0
+            else:
+                dy = 1.0 if y < h/2 else -1.0
+        elif self.slice_view == "sagittal":
+            if abs(x - w/2) > abs(y - h/2):
+                dy = 1.0 if x < w/2 else -1.0
+            else:
+                dz = 1.0 if y < h/2 else -1.0
+        elif self.slice_view == "coronal":
+            if abs(x - w/2) > abs(y - h/2):
+                dx = 1.0 if x < w/2 else -1.0
+            else:
+                dz = 1.0 if y < h/2 else -1.0
+        curr = [self.vtk_engine._tx, self.vtk_engine._ty, self.vtk_engine._tz] if self.vtk_engine else [0.0, 0.0, 0.0]
+        new_offset = (curr[0] + dx, curr[1] + dy, curr[2] + dz)
+        self.translation_menu.set_offsets(new_offset)
+        self.update_overlay_offset(new_offset, orientation=self.slice_view, slice_idx=self.slider.value())
+
+    def _handle_rotate_click(self, x, y, w, h):
+        rx, ry, rz = 0.0, 0.0, 0.0
+        if self.slice_view == "axial":
+            if abs(x - w/2) > abs(y - h/2):
+                rz = 0.5 if x < w/2 else -0.5
+            else:
+                rx = -0.5 if y < h/2 else 0.5
+        elif self.slice_view == "sagittal":
+            if abs(x - w/2) > abs(y - h/2):
+                rx = 0.5 if x < w/2 else -0.5
+            else:
+                ry = -0.5 if y < h/2 else 0.5
+        elif self.slice_view == "coronal":
+            if abs(x - w/2) > abs(y - h/2):
+                ry = -0.5 if x < w/2 else 0.5
+            else:
+                rx = -0.5 if y < h/2 else 0.5
+        curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
+        new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
+        self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0]*10)))
+        self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1]*10)))
+        self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2]*10)))
+        self.update_overlay_rotation(new_rot, orientation=self.slice_view, slice_idx=self.slider.value())
 
 
     def update_overlay_rotation(self, rotation_tuple, orientation=None, slice_idx=None):
