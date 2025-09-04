@@ -1,7 +1,8 @@
-import platform
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtWidgets, QtCore, QtGui
 import datetime
+
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class MLTestResultsWindow(QtWidgets.QDialog):
@@ -40,19 +41,13 @@ class MLTestResultsWindow(QtWidgets.QDialog):
             )
 
         # # Get stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(
-            resource_path(self.stylesheet_path)
-            ).read()
+        self.stylesheet = StyleSheetReader()
 
         # Set stylesheet
-        self.summary_label.setStyleSheet(self.stylesheet)
-        self.scroll_area.setStyleSheet(self.stylesheet)
-        self.save_ml_predicted_txt.setStyleSheet(self.stylesheet)
-        self.save_ml_predicted_csv.setStyleSheet(self.stylesheet)
+        self.summary_label.setStyleSheet(self.stylesheet())
+        self.scroll_area.setStyleSheet(self.stylesheet())
+        self.save_ml_predicted_txt.setStyleSheet(self.stylesheet())
+        self.save_ml_predicted_csv.setStyleSheet(self.stylesheet())
 
         # Make QLabel wrap text
         self.summary_label.setWordWrap(True)
