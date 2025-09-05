@@ -50,16 +50,14 @@ def parse_rtss_and_images(rtss_path: str, directory: str) -> dict:
         "list_roi_numbers": roi_list,
     }
 
-def load_rtss_file_to_patient_dict(container: PatientDictContainer) -> None:
-    rtss_path = container.filepaths["rtss"]
+def load_rtss_file_to_patient_dict(patient_dict_container: PatientDictContainer) -> None:
+    rtss_path = patient_dict_container.filepaths["rtss"]
     if not rtss_path:
         logger.error("No rtss file found")
         return
 
-    data = parse_rtss_and_images(rtss_path, container.path)
-    # set everything in one place, skip internal-only keys if desired
+    data = parse_rtss_and_images(rtss_path, patient_dict_container.path)
+    # load parsed data into patient_dict_container
     for key, val in data.items():
-        if key == "dataset_rtss":
-            continue
-        container.set(key, val)
-    container.set("selected_rois", [])
+        patient_dict_container.set(key, val)
+    patient_dict_container.set("selected_rois", [])
