@@ -98,7 +98,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         _progress_bar_label.setStyleSheet(self.style_sheet())
         self._auto_segmentation_layout.addWidget(_progress_bar_label)
 
-        self._progress_bar: QtWidgets.QProgressBar = QtWidgets.QProgressBar(minimum=0, maximum=100, value=20)
+        self._progress_bar: QtWidgets.QProgressBar = QtWidgets.QProgressBar(minimum=0, maximum=100, value=0)
         self._progress_bar.setToolTip("The progress of the task currently being processed.")
         self._progress_bar.setStyleSheet(self.style_sheet())
         self._auto_segmentation_layout.addWidget(self._progress_bar)
