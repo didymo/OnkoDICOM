@@ -7,6 +7,7 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QFont
 from src.Model.Configuration import Configuration
 from src.Controller.TopLevelController import Controller
+from src.View.util.RedirectStdOut import ConsoleOutputStream
 warnings.filterwarnings("ignore")
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -28,6 +29,9 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     print("PDPI: " + str(app.primaryScreen().physicalDotsPerInch()))
+
+    # Allow redirected stream in AutoSegmentation to still output to console
+    sys.stdout = ConsoleOutputStream()
 
     # Set the font to Segoe UI, 9, when in windows OS
     if platform.system() == 'Windows':

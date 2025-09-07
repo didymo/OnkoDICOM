@@ -11,6 +11,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.StyleSheetReader import StyleSheetReader
+from src.View.mainpage.AutoSegmentationTab import AutoSegmentationTab
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -142,6 +143,17 @@ class UIMainWindow:
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
+
+        # Add Auto-Segmentation to the left panel
+        if not hasattr(self, 'auto_segmentation_tab'):
+            self.auto_segmentation_tab = AutoSegmentationTab(self.stylesheet)
+            # Obtain controller from auto segment tab
+            self._controller = self.auto_segmentation_tab.get_autoseg_controller()
+
+            # Connect update structures signal to main slot
+            self._controller.update_structure_list.connect(self.structures_tab.update_ui)
+
+        self.left_panel.addTab(self.auto_segmentation_tab, "Auto-Seg")
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
