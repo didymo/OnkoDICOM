@@ -85,11 +85,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_labels.append(value_label)
 
         # --- Mouse Mode Toolbar (Translate/Rotate) ---
-        # Place the translate/rotate buttons below the color selector, equally spaced
-
-        # Remove the mouse mode buttons from their current position
-        # and add them directly after the color selector
-
         # Create a new horizontal layout for the buttons
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
