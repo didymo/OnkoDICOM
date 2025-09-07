@@ -60,8 +60,7 @@ class DicomTree(object):
         return parent
 
     def dicom_to_dataset(self, filename):
-        dataset = pydicom.read_file(filename, force=True)
-        return dataset
+        return pydicom.dcmread(filename, force=True)
 
     def data_element_to_dic(self, data_element):
         dic = collections.OrderedDict()
