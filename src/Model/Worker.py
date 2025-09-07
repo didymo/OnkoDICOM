@@ -4,10 +4,6 @@ import traceback
 
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot
 
-class SegmentationWorkerSignals(QObject):
-    progress_updated = Signal(str)
-    finished = Signal()
-    error = Signal(str)
 
 class WorkerSignals(QObject):
     finished = Signal()
