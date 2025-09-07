@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QPushButton
 
 from src.Controller.ROIOptionsController import ROITransferOption
 
+
 class ROITransferOptionView(QtWidgets.QWidget):
     def __init__(self, fixed_dict_structure_modified_function,
                  moving_dict_structure_modified_function):
