@@ -37,7 +37,6 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
     # Create dataset
     dicom_sr = pydicom.dataset.FileDataset(file_path, {}, preamble=b"\0" * 128,
                                         file_meta=file_meta)
-    dicom_sr.fix_meta_info()
 
     # Get current date and time
     now = datetime.datetime.now()

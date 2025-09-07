@@ -379,7 +379,6 @@ def create_initial_rtdose_from_ct(img_ds: pydicom.dataset.Dataset,
 
     rt_dose = pydicom.dataset.FileDataset(filepath, {}, preamble=b"\0" * 128,
                                         file_meta=file_meta)
-    rt_dose.fix_meta_info()
 
     top_level_tags_to_copy: list = [Tag("PatientName"),
                                     Tag("PatientID"),
