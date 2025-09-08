@@ -85,11 +85,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_labels.append(value_label)
 
         # --- Mouse Mode Toolbar (Translate/Rotate) ---
-        # Place the translate/rotate buttons below the color selector, equally spaced
-
-        # Remove the mouse mode buttons from their current position
-        # and add them directly after the color selector
-
         # Create a new horizontal layout for the buttons
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
@@ -275,7 +270,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.transform)
+                self._matrix_dialog.set_matrix(engine.user_transform)
 
     def set_offset_changed_callback(self, callback):
         """
@@ -322,7 +317,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.transform)
+                self._matrix_dialog.set_matrix(engine.user_transform)
 
     def set_offsets(self, offsets):
         """
@@ -381,7 +376,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.transform)
+                self._matrix_dialog.set_matrix(engine.user_transform)
 
     def _make_offset_change_handler(self, idx):
         return lambda value: self.on_offset_change(idx, value)
