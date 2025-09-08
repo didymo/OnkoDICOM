@@ -86,7 +86,7 @@ def lps_point_to_ras(pt: np.ndarray) -> np.ndarray:
     else:
         v = pt.astype(float)
     vr = (LPS_TO_RAS @ v)
-    return vr[0:3]
+    return vr[:3]
 
 def cleanup_old_dicom_temp_dirs(temp_root=None):
     """
@@ -201,8 +201,8 @@ class VTKEngine:
         print(self.fixed_matrix)
 
         # Safe to delete temp folder AFTER all computations however
-        # VTK still holds onto directory folder, but this will be deleted 
-        # on next run. Only one slice in the folder remains after this.
+        # VTK still holds onto directory folder with a single slice
+        # inside, but this will be deleted on next run.
         shutil.rmtree(slice_dir, ignore_errors=True)
         self._temp_dirs.remove(slice_dir)
 
@@ -242,8 +242,8 @@ class VTKEngine:
         print(self.moving_matrix)
 
         # Safe to delete temp folder AFTER all computations however
-        # VTK still holds onto directory folder, but this will be deleted 
-        # on next run. Only one slice in the folder remains after this.
+        # VTK still holds onto directory folder with a single slice
+        # inside, but this will be deleted on next run.
         shutil.rmtree(slice_dir, ignore_errors=True)
         self._temp_dirs.remove(slice_dir)
 
@@ -257,8 +257,16 @@ class VTKEngine:
         moving_to_world = self.moving_matrix
 
         # Compute rotation part (direction cosines only, no spacing)
-        R_fixed = fixed_to_world[0:3, 0:3] / np.array([np.linalg.norm(fixed_to_world[0:3, i]) for i in range(3)])
-        R_moving = moving_to_world[0:3, 0:3] / np.array([np.linalg.norm(moving_to_world[0:3, i]) for i in range(3)])
+        fixed_axes_norms = np.array([np.linalg.norm(fixed_to_world[0:3, i]) for i in range(3)])
+        moving_axes_norms = np.array([np.linalg.norm(moving_to_world[0:3, i]) for i in range(3)])
+
+        if np.any(fixed_axes_norms == 0):
+            raise ValueError("Zero-length axis detected in fixed image orientation matrix. Cannot normalize direction cosines.")
+        if np.any(moving_axes_norms == 0):
+            raise ValueError("Zero-length axis detected in moving image orientation matrix. Cannot normalize direction cosines.")
+
+        R_fixed = fixed_to_world[0:3, 0:3] / fixed_axes_norms
+        R_moving = moving_to_world[0:3, 0:3] / moving_axes_norms
         R = R_fixed.T @ R_moving   # relative rotation
 
         # Compute translation in mm (just difference of IPPs, in world coords)
@@ -462,7 +470,7 @@ class VTKEngine:
 
         # Use voxel->RAS matrix to compute center in RAS
         center_world_h = self.fixed_matrix @ center_voxel
-        center_world = center_world_h[0:3]
+        center_world = center_world_h[:3]
 
 
         # ---------------- User transform only ----------------
