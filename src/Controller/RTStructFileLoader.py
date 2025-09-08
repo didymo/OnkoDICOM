@@ -59,7 +59,5 @@ def load_rtss_file_to_patient_dict(container: PatientDictContainer) -> None:
     data = parse_rtss_and_images(rtss_path, container.path)
     # set everything in one place, skip internal-only keys if desired
     for key, val in data.items():
-        if key == "dataset_rtss":
-            continue
         container.set(key, val)
     container.set("selected_rois", [])
