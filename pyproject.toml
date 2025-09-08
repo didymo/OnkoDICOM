@@ -2,7 +2,6 @@
 name = "onkodicom"
 version = "0.6.1"
 description = "OnkoDICOM is an extensible open source radiation therapy research platform based on the DICOM standard"
-package-mode = false
 authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
 license = "LGPL"
 readme = "README.md"
