@@ -2,13 +2,13 @@ import logging
 import os
 import glob
 from pathlib import Path
-
 import SimpleITK as sitk
 import numpy as np
-from rt_utils import RTStructBuilder
+from rt_utils import RTStructBuilder, RTStruct
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 # Function loads a dicom series at dir as SimpleITK image
 def _load_dicom_series_as_sitk(dicom_folder: str) -> sitk.Image:
@@ -29,9 +29,12 @@ def _resample_seg_to_ct(ct_image: sitk.Image, seg_image: sitk.Image) -> sitk.Ima
     """
     Resample the segmentation image to match the CT image's grid.
 
-    :param ct_image:
-    :param seg_image:
-    :return: SimpleITK.Image
+    Args:
+        ct_image (sitk.Image): The reference DICOM image
+        seg_image (sitk.Image): The Nifti image to be resampled
+
+    Returns:
+         Resamples SimpleITK.Image
     """
     resample = sitk.ResampleImageFilter()
     resample.SetReferenceImage(ct_image)
@@ -53,108 +56,79 @@ def _validate_inputs(nifti_path: str, dicom_path: str, output_path: str) -> None
     if not output_file.parent.is_dir():
         raise ValueError(f"Invalid output directory: {output_file.parent}")
 
-def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: str) -> bool:
-
-    """Converts NIfTI image files to an RT Struct file based on the corresponding
-    DICOM series.
+def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: RTStruct) -> None:
+    """
+    Processes a single NIfTI segmentation file by orienting and resampling it to match
+    the provided DICOM image, then adds the resulting mask as a new ROI to the given RTStruct.
 
     Args:
-        nifti_path: Path to the directory containing NIfTI files.
-        dicom_path: Path to the directory containing the DICOM series.
-        output_path: Path to save the generated RTStruct file.
+        nifti_image_path (str): Path to the NIfTI segmentation file (.nii or .nii.gz).
+        dicom_img (sitk.Image): The reference DICOM image (SimpleITK Image) to match orientation and spacing.
+        rtstruct (RTStruct): The RTStruct object to which the ROI mask will be added.
 
     Returns:
-        True if the conversion was successful.
+        None
+    """
+    nifti_file_name = Path(nifti_image_path).name
+
+    structure_name = Path(nifti_file_name).stem  # handles files with .nii.gz extensions (as returned from totalsegmentator)
+    logging.info(f"Converting {nifti_file_name} to RTStruct")
+
+    # load & orient Nifti image
+    nifti_img = sitk.DICOMOrient(sitk.ReadImage(nifti_image_path), 'LPS')
+    nifti_img.CopyInformation(dicom_img)
+
+    # resample Nifti image & create mask
+    aligned_nifti_img = _resample_seg_to_ct(dicom_img, nifti_img)
+    nifti_array = sitk.GetArrayFromImage(aligned_nifti_img).astype(bool)
+    nifti_array_trans = np.transpose(nifti_array, (1, 2, 0))
+    rtstruct.add_roi(mask=nifti_array_trans, name=structure_name)
+
+def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: str) -> bool:
+    """
+    Converts NIfTI image files to an RT Struct file based on the corresponding DICOM series.
+
+    Args:
+        nifti_path (str): Path to the directory containing NIfTI files.
+        dicom_path (str): Path to the directory containing the DICOM series.
+        output_path (str): Path to save the generated RTStruct file.
+
+    Returns:
+        bool: True if the conversion was successful.
 
     Raises:
-        FileNotFoundError: If the DICOM series is not found.
         ValueError: If input paths are invalid or no NIfTI files are found.
-        RuntimeError: If a NIfTI file cannot be read or processed, or if the
-        RTStruct cannot be saved.
+        Exception: If an unexpected error occurs during conversion.
     """
-
     logging.info("Converting NIfTI to RTStruct...")
-    print("Converting NIfTI to RTStruct...")
+
+    _validate_inputs(nifti_path, dicom_path, output_path)
+
+    # Orientate the Dicom image to LPS (Left, Posterior, Superior) standard
+    dicom_img = sitk.DICOMOrient(_load_dicom_series_as_sitk(dicom_path), 'LPS')
+
+    # Build or load the rtstruct
+    if os.path.exists(output_path):
+        logging.info(f"Loading existing RTStruct: {output_path}")
+        rtstruct = RTStructBuilder.create_from(
+            rt_struct_path=output_path,
+            dicom_series_path=dicom_path
+        )
+    else:
+        logging.info("Creating new RTStruct")
+        rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
+
+    # Get the list of nifti files from path
+    nifti_files_list: list[str] = glob.glob(os.path.join(nifti_path, "*.nii.gz"))
+
+    if not nifti_files_list:
+        raise ValueError(f"No NIfTI files found at: {nifti_path}")
 
     try:
-        # Validate inputs
-        _validate_inputs(nifti_path, dicom_path, output_path)
-
-        # Load the DICOM series as image using SimpleITK
-        dicom_img = _load_dicom_series_as_sitk(dicom_path)
-
-        # Orientate the dicom image to dicom standard (Left, Posterior, Superior)
-        dicom_img = sitk.DICOMOrient(dicom_img, 'LPS')
-
-        # Build or load the rtstruct
-        if os.path.exists(output_path):
-            logging.info(f"Loading existing RTStruct: {output_path}")
-            rtstruct = RTStructBuilder.create_from(
-                rt_struct_path=output_path,
-                dicom_series_path=dicom_path
-            )
-        else:
-            logging.info("Creating new RTStruct")
-            rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
-
-        # Get the list of nifti files from path
-        nifti_files_list: list[str] = glob.glob(os.path.join(nifti_path, "*.nii.gz"))
-
-        # Raise error if no Nifti files found
-        if not nifti_files_list:
-            logging.error(f"No NIfTI files found at: {nifti_path}")
-            raise ValueError(f"No NIfTI files found at: {nifti_path}")
-
-        for img in nifti_files_list:
-            try:
-                # Get the file name from path (img)
-                nifti_file_name = os.path.basename(img)
-
-                # Get structure name
-                structure_name = os.path.splitext(os.path.splitext(nifti_file_name)[0])[0]
-
-                # Log progress
-                logging.info(f"Converting {os.path.basename(img)} to DICOM RTStruct")
-
-                # Load segmentation nifti image
-                nifti_img = sitk.ReadImage(img)
-
-                # Orientate nifti image to the dicom standard
-                nifti_img = sitk.DICOMOrient(nifti_img, 'LPS')
-
-                # Ensure orientations match
-                nifti_img.CopyInformation(dicom_img)
-
-                # Resample segmentation to match CT
-                aligned_seg_image = _resample_seg_to_ct(dicom_img, nifti_img)
-
-                # Access image data as array and convert to bool type for mask rt_util input
-                nifti_array = sitk.GetArrayFromImage(aligned_seg_image).astype(bool)
-
-                # Transpose the array before passing to rt_util as expects (y, x, z) configuration
-                nifti_array = np.transpose(nifti_array, (1, 2, 0))
-
-                rtstruct.add_roi(mask=nifti_array, name=structure_name)
-            except RuntimeError as e:
-                logging.error(f"Error reading or processing NIfTI file: {img}: {e}")
-                raise # Re-raise the exception after logging
-            except Exception as e:
-                logging.error(f"An unexpected error occurred while processing NIfTI file {img}: {e}")
-                raise
-
+        for img_path in nifti_files_list:
+            _process_nifti_file(str(img_path), dicom_img, rtstruct)
         rtstruct.save(output_path)
         return True
-
-    except FileNotFoundError as e:
-        logging.error(f"FileNotFoundError: {e}")
-        raise
-    except ValueError as e:
-        logging.error(f"ValueError: {e}")
-        raise
-    except RuntimeError as e:
-        logging.error(f"RuntimeError: {e}")
-        raise
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {type(e).__name__}: {e}")
+        logging.error(f"Conversion failed: {type(e).__name__}: {e}")
         raise
-
