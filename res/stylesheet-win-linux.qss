@@ -99,6 +99,9 @@ QPushButton:hover { /* +10% saturation */
 QPushButton:pressed { /* -20% saturation */
     background-color: #5c2eb8;
 }
+QPushButton:checked  { 
+    background-color: #b299e6;
+}
 
 QPushButton#SUV2ROI_Button {
     background-color: transparent;

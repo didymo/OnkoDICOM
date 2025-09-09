@@ -84,8 +84,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_sliders.append(slider)
             self.translate_labels.append(value_label)
 
-        # --- Mouse Mode Toolbar (Translate/Rotate) ---
-        # Create a new horizontal layout for the buttons
+        # Mouse Mode Toolbar (Translate/Rotate)
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
         mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
@@ -97,7 +96,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_translate_btn.setToolTip("Enable mouse translation mode")
         self.mouse_rotate_btn.setToolTip("Enable mouse rotation mode")
 
-        # Set icons using resource_path for cross-platform compatibility
+        # Set icons for buttons
         translate_icon = QIcon(resource_path("res/images/btn-icons/translate_arrow_icon.png"))
         rotate_icon = QIcon(resource_path("res/images/btn-icons/rotate_arrow_icon.png"))
         self.mouse_translate_btn.setIcon(translate_icon)
@@ -105,17 +104,13 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_translate_btn.setIconSize(QtCore.QSize(24, 24))
         self.mouse_rotate_btn.setIconSize(QtCore.QSize(24, 24))
 
-        # Consistent checked style
-        self.mouse_translate_btn.setStyleSheet("QPushButton:checked { background-color: #aaf; }")
-        self.mouse_rotate_btn.setStyleSheet("QPushButton:checked { background-color: #aaf; }")
-
-        # Add stretch, buttons, stretch for equal spacing
+        # Add stretch, buttons, stretch
         mouse_mode_hbox.addStretch(1)
         mouse_mode_hbox.addWidget(self.mouse_translate_btn)
         mouse_mode_hbox.addWidget(self.mouse_rotate_btn)
         mouse_mode_hbox.addStretch(1)
 
-        # Insert the button row directly after the color selector
+        # Insert the button row
         layout.insertLayout(1, mouse_mode_hbox)
 
         # Button group to ensure only one is checked at a time
@@ -123,41 +118,33 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode_group.setExclusive(True)
         self.mouse_mode_group.addButton(self.mouse_translate_btn)
         self.mouse_mode_group.addButton(self.mouse_rotate_btn)
-        # Default: none checked
 
-        # Internal state for mouse mode
-        self.mouse_mode = None  # "translate", "rotate", or None
+        # Track last clicked button for "toggle off" 
+        self._last_checked_button = None
 
-        def on_mouse_mode_btn_toggled():
-            # Only allow one checked at a time, or none
-            if self.mouse_translate_btn.isChecked() and not self.mouse_rotate_btn.isChecked():
-                self.mouse_mode = "translate"
-            elif self.mouse_rotate_btn.isChecked() and not self.mouse_translate_btn.isChecked():
-                self.mouse_mode = "rotate"
-            elif not self.mouse_translate_btn.isChecked() and not self.mouse_rotate_btn.isChecked():
+        def on_mouse_mode_btn_clicked(btn):
+            if self._last_checked_button == btn and btn.isChecked():
+                # uncheck button if active
+                self.mouse_mode_group.setExclusive(False)
+                btn.setChecked(False)
+                self.mouse_mode_group.setExclusive(True)
+                self._last_checked_button = None
                 self.mouse_mode = None
             else:
-                # If both somehow checked, uncheck both
-                self.mouse_translate_btn.setChecked(False)
-                self.mouse_rotate_btn.setChecked(False)
-                self.mouse_mode = None
-            # Visual feedback: checked button is colored, others default
-            self.mouse_translate_btn.setStyleSheet(
-                "QPushButton:checked { background-color: #aaf; }"
-                if self.mouse_translate_btn.isChecked() else "")
-            self.mouse_rotate_btn.setStyleSheet(
-                "QPushButton:checked { background-color: #aaf; }"
-                if self.mouse_rotate_btn.isChecked() else "")
+                # activate the clicked button
+                self._last_checked_button = btn
+                if btn == self.mouse_translate_btn:
+                    self.mouse_mode = "translate"
+                elif btn == self.mouse_rotate_btn:
+                    self.mouse_mode = "rotate"
+
             # Call callback if set
             if self.mouse_mode_changed_callback:
                 self.mouse_mode_changed_callback(self.mouse_mode)
 
-        self.mouse_translate_btn.toggled.connect(on_mouse_mode_btn_toggled)
-        self.mouse_rotate_btn.toggled.connect(on_mouse_mode_btn_toggled)
-        # Remove custom click logic: QButtonGroup with setExclusive(False) allows untoggle
-        self.mouse_mode_group.setExclusive(False)
 
-        # --- End Mouse Mode Toolbar ---
+        self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
+        self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
 
         # Rotate section
         layout.addSpacing(8)
