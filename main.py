@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(filename)s - %(funcName)s - %(lineno)d : %(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(filename)s - %(funcName)s - %(lineno)d : %(asctime)s - %(message)s')
 
     # On some configurations error traceback is not being displayed
     #     when the program crashes. This is a workaround.
