@@ -2,9 +2,12 @@ from PySide6 import QtCore
 import logging
 import os
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.VTKEngine import VTKEngine
 
-class ManualFusionLoader(QtCore.QObject):
+from src.View.ImageLoader import ImageLoader
+
+class ManualFusionLoader(ImageLoader):
     signal_loaded = QtCore.Signal(object)
     signal_error = QtCore.Signal(object)
 
@@ -64,3 +67,18 @@ class ManualFusionLoader(QtCore.QObject):
         self.signal_loaded.emit((True, {
             "vtk_engine": engine,
         }))
+
+     def populate_moving_model_container_manual(self, engine, moving_dir):
+        """
+        Populates the MovingModelContainer singleton with all relevant values for manual fusion.
+        """
+        from src.Model.MovingDictContainer import MovingDictContainer
+        moving_model = MovingDictContainer()
+        moving_model.clear()
+        moving_model.set_initial_values(
+            path=moving_dir,
+            dataset=engine.moving_dataset,
+            filepaths=engine.moving_filepaths
+        )
+        # Add any additional manual fusion-specific attributes here
+        # Example: moving_model.set("fusion_mode", "manual")

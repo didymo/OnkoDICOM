@@ -86,7 +86,7 @@ def lps_point_to_ras(pt: np.ndarray) -> np.ndarray:
     else:
         v = pt.astype(float)
     vr = (LPS_TO_RAS @ v)
-    return vr[:3]
+    return vr[0:3]
 
 def cleanup_old_dicom_temp_dirs(temp_root=None):
     """
@@ -179,7 +179,7 @@ class VTKEngine:
     def load_fixed(self, dicom_dir: str) -> bool:
         try:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
-            self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
+            self._temp_dirs.append(slice_dir)
         except ValueError as e:
             print(e)
             return False
@@ -194,32 +194,39 @@ class VTKEngine:
         flip.Update()
         self.fixed_reader = flip
 
+        # Compute voxel->LPS then LPS->RAS
         origin = get_first_slice_ipp(slice_dir)
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.fixed_matrix = lps_matrix_to_ras(vox2lps)
-        print("Fixed voxel->RAS matrix:")
+
+        print("Fixed voxel->RAS matrix (no flip):")
         print(self.fixed_matrix)
 
-        # Safe to delete temp folder AFTER all computations however
-        # VTK still holds onto directory folder with a single slice
-        # inside, but this will be deleted on next run.
+        # Debug: check RAS origin
+        ras_origin = np.array([0.0, 0.0, 0.0, 1.0])
+        voxel_at_ras0 = np.linalg.inv(self.fixed_matrix) @ ras_origin
+        print("Voxel coords of RAS (0,0,0):", voxel_at_ras0)
+
+        # Cleanup temp folder
         shutil.rmtree(slice_dir, ignore_errors=True)
         self._temp_dirs.remove(slice_dir)
 
-        img = flip.GetOutput()
+        # Set background level
+        img = r.GetOutput()
         scalars = numpy_support.vtk_to_numpy(img.GetPointData().GetScalars())
         if scalars is not None and scalars.size > 0:
-            min_val = float(scalars.min())
-            self.reslice3d.SetBackgroundLevel(min_val)
+            self.reslice3d.SetBackgroundLevel(float(scalars.min()))
 
         self._wire_blend()
         self._sync_reslice_output_to_fixed()
         return True
 
+
+
     def load_moving(self, dicom_dir: str) -> bool:
         try:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
-            self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
+            self._temp_dirs.append(slice_dir)
         except ValueError as e:
             print(e)
             return False
@@ -234,55 +241,35 @@ class VTKEngine:
         flip.Update()
         self.moving_reader = flip
 
-        # compute moving matrix like fixed
+        # Compute voxel->LPS then LPS->RAS
         origin = get_first_slice_ipp(slice_dir)
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.moving_matrix = lps_matrix_to_ras(vox2lps)
-        print("Moving voxel->RAS matrix:")
+
+        print("Moving voxel->RAS matrix (no flip):")
         print(self.moving_matrix)
 
-        # Safe to delete temp folder AFTER all computations however
-        # VTK still holds onto directory folder with a single slice
-        # inside, but this will be deleted on next run.
+        # Debug: check RAS origin
+        ras_origin = np.array([0.0, 0.0, 0.0, 1.0])
+        voxel_at_ras0 = np.linalg.inv(self.moving_matrix) @ ras_origin
+        print("Voxel coords of RAS (0,0,0):", voxel_at_ras0)
+
+        # Cleanup temp folder
         shutil.rmtree(slice_dir, ignore_errors=True)
         self._temp_dirs.remove(slice_dir)
 
         # --- Compute pre-registration transform ---
-        fixed_to_world = self.fixed_matrix
-        moving_to_world = self.moving_matrix
+        R_fixed = self.fixed_matrix[0:3,0:3] / np.array([np.linalg.norm(self.fixed_matrix[0:3,i]) for i in range(3)])
+        R_moving = self.moving_matrix[0:3,0:3] / np.array([np.linalg.norm(self.moving_matrix[0:3,i]) for i in range(3)])
+        R = R_fixed.T @ R_moving
 
+        t = self.moving_matrix[0:3,3] - self.fixed_matrix[0:3,3]
 
-        # --- Compute pre-registration transform including rotation ---
-        fixed_to_world = self.fixed_matrix
-        moving_to_world = self.moving_matrix
-
-        # Compute rotation part (direction cosines only, no spacing)
-        fixed_axes_norms = np.array([np.linalg.norm(fixed_to_world[0:3, i]) for i in range(3)])
-        moving_axes_norms = np.array([np.linalg.norm(moving_to_world[0:3, i]) for i in range(3)])
-
-        if np.any(fixed_axes_norms == 0):
-            raise ValueError("Zero-length axis detected in fixed image orientation matrix. Cannot normalize direction cosines.")
-        if np.any(moving_axes_norms == 0):
-            raise ValueError("Zero-length axis detected in moving image orientation matrix. Cannot normalize direction cosines.")
-
-        R_fixed = fixed_to_world[0:3, 0:3] / fixed_axes_norms
-        R_moving = moving_to_world[0:3, 0:3] / moving_axes_norms
-        R = R_fixed.T @ R_moving   # relative rotation
-
-        # Compute translation in mm (just difference of IPPs, in world coords)
-        t = moving_to_world[0:3, 3] - fixed_to_world[0:3, 3]
-
-        # Build prereg transform
         pre_transform = np.eye(4)
-        pre_transform[0:3, 0:3] = R
-        pre_transform[0:3, 3] = t
+        pre_transform[0:3,0:3] = R
+        pre_transform[0:3,3] = t
         self.pre_transform = pre_transform
 
-        # Debug prints
-        print("--- Fixed matrix ---")
-        print(fixed_to_world)
-        print("--- Moving matrix ---")
-        print(moving_to_world)
         print("--- Pre-registration transform ---")
         print(pre_transform)
         print("Pre-reg translation (mm):", t)
@@ -291,7 +278,7 @@ class VTKEngine:
         vtkmat = vtk.vtkMatrix4x4()
         for i in range(4):
             for j in range(4):
-                vtkmat.SetElement(i, j, pre_transform[i, j])
+                vtkmat.SetElement(i,j, pre_transform[i,j])
 
         self.reslice3d.SetInputConnection(flip.GetOutputPort())
         self.reslice3d.SetResliceAxes(vtkmat)
@@ -304,6 +291,7 @@ class VTKEngine:
 
 
 
+
     # ---------------- Transformation Utilities ----------------
     def set_translation(self, tx: float, ty: float, tz: float):
         self._tx, self._ty, self._tz = float(tx), float(ty), float(tz)
@@ -311,7 +299,7 @@ class VTKEngine:
 
     def set_rotation_deg(self, rx: float, ry: float, rz: float, orientation=None, slice_idx=None):
         self._rx, self._ry, self._rz = float(rx), float(ry), float(rz)
-        self._apply_transform(orientation, slice_idx)
+        self._apply_transform(orientation, slice_idx, pivot_mode="current_slice" if orientation and slice_idx is not None else "dataset_center")
 
     def reset_transform(self):
         self._tx = self._ty = self._tz = 0.0
@@ -453,55 +441,76 @@ class VTKEngine:
         return aspect_ratio_correct(qimg, h, w, orientation)
 
     # ---------------- Internal Transform Application ----------------
-    def _apply_transform(self, orientation=None, slice_idx=None):
-        if not self.fixed_reader or not self.moving_reader:
-            return
+    def _apply_transform(self, orientation=None, slice_idx=None): 
+        if not self.fixed_reader or not self.moving_reader: 
+            return 
 
-        img = self.fixed_reader.GetOutput()
-        extent = img.GetExtent()
+        # ---------------- User transform applied to pipeline ---------------- 
+        user_t = vtk.vtkTransform() 
+        user_t.PostMultiply() 
 
-        # Center voxel indices (i,j,k)
-        center_voxel = np.array([
-            0.5 * (extent[0] + extent[1]),
-            0.5 * (extent[2] + extent[3]),
-            0.5 * (extent[4] + extent[5]),
-            1.0
-        ], dtype=float)
+        # Move volume to origin for rotation
+        user_t.Translate(-self.moving_matrix[0:3,3])
 
-        # Use voxel->RAS matrix to compute center in RAS
-        center_world_h = self.fixed_matrix @ center_voxel
-        center_world = center_world_h[:3]
-
-
-        # ---------------- User transform only ----------------
-        user_t = vtk.vtkTransform()
-        user_t.PostMultiply()
-        user_t.Translate(-center_world)
-        user_t.RotateX(self._rx)
-        user_t.RotateY(self._ry)
-        user_t.RotateZ(self._rz)
-        user_t.Translate(center_world)
+        # Apply world-based translation first
         user_t.Translate(self._tx, self._ty, self._tz)
 
-        # Save **just the user transform** for GUI
-        self.user_transform.DeepCopy(user_t)
+        # Apply rotations
+        user_t.RotateX(-self._rx) 
+        user_t.RotateY(-self._ry) 
+        user_t.RotateZ(-self._rz) 
 
-        # ---------------- Combined transform for reslice ----------------
-        final_t = vtk.vtkTransform()
-        final_t.PostMultiply()
-        pre_vtk_mat = vtk.vtkMatrix4x4()
+        # Move volume back
+        user_t.Translate(self.moving_matrix[0:3,3]) 
+
+        # ---------------- Combined transform for reslice ---------------- 
+        final_t = vtk.vtkTransform() 
+        final_t.PostMultiply() 
+
+        pre_vtk_mat = vtk.vtkMatrix4x4() 
+        for i in range(4): 
+            for j in range(4): 
+                pre_vtk_mat.SetElement(i, j, self.pre_transform[i, j]) 
+
+        final_t.Concatenate(pre_vtk_mat)  # pre-registration 
+        final_t.Concatenate(user_t)       # user-applied 
+        self.transform.DeepCopy(final_t) 
+        self.reslice3d.SetResliceAxes(self.transform.GetMatrix()) 
+        self.reslice3d.Modified() 
+        self._blend_dirty = True 
+
+        # ---------------- Display-only user_transform ----------------
+        # Extract the pure rotation 3x3 from user_t
+        vtkmat = user_t.GetMatrix()
+        rot3x3 = np.eye(3)
+        for i in range(3):
+            for j in range(3):
+                rot3x3[i, j] = vtkmat.GetElement(i, j)
+
+        # LPS to RAS: flip coordinates for X,Y rotations and negate Z rotation
+        lps_to_ras = np.array([
+            [-1,  0,  0],
+            [ 0, -1,  0],
+            [ 0,  0,  1]
+        ])
+        rot_temp = lps_to_ras @ rot3x3 @ lps_to_ras.T
+
+        # Additionally flip Z rotation by negating specific matrix elements
+        rot_ras = rot_temp.copy()
+        rot_ras[0, 1] = -rot_ras[0, 1]  # Negate sin(z) component
+        rot_ras[1, 0] = -rot_ras[1, 0]  # Negate -sin(z) component
+
+        # Build display matrix
+        display_mat = np.eye(4)
+        display_mat[0:3, 0:3] = rot_ras
+        display_mat[0:3, 3] = np.array([self._tx, self._ty, self._tz])
+
+        vtk_display = vtk.vtkMatrix4x4()
         for i in range(4):
             for j in range(4):
-                pre_vtk_mat.SetElement(i, j, self.pre_transform[i, j])
+                vtk_display.SetElement(i, j, display_mat[i, j])
 
-        final_t.Concatenate(pre_vtk_mat)  # pre-registration
-        final_t.Concatenate(user_t)       # user transform
-
-        self.transform.DeepCopy(final_t)
-        self.reslice3d.SetResliceAxes(self.transform.GetMatrix())
-        self.reslice3d.Modified()
-        self._blend_dirty = True
-
+        self.user_transform.SetMatrix(vtk_display)
 
 
 
