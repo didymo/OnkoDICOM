@@ -114,14 +114,6 @@ class ImageFusionAxialView(BaseFusionView):
                          QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         bottom.addWidget(bottom_right_widget,
                          QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
-        
-        # Make the widgets transparent to mouse events
-        top_left_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        top_right_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        bottom_left_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        bottom_right_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        top_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        bottom_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
 
         # Add the bottom and top widgets to the view
         self.metadata_layout.addWidget(
