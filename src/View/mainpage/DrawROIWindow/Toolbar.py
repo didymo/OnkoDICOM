@@ -11,6 +11,7 @@ class CutsomToolbar(QToolBar):
     def __init__(self, parent=None, canvas_label = None, left_label = None):
         super().__init__("Toolbar", parent)
         self.parent = parent
+        print("4")
         self.setFont(QFontDatabase.systemFont(QFontDatabase.GeneralFont))
         #Sets communication between classes
         self.canvas_label = canvas_label

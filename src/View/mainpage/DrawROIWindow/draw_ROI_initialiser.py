@@ -1,14 +1,14 @@
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtGui import QPen, QKeyEvent
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Slot
+import pydicom
 from src.View.mainpage.DrawROIWindow.Toolbar import CutsomToolbar
 from src.View.mainpage.DrawROIWindow.Left_P import LeftPannel
 from src.View.mainpage.DrawROIWindow.Canvas import CanvasLabel
 from src.View.mainpage.DrawROIWindow.Units_Box import UnitsBox
-from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.scroll_loader_4_dicom_image import Scroll_Wheel
-from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
+from src.View.mainpage.DrawROIWindow.ROI_Name_Button import ROIName
 
 #Sourcery.ai Is this true
 class RoiInitialiser(QtWidgets.QWidget):
@@ -16,6 +16,7 @@ class RoiInitialiser(QtWidgets.QWidget):
     def __init__(self, host_main_window: QtWidgets.QMainWindow, rois, dataset_rtss,signal_roi_drawn,close_window_signal, parent=None):
         super().__init__(parent)
         self.host = host_main_window
+        self.signal_roi_drawn = signal_roi_drawn
         self.central = QtWidgets
         self.p = PatientDictContainer()
         self.display_pixmaps = []
@@ -34,7 +35,6 @@ class RoiInitialiser(QtWidgets.QWidget):
         self.pen.setColor("blue")
 
         # Initalises the calsses
-        self.dicom_viewer = DicomAxialView()
         self.scroller = Scroll_Wheel(self.display_pixmaps)
         self.scroller.valueChanged.connect(self.change_image)
         
@@ -80,12 +80,13 @@ class RoiInitialiser(QtWidgets.QWidget):
 
         self.units_box = UnitsBox(self, self.pen, self.canvas_labal)
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
-        self.rtstuct = SelectROIPopUp()
+        self.ROI_button = ROIName(self,roi_name="Select ROI")
 
         # Creates a layout for the tools to fit inside
         tools_layout = QtWidgets.QVBoxLayout()
         tools_container = QtWidgets.QWidget()
         tools_container.setLayout(tools_layout)
+        tools_layout.addWidget(self.ROI_button)
         tools_layout.addWidget(self.left_label)
         tools_layout.addWidget(self.units_box)
         
@@ -106,6 +107,8 @@ class RoiInitialiser(QtWidgets.QWidget):
         # keep a toolbar factory if you like (QMainWindow will add it)
         self._toolbar = CutsomToolbar(self, self.canvas_labal, self.left_label)
         self._toolbar.colour.connect(self.left_label.update_colour)
+        self.canvas_labal.emitter.m_window.connect(self.window_pop_up)
+
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
         """Creates and adds the toolbar to the ui"""
@@ -113,18 +116,12 @@ class RoiInitialiser(QtWidgets.QWidget):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Up:
-            self.scroller.setValue(self.dicom_viewer.slider.value() +1)
+            self.scroller.setValue(self.scroller.value() +1)
             self.canvas_labal.ds_is_active = False
         if event.key() == Qt.Key_Down:
-            self.scroller.setValue(self.dicom_viewer.slider.value() -1)
+            self.scroller.setValue(self.scroller.value() -1)
             self.canvas_labal.ds_is_active = False
         return super().keyPressEvent(event)
-
-
-    def apply_zoom(self):
-        factor = self.dicom_viewer.zoom
-        self.view.setTransform(QtGui.QTransform().scale(factor, factor))
-        
 
     def get_pixmaps(self):
         """Gets all of the pixmap data and returns it"""
@@ -141,9 +138,19 @@ class RoiInitialiser(QtWidgets.QWidget):
 
     def close_roi_window(self):
         """Closes the roi window"""
-        print("apples")
-        self.close()
         self._toolbar.close()
-        self.close_window_signal.emit()
+        self.host.close_window()
+    
+    @Slot()
+    def window_pop_up(self):
+        """Opens the popup"""
+        QtWidgets.QMessageBox.information(self, "No ROI instance selected",
+                    "Please ensure you have selected your ROI instance before saving.")
+        
+    @Slot(pydicom.Dataset,str)
+    def saved_roi_drawing(self,v):
+        "Emits the saved roi drawing"
+        self.signal_roi_drawn.emit(v,{"draw": self.roi_name})
+        
 
         
