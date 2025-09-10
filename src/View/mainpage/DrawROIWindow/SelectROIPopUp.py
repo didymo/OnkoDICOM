@@ -124,7 +124,7 @@ class SelectROIPopUp(QDialog):
             self.roi_name = str(roi.text())
 
             # Call function on UIDrawWindow so it has selected ROI
-            self.signal_roi_name.emit(self.roi_name)
+            #self.signal_roi_name.emit(self.roi_name)
             self.close()
 
     def on_cancel_clicked(self):

@@ -2,7 +2,7 @@ from PySide6 import QtWidgets
 from typing import Optional
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QButtonGroup
 from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QPixmap, QPainter, QPen, QColor, QAction, QBrush,QCursor
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, Slot, Signal
 
 class LeftPannel(QtWidgets.QWidget):
     """Holds the left pannels buttons"""
@@ -12,7 +12,6 @@ class LeftPannel(QtWidgets.QWidget):
         self.parent = parent
         self.pen = pen
         self.last_colour = QColor("blue")
-
         self.set_layout()
 
     def set_layout(self):
@@ -38,6 +37,7 @@ class LeftPannel(QtWidgets.QWidget):
         save = QPushButton("Save")
         fill = QPushButton("Fill")
         fill.setCheckable(True)
+        roi_name = QPushButton("ROI_Name")
         erase_dag = QPushButton("Erase DAGs")
         self.button_group.addButton(brush)
         self.button_group.addButton(pen)
@@ -84,6 +84,7 @@ class LeftPannel(QtWidgets.QWidget):
         
     def brush_tool(self):
         """This fucntion changes the draw tool to a brush"""
+        print("active")
         self.canvas_label.set_tool(1)
         self.canvas_label.pen.setColor(self.last_colour)
         cursor = self.make_circle_cursor(self.canvas_label.pen.width(), self.last_colour)
@@ -94,6 +95,10 @@ class LeftPannel(QtWidgets.QWidget):
         self.canvas_label.pen.setColor(self.last_colour)
         self.canvas_label.set_tool(3)
         self.canvas_label.setCursor(Qt.CrossCursor)
+
+    def roi_b(self):
+        """Selects the ROI"""
+        
 
 
     def eraser_roi_tool(self):
@@ -123,10 +128,12 @@ class LeftPannel(QtWidgets.QWidget):
 
     def save_button(self):
         """This fucntion saves the ROI drawing"""
-        print("Saved!!!!!! But not really........")
+        self.canvas_label.save_roi()
+        self.parent.close_roi_window()
 
     def fill_tool(self):
         """Fucntion for the fill tool"""
+        self.canvas_label.setCursor(Qt.ArrowCursor)
         self.canvas_label.pen.setColor(self.last_colour)
         self.canvas_label.set_tool(2)
 
@@ -171,3 +178,8 @@ class LeftPannel(QtWidgets.QWidget):
         """Used to update the colour of the cursor to refect the users choices"""
         self.last_colour = v # LF (\n)
         # End-of-file (EOF)
+
+    @Slot(int)
+    def update_opasity(self, v):
+        """Updates the alpha value"""
+        self.last_colour.setAlpha(v)
