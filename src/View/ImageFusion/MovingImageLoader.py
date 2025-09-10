@@ -160,3 +160,51 @@ class MovingImageLoader(ImageLoader):
             return False
 
         return True
+
+    def load_manual_mode(self, interrupt_flag, progress_callback):
+            progress_callback.emit(("Generating Moving Model", 60))
+            try:
+                path, read_data_dict, file_names_dict = self.get_common_path_and_datasets()
+            except ImageLoading.NotAllowedClassError:
+                raise ImageLoading.NotAllowedClassError
+
+            moving_dict_container = self.init_container(path, read_data_dict, file_names_dict)
+
+            if interrupt_flag.is_set():
+                return False
+
+            if 'rtss' in file_names_dict and 'rtdose' in file_names_dict:
+                self.parent_window.signal_advise_calc_dvh.connect(self.update_calc_dvh)
+                self.signal_request_calc_dvh.emit()
+                while not self.advised_calc_dvh:
+                    pass
+
+            if 'rtss' in file_names_dict:
+                progress_callback.emit(("Getting ROI + Contour data...", 65))
+                dataset_rtss, rois, dict_thickness = self.handle_rtss(
+                    file_names_dict, read_data_dict, moving_dict_container
+                )
+
+                if interrupt_flag.is_set():
+                    return False
+
+                if 'rtdose' in file_names_dict and self.calc_dvh:
+                    progress_callback.emit(("Calculating DVHs...", 75))
+                    ok = self.handle_dvh(dataset_rtss, rois, dict_thickness,
+                                        file_names_dict, moving_dict_container,
+                                        interrupt_flag)
+                    if not ok or interrupt_flag.is_set():
+                        return False
+                create_moving_model()
+            else:
+                progress_callback.emit(("Generating temporary rtss...", 80))
+                ok = self.create_model_and_rtss(path)
+                if not ok or interrupt_flag.is_set():
+                    return False
+
+            progress_callback.emit(("Loading Moving Model", 85))
+            if interrupt_flag.is_set():
+                progress_callback.emit(("Stopping", 85))
+                return False
+
+            return True

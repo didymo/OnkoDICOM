@@ -299,7 +299,7 @@ class VTKEngine:
 
     def set_rotation_deg(self, rx: float, ry: float, rz: float, orientation=None, slice_idx=None):
         self._rx, self._ry, self._rz = float(rx), float(ry), float(rz)
-        self._apply_transform(orientation, slice_idx, pivot_mode="current_slice" if orientation and slice_idx is not None else "dataset_center")
+        self._apply_transform(orientation, slice_idx)
 
     def reset_transform(self):
         self._tx = self._ty = self._tz = 0.0
