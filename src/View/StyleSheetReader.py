@@ -22,13 +22,6 @@ class StyleSheetReader:
         if StyleSheetReader.style_sheet is None:
             raise ValueError("No StyleSheet")
 
-    def __call__(self) -> str:
-        """
-        Returning the style_sheet member if the class is called after initialization
-        :rtype: str
-        """
-        return self.get_stylesheet()
-
     def get_stylesheet(self) -> str:
         """
         Returns the Stylesheet static member

@@ -1,8 +1,8 @@
-import platform
 from PySide6 import QtWidgets
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QComboBox, QLabel
-from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
+
 
 class KaplanMeierOptions(QtWidgets.QWidget):
     """
@@ -21,11 +21,7 @@ class KaplanMeierOptions(QtWidgets.QWidget):
         self.button_layout = QtWidgets.QHBoxLayout()
 
         # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        stylesheet: StyleSheetReader = StyleSheetReader()
 
         # Info messages
         self.message = QtWidgets.QLabel(
@@ -38,28 +34,28 @@ class KaplanMeierOptions(QtWidgets.QWidget):
 
         # target column widgets
         self.combobox_target = QComboBox()
-        self.combobox_target.setStyleSheet(self.stylesheet)
+        self.combobox_target.setStyleSheet(stylesheet.get_stylesheet())
         target_label = QtWidgets.QLabel(
             "Target Column")
-        target_label.setStyleSheet(self.stylesheet)
+        target_label.setStyleSheet(stylesheet.get_stylesheet())
         self.target_layout.addWidget(target_label)
         self.target_layout.addRow(self.combobox_target)
 
         # life duration widgets
         self.combobox_duration = QComboBox()
-        self.combobox_duration.setStyleSheet(self.stylesheet)
+        self.combobox_duration.setStyleSheet(stylesheet.get_stylesheet())
         duration_label = QtWidgets.QLabel(
             "Duration of Life Column")
-        duration_label.setStyleSheet(self.stylesheet)
+        duration_label.setStyleSheet(stylesheet.get_stylesheet())
         self.duration_layout.addWidget(duration_label)
         self.duration_layout.addRow(self.combobox_duration)
 
         # alive or dead widgets
         self.combobox_alive_or_dead = QComboBox()
-        self.combobox_alive_or_dead.setStyleSheet(self.stylesheet)
+        self.combobox_alive_or_dead.setStyleSheet(stylesheet.get_stylesheet())
         alive_or_dead_label = QtWidgets.QLabel(
             "Alive or Dead Column")
-        alive_or_dead_label.setStyleSheet(self.stylesheet)
+        alive_or_dead_label.setStyleSheet(stylesheet.get_stylesheet())
         self.alive_or_dead_layout.addWidget(alive_or_dead_label)
         self.alive_or_dead_layout.addRow(self.combobox_alive_or_dead)
 
@@ -100,13 +96,6 @@ class plot_window(QtWidgets.QWidget):
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
-
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         label = QLabel(self)
         pximap = QPixmap("")

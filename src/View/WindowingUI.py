@@ -29,8 +29,7 @@ class Windowing(QDialog):
                               QIcon.Normal, QIcon.Off)
 
         self.setWindowIcon(window_icon)
-        stylesheet = StyleSheetReader()
-        self.setStyleSheet(stylesheet())
+        self.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         self.text = text
 
