@@ -1,16 +1,16 @@
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QLabel, QSpinBox, QSlider
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt,Signal
 
 class UnitsBox(QtWidgets.QLabel):
     """The class contains all of the unit boxes"""
+    opasity_value = Signal(int)
     def __init__(self, parent = None, pen = None, canvas_label = None,):
         super().__init__(parent)
         self.canvas_label = canvas_label
         self.parent = parent
         self.pen = pen
         self.text_entry_setup()
-        print("3")
 
 
     def text_entry_setup(self):
@@ -53,7 +53,7 @@ class UnitsBox(QtWidgets.QLabel):
         self.transparency_slider = QSlider(Qt.Horizontal)
         self.transparency_slider.setRange(1,100)
         self.transparency_slider.valueChanged.connect(self.update_transparency)
-        self.transparency_slider.setValue(80)
+        self.transparency_slider.setValue(50)
         
         #Ading the them to the layout
         layout.addWidget(pen_size,0,0)
@@ -82,6 +82,9 @@ class UnitsBox(QtWidgets.QLabel):
         colour.setAlpha(transparency_value)
         self.canvas_label.pen.setColor(colour)
         self.canvas_label.max_alpha = transparency_value
+        self.opasity_value.emit(transparency_value)
+
+
 
     def update_pixel_min(self, value):
         """Updates the lower bounds of the pixel range for ROI"""

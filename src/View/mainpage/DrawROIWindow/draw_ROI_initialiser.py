@@ -89,8 +89,6 @@ class RoiInitialiser(QtWidgets.QWidget):
         tools_layout.addWidget(self.ROI_button)
         tools_layout.addWidget(self.left_label)
         tools_layout.addWidget(self.units_box)
-        
-
 
         # Create a layout to hold the left panel and the main canvas
         # Create a QWidget to hold both the left panel and the central label
@@ -133,7 +131,7 @@ class RoiInitialiser(QtWidgets.QWidget):
             j +=1
     def change_image(self, v):
         """Changes the image according to the value"""
-        image = self.display_pixmaps[self.scroller.value()]
+        image = self.display_pixmaps[v]
         self.image_item.setPixmap(image)
 
     def close_roi_window(self):
