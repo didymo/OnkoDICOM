@@ -90,7 +90,9 @@ class RoiDrawOptions(QtWidgets.QMainWindow):
         self.signal_draw_roi_closed.emit()
 
     def update_draw_roi_pixmaps(self):
-        print("Screeeeeem")
+        self.ui.display_pixmaps.clear()
+        self.ui.get_pixmaps()
+        self.ui.change_image(self.ui.scroller.value())
 
 class ROIDrawOption:
     """
