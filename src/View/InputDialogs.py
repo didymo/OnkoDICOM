@@ -1,5 +1,4 @@
 """This file holds all the user input pop up dialogs used from the software"""
-import platform
 import re
 
 from PySide6 import QtCore, QtGui
@@ -7,6 +6,7 @@ from PySide6.QtWidgets import QLabel, QDialogButtonBox, QFormLayout, QLineEdit, 
     QDialog, QComboBox, \
     QMessageBox
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class Dialog_Windowing(QDialog):
@@ -268,13 +268,6 @@ class PatientWeightDialog(QDialog):
         self.patient_weight_message += "conversion.\nPlease enter patient "
         self.patient_weight_message += "weight in kg."
 
-        # Get stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
-
         self.setWindowIcon(QtGui.QIcon(
             "res/images/btn-icons/onkodicom_icon.png"))
         buttonBox = QDialogButtonBox(
@@ -292,19 +285,19 @@ class PatientWeightDialog(QDialog):
             "QPushButtonClass", "fail-button")
 
         # Set stylesheets
-        buttonBox.setStyleSheet(self.stylesheet)
+        buttonBox.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         self.patient_weight_message_label.setFont(self.text_font)
-        self.patient_weight_message_label.setStyleSheet(self.stylesheet)
+        self.patient_weight_message_label.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         self.patient_weight_prompt.setMinimumHeight(36)
         self.patient_weight_prompt.setMargin(4)
         self.patient_weight_prompt.setFont(self.text_font)
         self.patient_weight_prompt.setAlignment(QtCore.Qt.AlignVCenter
                                                 | QtCore.Qt.AlignHCenter)
-        self.patient_weight_prompt.setStyleSheet(self.stylesheet)
+        self.patient_weight_prompt.setStyleSheet(StyleSheetReader().get_stylesheet())
 
-        self.patient_weight_entry.setStyleSheet(self.stylesheet)
+        self.patient_weight_entry.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         # Input dialog layout
         entry_layout = QFormLayout(self)
@@ -343,7 +336,7 @@ class PatientWeightDialog(QDialog):
                                 QMessageBox.StandardButton.Ok, self)
                 button_reply.button(
                     QMessageBox.StandardButton.Ok).setStyleSheet(
-                    self.stylesheet)
+                    StyleSheetReader().get_stylesheet())
                 button_reply.exec_()
         # Make sure the patient weight is not blank
         else:
@@ -354,7 +347,7 @@ class PatientWeightDialog(QDialog):
                             QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QMessageBox.StandardButton.Ok).setStyleSheet(
-                self.stylesheet)
+                StyleSheetReader().get_stylesheet())
             button_reply.exec_()
 
     def rejecting(self):
@@ -369,7 +362,7 @@ class PatientWeightDialog(QDialog):
                         QMessageBox.StandardButton.Ok, self)
         button_reply.button(
             QMessageBox.StandardButton.Ok).setStyleSheet(
-            self.stylesheet)
+            StyleSheetReader().get_stylesheet())
         reply = button_reply.exec_()
         if reply == QMessageBox.Ok:
             self.close()

@@ -1,6 +1,6 @@
-import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class BatchSummaryWindow(QtWidgets.QDialog):
@@ -29,17 +29,13 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         self.ok_button = QtWidgets.QPushButton("Continue")
 
         # Get stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        stylesheet: StyleSheetReader = StyleSheetReader()
 
         # Set stylesheet
-        self.summary_label.setStyleSheet(self.stylesheet)
-        self.scroll_area.setStyleSheet(self.stylesheet)
-        self.export_button.setStyleSheet(self.stylesheet)
-        self.ok_button.setStyleSheet(self.stylesheet)
+        self.summary_label.setStyleSheet(stylesheet.get_stylesheet())
+        self.scroll_area.setStyleSheet(stylesheet.get_stylesheet())
+        self.export_button.setStyleSheet(stylesheet.get_stylesheet())
+        self.ok_button.setStyleSheet(stylesheet.get_stylesheet())
 
         # Make QLabel wrap text
         self.summary_label.setWordWrap(True)
