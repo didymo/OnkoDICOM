@@ -13,7 +13,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
     # Static member maintain the controller outside a specific instance
     _controller: AutoSegmentationController | None = None
 
-    def __init__(self, style_sheet: StyleSheetReader) -> None:
+    def __init__(self) -> None:
         super().__init__()
         """
         Initialising the User Interface for the Auto Segmentation Feature.
@@ -21,7 +21,6 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         :param style_sheet:
         :rtype: None
         """
-        self.style_sheet: StyleSheetReader = style_sheet  # Making Member for Style Sheet
         self._auto_segmentation_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout()  # Declaring the layout of the User interface
         self._make_segmentation_task_selection()  # Adding Segmentation Task Combo Box
         self._make_fast_checkbox()  # Adding Fast Option Checkbox
@@ -53,7 +52,8 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         :rtype: None
         """
         _task_label: QtWidgets.QLabel = QtWidgets.QLabel("Segmentation Task:")
-        _task_label.setStyleSheet(self.style_sheet())
+        style_sheet: StyleSheetReader = StyleSheetReader()
+        _task_label.setStyleSheet(style_sheet.get_stylesheet())
         self._auto_segmentation_layout.addWidget(_task_label)
 
         self._task_combo: QtWidgets.QComboBox = QtWidgets.QComboBox()
@@ -69,7 +69,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         self._task_combo.setCurrentIndex(0)
         self._task_combo.setToolTip("Select for Segmentation Task to be completed.\n"
                                     "This will be the specific area of the body to create a segment for")
-        self._task_combo.setStyleSheet(self.style_sheet())
+        self._task_combo.setStyleSheet(style_sheet.get_stylesheet())
         self._auto_segmentation_layout.addWidget(self._task_combo)
 
     def _make_fast_checkbox(self) -> None:
@@ -84,7 +84,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
                                        "This option is only available on particular tasks such as total. \n"
                                        "BENEFIT: Faster Segmentations\n"
                                        "DOWNSIDE: Not as Accurate Segmentations")
-        self._fast_checkbox.setStyleSheet(self.style_sheet())
+        self._fast_checkbox.setStyleSheet(StyleSheetReader().get_stylesheet())
         self._auto_segmentation_layout.addWidget(self._fast_checkbox)
 
     def _make_progress_bar(self) -> None:
@@ -94,13 +94,14 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         how much longer till the task is completed.
         :rtype: None
         """
+        style_sheet: StyleSheetReader = StyleSheetReader()
         _progress_bar_label: QtWidgets.QLabel = QtWidgets.QLabel("\n\nProgress:")
-        _progress_bar_label.setStyleSheet(self.style_sheet())
+        _progress_bar_label.setStyleSheet(style_sheet.get_stylesheet())
         self._auto_segmentation_layout.addWidget(_progress_bar_label)
 
         self._progress_bar: QtWidgets.QProgressBar = QtWidgets.QProgressBar(minimum=0, maximum=100, value=0)
         self._progress_bar.setToolTip("The progress of the task currently being processed.")
-        self._progress_bar.setStyleSheet(self.style_sheet())
+        self._progress_bar.setStyleSheet(style_sheet.get_stylesheet())
         self._auto_segmentation_layout.addWidget(self._progress_bar)
 
     def _make_progress_text(self) -> None:
@@ -109,15 +110,16 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         To give the user feedback on what the current activity which is occurring.
         :rtype: None
         """
+        style_sheet: StyleSheetReader = StyleSheetReader()
         _progress_text_label: QtWidgets.QLabel = QtWidgets.QLabel("\n\nCurrent Task:")
-        _progress_text_label.setStyleSheet(self.style_sheet())
+        _progress_text_label.setStyleSheet(style_sheet.get_stylesheet())
         self._auto_segmentation_layout.addWidget(_progress_text_label)
 
         self._progress_text = QtWidgets.QTextEdit()
         self._progress_text.setText("Waiting...")
         self._progress_text.setReadOnly(True)
         self._progress_text.setToolTip("What task the auto-segmentator is currently performing")
-        self._progress_text.setStyleSheet(self.style_sheet())
+        self._progress_text.setStyleSheet(style_sheet.get_stylesheet())
         self._auto_segmentation_layout.addWidget(self._progress_text)
 
     def _make_start_button(self, button_action: Callable[[], None]) -> None:
@@ -129,7 +131,7 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         """
         self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
         self._start_button.setObjectName("start_button")
-        self._start_button.setStyleSheet(self.style_sheet())
+        self._start_button.setStyleSheet(StyleSheetReader().get_stylesheet())
         # self._start_button.Alignment = QtCore.Qt.AlignmentFlag.AlignBottom
         # Button Action
         self._start_button.clicked.connect(button_action)

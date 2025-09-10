@@ -74,7 +74,7 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        self.stylesheet = StyleSheetReader()
+        stylesheet = StyleSheetReader()
 
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
@@ -82,7 +82,7 @@ class UIMainWindow:
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(self.stylesheet())
+        self.main_window_instance.setStyleSheet(stylesheet.get_stylesheet())
 
         self.setup_central_widget()
         self.setup_actions()
@@ -146,7 +146,7 @@ class UIMainWindow:
 
         # Add Auto-Segmentation to the left panel
         if not hasattr(self, 'auto_segmentation_tab'):
-            self.auto_segmentation_tab = AutoSegmentationTab(self.stylesheet)
+            self.auto_segmentation_tab = AutoSegmentationTab()
             # Obtain controller from auto segment tab
             self._controller = self.auto_segmentation_tab.get_autoseg_controller()
 
@@ -700,7 +700,7 @@ class UIMainWindow:
                     QtWidgets.QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
-                self.stylesheet())
+                StyleSheetReader().get_stylesheet())
             button_reply.exec_()
 
         # Close progress window

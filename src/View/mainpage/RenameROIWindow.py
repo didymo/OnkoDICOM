@@ -15,8 +15,7 @@ class RenameROIWindow(QDialog):
                  suggested_text="", *args, **kwargs):
         super(RenameROIWindow, self).__init__(*args, **kwargs)
 
-        stylesheet = StyleSheetReader()
-        self.setStyleSheet(stylesheet())
+        self.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         self.standard_volume_names = standard_volume_names
         self.standard_organ_names = standard_organ_names

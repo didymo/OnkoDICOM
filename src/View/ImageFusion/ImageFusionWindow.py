@@ -14,6 +14,7 @@ from src.Model.Worker import Worker
 from src.View.ImageFusion.FusionResultWrapper import FusionResultWrapper
 from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.resources_open_patient_rc import *
 
 from src.Controller.PathHandler import resource_path
@@ -25,11 +26,6 @@ class UIImageFusionWindow(object):
 
     def setup_ui(self, open_image_fusion_select_instance):
         """Sets up a UI"""
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
@@ -270,8 +266,7 @@ class UIImageFusionWindow(object):
 
         # Set the current stylesheet to the instance and connect it back 
         # to the caller through slot
-        _stylesheet = open(resource_path(self.stylesheet_path)).read()
-        open_image_fusion_select_instance.setStyleSheet(_stylesheet)
+        open_image_fusion_select_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         QtCore.QMetaObject.connectSlotsByName(
             open_image_fusion_select_instance)

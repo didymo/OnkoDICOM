@@ -1,8 +1,7 @@
-import platform
-from os.path import expanduser
 from PySide6 import QtWidgets, QtGui
-from src.Controller.PathHandler import resource_path
 import logging
+
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class SelectSubgroupOptions(QtWidgets.QWidget):
@@ -19,13 +18,6 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
 
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
-
         # Info messages
         self.message = QtWidgets.QLabel(
             "No Clinical-data-SR files located in current selected directory"
@@ -33,7 +25,7 @@ class SelectSubgroupOptions(QtWidgets.QWidget):
 
         # Filter options table
         self.filter_table = QtWidgets.QTableWidget(0, 0)
-        self.filter_table.setStyleSheet(self.stylesheet)
+        self.filter_table.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         # Set up layout
         self.main_layout.addWidget(self.message)

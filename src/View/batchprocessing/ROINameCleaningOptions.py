@@ -1,10 +1,11 @@
 import csv
-import platform
 import re
 from pydicom import dcmread
 from PySide6 import QtCore, QtWidgets
 from src.Controller.PathHandler import data_path, resource_path
 from fuzzywuzzy import process
+
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class ROINameCleaningOptionComboBox(QtWidgets.QComboBox):
@@ -132,13 +133,6 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
-
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         # Class variables
         self.organ_names = []
@@ -268,6 +262,9 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                                 patients loaded.
         :param batch_directory: The directory selected for batch processing.
         """
+
+        stylesheet: StyleSheetReader = StyleSheetReader() # For the loop initialisations
+
         # Update table column view organ
         roi_name_header = self.table_organ.horizontalHeader()
         roi_name_header.setSectionResizeMode(
@@ -365,7 +362,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
         for roi_name in rois:
             # Create option combo box
             combo_box = ROINameCleaningOptionComboBox()
-            combo_box.setStyleSheet(self.stylesheet)
+            combo_box.setStyleSheet(stylesheet.get_stylesheet())
 
             # Create dataset combo box
             # Get list of RTSTRUCTs
@@ -379,7 +376,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                     dataset_list[index].replace(batch_directory, '')
 
             rtss_combo_box = ROINameCleaningDatasetComboBox(dataset_list)
-            rtss_combo_box.setStyleSheet(self.stylesheet)
+            rtss_combo_box.setStyleSheet(stylesheet.get_stylesheet())
 
             # Create text entry field the ROI has a standard prefix.
             # Generate organ combobox otherwise.
@@ -402,7 +399,7 @@ class ROINameCleaningOptions(QtWidgets.QWidget):
                 combo_box.setCurrentIndex(1)
 
             combo_box.currentIndexChanged.connect(name_box.change_enabled)
-            name_box.setStyleSheet(self.stylesheet)
+            name_box.setStyleSheet(stylesheet.get_stylesheet())
             
             if roi_name[0:3] in self.volume_prefixes \
             or 'PTV' in roi_name or 'LN' in roi_name:
