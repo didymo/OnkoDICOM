@@ -719,6 +719,7 @@ class UIMainWindow:
         """removes the draw roi instance from the main window,
         also removing the instance from the ROIDrawOption controller"""
         logging.debug("remove_draw_roi_instance started")
+        print("called")
 
         self.roi_draw_handler.remove_roi_draw_window()
         self.main_content.removeWidget(self.draw_roi)

@@ -99,6 +99,7 @@ class ROIDrawOption:
 
         return self.draw_window
 
+
     def remove_roi_draw_window(self):
         if hasattr(self, "draw_window"):
             delattr(self, 'draw_window')
