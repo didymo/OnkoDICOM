@@ -1,4 +1,6 @@
+import itertools
 from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
@@ -185,6 +187,15 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         reset_btn.setToolTip("Reset all translation and rotation to zero")
         reset_btn.clicked.connect(self.reset_transform)
         layout.addWidget(reset_btn)
+
+        # Add Save/Load buttons
+        save_button = QtWidgets.QPushButton("Save Fusion State")
+        load_button = QtWidgets.QPushButton("Load Fusion State")
+        save_button.clicked.connect(self.save_fusion_state)
+        load_button.clicked.connect(self.load_fusion_state)
+        # Add to layout (assume self.layout() is a QVBoxLayout)
+        layout.addWidget(save_button)
+        layout.addWidget(load_button)
 
         # Show Transform Matrix Button
         show_matrix_btn = QtWidgets.QPushButton("Show Transform Matrix")
@@ -398,3 +409,125 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self._matrix_dialog.show()
         self._matrix_dialog.raise_()
         self._matrix_dialog.activateWindow()
+
+    def save_fusion_state(self):
+        import pydicom
+        from pydicom.dataset import Dataset, FileDataset
+        import datetime
+        import numpy as np
+        import os
+        
+        vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
+                                                                "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
+        if vtk_engine is None:
+            QMessageBox.warning(self, "Error", "No VTK engine found.")
+            return
+
+        # Gather the 4x4 transform matrix
+        matrix = None
+        if hasattr(vtk_engine, "transform"):
+            m = vtk_engine.transform.GetMatrix()
+            matrix = np.array([[m.GetElement(i, j) for j in range(4)] for i in range(4)], dtype=np.float32)
+        else:
+            QMessageBox.warning(self, "Error", "No transform matrix found.")
+            return
+
+        # Create a minimal DICOM dataset
+        file_meta = pydicom.Dataset()
+        file_meta.MediaStorageSOPClassUID = pydicom.uid.generate_uid()
+        file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
+        file_meta.ImplementationClassUID = pydicom.uid.generate_uid()
+
+        ds = FileDataset("transform.dcm", {}, file_meta=file_meta, preamble=b"\0" * 128)
+        ds.is_little_endian = True
+        ds.is_implicit_VR = True
+
+        # Set required DICOM fields
+        dt = datetime.datetime.now()
+        ds.PatientName = "FUSION"
+        ds.PatientID = "FUSION"
+        ds.StudyInstanceUID = pydicom.uid.generate_uid()
+        ds.SeriesInstanceUID = pydicom.uid.generate_uid()
+        ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
+        ds.SOPClassUID = file_meta.MediaStorageSOPClassUID
+        ds.Modality = "OT"
+        ds.StudyDate = dt.strftime('%Y%m%d')
+        ds.StudyTime = dt.strftime('%H%M%S')
+
+        # Store the matrix as a private tag (use (0x7777,0x0010) as example)
+        # Flatten the matrix to a string for storage
+        matrix_str = ",".join([f"{v:.8f}" for v in matrix.flatten()])
+        ds.add_new((0x7777, 0x0010), 'LT', matrix_str)
+        ds.add_new((0x7777, 0x0011), 'LO', "VTK Fusion Transform Matrix")
+
+        # Save to transform.dcm in the current working directory
+        filename, _ = QFileDialog.getSaveFileName(self, "Save Transform Matrix", "transform.dcm", "DICOM Files (*.dcm)")
+        if filename:
+            ds.save_as(filename)
+            QMessageBox.information(self, "Saved", f"Transform matrix saved to {filename}")
+
+
+    def load_fusion_state(self):
+        import pydicom
+        import numpy as np
+
+        vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
+                                                                "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
+        if vtk_engine is None:
+            QMessageBox.warning(self, "Error", "No VTK engine found.")
+            return
+
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Fusion State", "", "DICOM Files (*.dcm)")
+
+        if filename:
+            try:
+                ds = pydicom.dcmread(filename)
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Could not read DICOM file:\n{e}")
+                return
+
+            if (0x7777, 0x0010) in ds:
+                self._extracted_from_load_fusion_state_15(ds, np, vtk_engine, filename)
+            else:
+                QMessageBox.warning(self, "Error",
+                                    "No transform matrix found in DICOM file.\nPlease select a transform.dcm file created by the Save Fusion State function.")
+
+    # TODO Rename this here and in `load_fusion_state`
+    def _extracted_from_load_fusion_state_15(self, ds, np, vtk_engine, filename):
+        import vtk
+        matrix_str = ds[(0x7777, 0x0010)].value
+        matrix_flat = [float(x) for x in matrix_str.split(",")]
+        matrix = np.array(matrix_flat, dtype=np.float32).reshape((4, 4))
+        m = vtk.vtkMatrix4x4()
+        for i, j in itertools.product(range(4), range(4)):
+            m.SetElement(i, j, matrix[i, j])
+        if hasattr(vtk_engine, "transform"):
+            vtk_engine.transform.SetMatrix(m)
+            vtk_engine.reslice3d.SetResliceAxes(m)
+            vtk_engine.reslice3d.Modified()
+
+        translation = [m.GetElement(0, 3), m.GetElement(1, 3), m.GetElement(2, 3)]
+        rotation = [0, 0, 0]
+
+        self.set_offsets(translation)
+        for i in range(3):
+            self.rotate_sliders[i].blockSignals(True)
+            self.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
+            self.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
+            self.rotate_sliders[i].blockSignals(False)
+        if self.offset_changed_callback:
+            self.offset_changed_callback(translation)
+        if self.rotation_changed_callback:
+            self.rotation_changed_callback(tuple(rotation))
+
+        # Optionally, force a refresh of all fusion views
+        from src.View.mainpage.MainPage import UIMainWindow
+        mw = None
+        for widget in QtWidgets.QApplication.topLevelWidgets():
+            if isinstance(widget, UIMainWindow):
+                mw = widget
+                break
+        if mw is not None:
+            mw.update_views()
+
+        QMessageBox.information(self, "Loaded", f"Transform matrix loaded from {filename}")
