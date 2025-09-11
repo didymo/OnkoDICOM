@@ -1,24 +1,23 @@
-from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QSpinBox, QPushButton
+from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QSpinBox, QPushButton
 from PySide6.QtCore import Signal
 
 
-class CopyROI(QWidget):
+class CopyROI(QDialog):
     copy_number_high = Signal(int)
     copy_number_low = Signal(int)
     """This class contains the allows the user to copy there roi to another slice"""
-    def __init__(self, num_of_slices:int, current_slice:int):
-        super().__init__()
+    def __init__(self, num_of_slices = None, current_slice = None):
+        QDialog.__init__(self)
         self.setWindowTitle("Copy ROI")
         self.resize(300,300)
         slice_num = num_of_slices
         self.cs = current_slice
         layout = QGridLayout()
-
+        self.current_slice_label = QLabel(f"Current Slice : {self.cs}")
         self.upper_bounds_label = QLabel("upeper Bounds : ")
         self.upper_bounds = QSpinBox()
         self.upper_bounds.setRange(1,slice_num)
         self.upper_bounds.setValue(self.cs)
-        
         self.lower_bounds_label = QLabel("Lower Bounds : ")
         self.lower_bounds = QSpinBox()
         self.lower_bounds.setRange(1,slice_num)
