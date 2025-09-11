@@ -520,6 +520,9 @@ class UIMainWindow:
         self.last_fusion_slice_orientation = "axial"
         self.last_fusion_slice_idx = 0
 
+        #callback to save button
+        self.fusion_options_tab.set_get_vtk_engine_callback(lambda: vtk_engine)
+
         def on_slider_changed(orientation, value):
             self.last_fusion_slice_orientation = orientation
             self.last_fusion_slice_idx = value
