@@ -42,7 +42,7 @@ class RoiInitialiser():
         """Closes the window"""
         print("trying to close")
         self.close_window_signal.emit()
-        self.close()
+        self.close() 
 
     def update_draw_roi_pixmaps(self):
         self.display_pixmaps.clear()
@@ -133,6 +133,7 @@ class RoiInitialiser():
         self.addToolBar(self._toolbar)
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.m_window.connect(self.window_pop_up)
+        self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
 
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
@@ -172,9 +173,12 @@ class RoiInitialiser():
                     "Please ensure you have selected your ROI instance before saving.")
         
     @Slot(pydicom.Dataset,str)
-    def saved_roi_drawing(self,v):
+    def saved_roi_drawing(self,v,name):
         "Emits the saved roi drawing"
-        self.signal_roi_drawn.emit(v,{"draw": "apple_pie"})
+        print(name)
+        print(type(v), "value aka dataset")
+        print("after v")
+        self.signal_roi_drawn.emit((v,{"draw": name}))
         
 
         

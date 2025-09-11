@@ -27,12 +27,13 @@ class Tool(Enum):
     TRANSECT = auto()
 class Emitter(QObject):
     m_window = Signal()
+    rtss_for_saving = Signal(pydicom.Dataset,str)
 
 
 class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
     """Class for the drawing funnction, creates an invisable layer projected over a dicom image"""
 
-    def __init__(self, pen: QPen, slider, rstt, signal_roi_drawn):
+    def __init__(self, pen: QPen, slider, rtss, signal_roi_drawn):
         super().__init__()
         self.pen = pen #the pen object that is used to draw on the canvas, can be changed in other classes
         self.last_point = None #becomes a x,y point
@@ -100,7 +101,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.max_range = 6000
 
         self.has_been_draw_on = [] #Used to track the slices that have been draw on 
-        self.rstt = rstt
+        self.rtss = rtss
         self.signal_roi_drawn = signal_roi_drawn
         self.roi_name = None
         self.emitter = Emitter()
@@ -490,7 +491,13 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             print("error?????")
             self.emitter.m_window.emit()
         else:
-            SaveROI(self.dicom_data, self.canvas, self.rstt, self.has_been_draw_on,self.roi_name)
+            s = SaveROI(self.dicom_data, self.canvas, self.rtss, self.has_been_draw_on,self.roi_name)
+            results = s.save_roi()
+            print(type(results))
+            self.emitter.rtss_for_saving.emit(results,self.roi_name)
+            
+
+            
             #self.signal_roi_drawn.emit((new_rtss, {"draw": "new-data-set"}))
 
 #This section contain all of the slots and connections that communicate with methods in other files

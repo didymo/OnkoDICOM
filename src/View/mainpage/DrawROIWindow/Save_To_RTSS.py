@@ -20,7 +20,6 @@ class SaveROI(QtCore.QObject):
         self.roi_name = roi_name
         self.rtss = rtss
         self.threadpool = QtCore.QThreadPool()
-        self.save_roi()
 
     def save_roi(self):
         """Saves the roi to the thing"""
@@ -30,9 +29,7 @@ class SaveROI(QtCore.QObject):
             slice_roi_list = converter.start(include_holes=True, simplify_tol_px=1.0)
             pending_roi_list.extend(slice_roi_list)
 
-        worker = Worker(ROI.create_roi, self.rtss, self.roi_name, pending_roi_list)
-        worker.signals.result.connect(self.roi_saved)
-        self.threadpool.start(worker)
+        new_rtss = ROI.create_roi(self.rtss, self.roi_name, pending_roi_list)
+        return new_rtss
 
-    def roi_saved(self, result):
-        self.signal_roi_saved.emit(result,self.roi_name)
+        
