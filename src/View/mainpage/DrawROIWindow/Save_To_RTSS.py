@@ -2,9 +2,6 @@ from PySide6 import QtCore
 from src.View.mainpage.DrawROIWindow.ConvertToDicom import ConvertPixmapToDicom
 from src.Model import ROI
 import pydicom
-import time
-from src.View.util.ProgressWindowHelper import connectSaveROIProgress
-from src.Model.Worker import Worker
 
 class SaveROI(QtCore.QObject):
     """Save the roi drawing into the rtss file

@@ -16,7 +16,6 @@ class LeftPannel(QtWidgets.QWidget):
 
     def set_layout(self):
         """Fucntion to set the buttons layout"""
-
         #Initalises the buttons
         self.button_group = QButtonGroup()
         self.button_group.setExclusive(True)
@@ -119,7 +118,7 @@ class LeftPannel(QtWidgets.QWidget):
 
     def copy_button(self):
         """This fucntion changes the draw tool to a smooth tool"""
-        self.canvas_label.copy_roi()
+        self.parent.copy_roi()
 
     def save_button(self):
         """This fucntion saves the ROI drawing"""

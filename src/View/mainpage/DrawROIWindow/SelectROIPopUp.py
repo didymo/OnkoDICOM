@@ -1,6 +1,5 @@
 import csv
 import platform
-
 from PySide6 import QtCore, QtGui
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, \
     QWidget, QPushButton, QHBoxLayout, QListWidget, QVBoxLayout
@@ -10,7 +9,6 @@ from src.Controller.PathHandler import data_path, resource_path
 """
 This Class handles the ROI Pop Up functionalities       
 """
-
 
 class SelectROIPopUp(QDialog):
     signal_roi_name = QtCore.Signal(str)

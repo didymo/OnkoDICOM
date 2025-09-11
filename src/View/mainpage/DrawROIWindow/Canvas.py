@@ -16,7 +16,6 @@ from PySide6.QtCore import Qt, Slot, Signal, QObject
 import numpy as np
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.Transect_Window import TransectWindow
-from src.View.mainpage.DrawROIWindow.Copy_Roi import CopyROI
 from src.View.mainpage.DrawROIWindow.Save_To_RTSS import SaveROI
 
 class Tool(Enum):
@@ -39,7 +38,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.last_point = None #becomes a x,y point
         self.first_point = None #becomes a x,y point
         self.t_window = None #becomes new window to show to transection window
-        self.copy_roi_window = None # becomes the new window for copy roit
         self.current_tool = Tool.DRAW
         self.ds_is_active = False  #used to tell if undelying dicom file matches the above layer, this variable lets the pixel lock know if it needs to run
          #this variable represents the current viewable slice
@@ -156,6 +154,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
             self.setPixmap(pm)  # refresh item
             self.last_point = current_point
+            self.mid_point.append(event.pos())
             self.did_draw = True
             event.accept()
             return
@@ -205,7 +204,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.transect_pixmap_copy = None
 
         self.last_point = None
-        print(self.has_been_draw_on)
         event.accept()
 
     def check_if_drawn(self, current_slice):
@@ -263,13 +261,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.canvas[self.slice_num] = self.transect_pixmap_copy
         self.setPixmap(self.canvas[self.slice_num])
 
-    def copy_roi(self):
-        """Allows the ablity to copy ROIs onto different areas"""
-        self.copy_roi_window = CopyROI(self.number_of_slices, self.slice_num)
-        self.copy_roi_window.copy_number_high.connect(self.copy_rois_up)
-        self.copy_roi_window.copy_number_low.connect(self.copy_rois_down)
-        self.copy_roi_window.show()
-
     def quick_copy(self, up_or_down:bool):
         """Changes the slide 1 up or 1 down and copies the slide"""
         if up_or_down:
@@ -288,7 +279,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
     def pen_fill_tool(self, event):
         """connects the last two points and fills the insides"""
-        current_point = event.position().toPoint()
+        current_point = event.pos()
         painter = QPainter(self.canvas[self.slice_num])
         painter.setCompositionMode(QPainter.CompositionMode_Source)
         painter.setPen(self.pen)
@@ -488,12 +479,10 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             Function to call save ROI and display progress
         """
         if self.roi_name is None:
-            print("error?????")
             self.emitter.m_window.emit()
         else:
             s = SaveROI(self.dicom_data, self.canvas, self.rtss, self.has_been_draw_on,self.roi_name)
             results = s.save_roi()
-            print(type(results))
             self.emitter.rtss_for_saving.emit(results,self.roi_name)
             
 

@@ -9,6 +9,7 @@ from src.View.mainpage.DrawROIWindow.Units_Box import UnitsBox
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.scroll_loader_4_dicom_image import Scroll_Wheel
 from src.View.mainpage.DrawROIWindow.ROI_Name_Button import ROIName
+from src.View.mainpage.DrawROIWindow.Copy_Roi import CopyROI
 
 #Sourcery.ai Is this true
 class RoiInitialiser():
@@ -42,7 +43,7 @@ class RoiInitialiser():
         """Closes the window"""
         print("trying to close")
         self.close_window_signal.emit()
-        self.close() 
+        self.close()
 
     def update_draw_roi_pixmaps(self):
         self.display_pixmaps.clear()
@@ -135,6 +136,7 @@ class RoiInitialiser():
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.m_window.connect(self.window_pop_up)
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
+        self.units_box.opasity_value.connect(self.left_label.update_opasity)
 
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
@@ -166,6 +168,16 @@ class RoiInitialiser():
     def close_roi_window(self):
         """Closes the roi window"""
         self._toolbar.close()
+
+    def copy_roi(self):
+        """Allows the ablity to copy ROIs onto different areas"""
+        print("before pymedphi is a bitch")
+        self.copy_roi_window = CopyROI(self.scroller.maximum(), self.scroller.value())
+        print("whyyyyyy pymed phys")
+        self.copy_roi_window.copy_number_high.connect(self.canvas_labal.copy_rois_up)
+        self.copy_roi_window.copy_number_low.connect(self.canvas_labal.copy_rois_down)
+        print("probably this")
+        self.copy_roi_window.show()
     
     @Slot()
     def window_pop_up(self):
@@ -176,9 +188,6 @@ class RoiInitialiser():
     @Slot(pydicom.Dataset,str)
     def saved_roi_drawing(self,v,name):
         "Emits the saved roi drawing"
-        print(name)
-        print(type(v), "value aka dataset")
-        print("after v")
         self.signal_roi_drawn.emit((v,{"draw": name}))
         
 

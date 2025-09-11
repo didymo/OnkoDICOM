@@ -1,10 +1,7 @@
 import pydicom
-from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import Qt, QSize, QRegularExpression, Slot, Signal, QThread
-from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
-from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, \
-    QSizePolicy, QHBoxLayout, QPushButton, QWidget, \
-    QMessageBox, QSlider
+from PySide6 import QtWidgets
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import  QLabel, QPushButton, QWidget, QMessageBox
 from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
 from src.Model.PatientDictContainer import PatientDictContainer
 
