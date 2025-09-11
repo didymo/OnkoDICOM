@@ -89,7 +89,8 @@ class RoiInitialiser():
         self.canvas_labal.setZValue(10)
         self.canvas_labal.setAcceptedMouseButtons(Qt.LeftButton)
         self.canvas_labal.setShapeMode(QtWidgets.QGraphicsPixmapItem.BoundingRectShape)
-        self.canvas_labal.setAcceptedMouseButtons(Qt.LeftButton)        
+        self.canvas_labal.setAcceptedMouseButtons(Qt.LeftButton)
+        self.canvas_labal.setTransform(QtGui.QTransform())
 
         self.view = QtWidgets.QGraphicsView(self.scene)
         self.view.setDragMode(QtWidgets.QGraphicsView.NoDrag)

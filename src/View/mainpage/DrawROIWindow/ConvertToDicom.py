@@ -86,7 +86,7 @@ class ConvertPixmapToDicom(QtWidgets.QGraphicsPixmapItem):
         def unpad_to_rc(cnt):
             xy = cnt[:, 0, :].astype(np.float32) - 1.0  # remove 1px pad
             # xy is (x=col, y=row) -> return (row, col)
-            return np.stack([xy[:, 1], xy[:, 0]], axis=1)
+            return np.stack([xy[:, 0], xy[:, 1]], axis=1)
 
         for i, cnt in enumerate(contours):
             if cv2.contourArea(cnt) < min_area_px:
