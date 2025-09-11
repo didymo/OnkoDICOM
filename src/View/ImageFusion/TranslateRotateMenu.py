@@ -444,10 +444,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         # Print translation and rotation being saved
         translation = [vtk_engine._tx, vtk_engine._ty, vtk_engine._tz]
         rotation = [vtk_engine._rx, vtk_engine._ry, vtk_engine._rz]
-        print("[Fusion Save] Saving transform matrix:")
-        print(matrix)
-        print(f"[Fusion Save] Translation: {translation}")
-        print(f"[Fusion Save] Rotation: {rotation}")
 
         ds = self._create_spatial_registration_dicom(matrix, translation, rotation, vtk_engine)
 
@@ -573,12 +569,14 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 return
 
             # Check for Spatial Registration Object
-            if hasattr(ds, "RegistrationSequence"):
+            if hasattr(ds, "RegistrationSequence" ):
+                self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
+            elif (0x7777, 0x0010) in ds:
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             else:
                 QMessageBox.warning(self, "Error",
-                                    "No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
-                                    "created by the Save Fusion State function.")
+                                    "No spatial registration or transform found in DICOM file.\n"
+                                    "Please select a transform.dcm file created by the Save Fusion State function.")
                 logging.error("No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
                               "created by the Save Fusion State function.")
 
@@ -617,11 +615,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             rotation = [float(x) for x in ds[(0x7777, 0x0021)].value.split(",")]
         else:
             rotation = [0, 0, 0]
-
-        print("[Fusion Load] Loaded transform matrix:")
-        print(matrix)
-        print(f"[Fusion Load] Translation: {translation}")
-        print(f"[Fusion Load] Rotation: {rotation}")
 
         m = vtk.vtkMatrix4x4()
         for i, j in itertools.product(range(4), range(4)):
