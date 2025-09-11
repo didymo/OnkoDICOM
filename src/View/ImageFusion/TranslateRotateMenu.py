@@ -413,18 +413,15 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def save_fusion_state(self):
         """
-               Save the current fusion transform state to a DICOM file.
+        Save the current fusion transform as a DICOM Spatial Registration Object (SRO).
 
-               This function saves the current 4x4 transformation matrix, translation, and rotation
-               values of the moving image overlay to a DICOM file using private tags. The user is prompted
-               to select the save location and filename for the DICOM file.
+        This function creates a standards-compliant DICOM SRO containing the 4x4 transformation matrix
+        for the moving image overlay, referencing the fixed and moving images. The user is prompted
+        to select the save location and filename for the DICOM file.
 
-               Returns:
-                   None
-               """
-        import pydicom
-        from pydicom.dataset import FileDataset
-        import datetime
+        Returns:
+            None
+        """
         import numpy as np
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
@@ -444,14 +441,52 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             logging.error("No transform matrix found")
             return
 
+        # Print translation and rotation being saved
         translation = [vtk_engine._tx, vtk_engine._ty, vtk_engine._tz]
         rotation = [vtk_engine._rx, vtk_engine._ry, vtk_engine._rz]
+        print("[Fusion Save] Saving transform matrix:")
+        print(matrix)
+        print(f"[Fusion Save] Translation: {translation}")
+        print(f"[Fusion Save] Rotation: {rotation}")
 
-        # Create a minimal DICOM dataset
+        ds = self._create_spatial_registration_dicom(matrix, translation, rotation, vtk_engine)
+
+        # Save as DICOM SRO
+        filename, _ = QFileDialog.getSaveFileName(self, "Save Spatial Registration (SRO)", "transform.dcm",
+                                                  "DICOM Files (*.dcm)")
+        if filename:
+            ds.save_as(filename)
+            QMessageBox.information(self, "Saved", f"Spatial Registration (SRO) saved to {filename}")
+
+    def _create_spatial_registration_dicom(self, matrix, translation, rotation, vtk_engine):
+        """
+        Create a DICOM Spatial Registration Object (SRO) dataset with the given transform.
+
+        Args:
+            matrix: 4x4 numpy array representing the transformation matrix.
+            translation: List of translation values [tx, ty, tz].
+            rotation: List of rotation values [rx, ry, rz].
+            vtk_engine: The VTKEngine instance (for UIDs).
+
+        Returns:
+            pydicom FileDataset representing the SRO.
+        """
+        import pydicom
+        from pydicom.dataset import FileDataset, Dataset
+        from pydicom.uid import generate_uid
+        import datetime
+
+        # Get UIDs for fixed and moving images from VTKEngine if available
+        fixed_series_uid = getattr(vtk_engine, "fixed_series_uid", "1.2.3.4.5.6.7.8.1")
+        fixed_image_uid = getattr(vtk_engine, "fixed_image_uid", "1.2.3.4.5.6.7.8.1.1")
+        moving_series_uid = getattr(vtk_engine, "moving_series_uid", "1.2.3.4.5.6.7.8.2")
+        moving_image_uid = getattr(vtk_engine, "moving_image_uid", "1.2.3.4.5.6.7.8.2.1")
+
+        # Create a minimal DICOM SRO dataset
         file_meta = pydicom.Dataset()
-        file_meta.MediaStorageSOPClassUID = pydicom.uid.generate_uid()
-        file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid()
-        file_meta.ImplementationClassUID = pydicom.uid.generate_uid()
+        file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.66.1"  # Spatial Registration Storage
+        file_meta.MediaStorageSOPInstanceUID = generate_uid()
+        file_meta.ImplementationClassUID = generate_uid()
 
         ds = FileDataset("transform.dcm", {}, file_meta=file_meta, preamble=b"\0" * 128)
         ds.is_little_endian = True
@@ -461,46 +496,65 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         dt = datetime.datetime.now()
         ds.PatientName = "FUSION"
         ds.PatientID = "FUSION"
-        ds.StudyInstanceUID = pydicom.uid.generate_uid()
-        ds.SeriesInstanceUID = pydicom.uid.generate_uid()
+        ds.StudyInstanceUID = generate_uid()
+        ds.SeriesInstanceUID = generate_uid()
         ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
         ds.SOPClassUID = file_meta.MediaStorageSOPClassUID
-        ds.Modality = "OT"
+        ds.Modality = "REG"
         ds.StudyDate = dt.strftime('%Y%m%d')
         ds.StudyTime = dt.strftime('%H%M%S')
+        ds.SeriesDescription = "Manual Fusion Spatial Registration"
+        ds.SeriesNumber = "1"
+        ds.InstanceNumber = "1"
 
-        # Store the matrix as a private tag (use (0x7777,0x0010) as example)
-        # Flatten the matrix to a string for storage
-        matrix_str = ",".join([f"{v:.8f}" for v in matrix.flatten()])
-        ds.add_new((0x7777, 0x0010), 'LT', matrix_str)
-        ds.add_new((0x7777, 0x0011), 'LO', "VTK Fusion Transform Matrix")
+        # Referenced Series/Image Sequence for fixed image
+        ds.ReferencedSeriesSequence = [Dataset()]
+        ds.ReferencedSeriesSequence[0].SeriesInstanceUID = fixed_series_uid
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"  # CT Image Storage
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence[0].ReferencedSOPInstanceUID = fixed_image_uid
 
-        # Store translation and rotation as private tags
+        # Registration Sequence
+        reg = Dataset()
+        reg.MatrixRegistrationSequence = [Dataset()]
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrixType = "RIGID"
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrix = [float(v) for v in matrix.flatten()]
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationComment = "Manual fusion transform"
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceUID = generate_uid()
+        ds.RegistrationSequence = [reg]
+
+        # Referenced Series/Image Sequence for moving image
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence = [Dataset()]
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[
+            0].SeriesInstanceUID = moving_series_uid
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence = [
+            Dataset()]
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPInstanceUID = moving_image_uid
+
+        # Save user translation/rotation as private tags for round-trip
         ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
         ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
 
-        # Save to transform.dcm in the current working directory
-        filename, _ = QFileDialog.getSaveFileName(self, "Save Transform Matrix", "transform.dcm", "DICOM Files (*.dcm)")
-        if filename:
-            ds.save_as(filename)
-            QMessageBox.information(self, "Saved", f"Transform matrix saved to {filename}")
-
+        return ds
 
     def load_fusion_state(self):
         """
-                Load a fusion transform state from a DICOM file.
+        Load a fusion transform state from a DICOM Spatial Registration Object (SRO).
 
-                This function loads a previously saved 4x4 transformation matrix, translation, and rotation
-                values from a DICOM file (created by the Save Fusion State function) and applies them to the
-                current fusion session. The user is prompted to select the DICOM file to load.
+        This function loads a previously saved 4x4 transformation matrix from a DICOM SRO file
+        (created by the Save Fusion State function) and applies it to the current fusion session.
+        The user is prompted to select the DICOM file to load.
 
-                Returns:
-                    None
-                """
+        Returns:
+            None
+        """
         import pydicom
         import numpy as np
 
-        # Get a reference to the VTK engine from a callback stored in this class
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
         if vtk_engine is None:
@@ -508,7 +562,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             logging.error("No VTK engine found in load_fusion_state")
             return
 
-        # Prompt the user to pick a DICOM file containing the saved transform
         filename, _ = QFileDialog.getOpenFileName(self, "Load Fusion State", "", "DICOM Files (*.dcm)")
 
         if filename:
@@ -519,55 +572,57 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 logging.error(f"Could not read DICOM file:\n{e}")
                 return
 
-            # Check if our custom private tag (0x7777,0x0010) exists — holds the transform matrix
-            if (0x7777, 0x0010) in ds:
-                self._extracted_from_load_fusion_state_15(ds, np, vtk_engine, filename)
+            # Check for Spatial Registration Object
+            if hasattr(ds, "RegistrationSequence"):
+                self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             else:
                 QMessageBox.warning(self, "Error",
-                                    "No transform matrix found in DICOM file.\nPlease select a transform.dcm file "
+                                    "No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
                                     "created by the Save Fusion State function.")
-                logging.error("No transform matrix found in DICOM file.\nPlease select a transform.dcm file "
-                                    "created by the Save Fusion State function.")
+                logging.error("No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
+                              "created by the Save Fusion State function.")
 
-
-    # TODO Rename this here and in `load_fusion_state`
-    def _extracted_from_load_fusion_state_15(self, ds, np, vtk_engine, filename):
+    def _extracted_from_load_fusion_state_sro(self, ds, np, vtk_engine, filename):
         """
-               Apply a loaded fusion transform to the current session.
+        Apply a loaded fusion transform from a DICOM SRO to the current session.
 
-               Given a DICOM dataset containing a saved transform, this method extracts the
-               4x4 transformation matrix, translation, and rotation values, applies them to
-               the VTK engine, updates the GUI sliders, and refreshes the fusion views.
+        Given a DICOM dataset containing a spatial registration, this method extracts the
+        4x4 transformation matrix, applies it to the VTK engine, updates the GUI sliders,
+        and refreshes the fusion views.
 
-               Args:
-                   ds: The loaded pydicom Dataset containing the transform.
-                   np: The numpy module.
-                   vtk_engine: The VTKEngine instance to update.
-                   filename: The filename of the loaded DICOM file.
+        Args:
+            ds: The loaded pydicom Dataset containing the SRO.
+            np: The numpy module.
+            vtk_engine: The VTKEngine instance to update.
+            filename: The filename of the loaded DICOM file.
 
-               Returns:
-                   None
-               """
+        Returns:
+            None
+        """
         import vtk
 
-        # --- Extract 4x4 transform matrix ---
-        matrix_str = ds[(0x7777, 0x0010)].value
-        matrix_flat = [float(x) for x in matrix_str.split(",")]
+        # --- Extract 4x4 transform matrix from SRO ---
+        reg_seq = ds.RegistrationSequence[0]
+        mat_seq = reg_seq.MatrixRegistrationSequence[0]
+        matrix_flat = mat_seq.FrameOfReferenceTransformationMatrix
         matrix = np.array(matrix_flat, dtype=np.float32).reshape((4, 4))
 
-        # --- Extract translation vector ---
+        # For SRO, translation/rotation are not stored separately, so extract from matrix
+        # Try to load user translation/rotation if present
         if (0x7777, 0x0020) in ds:
             translation = [float(x) for x in ds[(0x7777, 0x0020)].value.split(",")]
         else:
             translation = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
-
-        # --- Extract rotation (if saved) ---
         if (0x7777, 0x0021) in ds:
             rotation = [float(x) for x in ds[(0x7777, 0x0021)].value.split(",")]
         else:
             rotation = [0, 0, 0]
 
-        # --- Apply transform matrix to VTK engine ---
+        print("[Fusion Load] Loaded transform matrix:")
+        print(matrix)
+        print(f"[Fusion Load] Translation: {translation}")
+        print(f"[Fusion Load] Rotation: {rotation}")
+
         m = vtk.vtkMatrix4x4()
         for i, j in itertools.product(range(4), range(4)):
             m.SetElement(i, j, matrix[i, j])
@@ -577,13 +632,11 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             vtk_engine.reslice3d.SetResliceAxes(m)
             vtk_engine.reslice3d.Modified()
 
-        # --- Set VTK engine translation and rotation to match loaded values ---
         if hasattr(vtk_engine, "set_translation"):
             vtk_engine.set_translation(*translation)
         if hasattr(vtk_engine, "set_rotation_deg"):
             vtk_engine.set_rotation_deg(*rotation)
 
-        # --- Update GUI sliders & labels to match loaded transform ---
         self.set_offsets(translation)
         for i in range(3):
             self.rotate_sliders[i].blockSignals(True)
@@ -591,13 +644,11 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
             self.rotate_sliders[i].blockSignals(False)
 
-        # Notify other parts of the program if callbacks exist
         if self.offset_changed_callback:
             self.offset_changed_callback(translation)
         if self.rotation_changed_callback:
             self.rotation_changed_callback(tuple(rotation))
 
-        # --- Force refresh of all views if main window is found ---
         from src.View.mainpage.MainPage import UIMainWindow
         mw = next(
             (
@@ -610,4 +661,4 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if mw is not None:
             mw.update_views()
 
-        QMessageBox.information(self, "Loaded", f"Transform matrix loaded from {filename}")
+        QMessageBox.information(self, "Loaded", f"Spatial Registration loaded from {filename}")
