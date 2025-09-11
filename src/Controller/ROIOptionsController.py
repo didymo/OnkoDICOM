@@ -48,7 +48,7 @@ class ROIDelOption:
         self.options_window.show()
 
 
-class RoiDrawOptions(QtWidgets.QMainWindow):
+class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
     """
     Create the ROI Draw Options class based on the UI from the file in
     View/ROI Draw Option
@@ -56,51 +56,21 @@ class RoiDrawOptions(QtWidgets.QMainWindow):
     signal_roi_drawn = QtCore.Signal(tuple)
     signal_draw_roi_closed = QtCore.Signal()
 
-    def __init__(self, rois, dataset_rtss, parent=None):
- 
-        super().__init__(parent)
-        self.ui = RoiInitialiser(self, rois,dataset_rtss,self.signal_roi_drawn,self.signal_draw_roi_closed,parent =self)
-        #Connecting slots & signals
-        self.ui._toolbar.colour.connect(self.ui.left_label.update_colour)
-        self.ui.ROI_button.roi_name_emit.connect(self.ui.canvas_labal.set_roi_name)
-        
-        self.setCentralWidget(self.ui)
-        self.addToolBar(self.ui.build_toolbar())
-        self.zoom_variable = 1.00
-        
+    def __init__(self, rois, dataset_rtss):
+        super(RoiDrawOptions, self).__init__()
+        self._central = QtWidgets.QWidget(self)
+        self.setCentralWidget(self._central)
+        self.set_up(rois,dataset_rtss,self.signal_roi_drawn,self.signal_draw_roi_closed)
+        self.ROI_button.roi_name_emit.connect(self.canvas_labal.set_roi_name)
 
-    #Code for dicom toolbar events
-    def onZoomInClicked(self):
-        """Handles the event of the zoom in button"""
-        self.zoom_variable *= 1.05
-        self.apply_zoom()
-    
-    def onZoomOutClicked(self):
-        """Handles the event of the zoom out button"""
-        self.zoom_variable /= 1.05
-        self.apply_zoom()
-    
-    def apply_zoom(self):
-        """Zooms the canvas in or out depending"""
-        self.ui.view.setTransform(QtGui.QTransform().scale(self.zoom_variable, self.zoom_variable))
-
-    def close_window(self):
-        """Closes the window"""
-        self.ui.close()
-        self.signal_draw_roi_closed.emit()
-
-    def update_draw_roi_pixmaps(self):
-        self.ui.display_pixmaps.clear()
-        self.ui.get_pixmaps()
-        self.ui.change_image(self.ui.scroller.value())
+    def update_ui(self,rois, dataset_rtss):
+        self.set_up(rois,dataset_rtss,self.signal_roi_drawn,self.signal_draw_roi_closed)
 
 class ROIDrawOption:
     """
     The class that will be called by the main page to access the ROI
     Options controller
     """
-    signal_roi_drawn = QtCore.Signal(tuple)
-    signal_draw_roi_closed = QtCore.Signal()
 
     def __init__(self, structure_modified_function, remove_draw_roi_instance):
         super(ROIDrawOption, self).__init__()
@@ -121,8 +91,11 @@ class ROIDrawOption:
             self.draw_window.signal_roi_drawn.connect(
                 self.structure_modified_function)
             self.draw_window.signal_draw_roi_closed.connect(self.remove_roi_draw_instance)
+        else:
+            self.draw_window.update_ui(rois, dataset_rtss)
 
         return self.draw_window
+
 
     def remove_roi_draw_window(self):
         if hasattr(self, "draw_window"):

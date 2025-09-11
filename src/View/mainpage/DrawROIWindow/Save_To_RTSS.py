@@ -29,11 +29,10 @@ class SaveROI(QtCore.QObject):
             converter = ConvertPixmapToDicom(self.dicom_data[i], self.canvas[i])
             slice_roi_list = converter.start(include_holes=True, simplify_tol_px=1.0)
             pending_roi_list.extend(slice_roi_list)
-        
+
         worker = Worker(ROI.create_roi, self.rtss, self.roi_name, pending_roi_list)
         worker.signals.result.connect(self.roi_saved)
         self.threadpool.start(worker)
 
     def roi_saved(self, result):
         self.signal_roi_saved.emit(result,self.roi_name)
-        

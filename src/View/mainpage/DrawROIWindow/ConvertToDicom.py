@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 import numpy as np
 import cv2
 
+#AI Generated class 
 class ConvertPixmapToDicom(QtWidgets.QGraphicsPixmapItem):
     """
     Takes a DICOM image dataset (self.ds) and a drawn QPixmap (self.p),

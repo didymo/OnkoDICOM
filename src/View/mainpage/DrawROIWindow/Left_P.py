@@ -124,7 +124,7 @@ class LeftPannel(QtWidgets.QWidget):
     def save_button(self):
         """This fucntion saves the ROI drawing"""
         self.canvas_label.save_roi()
-        #self.parent.close_roi_window()
+        self.parent.close_window()
 
     def fill_tool(self):
         """Fucntion for the fill tool"""

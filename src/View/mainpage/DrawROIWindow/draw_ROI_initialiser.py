@@ -11,22 +11,47 @@ from src.View.mainpage.DrawROIWindow.scroll_loader_4_dicom_image import Scroll_W
 from src.View.mainpage.DrawROIWindow.ROI_Name_Button import ROIName
 
 #Sourcery.ai Is this true
-class RoiInitialiser(QtWidgets.QWidget):
+class RoiInitialiser():
     """Class to hold the draw ROI features"""
-    def __init__(self, host_main_window: QtWidgets.QMainWindow, rois, dataset_rtss,signal_roi_drawn,close_window_signal, parent=None):
-        super().__init__(parent)
-        self.host = host_main_window
+    def set_up(self, rois, dataset_rtss,signal_roi_drawn,close_window_signal):
         self.signal_roi_drawn = signal_roi_drawn
-        self.central = QtWidgets
+        self.close_window_signal = close_window_signal
+        self.dataset_rtss = dataset_rtss
         self.p = PatientDictContainer()
         self.display_pixmaps = []
         self.get_pixmaps()
-        
-        self.setWindowTitle("ROI Prototype")
-        self.close_window_signal = close_window_signal
+        self.setup_ui()
+        self.build_toolbar()
+        self.zoom_variable = 1.00
 
-        # Temporary hard coded directory path
-        self.last_point = None
+    def onZoomInClicked(self):
+        """Handles the event of the zoom in button"""
+        self.zoom_variable *= 1.05
+        self.apply_zoom()
+    
+    def onZoomOutClicked(self):
+        """Handles the event of the zoom out button"""
+        self.zoom_variable /= 1.05
+        self.apply_zoom()
+    
+    def apply_zoom(self):
+        """Zooms the canvas in or out depending"""
+        self.view.setTransform(QtGui.QTransform().scale(self.zoom_variable, self.zoom_variable))
+
+    def close_window(self):
+        """Closes the window"""
+        print("trying to close")
+        self.close_window_signal.emit()
+        self.close()
+
+    def update_draw_roi_pixmaps(self):
+        self.display_pixmaps.clear()
+        self.get_pixmaps()
+        self.change_image(self.scroller.value())
+
+
+
+    def setup_ui(self):
 
         # Initialize the pen
         self.pen = QPen()
@@ -50,7 +75,7 @@ class RoiInitialiser(QtWidgets.QWidget):
         self.scene.addItem(self.image_item)
         self.scene.setSceneRect(QtCore.QRectF(QtCore.QPointF(0,0), self.image.size()))
 
-        self.canvas_labal = CanvasLabel(self.pen,self.scroller,dataset_rtss, signal_roi_drawn)
+        self.canvas_labal = CanvasLabel(self.pen,self.scroller,self.dataset_rtss, self.signal_roi_drawn)
         self.scene.addItem(self.canvas_labal)
         self.scene.setSceneRect(self.image_item.boundingRect())
 
@@ -95,7 +120,8 @@ class RoiInitialiser(QtWidgets.QWidget):
         # Add the left panel to the layout
         # Add the canvas label to the layout
         # Set the central widget to be our layout container
-        main = QtWidgets.QHBoxLayout(self)
+        central = self.centralWidget() if isinstance(self, QtWidgets.QMainWindow) else self
+        main = QtWidgets.QHBoxLayout(central)
         main.setContentsMargins(0, 0, 0, 0)
         main.setSpacing(8)
         main.addWidget(tools_container)
@@ -104,6 +130,7 @@ class RoiInitialiser(QtWidgets.QWidget):
 
         # keep a toolbar factory if you like (QMainWindow will add it)
         self._toolbar = CutsomToolbar(self, self.canvas_labal, self.left_label)
+        self.addToolBar(self._toolbar)
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.m_window.connect(self.window_pop_up)
 
@@ -137,7 +164,6 @@ class RoiInitialiser(QtWidgets.QWidget):
     def close_roi_window(self):
         """Closes the roi window"""
         self._toolbar.close()
-        self.host.close_window()
     
     @Slot()
     def window_pop_up(self):
@@ -148,7 +174,7 @@ class RoiInitialiser(QtWidgets.QWidget):
     @Slot(pydicom.Dataset,str)
     def saved_roi_drawing(self,v):
         "Emits the saved roi drawing"
-        self.signal_roi_drawn.emit(v,{"draw": self.roi_name})
+        self.signal_roi_drawn.emit(v,{"draw": "apple_pie"})
         
 
         
