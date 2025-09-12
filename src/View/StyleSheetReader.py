@@ -40,7 +40,7 @@ class StyleSheetReader:
         :rtype: None
         """
         logger.debug("Initialising the StyleSheetReader and getting the style sheet")
-        style_sheet = self._get_layout_data()
+        style_sheet: str = self._get_layout_data()
         if style_sheet is None:
             logger.debug("StyleSheetReader did Not Read file")
             raise ValueError("No StyleSheet")
