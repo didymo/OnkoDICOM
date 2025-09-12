@@ -7,6 +7,10 @@ from src.Controller.PathHandler import resource_path
 
 logger = logging.getLogger(__name__)
 
+@functools.lru_cache(maxsize=128, typed=False)
+def get_stylesheet() -> str:
+    return StyleSheetReader().get_stylesheet()
+
 class StyleSheetReader:
     """
     A class to hold the style sheet data to be used in the User Interface classes.
