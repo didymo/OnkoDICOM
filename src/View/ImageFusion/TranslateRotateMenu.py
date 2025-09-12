@@ -170,7 +170,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             if self.mouse_mode_changed_callback:
                 self.mouse_mode_changed_callback(self.mouse_mode)
 
-
         self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
         self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
         self.mouse_interrogation_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_interrogation_btn))
