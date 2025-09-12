@@ -32,6 +32,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
     def __init__(self, _back_callback=None):
         super().__init__()
         self.offset_changed_callback = None
+        self.mouse_mode = None
 
         layout = QtWidgets.QVBoxLayout()
 
@@ -84,30 +85,45 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_sliders.append(slider)
             self.translate_labels.append(value_label)
 
-        # Mouse Mode Toolbar (Translate/Rotate)
+            # Mouse Mode Toolbar (Translate/Rotate/Interrogation)
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
         mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
 
         self.mouse_translate_btn = QtWidgets.QPushButton()
         self.mouse_rotate_btn = QtWidgets.QPushButton()
+        self.mouse_interrogation_btn = QtWidgets.QPushButton()
+        self.mouse_none_btn = QtWidgets.QPushButton()
         self.mouse_translate_btn.setCheckable(True)
         self.mouse_rotate_btn.setCheckable(True)
+        self.mouse_interrogation_btn.setCheckable(True)
+        self.mouse_none_btn.setCheckable(True)
         self.mouse_translate_btn.setToolTip("Enable mouse translation mode")
         self.mouse_rotate_btn.setToolTip("Enable mouse rotation mode")
+        self.mouse_interrogation_btn.setToolTip(
+            "Enable interrogation window mode (focus overlay in a square around mouse)")
+        self.mouse_none_btn.setToolTip("Disable mouse mode (X)")
 
         # Set icons for buttons
         translate_icon = QIcon(resource_path("res/images/btn-icons/translate_arrow_icon.png"))
         rotate_icon = QIcon(resource_path("res/images/btn-icons/rotate_arrow_icon.png"))
+        interrogation_icon = QIcon(resource_path("res/images/btn-icons/interrogation_window_icon.png"))
+        none_icon = QIcon(resource_path("res/images/btn-icons/no_movement_or_window.png"))
         self.mouse_translate_btn.setIcon(translate_icon)
         self.mouse_rotate_btn.setIcon(rotate_icon)
+        self.mouse_interrogation_btn.setIcon(interrogation_icon)
+        self.mouse_none_btn.setIcon(none_icon)
         self.mouse_translate_btn.setIconSize(QtCore.QSize(24, 24))
         self.mouse_rotate_btn.setIconSize(QtCore.QSize(24, 24))
+        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(24, 24))
+        self.mouse_none_btn.setIconSize(QtCore.QSize(24, 24))
 
         # Add stretch, buttons, stretch
         mouse_mode_hbox.addStretch(1)
         mouse_mode_hbox.addWidget(self.mouse_translate_btn)
         mouse_mode_hbox.addWidget(self.mouse_rotate_btn)
+        mouse_mode_hbox.addWidget(self.mouse_interrogation_btn)
+        mouse_mode_hbox.addWidget(self.mouse_none_btn)
         mouse_mode_hbox.addStretch(1)
 
         # Insert the button row
@@ -118,8 +134,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode_group.setExclusive(True)
         self.mouse_mode_group.addButton(self.mouse_translate_btn)
         self.mouse_mode_group.addButton(self.mouse_rotate_btn)
+        self.mouse_mode_group.addButton(self.mouse_interrogation_btn)
+        self.mouse_mode_group.addButton(self.mouse_none_btn)
 
-        # Track last clicked button for "toggle off" 
+        # Track last clicked button for "toggle off"
         self._last_checked_button = None
 
         def on_mouse_mode_btn_clicked(btn):
@@ -137,14 +155,19 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     self.mouse_mode = "translate"
                 elif btn == self.mouse_rotate_btn:
                     self.mouse_mode = "rotate"
+                elif btn == self.mouse_interrogation_btn:
+                    self.mouse_mode = "interrogation"
+                elif btn == self.mouse_none_btn:
+                    self.mouse_mode = None
 
             # Call callback if set
             if self.mouse_mode_changed_callback:
                 self.mouse_mode_changed_callback(self.mouse_mode)
 
-
         self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
         self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
+        self.mouse_interrogation_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_interrogation_btn))
+        self.mouse_none_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_none_btn))
 
         # Rotate section
         layout.addSpacing(8)
@@ -228,9 +251,15 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if mode == "translate":
             self.mouse_translate_btn.setChecked(True)
             self.mouse_rotate_btn.setChecked(False)
+            self.mouse_interrogation_btn.setChecked(False)
         elif mode == "rotate":
             self.mouse_translate_btn.setChecked(False)
+            self.mouse_interrogation_btn.setChecked(False)
             self.mouse_rotate_btn.setChecked(True)
+        elif mode == "interrogation":
+            self.mouse_translate_btn.setChecked(False)
+            self.mouse_interrogation_btn.setChecked(True)
+            self.mouse_rotate_btn.setChecked(False)
         else:
             self.mouse_translate_btn.setChecked(False)
             self.mouse_rotate_btn.setChecked(False)

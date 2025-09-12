@@ -374,13 +374,30 @@ class VTKEngine:
         moving_slice = vtk_to_np_slice(moving_img, orientation, slice_idx) if moving_img else None
         return fixed_slice, moving_slice
 
-    def get_slice_qimage(self, orientation: str, slice_idx: int, fixed_color="Purple", moving_color="Green", coloring_enabled=True) -> QtGui.QImage:
+    def get_slice_qimage(self, orientation: str, slice_idx: int, fixed_color="Purple", moving_color="Green",
+                             coloring_enabled=True, mask_rect=None) -> QtGui.QImage:
+        """
+               mask_rect: (x, y, size) or None. If set, only show overlay in a square of given size centered at (x, y).
+               """
         fixed_slice, moving_slice = self.get_slice_numpy(orientation, slice_idx)
         if fixed_slice is None:
             return QtGui.QImage()
         h, w = fixed_slice.shape
 
+        # If masking is requested, mask the moving_slice
+        if moving_slice is not None and mask_rect is not None:
+            mx, my, msize = mask_rect
+            mask = np.zeros_like(moving_slice, dtype=bool)
+            half = msize // 2
+            x0 = max(0, int(mx - half))
+            x1 = min(w, int(mx + half))
+            y0 = max(0, int(my - half))
+            y1 = min(h, int(my + half))
+            mask[y0:y1, x0:x1] = True
+            moving_slice = np.where(mask, moving_slice, 0)
+
         blend = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.0
+
         color_map = {
             "Grayscale":   lambda arr: arr,
             "Green":       lambda arr: np.stack([np.zeros_like(arr), arr, np.zeros_like(arr)], axis=-1),

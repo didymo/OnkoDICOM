@@ -48,7 +48,6 @@ class BaseFusionView(DicomView):
 
         # Mouse mode state
         self.mouse_mode = None
-        self.translation_menu.set_mouse_mode_changed_callback(self._on_mouse_mode_changed)
 
         self._refresh_timer = QtCore.QTimer(self)
         self._refresh_timer.setSingleShot(True)
@@ -81,17 +80,17 @@ class BaseFusionView(DicomView):
             set_slider(extent[0], extent[1])
             return
 
-    def image_display(self, overlay_image=None):
+    def image_display(self, overlay_image=None, mask_rect=None):
         """
-        Update the image to be displayed on the DICOM View.
-        If overlay_image is provided, use it as the overlay for this view.
-        If self.vtk_engine is set, use it to get both the base and overlay images for manual fusion.
-        """
+                Update the image to be displayed on the DICOM View.
+                If overlay_image is provided, use it as the overlay for this view.
+                If self.vtk_engine is set, use it to get both the base and overlay images for manual fusion.
+                """
         slider_id = self.slider.value()
 
         # If using VTKEngine (Manual Fusion), get both base and overlay from VTK
         if self.vtk_engine is not None:
-            self._display_vtk_image(slider_id)
+            self._display_vtk_image(slider_id, mask_rect=mask_rect)
             return
 
         # Legacy (non-vtk) logic below
@@ -130,16 +129,17 @@ class BaseFusionView(DicomView):
 
         # --- Mouse mode: connect scene mouse events ---
         if hasattr(self.scene, "set_mouse_mode_handler"):
-            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_click)
+            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_event)
         
-    def _display_vtk_image(self, slider_id):
+    def _display_vtk_image(self, slider_id, mask_rect = None):
         orientation = self.slice_view
         # Use selected color and coloring state
         qimg = self.vtk_engine.get_slice_qimage(
             orientation, slider_id,
             fixed_color=self.fixed_color,
             moving_color=self.moving_color,
-            coloring_enabled=self.coloring_enabled
+            coloring_enabled=self.coloring_enabled,
+            mask_rect=mask_rect
         )
         if qimg.isNull():
             logging.error(f"Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
@@ -169,7 +169,7 @@ class BaseFusionView(DicomView):
 
         # --- Mouse mode: connect scene mouse events ---
         if hasattr(self.scene, "set_mouse_mode_handler"):
-            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_click)
+            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_event)
 
     def roi_display(self):
         """
@@ -207,14 +207,25 @@ class BaseFusionView(DicomView):
 
     def refresh_overlay_now(self):
         """
-        Actually repaint the overlay image (called by debounce timer).
-        Uses the current interpolation mode.
-        """
-        if self.vtk_engine is not None:
-            self.vtk_engine.set_interpolation_linear(
-                self.overlay_interpolation_mode == "linear"
-            )
-        self.image_display()
+                Actually repaint the overlay image (called by debounce timer).
+                Uses the current interpolation mode.
+                """
+        if self.vtk_engine is None:
+            return
+        self.vtk_engine.set_interpolation_linear(
+            self.overlay_interpolation_mode == "linear"
+        )
+        # Always apply interrogation mask if in interrogation mode
+        if self.get_mouse_mode() == "interrogation":
+            mask_rect = None
+            if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
+                mask_rect = (*self._interrogation_mouse_pos, 80)  # 80px square
+            else:
+                # Hide overlay everywhere if no mouse pos
+                mask_rect = (-1000, -1000, 1)
+            self.image_display(mask_rect=mask_rect)
+        else:
+            self.image_display()
         self.scene.update()
         if hasattr(self, "viewport"):
             self.viewport().update()
@@ -287,6 +298,32 @@ class BaseFusionView(DicomView):
 
     def _on_mouse_mode_changed(self, mode):
         self.mouse_mode = mode
+        if mode == "interrogation":
+            # Set interrogation window to center of the image in image pixel coordinates
+            center_x = center_y = None
+            if self.vtk_engine is not None:
+                slider_id = self.slider.value()
+                qimg = self.vtk_engine.get_slice_qimage(
+                    self.slice_view, slider_id,
+                    fixed_color=self.fixed_color,
+                    moving_color=self.moving_color,
+                    coloring_enabled=self.coloring_enabled
+                )
+                center_x = int(qimg.width() / 2)
+                center_y = int(qimg.height() / 2)
+            elif self.base_item is not None:
+                pixmap = self.base_item.pixmap()
+                center_x = int(pixmap.width() / 2)
+                center_y = int(pixmap.height() / 2)
+            elif hasattr(self, "scene") and self.scene is not None:
+                rect = self.scene.sceneRect()
+                center_x = int(rect.width() / 2)
+                center_y = int(rect.height() / 2)
+            if center_x is not None and center_y is not None:
+                self._interrogation_mouse_pos = (center_x, center_y)
+            else:
+                self._interrogation_mouse_pos = None
+            self.refresh_overlay()
 
     def get_mouse_mode(self):
         """
@@ -296,24 +333,34 @@ class BaseFusionView(DicomView):
             return self.translation_menu.get_mouse_mode()
         return getattr(self, "mouse_mode", None)
 
-    def _handle_mouse_mode_click(self, scene_pos, scene_size):
+    def _handle_mouse_mode_event(self, scene_pos, scene_size, event_type="move"):
         """
-        Called by GraphicsScene when a mouse click occurs and mouse mode is active.
-        scene_pos: QPointF of click
-        scene_size: QSizeF of scene
-        """
+               Called by GraphicsScene when a mouse event occurs and mouse mode is active.
+               scene_pos: QPointF of event
+               scene_size: QSizeF of scene
+               """
         mode = self.get_mouse_mode()
-        if mode not in ("translate", "rotate"):
-            return  # Ignore if not in mouse mode
+        if mode is None:
+            # No mouse mode active: let cut lines logic handle the event
+            return
 
-        x = scene_pos.x()
-        y = scene_pos.y()
-        w = scene_size.width()
-        h = scene_size.height()
+        if mode == "interrogation":
+            # Store mouse position and trigger overlay update
+            self._interrogation_mouse_pos = (int(scene_pos.x()), int(scene_pos.y()))
+            self.refresh_overlay()
+            return
 
         if mode == "translate":
+            x = scene_pos.x()
+            y = scene_pos.y()
+            w = scene_size.width()
+            h = scene_size.height()
             self._handle_translate_click(x, y, w, h)
         elif mode == "rotate":
+            x = scene_pos.x()
+            y = scene_pos.y()
+            w = scene_size.width()
+            h = scene_size.height()
             self._handle_rotate_click(x, y, w, h)
 
     def _handle_translate_click(self, x, y, w, h):
@@ -397,4 +444,24 @@ class BaseFusionView(DicomView):
             if engine is not None and hasattr(engine, "transform"):
                 self.translation_menu._matrix_dialog.set_matrix(engine.transform)
 
+    def update_view(self, zoom_change=False):
+        """
+        Update the view of the DICOM Image.
+        :param zoom_change: Boolean indicating whether the user wants
+        to change the zoom. False by default.
+        """
+        super().update_view(zoom_change)
+        # After zoom or view update, reapply interrogation mask if needed
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_in(self):
+        super().zoom_in()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_out(self):
+        super().zoom_out()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
 

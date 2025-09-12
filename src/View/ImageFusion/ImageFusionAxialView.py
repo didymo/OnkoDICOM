@@ -1,8 +1,5 @@
 from PySide6 import QtWidgets, QtCore
 
-from src.View.mainpage.DicomView import DicomView, GraphicsScene
-
-
 from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
 
 class ImageFusionAxialView(BaseFusionView):
@@ -188,6 +185,19 @@ class ImageFusionAxialView(BaseFusionView):
         """
         super().update_view(zoom_change)
         self.update_metadata()
+        # After zoom or view update, reapply interrogation mask if needed
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_in(self):
+        super().zoom_in()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_out(self):
+        super().zoom_out()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
 
     def update_metadata(self):
         """
