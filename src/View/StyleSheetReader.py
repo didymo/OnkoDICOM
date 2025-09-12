@@ -1,7 +1,18 @@
 import pathlib
 import platform
+import logging
+import functools
 
 from src.Controller.PathHandler import resource_path
+
+logger = logging.getLogger(__name__)
+
+def get_stylesheet() -> str:
+    """
+    Static method to get the style sheet data. Using StyleSheetReader class
+    :rtype: str
+    """
+    return StyleSheetReader().get_stylesheet()
 
 class StyleSheetReader:
     """
@@ -10,31 +21,29 @@ class StyleSheetReader:
     This class is intended to reduce the number of times the style sheet is read
     """
 
-    style_sheet: str = None
+    # The intention of this class is to break up the function into smaller parts while also
+    # being a way of telling future users that this group of functions are related
 
-    def __init__(self) -> None:
-        """
-        Initialising the StyleSheetReader and getting the data from the style sheet
-        :rtype: None
-        """
-        if StyleSheetReader.style_sheet is None:
-            StyleSheetReader.style_sheet = self._get_layout_data()
-        if StyleSheetReader.style_sheet is None:
-            raise ValueError("No StyleSheet")
-
-    def __call__(self) -> str:
-        """
-        Returning the style_sheet member if the class is called after initialization
-        :rtype: str
-        """
-        return self.get_stylesheet()
-
+    @functools.lru_cache(maxsize=128, typed=False)
     def get_stylesheet(self) -> str:
         """
-        Returns the Stylesheet static member
+        Returns the Stylesheet data
         :rtype: str
         """
-        return StyleSheetReader.style_sheet
+        logger.debug("Getting the Stylesheet data")
+        return self._read_stylesheet()
+
+    def _read_stylesheet(self) -> str:
+        """
+        Determines if a StyleSheet has been read and returns it.
+        :rtype: None
+        """
+        logger.debug("Reading the StyleSheet and getting the style sheet")
+        style_sheet: str = self._get_layout_data()
+        if style_sheet is None:
+            logger.debug("StyleSheetReader did Not Read file")
+            raise ValueError("No StyleSheet")
+        return style_sheet
 
     def _get_platform_stylesheet(self, running_platform: str) -> str:
         """
@@ -43,9 +52,12 @@ class StyleSheetReader:
         :return:
         :rtype: str
         """
+        logging.debug("Getting the Platform specific style sheet location")
         if running_platform == "Darwin":
+            logger.debug("Getting the Darwin style sheet location")
             return "res/stylesheet.qss"
         else:
+            logger.debug("Getting the Win/Linux style sheet location")
             return "res/stylesheet-win-linux.qss"
 
     def _get_layout_data(self) -> str:
@@ -53,5 +65,5 @@ class StyleSheetReader:
         Reading the style sheet for the User Interface and loading it into the style_sheet member
         :rtype: str
         """
-        path_stylesheet = self._get_platform_stylesheet(platform.system())
-        return pathlib.Path(resource_path(path_stylesheet)).read_text()
+        logger.debug("Reading the style sheet for the User Interface")
+        return pathlib.Path(resource_path(self._get_platform_stylesheet(platform.system()))).read_text()

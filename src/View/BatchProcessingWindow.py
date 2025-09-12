@@ -1,9 +1,8 @@
-import platform
 from os.path import expanduser
-from pathlib import Path
 from src.Controller.PathHandler import resource_path
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.BatchProcessingController import BatchProcessingController
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.batchprocessing.SelectSubgroupOptions import \
     SelectSubgroupOptions
 from src.View.batchprocessing.ClinicalDataSR2CSVOptions import \
@@ -119,12 +118,6 @@ class UIBatchProcessingWindow(object):
         """
         Sets up the UI for the batch processing window.
         """
-        # Get the appropriate stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         # Create class variables
         self.file_path = "Select file path..."
@@ -155,7 +148,7 @@ class UIBatchProcessingWindow(object):
         self.directory_input = QtWidgets.QLineEdit()
         self.directory_input.setText(self.file_path)
         self.directory_input.textChanged.connect(self.line_edit_changed)
-        self.directory_input.setStyleSheet(self.stylesheet)
+        self.directory_input.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         # Label to display file search status
         self.search_progress_label = QtWidgets.QLabel("No directory is "
@@ -165,13 +158,13 @@ class UIBatchProcessingWindow(object):
         # Browse button
         self.browse_button = QtWidgets.QPushButton("Change")
         self.browse_button.setObjectName("NormalButton")
-        self.browse_button.setStyleSheet(self.stylesheet)
+        self.browse_button.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         # == Tab widgets
         # Tab widget
         self.tab_widget = CheckableTabWidget()
         self.tab_widget.tabBar().setObjectName("batch-tabs")
-        self.tab_widget.setStyleSheet(self.stylesheet)
+        self.tab_widget.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         # Tabs
         self.select_subgroup_tab = SelectSubgroupOptions()
@@ -223,14 +216,14 @@ class UIBatchProcessingWindow(object):
         self.back_button = QtWidgets.QPushButton("Exit")
         self.back_button.setObjectName("BatchExitButton")
         self.back_button.setMaximumWidth(80)
-        self.back_button.setStyleSheet(self.stylesheet)
+        self.back_button.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.back_button.setProperty("QPushButtonClass", "fail-button")
 
         # Begin button
         self.begin_button = QtWidgets.QPushButton("Begin")
         self.begin_button.setObjectName("BeginButton")
         self.begin_button.setMaximumWidth(100)
-        self.begin_button.setStyleSheet(self.stylesheet)
+        self.begin_button.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.begin_button.setProperty("QPushButtonClass", "success-button")
         self.begin_button.setEnabled(False)
 
@@ -543,5 +536,5 @@ class UIBatchProcessingWindow(object):
                                   self)
         button_reply.button(
             QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
-            self.stylesheet)
+            StyleSheetReader().get_stylesheet())
         button_reply.exec_()

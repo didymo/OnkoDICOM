@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from src.View.ProgressWindow import ProgressWindow
 from src.View.ImageLoader import ImageLoader
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class OpenPatientProgressWindow(ProgressWindow):
@@ -40,15 +41,6 @@ class OpenPatientProgressWindow(ProgressWindow):
                 self.signal_advise_calc_dvh.emit(True)
             else:
                 self.signal_advise_calc_dvh.emit(False)
-        else:
-            stylesheet_path = ""
-
-            # Select appropriate style sheet
-            if platform.system() == 'Darwin':
-                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
-            else:
-                stylesheet_path = Path.cwd().joinpath(
-                    'res', 'stylesheet-win-linux.qss')
 
             # Create a message box and add attributes
             mb = QMessageBox()
@@ -68,7 +60,7 @@ class OpenPatientProgressWindow(ProgressWindow):
             mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
 
             # Apply stylesheet to the message box and add icon to the window
-            mb.setStyleSheet(open(stylesheet_path).read())
+            mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath(
                 'res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
             mb.exec_()

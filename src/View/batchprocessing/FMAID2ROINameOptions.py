@@ -1,6 +1,4 @@
-import platform
 from PySide6 import QtCore, QtGui, QtWidgets
-from src.Controller.PathHandler import resource_path
 
 
 class FMAID2ROINameOptions(QtWidgets.QWidget):
@@ -16,13 +14,6 @@ class FMAID2ROINameOptions(QtWidgets.QWidget):
         
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
-
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         # Create widgets
         self.info_label = QtWidgets.QLabel()

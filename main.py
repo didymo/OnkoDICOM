@@ -2,6 +2,7 @@ import os
 import warnings
 import sys
 import platform
+import logging
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QFont
@@ -13,6 +14,7 @@ warnings.filterwarnings("ignore")
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 
 if __name__ == "__main__":
+    # logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(filename)s - %(funcName)s - %(lineno)d : %(asctime)s - %(message)s')
 
     # On some configurations error traceback is not being displayed
     #     when the program crashes. This is a workaround.

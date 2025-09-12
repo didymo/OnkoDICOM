@@ -1,9 +1,7 @@
 import csv
 import os
-import platform
 from pathlib import Path
 from PySide6 import QtCore, QtWidgets
-from src.Controller.PathHandler import resource_path
 from src.Model.DICOM import DICOMStructuredReport
 from src.Model.Configuration import Configuration, SqlError
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -25,13 +23,6 @@ class ClinicalDataView(QtWidgets.QWidget):
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
-
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         self.create_cd_table()
         self.setLayout(self.main_layout)
