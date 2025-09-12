@@ -45,9 +45,3 @@ class CopyROI(QDialog):
         if self.lower_bounds.value() != self.cs:
             self.copy_number_low.emit(self.lower_bounds.value())
         self.close()
-
-
-
-
-
-        

@@ -10,6 +10,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.scroll_loader_4_dicom_image import Scroll_Wheel
 from src.View.mainpage.DrawROIWindow.ROI_Name_Button import ROIName
 from src.View.mainpage.DrawROIWindow.Copy_Roi import CopyROI
+from src.View.mainpage.DrawROIWindow.multi_layer_conture_popup import multiPopUp
 
 #Sourcery.ai Is this true
 class RoiInitialiser():
@@ -41,7 +42,6 @@ class RoiInitialiser():
 
     def close_window(self):
         """Closes the window"""
-        print("trying to close")
         self.close_window_signal.emit()
         self.close()
 
@@ -53,7 +53,6 @@ class RoiInitialiser():
 
 
     def setup_ui(self):
-
         # Initialize the pen
         self.pen = QPen()
         self.pen.setWidth(6)
@@ -64,7 +63,6 @@ class RoiInitialiser():
         self.scroller = Scroll_Wheel(self.display_pixmaps)
         self.scroller.valueChanged.connect(self.change_image)
         
-
         # 1) Scene on the view
         self.scene = QtWidgets.QGraphicsScene(self)
 
@@ -171,15 +169,22 @@ class RoiInitialiser():
 
     def copy_roi(self):
         """Allows the ablity to copy ROIs onto different areas"""
-        print("before pymedphi is a bitch")
         self.copy_roi_window = CopyROI(self.scroller.maximum(), self.scroller.value())
-        print("whyyyyyy pymed phys")
         self.copy_roi_window.copy_number_high.connect(self.canvas_labal.copy_rois_up)
         self.copy_roi_window.copy_number_low.connect(self.canvas_labal.copy_rois_down)
-        print("probably this")
         self.copy_roi_window.show()
+
+    def multi_popup(self):
+        """Allows the ablity to copy ROIs onto different areas"""
+        self.multi_window = multiPopUp(self.scroller.maximum(), self.scroller.value(),
+                                          self.units_box.transparency_slider.value(),
+                                           self.units_box.pixel_range_max.value(),
+                                           self.units_box.pixel_range_min.value())
+        self.multi_window.contour_number.connect(self.canvas_labal.multi_layer_commit)
+        self.multi_window.max_range_signal.connect(self.canvas_labal.set_max_pixel_value)
+        self.multi_window.min_range_signal.connect(self.canvas_labal.set_min_pixel_value)
+        self.multi_window.show()
     
-    @Slot()
     def window_pop_up(self):
         """Opens the popup"""
         QtWidgets.QMessageBox.information(self, "No ROI instance selected",

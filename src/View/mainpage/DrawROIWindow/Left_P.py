@@ -36,7 +36,7 @@ class LeftPannel(QtWidgets.QWidget):
         save = QPushButton("Save")
         fill = QPushButton("Fill")
         fill.setCheckable(True)
-        roi_name = QPushButton("ROI_Name")
+        multi = QPushButton("Multi")
         erase_dag = QPushButton("Erase DAGs")
         self.button_group.addButton(brush)
         self.button_group.addButton(pen)
@@ -48,6 +48,7 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.addButton(save)
         self.button_group.addButton(fill)
         self.button_group.addButton(erase_dag)
+        self.button_group.addButton(multi)
 
         #Links the buttons to actions
         brush.clicked.connect(self.brush_tool)
@@ -60,18 +61,20 @@ class LeftPannel(QtWidgets.QWidget):
         save.clicked.connect(self.save_button)
         fill.clicked.connect(self.fill_tool)
         erase_dag.clicked.connect(self.canvas_label.erase_dags)
+        multi.clicked.connect(self.multi_button)
 
         #Sets the buttons in the layout 2 by 3
         layout.addWidget(brush,0,0)
         layout.addWidget(pen, 0,1)
         layout.addWidget(eraser_roi,1,0)
         layout.addWidget(eraser_draw,1,1)
-        layout.addWidget(smooth,2,0)
+        layout.addWidget(multi,2,0)
         layout.addWidget(fill, 2,1)
         layout.addWidget(copy,3,0)
         layout.addWidget(save,3,1)
         layout.addWidget(transect,4,0)
         layout.addWidget(erase_dag, 4,1)
+        
         
 
         #adds the layout to the grid_group_box
@@ -122,8 +125,15 @@ class LeftPannel(QtWidgets.QWidget):
 
     def save_button(self):
         """This fucntion saves the ROI drawing"""
-        self.canvas_label.save_roi()
-        self.parent.close_window()
+        if self.canvas_label.roi_name is None:
+            self.parent.window_pop_up()
+        else:
+            self.canvas_label.save_roi()
+            self.parent.close_window()
+
+    def multi_button(self):
+        """This fucntion calls the multi putton"""
+        self.parent.multi_popup()
 
     def fill_tool(self):
         """Fucntion for the fill tool"""

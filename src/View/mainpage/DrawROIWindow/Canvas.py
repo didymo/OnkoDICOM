@@ -478,12 +478,9 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         """
             Function to call save ROI and display progress
         """
-        if self.roi_name is None:
-            self.emitter.m_window.emit()
-        else:
-            s = SaveROI(self.dicom_data, self.canvas, self.rtss, self.has_been_draw_on,self.roi_name)
-            results = s.save_roi()
-            self.emitter.rtss_for_saving.emit(results,self.roi_name)
+        s = SaveROI(self.dicom_data, self.canvas, self.rtss, self.has_been_draw_on,self.roi_name)
+        results = s.save_roi()
+        self.emitter.rtss_for_saving.emit(results,self.roi_name)
             
 
             
@@ -534,3 +531,31 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
     def set_roi_name(self,v):
         """Sets the roi name that is emmited from the roi select box"""
         self.roi_name = v
+
+    @Slot(int)
+    def set_max_pixel_value(self,v):
+        """Sets the roi name that is emmited from the roi select box"""
+        self.max_range = v
+        self.lock_pixel()
+
+    @Slot(int)
+    def set_min_pixel_value(self,v):
+        """Sets the roi name that is emmited from the roi select box"""
+        self.min_range = v
+        self.lock_pixel()
+
+    @Slot(int,int)
+    def multi_layer_commit(self,upper_bounds, lower_bounds):
+        """Auto draws on every slide within the slides and pixmap given"""
+        i = lower_bounds
+        holder = self.canvas[self.slice_num].copy()
+        while upper_bounds > i:
+            self.canvas[self.slice_num].fill(self.pen.color())
+            self.set_pixel_layer(self.dicom_data[i])
+            self._enforce_lock_after_stroke()
+            self.canvas[i] = self.canvas[self.slice_num].copy()
+            self.check_if_drawn(i)
+            i +=1
+        self.canvas[self.slice_num] = holder.copy()
+        self.setPixmap(self.canvas[self.slice_num])
+        self.ds_is_active = False
