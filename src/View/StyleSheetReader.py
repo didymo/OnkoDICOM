@@ -20,7 +20,7 @@ class StyleSheetReader:
     @functools.lru_cache(maxsize=128, typed=False)
     def get_stylesheet(self) -> str:
         """
-        Returns the Stylesheet static member
+        Returns the Stylesheet data
         :rtype: str
         """
         logging.debug("Getting the Stylesheet data")
