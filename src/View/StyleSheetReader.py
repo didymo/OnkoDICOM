@@ -32,14 +32,14 @@ class StyleSheetReader:
         :rtype: str
         """
         logger.debug("Getting the Stylesheet data")
-        return self._init_StyleSheetReader()
+        return self._read_stylesheet()
 
-    def _init_StyleSheetReader(self) -> str:
+    def _read_stylesheet(self) -> str:
         """
-        Determining if a StyleSheet has been read
+        Determines if a StyleSheet has been read and returns it.
         :rtype: None
         """
-        logger.debug("Initialising the StyleSheetReader and getting the style sheet")
+        logger.debug("Reading the StyleSheet and getting the style sheet")
         style_sheet: str = self._get_layout_data()
         if style_sheet is None:
             logger.debug("StyleSheetReader did Not Read file")
