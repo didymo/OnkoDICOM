@@ -31,7 +31,7 @@ class StyleSheetReader:
         Returns the Stylesheet data
         :rtype: str
         """
-        logging.debug("Getting the Stylesheet data")
+        logger.debug("Getting the Stylesheet data")
         return self._init_StyleSheetReader()
 
     def _init_StyleSheetReader(self) -> str:
@@ -55,10 +55,10 @@ class StyleSheetReader:
         """
         logging.debug("Getting the Platform specific style sheet location")
         if running_platform == "Darwin":
-            logging.debug("Getting the Darwin style sheet location")
+            logger.debug("Getting the Darwin style sheet location")
             return "res/stylesheet.qss"
         else:
-            logging.debug("Getting the Win/Linux style sheet location")
+            logger.debug("Getting the Win/Linux style sheet location")
             return "res/stylesheet-win-linux.qss"
 
     def _get_layout_data(self) -> str:
@@ -66,5 +66,5 @@ class StyleSheetReader:
         Reading the style sheet for the User Interface and loading it into the style_sheet member
         :rtype: str
         """
-        logging.debug("Reading the style sheet for the User Interface")
+        logger.debug("Reading the style sheet for the User Interface")
         return pathlib.Path(resource_path(self._get_platform_stylesheet(platform.system()))).read_text()
