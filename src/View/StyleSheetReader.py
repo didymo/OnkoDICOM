@@ -7,7 +7,6 @@ from src.Controller.PathHandler import resource_path
 
 logger = logging.getLogger(__name__)
 
-@functools.lru_cache(maxsize=128, typed=False)
 def get_stylesheet() -> str:
     """
     Static method to get the style sheet data. Using StyleSheetReader class
