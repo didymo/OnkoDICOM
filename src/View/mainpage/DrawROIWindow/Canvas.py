@@ -556,6 +556,13 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.canvas[i] = self.canvas[self.slice_num].copy()
             self.check_if_drawn(i)
             i +=1
-        self.canvas[self.slice_num] = holder.copy()
+        if upper_bounds > self.slice_num > lower_bounds:
+            self.canvas[self.slice_num].fill(self.pen.color())
+            self.set_pixel_layer(self.dicom_data[self.slice_num])
+            self._enforce_lock_after_stroke()
+            self.check_if_drawn(i)
+        else:
+            self.canvas[self.slice_num] = holder
         self.setPixmap(self.canvas[self.slice_num])
         self.ds_is_active = False
+        self.update()
