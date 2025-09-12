@@ -1,6 +1,8 @@
 import pathlib
 import platform
 import logging
+import functools
+
 from src.Controller.PathHandler import resource_path
 
 logger = logging.getLogger(__name__)
@@ -12,28 +14,30 @@ class StyleSheetReader:
     This class is intended to reduce the number of times the style sheet is read
     """
 
-    style_sheet: str = None
+    # The intention of this class is to break up the function into smaller parts while also
+    # being a way of telling future users that this group of functions are related
 
-    def __init__(self) -> None:
-        """
-        Initialising the StyleSheetReader and getting the data from the style sheet
-        :rtype: None
-        """
-        logger.debug("Initialising the StyleSheetReader and getting the style sheet")
-        if StyleSheetReader.style_sheet is None:
-            StyleSheetReader.style_sheet = self._get_layout_data()
-            logger.debug("StyleSheetReader has Readd file")
-        if StyleSheetReader.style_sheet is None:
-            logger.debug("StyleSheetReader did Not Read file")
-            raise ValueError("No StyleSheet")
-
+    @functools.lru_cache(maxsize=128, typed=False)
     def get_stylesheet(self) -> str:
         """
         Returns the Stylesheet static member
         :rtype: str
         """
-        logging.debug("Getting the Stylesheet static member")
-        return StyleSheetReader.style_sheet
+        logging.debug("Getting the Stylesheet data")
+        style_sheet = self._init_StyleSheetReader()
+        return style_sheet
+
+    def _init_StyleSheetReader(self) -> str:
+        """
+        Determining if a StyleSheet has been read
+        :rtype: None
+        """
+        logger.debug("Initialising the StyleSheetReader and getting the style sheet")
+        style_sheet = self._get_layout_data()
+        if style_sheet is None:
+            logger.debug("StyleSheetReader did Not Read file")
+            raise ValueError("No StyleSheet")
+        return style_sheet
 
     def _get_platform_stylesheet(self, running_platform: str) -> str:
         """
