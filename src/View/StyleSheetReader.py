@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 @functools.lru_cache(maxsize=128, typed=False)
 def get_stylesheet() -> str:
+    """
+    Static method to get the style sheet data. Using StyleSheetReader class
+    :rtype: str
+    """
     return StyleSheetReader().get_stylesheet()
 
 class StyleSheetReader:
