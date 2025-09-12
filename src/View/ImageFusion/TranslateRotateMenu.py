@@ -32,6 +32,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
     def __init__(self, _back_callback=None):
         super().__init__()
         self.offset_changed_callback = None
+        self.mouse_mode = None
 
         layout = QtWidgets.QVBoxLayout()
 
