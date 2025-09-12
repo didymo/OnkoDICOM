@@ -32,8 +32,7 @@ class StyleSheetReader:
         :rtype: str
         """
         logging.debug("Getting the Stylesheet data")
-        style_sheet = self._init_StyleSheetReader()
-        return style_sheet
+        return self._init_StyleSheetReader()
 
     def _init_StyleSheetReader(self) -> str:
         """
@@ -68,5 +67,4 @@ class StyleSheetReader:
         :rtype: str
         """
         logging.debug("Reading the style sheet for the User Interface")
-        path_stylesheet = self._get_platform_stylesheet(platform.system())
-        return pathlib.Path(resource_path(path_stylesheet)).read_text()
+        return pathlib.Path(resource_path(self._get_platform_stylesheet(platform.system()))).read_text()
