@@ -24,8 +24,9 @@ class Tool(Enum):
     FILL     = auto()
     CIRCLE   = auto()
     TRANSECT = auto()
+
+#necessary because QGraphicsPixmapItem cannot emmit signals
 class Emitter(QObject):
-    m_window = Signal()
     rtss_for_saving = Signal(pydicom.Dataset,str)
 
 
@@ -98,7 +99,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.min_range = 0
         self.max_range = 6000
 
-        self.has_been_draw_on = [] #Used to track the slices that have been draw on 
+        self.has_been_draw_on = [] #Used to track the slices that have been draw on
         self.rtss = rtss
         self.signal_roi_drawn = signal_roi_drawn
         self.roi_name = None
@@ -122,7 +123,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.first_point = event.pos()
 
             if self.current_tool == Tool.FILL:
-                self.pixel_fill((int(self.first_point.x()), int(self.first_point.y())))
+                self.flood((int(self.first_point.x()), int(self.first_point.y())),paint_bicket=False)
                 self.draw_history.append(self.canvas[self.slice_num].copy())
                 self.redo_history.clear()
                 self.setPixmap(self.canvas[self.slice_num])
@@ -171,12 +172,10 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             painter.setPen(self.t_pen)
             painter.drawLine(self.first_point, event.pos())
             painter.end()
-
             self.setPixmap(preview)            # show preview
             self.last_point = event.pos()
             event.accept()
             return
-
         event.ignore()
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent):
@@ -287,7 +286,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         painter.end()
         self.setPixmap(self.canvas[self.slice_num])
         ave = self.calculate_average_pixel()
-        self.flood(ave)
+        self.flood(ave,paint_bicket=True)
         self.setPixmap(self.canvas[self.slice_num])
         # (history is now handled in mouseReleaseEvent after enforcement)
 
@@ -306,7 +305,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         return average
 
     # not the things from halo
-    def flood(self, mid_p):
+    def flood(self, mid_p,paint_bicket):
         """Simple BFS flood fill on current canvas"""
         #Painter and drawing details
         fill = QPainter(self.canvas[self.slice_num])
@@ -325,47 +324,28 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         direction = [(-1, -1), (0, -1), (1, -1),
                      (-1,  0),          (1,  0),
                      (-1,  1), (0,  1), (1,  1)]
-
-        while queue:
-            x,y = queue.popleft()
-            fill.drawRect(x, y, 1, 1)
-            for dx, dy in direction:
-                nx, ny = dx + x, dy + y
-                if 0 <= nx < image.width() and 0 <= ny < image.height():
-                    colour = image.pixelColor(nx, ny)
-                    if colour == target_color and (nx, ny) not in visited:
+        if paint_bicket:
+            while queue:
+                x,y = queue.popleft()
+                fill.drawRect(x, y, 1, 1)
+                for dx, dy in direction:
+                    nx, ny = dx + x, dy + y
+                    if 0 <= nx < image.width() and 0 <= ny < image.height():
+                        colour = image.pixelColor(nx, ny)
+                        if colour == target_color and (nx, ny) not in visited:
+                            queue.append((nx, ny))
+                            visited.add((nx, ny))
+        else:
+            while queue:
+                x, y = queue.popleft()
+                fill.drawRect(x, y, 1, 1)
+                for dx, dy in direction:
+                    nx, ny = dx + x, dy + y
+                    if 0 <= nx < image.width() and 0 <= ny < image.height() and (not self.pixel_lock[ny,nx] and (nx, ny) not in visited):
                         queue.append((nx, ny))
                         visited.add((nx, ny))
         fill.end()
 
-    def pixel_fill(self, mid_p):
-        """Fill tool that respects pixel_lock at expansion time"""
-        fill = QPainter(self.canvas[self.slice_num])
-        fill.setCompositionMode(QPainter.CompositionMode_Source)
-        colour_contrast = self.pen.color()
-        colour_contrast.setAlpha(self.max_alpha)
-        fill.setBrush(QColor(colour_contrast))
-        fill.setPen(Qt.NoPen)
-        image = self.canvas[self.slice_num].toImage()
-        
-        #Cordinate Details
-        x, y = mid_p
-        queue = deque([(x, y)])
-        visited = {(x, y)}
-        direction = [(-1, -1), (0, -1), (1, -1),
-                     (-1,  0),          (1,  0),
-                     (-1,  1), (0,  1), (1,  1)]
-
-        while queue:
-            x, y = queue.popleft()
-            fill.drawRect(x, y, 1, 1)
-            for dx, dy in direction:
-                nx, ny = dx + x, dy + y
-                if 0 <= nx < image.width() and 0 <= ny < image.height() and (not self.pixel_lock[ny,nx] and (nx, ny) not in visited):
-                    queue.append((nx, ny))
-                    visited.add((nx, ny))
-
-        fill.end()
     def undo_draw(self):
         """Reloads the last saved pixmap"""
         if len(self.draw_history) > 1:
@@ -403,10 +383,56 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         colour_contrast.setAlpha(0)
         erase.setBrush(QColor(colour_contrast))
         erase.setPen(Qt.NoPen)
-
-        self._enforce_lock_after_stroke()
+        inv = ~self.pixel_lock
+        cords = np.argwhere(inv)
+        coords_xy = np.stack([cords[:,1], cords[:,0]], axis=1) #flips y,x to x,y
+        connected_points = self.connected_components_grid(coords_xy)
+        for i in connected_points:
+            if len(i) < 20:
+                for x,y in i:
+                    erase.drawRect(x,y,1,1)
+        erase.end()
+        self.setPixmap(self.canvas[self.slice_num])
 
     #AI Vibe coded part
+    def connected_components_grid(self,coords, connectivity=8):
+        """
+        Group integer (x, y) coordinates into connected components on a grid.
+
+        Args:
+            coords: iterable of (x, y) integer tuples or 2D array-like.
+            connectivity: 4 or 8.
+
+        Returns:
+            List[List[tuple]]: each inner list is one component of (x, y) tuples.
+        """
+        if connectivity == 4:
+            nbrs = [(1,0), (-1,0), (0,1), (0,-1)]
+        elif connectivity == 8:
+            nbrs = [(dx,dy) for dx in (-1,0,1) for dy in (-1,0,1) if not (dx==0 and dy==0)]
+        else:
+            raise ValueError("connectivity must be 4 or 8")
+
+        S = set(map(tuple, coords))           # O(1) membership/removal
+        components = []
+
+        while S:
+            start = S.pop()
+            comp = [start]
+            q = deque([start])
+
+            while q:
+                x, y = q.popleft()
+                for dx, dy in nbrs:
+                    nb = (x+dx, y+dy)
+                    if nb in S:
+                        S.remove(nb)
+                        q.append(nb)
+                        comp.append(nb)
+
+            components.append(comp)
+        return components
+
     # --------------- NEW: lock enforcement helpers ---------------
     def _draw_mask_bool(self) -> np.ndarray:
         """Alpha>0 where anything has been drawn on the canvas."""
@@ -481,10 +507,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         s = SaveROI(self.dicom_data, self.canvas, self.rtss, self.has_been_draw_on,self.roi_name)
         results = s.save_roi()
         self.emitter.rtss_for_saving.emit(results,self.roi_name)
-            
-
-            
-            #self.signal_roi_drawn.emit((new_rtss, {"draw": "new-data-set"}))
 
 #This section contain all of the slots and connections that communicate with methods in other files
     def change_layout_bool(self):

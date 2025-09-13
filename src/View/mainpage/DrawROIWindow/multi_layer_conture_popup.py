@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QSpinBox, QPushButton
 from PySide6.QtCore import Signal
 
-
 class multiPopUp(QDialog):
     """This class facilitates the multi layer contour"""
     contour_number = Signal(int,int)
@@ -23,7 +22,7 @@ class multiPopUp(QDialog):
         self.upper_bounds.setValue(self.cs)
         self.lower_bounds_label = QLabel("Lower Bounds : ")
         self.lower_bounds = QSpinBox()
-        self.lower_bounds.setRange(1,current_slice)
+        self.lower_bounds.setRange(1,slice_num)
         self.lower_bounds.setValue(self.cs)
 
         opasity_label = QLabel("Opasity")

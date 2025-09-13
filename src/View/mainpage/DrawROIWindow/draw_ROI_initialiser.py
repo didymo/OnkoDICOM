@@ -132,10 +132,8 @@ class RoiInitialiser():
         self._toolbar = CutsomToolbar(self, self.canvas_labal, self.left_label)
         self.addToolBar(self._toolbar)
         self._toolbar.colour.connect(self.left_label.update_colour)
-        self.canvas_labal.emitter.m_window.connect(self.window_pop_up)
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
         self.units_box.opasity_value.connect(self.left_label.update_opasity)
-
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
         """Creates and adds the toolbar to the ui"""
