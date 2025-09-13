@@ -440,6 +440,7 @@ class UIMainWindow:
         # Define a callback that updates all three views for translation
         def update_all_views(offset):
             for view in [
+                self.image_fusion_single_view,
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
@@ -454,6 +455,7 @@ class UIMainWindow:
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
             for view in [
+                self.image_fusion_single_view,
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
@@ -467,6 +469,7 @@ class UIMainWindow:
         # --- Connect color pair change to all fusion views ---
         def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
             for view in [
+                self.image_fusion_single_view,
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
@@ -500,6 +503,7 @@ class UIMainWindow:
             # --- Set mouse mode changed callback to update ALL views ---
             def propagate_mouse_mode_change(mode):
                 for view in [
+                    self.image_fusion_single_view,
                     self.image_fusion_view_axial,
                     self.image_fusion_view_sagittal,
                     self.image_fusion_view_coronal,
