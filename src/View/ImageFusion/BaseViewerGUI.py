@@ -317,49 +317,65 @@ class BaseFusionView(DicomView):
             self._handle_rotate_click(x, y, w, h)
 
     def _handle_translate_click(self, x, y, w, h):
-        dx, dy, dz = 0.0, 0.0, 0.0
-        if self.slice_view == "axial":
-            if abs(x - w/2) > abs(y - h/2):
-                dx = 1.0 if x < w/2 else -1.0
+        def axial_trans(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
-                dy = 1.0 if y < h/2 else -1.0
-        elif self.slice_view == "sagittal":
-            if abs(x - w/2) > abs(y - h/2):
-                dy = 1.0 if x < w/2 else -1.0
+                return 0.0, 1.0 if y < h / 2 else -1.0, 0.0
+
+        def sagittal_trans(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return 0.0, 1.0 if x < w / 2 else -1.0, 0.0
             else:
-                dz = 1.0 if y < h/2 else -1.0
-        elif self.slice_view == "coronal":
-            if abs(x - w/2) > abs(y - h/2):
-                dx = 1.0 if x < w/2 else -1.0
+                return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
+
+        def coronal_trans(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
-                dz = 1.0 if y < h/2 else -1.0
+                return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
+
+        translate_lookup = {
+            "axial": axial_trans,
+            "sagittal": sagittal_trans,
+            "coronal": coronal_trans,
+        }
+        dx, dy, dz = translate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
         curr = [self.vtk_engine._tx, self.vtk_engine._ty, self.vtk_engine._tz] if self.vtk_engine else [0.0, 0.0, 0.0]
         new_offset = (curr[0] + dx, curr[1] + dy, curr[2] + dz)
         self.translation_menu.set_offsets(new_offset)
         self.update_overlay_offset(new_offset, orientation=self.slice_view, slice_idx=self.slider.value())
 
     def _handle_rotate_click(self, x, y, w, h):
-        rx, ry, rz = 0.0, 0.0, 0.0
-        if self.slice_view == "axial":
-            if abs(x - w/2) > abs(y - h/2):
-                rz = 0.5 if x < w/2 else -0.5
+        def axial_rot(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return (0.0, 0.0, 0.5 if x < w / 2 else -0.5)
             else:
-                rx = -0.5 if y < h/2 else 0.5
-        elif self.slice_view == "sagittal":
-            if abs(x - w/2) > abs(y - h/2):
-                rx = 0.5 if x < w/2 else -0.5
+                return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
+
+        def sagittal_rot(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return (0.5 if x < w / 2 else -0.5, 0.0, 0.0)
             else:
-                ry = -0.5 if y < h/2 else 0.5
-        elif self.slice_view == "coronal":
-            if abs(x - w/2) > abs(y - h/2):
-                ry = -0.5 if x < w/2 else 0.5
+                return (0.0, -0.5 if y < h / 2 else 0.5, 0.0)
+
+        def coronal_rot(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return (0.0, -0.5 if x < w / 2 else 0.5, 0.0)
             else:
-                rx = -0.5 if y < h/2 else 0.5
+                return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
+
+        rotate_lookup = {
+            "axial": axial_rot,
+            "sagittal": sagittal_rot,
+            "coronal": coronal_rot,
+        }
+        rx, ry, rz = rotate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
         curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
         new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
-        self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0]*10)))
-        self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1]*10)))
-        self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2]*10)))
+        self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0] * 10)))
+        self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1] * 10)))
+        self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2] * 10)))
         self.update_overlay_rotation(new_rot, orientation=self.slice_view, slice_idx=self.slider.value())
 
 
