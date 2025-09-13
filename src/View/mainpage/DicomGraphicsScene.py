@@ -4,6 +4,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 class GraphicsScene(QtWidgets.QGraphicsScene):
     """
     A child class of the QGraphicsScene that contains the pixmaps and the cut lines
+    Also supports mouse mode for translation/rotation.
     """
 
     def __init__(self, label: QtWidgets.QGraphicsPixmapItem, horizontal_view, vertical_view):
@@ -16,6 +17,14 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.horizontal_line = None
         self.vertical_line = None
         self.init_cut_lines()
+        self._mouse_mode_handler = None
+
+    def set_mouse_mode_handler(self, handler):
+        """
+        Set a callback to handle mouse mode clicks.
+        handler: function(scene_pos: QPointF, scene_size: QSizeF)
+        """
+        self._mouse_mode_handler = handler
 
     def init_cut_lines(self):
         if self.horizontal_view is not None and self.vertical_view is not None:
@@ -74,6 +83,12 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
 
             self.add_cut_lines(vertical_line_x, horizontal_line_y)
             self.update_slider(vertical_line_x, horizontal_line_y)
+            return
+
+        # Mouse mode handler (for translation/rotation)
+        if self._mouse_mode_handler is not None:
+            self._mouse_mode_handler(event.scenePos(), self.sceneRect().size())
+            return
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         if self.horizontal_view is not None and self.vertical_view is not None:
