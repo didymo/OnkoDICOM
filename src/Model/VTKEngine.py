@@ -387,12 +387,36 @@ class VTKEngine:
         # If masking is requested, mask the moving_slice
         if moving_slice is not None and mask_rect is not None:
             mx, my, msize = mask_rect
+            # If the QImage will be scaled, scale the mask coordinates to image pixel space
+            # (scene coordinates to image pixel coordinates)
+            display_w, display_h = w, h
+            if self.fixed_reader is not None:
+                spacing = self.fixed_reader.GetOutput().GetSpacing()
+                if orientation == VTKEngine.ORI_AXIAL:
+                    spacing_y, spacing_x = spacing[1], spacing[0]
+                elif orientation == VTKEngine.ORI_CORONAL:
+                    spacing_y, spacing_x = spacing[2], spacing[0]
+                elif orientation == VTKEngine.ORI_SAGITTAL:
+                    spacing_y, spacing_x = spacing[2], spacing[1]
+                else:
+                    spacing_y, spacing_x = 1.0, 1.0
+                phys_h = h * spacing_y
+                phys_w = w * spacing_x
+                aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
+                display_h = h
+                display_w = int(round(h * aspect_ratio))
+            # Map scene (display_w, display_h) to image (w, h)
+            scale_x = w / display_w if display_w != 0 else 1.0
+            scale_y = h / display_h if display_h != 0 else 1.0
+            mx_img = mx * scale_x
+            my_img = my * scale_y
+            msize_img = msize * ((scale_x + scale_y) / 2.0)
             mask = np.zeros_like(moving_slice, dtype=bool)
-            half = msize // 2
-            x0 = max(0, int(mx - half))
-            x1 = min(w, int(mx + half))
-            y0 = max(0, int(my - half))
-            y1 = min(h, int(my + half))
+            half = int(msize_img // 2)
+            x0 = max(0, int(mx_img - half))
+            x1 = min(w, int(mx_img + half))
+            y0 = max(0, int(my_img - half))
+            y1 = min(h, int(my_img + half))
             mask[y0:y1, x0:x1] = True
             moving_slice = np.where(mask, moving_slice, 0)
 

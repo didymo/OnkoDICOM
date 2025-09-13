@@ -219,6 +219,7 @@ class BaseFusionView(DicomView):
         if self.get_mouse_mode() == "interrogation":
             mask_rect = None
             if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
+                # Use scene coordinates for mask
                 mask_rect = (*self._interrogation_mouse_pos, 80)  # 80px square
             else:
                 # Hide overlay everywhere if no mouse pos
