@@ -332,25 +332,42 @@ class VTKEngine:
 
     # ---------------- Slice Extraction ----------------
     def get_slice_numpy(self, orientation: str, slice_idx: int) -> tuple[np.ndarray | None, np.ndarray | None]:
+        """
+           Extracts a 2D NumPy slice from the fixed and moving volumes
+           based on the chosen orientation (axial, coronal, sagittal).
+           """
         if self.fixed_reader is None:
             return None, None
+
+        # Get the fixed (always present) and moving (if available) VTK images
         fixed_img = self.fixed_reader.GetOutput()
         moving_img = self.reslice3d.GetOutput() if self.moving_reader else None
         if self.moving_reader:
             self.reslice3d.Update()
 
         def vtk_to_np_slice(img, orientation, slice_idx, window_center=40, window_width=400):
+            """
+            Converts a VTK image into a 2D NumPy slice with window/level applied.
+            """
+
             if img is None or img.GetPointData() is None:
                 return None
+
+            # Extract voxel array dimensions from VTK extent
             extent = img.GetExtent()
             nx = extent[1] - extent[0] + 1
             ny = extent[3] - extent[2] + 1
             nz = extent[5] - extent[4] + 1
+
+            # Convert VTK scalars to NumPy
             scalars = numpy_support.vtk_to_numpy(img.GetPointData().GetScalars())
             if scalars is None:
                 return None
+
+            # Reshape into 3D volume (z, y, x)
             arr = scalars.reshape((nz, ny, nx))
 
+            # Select 2D slice depending on orientation
             if orientation == VTKEngine.ORI_AXIAL:
                 z = int(np.clip(slice_idx - extent[4], 0, nz - 1))
                 arr2d = arr[z, :, :]
@@ -363,6 +380,7 @@ class VTKEngine:
             else:
                 return None
 
+            # Apply window/level to map to [0, 255] grayscale
             arr2d = arr2d.astype(np.float32)
             c = window_center
             w = window_width
@@ -370,6 +388,7 @@ class VTKEngine:
             arr2d = (arr2d * 255.0).astype(np.uint8)
             return np.ascontiguousarray(arr2d)
 
+        # Extract slices from fixed and moving volumes
         fixed_slice = vtk_to_np_slice(fixed_img, orientation, slice_idx)
         moving_slice = vtk_to_np_slice(moving_img, orientation, slice_idx) if moving_img else None
         return fixed_slice, moving_slice
@@ -385,28 +404,39 @@ class VTKEngine:
         h, w = fixed_slice.shape
 
         def aspect_ratio_correct(qimg, h, w, orientation):
-            if self.fixed_reader is not None:
-                spacing = self.fixed_reader.GetOutput().GetSpacing()
-                if orientation == VTKEngine.ORI_AXIAL:
-                    spacing_y, spacing_x = spacing[1], spacing[0]
-                elif orientation == VTKEngine.ORI_CORONAL:
-                    spacing_y, spacing_x = spacing[2], spacing[0]
-                elif orientation == VTKEngine.ORI_SAGITTAL:
-                    spacing_y, spacing_x = spacing[2], spacing[1]
-                else:
-                    spacing_y, spacing_x = 1.0, 1.0
-                phys_h = h * spacing_y
-                phys_w = w * spacing_x
-                aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
-                display_h = h
-                display_w = int(round(h * aspect_ratio))
-                return qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
-            return qimg
+            """
+                 Rescales an image so physical spacing is respected.
+                 Different orientations require different voxel spacings.
+                 """
+            if self.fixed_reader is None:
+                return qimg
 
+            spacing = self.fixed_reader.GetOutput().GetSpacing()
+            if orientation == VTKEngine.ORI_AXIAL:
+                spacing_y, spacing_x = spacing[1], spacing[0]
+            elif orientation == VTKEngine.ORI_CORONAL:
+                spacing_y, spacing_x = spacing[2], spacing[0]
+            elif orientation == VTKEngine.ORI_SAGITTAL:
+                spacing_y, spacing_x = spacing[2], spacing[1]
+            else:
+                spacing_y, spacing_x = 1.0, 1.0
+
+            # Compute physical dimensions
+            phys_h = h * spacing_y
+            phys_w = w * spacing_x
+
+            # Scale to match physical aspect ratio
+            aspect_ratio = phys_w / phys_h if phys_h != 0 else 1.0
+            display_h = h
+            display_w = int(round(h * aspect_ratio))
+            return qimg.scaled(display_w, display_h, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.SmoothTransformation)
+
+        # ---------------- Interrogation window (mask_rect) ----------------
         if moving_slice is not None and mask_rect is not None:
+            # center + size of square window
             mx, my, msize = mask_rect
 
-            # Use aspect_ratio_correct to get the display size
+            # Compute display dimensions (with aspect ratio correction)
             def get_display_size(h, w, orientation):
                 qimg_dummy = QtGui.QImage(w, h, QtGui.QImage.Format_Grayscale8)
                 qimg_scaled = aspect_ratio_correct(qimg_dummy, h, w, orientation)
@@ -414,12 +444,14 @@ class VTKEngine:
 
             display_w, display_h = get_display_size(h, w, orientation)
 
-            # Map scene (display_w, display_h) to image (w, h)
+            # Map scene/display coords to image coords
             scale_x = w / display_w if display_w != 0 else 1.0
             scale_y = h / display_h if display_h != 0 else 1.0
             mx_img = mx * scale_x
             my_img = my * scale_y
             msize_img = msize * ((scale_x + scale_y) / 2.0)
+
+            # Build boolean mask
             mask = np.zeros_like(moving_slice, dtype=bool)
             half = int(msize_img // 2)
             x0 = max(0, int(mx_img - half))
@@ -428,10 +460,14 @@ class VTKEngine:
             y1 = min(h, int(my_img + half))
             mask[y0:y1, x0:x1] = True
 
-            # Only show the base (fixed) image inside the window, overlay everywhere else
-            fixed_slice = np.where(mask, fixed_slice, 0)
+            # Inside mask → show fixed image only
+            fixed_slice = np.where(mask, fixed_slice, fixed_slice)
+
+            # Inside mask → suppress moving contribution
+            # Outside mask → keep moving as-is
             moving_slice = np.where(mask, 0, moving_slice)
 
+        # Blend opacity setting for moving image (used later in display pipeline)
         blend = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.0
 
         color_map = {
