@@ -9,7 +9,7 @@ from src.View.ImageFusion.TranslateRotateMenu import get_color_pair_from_text
 
 
 class BaseFusionView(DicomView):
-    DEBOUNCE_MS = 5  # adjust debounce time as needed
+    DEBOUNCE_MS = 5
 
     def __init__(self, slice_view, roi_color=None, iso_color=None, cut_line_color=None, vtk_engine=None, translation_menu=None):
         # Always initialize these attributes first
@@ -52,6 +52,36 @@ class BaseFusionView(DicomView):
         self._refresh_timer = QtCore.QTimer(self)
         self._refresh_timer.setSingleShot(True)
         self._refresh_timer.timeout.connect(self.refresh_overlay_now)
+
+    def wheelEvent(self, event: QtGui.QWheelEvent):
+        """
+            Handle mouse wheel events to scroll through slices.
+            This uses angleDelta().y() which gives consistent step values across platforms.
+            """
+
+        # Get keyboard modifiers (Ctrl, Alt, Shift, etc.)
+        modifiers = event.modifiers()
+        ctrl = modifiers & QtCore.Qt.ControlModifier
+        alt = modifiers & QtCore.Qt.AltModifier
+
+        # If Ctrl + Alt are pressed AND we're in interrogation mode → custom zoom
+        if ctrl and alt and self.mouse_mode == "interrogation":
+            # Get scroll delta (angleDelta is preferred because it's device-independent)
+            delta_pt = event.angleDelta()
+            delta = delta_pt.y() if delta_pt.y() != 0 else delta_pt.x()
+
+            # Fallback: some devices report pixelDelta instead of angleDelta
+            if delta == 0:
+                delta_pt = event.pixelDelta()
+                delta = delta_pt.y() if delta_pt.y() != 0 else delta_pt.x()
+
+            # If we got a valid delta, adjust the interrogation window size
+            if delta != 0:
+                self._handle_interrogation_window_size_change(delta)
+            return
+
+        # If not Ctrl+Alt interrogation, just do the normal behavior
+        super().wheelEvent(event)
 
     def set_slider_range_from_vtk(self):
         """
@@ -127,9 +157,12 @@ class BaseFusionView(DicomView):
         else:
             self.overlay_item = None
 
-        # --- Mouse mode: connect scene mouse events ---
-        if hasattr(self.scene, "set_mouse_mode_handler"):
-            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_event)
+            # --- Mouse mode: connect scene mouse events ---
+            if hasattr(self.scene, "set_mouse_mode_handler"):
+                self.scene.set_mouse_mode_handler(
+                    self._handle_mouse_mode_event,
+                    self._handle_interrogation_window_size_change
+                )
         
     def _display_vtk_image(self, slider_id, mask_rect = None):
         orientation = self.slice_view
@@ -215,12 +248,12 @@ class BaseFusionView(DicomView):
         self.vtk_engine.set_interpolation_linear(
             self.overlay_interpolation_mode == "linear"
         )
-        # Always apply interrogation mask if in interrogation mode
         if self.get_mouse_mode() == "interrogation":
             mask_rect = None
+            window_size = getattr(self, "_interrogation_window_size", 80)
             if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
                 # Use scene coordinates for mask
-                mask_rect = (*self._interrogation_mouse_pos, 80)  # 80px square
+                mask_rect = (*self._interrogation_mouse_pos, window_size)
             else:
                 # Hide overlay everywhere if no mouse pos
                 mask_rect = (-1000, -1000, 1)
@@ -464,5 +497,38 @@ class BaseFusionView(DicomView):
     def zoom_out(self):
         super().zoom_out()
         if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def _handle_interrogation_window_size_change(self, delta):
+        """
+            Adjust the interrogation window size based on scroll delta.
+            Positive delta = shrink window (zoom in).
+            Negative delta = enlarge window (zoom out).
+            """
+
+        # Safety: make sure we're still in interrogation mode
+        if self.get_mouse_mode() != "interrogation":
+            return
+
+        # Pixel shrink and grow amount
+        step = 8
+
+        # Initialize default interrogation window size if not set yet
+        if not hasattr(self, "_interrogation_window_size"):
+            self._interrogation_window_size = 80
+
+        # Update interrogation window size based on scroll direction
+        if delta > 0:
+            # Scroll forward
+            new_size = max(10, self._interrogation_window_size - step)
+        else:
+            # Scroll backward
+            new_size = self._interrogation_window_size + step
+
+        # Save updated size
+        self._interrogation_window_size = new_size
+
+        # If mouse position is available, refresh the overlay at that location
+        if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
             self.refresh_overlay_now()
 
