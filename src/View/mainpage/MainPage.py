@@ -515,9 +515,6 @@ class UIMainWindow:
 
             self.fusion_options_tab.set_mouse_mode_changed_callback(propagate_mouse_mode_change)
 
-
-    
-
         # VTKEngine integration
         vtk_engine = None
         # Try to get vtk_engine from loader result (set by TopLevelController)
@@ -726,3 +723,4 @@ class UIMainWindow:
         self.action_handler.action_four_views.setDisabled(disabled)
         self.action_handler.action_show_cut_lines.setDisabled(disabled)
         self.action_handler.action_image_fusion.setDisabled(disabled)
+
