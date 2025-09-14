@@ -1,6 +1,8 @@
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
+from src.Controller.PathHandler import resource_path
 
 
 def get_color_pair_from_text(text):
@@ -30,6 +32,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
     def __init__(self, _back_callback=None):
         super().__init__()
         self.offset_changed_callback = None
+        self.mouse_mode = None
 
         layout = QtWidgets.QVBoxLayout()
 
@@ -67,7 +70,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             slider.setMinimum(-500)
             slider.setMaximum(500)
             slider.setValue(0)
-            slider.setSingleStep(1)
+            slider.setSingleStep(1)  # 1mm per step
             slider.setPageStep(1)
             slider.setTickInterval(0)
             slider.setTracking(True)
@@ -82,6 +85,67 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_sliders.append(slider)
             self.translate_labels.append(value_label)
 
+        # Mouse Mode Toolbar (Translate/Rotate)
+        mouse_mode_hbox = QtWidgets.QHBoxLayout()
+        mouse_mode_hbox.setSpacing(20)
+        mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
+
+        self.mouse_translate_btn = QtWidgets.QPushButton()
+        self.mouse_rotate_btn = QtWidgets.QPushButton()
+        self.mouse_translate_btn.setCheckable(True)
+        self.mouse_rotate_btn.setCheckable(True)
+        self.mouse_translate_btn.setToolTip("Enable mouse translation mode")
+        self.mouse_rotate_btn.setToolTip("Enable mouse rotation mode")
+
+        # Set icons for buttons
+        translate_icon = QIcon(resource_path("res/images/btn-icons/translate_arrow_icon.png"))
+        rotate_icon = QIcon(resource_path("res/images/btn-icons/rotate_arrow_icon.png"))
+        self.mouse_translate_btn.setIcon(translate_icon)
+        self.mouse_rotate_btn.setIcon(rotate_icon)
+        self.mouse_translate_btn.setIconSize(QtCore.QSize(24, 24))
+        self.mouse_rotate_btn.setIconSize(QtCore.QSize(24, 24))
+
+        # Add stretch, buttons, stretch
+        mouse_mode_hbox.addStretch(1)
+        mouse_mode_hbox.addWidget(self.mouse_translate_btn)
+        mouse_mode_hbox.addWidget(self.mouse_rotate_btn)
+        mouse_mode_hbox.addStretch(1)
+
+        # Insert the button row
+        layout.insertLayout(1, mouse_mode_hbox)
+
+        # Button group to ensure only one is checked at a time
+        self.mouse_mode_group = QtWidgets.QButtonGroup(self)
+        self.mouse_mode_group.setExclusive(True)
+        self.mouse_mode_group.addButton(self.mouse_translate_btn)
+        self.mouse_mode_group.addButton(self.mouse_rotate_btn)
+
+        # Track last clicked button for "toggle off" 
+        self._last_checked_button = None
+
+        def on_mouse_mode_btn_clicked(btn):
+            if self._last_checked_button == btn and btn.isChecked():
+                # uncheck button if active
+                self.mouse_mode_group.setExclusive(False)
+                btn.setChecked(False)
+                self.mouse_mode_group.setExclusive(True)
+                self._last_checked_button = None
+                self.mouse_mode = None
+            else:
+                # activate the clicked button
+                self._last_checked_button = btn
+                if btn == self.mouse_translate_btn:
+                    self.mouse_mode = "translate"
+                elif btn == self.mouse_rotate_btn:
+                    self.mouse_mode = "rotate"
+
+            # Call callback if set
+            if self.mouse_mode_changed_callback:
+                self.mouse_mode_changed_callback(self.mouse_mode)
+
+
+        self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
+        self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
 
         # Rotate section
         layout.addSpacing(8)
@@ -94,9 +158,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             label = QtWidgets.QLabel(axis)
             label.setFixedWidth(30)
             slider = QtWidgets.QSlider(Qt.Horizontal)
-            slider.setMinimum(-180)
-            slider.setMaximum(180)
+            slider.setMinimum(-1800)  # -180.0 deg (in 0.1 deg steps)
+            slider.setMaximum(1800)   # +180.0 deg (in 0.1 deg steps)
             slider.setValue(0)
+            slider.setSingleStep(1)   # 0.1 deg per step
             slider.valueChanged.connect(self._make_rotation_change_handler(i))
             value_label = QtWidgets.QLabel("0°")
             value_label.setFixedWidth(50)
@@ -140,6 +205,40 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.moving_color = "Green"
         self.coloring_enabled = True
 
+        # Mouse mode callback (to be set by parent)
+        self.mouse_mode_changed_callback = None
+
+    def set_mouse_mode_changed_callback(self, callback):
+        """
+        Allows external code to register a callback for mouse mode changes.
+        Args:
+            callback: A function that takes a string: "translate", "rotate", or None.
+        """
+        self.mouse_mode_changed_callback = callback
+
+    def get_mouse_mode(self):
+        """
+        Returns the current mouse mode: "translate", "rotate", or None.
+        """
+        return self.mouse_mode
+
+    def set_mouse_mode(self, mode):
+        """
+        Set the mouse mode programmatically.
+        """
+        if mode == "translate":
+            self.mouse_translate_btn.setChecked(True)
+            self.mouse_rotate_btn.setChecked(False)
+        elif mode == "rotate":
+            self.mouse_translate_btn.setChecked(False)
+            self.mouse_rotate_btn.setChecked(True)
+        else:
+            self.mouse_translate_btn.setChecked(False)
+            self.mouse_rotate_btn.setChecked(False)
+        self.mouse_mode = mode
+        if self.mouse_mode_changed_callback:
+            self.mouse_mode_changed_callback(mode)
+
     def on_offset_change(self, axis_index, value):
         """
             When a slider value changes, this method collects the current x, y, z offsets and
@@ -159,7 +258,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.transform)
+                self._matrix_dialog.set_matrix(engine.user_transform)
 
     def set_offset_changed_callback(self, callback):
         """
@@ -195,17 +294,18 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         """
         Called when a rotation slider value changes.
         """
-        self.rotate_labels[axis_index].setText(f"{value}°")
+        # Show value in degrees (float, 1 decimal)
+        self.rotate_labels[axis_index].setText(f"{value/10.0:.1f}°")
         if self.rotation_changed_callback:
-            rx = self.rotate_sliders[0].value()
-            ry = self.rotate_sliders[1].value()
-            rz = self.rotate_sliders[2].value()
+            rx = self.rotate_sliders[0].value() / 10.0
+            ry = self.rotate_sliders[1].value() / 10.0
+            rz = self.rotate_sliders[2].value() / 10.0
             self.rotation_changed_callback((rx, ry, rz))
         # Update matrix dialog if open
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.transform)
+                self._matrix_dialog.set_matrix(engine.user_transform)
 
     def set_offsets(self, offsets):
         """
@@ -218,8 +318,8 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         for i in range(3):
             self.translate_sliders[i].blockSignals(True)
-            self.translate_sliders[i].setValue(offsets[i])
-            self.translate_labels[i].setText(f"{offsets[i]} mm")
+            self.translate_sliders[i].setValue(int(round(offsets[i])))
+            self.translate_labels[i].setText(f"{int(round(offsets[i]))} mm")
             self.translate_sliders[i].blockSignals(False)
 
     def reset_trans(self):
@@ -264,7 +364,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.transform)
+                self._matrix_dialog.set_matrix(engine.user_transform)
 
     def _make_offset_change_handler(self, idx):
         return lambda value: self.on_offset_change(idx, value)
