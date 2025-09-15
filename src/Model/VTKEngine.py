@@ -511,7 +511,19 @@ class VTKEngine:
         display_mat[0:3, 0:3] = rot_ras
         display_mat[0:3, 3] = np.array([self._tx, self._ty, self._tz])
 
-        self.sitktransform = sitk.Euler3DTransform(display_mat)
+        # Convert vtkTransform (user_transform) to sitk.AffineTransform
+        vtkmat = self.user_transform.GetMatrix()
+        affine_np = np.eye(4)
+        for i in range(4):
+            for j in range(4):
+                affine_np[i, j] = vtkmat.GetElement(i, j)
+        # SimpleITK expects a 3x3 matrix and a translation vector
+        sitk_matrix = affine_np[0:3, 0:3].flatten()
+        sitk_translation = affine_np[0:3, 3]
+        sitk_affine = sitk.AffineTransform(3)
+        sitk_affine.SetMatrix(sitk_matrix)
+        sitk_affine.SetTranslation(sitk_translation)
+        self.sitktransform = sitk_affine
         self.moving_image_container.set("tfm", self.sitktransform)
 
         vtk_display = vtk.vtkMatrix4x4()
