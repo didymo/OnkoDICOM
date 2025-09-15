@@ -313,6 +313,15 @@ class UIMainWindow:
                 self.image_fusion_view_axial.update_view()
                 self.image_fusion_view_coronal.update_view()
                 self.image_fusion_view_sagittal.update_view()
+                # --- Ensure interrogation mask is reapplied after zoom/windowing ---
+                for view in [
+                    self.image_fusion_single_view,
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_coronal,
+                    self.image_fusion_view_sagittal,
+                ]:
+                    if hasattr(view, "get_mouse_mode") and view.get_mouse_mode() == "interrogation":
+                        view.refresh_overlay_now()
 
         if hasattr(self, 'draw_roi'):
             if self.draw_roi is not None:
@@ -443,6 +452,7 @@ class UIMainWindow:
         # Define a callback that updates all three views for translation
         def update_all_views(offset):
             for view in [
+                self.image_fusion_single_view,
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
@@ -457,6 +467,7 @@ class UIMainWindow:
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
             for view in [
+                self.image_fusion_single_view,
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
@@ -470,6 +481,7 @@ class UIMainWindow:
         # --- Connect color pair change to all fusion views ---
         def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
             for view in [
+                self.image_fusion_single_view,
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
@@ -499,7 +511,21 @@ class UIMainWindow:
             self.fusion_options_tab.set_get_vtk_engine_callback(lambda: vtk_engine)
             self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
             self.left_panel.setCurrentWidget(self.fusion_options_tab)
-    
+
+            # --- Set mouse mode changed callback to update ALL views ---
+            def propagate_mouse_mode_change(mode):
+                for view in [
+                    self.image_fusion_single_view,
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal,
+                    self.image_fusion_view_coronal,
+                ]:
+                    if hasattr(view, "_on_mouse_mode_changed"):
+                        view._on_mouse_mode_changed(mode)
+                        # Force overlay refresh so window appears immediately
+                        view.refresh_overlay_now()
+
+            self.fusion_options_tab.set_mouse_mode_changed_callback(propagate_mouse_mode_change)
 
         # VTKEngine integration
         vtk_engine = None
@@ -628,6 +654,7 @@ class UIMainWindow:
         # Update the Add On Option GUI
         self.add_on_options_controller.update_ui()
 
+
     def perform_suv2roi(self):
         """
         Performs the SUV2ROI process.
@@ -692,6 +719,7 @@ class UIMainWindow:
         """removes the draw roi instance from the main window,
         also removing the instance from the ROIDrawOption controller"""
         logging.debug("remove_draw_roi_instance started")
+        print("called")
 
         self.roi_draw_handler.remove_roi_draw_window()
         self.main_content.removeWidget(self.draw_roi)

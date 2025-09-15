@@ -11,7 +11,6 @@ from src.View.StyleSheetReader import StyleSheetReader
 This Class handles the ROI Pop Up functionalities       
 """
 
-
 class SelectROIPopUp(QDialog):
     signal_roi_name = QtCore.Signal(str)
 

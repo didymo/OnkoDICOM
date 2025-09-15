@@ -1330,3 +1330,4 @@ class UIDrawROIWindow:
             delattr(self, 'seed')
         self.close()
         self.signal_draw_roi_closed.emit()
+

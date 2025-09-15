@@ -1,8 +1,5 @@
 from PySide6 import QtWidgets, QtCore
 
-from src.View.mainpage.DicomView import DicomView, GraphicsScene
-
-
 from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
 
 class ImageFusionAxialView(BaseFusionView):
@@ -114,14 +111,6 @@ class ImageFusionAxialView(BaseFusionView):
                          QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         bottom.addWidget(bottom_right_widget,
                          QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
-        
-        # Make the widgets transparent to mouse events
-        top_left_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        top_right_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        bottom_left_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        bottom_right_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        top_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
-        bottom_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
 
         # Add the bottom and top widgets to the view
         self.metadata_layout.addWidget(
@@ -188,6 +177,19 @@ class ImageFusionAxialView(BaseFusionView):
         """
         super().update_view(zoom_change)
         self.update_metadata()
+        # After zoom or view update, reapply interrogation mask if needed
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_in(self):
+        super().zoom_in()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_out(self):
+        super().zoom_out()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
 
     def update_metadata(self):
         """

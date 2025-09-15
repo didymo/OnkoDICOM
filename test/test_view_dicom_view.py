@@ -2,7 +2,7 @@ import os
 
 import pytest
 from pathlib import Path
-from PySide6.QtWidgets import QGridLayout, QGraphicsPolygonItem
+from PySide6.QtWidgets import QGridLayout, QGraphicsPathItem
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
@@ -135,6 +135,9 @@ def test_one_view_roi(qtbot, test_object, init_config):
     # The first four ROI can not be displayed on the single DICOM test image. Use the fifth roi to test
     fifth_roi_id = list(test_object.main_window.structures_tab.rois.items())[4][0]
     test_object.main_window.structures_tab.structure_checked(True, fifth_roi_id)
+
+
+    assert isinstance(test_object.main_window.dicom_single_view.scene.items()[0], QGraphicsPathItem)
 
     # Check if ROI color is correct
     assert test_object.main_window.dicom_single_view.scene.items()[0].brush().color() == \
