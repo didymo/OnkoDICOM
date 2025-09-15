@@ -517,6 +517,8 @@ class VTKEngine:
         for i in range(4):
             for j in range(4):
                 affine_np[i, j] = vtkmat.GetElement(i, j)
+        # Invert only the Z translation for SimpleITK
+        affine_np[2, 3] *= -1
         # SimpleITK expects a 3x3 matrix and a translation vector
         sitk_matrix = affine_np[0:3, 0:3].flatten()
         sitk_translation = affine_np[0:3, 3]

@@ -26,10 +26,6 @@ class MovingImageLoader(ImageLoader):
     def __init__(self, *args, **kwargs):
         super(MovingImageLoader, self).__init__(*args, **kwargs)
 
-    # ----------------------------
-    # Modular Functions
-    # ----------------------------
-
     def get_common_path_and_datasets(self):
         path = os.path.dirname(os.path.commonprefix(self.selected_files))
         read_data_dict, file_names_dict = ImageLoading.get_datasets(
@@ -109,10 +105,7 @@ class MovingImageLoader(ImageLoader):
 
         return True
 
-    # ----------------------------
-    # Main Loader (keeps progress)
-    # ----------------------------
-
+    # Main Loader
     def load(self, interrupt_flag, progress_callback):
         progress_callback.emit(("Creating datasets...", 0))
         try:
@@ -161,6 +154,7 @@ class MovingImageLoader(ImageLoader):
 
         return True
 
+    # manual fusion loader
     def load_manual_mode(self, interrupt_flag, progress_callback):
             progress_callback.emit(("Generating Moving Model", 60))
             try:
