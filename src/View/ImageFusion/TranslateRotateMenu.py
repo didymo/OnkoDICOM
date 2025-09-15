@@ -1,9 +1,11 @@
+import itertools
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
 from src.Controller.PathHandler import resource_path
-
+from PySide6.QtWidgets import QFileDialog, QMessageBox
+import logging
 
 def get_color_pair_from_text(text):
     """
@@ -85,30 +87,45 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_sliders.append(slider)
             self.translate_labels.append(value_label)
 
-        # Mouse Mode Toolbar (Translate/Rotate)
+            # Mouse Mode Toolbar (Translate/Rotate/Interrogation)
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
         mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
 
         self.mouse_translate_btn = QtWidgets.QPushButton()
         self.mouse_rotate_btn = QtWidgets.QPushButton()
+        self.mouse_interrogation_btn = QtWidgets.QPushButton()
+        self.mouse_none_btn = QtWidgets.QPushButton()
         self.mouse_translate_btn.setCheckable(True)
         self.mouse_rotate_btn.setCheckable(True)
+        self.mouse_interrogation_btn.setCheckable(True)
+        self.mouse_none_btn.setCheckable(True)
         self.mouse_translate_btn.setToolTip("Enable mouse translation mode")
         self.mouse_rotate_btn.setToolTip("Enable mouse rotation mode")
+        self.mouse_interrogation_btn.setToolTip(
+            "Enable interrogation window mode (focus overlay in a square around mouse)")
+        self.mouse_none_btn.setToolTip("Disable mouse mode (X)")
 
         # Set icons for buttons
         translate_icon = QIcon(resource_path("res/images/btn-icons/translate_arrow_icon.png"))
         rotate_icon = QIcon(resource_path("res/images/btn-icons/rotate_arrow_icon.png"))
+        interrogation_icon = QIcon(resource_path("res/images/btn-icons/interrogation_window_icon.png"))
+        none_icon = QIcon(resource_path("res/images/btn-icons/no_movement_or_window.png"))
         self.mouse_translate_btn.setIcon(translate_icon)
         self.mouse_rotate_btn.setIcon(rotate_icon)
+        self.mouse_interrogation_btn.setIcon(interrogation_icon)
+        self.mouse_none_btn.setIcon(none_icon)
         self.mouse_translate_btn.setIconSize(QtCore.QSize(24, 24))
         self.mouse_rotate_btn.setIconSize(QtCore.QSize(24, 24))
+        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(24, 24))
+        self.mouse_none_btn.setIconSize(QtCore.QSize(24, 24))
 
         # Add stretch, buttons, stretch
         mouse_mode_hbox.addStretch(1)
         mouse_mode_hbox.addWidget(self.mouse_translate_btn)
         mouse_mode_hbox.addWidget(self.mouse_rotate_btn)
+        mouse_mode_hbox.addWidget(self.mouse_interrogation_btn)
+        mouse_mode_hbox.addWidget(self.mouse_none_btn)
         mouse_mode_hbox.addStretch(1)
 
         # Insert the button row
@@ -119,8 +136,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode_group.setExclusive(True)
         self.mouse_mode_group.addButton(self.mouse_translate_btn)
         self.mouse_mode_group.addButton(self.mouse_rotate_btn)
+        self.mouse_mode_group.addButton(self.mouse_interrogation_btn)
+        self.mouse_mode_group.addButton(self.mouse_none_btn)
 
-        # Track last clicked button for "toggle off" 
+        # Track last clicked button for "toggle off"
         self._last_checked_button = None
 
         def on_mouse_mode_btn_clicked(btn):
@@ -138,14 +157,19 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     self.mouse_mode = "translate"
                 elif btn == self.mouse_rotate_btn:
                     self.mouse_mode = "rotate"
+                elif btn == self.mouse_interrogation_btn:
+                    self.mouse_mode = "interrogation"
+                elif btn == self.mouse_none_btn:
+                    self.mouse_mode = None
 
             # Call callback if set
             if self.mouse_mode_changed_callback:
                 self.mouse_mode_changed_callback(self.mouse_mode)
 
-
         self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
         self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
+        self.mouse_interrogation_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_interrogation_btn))
+        self.mouse_none_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_none_btn))
 
         # Rotate section
         layout.addSpacing(8)
@@ -186,6 +210,15 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         reset_btn.setToolTip("Reset all translation and rotation to zero")
         reset_btn.clicked.connect(self.reset_transform)
         layout.addWidget(reset_btn)
+
+        # Add Save/Load buttons
+        save_button = QtWidgets.QPushButton("Save Fusion State")
+        load_button = QtWidgets.QPushButton("Load Fusion State")
+        save_button.clicked.connect(self.save_fusion_state)
+        load_button.clicked.connect(self.load_fusion_state)
+        # Add to layout (assume self.layout() is a QVBoxLayout)
+        layout.addWidget(save_button)
+        layout.addWidget(load_button)
 
         # Show Transform Matrix Button
         show_matrix_btn = QtWidgets.QPushButton("Show Transform Matrix")
@@ -229,9 +262,15 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if mode == "translate":
             self.mouse_translate_btn.setChecked(True)
             self.mouse_rotate_btn.setChecked(False)
+            self.mouse_interrogation_btn.setChecked(False)
         elif mode == "rotate":
             self.mouse_translate_btn.setChecked(False)
+            self.mouse_interrogation_btn.setChecked(False)
             self.mouse_rotate_btn.setChecked(True)
+        elif mode == "interrogation":
+            self.mouse_translate_btn.setChecked(False)
+            self.mouse_interrogation_btn.setChecked(True)
+            self.mouse_rotate_btn.setChecked(False)
         else:
             self.mouse_translate_btn.setChecked(False)
             self.mouse_rotate_btn.setChecked(False)
@@ -399,3 +438,239 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self._matrix_dialog.show()
         self._matrix_dialog.raise_()
         self._matrix_dialog.activateWindow()
+
+    def save_fusion_state(self):
+        """
+        Save the current fusion transform as a DICOM Spatial Registration Object (SRO).
+        This function creates a standards-compliant DICOM SRO containing the 4x4 transformation matrix
+        for the moving image overlay, referencing the fixed and moving images. The user is prompted
+        to select the save location and filename for the DICOM file.
+        Returns:
+            None
+        """
+        import numpy as np
+
+        vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
+                                                                "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
+        if vtk_engine is None:
+            QMessageBox.warning(self, "Error", "No VTK engine found.")
+            logging.error("No VTK engine found in save_fusion_state")
+            return
+
+        # Gather the 4x4 transform matrix
+        matrix = None
+        if hasattr(vtk_engine, "transform"):
+            m = vtk_engine.transform.GetMatrix()
+            matrix = np.array([[m.GetElement(i, j) for j in range(4)] for i in range(4)], dtype=np.float32)
+        else:
+            QMessageBox.warning(self, "Error", "No transform matrix found.")
+            logging.error("No transform matrix found")
+            return
+
+        # Print translation and rotation being saved
+        translation = [vtk_engine._tx, vtk_engine._ty, vtk_engine._tz]
+        rotation = [vtk_engine._rx, vtk_engine._ry, vtk_engine._rz]
+
+        ds = self._create_spatial_registration_dicom(matrix, translation, rotation, vtk_engine)
+
+        # Save as DICOM SRO
+        filename, _ = QFileDialog.getSaveFileName(self, "Save Spatial Registration (SRO)", "transform.dcm",
+                                                  "DICOM Files (*.dcm)")
+        if filename:
+            ds.save_as(filename)
+            QMessageBox.information(self, "Saved", f"Spatial Registration (SRO) saved to {filename}")
+
+    def _create_spatial_registration_dicom(self, matrix, translation, rotation, vtk_engine):
+        """
+        Create a DICOM Spatial Registration Object (SRO) dataset with the given transform.
+        Args:
+            matrix: 4x4 numpy array representing the transformation matrix.
+            translation: List of translation values [tx, ty, tz].
+            rotation: List of rotation values [rx, ry, rz].
+            vtk_engine: The VTKEngine instance (for UIDs).
+        Returns:
+            pydicom FileDataset representing the SRO.
+        """
+        import pydicom
+        from pydicom.dataset import FileDataset, Dataset
+        from pydicom.uid import generate_uid
+        import datetime
+
+        # Get UIDs for fixed and moving images from VTKEngine if available
+        fixed_series_uid = getattr(vtk_engine, "fixed_series_uid", "1.2.3.4.5.6.7.8.1")
+        fixed_image_uid = getattr(vtk_engine, "fixed_image_uid", "1.2.3.4.5.6.7.8.1.1")
+        moving_series_uid = getattr(vtk_engine, "moving_series_uid", "1.2.3.4.5.6.7.8.2")
+        moving_image_uid = getattr(vtk_engine, "moving_image_uid", "1.2.3.4.5.6.7.8.2.1")
+
+        # Create a minimal DICOM SRO dataset
+        file_meta = pydicom.Dataset()
+        file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.66.1"  # Spatial Registration Storage
+        file_meta.MediaStorageSOPInstanceUID = generate_uid()
+        file_meta.ImplementationClassUID = generate_uid()
+
+        ds = FileDataset("transform.dcm", {}, file_meta=file_meta, preamble=b"\0" * 128)
+        ds.is_little_endian = True
+        ds.is_implicit_VR = True
+
+        # Set required DICOM fields
+        dt = datetime.datetime.now()
+        ds.PatientName = "FUSION"
+        ds.PatientID = "FUSION"
+        ds.StudyInstanceUID = generate_uid()
+        ds.SeriesInstanceUID = generate_uid()
+        ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
+        ds.SOPClassUID = file_meta.MediaStorageSOPClassUID
+        ds.Modality = "REG"
+        ds.StudyDate = dt.strftime('%Y%m%d')
+        ds.StudyTime = dt.strftime('%H%M%S')
+        ds.SeriesDescription = "Manual Fusion Spatial Registration"
+        ds.SeriesNumber = "1"
+        ds.InstanceNumber = "1"
+
+        # Referenced Series/Image Sequence for fixed image
+        ds.ReferencedSeriesSequence = [Dataset()]
+        ds.ReferencedSeriesSequence[0].SeriesInstanceUID = fixed_series_uid
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"  # CT Image Storage
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence[0].ReferencedSOPInstanceUID = fixed_image_uid
+
+        # Registration Sequence
+        reg = Dataset()
+        reg.MatrixRegistrationSequence = [Dataset()]
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrixType = "RIGID"
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrix = [float(v) for v in matrix.flatten()]
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationComment = "Manual fusion transform"
+        reg.MatrixRegistrationSequence[0].FrameOfReferenceUID = generate_uid()
+        ds.RegistrationSequence = [reg]
+
+        # Referenced Series/Image Sequence for moving image
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence = [Dataset()]
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[
+            0].SeriesInstanceUID = moving_series_uid
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence = [
+            Dataset()]
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
+        ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPInstanceUID = moving_image_uid
+
+        # Save user translation/rotation as private tags for round-trip
+        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
+        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
+
+        return ds
+
+    def load_fusion_state(self):
+        """
+        Load a fusion transform state from a DICOM Spatial Registration Object (SRO).
+        This function loads a previously saved 4x4 transformation matrix from a DICOM SRO file
+        (created by the Save Fusion State function) and applies it to the current fusion session.
+        The user is prompted to select the DICOM file to load.
+        Returns:
+            None
+        """
+        import pydicom
+        import numpy as np
+
+        vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
+                                                                "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
+        if vtk_engine is None:
+            QMessageBox.warning(self, "Error", "No VTK engine found.")
+            logging.error("No VTK engine found in load_fusion_state")
+            return
+
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Fusion State", "", "DICOM Files (*.dcm)")
+
+        if filename:
+            try:
+                ds = pydicom.dcmread(filename)
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Could not read DICOM file:\n{e}")
+                logging.error(f"Could not read DICOM file:\n{e}")
+                return
+
+            # Check for Spatial Registration Object
+            if hasattr(ds, "RegistrationSequence"):
+                self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
+            elif (0x7777, 0x0010) in ds:
+                self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
+            else:
+                QMessageBox.warning(self, "Error",
+                                    "No spatial registration or transform found in DICOM file.\n"
+                                    "Please select a transform.dcm file created by the Save Fusion State function.")
+                logging.error("No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
+                              "created by the Save Fusion State function.")
+
+    def _extracted_from_load_fusion_state_sro(self, ds, np, vtk_engine, filename):
+        """
+        Apply a loaded fusion transform from a DICOM SRO to the current session.
+        Given a DICOM dataset containing a spatial registration, this method extracts the
+        4x4 transformation matrix, applies it to the VTK engine, updates the GUI sliders,
+        and refreshes the fusion views.
+        Args:
+            ds: The loaded pydicom Dataset containing the SRO.
+            np: The numpy module.
+            vtk_engine: The VTKEngine instance to update.
+            filename: The filename of the loaded DICOM file.
+        Returns:
+            None
+        """
+        import vtk
+
+        # --- Extract 4x4 transform matrix from SRO ---
+        reg_seq = ds.RegistrationSequence[0]
+        mat_seq = reg_seq.MatrixRegistrationSequence[0]
+        matrix_flat = mat_seq.FrameOfReferenceTransformationMatrix
+        matrix = np.array(matrix_flat, dtype=np.float32).reshape((4, 4))
+
+        # For SRO, translation/rotation are not stored separately, so extract from matrix
+        # Try to load user translation/rotation if present
+        if (0x7777, 0x0020) in ds:
+            translation = [float(x) for x in ds[(0x7777, 0x0020)].value.split(",")]
+        else:
+            translation = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+        if (0x7777, 0x0021) in ds:
+            rotation = [float(x) for x in ds[(0x7777, 0x0021)].value.split(",")]
+        else:
+            rotation = [0, 0, 0]
+
+        m = vtk.vtkMatrix4x4()
+        for i, j in itertools.product(range(4), range(4)):
+            m.SetElement(i, j, matrix[i, j])
+
+        if hasattr(vtk_engine, "transform"):
+            vtk_engine.transform.SetMatrix(m)
+            vtk_engine.reslice3d.SetResliceAxes(m)
+            vtk_engine.reslice3d.Modified()
+
+        if hasattr(vtk_engine, "set_translation"):
+            vtk_engine.set_translation(*translation)
+        if hasattr(vtk_engine, "set_rotation_deg"):
+            vtk_engine.set_rotation_deg(*rotation)
+
+        self.set_offsets(translation)
+        for i in range(3):
+            self.rotate_sliders[i].blockSignals(True)
+            self.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
+            self.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
+            self.rotate_sliders[i].blockSignals(False)
+
+        if self.offset_changed_callback:
+            self.offset_changed_callback(translation)
+        if self.rotation_changed_callback:
+            self.rotation_changed_callback(tuple(rotation))
+
+        from src.View.mainpage.MainPage import UIMainWindow
+        mw = next(
+            (
+                widget
+                for widget in QtWidgets.QApplication.topLevelWidgets()
+                if isinstance(widget, UIMainWindow)
+            ),
+            None,
+        )
+        if mw is not None:
+            mw.update_views()
+
+        QMessageBox.information(self, "Loaded", f"Spatial Registration loaded from {filename}")
