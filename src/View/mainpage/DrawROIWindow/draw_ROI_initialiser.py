@@ -40,6 +40,9 @@ class RoiInitialiser():
     def apply_zoom(self):
         """Zooms the canvas in or out depending"""
         self.view.setTransform(QtGui.QTransform().scale(self.zoom_variable, self.zoom_variable))
+    
+    def transect_handler(self):
+        self.canvas_labal.set_tool(4)
 
     def close_window(self):
         """Closes the window"""
