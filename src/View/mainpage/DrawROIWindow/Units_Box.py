@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt,Signal
 class UnitsBox(QtWidgets.QLabel):
     """The class contains all of the unit boxes"""
     opasity_value = Signal(int)
+    update_cursor_size = Signal()
     def __init__(self, parent = None, pen = None, canvas_label = None,):
         super().__init__(parent)
         self.canvas_label = canvas_label
@@ -51,9 +52,9 @@ class UnitsBox(QtWidgets.QLabel):
         #Transparency Widget
         transparency = QLabel("Opacity :")
         self.transparency_slider = QSlider(Qt.Horizontal)
-        self.transparency_slider.setRange(1,100)
+        self.transparency_slider.setRange(1,255)
         self.transparency_slider.valueChanged.connect(self.update_transparency)
-        self.transparency_slider.setValue(50)
+        self.transparency_slider.setValue(126)
         
         #Ading the them to the layout
         layout.addWidget(pen_size,0,0)
@@ -74,15 +75,15 @@ class UnitsBox(QtWidgets.QLabel):
     def update_pen_size(self, value):
         """Changes the width of the drawing"""
         self.canvas_label.pen.setWidth(value)
+        self.update_cursor_size.emit()
 
     def update_transparency(self,value):
         """Updates the value of the transparency"""
         colour = self.canvas_label.pen.color()
-        transparency_value = int((255/100) * value)
-        colour.setAlpha(transparency_value)
+        colour.setAlpha(value)
         self.canvas_label.pen.setColor(colour)
-        self.canvas_label.max_alpha = transparency_value
-        self.opasity_value.emit(transparency_value)
+        self.canvas_label.max_alpha = value
+        self.opasity_value.emit(value)
 
 
 

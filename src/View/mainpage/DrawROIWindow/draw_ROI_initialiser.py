@@ -36,6 +36,7 @@ class RoiInitialiser():
         self.zoom_variable /= 1.05
         self.apply_zoom()
     
+    
     def apply_zoom(self):
         """Zooms the canvas in or out depending"""
         self.view.setTransform(QtGui.QTransform().scale(self.zoom_variable, self.zoom_variable))
@@ -134,6 +135,7 @@ class RoiInitialiser():
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
         self.units_box.opasity_value.connect(self.left_label.update_opasity)
+        self.units_box.update_cursor_size.connect(self.left_label.update_cursor)
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
         """Creates and adds the toolbar to the ui"""

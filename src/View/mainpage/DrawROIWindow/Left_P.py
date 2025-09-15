@@ -12,6 +12,8 @@ class LeftPannel(QtWidgets.QWidget):
         self.parent = parent
         self.pen = pen
         self.last_colour = QColor("blue")
+        self.last_colour.setAlpha(126)
+        self.was_erasor = False
         self.set_layout()
 
     def set_layout(self):
@@ -28,8 +30,6 @@ class LeftPannel(QtWidgets.QWidget):
         eraser_roi = QPushButton("Trim ROI")
         eraser_roi.setCheckable(True)
         eraser_draw = QPushButton("Remove ROI")
-        smooth = QPushButton("Smooth")
-        smooth.setCheckable(True)
         transect = QPushButton("Transect")
         transect.setCheckable(True)
         copy = QPushButton("Copy ROI")
@@ -42,7 +42,6 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.addButton(pen)
         self.button_group.addButton(eraser_draw)
         self.button_group.addButton(eraser_roi)
-        self.button_group.addButton(smooth)
         self.button_group.addButton(transect)
         self.button_group.addButton(copy)
         self.button_group.addButton(save)
@@ -55,7 +54,6 @@ class LeftPannel(QtWidgets.QWidget):
         pen.clicked.connect(self.pen_tool)
         eraser_roi.clicked.connect(self.eraser_roi_tool)
         eraser_draw.clicked.connect(self.eraser_draw_tool)
-        smooth.clicked.connect(self.smooth_tool)
         transect.clicked.connect(self.transect_tool)
         copy.clicked.connect(self.copy_button)
         save.clicked.connect(self.save_button)
@@ -86,11 +84,11 @@ class LeftPannel(QtWidgets.QWidget):
         
     def brush_tool(self):
         """This fucntion changes the draw tool to a brush"""
-        print("active")
         self.canvas_label.set_tool(1)
         self.canvas_label.pen.setColor(self.last_colour)
         cursor = self.make_circle_cursor(self.canvas_label.pen.width(), self.last_colour)
         self.canvas_label.setCursor(cursor)
+        self.was_erasor = False
 
     def pen_tool(self):
         """This fucntion changes the draw tool to a pen"""
@@ -101,26 +99,23 @@ class LeftPannel(QtWidgets.QWidget):
     def eraser_roi_tool(self):
         """This fucntion changes the draw tool to the eraser ROI tool"""
         self.canvas_label.set_tool(1)
-        canvas = self.make_circle_cursor(self.canvas_label.pen.width(),QColor(Qt.black), fill=QColor(Qt.white))
-        self.canvas_label.setCursor(canvas)
+        cursor = self.make_circle_cursor(self.canvas_label.pen.width(),\
+                                         QColor(Qt.black), fill=QColor(Qt.white))
+        self.canvas_label.setCursor(cursor)
         self.canvas_label.pen.setColor(Qt.transparent)
+        self.was_erasor = True
 
     def eraser_draw_tool(self):
         """This fucntion changes the draw tool to a eraser draw tool"""
         self.canvas_label.erase_roi()
-        
-
-    #TODO
-    def smooth_tool(self):
-        """This fucntion changes the draw tool to a smooth tool"""
 
     def transect_tool(self):
-        """This fucntion changes the draw tool to a smooth tool"""
+        """This fucntion activates the transect tool"""
         self.canvas_label.setCursor(Qt.ArrowCursor)
         self.canvas_label.set_tool(4)
 
     def copy_button(self):
-        """This fucntion changes the draw tool to a smooth tool"""
+        """This fucntion activates the copy pop up window"""
         self.parent.copy_roi()
 
     def save_button(self):
@@ -187,3 +182,12 @@ class LeftPannel(QtWidgets.QWidget):
     def update_opasity(self, v):
         """Updates the alpha value"""
         self.last_colour.setAlpha(v)
+
+    @Slot(Signal)
+    def update_cursor(self):
+        "Changes the size of the cursor to be inline with the slider"
+        if self.was_erasor:
+            self.canvas_label.setCursor(self.make_circle_cursor(self.canvas_label.pen.width(),\
+                                         QColor(Qt.black), fill=QColor(Qt.white)))
+        else:
+            self.canvas_label.setCursor(self.make_circle_cursor(self.canvas_label.pen.width(), self.last_colour))
