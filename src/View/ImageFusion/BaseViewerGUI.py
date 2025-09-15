@@ -354,12 +354,13 @@ class BaseFusionView(DicomView):
                 center_x = int(rect.width() / 2)
                 center_y = int(rect.height() / 2)
 
-            # Only update interrogation position if valid
+                # Only update interrogation position if valid
             if center_x is not None and center_y is not None:
                 self._interrogation_mouse_pos = (center_x, center_y)
                 # else: keep last known position instead of clearing
 
                 self.refresh_overlay()
+
         else:
             # Leaving interrogation mode → explicitly clear
             self._interrogation_mouse_pos = None
@@ -385,8 +386,13 @@ class BaseFusionView(DicomView):
             return
 
         if mode == "interrogation":
-            # Store mouse position and trigger overlay update
-            self._interrogation_mouse_pos = (int(scene_pos.x()), int(scene_pos.y()))
+            # Clamp mouse position so it cannot go outside the scene
+            scene_rect = self.scene.sceneRect()
+            clamped_x = min(max(scene_pos.x(), scene_rect.left()), scene_rect.right())
+            clamped_y = min(max(scene_pos.y(), scene_rect.top()), scene_rect.bottom())
+
+            # Store clamped position
+            self._interrogation_mouse_pos = (int(clamped_x), int(clamped_y))
             self.refresh_overlay()
             return
 
