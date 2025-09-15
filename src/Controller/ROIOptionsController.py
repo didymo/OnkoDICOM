@@ -3,8 +3,6 @@ import logging
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow.draw_ROI_initialiser import RoiInitialiser
-from src.View.mainpage.DrawROIWindow.Save_To_RTSS import SaveROI
-from src.View.mainpage.DrawROIWindow.Canvas import Tool
 from src.View.mainpage.ManipulateROIWindow import *
 
 
@@ -68,9 +66,6 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
     def update_ui(self, rois, dataset_rtss):
         self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
                     self.signal_draw_roi_closed)
-
-    def transect_handler(self):
-        self.canvas_labal.current_tool = Tool.TRANSECT
 
 
 class ROIDrawOption:
