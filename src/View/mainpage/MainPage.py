@@ -736,4 +736,3 @@ class UIMainWindow:
         self.action_handler.action_four_views.setDisabled(disabled)
         self.action_handler.action_show_cut_lines.setDisabled(disabled)
         self.action_handler.action_image_fusion.setDisabled(disabled)
-

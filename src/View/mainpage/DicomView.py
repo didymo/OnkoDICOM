@@ -176,6 +176,7 @@ class DicomView(QtWidgets.QWidget):
         pen = self.get_qpen(pen_color, roi_line, line_width)
         path = QtGui.QPainterPath()
         path.setFillRule(QtCore.Qt.OddEvenFill)
+
         for _,poly in enumerate(polygons):
             path.addPolygon(poly)
         new_polygon = QtWidgets.QGraphicsPathItem(path)
