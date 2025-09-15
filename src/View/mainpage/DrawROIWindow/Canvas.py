@@ -18,16 +18,19 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.Transect_Window import TransectWindow
 from src.View.mainpage.DrawROIWindow.Save_To_RTSS import SaveROI
 
+
 class Tool(Enum):
     """Holds the switch for the tools"""
-    DRAW     = auto()
-    FILL     = auto()
-    CIRCLE   = auto()
+    DRAW = auto()
+    FILL = auto()
+    CIRCLE = auto()
     TRANSECT = auto()
 
-#necessary because QGraphicsPixmapItem cannot emmit signals
+# necessary because QGraphicsPixmapItem cannot emmit signals
+
+
 class Emitter(QObject):
-    rtss_for_saving = Signal(pydicom.Dataset,str)
+    rtss_for_saving = Signal(pydicom.Dataset, str)
 
 
 class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
@@ -35,35 +38,37 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
     def __init__(self, pen: QPen, slider, rtss, signal_roi_drawn):
         super().__init__()
-        self.pen = pen #the pen object that is used to draw on the canvas, can be changed in other classes
-        self.last_point = None #becomes a x,y point
-        self.first_point = None #becomes a x,y point
-        self.t_window = None #becomes new window to show to transection window
+        self.pen = pen  # the pen object that is used to draw on the canvas, can be changed in other classes
+        self.last_point = None  # becomes a x,y point
+        self.first_point = None  # becomes a x,y point
+        self.t_window = None  # becomes new window to show to transection window
         self.current_tool = Tool.DRAW
-        self.ds_is_active = False  #used to tell if undelying dicom file matches the above layer, this variable lets the pixel lock know if it needs to run
-         #this variable represents the current viewable slice
-        self.transect_pixmap_copy = None #Becomes a pixmap
+        # used to tell if undelying dicom file matches the above layer, this variable lets the pixel lock know if it needs to run
+        self.ds_is_active = False
+        # this variable represents the current viewable slice
+        self.transect_pixmap_copy = None  # Becomes a pixmap
         self.patient_dict_container = PatientDictContainer()
-        self.dicom_slider =  slider #change in future
+        self.dicom_slider = slider  # change in future
         self.dicom_data = self.patient_dict_container.dataset
         self.dicom_slider.valueChanged.connect(self.change_layout_bool)
         self.dicom_slider.valueChanged.connect(self.update_pixmap_layer)
-        self.slice_num = 94 #must change
-        self.number_of_slices = self.dicom_slider.maximum() #number of image slices
+        self.slice_num = 94  # must change
+        self.number_of_slices = self.dicom_slider.maximum()  # number of image slices
         # sets the canvas and the mouse tracking
-        #genorates a pixmap to draw on then copys that pixmap into an array an equal size of the dicom images
+        # genorates a pixmap to draw on then copys that pixmap into an array an equal size of the dicom images
         self.gen_pix_map = QPixmap(512, 512)
         self.gen_pix_map.fill(Qt.transparent)
-        self.canvas = [] #An array that holds all of the slices used in the viewer
+        self.canvas = []  # An array that holds all of the slices used in the viewer
 
-        #zoom variables
+        # zoom variables
         self.base_canvas = []
         self.scale_factor = 1.0
 
         for _ in range(self.number_of_slices+1):
             self.canvas.append(self.gen_pix_map.copy())
             self.base_canvas.append(self.gen_pix_map.copy())
-        self.setPixmap(self.canvas[self.slice_num]) #sets the current pixmap to the first slice
+        # sets the current pixmap to the first slice
+        self.setPixmap(self.canvas[self.slice_num])
         self.setAcceptHoverEvents(True)
         self.setAcceptedMouseButtons(Qt.LeftButton)
 
@@ -74,9 +79,10 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.did_draw = False
         self.max_alpha = 255
         self.pixel_lock = 0       # will become a np.bool_ array [H,W]
-        self.transect_array = []  #Holds the two values used to determain the transect array
-        self.pixel_array = 0     #A numpy array that holds the pixel data of a slice
-        self.mid_point = []   #When drawing will hold the points of each stroke, then creates an average and calculate that average
+        self.transect_array = []  # Holds the two values used to determain the transect array
+        self.pixel_array = 0  # A numpy array that holds the pixel data of a slice
+        # When drawing will hold the points of each stroke, then creates an average and calculate that average
+        self.mid_point = []
 
         # stores the pixmaps after each draw to allow for an undo button
         self.draw_history = [self.canvas.copy()]
@@ -99,11 +105,12 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.min_range = 0
         self.max_range = 6000
 
-        self.has_been_draw_on = [] #Used to track the slices that have been draw on
+        self.has_been_draw_on = []  # Used to track the slices that have been draw on
         self.rtss = rtss
         self.signal_roi_drawn = signal_roi_drawn
         self.roi_name = None
         self.emitter = Emitter()
+
     def set_tool(self, tool_num):
         """Sets the tool"""
         self.current_tool = Tool(tool_num)
@@ -112,7 +119,8 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         if event.button() == Qt.LeftButton:
             if not self.ds_is_active:
                 # activate once using the current slice’s pixel layer
-                self.set_pixel_layer(self.dicom_data[self.dicom_slider.value()])
+                self.set_pixel_layer(
+                    self.dicom_data[self.dicom_slider.value()])
                 self.ds_is_active = True
 
             # keep everything in *item coordinates* (pixmap pixel space)
@@ -123,7 +131,8 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.first_point = event.pos()
 
             if self.current_tool == Tool.FILL:
-                self.flood((int(self.first_point.x()), int(self.first_point.y())),paint_bicket=False)
+                self.flood((int(self.first_point.x()), int(
+                    self.first_point.y())), paint_bicket=False)
                 self.draw_history.append(self.canvas[self.slice_num].copy())
                 self.redo_history.clear()
                 self.setPixmap(self.canvas[self.slice_num])
@@ -146,7 +155,8 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             pm = self.canvas[self.slice_num]
             painter = QPainter(pm)
             painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setCompositionMode(QPainter.CompositionMode_Source)  # or SourceOver if you want alpha blending
+            # or SourceOver if you want alpha blending
+            painter.setCompositionMode(QPainter.CompositionMode_Source)
             painter.setPen(self.pen)
 
             if self.last_point is not None:
@@ -208,8 +218,9 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
     def check_if_drawn(self, current_slice):
         """Checks if the pixmap has been drawn on, if yes then it gets added to the slice"""
         if current_slice not in self.has_been_draw_on:
-                self.has_been_draw_on.append(current_slice)
-    #Chat gpt redition of breseham algorithm
+            self.has_been_draw_on.append(current_slice)
+    # Chat gpt redition of breseham algorithm
+
     def _iter_line_pixels(self, x0: int, y0: int, x1: int, y1: int):
         """Bresenham integer line iterator: yields (x, y) for every pixel crossed."""
         dx = abs(x1 - x0)
@@ -260,17 +271,18 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.canvas[self.slice_num] = self.transect_pixmap_copy
         self.setPixmap(self.canvas[self.slice_num])
 
-    def quick_copy(self, up_or_down:bool):
+    def quick_copy(self, up_or_down: bool):
         """Changes the slide 1 up or 1 down and copies the slide"""
         if up_or_down:
             self.canvas[self.slice_num+1] = self.canvas[self.slice_num].copy()
-            self.dicom_slider.setValue(self.dicom_slider.value() +1)
+            self.dicom_slider.setValue(self.dicom_slider.value() + 1)
             self.check_if_drawn(self.slice_num)
         elif not up_or_down and self.slice_num > 1:
             self.canvas[self.slice_num-1] = self.canvas[self.slice_num].copy()
-            self.dicom_slider.setValue(self.dicom_slider.value() -1)
+            self.dicom_slider.setValue(self.dicom_slider.value() - 1)
             self.check_if_drawn(self.slice_num)
         self.ds_is_active = False
+
     def erase_roi(self):
         """Erases everything on the current slide"""
         self.canvas[self.slice_num].fill(Qt.transparent)
@@ -286,7 +298,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         painter.end()
         self.setPixmap(self.canvas[self.slice_num])
         ave = self.calculate_average_pixel()
-        self.flood(ave,paint_bicket=True)
+        self.flood(ave, paint_bicket=True)
         self.setPixmap(self.canvas[self.slice_num])
         # (history is now handled in mouseReleaseEvent after enforcement)
 
@@ -305,9 +317,9 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         return average
 
     # not the things from halo
-    def flood(self, mid_p,paint_bicket):
+    def flood(self, mid_p, paint_bicket):
         """Simple BFS flood fill on current canvas"""
-        #Painter and drawing details
+        # Painter and drawing details
         fill = QPainter(self.canvas[self.slice_num])
         fill.setCompositionMode(QPainter.CompositionMode_Source)
         colour_contrast = self.pen.color()
@@ -315,9 +327,9 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         fill.setBrush(QColor(colour_contrast))
         fill.setPen(Qt.NoPen)
         image = self.canvas[self.slice_num].toImage()
-        
-        #Cordinate Details
-        x,y = mid_p
+
+        # Cordinate Details
+        x, y = mid_p
         queue = deque([(x, y)])
         visited = {(x, y)}
         target_color = image.pixelColor(x, y)
@@ -326,7 +338,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
                      (-1,  1), (0,  1), (1,  1)]
         if paint_bicket:
             while queue:
-                x,y = queue.popleft()
+                x, y = queue.popleft()
                 fill.drawRect(x, y, 1, 1)
                 for dx, dy in direction:
                     nx, ny = dx + x, dy + y
@@ -341,7 +353,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
                 fill.drawRect(x, y, 1, 1)
                 for dx, dy in direction:
                     nx, ny = dx + x, dy + y
-                    if 0 <= nx < image.width() and 0 <= ny < image.height() and (not self.pixel_lock[ny,nx] and (nx, ny) not in visited):
+                    if 0 <= nx < image.width() and 0 <= ny < image.height() and (not self.pixel_lock[ny, nx] and (nx, ny) not in visited):
                         queue.append((nx, ny))
                         visited.add((nx, ny))
         fill.end()
@@ -368,7 +380,8 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
     def lock_pixel(self):
         """Creates the lock values for the drawing images"""
-        lock_mask = ~((self.pixel_array >= self.min_range) & (self.pixel_array <= self.max_range))
+        lock_mask = ~((self.pixel_array >= self.min_range) &
+                      (self.pixel_array <= self.max_range))
         self.pixel_lock = lock_mask
 
     def erase_dags(self):
@@ -385,17 +398,18 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         erase.setPen(Qt.NoPen)
         inv = ~self.pixel_lock
         cords = np.argwhere(inv)
-        coords_xy = np.stack([cords[:,1], cords[:,0]], axis=1) #flips y,x to x,y
+        coords_xy = np.stack([cords[:, 1], cords[:, 0]],
+                             axis=1)  # flips y,x to x,y
         connected_points = self.connected_components_grid(coords_xy)
         for i in connected_points:
             if len(i) < 20:
-                for x,y in i:
-                    erase.drawRect(x,y,1,1)
+                for x, y in i:
+                    erase.drawRect(x, y, 1, 1)
         erase.end()
         self.setPixmap(self.canvas[self.slice_num])
 
-    #AI Vibe coded part
-    def connected_components_grid(self,coords, connectivity=8):
+    # AI Vibe coded part
+    def connected_components_grid(self, coords, connectivity=8):
         """
         Group integer (x, y) coordinates into connected components on a grid.
 
@@ -407,9 +421,10 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             List[List[tuple]]: each inner list is one component of (x, y) tuples.
         """
         if connectivity == 4:
-            nbrs = [(1,0), (-1,0), (0,1), (0,-1)]
+            nbrs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         elif connectivity == 8:
-            nbrs = [(dx,dy) for dx in (-1,0,1) for dy in (-1,0,1) if not (dx==0 and dy==0)]
+            nbrs = [(dx, dy) for dx in (-1, 0, 1)
+                    for dy in (-1, 0, 1) if not (dx == 0 and dy == 0)]
         else:
             raise ValueError("connectivity must be 4 or 8")
 
@@ -436,7 +451,8 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
     # --------------- NEW: lock enforcement helpers ---------------
     def _draw_mask_bool(self) -> np.ndarray:
         """Alpha>0 where anything has been drawn on the canvas."""
-        img = self.canvas[self.slice_num].toImage().convertToFormat(QImage.Format_ARGB32)
+        img = self.canvas[self.slice_num].toImage(
+        ).convertToFormat(QImage.Format_ARGB32)
         h, w = img.height(), img.width()
 
         # memoryview (read-only is fine for reading)
@@ -486,7 +502,8 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
         # Writable memoryview
         mptr = mask_img.bits()
-        marr = np.frombuffer(mptr, dtype=np.uint8).reshape(h, mask_img.bytesPerLine())
+        marr = np.frombuffer(mptr, dtype=np.uint8).reshape(
+            h, mask_img.bytesPerLine())
 
         # Fill only the active width (there may be padding on the right)
         marr[:, :w] = np.where(allow_mask, 255, 0).astype(np.uint8)
@@ -498,30 +515,41 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         p.end()
 
         self.setPixmap(self.canvas[self.slice_num])
- #end of AI gen
+ # end of AI gen
 
     def save_roi(self):
         """
             Function to call save ROI and display progress
         """
-        s = SaveROI(self.dicom_data, self.canvas, self.rtss, self.has_been_draw_on,self.roi_name)
+        s = SaveROI(self.dicom_data, self.canvas, self.rtss,
+                    self.has_been_draw_on, self.roi_name)
         results = s.save_roi()
-        self.emitter.rtss_for_saving.emit(results,self.roi_name)
+        self.emitter.rtss_for_saving.emit(results, self.roi_name)
 
-#This section contain all of the slots and connections that communicate with methods in other files
+    def start_transect(self):
+        """
+        Enable transect drawing mode
+        """
+        self.transect_active = True
+        self.ds_is_active = False  # Temp disable ROI drawing
+        if self.transect_line:
+            self.scene().removeItem(self.transect_line)
+            self.transect_line = None
+
+# This section contain all of the slots and connections that communicate with methods in other files
     def change_layout_bool(self):
         """Changes the values of ds_is_active to remind the drawer to reset the pixmap
         once the scroll loader changes value"""
         self.ds_is_active = False
 
-    def update_pixmap_layer(self, v:int):
+    def update_pixmap_layer(self, v: int):
         """When the slider changes value the pixmap gets updated"""
         self.setPixmap(self.canvas[v])
         self.slice_num = v
         self.update()
 
     @Slot(int)
-    def copy_rois_up(self,v):
+    def copy_rois_up(self, v):
         """Copys any pixmap onto the rois values selcted"""
         i = self.slice_num+1
         holder = self.canvas[self.slice_num].copy()
@@ -530,12 +558,13 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.set_pixel_layer(self.dicom_data[i])
             self._enforce_lock_after_stroke()
             self.check_if_drawn(i)
-            i +=1
+            i += 1
         self.canvas[self.slice_num] = holder
         self.setPixmap(self.canvas[self.slice_num])
         self.ds_is_active = False
+
     @Slot(int)
-    def copy_rois_down(self,v):
+    def copy_rois_down(self, v):
         """Copys any pixmap onto the rois values selcted"""
         i = self.slice_num-1
         holder = self.canvas[self.slice_num].copy()
@@ -544,30 +573,30 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.set_pixel_layer(self.dicom_data[i])
             self._enforce_lock_after_stroke()
             self.check_if_drawn(i)
-            i -=1
+            i -= 1
         self.canvas[self.slice_num] = holder
         self.setPixmap(self.canvas[self.slice_num])
         self.ds_is_active = False
-    
+
     @Slot(str)
-    def set_roi_name(self,v):
+    def set_roi_name(self, v):
         """Sets the roi name that is emmited from the roi select box"""
         self.roi_name = v
 
     @Slot(int)
-    def set_max_pixel_value(self,v):
+    def set_max_pixel_value(self, v):
         """Sets the roi name that is emmited from the roi select box"""
         self.max_range = v
         self.lock_pixel()
 
     @Slot(int)
-    def set_min_pixel_value(self,v):
+    def set_min_pixel_value(self, v):
         """Sets the roi name that is emmited from the roi select box"""
         self.min_range = v
         self.lock_pixel()
 
-    @Slot(int,int)
-    def multi_layer_commit(self,upper_bounds, lower_bounds):
+    @Slot(int, int)
+    def multi_layer_commit(self, upper_bounds, lower_bounds):
         """Auto draws on every slide within the slides and pixmap given"""
         i = lower_bounds
         holder = self.canvas[self.slice_num].copy()
@@ -577,7 +606,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self._enforce_lock_after_stroke()
             self.canvas[i] = self.canvas[self.slice_num].copy()
             self.check_if_drawn(i)
-            i +=1
+            i += 1
         if upper_bounds > self.slice_num > lower_bounds:
             self.canvas[self.slice_num].fill(self.pen.color())
             self.set_pixel_layer(self.dicom_data[self.slice_num])

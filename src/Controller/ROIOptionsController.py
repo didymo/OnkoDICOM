@@ -4,6 +4,7 @@ from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow.draw_ROI_initialiser import RoiInitialiser
 from src.View.mainpage.DrawROIWindow.Save_To_RTSS import SaveROI
+from src.View.mainpage.DrawROIWindow.Canvas import Tool
 from src.View.mainpage.ManipulateROIWindow import *
 
 
@@ -52,7 +53,7 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
     """
     Create the ROI Draw Options class based on the UI from the file in
     View/ROI Draw Option
-    """       
+    """
     signal_roi_drawn = QtCore.Signal(tuple)
     signal_draw_roi_closed = QtCore.Signal()
 
@@ -60,11 +61,17 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
         super(RoiDrawOptions, self).__init__()
         self._central = QtWidgets.QWidget(self)
         self.setCentralWidget(self._central)
-        self.set_up(rois,dataset_rtss,self.signal_roi_drawn,self.signal_draw_roi_closed)
+        self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
+                    self.signal_draw_roi_closed)
         self.ROI_button.roi_name_emit.connect(self.canvas_labal.set_roi_name)
 
-    def update_ui(self,rois, dataset_rtss):
-        self.set_up(rois,dataset_rtss,self.signal_roi_drawn,self.signal_draw_roi_closed)
+    def update_ui(self, rois, dataset_rtss):
+        self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
+                    self.signal_draw_roi_closed)
+
+    def transect_handler(self):
+        self.canvas_labal.current_tool = Tool.TRANSECT
+
 
 class ROIDrawOption:
     """
@@ -87,15 +94,15 @@ class ROIDrawOption:
         dataset_rtss = patient_dict_container.get("dataset_rtss")
 
         if not hasattr(self, "draw_window"):
-            self.draw_window = RoiDrawOptions(rois,dataset_rtss)
+            self.draw_window = RoiDrawOptions(rois, dataset_rtss)
             self.draw_window.signal_roi_drawn.connect(
                 self.structure_modified_function)
-            self.draw_window.signal_draw_roi_closed.connect(self.remove_roi_draw_instance)
+            self.draw_window.signal_draw_roi_closed.connect(
+                self.remove_roi_draw_instance)
         else:
             self.draw_window.update_ui(rois, dataset_rtss)
 
         return self.draw_window
-
 
     def remove_roi_draw_window(self):
         if hasattr(self, "draw_window"):
@@ -213,5 +220,3 @@ class ROITransferOption:
             signal_roi_transferred_to_fixed_container \
             .connect(self.fixed_dict_structure_modified_function)
         self.roi_transfer_option_pop_up_window.show()
-
-    
