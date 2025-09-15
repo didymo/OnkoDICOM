@@ -7,6 +7,8 @@ import vtk
 from vtkmodules.util import numpy_support
 import pydicom
 import tempfile, shutil, atexit, gc, glob
+import SimpleITK as sitk
+from src.Model.MovingDictContainer import MovingDictContainer
 
 # ------------------------------ DICOM Utilities ------------------------------
 
@@ -158,6 +160,10 @@ class VTKEngine:
         # Temporary directories created for DICOM slices
         self._temp_dirs = []
         atexit.register(self._cleanup_temp_dirs)
+
+        self.moving_image_container = MovingDictContainer()
+        self.sitktransform = sitk.Euler3DTransform()
+        
 
     def cleanup_old_temp_dirs(self):
         cleanup_old_dicom_temp_dirs()
@@ -504,6 +510,9 @@ class VTKEngine:
         display_mat = np.eye(4)
         display_mat[0:3, 0:3] = rot_ras
         display_mat[0:3, 3] = np.array([self._tx, self._ty, self._tz])
+
+        self.sitktransform = sitk.Euler3DTransform(display_mat)
+        self.moving_image_container.set("tfm", self.sitktransform)
 
         vtk_display = vtk.vtkMatrix4x4()
         for i in range(4):
