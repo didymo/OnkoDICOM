@@ -9,7 +9,7 @@ from src.View.ImageFusion.TranslateRotateMenu import get_color_pair_from_text
 
 
 class BaseFusionView(DicomView):
-    DEBOUNCE_MS = 5  # adjust debounce time as needed
+    DEBOUNCE_MS = 5
 
     def __init__(self, slice_view, roi_color=None, iso_color=None, cut_line_color=None, vtk_engine=None, translation_menu=None):
         # Always initialize these attributes first
@@ -48,11 +48,40 @@ class BaseFusionView(DicomView):
 
         # Mouse mode state
         self.mouse_mode = None
-        self.translation_menu.set_mouse_mode_changed_callback(self._on_mouse_mode_changed)
 
         self._refresh_timer = QtCore.QTimer(self)
         self._refresh_timer.setSingleShot(True)
         self._refresh_timer.timeout.connect(self.refresh_overlay_now)
+
+    def wheelEvent(self, event: QtGui.QWheelEvent):
+        """
+            Handle mouse wheel events to scroll through slices.
+            This uses angleDelta().y() which gives consistent step values across platforms.
+            """
+
+        # Get keyboard modifiers (Ctrl, Alt, Shift, etc.)
+        modifiers = event.modifiers()
+        ctrl = modifiers & QtCore.Qt.ControlModifier
+        alt = modifiers & QtCore.Qt.AltModifier
+
+        # If Ctrl + Alt are pressed AND we're in interrogation mode → custom zoom
+        if ctrl and alt and self.mouse_mode == "interrogation":
+            # Get scroll delta (angleDelta is preferred because it's device-independent)
+            delta_pt = event.angleDelta()
+            delta = delta_pt.y() if delta_pt.y() != 0 else delta_pt.x()
+
+            # Fallback: some devices report pixelDelta instead of angleDelta
+            if delta == 0:
+                delta_pt = event.pixelDelta()
+                delta = delta_pt.y() if delta_pt.y() != 0 else delta_pt.x()
+
+            # If we got a valid delta, adjust the interrogation window size
+            if delta != 0:
+                self._handle_interrogation_window_size_change(delta)
+            return
+
+        # If not Ctrl+Alt interrogation, just do the normal behavior
+        super().wheelEvent(event)
 
     def set_slider_range_from_vtk(self):
         """
@@ -81,17 +110,17 @@ class BaseFusionView(DicomView):
             set_slider(extent[0], extent[1])
             return
 
-    def image_display(self, overlay_image=None):
+    def image_display(self, overlay_image=None, mask_rect=None):
         """
-        Update the image to be displayed on the DICOM View.
-        If overlay_image is provided, use it as the overlay for this view.
-        If self.vtk_engine is set, use it to get both the base and overlay images for manual fusion.
-        """
+                Update the image to be displayed on the DICOM View.
+                If overlay_image is provided, use it as the overlay for this view.
+                If self.vtk_engine is set, use it to get both the base and overlay images for manual fusion.
+                """
         slider_id = self.slider.value()
 
         # If using VTKEngine (Manual Fusion), get both base and overlay from VTK
         if self.vtk_engine is not None:
-            self._display_vtk_image(slider_id)
+            self._display_vtk_image(slider_id, mask_rect=mask_rect)
             return
 
         # Legacy (non-vtk) logic below
@@ -128,18 +157,22 @@ class BaseFusionView(DicomView):
         else:
             self.overlay_item = None
 
-        # --- Mouse mode: connect scene mouse events ---
-        if hasattr(self.scene, "set_mouse_mode_handler"):
-            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_click)
+            # --- Mouse mode: connect scene mouse events ---
+            if hasattr(self.scene, "set_mouse_mode_handler"):
+                self.scene.set_mouse_mode_handler(
+                    self._handle_mouse_mode_event,
+                    self._handle_interrogation_window_size_change
+                )
         
-    def _display_vtk_image(self, slider_id):
+    def _display_vtk_image(self, slider_id, mask_rect = None):
         orientation = self.slice_view
         # Use selected color and coloring state
         qimg = self.vtk_engine.get_slice_qimage(
             orientation, slider_id,
             fixed_color=self.fixed_color,
             moving_color=self.moving_color,
-            coloring_enabled=self.coloring_enabled
+            coloring_enabled=self.coloring_enabled,
+            mask_rect=mask_rect
         )
         if qimg.isNull():
             logging.error(f"Null QImage returned from VTKEngine for orientation '{orientation}', slice {slider_id}")
@@ -169,7 +202,7 @@ class BaseFusionView(DicomView):
 
         # --- Mouse mode: connect scene mouse events ---
         if hasattr(self.scene, "set_mouse_mode_handler"):
-            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_click)
+            self.scene.set_mouse_mode_handler(self._handle_mouse_mode_event)
 
     def roi_display(self):
         """
@@ -207,14 +240,26 @@ class BaseFusionView(DicomView):
 
     def refresh_overlay_now(self):
         """
-        Actually repaint the overlay image (called by debounce timer).
-        Uses the current interpolation mode.
-        """
-        if self.vtk_engine is not None:
-            self.vtk_engine.set_interpolation_linear(
-                self.overlay_interpolation_mode == "linear"
-            )
-        self.image_display()
+                Actually repaint the overlay image (called by debounce timer).
+                Uses the current interpolation mode.
+                """
+        if self.vtk_engine is None:
+            return
+        self.vtk_engine.set_interpolation_linear(
+            self.overlay_interpolation_mode == "linear"
+        )
+        if self.get_mouse_mode() == "interrogation":
+            mask_rect = None
+            window_size = getattr(self, "_interrogation_window_size", 80)
+            if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
+                # Use scene coordinates for mask
+                mask_rect = (*self._interrogation_mouse_pos, window_size)
+            else:
+                # Hide overlay everywhere if no mouse pos
+                mask_rect = (-1000, -1000, 1)
+            self.image_display(mask_rect=mask_rect)
+        else:
+            self.image_display()
         self.scene.update()
         if hasattr(self, "viewport"):
             self.viewport().update()
@@ -287,6 +332,39 @@ class BaseFusionView(DicomView):
 
     def _on_mouse_mode_changed(self, mode):
         self.mouse_mode = mode
+        if mode == "interrogation":
+            # Set interrogation window to center of the image in image pixel coordinates
+            center_x = center_y = None
+            if self.vtk_engine is not None:
+                slider_id = self.slider.value()
+                qimg = self.vtk_engine.get_slice_qimage(
+                    self.slice_view, slider_id,
+                    fixed_color=self.fixed_color,
+                    moving_color=self.moving_color,
+                    coloring_enabled=self.coloring_enabled
+                )
+                center_x = int(qimg.width() / 2)
+                center_y = int(qimg.height() / 2)
+            elif self.base_item is not None:
+                pixmap = self.base_item.pixmap()
+                center_x = int(pixmap.width() / 2)
+                center_y = int(pixmap.height() / 2)
+            elif hasattr(self, "scene") and self.scene is not None:
+                rect = self.scene.sceneRect()
+                center_x = int(rect.width() / 2)
+                center_y = int(rect.height() / 2)
+
+                # Only update interrogation position if valid
+            if center_x is not None and center_y is not None:
+                self._interrogation_mouse_pos = (center_x, center_y)
+                # else: keep last known position instead of clearing
+
+                self.refresh_overlay()
+
+        else:
+            # Leaving interrogation mode → explicitly clear
+            self._interrogation_mouse_pos = None
+            self.refresh_overlay()
 
     def get_mouse_mode(self):
         """
@@ -296,70 +374,101 @@ class BaseFusionView(DicomView):
             return self.translation_menu.get_mouse_mode()
         return getattr(self, "mouse_mode", None)
 
-    def _handle_mouse_mode_click(self, scene_pos, scene_size):
+    def _handle_mouse_mode_event(self, scene_pos, scene_size, event_type="move"):
         """
-        Called by GraphicsScene when a mouse click occurs and mouse mode is active.
-        scene_pos: QPointF of click
-        scene_size: QSizeF of scene
-        """
+               Called by GraphicsScene when a mouse event occurs and mouse mode is active.
+               scene_pos: QPointF of event
+               scene_size: QSizeF of scene
+               """
         mode = self.get_mouse_mode()
-        if mode not in ("translate", "rotate"):
-            return  # Ignore if not in mouse mode
+        if mode is None:
+            # No mouse mode active: let cut lines logic handle the event
+            return
 
-        x = scene_pos.x()
-        y = scene_pos.y()
-        w = scene_size.width()
-        h = scene_size.height()
+        if mode == "interrogation":
+            # Clamp mouse position so it cannot go outside the scene
+            scene_rect = self.scene.sceneRect()
+            clamped_x = min(max(scene_pos.x(), scene_rect.left()), scene_rect.right())
+            clamped_y = min(max(scene_pos.y(), scene_rect.top()), scene_rect.bottom())
+
+            # Store clamped position
+            self._interrogation_mouse_pos = (int(clamped_x), int(clamped_y))
+            self.refresh_overlay()
+            return
 
         if mode == "translate":
+            x = scene_pos.x()
+            y = scene_pos.y()
+            w = scene_size.width()
+            h = scene_size.height()
             self._handle_translate_click(x, y, w, h)
         elif mode == "rotate":
+            x = scene_pos.x()
+            y = scene_pos.y()
+            w = scene_size.width()
+            h = scene_size.height()
             self._handle_rotate_click(x, y, w, h)
 
     def _handle_translate_click(self, x, y, w, h):
-        dx, dy, dz = 0.0, 0.0, 0.0
-        if self.slice_view == "axial":
-            if abs(x - w/2) > abs(y - h/2):
-                dx = 1.0 if x < w/2 else -1.0
+        def axial_trans(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
-                dy = 1.0 if y < h/2 else -1.0
-        elif self.slice_view == "sagittal":
-            if abs(x - w/2) > abs(y - h/2):
-                dy = 1.0 if x < w/2 else -1.0
+                return 0.0, 1.0 if y < h / 2 else -1.0, 0.0
+
+        def sagittal_trans(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return 0.0, 1.0 if x < w / 2 else -1.0, 0.0
             else:
-                dz = 1.0 if y < h/2 else -1.0
-        elif self.slice_view == "coronal":
-            if abs(x - w/2) > abs(y - h/2):
-                dx = 1.0 if x < w/2 else -1.0
+                return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
+
+        def coronal_trans(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
-                dz = 1.0 if y < h/2 else -1.0
+                return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
+
+        translate_lookup = {
+            "axial": axial_trans,
+            "sagittal": sagittal_trans,
+            "coronal": coronal_trans,
+        }
+        dx, dy, dz = translate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
         curr = [self.vtk_engine._tx, self.vtk_engine._ty, self.vtk_engine._tz] if self.vtk_engine else [0.0, 0.0, 0.0]
         new_offset = (curr[0] + dx, curr[1] + dy, curr[2] + dz)
         self.translation_menu.set_offsets(new_offset)
         self.update_overlay_offset(new_offset, orientation=self.slice_view, slice_idx=self.slider.value())
 
     def _handle_rotate_click(self, x, y, w, h):
-        rx, ry, rz = 0.0, 0.0, 0.0
-        if self.slice_view == "axial":
-            if abs(x - w/2) > abs(y - h/2):
-                rz = 0.5 if x < w/2 else -0.5
+        def axial_rot(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return (0.0, 0.0, 0.5 if x < w / 2 else -0.5)
             else:
-                rx = -0.5 if y < h/2 else 0.5
-        elif self.slice_view == "sagittal":
-            if abs(x - w/2) > abs(y - h/2):
-                rx = 0.5 if x < w/2 else -0.5
+                return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
+
+        def sagittal_rot(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return (0.5 if x < w / 2 else -0.5, 0.0, 0.0)
             else:
-                ry = -0.5 if y < h/2 else 0.5
-        elif self.slice_view == "coronal":
-            if abs(x - w/2) > abs(y - h/2):
-                ry = -0.5 if x < w/2 else 0.5
+                return (0.0, -0.5 if y < h / 2 else 0.5, 0.0)
+
+        def coronal_rot(x, y, w, h):
+            if abs(x - w / 2) > abs(y - h / 2):
+                return (0.0, -0.5 if x < w / 2 else 0.5, 0.0)
             else:
-                rx = -0.5 if y < h/2 else 0.5
+                return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
+
+        rotate_lookup = {
+            "axial": axial_rot,
+            "sagittal": sagittal_rot,
+            "coronal": coronal_rot,
+        }
+        rx, ry, rz = rotate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
         curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
         new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
-        self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0]*10)))
-        self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1]*10)))
-        self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2]*10)))
+        self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0] * 10)))
+        self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1] * 10)))
+        self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2] * 10)))
         self.update_overlay_rotation(new_rot, orientation=self.slice_view, slice_idx=self.slider.value())
 
 
@@ -397,4 +506,57 @@ class BaseFusionView(DicomView):
             if engine is not None and hasattr(engine, "transform"):
                 self.translation_menu._matrix_dialog.set_matrix(engine.transform)
 
+    def update_view(self, zoom_change=False):
+        """
+        Update the view of the DICOM Image.
+        :param zoom_change: Boolean indicating whether the user wants
+        to change the zoom. False by default.
+        """
+        super().update_view(zoom_change)
+        # After zoom or view update, reapply interrogation mask if needed
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_in(self):
+        super().zoom_in()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def zoom_out(self):
+        super().zoom_out()
+        if self.get_mouse_mode() == "interrogation":
+            self.refresh_overlay_now()
+
+    def _handle_interrogation_window_size_change(self, delta):
+        """
+            Adjust the interrogation window size based on scroll delta.
+            Positive delta = shrink window (zoom in).
+            Negative delta = enlarge window (zoom out).
+            """
+
+        # Safety: make sure we're still in interrogation mode
+        if self.get_mouse_mode() != "interrogation":
+            return
+
+        # Pixel shrink and grow amount
+        step = 8
+
+        # Initialize default interrogation window size if not set yet
+        if not hasattr(self, "_interrogation_window_size"):
+            self._interrogation_window_size = 80
+
+        # Update interrogation window size based on scroll direction
+        if delta > 0:
+            # Scroll forward
+            new_size = max(10, self._interrogation_window_size - step)
+        else:
+            # Scroll backward
+            new_size = self._interrogation_window_size + step
+
+        # Save updated size
+        self._interrogation_window_size = new_size
+
+        # If mouse position is available, refresh the overlay at that location
+        if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
+            self.refresh_overlay_now()
 
