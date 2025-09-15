@@ -353,10 +353,16 @@ class BaseFusionView(DicomView):
                 rect = self.scene.sceneRect()
                 center_x = int(rect.width() / 2)
                 center_y = int(rect.height() / 2)
+
+            # Only update interrogation position if valid
             if center_x is not None and center_y is not None:
                 self._interrogation_mouse_pos = (center_x, center_y)
-            else:
-                self._interrogation_mouse_pos = None
+                # else: keep last known position instead of clearing
+
+                self.refresh_overlay()
+        else:
+            # Leaving interrogation mode → explicitly clear
+            self._interrogation_mouse_pos = None
             self.refresh_overlay()
 
     def get_mouse_mode(self):

@@ -100,7 +100,9 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
             self.add_cut_lines(vertical_line_x, horizontal_line_y)
             self.update_slider(vertical_line_x, horizontal_line_y)
             # Always call mouse mode handler if set (for interrogation window drag)
+        handled = False
         if self._mouse_mode_handler is not None:
-            self._mouse_mode_handler(event.scenePos(), self.sceneRect().size(), "move")
-        else:
+            handled = self._mouse_mode_handler(event.scenePos(), self.sceneRect().size(), "move")
+
+        if not handled:
             super().mouseMoveEvent(event)
