@@ -1,6 +1,3 @@
-import platform
-import traceback
-
 import SimpleITK as sitk
 import numpy as np
 from PySide6 import QtCore, QtGui
@@ -15,6 +12,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROITransfer import transform_point_set_from_dicom_struct
 from src.View.ProgressWindow import ProgressWindow
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid, \
     read_dicom_image_to_sitk
 from src.View.util.ProgressWindowHelper import check_interrupt_flag
@@ -75,11 +73,6 @@ class UITransferROIWindow:
         """
         Initialize the layout for the Transfer ROI Window.
         """
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
@@ -107,7 +100,7 @@ class UITransferROIWindow:
         self.transfer_roi_window_instance_central_widget.setLayout(
             self.transfer_roi_window_grid_layout)
         self.retranslate_ui(self.transfer_roi_window_instance)
-        self.transfer_roi_window_instance.setStyleSheet(stylesheet)
+        self.transfer_roi_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.transfer_roi_window_instance.setCentralWidget(
             self.transfer_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(

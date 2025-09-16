@@ -1,6 +1,6 @@
-import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class BatchMLResultsWindow(QtWidgets.QDialog):
@@ -37,18 +37,14 @@ class BatchMLResultsWindow(QtWidgets.QDialog):
         self.results_table = QtWidgets.QTableWidget(0, 0)
 
         # # Get stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        stylesheet: StyleSheetReader = StyleSheetReader()
 
         # Set stylesheet
-        self.summary_label.setStyleSheet(self.stylesheet)
-        self.scroll_area.setStyleSheet(self.stylesheet)
-        self.export_risk_table_button.setStyleSheet(self.stylesheet)
-        self.save_ml_model_button.setStyleSheet(self.stylesheet)
-        self.save_ml_parameters_button.setStyleSheet(self.stylesheet)
+        self.summary_label.setStyleSheet(stylesheet.get_stylesheet())
+        self.scroll_area.setStyleSheet(stylesheet.get_stylesheet())
+        self.export_risk_table_button.setStyleSheet(stylesheet.get_stylesheet())
+        self.save_ml_model_button.setStyleSheet(stylesheet.get_stylesheet())
+        self.save_ml_parameters_button.setStyleSheet(stylesheet.get_stylesheet())
 
         # Make QLabel wrap text
         self.summary_label.setWordWrap(True)

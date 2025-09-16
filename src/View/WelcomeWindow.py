@@ -1,17 +1,11 @@
 from src.View.OpenPatientWindow import *
 from src.Controller.PathHandler import resource_path
-import platform
 
 
 class UIWelcomeWindow(object):
 
     # the ui constructor function
     def setup_ui(self, welcome_window_instance):
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QtGui.QIcon()
         window_icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off) # adding icon
         welcome_window_instance.setObjectName("WelcomeWindowInstance")
@@ -81,7 +75,7 @@ class UIWelcomeWindow(object):
         self.welcome_window_instance_central_widget = QtWidgets.QWidget()
         self.welcome_window_instance_central_widget.setLayout(self.window_vertical_layout_box)
         welcome_window_instance.setCentralWidget(self.welcome_window_instance_central_widget)
-        welcome_window_instance.setStyleSheet(stylesheet)
+        welcome_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.retranslate_ui(welcome_window_instance)
         QtCore.QMetaObject.connectSlotsByName(welcome_window_instance)
 

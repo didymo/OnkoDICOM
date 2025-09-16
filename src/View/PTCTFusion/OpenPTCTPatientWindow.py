@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, \
 from src.Model.DICOM import DICOMDirectorySearch
 from src.Model.Worker import Worker
 from src.View.PTCTFusion.PTCTProgressWindow import PTCTProgressWindow
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.resources_open_patient_rc import *
 from src.Model import ImageLoading
 
@@ -21,11 +22,6 @@ class UIOpenPTCTPatientWindow(object):
     patient_info_initialized = QtCore.Signal(object)
 
     def setup_ui(self, open_pt_ct_window_instance):
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
@@ -234,8 +230,7 @@ class UIOpenPTCTPatientWindow(object):
 
         # Set the current stylesheet to the instance and connect it back to the
         # caller through slot
-        _stylesheet = open(resource_path(self.stylesheet_path)).read()
-        open_pt_ct_window_instance.setStyleSheet(_stylesheet)
+        open_pt_ct_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         QtCore.QMetaObject.connectSlotsByName(open_pt_ct_window_instance)
 

@@ -3,6 +3,7 @@ import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import resource_path, data_path
 from src.Model.Configuration import Configuration, SqlError
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.addons.ImageFusionAddOnOption import ImageFusionOptions
 
 
@@ -62,16 +63,9 @@ class UIAddOnOptions(object):
         """
         Create the window and the components for each option view.
         """
-        self.stylesheet_path = ""
-
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
         add_on_options.setObjectName("Add_On_Options")
         add_on_options.setMinimumSize(960, 720)
-        add_on_options.setStyleSheet(stylesheet)
+        add_on_options.setStyleSheet(StyleSheetReader().get_stylesheet())
         add_on_options.setWindowIcon(QtGui.QIcon(
             resource_path("res/images/btn-icons/onkodicom_icon.png")))
 

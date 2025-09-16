@@ -1,8 +1,8 @@
-import platform
 from PySide6 import QtWidgets, QtCore, QtGui
 from os.path import expanduser
-from src.Controller.PathHandler import resource_path
 import numpy as np
+
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class CheckableCombox(QtWidgets.QComboBox):
@@ -96,23 +96,19 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        stylesheet: StyleSheetReader = StyleSheetReader()
 
         label_clinical_data = QtWidgets.QLabel("Please choose the CSV file"
                                                " location for Clinical Data:")
-        label_clinical_data.setStyleSheet(self.stylesheet)
+        label_clinical_data.setStyleSheet(stylesheet.get_stylesheet())
 
         label_dvg = QtWidgets.QLabel("Please choose the CSV"
                                      " file location for DVH Data:")
-        label_dvg.setStyleSheet(self.stylesheet)
+        label_dvg.setStyleSheet(stylesheet.get_stylesheet())
 
         label_pyrad = QtWidgets.QLabel("Please choose the CSV"
                                        " file location for Pyradiomics Data:")
-        label_pyrad.setStyleSheet(self.stylesheet)
+        label_pyrad.setStyleSheet(stylesheet.get_stylesheet())
 
         self.directory_layout = \
             QtWidgets.QFormLayout()
@@ -121,7 +117,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.directory_input_clinicalData = \
             QtWidgets.QLineEdit("No file selected")
         self.directory_input_clinicalData. \
-            setStyleSheet(self.stylesheet)
+            setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_clinicalData.setEnabled(False)
 
         # Button For clinical Data to set location
@@ -130,12 +126,12 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.change_button_clinicalData.clicked. \
             connect(self.show_file_browser_clinical_data)
         self.change_button_clinicalData.setObjectName("NormalButton")
-        self.change_button_clinicalData.setStyleSheet(self.stylesheet)
+        self.change_button_clinicalData.setStyleSheet(stylesheet.get_stylesheet())
 
         # Directory text box for DVH Data
         self.directory_input_dvhData = \
             QtWidgets.QLineEdit("No file selected")
-        self.directory_input_dvhData.setStyleSheet(self.stylesheet)
+        self.directory_input_dvhData.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_dvhData.setEnabled(False)
 
         # Button For DVH Data to set location
@@ -146,12 +142,12 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.change_button_dvhData.clicked.\
             connect(self.show_file_browser_dvh_data)
         self.change_button_dvhData.setObjectName("NormalButton")
-        self.change_button_dvhData.setStyleSheet(self.stylesheet)
+        self.change_button_dvhData.setStyleSheet(stylesheet.get_stylesheet())
 
         # Directory text box for Pyradiomics Data
         self.directory_input_pyrad = \
             QtWidgets.QLineEdit("No file selected")
-        self.directory_input_pyrad.setStyleSheet(self.stylesheet)
+        self.directory_input_pyrad.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_pyrad.setEnabled(False)
 
         # Button For Pyradiomics Data to set location
@@ -164,7 +160,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
         self.change_button_pyradiomicsData.\
             setObjectName("NormalButton")
         self.change_button_pyradiomicsData.\
-            setStyleSheet(self.stylesheet)
+            setStyleSheet(stylesheet.get_stylesheet())
 
         # Set Clinical Data
         self.directory_layout.addWidget(label_clinical_data)
@@ -185,7 +181,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # Table
         self.filter_table = QtWidgets.QTableWidget(0, 0)
-        self.filter_table.setStyleSheet(self.stylesheet)
+        self.filter_table.setStyleSheet(stylesheet.get_stylesheet())
 
         # Modify Table
         title_listof_headers = ["Function Name", "Selected Value", "Comment"]
@@ -239,7 +235,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # add target
         self.combox_target = QtWidgets.QComboBox()
-        self.combox_target.setStyleSheet(self.stylesheet)
+        self.combox_target.setStyleSheet(stylesheet.get_stylesheet())
         self.combox_target.setEditable(True)
         self.combox_target.lineEdit().setReadOnly(True)
         comment = QtWidgets.QTableWidgetItem("No Clinical-data-SR"
@@ -249,7 +245,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # add Type
         self.combox_type = QtWidgets.QComboBox()
-        self.combox_type.setStyleSheet(self.stylesheet)
+        self.combox_type.setStyleSheet(stylesheet.get_stylesheet())
         self.combox_type.setEditable(True)
         self.combox_type.lineEdit().setReadOnly(True)
         self.combox_type.addItems(["category", "numerical"])
@@ -257,7 +253,7 @@ class MachineLearningOptions(QtWidgets.QWidget):
 
         # add Tune
         self.combox_tune = QtWidgets.QComboBox()
-        self.combox_tune.setStyleSheet(self.stylesheet)
+        self.combox_tune.setStyleSheet(stylesheet.get_stylesheet())
         self.combox_tune.setEditable(True)
         self.combox_tune.lineEdit().setReadOnly(True)
         self.combox_tune.addItems(["no", "yes"])

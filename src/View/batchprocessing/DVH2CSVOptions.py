@@ -1,8 +1,6 @@
-import platform
 from os.path import expanduser
 
 from PySide6 import QtWidgets
-from src.Controller.PathHandler import resource_path
 from src.View.StyleSheetReader import StyleSheetReader
 
 
@@ -21,17 +19,17 @@ class DVH2CSVOptions(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # Get the stylesheet
-        stylesheet = StyleSheetReader()
+        stylesheet: StyleSheetReader = StyleSheetReader()
 
         label = QtWidgets.QLabel(
             "Please choose the location for the resulting CSV file:")
-        label.setStyleSheet(stylesheet())
+        label.setStyleSheet(stylesheet.get_stylesheet())
 
         self.directory_layout = QtWidgets.QFormLayout()
 
         # Directory text box
         self.directory_input = QtWidgets.QLineEdit("No directory selected")
-        self.directory_input.setStyleSheet(stylesheet())
+        self.directory_input.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input.setEnabled(False)
 
         # Change button
@@ -39,7 +37,7 @@ class DVH2CSVOptions(QtWidgets.QWidget):
         self.change_button.setMaximumWidth(100)
         self.change_button.clicked.connect(self.show_file_browser)
         self.change_button.setObjectName("NormalButton")
-        self.change_button.setStyleSheet(stylesheet())
+        self.change_button.setStyleSheet(stylesheet.get_stylesheet())
 
         self.directory_layout.addWidget(label)
         self.directory_layout.addRow(self.directory_input)

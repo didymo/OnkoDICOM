@@ -11,6 +11,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.StyleSheetReader import StyleSheetReader
+from src.View.mainpage.AutoSegmentationTab import AutoSegmentationTab
 from src.View.mainpage.DVHTab import DVHTab
 from src.View.mainpage.DicomTreeView import DicomTreeView
 from src.View.mainpage.DicomAxialView import DicomAxialView
@@ -73,7 +74,7 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        self.stylesheet = StyleSheetReader()
+        stylesheet = StyleSheetReader()
 
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
@@ -81,7 +82,7 @@ class UIMainWindow:
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(self.stylesheet())
+        self.main_window_instance.setStyleSheet(stylesheet.get_stylesheet())
 
         self.setup_central_widget()
         self.setup_actions()
@@ -142,6 +143,17 @@ class UIMainWindow:
             self.left_panel.addTab(self.isodoses_tab, "Isodoses")
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
+
+        # Add Auto-Segmentation to the left panel
+        if not hasattr(self, 'auto_segmentation_tab'):
+            self.auto_segmentation_tab = AutoSegmentationTab()
+            # Obtain controller from auto segment tab
+            self._controller = self.auto_segmentation_tab.get_autoseg_controller()
+
+            # Connect update structures signal to main slot
+            self._controller.update_structure_list.connect(self.structures_tab.update_ui)
+
+        self.left_panel.addTab(self.auto_segmentation_tab, "Auto-Seg")
 
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
@@ -688,7 +700,7 @@ class UIMainWindow:
                     QtWidgets.QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
-                self.stylesheet())
+                StyleSheetReader().get_stylesheet())
             button_reply.exec_()
 
         # Close progress window
@@ -723,4 +735,3 @@ class UIMainWindow:
         self.action_handler.action_four_views.setDisabled(disabled)
         self.action_handler.action_show_cut_lines.setDisabled(disabled)
         self.action_handler.action_image_fusion.setDisabled(disabled)
-
