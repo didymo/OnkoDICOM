@@ -186,7 +186,7 @@ class DVHTab(QtWidgets.QWidget):
                 progress_window.exec_()
 
                 self.export_rtdose()
-
+        else:
             # Create a message box and add attributes
             mb = QtWidgets.QMessageBox()
             mb.setIcon(QtWidgets.QMessageBox.Question)

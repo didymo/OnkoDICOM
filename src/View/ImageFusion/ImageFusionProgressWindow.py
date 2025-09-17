@@ -42,7 +42,7 @@ class ImageFusionProgressWindow(ProgressWindow):
                 self.signal_advise_calc_dvh.emit(True)
             else:
                 self.signal_advise_calc_dvh.emit(False)
-
+        else:
             # Create a message box and add attributes
             mb = QMessageBox()
             mb.setIcon(QMessageBox.Question)
