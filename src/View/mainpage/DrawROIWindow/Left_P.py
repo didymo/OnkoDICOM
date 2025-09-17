@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 from typing import Optional
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QButtonGroup
-from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QPixmap, QPainter, QPen, QColor, QAction, QBrush,QCursor
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QButtonGroup, QMessageBox
+from PySide6.QtGui import QPixmap, QPixmap, QPainter, QPen, QColor,QCursor
 from PySide6.QtCore import Qt, Slot, Signal
 
 class LeftPannel(QtWidgets.QWidget):
@@ -38,6 +38,7 @@ class LeftPannel(QtWidgets.QWidget):
         fill.setCheckable(True)
         multi = QPushButton("Multi")
         erase_dag = QPushButton("Erase DAGs")
+        cancel = QPushButton("Cancel")
         self.button_group.addButton(brush)
         self.button_group.addButton(pen)
         self.button_group.addButton(eraser_draw)
@@ -48,6 +49,7 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.addButton(fill)
         self.button_group.addButton(erase_dag)
         self.button_group.addButton(multi)
+        self.button_group.addButton(cancel)
 
         #Links the buttons to actions
         brush.clicked.connect(self.brush_tool)
@@ -59,7 +61,7 @@ class LeftPannel(QtWidgets.QWidget):
         save.clicked.connect(self.save_button)
         fill.clicked.connect(self.fill_tool)
         erase_dag.clicked.connect(self.canvas_label.erase_dags)
-        multi.clicked.connect(self.multi_button)
+        cancel.clicked.connect(self.cancel_button)
 
         #Sets the buttons in the layout 2 by 3
         layout.addWidget(brush,0,0)
@@ -69,9 +71,10 @@ class LeftPannel(QtWidgets.QWidget):
         layout.addWidget(multi,2,0)
         layout.addWidget(fill, 2,1)
         layout.addWidget(copy,3,0)
-        layout.addWidget(save,3,1)
         layout.addWidget(transect,4,0)
         layout.addWidget(erase_dag, 4,1)
+        layout.addWidget(save,5,0)
+        layout.addWidget(cancel,5,1)
         
         
 
@@ -136,8 +139,22 @@ class LeftPannel(QtWidgets.QWidget):
         self.canvas_label.pen.setColor(self.last_colour)
         self.canvas_label.set_tool(2)
 
-    def erase_dags_tool(self):
-        """This fucntion calls the erase dags from the canvas"""
+    def cancel_button(self):
+        """This fucntion saves the ROI drawing"""
+        if len(self.canvas_label.has_been_draw_on) > 0:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Cancel Drawing?")
+            dlg.setText("Are you sure you want to exit? If you cancel the ROI will not be saved")
+            dlg.setIcon(QMessageBox.Critical)
+            dlg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            dlg.setDefaultButton(QMessageBox.Retry)
+            choice = dlg.exec()
+            if choice == QMessageBox.Ok:
+                self.parent.close_window()
+            if choice == QMessageBox.Cancel:
+                return
+        else:
+            self.parent.close_window()
     
     #ChatGPT Code
     def make_circle_cursor(self,
