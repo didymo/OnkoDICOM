@@ -49,6 +49,14 @@ class UnitsBox(QtWidgets.QLabel):
         self.pixel_range_max.valueChanged.connect(self.update_pixel_max)
         self.pixel_range_max.setValue(6000)
 
+        erase_dags_num = QLabel("Erase Conected Pixels count :")
+        self.erase_dags_num = QSpinBox()
+        self.erase_dags_num.setFocusPolicy(Qt.ClickFocus)
+        self.erase_dags_num.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
+        self.erase_dags_num.setRange(0,262144)
+        self.erase_dags_num.valueChanged.connect(self.update_erase_dags)
+        self.erase_dags_num.setValue(20)
+        
         #Transparency Widget
         transparency = QLabel("Opacity :")
         self.transparency_slider = QSlider(Qt.Horizontal)
@@ -61,10 +69,12 @@ class UnitsBox(QtWidgets.QLabel):
         layout.addWidget(self.pen_size_spinbox, 0,1)
         layout.addWidget(transparency, 1,0)
         layout.addWidget(self.transparency_slider, 1,1)
-        layout.addWidget(pixel_min_range, 2,0)
-        layout.addWidget(self.pixel_range_min, 2,1)
-        layout.addWidget(pixel_max_range, 3,0)
-        layout.addWidget(self.pixel_range_max, 3,1)
+        layout.addWidget(erase_dags_num, 2,0)
+        layout.addWidget(self.erase_dags_num, 2,1)
+        layout.addWidget(pixel_min_range, 3,0)
+        layout.addWidget(self.pixel_range_min, 3,1)
+        layout.addWidget(pixel_max_range, 4,0)
+        layout.addWidget(self.pixel_range_max, 4,1)
 
         #setting the layout and adding
         self._grid_group_box.setLayout(layout)
@@ -86,7 +96,6 @@ class UnitsBox(QtWidgets.QLabel):
         self.opasity_value.emit(value)
 
 
-
     def update_pixel_min(self, value):
         """Updates the lower bounds of the pixel range for ROI"""
         self.canvas_label.min_range = value
@@ -96,3 +105,10 @@ class UnitsBox(QtWidgets.QLabel):
         """Updates the upper bounds of the pixel range for ROI"""
         self.canvas_label.max_range = value
         self.canvas_label.lock_pixel()
+
+    def update_erase_dags(self, value):
+        """
+        Updates the erase dags connected pixel number 
+        par :: int
+        """
+        self.canvas_label.erase_das_num = value

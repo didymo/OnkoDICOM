@@ -110,6 +110,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.signal_roi_drawn = signal_roi_drawn
         self.roi_name = None
         self.emitter = Emitter()
+        self.erase_das_num = 20
 
     def set_tool(self, tool_num):
         """Sets the tool"""
@@ -402,7 +403,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
                              axis=1)  # flips y,x to x,y
         connected_points = self.connected_components_grid(coords_xy)
         for i in connected_points:
-            if len(i) < 20:
+            if len(i) < self.erase_das_num:
                 for x, y in i:
                     erase.drawRect(x, y, 1, 1)
         erase.end()
