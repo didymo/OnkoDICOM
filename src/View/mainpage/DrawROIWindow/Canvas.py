@@ -391,6 +391,9 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         add thoses into a np array 
         run an algorithm to check for clusters of pixels 
         delete the clusters """
+        self.set_pixel_layer(
+            self.dicom_data[self.dicom_slider.value()])
+        self.ds_is_active = True
         erase = QPainter(self.canvas[self.slice_num])
         erase.setCompositionMode(QPainter.CompositionMode_Source)
         colour_contrast = QColor(Qt.white)

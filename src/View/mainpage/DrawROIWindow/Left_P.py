@@ -61,6 +61,7 @@ class LeftPannel(QtWidgets.QWidget):
         save.clicked.connect(self.save_button)
         fill.clicked.connect(self.fill_tool)
         erase_dag.clicked.connect(self.canvas_label.erase_dags)
+        multi.clicked.connect(self.multi_button)
         cancel.clicked.connect(self.cancel_button)
 
         #Sets the buttons in the layout 2 by 3
