@@ -38,9 +38,9 @@ class AutoSegmentationTab(QtWidgets.QWidget):
         # there should only be one instance
         # which is created when MainPage class is created
         if AutoSegmentationTab._controller is None:
-            AutoSegmentationTab._controller = AutoSegmentationController(self)
+            AutoSegmentationTab._controller = AutoSegmentationController()
         else:
-            AutoSegmentationTab._controller.set_view(self)
+            AutoSegmentationTab._controller.set_view()
 
         # Check task setting against fast mode - set check box false if not compatible
         self._task_combo.currentIndexChanged.connect(self._check_task_is_fast_compatible)

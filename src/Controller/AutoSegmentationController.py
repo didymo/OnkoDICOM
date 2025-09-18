@@ -4,6 +4,7 @@ from PySide6.QtCore import Slot, QObject, Signal
 from src.Model.AutoSegmentation import AutoSegmentation
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
+from src.View.AutoSegmentation.AutoSegmentWindow import AutoSegmentWindow
 
 
 class AutoSegmentationController(QObject):
@@ -13,27 +14,25 @@ class AutoSegmentationController(QObject):
     """
     update_structure_list = Signal()
 
-    def __init__(self, view) -> None:
+    def __init__(self) -> None:
         super().__init__()
         """
         Initialising the Controller for Auto Segmentation Feature.
         Creating the requirements to run the feature
-        :param view: AutoSegmentationTab
         :rtype: None
         """
-        self._view = view
+        self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
-    def set_view(self, view) -> None:
-        """
-        To change the view reference if a new view is
-        constructed to replace the old view
-        :param view:
-        :rtype: None
-        """
-        self._view = view
+    # def set_view(self) -> None:
+    #     """
+    #     To change the view reference if a new view is
+    #     constructed to replace the old view
+    #     :rtype: None
+    #     """
+    #     self._view = AutoSegmentWindow()
 
     # View related methods
     def start_button_clicked(self) -> None:
@@ -46,14 +45,22 @@ class AutoSegmentationController(QObject):
 
         self.run_task(self._view.get_segmentation_task(), self._view.get_fast_value())
 
-    def update_progress_bar_value(self, value: int) -> None:
-        """
-        Access the view of the feature and updates the progress bar on the UI element
-        :param value: int
-        :rtype: None
+    # def update_progress_bar_value(self, value: int) -> None:
+    #     """
+    #     Access the view of the feature and updates the progress bar on the UI element
+    #     :param value: int
+    #     :rtype: None
+    #
+    #     """
+    #     self._view.set_progress_bar_value(value)
 
+    def show_view(self):
         """
-        self._view.set_progress_bar_value(value)
+        To Display the view on Screen
+        :rtype: None
+        """
+        self._view = AutoSegmentWindow(self)
+        self._view.show()
 
     def update_progress_text(self, text: str) -> None:
         """
@@ -64,11 +71,11 @@ class AutoSegmentationController(QObject):
         self._view.set_progress_text(text)
 
     # Model related methods
-    def run_task(self, task: str, fast: bool) -> None:
+    def run_task(self, task: list[str], fast: bool) -> None:
         """
         Run the segmentation task from the model class.
         Performing the Segmentation for the Dicom Images
-        :param task: str
+        :param task: list[str]
         :param fast: bool
         :rtype: None
         """
@@ -82,14 +89,14 @@ class AutoSegmentationController(QObject):
     @Slot()
     def on_segmentation_finished(self) -> None:
         # Update the text edit UI
-        self.update_progress_bar_value(80)
+        # self.update_progress_bar_value(80)
 
         self.update_progress_text("Loading the RTSTRUCT file")
         load_rtss_file_to_patient_dict(self.patient_dict_container)
-        self.update_progress_bar_value(90)
+        # self.update_progress_bar_value(90)
         self.update_progress_text("Populating Structures Tab.")
         self.update_structure_list.emit()
-        self.update_progress_bar_value(100)
+        # self.update_progress_bar_value(100)
         self.update_progress_text("Structures Loaded")
 
         # Enable once segmentation complete

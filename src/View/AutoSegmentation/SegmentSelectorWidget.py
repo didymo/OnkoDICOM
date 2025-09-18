@@ -22,7 +22,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent=None, res_location="res") -> None:
+    def __init__(self, parent=None, data_location="data") -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Constructs the parent class of QtWidgets.QWidget
@@ -42,7 +42,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # Creating Tree using PySide6
         # Nesting methods here to Indicate that each one is intended to feed into each other
         self._selection_tree = self._resize_columns(
-            self._enter_tree_data(csv_location=pathlib.Path(res_location)/"segmentation_lists.csv", tree=self._create_selection_tree(
+            self._enter_tree_data(csv_location=pathlib.Path(data_location)/"segmentation_lists.csv", tree=self._create_selection_tree(
                 self._body_section_clicked)))
 
         # Adding the layout and the Widget to the parent Widget
@@ -106,7 +106,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     def _get_csv_data(self, path: pathlib.Path) -> pandas.DataFrame:
         """
         Cached method to get the structure data
-        Reads and Extracts the useful columns out of the "res/segmentation_list.csv" file.
+        Reads and Extracts the useful columns out of the "data/segmentation_list.csv" file.
 
         :param path: str
         :returns: pandas.DataFrame

@@ -1,3 +1,4 @@
+from src.View.AutoSegmentation.AutoSegmentWindow import AutoSegmentWindow
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
 from PySide6.QtWidgets import QStackedWidget
@@ -174,6 +175,21 @@ class ActionHandler:
         self.action_show_cut_lines.setIconVisibleInMenu(True)
         self.action_show_cut_lines.setText("Show Cut Lines")
         self.action_show_cut_lines.triggered.connect(self.cut_lines_handler)
+
+        # AutoSegmentation Action
+        self.autosegmentation_icon = QtGui.QIcon()
+        self.autosegmentation_icon.addPixmap(
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/auto_segmentaion_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.autosegmentation = QtGui.QAction()
+        self.autosegmentation.setIcon(self.autosegmentation_icon)
+        self.autosegmentation.setIconVisibleInMenu(True)
+        self.autosegmentation.setText("Auto-Segmentation")
+        self.autosegmentation.triggered.connect(self.auto_segmentation_handler)
+
 
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtGui.QAction()
@@ -411,6 +427,9 @@ class ActionHandler:
                 self.__main_page.image_fusion_view.setCurrentWidget(
                     self.__main_page.image_fusion_four_views)
                 self.__main_page.image_fusion_view_axial.update_view()
+
+    def auto_segmentation_handler(self):
+        self.auto_seg = self.__main_page.auto_segmentation_controller.show_view()
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()

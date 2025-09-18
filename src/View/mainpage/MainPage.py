@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
+from src.Controller.AutoSegmentationController import AutoSegmentationController
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
@@ -144,17 +145,6 @@ class UIMainWindow:
         elif hasattr(self, 'isodoses_tab'):
             del self.isodoses_tab
 
-        # Add Auto-Segmentation to the left panel
-        if not hasattr(self, 'auto_segmentation_tab'):
-            self.auto_segmentation_tab = AutoSegmentationTab()
-            # Obtain controller from auto segment tab
-            self._controller = self.auto_segmentation_tab.get_autoseg_controller()
-
-            # Connect update structures signal to main slot
-            self._controller.update_structure_list.connect(self.structures_tab.update_ui)
-
-        self.left_panel.addTab(self.auto_segmentation_tab, "Auto-Seg")
-
         # Right panel contains the different tabs of DICOM view, DVH,
         # clinical data, DICOM tree
         self.right_panel = QtWidgets.QTabWidget()
@@ -269,6 +259,9 @@ class UIMainWindow:
 
         self.central_widget.setLayout(self.central_widget_layout)
         self.main_window_instance.setCentralWidget(self.central_widget)
+
+        # creating controller for auto-Segmentation
+        self._create_autosegmentation_controller()
 
     def create_footer(self):
         self.footer.setFixedHeight(15)
@@ -654,6 +647,12 @@ class UIMainWindow:
         # Update the Add On Option GUI
         self.add_on_options_controller.update_ui()
 
+    # Add Auto-Segmentation to the left panel
+    def _create_autosegmentation_controller(self):
+        # Obtain controller from auto segment tab
+        self.auto_segmentation_controller: AutoSegmentationController = AutoSegmentationController()
+        # Connect update structures signal to main slot
+        self.auto_segmentation_controller.update_structure_list.connect(self.structures_tab.update_ui)
 
     def perform_suv2roi(self):
         """

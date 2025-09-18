@@ -1,3 +1,4 @@
+import sys
 import pandas
 import functools
 from typing import Callable
@@ -5,9 +6,8 @@ from PySide6 import QtWidgets
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
 
-from SegmentSelectorWidget import SegmentSelectorWidget
+from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
 import src.View.StyleSheetReader as StyleSheetReader
-from src.Controller.AutoSegmentationController import AutoSegmentationController
 from src.Controller.PathHandler import resource_path
 
 
@@ -16,18 +16,19 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     Class for the AutoSegmentation Window.
     A feature that allows an algorithm to be able creates segments of the human body.
     """
-    _controller: AutoSegmentationController | None = None
+    _controller = None
 
-    def __init__(self) -> None:
+    def __init__(self, controller) -> None:
         """
         Initialization of the AutoSegmentWindow class.
         Includes aspects as creating a controller, setting up the window attributes,
         Creating Widgets and setting up layout
 
+        :param controller: AutoSegmentationController instance
         :returns: None
         """
         super(AutoSegmentWindow, self).__init__()
-        self._create_controller()
+        self._create_controller(controller)
 
         # Setting Up Window
         self._setup_window()
@@ -40,7 +41,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Left Section of the Window
         self._left_layout: QtWidgets.QLayout = QtWidgets.QFormLayout()
         # self._make_segmentation_task_selection(seg_lists[0])  # Adding Segmentation Task Combo Box
-        self._make_fast_checkbox()
+        # self._make_fast_checkbox()
         self._make_progress_text()
         self._make_start_button(self._start_button_clicked)
 
@@ -54,7 +55,8 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self.setLayout(window_layout)
 
         # Setting up connections
-        # self._setup_connections()
+        self._setup_connections()
+        self.show()
 
     def sizeHint(self) -> QSize:
         """
@@ -64,16 +66,14 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         return QSize(600, 600)
 
-    def _create_controller(self) -> None:
+    def _create_controller(self, controller) -> None:
         """
         Protected Method Creating the Controller for the AutoSegmentation Feature or Connecting to it if it already exists
+        :param _controller: AutoSegmentationController instance
 
         :returns: None
         """
-        if AutoSegmentWindow._controller is None:
-            AutoSegmentWindow._controller = AutoSegmentationController(self)
-        else:
-            AutoSegmentWindow._controller.set_view(self)
+        self._controller = controller
 
     def _setup_window(self) -> None:
         """
@@ -98,7 +98,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :returns: None
         """
         # Check task setting against fast mode - set check box false if not compatible
-        self._task_combo.currentIndexChanged.connect(self._check_task_is_fast_compatible)
+        #self._task_combo.currentIndexChanged.connect(self._check_task_is_fast_compatible)
 
     @functools.lru_cache(maxsize=128, typed=False)
     def _get_lists_from_csv(self) -> tuple[list[str], list[str], list[str]]:
@@ -107,10 +107,10 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :returns: tuple[list[str], list[str], list[str]]
         """
-        fast_fastest_lists: pandas.DataFrame = pandas.read_csv(resource_path("res\\segmentation_lists.csv"))
+        fast_fastest_lists: pandas.DataFrame = pandas.read_csv(resource_path("data\\segmentation_lists.csv"))
         fast_fastest: pandas.DataFrame = fast_fastest_lists.filter(["Structure", "Fast", "Fastest"])
         fast_list: list[str] = fast_fastest[fast_fastest["Fast"]]["Structure"].str.strip().tolist()
-        fastest_list: list[str] = fast_fastest[fast_fastest["Fastest"]]["Structure"].str.strip().tolist()
+        fastest_list: list[str] = fast_fastest[fast_fastest["Fastest"] == "true"]["Structure"].str.strip().tolist()
         structure_list: list[str] = fast_fastest["Structure"].str.strip().tolist()
         return structure_list ,fast_list, fastest_list
 
@@ -184,8 +184,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
-        print(self.get_segmentation_task())
-        # self._controller.start_button_clicked()
+        self._controller.start_button_clicked()
 
     def set_progress_text(self, text: str) -> None:
         """
@@ -254,7 +253,8 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: bool
         """
-        return self._fast_checkbox.isChecked()
+        return False
+        # return self._fast_checkbox.isChecked()
 
     def get_autoseg_controller(self):
         return self._controller

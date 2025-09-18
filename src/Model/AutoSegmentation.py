@@ -127,7 +127,7 @@ class AutoSegmentation:
         totalsegmentator(
             input=self.dicom_temp_dir.name,
             output=output_dir,
-            task=task,
+            roi_subset=task,
             output_type="nifti",
             device="cpu",
             fastest=fast,
