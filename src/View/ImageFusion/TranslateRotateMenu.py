@@ -88,7 +88,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             self.translate_labels.append(value_label)
 
             # Mouse Mode Toolbar (Translate/Rotate/Interrogation)
-
+            
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
         mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
@@ -137,12 +137,11 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode_group.setExclusive(True)
         self.mouse_mode_group.addButton(self.mouse_translate_btn)
         self.mouse_mode_group.addButton(self.mouse_rotate_btn)
-
         self.mouse_mode_group.addButton(self.mouse_interrogation_btn)
         self.mouse_mode_group.addButton(self.mouse_none_btn)
 
-        # Track last clicked button for "toggle off"
 
+        # Track last clicked button for "toggle off"
         self._last_checked_button = None
 
         def on_mouse_mode_btn_clicked(btn):
@@ -160,6 +159,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     self.mouse_mode = "translate"
                 elif btn == self.mouse_rotate_btn:
                     self.mouse_mode = "rotate"
+                elif btn == self.mouse_interrogation_btn:
+                    self.mouse_mode = "interrogation"
+                elif btn == self.mouse_none_btn:
+                    self.mouse_mode = None
 
                 elif btn == self.mouse_interrogation_btn:
                     self.mouse_mode = "interrogation"
