@@ -412,16 +412,36 @@ class BaseFusionView(DicomView):
             self._handle_rotate_click(x, y, w, h)
 
     def save_and_set_mouse_mode_none(self):
-        if self.get_mouse_mode() != "none":
-            self._prev_mouse_mode = self.get_mouse_mode()
-            self._cut_line_active = True
-            self.translation_menu.set_mouse_mode("none")
+        """
+               Save the current mouse mode and set it to 'none'.
+               Safe to call multiple times; only the first call has an effect.
+               """
+        # If already active ignore
+        if self._cut_line_active:
+            return
+
+        current_mode = self.get_mouse_mode()
+        self._prev_mouse_mode = current_mode if current_mode != "none" else None
+        self._cut_line_active = True
+
+        # Set mouse mode to none (uncheck all buttons and update state)
+        self.translation_menu.set_mouse_mode("none")
 
     def restore_prev_mouse_mode(self):
-        if self._cut_line_active and self._prev_mouse_mode is not None:
+        """
+                Restore the previously saved mouse mode if available.
+                Safe to call multiple times; only the first call has an effect.
+                """
+        if not self._cut_line_active:
+            # Nothing to restore
+            return
+
+        if self._prev_mouse_mode is not None:
             self.translation_menu.set_mouse_mode(self._prev_mouse_mode)
-            self._prev_mouse_mode = None
-            self._cut_line_active = False
+
+        # Always reset state
+        self._prev_mouse_mode = None
+        self._cut_line_active = False
 
     def _handle_translate_click(self, x, y, w, h):
         def axial_trans(x, y, w, h):
