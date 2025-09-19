@@ -1,5 +1,6 @@
 import pandas
 import functools
+import pathlib
 from typing import Callable
 from PySide6 import QtWidgets
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
@@ -106,7 +107,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :returns: tuple[list[str], list[str], list[str]]
         """
         fast_fastest: pandas.DataFrame = SegmentationListFilter.read_csv_to_pandas(
-            csv="data\\csv\\segmentation_lists.csv",
+            csv=pathlib.Path("data/csv/segmentation_lists.csv"),
             row_filter_column="Structure",
             row_filter_words=class_map["total"],
             column_list=["Structure", "Fast", "Fastest"])

@@ -1,13 +1,13 @@
 import pandas
-
+import pathlib
 from src.Controller.PathHandler import resource_path
 
 
-def read_csv_to_pandas(csv: str, row_filter_column:str=None, row_filter_words: dict | list[str]=None, column_list: list[str]=None) -> pandas.DataFrame:
+def read_csv_to_pandas(csv: str | pathlib.Path, row_filter_column:str=None, row_filter_words: dict | list[str]=None, column_list: list[str]=None) -> pandas.DataFrame:
     """
     Imports Segments list then filters it to the specified columns then return them as a dataFrame
 
-    :param csv: str: location of the csv file
+    :param csv: str | pathlib.Path: location of the csv file
     :param row_filter_column: str: column name to filter rows to of the csv file
     :param row_filter_words: dict: dictionary with column names as keys and values as values
     :param column_list: list[str]: list of column names
@@ -24,7 +24,7 @@ def _dict_row_filter(data: pandas.DataFrame, csv_column: str = None, filter_valu
 
     :param data: pandas.DataFrame
     :param csv_column: str: column name to filter rows to of the csv file
-    :param filter: dict | list[...] dictionary with column names as keys and values as values
+    :param filter_values: dict | list[...] dictionary with column names as keys and values as values
     :return: pandas.DataFrame
     """
 
@@ -45,14 +45,18 @@ def _column_filter(data: pandas.DataFrame, column_list: list[str]) -> pandas.Dat
     :param *args: list[str]: list of column to filter to
     :return: pandas.DataFrame
     """
-    output: pandas.DataFrame = pandas.DataFrame()
-    if column_list is not None:
+
+    if column_list is not None and not data.empty:
+        output: pandas.DataFrame = pandas.DataFrame()
         for column in column_list:
             try:
                 output[column]: pandas.Series = data[column]
             finally:
-                pass
-    return output
+                continue
+        if output.empty:
+            return data
+        return output
+    return data
 
 def _strip_whitespace(data: pandas.DataFrame) -> pandas.DataFrame:
     """
@@ -65,10 +69,10 @@ def _strip_whitespace(data: pandas.DataFrame) -> pandas.DataFrame:
             data[column]: pandas.Series = data[column].str.strip()
     return data
 
-def _read_csv_data_to_pandas(csv: str) -> pandas.DataFrame:
+def _read_csv_data_to_pandas(csv: str | pathlib.Path) -> pandas.DataFrame:
     """
     Cached Method to return the row filtered pandas DataFrame
-    :param csv: str: location of the csv file
+    :param csv: str | pathlib.Path: location of the csv file
     :return: pandas.DataFrame
     """
-    return pandas.read_csv(csv)
+    return pandas.read_csv(pathlib.Path(csv))
