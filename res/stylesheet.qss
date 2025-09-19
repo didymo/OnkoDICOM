@@ -7,6 +7,14 @@ QWidget {
     background-color:  #F5F4F5;
 }
 
+QMenu {
+    color: #000000
+}
+
+QMenuBar {
+    color: #000000
+}
+
 QProgressBar {
     border-radius: 1px;
     background-color: #b299e6;
