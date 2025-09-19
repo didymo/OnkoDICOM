@@ -22,7 +22,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent=None, data_location="data") -> None:
+    def __init__(self, parent=None, data_location="data\\csv") -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Constructs the parent class of QtWidgets.QWidget

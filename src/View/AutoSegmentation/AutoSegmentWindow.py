@@ -107,7 +107,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :returns: tuple[list[str], list[str], list[str]]
         """
-        fast_fastest_lists: pandas.DataFrame = pandas.read_csv(resource_path("data\\segmentation_lists.csv"))
+        fast_fastest_lists: pandas.DataFrame = pandas.read_csv(resource_path("data\\csv\\segmentation_lists.csv"))
         fast_fastest: pandas.DataFrame = fast_fastest_lists.filter(["Structure", "Fast", "Fastest"])
         fast_list: list[str] = fast_fastest[fast_fastest["Fast"]]["Structure"].str.strip().tolist()
         fastest_list: list[str] = fast_fastest[fast_fastest["Fastest"] == "true"]["Structure"].str.strip().tolist()
