@@ -6,8 +6,8 @@ import pandas
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QSizePolicy
 from PySide6.QtCore import Qt, QSize
-
-from src.Controller.PathHandler import resource_path
+from totalsegmentator.map_to_binary import class_map
+import src.View.AutoSegmentation.SegmentationListFilter as SegmentationListFilter
 from src.View.StyleSheetReader import StyleSheetReader
 
 class SegmentSelectorWidget(QtWidgets.QWidget):
@@ -111,10 +111,11 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param path: str
         :returns: pandas.DataFrame
         """
-        structure_data_full: pandas.DataFrame = pandas.read_csv(resource_path(path))
-        structure_data: pandas.DataFrame = structure_data_full.filter(["BodySection", "Structure"])
-        structure_data["BodySection"]: pandas.Series = structure_data["BodySection"].str.strip()
-        structure_data["Structure"]: pandas.Series = structure_data["Structure"].str.strip()
+        structure_data: pandas.DataFrame = SegmentationListFilter.read_csv_to_pandas(
+            csv="data\\csv\\segmentation_lists.csv",
+            row_filter_column="Structure",
+            row_filter_words=class_map["total"],
+            column_list=["Structure", "BodySection"])
         return structure_data
 
     def _input_structure(self,

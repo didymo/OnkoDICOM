@@ -1,12 +1,13 @@
-import sys
 import pandas
 import functools
 from typing import Callable
 from PySide6 import QtWidgets
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
+from totalsegmentator.map_to_binary import class_map
 
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
+import src.View.AutoSegmentation.SegmentationListFilter as SegmentationListFilter
 import src.View.StyleSheetReader as StyleSheetReader
 from src.Controller.PathHandler import resource_path
 
@@ -104,11 +105,14 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :returns: tuple[list[str], list[str], list[str]]
         """
-        fast_fastest_lists: pandas.DataFrame = pandas.read_csv(resource_path("data\\csv\\segmentation_lists.csv"))
-        fast_fastest: pandas.DataFrame = fast_fastest_lists.filter(["Structure", "Fast", "Fastest"])
-        fast_list: list[str] = fast_fastest[fast_fastest["Fast"]]["Structure"].str.strip().tolist()
-        fastest_list: list[str] = fast_fastest[fast_fastest["Fastest"] == "true"]["Structure"].str.strip().tolist()
-        structure_list: list[str] = fast_fastest["Structure"].str.strip().tolist()
+        fast_fastest: pandas.DataFrame = SegmentationListFilter.read_csv_to_pandas(
+            csv="data\\csv\\segmentation_lists.csv",
+            row_filter_column="Structure",
+            row_filter_words=class_map["total"],
+            column_list=["Structure", "Fast", "Fastest"])
+        fast_list: list[str] = fast_fastest[fast_fastest["Fast"]]["Structure"].tolist()
+        fastest_list: list[str] = fast_fastest[fast_fastest["Fastest"]]["Structure"].tolist()
+        structure_list: list[str] = fast_fastest["Structure"].tolist()
         return structure_list ,fast_list, fastest_list
 
     def _make_fast_checkbox(self) -> None:
