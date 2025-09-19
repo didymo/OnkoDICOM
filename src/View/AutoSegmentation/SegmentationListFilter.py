@@ -34,7 +34,7 @@ def _dict_row_filter(data: pandas.DataFrame, csv_column: str = None, filter_valu
             filter_list: list[str] = list(filter_values.values())
         if isinstance(filter_values, list):
             filter_list: list[str] = filter_values
-        if filter_list is not None:
+        if filter_list is not None and filter_list:
             return data[data[csv_column].isin(filter_list)]
     return data
 
