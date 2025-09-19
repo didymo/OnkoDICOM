@@ -22,7 +22,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent=None, data_location="data\\csv") -> None:
+    def __init__(self, parent=None, data_location="data/csv") -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Constructs the parent class of QtWidgets.QWidget
@@ -112,7 +112,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :returns: pandas.DataFrame
         """
         structure_data: pandas.DataFrame = SegmentationListFilter.read_csv_to_pandas(
-            csv="data\\csv\\segmentation_lists.csv",
+            csv=pathlib.Path(path),
             row_filter_column="Structure",
             row_filter_words=class_map["total"],
             column_list=["Structure", "BodySection"])
