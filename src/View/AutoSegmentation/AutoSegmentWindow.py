@@ -254,6 +254,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: bool
         """
         return False
+        # TODO: Intentionally Disabled while we are making sure the new GUI works will be looking into if we can reimplement this in the future
         # return self._fast_checkbox.isChecked()
 
     def get_autoseg_controller(self):

@@ -429,7 +429,7 @@ class ActionHandler:
                 self.__main_page.image_fusion_view_axial.update_view()
 
     def auto_segmentation_handler(self):
-        self.auto_seg = self.__main_page.auto_segmentation_controller.show_view()
+        self.__main_page.auto_segmentation_controller.show_view()
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()

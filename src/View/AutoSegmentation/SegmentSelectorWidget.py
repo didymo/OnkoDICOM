@@ -135,7 +135,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         structure_input.setFlags(structure_input.flags() | Qt.ItemFlag.ItemIsUserCheckable)
         structure_input.setCheckState(column, Qt.CheckState.Unchecked)
         # Spaces added here to prevent check box from going over the first letter
-        structure_input.setText(column, "   " + structure)
+        structure_input.setText(column, f"   {structure}")
         return structure_input
 
     def _resize_columns(self, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
@@ -145,7 +145,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param tree: QtWidgets.QTreeWidget
         :return: QtWidgets.QTreeWidget
         """
-        for column in range(0, tree.columnCount()):
+        for column in range(tree.columnCount()):
             tree.resizeColumnToContents(column)
         return tree
 
@@ -200,7 +200,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param state: Qt.CheckState
         :returns: None
         """
-        for i in range(0, item.childCount()):
+        for i in range(item.childCount()):
             item.child(i).setCheckState(1, state)
             item_text: str = item.child(i).text(1).strip()
             self._selected_list_add_or_remove(item_text, state)
@@ -217,11 +217,8 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :returns: None
         """
         # Counting the number of checked child boxes
-        active_count: int = 0
         parent_child_count: int = item.parent().childCount()
-        for i in range(0, parent_child_count):
-            if item.parent().child(i).checkState(1) == Qt.CheckState.Checked:
-                active_count += 1
+        active_count = sum(item.parent().child(i).checkState(1) == Qt.CheckState.Checked for i in range(parent_child_count))
         self._setting_parent_states(item, active_count, parent_child_count)
         self._selected_list_add_or_remove(body_text, state)
 
@@ -250,10 +247,10 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param state: Qt.CheckState
         :returns: None
         """
-        if state is Qt.CheckState.Checked and body_text not in self._selected_list:
+        if state == Qt.CheckState.Checked and body_text not in self._selected_list:
             self._selected_list.append(body_text)
             return
-        if state is Qt.CheckState.Unchecked and body_text in self._selected_list:
+        if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
             self._selected_list.remove(body_text)
 
 
