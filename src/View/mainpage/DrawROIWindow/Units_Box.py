@@ -2,7 +2,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QLabel, QSpinBox, QSlider
 from PySide6.QtCore import Qt,Signal
 
-class UnitsBox(QtWidgets.QLabel):
+class UnitsBox(QtWidgets.QWidget):
     """The class contains all of the unit boxes"""
     opasity_value = Signal(int)
     update_cursor_size = Signal()
@@ -49,7 +49,7 @@ class UnitsBox(QtWidgets.QLabel):
         self.pixel_range_max.valueChanged.connect(self.update_pixel_max)
         self.pixel_range_max.setValue(6000)
 
-        erase_dags_num = QLabel("Erase Conected Pixels count :")
+        erase_dags_num = QLabel("Erase Dags :")
         self.erase_dags_num = QSpinBox()
         self.erase_dags_num.setFocusPolicy(Qt.ClickFocus)
         self.erase_dags_num.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
@@ -59,7 +59,9 @@ class UnitsBox(QtWidgets.QLabel):
         
         #Transparency Widget
         transparency = QLabel("Opacity :")
-        self.transparency_slider = QSlider(Qt.Horizontal)
+        self.transparency_slider = QSpinBox()
+        self.transparency_slider.setFocusPolicy(Qt.ClickFocus)
+        self.transparency_slider.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
         self.transparency_slider.setRange(1,255)
         self.transparency_slider.valueChanged.connect(self.update_transparency)
         self.transparency_slider.setValue(126)

@@ -97,7 +97,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
         # transect Pen
         self.t_pen = QPen()
-        self.t_pen.setWidth(2)
+        self.t_pen.setWidth(1)
         self.t_pen.setColor(QColor(255, 105, 180))
         self.t_pen.setCapStyle(Qt.FlatCap)
         self.t_pen.setJoinStyle(Qt.MiterJoin)
@@ -324,7 +324,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         fill = QPainter(self.canvas[self.slice_num])
         fill.setCompositionMode(QPainter.CompositionMode_Source)
         colour_contrast = self.pen.color()
-        colour_contrast.setAlpha(self.max_alpha)
+        #colour_contrast.setAlpha(self.max_alpha)
         fill.setBrush(QColor(colour_contrast))
         fill.setPen(Qt.NoPen)
         image = self.canvas[self.slice_num].toImage()

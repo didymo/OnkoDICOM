@@ -104,21 +104,25 @@ class RoiInitialiser():
         self.view.setLineWidth(0); self.view.setMidLineWidth(0)
         self.view.viewport().setAutoFillBackground(False)
         self.view.setBackgroundBrush(Qt.NoBrush)
-        self.scene.setBackgroundBrush(Qt.NoBrush)
+        self.scene.setBackgroundBrush(Qt.black)
         
 
         self.units_box = UnitsBox(self, self.pen, self.canvas_labal)
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
         self.ROI_button = ROIName(self,roi_name="Select ROI")
 
-        # Creates a layout for the tools to fit inside
+        # Creates a layout for the tools to fit insid
         tools_layout = QtWidgets.QVBoxLayout()
+        tools_layout.setContentsMargins(0, 0, 0, 0)
+        tools_layout.setSpacing(0)                    
+        tools_layout.setAlignment(Qt.AlignTop)
         tools_container = QtWidgets.QWidget()
+        tools_container.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         tools_container.setLayout(tools_layout)
         tools_layout.addWidget(self.ROI_button)
         tools_layout.addWidget(self.left_label)
         tools_layout.addWidget(self.units_box)
-
+        tools_layout.addStretch(1)
         # Create a layout to hold the left panel and the main canvas
         # Create a QWidget to hold both the left panel and the central label
         # Add the left panel to the layout

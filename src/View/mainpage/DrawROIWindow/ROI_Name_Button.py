@@ -12,12 +12,9 @@ class ROIName(QWidget):
         self.roi_name = roi_name
         self.parent = parent
         layout = QtWidgets.QHBoxLayout(self)
-
-        label = QLabel("Select ROI Name")
-        self.select_roi_type = QPushButton()
+        self.select_roi_type = QPushButton("Select ROI Name")
         self.select_roi_type.clicked.connect(self.show_roi_type_options)
-
-        layout.addWidget(label)
+        
         layout.addWidget(self.select_roi_type)
         self.setLayout(layout)
 

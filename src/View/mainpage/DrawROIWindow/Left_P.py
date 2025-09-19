@@ -23,6 +23,8 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.setExclusive(True)
         self._grid_group_box = QGroupBox()
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)       
         brush = QPushButton("Brush")
         brush.setCheckable(True)
         pen = QPushButton("Pen")
@@ -37,8 +39,12 @@ class LeftPannel(QtWidgets.QWidget):
         fill = QPushButton("Fill")
         fill.setCheckable(True)
         multi = QPushButton("Multi")
+        multi.setCheckable(True)
         erase_dag = QPushButton("Erase DAGs")
         cancel = QPushButton("Cancel")
+        zapper = QPushButton("Zapper")
+        zapper.setCheckable(True)
+        
         self.button_group.addButton(brush)
         self.button_group.addButton(pen)
         self.button_group.addButton(eraser_draw)
@@ -50,6 +56,8 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.addButton(erase_dag)
         self.button_group.addButton(multi)
         self.button_group.addButton(cancel)
+        self.button_group.addButton(zapper)
+
 
         #Links the buttons to actions
         brush.clicked.connect(self.brush_tool)
@@ -63,6 +71,7 @@ class LeftPannel(QtWidgets.QWidget):
         erase_dag.clicked.connect(self.canvas_label.erase_dags)
         multi.clicked.connect(self.multi_button)
         cancel.clicked.connect(self.cancel_button)
+        zapper.clicked.connect(self.zapper_button)
 
         #Sets the buttons in the layout 2 by 3
         layout.addWidget(brush,0,0)
@@ -72,6 +81,7 @@ class LeftPannel(QtWidgets.QWidget):
         layout.addWidget(multi,2,0)
         layout.addWidget(fill, 2,1)
         layout.addWidget(copy,3,0)
+        layout.addWidget(zapper,3,1)
         layout.addWidget(transect,4,0)
         layout.addWidget(erase_dag, 4,1)
         layout.addWidget(save,5,0)
@@ -132,6 +142,7 @@ class LeftPannel(QtWidgets.QWidget):
 
     def multi_button(self):
         """This fucntion calls the multi putton"""
+        self.canvas_label.pen.setColor(self.last_colour)
         self.parent.multi_popup()
 
     def fill_tool(self):
@@ -156,6 +167,13 @@ class LeftPannel(QtWidgets.QWidget):
                 return
         else:
             self.parent.close_window()
+        
+    def zapper_button(self):
+        """Fucntion to activate the zapper function"""
+        self.canvas_label.setCursor(Qt.ArrowCursor)
+        self.canvas_label.pen.setColor(Qt.transparent)
+        self.canvas_label.set_tool(2)
+
     
     #ChatGPT Code
     def make_circle_cursor(self,
