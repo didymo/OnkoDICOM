@@ -17,6 +17,8 @@ class BaseFusionView(DicomView):
         self.overlay_item = None
         self.overlay_images = None
         self.overlay_offset = (0, 0)
+        self._prev_mouse_mode = None
+        self._cut_line_active = False
 
         self.slice_view = slice_view
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
@@ -408,6 +410,18 @@ class BaseFusionView(DicomView):
             w = scene_size.width()
             h = scene_size.height()
             self._handle_rotate_click(x, y, w, h)
+
+    def save_and_set_mouse_mode_none(self):
+        if self.get_mouse_mode() != "none":
+            self._prev_mouse_mode = self.get_mouse_mode()
+            self._cut_line_active = True
+            self.translation_menu.set_mouse_mode("none")
+
+    def restore_prev_mouse_mode(self):
+        if self._cut_line_active and self._prev_mouse_mode is not None:
+            self.translation_menu.set_mouse_mode(self._prev_mouse_mode)
+            self._prev_mouse_mode = None
+            self._cut_line_active = False
 
     def _handle_translate_click(self, x, y, w, h):
         def axial_trans(x, y, w, h):

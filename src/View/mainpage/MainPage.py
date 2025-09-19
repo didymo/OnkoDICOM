@@ -328,12 +328,16 @@ class UIMainWindow:
                 self.draw_roi.update_draw_roi_pixmaps()
 
     def toggle_cut_lines(self):
-        if self.dicom_axial_view.horizontal_view is None or \
-                self.dicom_axial_view.vertical_view is None or \
-                self.dicom_coronal_view.horizontal_view is None or \
-                self.dicom_coronal_view.vertical_view is None or \
-                self.dicom_sagittal_view.horizontal_view is None or \
-                self.dicom_sagittal_view.vertical_view is None:
+        cut_lines_enabled = (
+                self.dicom_axial_view.horizontal_view is not None and
+                self.dicom_axial_view.vertical_view is not None and
+                self.dicom_coronal_view.horizontal_view is not None and
+                self.dicom_coronal_view.vertical_view is not None and
+                self.dicom_sagittal_view.horizontal_view is not None and
+                self.dicom_sagittal_view.vertical_view is not None
+        )
+
+        if not cut_lines_enabled:
             self.dicom_axial_view.set_views(self.dicom_coronal_view,
                                             self.dicom_sagittal_view)
             self.dicom_coronal_view.set_views(self.dicom_axial_view,
@@ -345,30 +349,55 @@ class UIMainWindow:
             self.dicom_coronal_view.set_views(None, None)
             self.dicom_sagittal_view.set_views(None, None)
 
-        if hasattr(self, 'image_fusion_view'):
-            if self.image_fusion_view is not None:
-                if self.image_fusion_view_axial.horizontal_view is None or \
-                        self.image_fusion_view_axial.vertical_view is None or \
-                        self.image_fusion_view_coronal.horizontal_view is None \
-                        or self.image_fusion_view_coronal.vertical_view is None \
-                        or \
-                        self.image_fusion_view_sagittal.horizontal_view is None \
-                        or \
-                        self.image_fusion_view_sagittal.vertical_view is None:
-                    self.image_fusion_view_axial.set_views(
-                        self.image_fusion_view_coronal,
-                        self.image_fusion_view_sagittal)
-                    self.image_fusion_view_coronal.set_views(
-                        self.image_fusion_view_axial,
-                        self.image_fusion_view_sagittal)
-
-                    self.image_fusion_view_sagittal.set_views(
-                        self.image_fusion_view_axial,
-                        self.image_fusion_view_coronal)
-                else:
-                    self.image_fusion_view_axial.set_views(None, None)
-                    self.image_fusion_view_coronal.set_views(None, None)
-                    self.image_fusion_view_sagittal.set_views(None, None)
+        if hasattr(self, 'image_fusion_view') and self.image_fusion_view is not None:
+            fusion_cut_lines_enabled = (
+                    self.image_fusion_view_axial.horizontal_view is not None and
+                    self.image_fusion_view_axial.vertical_view is not None and
+                    self.image_fusion_view_coronal.horizontal_view is not None and
+                    self.image_fusion_view_coronal.vertical_view is not None and
+                    self.image_fusion_view_sagittal.horizontal_view is not None and
+                    self.image_fusion_view_sagittal.vertical_view is not None
+            )
+            if not fusion_cut_lines_enabled:
+                self.image_fusion_view_axial.set_views(
+                    self.image_fusion_view_coronal,
+                    self.image_fusion_view_sagittal)
+                self.image_fusion_view_coronal.set_views(
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal)
+                self.image_fusion_view_sagittal.set_views(
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_coronal)
+                # --- Save and set mouse mode to none for all fusion views ---
+                for view in [
+                    self.image_fusion_single_view,
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal,
+                    self.image_fusion_view_coronal,
+                ]:
+                    if hasattr(view, "save_and_set_mouse_mode_none"):
+                        view.save_and_set_mouse_mode_none()
+                    # Disable mouse mode buttons
+                    if hasattr(view, "translation_menu") and hasattr(view.translation_menu,
+                                                                     "set_mouse_mode_buttons_enabled"):
+                        view.translation_menu.set_mouse_mode_buttons_enabled(False)
+            else:
+                self.image_fusion_view_axial.set_views(None, None)
+                self.image_fusion_view_coronal.set_views(None, None)
+                self.image_fusion_view_sagittal.set_views(None, None)
+                # --- Restore previous mouse mode for all fusion views ---
+                for view in [
+                    self.image_fusion_single_view,
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal,
+                    self.image_fusion_view_coronal,
+                ]:
+                    if hasattr(view, "restore_prev_mouse_mode"):
+                        view.restore_prev_mouse_mode()
+                    # Enable mouse mode buttons
+                    if hasattr(view, "translation_menu") and hasattr(view.translation_menu,
+                                                                     "set_mouse_mode_buttons_enabled"):
+                        view.translation_menu.set_mouse_mode_buttons_enabled(True)
 
     def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
