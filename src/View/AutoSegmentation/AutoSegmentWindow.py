@@ -34,14 +34,12 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._setup_window()
 
         # Getting Fast Compatible
-        seg_lists: tuple[list[str], list[str], list[str]] = self._get_lists_from_csv()
-        self._fast_compatible_tasks: list[str] = seg_lists[1]
-        self._fastest_compatible_tasks: list[str] = seg_lists[2]
+        # self._get_fast_lists()
+        # self._make_fast_checkbox()
+        # TODO: Intentionally Disabled while we are making sure the new GUI works will be looking into if we can reimplement this in the future
 
         # Left Section of the Window
         self._left_layout: QtWidgets.QLayout = QtWidgets.QFormLayout()
-        # self._make_segmentation_task_selection(seg_lists[0])  # Adding Segmentation Task Combo Box
-        # self._make_fast_checkbox()
         self._make_progress_text()
         self._make_start_button(self._start_button_clicked)
 
@@ -56,7 +54,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Setting up connections
         self._setup_connections()
-        self.show()
 
     def sizeHint(self) -> QSize:
         """
@@ -114,25 +111,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         structure_list: list[str] = fast_fastest["Structure"].str.strip().tolist()
         return structure_list ,fast_list, fastest_list
 
-    def _make_segmentation_task_selection(self, structure_list: list[str]) -> None:
-        """
-        Protected method to create the segmentation task label and
-        combo box for segmentation task selection.
-
-        :param structure_list: list[str]
-        :return: None
-        """
-        _task_label: QtWidgets.QLabel = QtWidgets.QLabel("Segmentation Task:")
-        self._left_layout.addWidget(_task_label)
-
-        self._task_combo: QtWidgets.QComboBox = QtWidgets.QComboBox()
-        # List of items which can be selected and segmented for
-        self._task_combo.addItems(structure_list)  # Need to figure out if we can make this an Enum
-        self._task_combo.setCurrentIndex(0)
-        self._task_combo.setToolTip("Select for Segmentation Task to be completed.\n"
-                                    "This will be the specific area of the body to create a segment for")
-        self._left_layout.addWidget(self._task_combo)
-
     def _make_fast_checkbox(self) -> None:
         """
         Protected method to create the checkbox with label to
@@ -147,6 +125,16 @@ class AutoSegmentWindow(QtWidgets.QWidget):
                                        "BENEFIT: Faster Segmentations\n"
                                        "DOWNSIDE: Not as Accurate Segmentations")
         self._left_layout.addWidget(self._fast_checkbox)
+
+    def _get_fast_lists(self):
+        """
+        Getting Fast Compatible Lists from CSV File
+
+        :returns: None
+        """
+        seg_lists: tuple[list[str], list[str], list[str]] = self._get_lists_from_csv()
+        self._fast_compatible_tasks: list[str] = seg_lists[1]
+        self._fastest_compatible_tasks: list[str] = seg_lists[2]
 
     def _make_progress_text(self) -> None:
         """
@@ -231,6 +219,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
+        # TODO: Find a new way to implement this
         if self._task_combo.currentText() not in self._fast_compatible_tasks:
             self._fast_checkbox.setChecked(False)
             self._fast_checkbox.setEnabled(False)
