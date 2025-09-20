@@ -29,6 +29,8 @@ class ManualFusionLoader(QtCore.QObject):
         patient_dict_container = PatientDictContainer()
         fixed_dir = patient_dict_container.path
         moving_dir = None
+        transform_file = None
+
         if self.selected_files:
             # Validate all selected files are from the same directory
             dirs = {os.path.dirname(f) for f in self.selected_files}
@@ -44,6 +46,20 @@ class ManualFusionLoader(QtCore.QObject):
                 return
             moving_dir = dirs.pop()
 
+            # Check if any selected file is a transform DICOM (Spatial Registration)
+            from pydicom import dcmread
+            from pydicom.errors import InvalidDicomError
+            for f in self.selected_files:
+                try:
+                    ds = dcmread(f, stop_before_pixels=True)
+                    modality = getattr(ds, "Modality", "").upper()
+                    sop_class = getattr(ds, "SOPClassUID", "")
+                    if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
+                        transform_file = f
+                        break
+                except (InvalidDicomError, AttributeError, OSError):
+                    continue
+
         # Use VTKEngine to load images
         engine = VTKEngine()
         fixed_loaded = engine.load_fixed(fixed_dir)
@@ -56,6 +72,18 @@ class ManualFusionLoader(QtCore.QObject):
         moving_loaded = engine.load_moving(moving_dir)
         if not moving_loaded:
             raise RuntimeError("Failed to load moving image with VTK.")
+
+        # If a transform DICOM was found and is ticked, load and apply it
+        if transform_file is not None:
+            if progress_callback is not None:
+                progress_callback.emit(("Applying saved transform...", 80))
+            import pydicom, numpy as np
+            from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
+            ds = pydicom.dcmread(transform_file)
+            # Check for Spatial Registration Object
+            if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
+                menu = TranslateRotateMenu()
+                menu._extracted_from_load_fusion_state_sro(ds, np, engine, transform_file)
 
         if progress_callback is not None:
             progress_callback.emit(("Finalising", 90))

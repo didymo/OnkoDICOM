@@ -1,4 +1,7 @@
 import itertools
+import os
+import threading
+
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -482,15 +485,15 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def _create_spatial_registration_dicom(self, matrix, translation, rotation, vtk_engine):
         """
-        Create a DICOM Spatial Registration Object (SRO) dataset with the given transform.
-        Args:
-            matrix: 4x4 numpy array representing the transformation matrix.
-            translation: List of translation values [tx, ty, tz].
-            rotation: List of rotation values [rx, ry, rz].
-            vtk_engine: The VTKEngine instance (for UIDs).
-        Returns:
-            pydicom FileDataset representing the SRO.
-        """
+               Create a DICOM Spatial Registration Object (SRO) dataset with the given transform.
+               Args:
+                   matrix: 4x4 numpy array representing the transformation matrix.
+                   translation: List of translation values [tx, ty, tz].
+                   rotation: List of rotation values [rx, ry, rz].
+                   vtk_engine: The VTKEngine instance (for UIDs).
+               Returns:
+                   pydicom FileDataset representing the SRO.
+               """
         import pydicom
         from pydicom.dataset import FileDataset, Dataset
         from pydicom.uid import generate_uid
@@ -501,6 +504,55 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         fixed_image_uid = getattr(vtk_engine, "fixed_image_uid", "1.2.3.4.5.6.7.8.1.1")
         moving_series_uid = getattr(vtk_engine, "moving_series_uid", "1.2.3.4.5.6.7.8.2")
         moving_image_uid = getattr(vtk_engine, "moving_image_uid", "1.2.3.4.5.6.7.8.2.1")
+
+        # Try to get patient info from the original DICOM file in PatientDictContainer
+        patient_name = None
+        patient_id = None
+
+        try:
+            from src.Model.PatientDictContainer import PatientDictContainer
+            pdc = PatientDictContainer()
+            filepaths = pdc.filepaths
+            if filepaths and isinstance(filepaths, dict):
+                if image_keys := [k for k in filepaths.keys() if str(k).isdigit()]:
+                    first_key = sorted(image_keys, key=lambda x: int(x))[0]
+                    first_image_path = filepaths[first_key]
+                    from pydicom import dcmread
+                    ds_fixed = dcmread(first_image_path, stop_before_pixels=True)
+                    patient_name = getattr(ds_fixed, "PatientName", None)
+                    patient_id = getattr(ds_fixed, "PatientID", None)
+                    print(
+                        f"[DEBUG] Found patient info in file: {first_image_path} PatientName={patient_name}, PatientID={patient_id}")
+                else:
+                    print("[DEBUG] No numeric keys found in filepaths for image slices.")
+            else:
+                print("[DEBUG] filepaths is not a dict or is empty.")
+        except Exception as e:
+            print(f"[DEBUG] Could not get patient info from PatientDictContainer filepaths: {e}")
+
+        if not patient_name or not patient_id:
+            try:
+                pdc = PatientDictContainer()
+                patient_name = pdc.get("patient_name") or "FUSION"
+                patient_id = pdc.get("patient_id") or "FUSION"
+                print(
+                    f"[DEBUG] Fallback patient info from PatientDictContainer: PatientName={patient_name}, PatientID={patient_id}")
+            except Exception as e:
+                print(f"[DEBUG] Could not get patient info from PatientDictContainer: {e}")
+                patient_name = "FUSION"
+                patient_id = "FUSION"
+                print(f"[DEBUG] Using default patient info: PatientName={patient_name}, PatientID={patient_id}")
+        print(f"[DEBUG] Saving transform DICOM with PatientName={patient_name}, PatientID={patient_id}")
+
+
+        # Print a warning if the patient name is too long for DICOM
+        if patient_name and len(str(patient_name)) > 64:
+            print(
+                f"[WARNING] PatientName length ({len(str(patient_name))}) exceeds DICOM max of 64. It will be truncated.")
+            patient_name = str(patient_name)[:64]
+        if patient_id and len(str(patient_id)) > 64:
+            print(f"[WARNING] PatientID length ({len(str(patient_id))}) exceeds DICOM max of 64. It will be truncated.")
+            patient_id = str(patient_id)[:64]
 
         # Create a minimal DICOM SRO dataset
         file_meta = pydicom.Dataset()
@@ -514,8 +566,8 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         # Set required DICOM fields
         dt = datetime.datetime.now()
-        ds.PatientName = "FUSION"
-        ds.PatientID = "FUSION"
+        ds.PatientName = patient_name
+        ds.PatientID = patient_id
         ds.StudyInstanceUID = generate_uid()
         ds.SeriesInstanceUID = generate_uid()
         ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
@@ -561,6 +613,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         return ds
 
+
     def load_fusion_state(self):
         """
         Load a fusion transform state from a DICOM Spatial Registration Object (SRO).
@@ -576,7 +629,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
         if vtk_engine is None:
-            QMessageBox.warning(self, "Error", "No VTK engine found.")
             logging.error("No VTK engine found in load_fusion_state")
             return
 
@@ -586,7 +638,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             try:
                 ds = pydicom.dcmread(filename)
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Could not read DICOM file:\n{e}")
                 logging.error(f"Could not read DICOM file:\n{e}")
                 return
 
@@ -596,9 +647,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             elif (0x7777, 0x0010) in ds:
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             else:
-                QMessageBox.warning(self, "Error",
-                                    "No spatial registration or transform found in DICOM file.\n"
-                                    "Please select a transform.dcm file created by the Save Fusion State function.")
                 logging.error("No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
                               "created by the Save Fusion State function.")
 
@@ -673,4 +721,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if mw is not None:
             mw.update_views()
 
-        QMessageBox.information(self, "Loaded", f"Spatial Registration loaded from {filename}")
+        if threading.current_thread() is threading.main_thread():
+            QMessageBox.information(self, "Loaded", f"Spatial Registration loaded from {filename}")
+        else:
+            print(f"[INFO] Spatial Registration loaded from {filename}")

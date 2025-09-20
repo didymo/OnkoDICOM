@@ -423,8 +423,6 @@ class BaseFusionView(DicomView):
         current_mode = self.get_mouse_mode()
         self._prev_mouse_mode = current_mode if current_mode != "none" else None
         self._cut_line_active = True
-
-        # Set mouse mode to none (uncheck all buttons and update state)
         self.translation_menu.set_mouse_mode("none")
 
     def restore_prev_mouse_mode(self):
@@ -438,8 +436,6 @@ class BaseFusionView(DicomView):
 
         if self._prev_mouse_mode is not None:
             self.translation_menu.set_mouse_mode(self._prev_mouse_mode)
-
-        # Always reset state
         self._prev_mouse_mode = None
         self._cut_line_active = False
 
