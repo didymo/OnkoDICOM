@@ -44,7 +44,8 @@ class AutoSegmentationController(QObject, metaclass=Singleton):
         To Display the view on Screen
         :rtype: None
         """
-        self._view = AutoSegmentWindow(self)
+        if self._view is None:
+            self._view = AutoSegmentWindow(self)
         self._view.show()
 
     def update_progress_text(self, text: str) -> None:
