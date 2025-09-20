@@ -36,7 +36,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._make_start_button(self._start_button_clicked)
 
         # Right Section of the Window
-        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self)
+        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, controller.segmentation_list)
 
         # Setting the Window Layout
         window_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()

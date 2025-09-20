@@ -22,7 +22,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent=None, data_location="data/csv") -> None:
+    def __init__(self, parent, segmentation_list: list[str], data_location="data/csv") -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Constructs the parent class of QtWidgets.QWidget
@@ -30,6 +30,9 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         Generates Tree
         Sets up the layout of the Widget
 
+        :param parent: QWidget
+        :param segmentation_list: list[str]
+        :param data_location: str
         :returns: None
         """
 
@@ -37,7 +40,8 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         self.setStyleSheet(StyleSheetReader().get_stylesheet()) # To style the Widget
 
         # Class Members
-        self._selected_list: list[str] = [] # To store the selected segments
+        # Reference to the list owned by another class most likely the controller class
+        self._selected_list: list[str] = segmentation_list
 
         # Creating Tree using PySide6
         # Nesting methods here to Indicate that each one is intended to feed into each other
@@ -49,6 +53,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         layout: QtWidgets.QLayout = QtWidgets.QFormLayout() # Creating Window Layout
         layout.addWidget(self._selection_tree)
         self.setLayout(layout)
+        self._load_selections(segmentation_list)
 
     def sizeHint(self) -> QSize:
         """
@@ -139,6 +144,21 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         structure_input.setText(column, f"   {structure}")
         return structure_input
 
+    def _load_selections(self, current_list: list[str]) -> None:
+        """
+        Setting the selection in the segmentation selector tree to the options given in a list
+
+        :param current_list: list[str]
+        :returns: None
+        """
+        # There has got to be a better way to do this
+        # Attempted using QTreeWidget.findItem(test, column) but would only return empty lists
+        for top_item in range(self._selection_tree.topLevelItemCount()):
+            for child_item in range(self._selection_tree.topLevelItem(top_item).childCount()):
+                if self._selection_tree.topLevelItem(top_item).child(child_item).text(1).strip() in current_list:
+                    self._selection_tree.topLevelItem(top_item).child(child_item).setCheckState(1, Qt.CheckState.Checked)
+            self._setting_parent_states(self._selection_tree.topLevelItem(top_item))
+
     def _resize_columns(self, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
         """
         Goes though each column in the Tree and resizes them so the contents fit the columns
@@ -210,7 +230,6 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
 
     def _specific_structure_changed(self, item: QTreeWidgetItem, body_text: str, state: Qt.CheckState) -> None:
         """
-        Determines how many of the child objects are checked or Checked
         Changes the parents checkbox state
         adds or removes items from self._selection_list
 
@@ -219,28 +238,27 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param state: Qt.CheckState
         :returns: None
         """
-        # Counting the number of checked child boxes
-        parent_child_count: int = item.parent().childCount()
-        active_count = sum(item.parent().child(i).checkState(1) == Qt.CheckState.Checked for i in range(parent_child_count))
-        self._setting_parent_states(item, active_count, parent_child_count)
+        self._setting_parent_states(item.parent())
         self._selected_list_add_or_remove(body_text, state)
 
-    def _setting_parent_states(self, item: QTreeWidgetItem, active_count:int, parent_child_count: int) -> None:
+    def _setting_parent_states(self, item: QTreeWidgetItem) -> None:
         """
+        Determines how many of the child objects are checked or Checked
         Sets the state of a parent checkbox for when a child check box has been changed
 
         :param item: QtWidgets.QTreeWidgetItem
-        :param active_count: int
-        :param parent_child_count: int
         :returns: None
         """
+        # Counting the number of checked child boxes
+        parent_child_count: int = item.childCount()
+        active_count = sum(item.child(i).checkState(1) == Qt.CheckState.Checked for i in range(parent_child_count))
         if active_count == parent_child_count:
-            item.parent().setCheckState(0, Qt.CheckState.Checked)
+            item.setCheckState(0, Qt.CheckState.Checked)
             return
         if active_count == 0:
-            item.parent().setCheckState(0, Qt.CheckState.Unchecked)
+            item.setCheckState(0, Qt.CheckState.Unchecked)
             return
-        item.parent().setCheckState(0, Qt.CheckState.PartiallyChecked)
+        item.setCheckState(0, Qt.CheckState.PartiallyChecked)
 
     def _selected_list_add_or_remove(self, body_text: str , state: Qt.CheckState) -> None:
         """
