@@ -1,14 +1,13 @@
 import threading
 import logging
 from PySide6.QtCore import Slot, QObject, Signal
-from src.Model.Singleton import Singleton
 from src.Model.AutoSegmentation import AutoSegmentation
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
 from src.View.AutoSegmentation.AutoSegmentWindow import AutoSegmentWindow
 
 
-class AutoSegmentationController(QObject, metaclass=Singleton):
+class AutoSegmentationController(QObject):
     """
     For the controlling of the UI elements in the View Class and the sending data to the Model class
     As well as modifying data to communicate between the View and Model Classes
