@@ -506,29 +506,31 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         moving_image_uid = getattr(vtk_engine, "moving_image_uid", "1.2.3.4.5.6.7.8.2.1")
 
         # Try to get patient info from the original DICOM file in PatientDictContainer
-        patient_name = None
-        patient_id = None
+        # Use patient_name and patient_id if provided as attributes (from loader/main thread)
+        patient_name = getattr(self, "patient_name", None)
+        patient_id = getattr(self, "patient_id", None)
 
-        try:
-            from src.Model.PatientDictContainer import PatientDictContainer
-            pdc = PatientDictContainer()
-            filepaths = pdc.filepaths
-            if filepaths and isinstance(filepaths, dict):
-                if image_keys := [k for k in filepaths.keys() if str(k).isdigit()]:
-                    first_key = sorted(image_keys, key=lambda x: int(x))[0]
-                    first_image_path = filepaths[first_key]
-                    from pydicom import dcmread
-                    ds_fixed = dcmread(first_image_path, stop_before_pixels=True)
-                    patient_name = getattr(ds_fixed, "PatientName", None)
-                    patient_id = getattr(ds_fixed, "PatientID", None)
-                    print(
-                        f"[DEBUG] Found patient info in file: {first_image_path} PatientName={patient_name}, PatientID={patient_id}")
+        if not patient_name or not patient_id:
+            try:
+                from src.Model.PatientDictContainer import PatientDictContainer
+                pdc = PatientDictContainer()
+                filepaths = pdc.filepaths
+                if filepaths and isinstance(filepaths, dict):
+                    if image_keys := [k for k in filepaths.keys() if str(k).isdigit()]:
+                        first_key = sorted(image_keys, key=lambda x: int(x))[0]
+                        first_image_path = filepaths[first_key]
+                        from pydicom import dcmread
+                        ds_fixed = dcmread(first_image_path, stop_before_pixels=True)
+                        patient_name = getattr(ds_fixed, "PatientName", None)
+                        patient_id = getattr(ds_fixed, "PatientID", None)
+                        print(
+                            f"[DEBUG] Found patient info in file: {first_image_path} PatientName={patient_name}, PatientID={patient_id}")
+                    else:
+                        print("[DEBUG] No numeric keys found in filepaths for image slices.")
                 else:
-                    print("[DEBUG] No numeric keys found in filepaths for image slices.")
-            else:
-                print("[DEBUG] filepaths is not a dict or is empty.")
-        except Exception as e:
-            print(f"[DEBUG] Could not get patient info from PatientDictContainer filepaths: {e}")
+                    print("[DEBUG] filepaths is not a dict or is empty.")
+            except Exception as e:
+                print(f"[DEBUG] Could not get patient info from PatientDictContainer filepaths: {e}")
 
         if not patient_name or not patient_id:
             try:
