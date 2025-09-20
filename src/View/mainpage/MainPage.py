@@ -587,40 +587,6 @@ class UIMainWindow:
         self.last_fusion_slice_orientation = "axial"
         self.last_fusion_slice_idx = 0
 
-        # --- Apply transform if present in images dict (from ManualFusionLoader) ---
-        if hasattr(self, "images") and isinstance(self.images, dict) and "transform_data" in self.images and \
-                self.images["transform_data"] is not None:
-            td = self.images["transform_data"]
-            menu = self.fusion_options_tab
-            import numpy as np
-            import vtk
-            m = td["matrix"]
-            translation = td["translation"]
-            rotation = td["rotation"]
-            vtkmat = vtk.vtkMatrix4x4()
-            for i in range(4):
-                for j in range(4):
-                    vtkmat.SetElement(i, j, m[i, j])
-            if hasattr(vtk_engine, "transform"):
-                vtk_engine.transform.SetMatrix(vtkmat)
-                vtk_engine.reslice3d.SetResliceAxes(vtkmat)
-                vtk_engine.reslice3d.Modified()
-            if hasattr(vtk_engine, "set_translation"):
-                vtk_engine.set_translation(*translation)
-            if hasattr(vtk_engine, "set_rotation_deg"):
-                vtk_engine.set_rotation_deg(*rotation)
-            # Update the menu sliders
-            menu.set_offsets(translation)
-            for i in range(3):
-                menu.rotate_sliders[i].blockSignals(True)
-                menu.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
-                menu.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
-                menu.rotate_sliders[i].blockSignals(False)
-            if menu.offset_changed_callback:
-                menu.offset_changed_callback(translation)
-            if menu.rotation_changed_callback:
-                menu.rotation_changed_callback(tuple(rotation))
-
         def on_slider_changed(orientation, value):
             self.last_fusion_slice_orientation = orientation
             self.last_fusion_slice_idx = value

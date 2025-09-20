@@ -635,20 +635,7 @@ class UIImageFusionWindow(object):
             # # Start loading in a thread (simulate progress window behavior)
             # self.progress_window.start(loader.load)
             from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
-            pdc = PatientDictContainer()
-            patient_name = None
-            patient_id = None
-            filepaths = pdc.filepaths
-            if filepaths and isinstance(filepaths, dict):
-                if image_keys := [k for k in filepaths.keys() if str(k).isdigit()]:
-                    first_key = sorted(image_keys, key=lambda x: int(x))[0]
-                    from pydicom import dcmread
-                    ds_fixed = dcmread(filepaths[first_key], stop_before_pixels=True)
-                    patient_name = getattr(ds_fixed, "PatientName", None)
-                    patient_id = getattr(ds_fixed, "PatientID", None)
-
-            loader = ManualFusionLoader(selected_files, self.progress_window, patient_name=patient_name,
-                                        patient_id=patient_id)
+            loader = ManualFusionLoader(selected_files, self.progress_window)
             start_method = lambda: self.progress_window.start(loader.load)
             signal_source = loader
 
