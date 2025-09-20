@@ -1,14 +1,9 @@
-import pandas
-import functools
-import pathlib
 from typing import Callable
 from PySide6 import QtWidgets
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
-from totalsegmentator.map_to_binary import class_map
 
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
-import src.View.AutoSegmentation.SegmentationListFilter as SegmentationListFilter
 import src.View.StyleSheetReader as StyleSheetReader
 from src.Controller.PathHandler import resource_path
 
@@ -35,11 +30,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Setting Up Window
         self._setup_window()
 
-        # Getting Fast Compatible
-        # self._get_fast_lists()
-        # self._make_fast_checkbox()
-        # TODO: Intentionally Disabled while we are making sure the new GUI works will be looking into if we can reimplement this in the future
-
         # Left Section of the Window
         self._left_layout: QtWidgets.QLayout = QtWidgets.QFormLayout()
         self._make_progress_text()
@@ -54,9 +44,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         window_layout.addWidget(self._tree_selector, stretch=2) # Stretch so it Takes 2 Units of the screen
         self.setLayout(window_layout)
 
-        # Setting up connections
-        self._setup_connections()
-
     def sizeHint(self) -> QSize:
         """
         Concreate Method of the Virtual Method which determine the size of the widget
@@ -68,7 +55,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     def _create_controller(self, controller) -> None:
         """
         Protected Method Creating the Controller for the AutoSegmentation Feature or Connecting to it if it already exists
-        :param _controller: AutoSegmentationController instance
+        :param controller: AutoSegmentationController instance
 
         :returns: None
         """
@@ -89,57 +76,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         window_icon: QIcon() = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Mode.Normal, QIcon.State.Off)
         self.setWindowIcon(window_icon)
-
-    def _setup_connections(self) -> None:
-        """
-        Protected Method to set up connections within the widget/Window
-
-        :returns: None
-        """
-        # Check task setting against fast mode - set check box false if not compatible
-        #self._task_combo.currentIndexChanged.connect(self._check_task_is_fast_compatible)
-
-    @functools.lru_cache(maxsize=128, typed=False)
-    def _get_lists_from_csv(self) -> tuple[list[str], list[str], list[str]]:
-        """
-        Protected Cached Method to read the CSV File and retrieve the Structures, Fast, and Fastest Lists from it,
-
-        :returns: tuple[list[str], list[str], list[str]]
-        """
-        fast_fastest: pandas.DataFrame = SegmentationListFilter.read_csv_to_pandas(
-            csv=pathlib.Path("data/csv/segmentation_lists.csv"),
-            row_filter_column="Structure",
-            row_filter_words=class_map["total"],
-            column_list=["Structure", "Fast", "Fastest"])
-        fast_list: list[str] = fast_fastest[fast_fastest["Fast"]]["Structure"].tolist()
-        fastest_list: list[str] = fast_fastest[fast_fastest["Fastest"]]["Structure"].tolist()
-        structure_list: list[str] = fast_fastest["Structure"].tolist()
-        return structure_list ,fast_list, fastest_list
-
-    def _make_fast_checkbox(self) -> None:
-        """
-        Protected method to create the checkbox with label to
-        determine if the fast option is selected.
-
-        :return: None
-        """
-        self._fast_checkbox: QtWidgets.QCheckBox = QtWidgets.QCheckBox("Fast")
-        self._fast_checkbox.setToolTip("When Activated this will allow for faster processing times with the \n"
-                                       "downside of lower resolution of the resulting segmentations.\n"
-                                       "This option is only available on particular tasks such as total. \n"
-                                       "BENEFIT: Faster Segmentations\n"
-                                       "DOWNSIDE: Not as Accurate Segmentations")
-        self._left_layout.addWidget(self._fast_checkbox)
-
-    def _get_fast_lists(self):
-        """
-        Getting Fast Compatible Lists from CSV File
-
-        :returns: None
-        """
-        seg_lists: tuple[list[str], list[str], list[str]] = self._get_lists_from_csv()
-        self._fast_compatible_tasks: list[str] = seg_lists[1]
-        self._fastest_compatible_tasks: list[str] = seg_lists[2]
 
     def _make_progress_text(self) -> None:
         """
@@ -216,22 +152,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._start_button.setEnabled(False)
         self._start_button.setText("Wait")
 
-    def _check_task_is_fast_compatible(self) -> None:
-        """
-        Protected method to check if the currently selected task
-        is compatible with the fast option. If the task is not
-        compatible then the fast checkbox is disabled and unchecked.
-
-        :return: None
-        """
-        # TODO: Find a new way to implement this
-        if self._task_combo.currentText() not in self._fast_compatible_tasks:
-            self._fast_checkbox.setChecked(False)
-            self._fast_checkbox.setEnabled(False)
-        else:
-            self._fast_checkbox.setEnabled(True)
-
-    def get_segmentation_task(self) -> list[str]:
+    def get_segmentation_roi_subset(self) -> list[str]:
         """
         Public Method to retrieve the current selection
         from the segmentation selection tree.
@@ -239,17 +160,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: list[str]
         """
         return self._tree_selector.get_segment_list()
-
-    def get_fast_value(self) -> bool:
-        """
-        Public Method to retrieve the value of the fast checkbox.
-        TO see if the fast option has been selected.
-
-        :return: bool
-        """
-        return False
-        # TODO: Intentionally Disabled while we are making sure the new GUI works will be looking into if we can reimplement this in the future
-        # return self._fast_checkbox.isChecked()
 
     def get_autoseg_controller(self):
         return self._controller

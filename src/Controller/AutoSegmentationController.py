@@ -26,14 +26,6 @@ class AutoSegmentationController(QObject):
         self.patient_dict_container = PatientDictContainer()
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
-    # def set_view(self) -> None:
-    #     """
-    #     To change the view reference if a new view is
-    #     constructed to replace the old view
-    #     :rtype: None
-    #     """
-    #     self._view = AutoSegmentWindow()
-
     # View related methods
     def start_button_clicked(self) -> None:
         """
@@ -43,16 +35,7 @@ class AutoSegmentationController(QObject):
         # Disable start button while segmentation processes
         self._view.disable_start_button()
 
-        self.run_task(self._view.get_segmentation_task(), self._view.get_fast_value())
-
-    # def update_progress_bar_value(self, value: int) -> None:
-    #     """
-    #     Access the view of the feature and updates the progress bar on the UI element
-    #     :param value: int
-    #     :rtype: None
-    #
-    #     """
-    #     self._view.set_progress_bar_value(value)
+        self.run_task("total", self._view.get_segmentation_roi_subset())
 
     def show_view(self):
         """
@@ -71,32 +54,28 @@ class AutoSegmentationController(QObject):
         self._view.set_progress_text(text)
 
     # Model related methods
-    def run_task(self, task: list[str], fast: bool) -> None:
+    def run_task(self, task: str, roi_subset: list[str]) -> None:
         """
         Run the segmentation task from the model class.
         Performing the Segmentation for the Dicom Images
-        :param task: list[str]
-        :param fast: bool
+        :param task: str
+        :param roi_subset: list[str]
         :rtype: None
         """
         # Instantiate AutoSegmentation passing the required settings from the UI
         auto_segmentation = AutoSegmentation(self)
 
         # Run tasks on separate thread
-        auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow, args=(task, fast))
+        auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow, args=(task, roi_subset))
         auto_seg_thread.start() # Will auto terminate at the called functions conclusion
 
     @Slot()
     def on_segmentation_finished(self) -> None:
         # Update the text edit UI
-        # self.update_progress_bar_value(80)
-
         self.update_progress_text("Loading the RTSTRUCT file")
         load_rtss_file_to_patient_dict(self.patient_dict_container)
-        # self.update_progress_bar_value(90)
         self.update_progress_text("Populating Structures Tab.")
         self.update_structure_list.emit()
-        # self.update_progress_bar_value(100)
         self.update_progress_text("Structures Loaded")
 
         # Enable once segmentation complete

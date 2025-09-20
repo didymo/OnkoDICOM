@@ -1,10 +1,10 @@
 import os
+import copy
 import shutil
 import tempfile
 import logging
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import SegmentationWorkerSignals
-import fnmatch
 from totalsegmentator.python_api import totalsegmentator
 from src.Model.NiftiToRtstructConverter import nifti_to_rtstruct_conversion
 from src.View.util.RedirectStdOut import ConsoleOutputStream, redirect_output_to_gui, setup_logging
@@ -44,7 +44,7 @@ class AutoSegmentation:
         redirect_output_to_gui(output_stream)
         setup_logging(output_stream)
 
-    def run_segmentation_workflow(self, task, fast):
+    def run_segmentation_workflow(self, task, roi_subset):
         """
         Runs the full segmentation workflow for a given task and speed setting.
         This method manages the process of segmenting DICOM images, converting the
@@ -52,7 +52,7 @@ class AutoSegmentation:
 
         Args:
             task: The segmentation task to perform.
-            fast: Whether to use the fastest segmentation mode.
+            roi_subset: The ROI subset to use.
 
         Returns:
             None
@@ -63,7 +63,7 @@ class AutoSegmentation:
 
         try:
             self._copy_temp_dicom_dir()
-            self._run_totalsegmentation(task, fast, output_dir)
+            self._run_totalsegmentation(task, roi_subset, output_dir)
             self._convert_to_rtstruct(output_dir, output_rt)
             self._cleanup_nifti_dir(output_dir)
             self.signals.finished.emit()
@@ -110,7 +110,7 @@ class AutoSegmentation:
         except Exception as e:
             raise ValueError(f"Failed to copy DICOM files: {e}") from e
 
-    def _run_totalsegmentation(self, task, fast, output_dir) -> None:
+    def _run_totalsegmentation(self, task, roi_subset, output_dir) -> None:
         """
         Runs the TotalSegmentator segmentation task and saves the results.
         This method executes the segmentation process using the specified task and
@@ -118,7 +118,7 @@ class AutoSegmentation:
 
         Args:
             task: The segmentation task to perform.
-            fast: Whether to use the fastest segmentation mode.
+            roi_subset: The ROI subset to use.
             output_dir: Directory to store the segmentation results.
 
         Returns:
@@ -127,10 +127,10 @@ class AutoSegmentation:
         totalsegmentator(
             input=self.dicom_temp_dir.name,
             output=output_dir,
-            roi_subset=task,
+            task=task,
+            roi_subset=copy.deepcopy(roi_subset), # Deep copy to prevent changing to the selection after starting
             output_type="nifti",
-            device="cpu",
-            fastest=fast,
+            device="gpu",
         )
 
     def _convert_to_rtstruct(self, nifti_dir, output_rt) -> None:
