@@ -186,12 +186,14 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param body_text: str
         :returns: None
         """
-        # Adds the specific Structure to the list when checked
-        if item.checkState(1) == Qt.CheckState.Checked:
-            self._specific_structure_changed(item, body_text, Qt.CheckState.Checked)
-            return
-        # Removes the specific structure from the list when unchecked
-        self._specific_structure_changed(item, body_text, Qt.CheckState.Unchecked)
+        # Stopping crashing when interacting with columns right of selectable columns
+        if item.parent() is not None:
+            # Adds the specific Structure to the list when checked
+            if item.checkState(1) == Qt.CheckState.Checked:
+                self._specific_structure_changed(item, body_text, Qt.CheckState.Checked)
+                return
+            # Removes the specific structure from the list when unchecked
+            self._specific_structure_changed(item, body_text, Qt.CheckState.Unchecked)
 
     def _parent_section_changed(self, item: QTreeWidgetItem, state: Qt.CheckState) -> None:
         """
