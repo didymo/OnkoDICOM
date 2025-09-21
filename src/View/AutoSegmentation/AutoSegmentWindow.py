@@ -42,9 +42,14 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Right Section of the Window
         self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, controller.segmentation_list)
 
-        self._splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self._splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
 
-        # Setting the Window Layout with splitter
+        # Set minimum widths for both panels
+        self._splitter.setChildrenCollapsible(False)
+        self._left_layout_container.setMinimumWidth(200)
+        self._tree_selector.setMinimumWidth(200)
+
+        # Setting the Window Layout with splitter and widgets
         window_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         self._splitter.addWidget(self._left_layout_container)
         self._splitter.addWidget(self._tree_selector)
