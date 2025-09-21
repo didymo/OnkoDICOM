@@ -1,18 +1,35 @@
 QMainWindow {
-    background-color:  #F5F4F5;
-}
 
-QWidget {
-    color: #000000;
-    background-color:  #F5F4F5;
+    background-color: #F5F4F5;
 }
 
 QMenu {
-    color: #000000
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
 QMenuBar {
-    color: #000000
+    color: #000000;
+    background-color: #F5F4F5;
+}
+
+QDialog {
+    color: #000000;
+    background-color: #F5F4F5;
+}
+
+QMMessageBox {
+    color: #000000;
+    background-color: #F5F4F5;
+}
+
+QSplitter::handle {
+    background-color: #F5F4F5;
+}
+
+QTextEdit {
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
 QProgressBar {
@@ -185,6 +202,7 @@ QLineEdit {
     border-bottom: 3px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
+    color: #000000;
     background-color:  #F5F4F5;
 }
 QLineEdit#BatchROICleaning {
@@ -223,8 +241,15 @@ QTreeView#OpenPatientWindowPatientsTree {
 QHeaderView {
     color: red;
 }
+
+QTreeView {
+    color: #000000;
+    background-color: #e6e6eb;
+}
+
 QTreeView::item {
     color: #000000;
+    background-color: #e6e6eb;
     min-height: 36px;
     font-size: 14px;
 }
@@ -488,4 +513,10 @@ QSlider::add-page:vertical {
     background: #e6e9e9;
     margin-left:5px;
     margin-right:5px;
+}
+
+AutoSegmentWindow {
+    color: #000000;
+    background-color: #F5F4F5;
+
 }
