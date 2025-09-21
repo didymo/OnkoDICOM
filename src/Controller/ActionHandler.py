@@ -7,6 +7,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.WindowingUI import Windowing
 from src.Model.Windowing import windowing_model
 
@@ -225,6 +226,7 @@ class ActionHandler:
             QtGui.QIcon.On,
         )
         self.menu_export = QtWidgets.QMenu()
+        self.menu_export.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.menu_export.setTitle("Export")
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
