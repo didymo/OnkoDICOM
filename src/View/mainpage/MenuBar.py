@@ -5,12 +5,15 @@ from PySide6.QtCore import Qt
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class MenuBar(QtWidgets.QMenuBar):
 
     def __init__(self, action_handler: ActionHandler):
         QtWidgets.QMenuBar.__init__(self)
+        stylesheet = StyleSheetReader()
+        self.setStyleSheet(stylesheet.get_stylesheet())
         self.action_handler = action_handler
         self.patient_dict_container = PatientDictContainer()
         self.setGeometry(QtCore.QRect(0, 0, 901, 35))
@@ -19,10 +22,12 @@ class MenuBar(QtWidgets.QMenuBar):
         # Menu Bar: File, Tools, Export, Help
         self.menu_file = QtWidgets.QMenu()
         self.menu_file.setTitle("File")
+        self.menu_file.setStyleSheet(stylesheet.get_stylesheet())
         self.addMenu(self.menu_file)
 
         self.menu_tools = QtWidgets.QMenu()
         self.menu_tools.setTitle("Tools")
+        self.menu_tools.setStyleSheet(stylesheet.get_stylesheet())
         self.addMenu(self.menu_tools)
 
         self.addMenu(self.action_handler.menu_export)
