@@ -22,6 +22,15 @@ QMMessageBox {
     background-color: #F5F4F5;
 }
 
+QSplitter::handle {
+    background-color: #F5F4F5;
+}
+
+QTextEdit {
+    color: #000000;
+    background-color: #F5F4F5;
+}
+
 QProgressBar {
     border-radius: 1px;
     background-color: #b299e6;
@@ -604,4 +613,10 @@ QLabel#FusionModeLabel {
 QRadioButton#FusionModeRadio:disabled, QLabel#FusionModeLabel:disabled {
     color: #a0a0a0;
     opacity: 0.35;
+}
+
+AutoSegmentWindow {
+    color: #000000;
+    background-color: #F5F4F5;
+
 }
