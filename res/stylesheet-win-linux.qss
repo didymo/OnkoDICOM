@@ -2,16 +2,24 @@ QMainWindow {
     background-color: #F5F4F5;
 }
 
-QWidget {
+QMenu {
+    color: #000000;
     background-color: #F5F4F5;
 }
 
-QMenu {
-    color: #000000
+QMenuBar {
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
-QMenuBar {
-    color: #000000
+QDialog {
+    color: #000000;
+    background-color: #F5F4F5;
+}
+
+QMMessageBox {
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
 QProgressBar {
@@ -219,7 +227,8 @@ QLineEdit {
     border-bottom: 3px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
-    background-color: #F5F4F5;;
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
 QLineEdit#BatchROICleaning {
@@ -259,10 +268,17 @@ QTreeView#OpenPatientWindowPatientsTree {
 }
 QHeaderView {
     color: red;
-    background-color: #e6e6eb
+    background-color: #e6e6eb;
 }
+
+QTreeView {
+    color: #000000;
+    background-color: #e6e6eb;
+}
+
 QTreeView::item {
     color: #000000;
+    background-color: #e6e6eb;
     min-height: 36px;
     font-size: 14px;
 }
