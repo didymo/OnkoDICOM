@@ -1,7 +1,9 @@
 import threading
 import logging
 from PySide6.QtCore import Slot, QObject, Signal
-from src.Model.AutoSegmentation import AutoSegmentation
+
+from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
+from src.Model.AutoSegmentation.AutoSegmentation import AutoSegmentation
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
 from src.View.AutoSegmentation.AutoSegmentWindow import AutoSegmentWindow
@@ -21,7 +23,7 @@ class AutoSegmentationController(QObject):
         Creating the requirements to run the feature
         :rtype: None
         """
-        self.segmentation_list = []
+        self.view_state: AutoSegmentViewState = AutoSegmentViewState()
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()

@@ -3,6 +3,7 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
 
+from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
 import src.View.StyleSheetReader as StyleSheetReader
 from src.Controller.PathHandler import resource_path
@@ -26,9 +27,8 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         super(AutoSegmentWindow, self).__init__()
         self._create_controller(controller)
-
-        # Setting Up Window
-        self._setup_window()
+        self._view_state = controller.view_state
+        self._setup_window() # Setting Up Window
 
         # Left Section of the Window
         self._left_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
@@ -40,7 +40,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._left_layout_container.setLayout(self._left_layout)
 
         # Right Section of the Window
-        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, controller.segmentation_list)
+        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, self._view_state.segmentation_list)
 
         self._splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
 
