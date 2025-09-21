@@ -1,5 +1,5 @@
 from typing import Callable
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
 
@@ -31,17 +31,30 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._setup_window()
 
         # Left Section of the Window
-        self._left_layout: QtWidgets.QLayout = QtWidgets.QFormLayout()
+        self._left_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
         self._make_progress_text()
         self._make_start_button(self._start_button_clicked)
+
+        # Wrap left layout in widget for splitter resizing
+        self._left_layout_container: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._left_layout_container.setLayout(self._left_layout)
 
         # Right Section of the Window
         self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, controller.segmentation_list)
 
-        # Setting the Window Layout
+        self._splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+
+        # Set minimum widths for both panels
+        self._splitter.setChildrenCollapsible(False)
+        self._left_layout_container.setMinimumWidth(200)
+        self._tree_selector.setMinimumWidth(200)
+
+        # Setting the Window Layout with splitter and widgets
         window_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        window_layout.addLayout(self._left_layout, stretch=1) # Stretch so it take up 1 unit of the window
-        window_layout.addWidget(self._tree_selector, stretch=2) # Stretch so it Takes 2 Units of the screen
+        self._splitter.addWidget(self._left_layout_container)
+        self._splitter.addWidget(self._tree_selector)
+        window_layout.addWidget(self._splitter)
+
         self.setLayout(window_layout)
 
     def sizeHint(self) -> QSize:

@@ -50,7 +50,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
                 self._body_section_clicked)))
 
         # Adding the layout and the Widget to the parent Widget
-        layout: QtWidgets.QLayout = QtWidgets.QFormLayout() # Creating Window Layout
+        layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout() # Creating Window Layout
         layout.addWidget(self._selection_tree)
         self.setLayout(layout)
         self._load_selections(segmentation_list)
