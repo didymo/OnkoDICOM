@@ -1,4 +1,5 @@
 import functools
+import logging
 import pathlib
 from collections.abc import Callable
 
@@ -9,6 +10,8 @@ from PySide6.QtCore import Qt, QSize
 from totalsegmentator.map_to_binary import class_map
 import src.Model.AutoSegmentation.SegmentationListFilter as SegmentationListFilter
 from src.View.StyleSheetReader import StyleSheetReader
+
+logger = logging.getLogger(__name__)
 
 class SegmentSelectorWidget(QtWidgets.QWidget):
     """
@@ -43,7 +46,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # Reference to the list owned by another class most likely the controller class
         self._selected_list: list[str] = segmentation_list
         # References to look up items in tree without searching entire tree
-        self._tree_choices_ref: dict[str, QTreeWidgetItem] = dict()
+        self._tree_choices_ref: dict[str, QTreeWidgetItem] = {}
 
         # Creating Tree using PySide6
         # Nesting methods here to Indicate that each one is intended to feed into each other
@@ -162,6 +165,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             try:
                 self._tree_choices_ref[selected].setCheckState(1, Qt.CheckState.Checked)
             except KeyError:
+                logger.debug(f"Skipped Selection {selected}: Not a choice in Tree")
                 pass
         for parent_item in range(self._selection_tree.topLevelItemCount()):
             self._setting_parent_states(self._selection_tree.topLevelItem(parent_item))
