@@ -14,20 +14,18 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     Class for the AutoSegmentation Window.
     A feature that allows an algorithm to be able creates segments of the human body.
     """
-    _controller = None
 
-    def __init__(self, controller) -> None:
+    def __init__(self, view_state: AutoSegmentViewState) -> None:
         """
         Initialization of the AutoSegmentWindow class.
-        Includes aspects as creating a controller, setting up the window attributes,
+        Setting up the window attributes,
         Creating Widgets and setting up layout
 
         :param controller: AutoSegmentationController instance
         :returns: None
         """
         super(AutoSegmentWindow, self).__init__()
-        self._create_controller(controller)
-        self._view_state = controller.view_state
+        self._view_state = view_state
         self._setup_window() # Setting Up Window
 
         # Left Section of the Window
@@ -64,15 +62,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :returns: QSize:
         """
         return QSize(600, 600)
-
-    def _create_controller(self, controller) -> None:
-        """
-        Protected Method Creating the Controller for the AutoSegmentation Feature or Connecting to it if it already exists
-        :param controller: AutoSegmentationController instance
-
-        :returns: None
-        """
-        self._controller = controller
 
     def _setup_window(self) -> None:
         """
@@ -126,7 +115,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
-        self._controller.start_button_clicked()
+        self._view_state.start_button_connection()
 
     def set_progress_text(self, text: str) -> None:
         """
@@ -173,6 +162,3 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: list[str]
         """
         return self._tree_selector.get_segment_list()
-
-    def get_autoseg_controller(self):
-        return self._controller

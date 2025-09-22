@@ -23,7 +23,7 @@ class AutoSegmentationController(QObject):
         Creating the requirements to run the feature
         :rtype: None
         """
-        self.view_state: AutoSegmentViewState = AutoSegmentViewState() # storing state of view
+        self.view_state: AutoSegmentViewState = AutoSegmentViewState(self.start_button_clicked) # storing state of view
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()
@@ -46,7 +46,7 @@ class AutoSegmentationController(QObject):
         :rtype: None
         """
         if self._view is None:
-            self._view = AutoSegmentWindow(self)
+            self._view = AutoSegmentWindow(self.view_state)
         self._view.show()
 
     def update_progress_text(self, text: str) -> None:
