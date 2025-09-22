@@ -21,7 +21,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         Setting up the window attributes,
         Creating Widgets and setting up layout
 
-        :param controller: AutoSegmentationController instance
+        :param view_state: AutoSegmentViewState
         :returns: None
         """
         super(AutoSegmentWindow, self).__init__()
