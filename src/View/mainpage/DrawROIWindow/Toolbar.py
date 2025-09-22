@@ -44,8 +44,7 @@ class CutsomToolbar(QToolBar):
     def change_colour(self):
         """Allows us to change the colour of the pen"""
         dialog = QColorDialog()
-        on_clicked_ok = dialog.exec()
-        if on_clicked_ok:
+        if on_clicked_ok := dialog.exec():
             colour = dialog.currentColor()
             colour.setAlpha(self.canvas_label.max_alpha)
             self.canvas_label.pen.setColor(colour)

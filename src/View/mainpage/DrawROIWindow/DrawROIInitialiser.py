@@ -100,10 +100,10 @@ class RoiInitialiser():
         self.image = self.display_pixmaps[self.scroller.value()]
 
         self.image_item = QtWidgets.QGraphicsPixmapItem(self.image)
+
         self.image_item.setZValue(0)
         self.scene.addItem(self.image_item)
         self.scene.setSceneRect(QtCore.QRectF(QtCore.QPointF(0,0), self.image.size()))
-
         self.canvas_labal = CanvasLabel(self.pen,self.scroller,self.dataset_rtss)
         self.scene.addItem(self.canvas_labal)
         self.scene.setSceneRect(self.image_item.boundingRect())
@@ -120,7 +120,6 @@ class RoiInitialiser():
         self.canvas_labal.setShapeMode(QtWidgets.QGraphicsPixmapItem.BoundingRectShape)
         self.canvas_labal.setAcceptedMouseButtons(Qt.LeftButton)
         self.canvas_labal.setTransform(QtGui.QTransform())
-
         self.view = QtWidgets.QGraphicsView(self.scene)
         self.view.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         self.view.setInteractive(True)
@@ -180,6 +179,8 @@ class RoiInitialiser():
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Handles up and down arrow keys"""
+        if self.scroller.value() +1 > self.scroller.maximum or self.scroller.value() -1 < self.scroller.minimum:
+            return
         if event.key() == Qt.Key_Up:
             self.scroller.setValue(self.scroller.value() +1)
             self.canvas_labal.ds_is_active = False

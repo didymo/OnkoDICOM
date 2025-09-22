@@ -42,7 +42,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.dicom_data = self.patient_dict_container.dataset
         self.dicom_slider.valueChanged.connect(self.change_layout_bool)
         self.dicom_slider.valueChanged.connect(self.update_pixmap_layer)
-        self.slice_num = 94  # must change
+        self.slice_num = self.dicom_slider.value()  # must change
         self.number_of_slices = self.dicom_slider.maximum()  # number of image slices
         # sets the canvas and the mouse tracking
         # genorates a pixmap to draw on then copys that pixmap into an array an equal size of the dicom images
@@ -271,11 +271,12 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         p2_y = int(p2.y())
 
         h, w = self.pixel_array.shape[:2]
-        transected_values = []
+        transected_values = [
+            self.pixel_array[y, x]
+            for x, y in self._iter_line_pixels(p1_x, p1_y, p2_x, p2_y)
+            if 0 <= x < w and 0 <= y < h
+        ]
 
-        for x, y in self._iter_line_pixels(p1_x, p1_y, p2_x, p2_y):
-            if 0 <= x < w and 0 <= y < h:
-                transected_values.append(self.pixel_array[y, x])
 
         self.t_window = TransectWindow(transected_values)
         self.t_window.show()
@@ -337,8 +338,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             y += p.y()
             self.mid_point.pop(0)
             i += 1
-        average = (int(x / i), int(y / i))
-        return average
+        return (int(x / i), int(y / i)) #average
 
     # not the things from halo
     def flood(self, mid_p, paint_bicket):

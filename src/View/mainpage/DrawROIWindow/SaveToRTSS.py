@@ -25,8 +25,6 @@ class SaveROI(QtCore.QObject):
             converter = ConvertPixmapToDicom(self.dicom_data[i], self.canvas[i])
             slice_roi_list = converter.start(include_holes=True, simplify_tol_px=1.0)
             pending_roi_list.extend(slice_roi_list)
-
-        new_rtss = ROI.create_roi(self.rtss, self.roi_name, pending_roi_list)
-        return new_rtss
+        return ROI.create_roi(self.rtss, self.roi_name, pending_roi_list)
 
         

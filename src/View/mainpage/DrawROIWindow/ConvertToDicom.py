@@ -57,8 +57,7 @@ class ConvertPixmapToDicom(QtWidgets.QGraphicsPixmapItem):
         # In ARGB32 on little-endian, bytes are actually BGRA; alpha is channel 3
         alpha = arr[:, :, 3]
 
-        mask = (alpha > 0).astype(np.uint8)
-        return mask
+        return (alpha > 0).astype(np.uint8)
 
     # ---- MASK -> RINGS (row,col) ------------------------------------------
     def mask_to_contours(self, mask: np.ndarray, keep='ccomp', simplify_tol_px=1.0, min_area_px=9):
@@ -107,7 +106,7 @@ class ConvertPixmapToDicom(QtWidgets.QGraphicsPixmapItem):
     @staticmethod
     def _get_rc_vectors(ds):
         iop = np.asarray(ds.ImageOrientationPatient, dtype=float)  # [r_x,r_y,r_z, c_x,c_y,c_z]
-        R = iop[0:3]                              # row dir
+        R = iop[:3]                              # row dir
         C = iop[3:6]                              # col dir
         IPP = np.asarray(ds.ImagePositionPatient, dtype=float)
         dr, dc = map(float, ds.PixelSpacing)      # row, col spacing (mm/px)
@@ -120,8 +119,7 @@ class ConvertPixmapToDicom(QtWidgets.QGraphicsPixmapItem):
             raise ValueError("points_rc must be (N,2) [row, col]")
         R, C, IPP, dr, dc = ConvertPixmapToDicom._get_rc_vectors(ds)
         r = pts[:, 0]; c = pts[:, 1]
-        P = (IPP + np.outer(c * dc, C) + np.outer(r * dr, R))
-        return P  # (N,3)
+        return (IPP + np.outer(c * dc, C) + np.outer(r * dr, R))  # (N,3)
 
     @staticmethod
     def check_planarity(points_xyz, ds, tol_mm=1e-2):
