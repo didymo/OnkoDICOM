@@ -1,10 +1,9 @@
 import csv
 import pydicom
 from pathlib import Path
-from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
-
+import numpy as np
 from src.Controller.ROIOptionsController import ROIDelOption, \
     ROIManipulateOption
 from src.Model.DICOM.Structure.DICOMSeries import Series
@@ -102,31 +101,26 @@ class StructureTab(QtWidgets.QWidget):
         :return: Dictionary where the key is the ROI number and the value a
         QColor object.
         """
-        roi_color = dict()
+        roi_color = {}
         roi_contour_info = dict_container.get(
             "dict_dicom_tree_rtss")['ROI Contour Sequence']
 
         if len(roi_contour_info) > 0:
-            for item, roi_dict in roi_contour_info.items():
-                # Note: the keys of roiContourInfo are "item 0", "item 1",
-                # etc. As all the ROI structures are identified by the ROI
-                # numbers in the whole code, we get the ROI number 'roi_id'
-                # by using the member 'list_roi_numbers'
-                id = item.split()[1]
-                roi_id = dict_container.get(
-                    "list_roi_numbers")[int(id)]
-                if 'ROI Display Color' in roi_contour_info[item]:
-                    RGB_list = roi_contour_info[item]['ROI Display Color'][0]
-                    red = RGB_list[0]
-                    green = RGB_list[1]
-                    blue = RGB_list[2]
-                else:
-                    seed(1)
-                    red = randint(0, 255)
-                    green = randint(0, 255)
-                    blue = randint(0, 255)
+            for roi_key, roi_dict in roi_contour_info.items():
+                # Get ROI number safely
+                roi_id = roi_dict.get("Referenced ROI Number")[0]
+                if roi_id is None:
+                    continue  # skip if invalid
 
-                roi_color[roi_id] = QtGui.QColor(red, green, blue)
+                # Get display color if available
+                rgb = roi_dict.get("ROI Display Color", [[None, None, None]])[0]
+                if all(c is not None for c in rgb):
+                    r, g, b = rgb
+                else:
+                    # fallback random color
+                    r, g, b = np.random.default_rng(seed=roi_id).integers(0, 256, 3)
+
+                roi_color[roi_id] = QtGui.QColor(r, g, b)
 
         return roi_color
 
