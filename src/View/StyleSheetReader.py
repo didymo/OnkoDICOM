@@ -4,6 +4,7 @@ import logging
 import functools
 
 from src.Controller.PathHandler import resource_path
+from src.Model.Singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ def get_stylesheet() -> str:
     """
     return StyleSheetReader().get_stylesheet()
 
-class StyleSheetReader:
+class StyleSheetReader(metaclass=Singleton):
     """
     A class to hold the style sheet data to be used in the User Interface classes.
     As this information will need to be used for most of the User Interfaces
@@ -66,4 +67,6 @@ class StyleSheetReader:
         :rtype: str
         """
         logger.debug("Reading the style sheet for the User Interface")
-        return pathlib.Path(resource_path(self._get_platform_stylesheet(platform.system()))).read_text()
+        location = self._get_platform_stylesheet(platform.system())
+        logger.debug(f"Reading the style sheet from {location}")
+        return pathlib.Path(resource_path(location)).read_text()
