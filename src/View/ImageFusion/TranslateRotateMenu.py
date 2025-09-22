@@ -9,6 +9,12 @@ from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
 from src.Controller.PathHandler import resource_path
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import logging
+from src.Model.DicomUtils import truncate_ds_fields
+import pydicom
+from pydicom.dataset import FileDataset, Dataset
+from pydicom.uid import generate_uid
+import datetime
+
 
 def get_color_pair_from_text(text):
     """
@@ -480,6 +486,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         filename, _ = QFileDialog.getSaveFileName(self, "Save Spatial Registration (SRO)", "transform.dcm",
                                                   "DICOM Files (*.dcm)")
         if filename:
+            truncate_ds_fields(ds)
             ds.save_as(filename)
             QMessageBox.information(self, "Saved", f"Spatial Registration (SRO) saved to {filename}")
 
@@ -494,17 +501,23 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                Returns:
                    pydicom FileDataset representing the SRO.
                """
-        import pydicom
-        from pydicom.dataset import FileDataset, Dataset
-        from pydicom.uid import generate_uid
-        import datetime
+        from src.Model.PatientDictContainer import PatientDictContainer
 
-        # Get UIDs for fixed and moving images from VTKEngine if available
-        fixed_series_uid = getattr(vtk_engine, "fixed_series_uid", "1.2.3.4.5.6.7.8.1")
-        fixed_image_uid = getattr(vtk_engine, "fixed_image_uid", "1.2.3.4.5.6.7.8.1.1")
-        moving_series_uid = getattr(vtk_engine, "moving_series_uid", "1.2.3.4.5.6.7.8.2")
-        moving_image_uid = getattr(vtk_engine, "moving_image_uid", "1.2.3.4.5.6.7.8.2.1")
+        pdc = PatientDictContainer()
+        fixed_ds = pdc.dataset[0] if pdc.dataset and 0 in pdc.dataset else None
 
+        # Get moving image UIDs from VTKEngine if available
+        moving_series_uid = getattr(vtk_engine, "moving_series_uid", None)
+        moving_image_uid = getattr(vtk_engine, "moving_image_uid", None)
+        if not moving_series_uid or not moving_image_uid:
+            # Fallback: try to get from loaded files (if available)
+            moving_series_uid = "1.2.3.4.5.6.7.8.2"
+            moving_image_uid = "1.2.3.4.5.6.7.8.2.1"
+
+        fixed_series_uid = getattr(fixed_ds, "SeriesInstanceUID", "1.2.3.4.5.6.7.8.1")
+        fixed_image_uid = getattr(fixed_ds, "SOPInstanceUID", "1.2.3.4.5.6.7.8.1.1")
+        print(
+            f"[DEBUG] In _create_spatial_registration_dicom: fixed_series_uid={fixed_series_uid}, moving_series_uid={moving_series_uid}")
         # Try to get patient info from the original DICOM file in PatientDictContainer
         # Use patient_name and patient_id if provided as attributes (from loader/main thread)
         patient_name = getattr(self, "patient_name", None)
@@ -596,6 +609,14 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrix = [float(v) for v in matrix.flatten()]
         reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationComment = "Manual fusion transform"
         reg.MatrixRegistrationSequence[0].FrameOfReferenceUID = generate_uid()
+        # Set referenced series for moving image
+        reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence = [Dataset()]
+        reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].SeriesInstanceUID = moving_series_uid
+        reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
+        reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
+        reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
+            0].ReferencedSOPInstanceUID = moving_image_uid
         ds.RegistrationSequence = [reg]
 
         # Referenced Series/Image Sequence for moving image
