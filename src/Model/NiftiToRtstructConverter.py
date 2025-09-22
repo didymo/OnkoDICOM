@@ -149,16 +149,17 @@ def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: 
 
     # Load & orient Nifti image
     nifti_img = sitk.DICOMOrient(sitk.ReadImage(nifti_image_path), 'LPS')
+
+    # Check nifti data is valid before saving to rtstruct
+    if not _valid_nifti_data(nifti_image_name, nifti_img, sitk.GetArrayFromImage(nifti_img)):
+        return
+
     nifti_img.CopyInformation(dicom_img)
 
     # Resample Nifti image & create mask
     aligned_nifti_img = _resample_seg_to_ct(dicom_img, nifti_img)
     nifti_array = sitk.GetArrayFromImage(aligned_nifti_img).astype(bool)
 
-    # Check nifti data is valid before saving to rtstruct
-    if not _valid_nifti_data(nifti_image_name, nifti_img, nifti_array):
-        return
-    
     # The SimpleITK array is in (slices, rows, columns) order.
     # We transpose to (rows, columns, slices) so that the image data aligns with the expected CT/DICOM layout.
     nifti_array_transposed = np.transpose(nifti_array, (1, 2, 0))
