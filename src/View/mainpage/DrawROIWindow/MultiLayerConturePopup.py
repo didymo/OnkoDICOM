@@ -16,7 +16,7 @@ class multiPopUp(QDialog):
         self.opasity = opasity
         layout = QGridLayout()
         self.current_slice_label = QLabel(f"Current Slice : {self.cs}")
-        self.upper_bounds_label = QLabel("upeper Bounds : ")
+        self.upper_bounds_label = QLabel("Upper Bounds : ")
         self.upper_bounds = QSpinBox()
         self.upper_bounds.setRange(1,slice_num)
         self.upper_bounds.setValue(self.cs)
