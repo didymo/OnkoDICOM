@@ -17,7 +17,7 @@ QDialog {
     background-color: #F5F4F5;
 }
 
-QMMessageBox {
+QMessageBox {
     color: #000000;
     background-color: #F5F4F5;
 }
@@ -237,7 +237,7 @@ QLineEdit {
     border-radius: 0;
     font-size: 14px;
     color: #000000;
-    background-color: #F5F4F5;
+    background-color: #e6e6eb;
 }
 
 QLineEdit#BatchROICleaning {
@@ -544,6 +544,11 @@ QCalendarWidget QToolButton#qt_calendar_prevmonth {
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
     icon-size: 24px;
     qproperty-icon: url(./res/images/qcalendarwidget/right_icon.png);
+}
+
+QWidget[AutoSegmentSave="save-message-box"] {
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {

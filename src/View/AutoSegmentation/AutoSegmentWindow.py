@@ -2,6 +2,7 @@ from typing import Callable
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
+from PySide6.QtWidgets import QSizePolicy, QMessageBox
 
 from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
@@ -26,7 +27,9 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         super(AutoSegmentWindow, self).__init__()
         self._view_state = view_state
-        self._setup_window() # Setting Up Window
+        self._setup_window(self) # Setting Up Window
+        self.setWindowTitle("OnkoDICOM: Auto-Segmentation")
+        self.setMinimumSize(QSize(800, 600))
 
         # Left Section of the Window
         # List Widget for Loafing Saved selections
@@ -41,12 +44,14 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
         self._delete_button.setProperty("QPushButtonClass", "fail-button")
         self._save_button.setProperty("QPushButtonClass", "success-button")
-        self._button_layout = QtWidgets.QHBoxLayout()
+        self._button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
         self._button_layout.addWidget(self._delete_button)
         self._button_layout.addWidget(self._save_button)
         self._button_layout.addWidget(self._load_button)
-        self._button_widget = QtWidgets.QWidget()
+        self._button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         self._button_widget.setLayout(self._button_layout)
+        self.setup_dialog()
+        self._save_button.clicked.connect(self.click_save)
 
         # Widget for Saving and Loading
         self._save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
@@ -64,7 +69,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Splitting the left side Vertically
         # Wrapping left side in widget
-        self._left_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self._left_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         self._left_splitter.addWidget(self._save_load_widget)
         self._left_splitter.addWidget(self._text_start_widget)
         self._left_splitter.setChildrenCollapsible(False)
@@ -74,7 +79,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Right Section of the Window
         self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, self._view_state.segmentation_list)
 
-        self._splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self._splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
 
         # Set minimum widths for both panels
         self._splitter.setChildrenCollapsible(False)
@@ -97,21 +102,49 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         return QSize(700, 600)
 
-    def _setup_window(self) -> None:
+    def setup_dialog(self) -> None:
+        self._save_message_box: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._save_message_box.setProperty("AutoSegmentSave", "save-message-box")
+        self._setup_window(self._save_message_box)
+        self._save_message_box.setFixedSize(QSize(400, 150))
+
+        self._box_save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
+        self._box_cancel_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Cancel")
+        self._box_save_button.setProperty("QPushButtonClass", "success-button")
+        self._box_cancel_button.setProperty("QPushButtonClass", "fail-button")
+
+        self._save_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._save_box_buttons: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        self._save_box_buttons.addWidget(self._box_save_button)
+        self._save_box_buttons.addWidget(self._box_cancel_button)
+        self._save_button_widget.setLayout(self._save_box_buttons)
+
+        self._save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
+        self._save_text.setPlaceholderText("Selection Name")
+        self._save_text.setMaxLength(25)
+        self._save_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Enter Selection Name:")
+        self._save_box_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
+        self._save_box_layout.addWidget(self._save_text_label)
+        self._save_box_layout.addWidget(self._save_text)
+        self._save_box_layout.addWidget(self._save_button_widget)
+        self._save_message_box.setLayout(self._save_box_layout)
+
+    def click_save(self) -> None:
+        self._save_message_box.show()
+
+    def _setup_window(self, window: QtWidgets.QWidget | QtWidgets.QMessageBox) -> None:
         """
         Protected Method for Setting up the window, with Title, StyleSheet, MinimumSize and Icon
 
         :returns: None
         """
         # Adding Window Attributes
-        self.setWindowTitle("OnkoDICOM: Auto-Segmentation")
-        self.setStyleSheet(StyleSheetReader.get_stylesheet())
-        self.setMinimumSize(QSize(800, 600))
+        window.setStyleSheet(StyleSheetReader.get_stylesheet())
 
         # Adding Window Icon
         window_icon: QIcon() = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Mode.Normal, QIcon.State.Off)
-        self.setWindowIcon(window_icon)
+        window.setWindowIcon(window_icon)
 
     def _make_progress_text(self) -> None:
         """
