@@ -6,6 +6,10 @@ from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
 from src.Model.PatientDictContainer import PatientDictContainer
 
 class ROIName(QWidget):
+    """
+    Handles the roi name popup 
+    sets the value of roi name
+    """
     roi_name_emit = Signal(str)
     def __init__(self,parent = None, roi_name = str):
         super().__init__(parent)
@@ -19,7 +23,11 @@ class ROIName(QWidget):
         self.setLayout(layout)
 
     def show_roi_type_options(self):
-        """Creates and displays roi type options popup"""
+        """
+        Creates and displays roi type options popup
+        Parm : None
+        Return : None
+        """
         self.choose_roi_name_window = SelectROIPopUp()
         self.choose_roi_name_window.signal_roi_name.connect(
             self.set_selected_roi_name)

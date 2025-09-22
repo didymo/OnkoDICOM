@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QLabel, QSpinBox, QSlider
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QLabel, QSpinBox
 from PySide6.QtCore import Qt,Signal
 
 class UnitsBox(QtWidgets.QWidget):
@@ -85,12 +85,20 @@ class UnitsBox(QtWidgets.QWidget):
         self.setLayout(main_layout)
 
     def update_pen_size(self, value):
-        """Changes the width of the drawing"""
+        """
+        Changes the width of the drawing
+        Parm int : value
+        Return : None
+        """
         self.canvas_label.pen.setWidth(value)
         self.update_cursor_size.emit()
 
     def update_transparency(self,value):
-        """Updates the value of the transparency"""
+        """
+        Updates the value of the transparency
+        Parm int : value
+        Return : None
+        """
         colour = self.canvas_label.pen.color()
         colour.setAlpha(value)
         self.canvas_label.pen.setColor(colour)
@@ -99,12 +107,20 @@ class UnitsBox(QtWidgets.QWidget):
 
 
     def update_pixel_min(self, value):
-        """Updates the lower bounds of the pixel range for ROI"""
+        """
+        Updates the lower bounds of the pixel range for ROI
+        Parm int : value
+        Return : None
+        """
         self.canvas_label.min_range = value
         self.canvas_label.lock_pixel()
 
     def update_pixel_max(self, value):
-        """Updates the upper bounds of the pixel range for ROI"""
+        """
+        Updates the upper bounds of the pixel range for ROI
+        Parm int : value
+        Return : None
+        """
         self.canvas_label.max_range = value
         self.canvas_label.lock_pixel()
 

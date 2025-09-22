@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QSlider
 
-class Scroll_Wheel(QSlider):
+class ScrollWheel(QSlider):
     """Creates a scroll wheel for the dicom image loader"""
     def __init__(self, dicom_image_set = None):
         super().__init__()

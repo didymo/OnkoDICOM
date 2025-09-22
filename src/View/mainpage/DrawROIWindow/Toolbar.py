@@ -61,5 +61,8 @@ class CutsomToolbar(QToolBar):
         self.canvas_label.redo_draw()
 
     def quick_copy(self, up_or_down:bool):
-        """Copys the next slide up"""
+        """
+        Copys the next slide up
+        Parm : Bool
+        """
         self.canvas_label.quick_copy(up_or_down)

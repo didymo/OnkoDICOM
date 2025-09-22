@@ -3,14 +3,14 @@ from PySide6.QtGui import QPen, QKeyEvent
 from PySide6.QtCore import Qt, Slot
 import pydicom
 from src.View.mainpage.DrawROIWindow.Toolbar import CutsomToolbar
-from src.View.mainpage.DrawROIWindow.Left_P import LeftPannel
+from src.View.mainpage.DrawROIWindow.ButtonBox import LeftPannel
 from src.View.mainpage.DrawROIWindow.Canvas import CanvasLabel
-from src.View.mainpage.DrawROIWindow.Units_Box import UnitsBox
+from src.View.mainpage.DrawROIWindow.UnitsBox import UnitsBox
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.View.mainpage.DrawROIWindow.scroll_loader_4_dicom_image import Scroll_Wheel
-from src.View.mainpage.DrawROIWindow.ROI_Name_Button import ROIName
-from src.View.mainpage.DrawROIWindow.Copy_Roi import CopyROI
-from src.View.mainpage.DrawROIWindow.multi_layer_conture_popup import multiPopUp
+from src.View.mainpage.DrawROIWindow.ScrollLoader import ScrollWheel
+from src.View.mainpage.DrawROIWindow.ROINameButton import ROIName
+from src.View.mainpage.DrawROIWindow.CopyRoi import CopyROI
+from src.View.mainpage.DrawROIWindow.MultiLayerConturePopup import multiPopUp
 
 #Sourcery.ai Is this true
 class RoiInitialiser():
@@ -27,29 +27,50 @@ class RoiInitialiser():
         self.zoom_variable = 1.00
 
     def onZoomInClicked(self):
-        """Handles the event of the zoom in button"""
+        """
+        Handles the event of the zoom in button
+        Parms : None
+        Return : None
+        """
         self.zoom_variable *= 1.05
         self.apply_zoom()
     
     def onZoomOutClicked(self):
-        """Handles the event of the zoom out button"""
+        """
+        Handles the event of the zoom out button
+        Parms : None
+        Return : None
+        """
         self.zoom_variable /= 1.05
         self.apply_zoom()
-    
-    
+
     def apply_zoom(self):
-        """Zooms the canvas in or out depending"""
+        """
+        Zooms the canvas in or out depending
+        Parms : None
+        Return : None
+        """
         self.view.setTransform(QtGui.QTransform().scale(self.zoom_variable, self.zoom_variable))
     
     def transect_handler(self):
+        """
+        Handles the transect button
+        Parms : None
+        Return : None
+        """
         self.canvas_labal.set_tool(4)
 
     def close_window(self):
-        """Closes the window"""
+        """
+        Closes the window
+        """
         self.close_window_signal.emit()
         self.close()
 
     def update_draw_roi_pixmaps(self):
+        """
+        updates the draw roi pixmaps
+        """
         self.display_pixmaps.clear()
         self.get_pixmaps()
         self.change_image(self.scroller.value())
@@ -57,6 +78,11 @@ class RoiInitialiser():
 
 
     def setup_ui(self):
+        """
+        sets up the ui
+        Parms : None
+        Return : None
+        """
         # Initialize the pen
         self.pen = QPen()
         self.pen.setWidth(6)
@@ -64,7 +90,7 @@ class RoiInitialiser():
         self.pen.setColor("blue")
 
         # Initalises the calsses
-        self.scroller = Scroll_Wheel(self.display_pixmaps)
+        self.scroller = ScrollWheel(self.display_pixmaps)
         self.scroller.valueChanged.connect(self.change_image)
         
         # 1) Scene on the view
@@ -78,7 +104,7 @@ class RoiInitialiser():
         self.scene.addItem(self.image_item)
         self.scene.setSceneRect(QtCore.QRectF(QtCore.QPointF(0,0), self.image.size()))
 
-        self.canvas_labal = CanvasLabel(self.pen,self.scroller,self.dataset_rtss, self.signal_roi_drawn)
+        self.canvas_labal = CanvasLabel(self.pen,self.scroller,self.dataset_rtss)
         self.scene.addItem(self.canvas_labal)
         self.scene.setSceneRect(self.image_item.boundingRect())
 
@@ -145,10 +171,15 @@ class RoiInitialiser():
         self.units_box.update_cursor_size.connect(self.left_label.update_cursor)
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
-        """Creates and adds the toolbar to the ui"""
+        """
+        Creates and adds the toolbar to the ui
+        Parms : None
+        Return : QtWidgets.QToolBar
+        """
         return self._toolbar
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        """Handles up and down arrow keys"""
         if event.key() == Qt.Key_Up:
             self.scroller.setValue(self.scroller.value() +1)
             self.canvas_labal.ds_is_active = False
@@ -158,7 +189,11 @@ class RoiInitialiser():
         return super().keyPressEvent(event)
 
     def get_pixmaps(self):
-        """Gets all of the pixmap data and returns it"""
+        """
+        Gets all of the pixmap data and returns it
+        Parm : None
+        Return : None
+        """
         pixmaps = self.p.get("pixmaps_axial")
         i = len(pixmaps)
         j = 0
@@ -166,7 +201,11 @@ class RoiInitialiser():
             self.display_pixmaps.append(pixmaps[j])
             j +=1
     def change_image(self, v):
-        """Changes the image according to the value"""
+        """
+        Changes the image (patient image) according to the value
+        Parm : None
+        Return : None
+        """
         image = self.display_pixmaps[v]
         self.image_item.setPixmap(image)
 
@@ -175,14 +214,22 @@ class RoiInitialiser():
         self._toolbar.close()
 
     def copy_roi(self):
-        """Allows the ablity to copy ROIs onto different areas"""
+        """
+        Allows the ablity to copy ROIs onto different areas and handles the popups
+        Parm : None
+        Return : None
+        """
         self.copy_roi_window = CopyROI(self.scroller.maximum(), self.scroller.value())
         self.copy_roi_window.copy_number_high.connect(self.canvas_labal.copy_rois_up)
         self.copy_roi_window.copy_number_low.connect(self.canvas_labal.copy_rois_down)
         self.copy_roi_window.show()
 
     def multi_popup(self):
-        """Allows the ablity to copy ROIs onto different areas"""
+        """
+        Controls the pop for the multi layer conture
+        Parm : None
+        Return : None
+        """
         self.multi_window = multiPopUp(self.scroller.maximum(), self.scroller.value(),
                                           self.units_box.transparency_slider.value(),
                                            self.units_box.pixel_range_max.value(),
@@ -193,13 +240,23 @@ class RoiInitialiser():
         self.multi_window.show()
     
     def window_pop_up(self):
-        """Opens the popup"""
+        """
+        Opens the popup
+        Parm : None
+        Return : None
+        """
         QtWidgets.QMessageBox.information(self, "No ROI instance selected",
                     "Please ensure you have selected your ROI instance before saving.")
         
     @Slot(pydicom.Dataset,str)
     def saved_roi_drawing(self,v,name):
-        "Emits the saved roi drawing"
+        """
+        Emits the saved roi drawing
+        Parm 
+        pydicom.Dataset : v
+        str : name
+        Return : None
+        """
         self.signal_roi_drawn.emit((v,{"draw": name}))
         
 

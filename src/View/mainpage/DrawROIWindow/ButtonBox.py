@@ -17,7 +17,12 @@ class LeftPannel(QtWidgets.QWidget):
         self.set_layout()
 
     def set_layout(self):
-        """Fucntion to set the buttons layout"""
+        """
+        Fucntion to set the buttons layout and
+        establishes all of the buttons
+        Parm : none
+        Return : None
+        """
         #Initalises the buttons
         self.button_group = QButtonGroup()
         self.button_group.setExclusive(True)
@@ -87,17 +92,19 @@ class LeftPannel(QtWidgets.QWidget):
         layout.addWidget(save,5,0)
         layout.addWidget(cancel,5,1)
         
-        
-
         #adds the layout to the grid_group_box
         #Bundles everything up yay!
         self._grid_group_box.setLayout(layout)
         main_layout = QtWidgets.QVBoxLayout()  # Create main layout for the left panel
         main_layout.addWidget(self._grid_group_box)  # Add the group box to the main layout
-        self.setLayout(main_layout)  # Set th
+        self.setLayout(main_layout) 
         
     def brush_tool(self):
-        """This fucntion changes the draw tool to a brush"""
+        """
+        This fucntion changes the draw tool to a brush
+        Parms : None
+        Return : None
+        """
         self.canvas_label.set_tool(1)
         self.canvas_label.pen.setColor(self.last_colour)
         cursor = self.make_circle_cursor(self.canvas_label.pen.width(), self.last_colour)
@@ -105,13 +112,21 @@ class LeftPannel(QtWidgets.QWidget):
         self.was_erasor = False
 
     def pen_tool(self):
-        """This fucntion changes the draw tool to a pen"""
+        """
+        This fucntion changes the draw tool to a pen
+        Parms : None
+        Return : None
+        """
         self.canvas_label.pen.setColor(self.last_colour)
         self.canvas_label.set_tool(3)
         self.canvas_label.setCursor(Qt.CrossCursor)
 
     def eraser_roi_tool(self):
-        """This fucntion changes the draw tool to the eraser ROI tool"""
+        """
+        This fucntion changes the draw tool to the eraser ROI tool
+        Parms : None
+        Return : None
+        """
         self.canvas_label.set_tool(1)
         cursor = self.make_circle_cursor(self.canvas_label.pen.width(),\
                                          QColor(Qt.black), fill=QColor(Qt.white))
@@ -120,11 +135,19 @@ class LeftPannel(QtWidgets.QWidget):
         self.was_erasor = True
 
     def eraser_draw_tool(self):
-        """This fucntion changes the draw tool to a eraser draw tool"""
+        """
+        This fucntion sets the pixmap to be blank
+        Parms : None
+        Return : None
+        """
         self.canvas_label.erase_roi()
 
     def transect_tool(self):
-        """This fucntion activates the transect tool"""
+        """
+        This fucntion activates the transect tool
+        Parms : None
+        Return : None
+        """
         self.canvas_label.setCursor(Qt.ArrowCursor)
         self.canvas_label.set_tool(4)
 
@@ -133,7 +156,10 @@ class LeftPannel(QtWidgets.QWidget):
         self.parent.copy_roi()
 
     def save_button(self):
-        """This fucntion saves the ROI drawing"""
+        """
+        This fucntion saves the ROI drawing if they havent selected a name 
+        it promps them to select one
+        """
         if self.canvas_label.roi_name is None:
             self.parent.window_pop_up()
         else:
@@ -141,7 +167,7 @@ class LeftPannel(QtWidgets.QWidget):
             self.parent.close_window()
 
     def multi_button(self):
-        """This fucntion calls the multi putton"""
+        """This fucntion calls the multi popup"""
         self.canvas_label.pen.setColor(self.last_colour)
         self.parent.multi_popup()
 
@@ -152,7 +178,13 @@ class LeftPannel(QtWidgets.QWidget):
         self.canvas_label.set_tool(2)
 
     def cancel_button(self):
-        """This fucntion saves the ROI drawing"""
+        """
+        This fucntion exists the ROI drawing
+        If the user has made a drawing they are prompted that 
+        the drawing will not be saved and asked if they want to contiue 
+        Parms : None
+        Return : None
+        """
         if len(self.canvas_label.has_been_draw_on) > 0:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Cancel Drawing?")
@@ -172,7 +204,7 @@ class LeftPannel(QtWidgets.QWidget):
         """Fucntion to activate the zapper function"""
         self.canvas_label.setCursor(Qt.ArrowCursor)
         self.canvas_label.pen.setColor(Qt.transparent)
-        self.canvas_label.set_tool(2)
+        self.canvas_label.set_tool(5)
 
     
     #ChatGPT Code
@@ -210,18 +242,29 @@ class LeftPannel(QtWidgets.QWidget):
 
     @Slot(QColor)
     def update_colour(self, v):
-        """Used to update the colour of the cursor to refect the users choices"""
-        self.last_colour = v # LF (\n)
-        # End-of-file (EOF)
+        """
+        Used to update the colour of the cursor to refect the users choices
+        Parm QColor : v
+        Return : None 
+        """
+        self.last_colour = v 
 
     @Slot(int)
     def update_opasity(self, v):
-        """Updates the alpha value"""
+        """
+        Updates the alpha value
+        Parm int : v
+        Parm : None
+        """
         self.last_colour.setAlpha(v)
 
     @Slot(Signal)
     def update_cursor(self):
-        "Changes the size of the cursor to be inline with the slider"
+        """
+        Changes the size of the cursor to be inline with the slider
+        Parm : None
+        Return : None
+        """
         if self.was_erasor:
             self.canvas_label.setCursor(self.make_circle_cursor(self.canvas_label.pen.width(),\
                                          QColor(Qt.black), fill=QColor(Qt.white)))

@@ -2,7 +2,7 @@ import logging
 
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow.draw_ROI_initialiser import RoiInitialiser
+from src.View.mainpage.DrawROIWindow.DrawROIInitialiser import RoiInitialiser
 from src.View.mainpage.ManipulateROIWindow import *
 
 
