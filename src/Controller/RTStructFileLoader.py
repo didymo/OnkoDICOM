@@ -10,14 +10,26 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def gather_all_files(directory: str) -> list[str]:
+def _gather_all_files(directory: str) -> list[str]:
+    """Gathers all files within a specified directory.
+
+    This function retrieves a list of all files (not subdirectories)
+    present in the given directory.
+
+    Args:
+        directory: The path to the directory.
+
+    Returns:
+        A list of strings, where each string is the full path to a file
+        within the directory.
+    """
     return [
         os.path.join(directory, f)
         for f in os.listdir(directory)
         if os.path.isfile(os.path.join(directory, f))
     ]
 
-def parse_rtss_and_images(rtss_path: str, directory: str) -> dict:
+def _parse_rtss_and_images(rtss_path: str, directory: str) -> dict:
     """Parses RTSTRUCT file and associated DICOM images.
 
     This function extracts comprehensive information from an RTSTRUCT file
@@ -32,7 +44,7 @@ def parse_rtss_and_images(rtss_path: str, directory: str) -> dict:
         A dictionary containing parsed RTSTRUCT and image metadata.
     """
     ds = dcmread(rtss_path)
-    files = gather_all_files(directory)
+    files = _gather_all_files(directory)
     read_data, _ = ImageLoading.get_datasets(files)
     rois = ImageLoading.get_roi_info(ds)
     raw_contour, num_points = ImageLoading.get_raw_contour_data(ds)
@@ -50,14 +62,25 @@ def parse_rtss_and_images(rtss_path: str, directory: str) -> dict:
         "list_roi_numbers": roi_list,
     }
 
-def load_rtss_file_to_patient_dict(container: PatientDictContainer) -> None:
-    rtss_path = container.filepaths["rtss"]
+def load_rtss_file_to_patient_dict(patient_dict_container: PatientDictContainer) -> None:
+
+    """Loads RTSTRUCT data into the patient dictionary.
+
+    This function reads the RTSTRUCT file specified in the
+    patient_dict_container, parses its contents along with associated
+    DICOM images, and populates the patient_dict_container with
+    the extracted information.  It also initializes the 'selected_rois'
+    list in the container.
+    """
+
+    rtss_path = patient_dict_container.filepaths["rtss"]
     if not rtss_path:
         logger.error("No rtss file found")
         return
 
-    data = parse_rtss_and_images(rtss_path, container.path)
-    # set everything in one place, skip internal-only keys if desired
+    data = _parse_rtss_and_images(rtss_path, patient_dict_container.path)
+
+    # load parsed data into patient_dict_container
     for key, val in data.items():
-        container.set(key, val)
-    container.set("selected_rois", [])
+        patient_dict_container.set(key, val)
+    patient_dict_container.set("selected_rois", [])
