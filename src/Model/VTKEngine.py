@@ -217,6 +217,7 @@ class VTKEngine:
         return True
 
     def load_moving(self, dicom_dir: str) -> bool:
+        self.moving_dir = dicom_dir
         try:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)  # track temp dir for cleanup

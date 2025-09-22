@@ -10,6 +10,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.MovingModel import create_moving_model
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.GetPatientInfo import DicomTree
+from src.Model.DicomUtils import truncate_ds_fields
 
 from src.View.ImageLoader import ImageLoader
 
@@ -146,12 +147,14 @@ class MovingImageLoader(ImageLoader):
         else:
             create_moving_model()
             self.load_temp_rtss(path, progress_callback, interrupt_flag)
+        print("[DEBUG] Progress: Loading Moving Model (85%)")
         progress_callback.emit(("Loading Moving Model", 85))
 
         if interrupt_flag.is_set():  # Stop loading.
             progress_callback.emit(("Stopping", 85))
             return False
 
+        print("[DEBUG] About to return True from MovingImageLoader.load")
         return True
 
     def load_temp_rtss(self, path, progress_callback, interrupt_flag):
@@ -171,6 +174,10 @@ class MovingImageLoader(ImageLoader):
             moving_dict_container.dataset)
         rtss = create_initial_rtss_from_ct(
             moving_dict_container.dataset[0], rtss_path, uid_list)
+
+        truncate_ds_fields(rtss)
+        print(f"[DEBUG] Saving RTSTRUCT DICOM: {rtss_path}")
+        rtss.save_as(str(rtss_path), write_like_original=False)
 
         if interrupt_flag.is_set():  # Stop loading.
             print("stopped")
