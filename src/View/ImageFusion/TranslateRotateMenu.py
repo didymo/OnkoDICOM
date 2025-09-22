@@ -457,7 +457,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 """
         import numpy as np
         import os
-        from src.Model.MovingDictContainer import MovingDictContainer
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
@@ -467,6 +466,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             return
 
         # Gather the 4x4 transform matrix
+        #matris is used ignore the error
         matrix = None
         if hasattr(vtk_engine, "transform"):
             m = vtk_engine.transform.GetMatrix()
@@ -717,8 +717,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 """
         import pydicom
         import numpy as np
-        import os
-        from src.Model.MovingDictContainer import MovingDictContainer
+
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
