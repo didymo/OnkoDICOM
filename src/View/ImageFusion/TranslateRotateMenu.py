@@ -10,10 +10,9 @@ from src.Controller.PathHandler import resource_path
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import logging
 from src.Model.DicomUtils import truncate_ds_fields
-import pydicom
-from pydicom.dataset import FileDataset, Dataset
+from pydicom.dataset import FileDataset
 from pydicom.uid import generate_uid
-import datetime
+
 
 
 def get_color_pair_from_text(text):
@@ -492,94 +491,150 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def _create_spatial_registration_dicom(self, matrix, translation, rotation, vtk_engine):
         """
-               Create a DICOM Spatial Registration Object (SRO) dataset with the given transform.
-               Args:
-                   matrix: 4x4 numpy array representing the transformation matrix.
-                   translation: List of translation values [tx, ty, tz].
-                   rotation: List of rotation values [rx, ry, rz].
-                   vtk_engine: The VTKEngine instance (for UIDs).
-               Returns:
-                   pydicom FileDataset representing the SRO.
-               """
-        from src.Model.PatientDictContainer import PatientDictContainer
+                Create a DICOM Spatial Registration Object (SRO) dataset with the given transform.
 
+                Args:
+                    matrix: 4x4 numpy array representing the transformation matrix.
+                    translation: List of translation values [tx, ty, tz].
+                    rotation: List of rotation values [rx, ry, rz].
+                    vtk_engine: The VTKEngine instance (for UIDs).
+
+                Returns:
+                    pydicom FileDataset representing the SRO.
+                """
+
+        fixed_ds, fixed_series_uid, fixed_image_uid = self._get_fixed_image_info()
+        moving_series_uid, moving_image_uid = self._get_moving_image_info(vtk_engine)
+        patient_name, patient_id = self._get_patient_info(fixed_ds)
+
+        file_meta = self._create_file_meta()
+        ds = FileDataset("transform.dcm", {}, file_meta=file_meta, preamble=b"\0" * 128)
+        ds.is_little_endian = True
+        ds.is_implicit_VR = True
+
+        self._set_dicom_fields(ds, patient_name, patient_id, file_meta)
+        self._add_referenced_series(ds, fixed_series_uid, fixed_image_uid)
+        self._add_registration_sequence(ds, matrix, moving_series_uid, moving_image_uid)
+
+        # Save user translation/rotation as private tags for round-trip
+        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
+        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
+
+        return ds
+
+    def _get_fixed_image_info(self):
+        """
+                Retrieve the fixed image dataset and its SeriesInstanceUID and SOPInstanceUID.
+
+                Returns:
+                    tuple: (fixed_ds, fixed_series_uid, fixed_image_uid)
+                """
+        from src.Model.PatientDictContainer import PatientDictContainer
         pdc = PatientDictContainer()
         fixed_ds = pdc.dataset[0] if pdc.dataset and 0 in pdc.dataset else None
+        fixed_series_uid = getattr(fixed_ds, "SeriesInstanceUID", "1.2.3.4.5.6.7.8.1")
+        fixed_image_uid = getattr(fixed_ds, "SOPInstanceUID", "1.2.3.4.5.6.7.8.1.1")
+        return fixed_ds, fixed_series_uid, fixed_image_uid
 
-        # Get moving image UIDs from VTKEngine if available
+    def _get_moving_image_info(self, vtk_engine):
+        """
+                Retrieve the moving image SeriesInstanceUID and SOPInstanceUID from the VTKEngine.
+
+                Args:
+                    vtk_engine: The VTKEngine instance.
+
+                Returns:
+                    tuple: (moving_series_uid, moving_image_uid)
+                """
         moving_series_uid = getattr(vtk_engine, "moving_series_uid", None)
         moving_image_uid = getattr(vtk_engine, "moving_image_uid", None)
         if not moving_series_uid or not moving_image_uid:
-            # Fallback: try to get from loaded files (if available)
             moving_series_uid = "1.2.3.4.5.6.7.8.2"
             moving_image_uid = "1.2.3.4.5.6.7.8.2.1"
+        return moving_series_uid, moving_image_uid
 
-        fixed_series_uid = getattr(fixed_ds, "SeriesInstanceUID", "1.2.3.4.5.6.7.8.1")
-        fixed_image_uid = getattr(fixed_ds, "SOPInstanceUID", "1.2.3.4.5.6.7.8.1.1")
-        print(
-            f"[DEBUG] In _create_spatial_registration_dicom: fixed_series_uid={fixed_series_uid}, moving_series_uid={moving_series_uid}")
-        # Try to get patient info from the original DICOM file in PatientDictContainer
-        # Use patient_name and patient_id if provided as attributes (from loader/main thread)
+    def _get_patient_info(self, fixed_ds):
+        """
+                Retrieve the patient name and ID for the DICOM SRO.
+
+                Args:
+                    fixed_ds: The fixed image dataset.
+
+                Returns:
+                    tuple: (patient_name, patient_id)
+                """
         patient_name = getattr(self, "patient_name", None)
         patient_id = getattr(self, "patient_id", None)
-
         if not patient_name or not patient_id:
             try:
                 from src.Model.PatientDictContainer import PatientDictContainer
                 pdc = PatientDictContainer()
                 filepaths = pdc.filepaths
                 if filepaths and isinstance(filepaths, dict):
-                    if image_keys := [k for k in filepaths.keys() if str(k).isdigit()]:
+                    if image_keys := [
+                        k for k in filepaths.keys() if str(k).isdigit()
+                    ]:
                         first_key = sorted(image_keys, key=lambda x: int(x))[0]
                         first_image_path = filepaths[first_key]
                         from pydicom import dcmread
                         ds_fixed = dcmread(first_image_path, stop_before_pixels=True)
                         patient_name = getattr(ds_fixed, "PatientName", None)
                         patient_id = getattr(ds_fixed, "PatientID", None)
-                        print(
-                            f"[DEBUG] Found patient info in file: {first_image_path} PatientName={patient_name}, PatientID={patient_id}")
-                    else:
-                        print("[DEBUG] No numeric keys found in filepaths for image slices.")
-                else:
-                    print("[DEBUG] filepaths is not a dict or is empty.")
+                        logging.debug(
+                            f"Found patient info in file: {first_image_path} PatientName={patient_name}, PatientID={patient_id}")
             except Exception as e:
-                print(f"[DEBUG] Could not get patient info from PatientDictContainer filepaths: {e}")
+                logging.debug(f"Could not get patient info from PatientDictContainer filepaths: {e}")
 
         if not patient_name or not patient_id:
             try:
+                from src.Model.PatientDictContainer import PatientDictContainer
                 pdc = PatientDictContainer()
                 patient_name = pdc.get("patient_name") or "FUSION"
                 patient_id = pdc.get("patient_id") or "FUSION"
-                print(
-                    f"[DEBUG] Fallback patient info from PatientDictContainer: PatientName={patient_name}, PatientID={patient_id}")
+                logging.debug(
+                    f"Fallback patient info from PatientDictContainer: PatientName={patient_name}, PatientID={patient_id}")
             except Exception as e:
-                print(f"[DEBUG] Could not get patient info from PatientDictContainer: {e}")
+                logging.debug(f"Could not get patient info from PatientDictContainer: {e}")
                 patient_name = "FUSION"
                 patient_id = "FUSION"
-                print(f"[DEBUG] Using default patient info: PatientName={patient_name}, PatientID={patient_id}")
-        print(f"[DEBUG] Saving transform DICOM with PatientName={patient_name}, PatientID={patient_id}")
+                logging.debug(f"Using default patient info: PatientName={patient_name}, PatientID={patient_id}")
 
-
-        # Print a warning if the patient name is too long for DICOM
         if patient_name and len(str(patient_name)) > 64:
-            print(
-                f"[WARNING] PatientName length ({len(str(patient_name))}) exceeds DICOM max of 64. It will be truncated.")
+            logging.warning(
+                f"PatientName length ({len(str(patient_name))}) exceeds DICOM max of 64. It will be truncated.")
             patient_name = str(patient_name)[:64]
         if patient_id and len(str(patient_id)) > 64:
-            print(f"[WARNING] PatientID length ({len(str(patient_id))}) exceeds DICOM max of 64. It will be truncated.")
+            logging.warning(f"PatientID length ({len(str(patient_id))}) exceeds DICOM max of 64. It will be truncated.")
             patient_id = str(patient_id)[:64]
+        logging.debug(f"Saving transform DICOM with PatientName={patient_name}, PatientID={patient_id}")
+        return patient_name, patient_id
 
-        # Create a minimal DICOM SRO dataset
+    def _create_file_meta(self):
+        """
+                Create the DICOM file meta information for the SRO.
+
+                Returns:
+                    pydicom.Dataset: The file meta dataset.
+                """
+        import pydicom
+        from pydicom.uid import generate_uid
         file_meta = pydicom.Dataset()
         file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.66.1"  # Spatial Registration Storage
         file_meta.MediaStorageSOPInstanceUID = generate_uid()
         file_meta.ImplementationClassUID = generate_uid()
+        return file_meta
 
-        ds = FileDataset("transform.dcm", {}, file_meta=file_meta, preamble=b"\0" * 128)
-        ds.is_little_endian = True
-        ds.is_implicit_VR = True
+    def _set_dicom_fields(self, ds, patient_name, patient_id, file_meta):
+        """
+                Set the required DICOM fields for the SRO dataset.
 
-        # Set required DICOM fields
+                Args:
+                    ds: The FileDataset to update.
+                    patient_name: The patient name.
+                    patient_id: The patient ID.
+                    file_meta: The file meta dataset.
+                """
+        import datetime
         dt = datetime.datetime.now()
         ds.PatientName = patient_name
         ds.PatientID = patient_id
@@ -594,22 +649,40 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         ds.SeriesNumber = "1"
         ds.InstanceNumber = "1"
 
-        # Referenced Series/Image Sequence for fixed image
+    def _add_referenced_series(self, ds, fixed_series_uid, fixed_image_uid):
+        """
+                Add the referenced series and image sequence for the fixed image.
+
+                Args:
+                    ds: The FileDataset to update.
+                    fixed_series_uid: The SeriesInstanceUID of the fixed image.
+                    fixed_image_uid: The SOPInstanceUID of the fixed image.
+                """
+        from pydicom.dataset import Dataset
         ds.ReferencedSeriesSequence = [Dataset()]
         ds.ReferencedSeriesSequence[0].SeriesInstanceUID = fixed_series_uid
         ds.ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
-        ds.ReferencedSeriesSequence[0].ReferencedImageSequence[
-            0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"  # CT Image Storage
+        ds.ReferencedSeriesSequence[0].ReferencedImageSequence[0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
         ds.ReferencedSeriesSequence[0].ReferencedImageSequence[0].ReferencedSOPInstanceUID = fixed_image_uid
 
-        # Registration Sequence
+    def _add_registration_sequence(self, ds, matrix, moving_series_uid, moving_image_uid):
+        """
+                Add the registration sequence for the moving image and transformation.
+
+                Args:
+                    ds: The FileDataset to update.
+                    matrix: 4x4 numpy array representing the transformation matrix.
+                    moving_series_uid: The SeriesInstanceUID of the moving image.
+                    moving_image_uid: The SOPInstanceUID of the moving image.
+                """
+        from pydicom.dataset import Dataset
+        from pydicom.uid import generate_uid
         reg = Dataset()
         reg.MatrixRegistrationSequence = [Dataset()]
         reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrixType = "RIGID"
         reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrix = [float(v) for v in matrix.flatten()]
         reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationComment = "Manual fusion transform"
         reg.MatrixRegistrationSequence[0].FrameOfReferenceUID = generate_uid()
-        # Set referenced series for moving image
         reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence = [Dataset()]
         reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].SeriesInstanceUID = moving_series_uid
         reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
@@ -618,8 +691,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         reg.MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
             0].ReferencedSOPInstanceUID = moving_image_uid
         ds.RegistrationSequence = [reg]
-
-        # Referenced Series/Image Sequence for moving image
+        # Also add the referenced series/image sequence for moving image (for compatibility)
         ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence = [Dataset()]
         ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[
             0].SeriesInstanceUID = moving_series_uid
@@ -629,12 +701,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             0].ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
         ds.RegistrationSequence[0].MatrixRegistrationSequence[0].ReferencedSeriesSequence[0].ReferencedImageSequence[
             0].ReferencedSOPInstanceUID = moving_image_uid
-
-        # Save user translation/rotation as private tags for round-trip
-        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
-        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
-
-        return ds
 
 
     def load_fusion_state(self):
