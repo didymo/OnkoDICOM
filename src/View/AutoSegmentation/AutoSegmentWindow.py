@@ -29,13 +29,47 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._setup_window() # Setting Up Window
 
         # Left Section of the Window
-        self._left_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
+        # List Widget for Loafing Saved selections
+        self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
+        # TODO: Remove these add items
+        self._select_save.addItems(["One", "Two", "Three", "Four"])
+        self._select_save.addItems(["Five", "Six", "Seven", "Eight", "Nine"])
+
+        # Button Widget for Save, Load Buttons
+        self._delete_button = QtWidgets.QPushButton("Delete")
+        self._save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
+        self._load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
+        self._delete_button.setProperty("QPushButtonClass", "fail-button")
+        self._save_button.setProperty("QPushButtonClass", "success-button")
+        self._button_layout = QtWidgets.QHBoxLayout()
+        self._button_layout.addWidget(self._delete_button)
+        self._button_layout.addWidget(self._save_button)
+        self._button_layout.addWidget(self._load_button)
+        self._button_widget = QtWidgets.QWidget()
+        self._button_widget.setLayout(self._button_layout)
+
+        # Widget for Saving and Loading
+        self._save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
+        self._save_load_layout.addWidget(self._select_save)
+        self._save_load_layout.addWidget(self._button_widget)
+        self._save_load_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._save_load_widget.setLayout(self._save_load_layout)
+
+        # Widget for text output and start button
+        self._text_start_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
         self._make_progress_text()
         self._make_start_button(self._start_button_clicked)
+        self._text_start_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._text_start_widget.setLayout(self._text_start_layout)
 
-        # Wrap left layout in widget for splitter resizing
-        self._left_layout_container: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._left_layout_container.setLayout(self._left_layout)
+        # Splitting the left side Vertically
+        # Wrapping left side in widget
+        self._left_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self._left_splitter.addWidget(self._save_load_widget)
+        self._left_splitter.addWidget(self._text_start_widget)
+        self._left_splitter.setChildrenCollapsible(False)
+        self._save_load_widget.setMinimumHeight(200)
+        self._text_start_widget.setMinimumHeight(200)
 
         # Right Section of the Window
         self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, self._view_state.segmentation_list)
@@ -44,12 +78,12 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Set minimum widths for both panels
         self._splitter.setChildrenCollapsible(False)
-        self._left_layout_container.setMinimumWidth(200)
-        self._tree_selector.setMinimumWidth(200)
+        self._left_splitter.setMinimumWidth(300)
+        self._tree_selector.setMinimumWidth(400)
 
         # Setting the Window Layout with splitter and widgets
         window_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        self._splitter.addWidget(self._left_layout_container)
+        self._splitter.addWidget(self._left_splitter)
         self._splitter.addWidget(self._tree_selector)
         window_layout.addWidget(self._splitter)
 
@@ -61,7 +95,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :returns: QSize:
         """
-        return QSize(600, 600)
+        return QSize(700, 600)
 
     def _setup_window(self) -> None:
         """
@@ -72,7 +106,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Adding Window Attributes
         self.setWindowTitle("OnkoDICOM: Auto-Segmentation")
         self.setStyleSheet(StyleSheetReader.get_stylesheet())
-        self.setMinimumSize(QSize(600, 600))
+        self.setMinimumSize(QSize(800, 600))
 
         # Adding Window Icon
         window_icon: QIcon() = QIcon()
@@ -87,13 +121,13 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: None
         """
         _progress_text_label: QtWidgets.QLabel = QtWidgets.QLabel("\n\nCurrent Task:")
-        self._left_layout.addWidget(_progress_text_label)
+        self._text_start_layout.addWidget(_progress_text_label)
 
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self._progress_text.setText("Waiting...")
         self._progress_text.setReadOnly(True)
         self._progress_text.setToolTip("What task the auto-segmentator is currently performing")
-        self._left_layout.addWidget(self._progress_text)
+        self._text_start_layout.addWidget(self._progress_text)
 
     def _make_start_button(self, button_action: Callable[[], None]) -> None:
         """
@@ -107,7 +141,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._start_button.setObjectName("start_button")
         # Button Action
         self._start_button.clicked.connect(button_action)
-        self._left_layout.addWidget(self._start_button)
+        self._text_start_layout.addWidget(self._start_button)
 
     def _start_button_clicked(self) -> None:
         """
