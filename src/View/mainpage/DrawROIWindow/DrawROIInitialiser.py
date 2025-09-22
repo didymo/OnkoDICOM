@@ -181,13 +181,14 @@ class RoiInitialiser():
         """Handles up and down arrow keys"""
         if self.scroller.value() +1 > self.scroller.maximum or self.scroller.value() -1 < self.scroller.minimum:
             return
-        if event.key() == Qt.Key_Up:
-            self.scroller.setValue(self.scroller.value() +1)
-            self.canvas_labal.ds_is_active = False
-        if event.key() == Qt.Key_Down:
-            self.scroller.setValue(self.scroller.value() -1)
-            self.canvas_labal.ds_is_active = False
-        return super().keyPressEvent(event)
+        else:
+            if event.key() == Qt.Key_Up:
+                self.scroller.setValue(self.scroller.value() +1)
+                self.canvas_labal.ds_is_active = False
+            if event.key() == Qt.Key_Down:
+                self.scroller.setValue(self.scroller.value() -1)
+                self.canvas_labal.ds_is_active = False
+            return super().keyPressEvent(event)
 
     def get_pixmaps(self):
         """
