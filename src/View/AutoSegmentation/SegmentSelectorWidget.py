@@ -7,7 +7,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QSizePolicy
 from PySide6.QtCore import Qt, QSize
 from totalsegmentator.map_to_binary import class_map
-import src.View.AutoSegmentation.SegmentationListFilter as SegmentationListFilter
+import src.Model.AutoSegmentation.SegmentationListFilter as SegmentationListFilter
 from src.View.StyleSheetReader import StyleSheetReader
 
 class SegmentSelectorWidget(QtWidgets.QWidget):
@@ -42,6 +42,8 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # Class Members
         # Reference to the list owned by another class most likely the controller class
         self._selected_list: list[str] = segmentation_list
+        # References to look up items in tree without searching entire tree
+        self._tree_choices_ref: dict[str, QTreeWidgetItem] = dict()
 
         # Creating Tree using PySide6
         # Nesting methods here to Indicate that each one is intended to feed into each other
@@ -53,7 +55,10 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout() # Creating Window Layout
         layout.addWidget(self._selection_tree)
         self.setLayout(layout)
-        self._load_selections(segmentation_list)
+
+        # Only Really needed if view is destroyed.
+        if segmentation_list:
+            self._load_selections(segmentation_list)
 
     def sizeHint(self) -> QSize:
         """
@@ -88,11 +93,11 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         tree.itemClicked.connect(callback_method) # Call back for when item is clicked
         return tree
 
-    def _enter_tree_data(self,csv_location: pathlib.Path, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
+    def _enter_tree_data(self, csv_location: pathlib.Path, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
         """
         Gets the Structure Data inf the form of a pandas.DataFrame
         Which is then into the TreeWidget under their respective parents
-
+        :param csv_location: pathlib.Path
         :param tree: QtWidgets.QTreeWidget
         :return: QtWidgets.QTreeWidget
         """
@@ -103,8 +108,10 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
 
             # Getting the Structure list from the Pandas Table
             structure_list: pandas.DataFrame = structure_data.loc[structure_data["BodySection"] == BodySection]
-            for StructureName in structure_list.Structure.unique():
-                self._input_structure(1, StructureName, body_input)
+            for structure_name in structure_list.Structure.unique():
+                # in 2 lines to communicate each operation is for a different task
+                single_structure = self._input_structure(1, structure_name, body_input) # creating Item in tree
+                self._tree_choices_ref[structure_name] = single_structure # Adding Reference to dictionary for look up
         return tree
 
     @functools.lru_cache(maxsize=128, typed=False)
@@ -151,13 +158,13 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param current_list: list[str]
         :returns: None
         """
-        # There has got to be a better way to do this
-        # Attempted using QTreeWidget.findItem(test, column) but would only return empty lists
-        for top_item in range(self._selection_tree.topLevelItemCount()):
-            for child_item in range(self._selection_tree.topLevelItem(top_item).childCount()):
-                if self._selection_tree.topLevelItem(top_item).child(child_item).text(1).strip() in current_list:
-                    self._selection_tree.topLevelItem(top_item).child(child_item).setCheckState(1, Qt.CheckState.Checked)
-            self._setting_parent_states(self._selection_tree.topLevelItem(top_item))
+        for selected in current_list:
+            try:
+                self._tree_choices_ref[selected].setCheckState(1, Qt.CheckState.Checked)
+            except KeyError:
+                pass
+        for parent_item in range(self._selection_tree.topLevelItemCount()):
+            self._setting_parent_states(self._selection_tree.topLevelItem(parent_item))
 
     def _resize_columns(self, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
         """
