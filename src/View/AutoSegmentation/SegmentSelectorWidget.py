@@ -79,6 +79,22 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         """
         return self._selected_list
 
+    def select_all(self) -> None:
+        """
+        Checking all Options and adding all values to the self.selected_list
+
+        :returns: None
+        """
+        self._uniform_selection(Qt.CheckState.Checked)
+
+    def deselect_all(self) -> None:
+        """
+        Unchecking all Options and removing them from self.selected_list
+
+        :returns: None
+        """
+        self._uniform_selection(Qt.CheckState.Unchecked)
+
     def _create_selection_tree(self, callback_method: Callable[[QTreeWidgetItem, int], None]) -> QtWidgets.QTreeWidget:
         """
         Creates the Selection Tree for the Widget including styling and the header label
@@ -271,6 +287,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             return
         item.setCheckState(0, Qt.CheckState.PartiallyChecked)
 
+
     def _selected_list_add_or_remove(self, body_text: str , state: Qt.CheckState) -> None:
         """
         To add or remove an item from the self._selection_list member when a selection has changed
@@ -285,8 +302,18 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
             self._selected_list.remove(body_text)
 
+    def _uniform_selection(self, check: Qt.CheckState) -> None:
+        """
+        Method to set all check boxes to the same state as well as
+        adding or removing all values from self.selected List.
 
-
-
-
-
+        :param check: Qt.CheckState
+        :returns: None
+        """
+        # Instead of just going though self._selected_list and Unchecking only the values
+        # which exist with the list we are going though every value and Unchecking all of
+        # as a potential method of dealing with potential bugs such as checked boxes which are
+        # not checked which may or may not exist.
+        for key, item in self._tree_choices_ref:
+            item.setCheckState(1, Qt.CheckState.Unchecked)
+            self._selected_list_add_or_remove(key, Qt.CheckState.Unchecked)
