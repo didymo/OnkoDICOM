@@ -233,7 +233,7 @@ QLineEdit {
     margin: 4px;
     padding: 0 4px;
     min-height: 36px;
-    border-bottom: 3px solid #b3b3b3;
+    border-bottom: 4px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
     color: #000000;
@@ -274,7 +274,11 @@ QLineEdit:focus {
 QListWidget {
     color: #000000;
     background-color: #e6e6eb;
-    selection-background-color: transparent;
+    border-bottom: 4px solid #b3b3b3;
+}
+
+QListWidget:hover {
+    border-bottom: 4px solid #9370DB;
 }
 
 QListWidget::item {
@@ -488,7 +492,6 @@ QComboBox#DicomTreeviewComboBox {
     background-color: #ffffff;
     color: #000000
 }
-
 
 QCalendarWidget QTableView, QTableView {
     background-color: #ffffff;

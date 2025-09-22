@@ -199,7 +199,7 @@ QLineEdit {
     margin: 4px;
     padding: 0 4px;
     min-height: 36px;
-    border-bottom: 3px solid #b3b3b3;
+    border-bottom: 4px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
     color: #000000;
@@ -232,6 +232,28 @@ QLineEdit:hover {
 }
 QLineEdit:focus {
     border-bottom: 3px solid #5c2eb8;
+}
+
+QListWidget {
+    color: #000000;
+    background-color: #e6e6eb;
+    border-bottom: 4px solid #b3b3b3;
+}
+
+QListWidget:hover {
+    border-bottom: 4px solid #9370DB;
+}
+
+QListWidget::item {
+    color: #000000;
+    background-color: #e6e6eb;
+    min-height: 36px;
+    font-size: 14px;
+}
+QListWidget::item:selected {
+    background-color: #9370DB;
+    color: #ffffff;
+    border: 2px solid #9370DB;
 }
 
 /*This part is the styling for QTreeView in general*/
