@@ -1,7 +1,7 @@
 from typing import Callable
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, QMargins
 from PySide6.QtWidgets import QSizePolicy, QMessageBox
 
 from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
@@ -33,6 +33,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Left Section of the Window
         # List Widget for Loafing Saved selections
+        self._select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Save Selections:")
         self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
         # TODO: Remove these add items
         self._select_save.addItems(["One", "Two", "Three", "Four"])
@@ -50,11 +51,13 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._button_layout.addWidget(self._load_button)
         self._button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         self._button_widget.setLayout(self._button_layout)
+
         self.setup_dialog()
         self._save_button.clicked.connect(self.click_save)
 
         # Widget for Saving and Loading
         self._save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
+        self._save_load_layout.addWidget(self._select_save_label)
         self._save_load_layout.addWidget(self._select_save)
         self._save_load_layout.addWidget(self._button_widget)
         self._save_load_widget: QtWidgets.QWidget = QtWidgets.QWidget()
@@ -77,7 +80,41 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._text_start_widget.setMinimumHeight(200)
 
         # Right Section of the Window
+        self._tree_selector_label: QtWidgets.QLabel = QtWidgets.QLabel("Select Segments:")
         self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, self._view_state.segmentation_list)
+        self._select_all_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Select All")
+        self._select_all_button.clicked.connect(self._tree_selector.select_all)
+        self._select_all_button.setMaximumWidth(120)
+        self._deselect_all_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Deselect All")
+        self._deselect_all_button.clicked.connect(self._tree_selector.deselect_all)
+        self._deselect_all_button.setMaximumWidth(120)
+        self._selector_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        self._selector_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+        self._selector_button_layout.addWidget(self._select_all_button)
+        self._selector_button_layout.addWidget(self._deselect_all_button)
+        self._selector_button: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._selector_button.setLayout(self._selector_button_layout)
+
+        self._close_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Close")
+        self._close_button.setMaximumWidth(120)
+        self._close_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        self._close_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        self._close_button_layout.addWidget(self._close_button)
+        self._close_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._close_button_widget.setLayout(self._close_button_layout)
+
+        self._right_button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
+        self._right_button_layout.addWidget(self._selector_button)
+        self._right_button_layout.addWidget(self._close_button_widget)
+        self._right_button: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._right_button.setLayout(self._right_button_layout)
+
+        self._right_side_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
+        self._right_side_layout.addWidget(self._tree_selector_label)
+        self._right_side_layout.addWidget(self._tree_selector)
+        self._right_side_layout.addWidget(self._right_button)
+        self._right_side: QtWidgets.QWidget = QtWidgets.QWidget()
+        self._right_side.setLayout(self._right_side_layout)
 
         self._splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
 
@@ -89,7 +126,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Setting the Window Layout with splitter and widgets
         window_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         self._splitter.addWidget(self._left_splitter)
-        self._splitter.addWidget(self._tree_selector)
+        self._splitter.addWidget(self._right_side)
         window_layout.addWidget(self._splitter)
 
         self.setLayout(window_layout)
@@ -153,7 +190,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
-        _progress_text_label: QtWidgets.QLabel = QtWidgets.QLabel("\n\nCurrent Task:")
+        _progress_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Current Task:")
         self._text_start_layout.addWidget(_progress_text_label)
 
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
