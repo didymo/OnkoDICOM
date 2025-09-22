@@ -1,5 +1,4 @@
 import itertools
-import os
 import threading
 
 from PySide6 import QtWidgets, QtCore
@@ -449,14 +448,16 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def save_fusion_state(self):
         """
-        Save the current fusion transform as a DICOM Spatial Registration Object (SRO).
-        This function creates a standards-compliant DICOM SRO containing the 4x4 transformation matrix
-        for the moving image overlay, referencing the fixed and moving images. The user is prompted
-        to select the save location and filename for the DICOM file.
-        Returns:
-            None
-        """
+                Save the current fusion transform as a DICOM Spatial Registration Object (SRO).
+                This function creates a standards-compliant DICOM SRO containing the 4x4 transformation matrix
+                for the moving image overlay, referencing the fixed and moving images. The user is prompted
+                to select the save location and filename for the DICOM file.
+                Returns:
+                    None
+                """
         import numpy as np
+        import os
+        from src.Model.MovingDictContainer import MovingDictContainer
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
@@ -481,8 +482,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         ds = self._create_spatial_registration_dicom(matrix, translation, rotation, vtk_engine)
 
-        # Save as DICOM SRO
-        filename, _ = QFileDialog.getSaveFileName(self, "Save Spatial Registration (SRO)", "transform.dcm",
+        moving_dir = getattr(vtk_engine, "moving_dir", None)
+
+        initial_path = os.path.join(moving_dir, "transform.dcm") if moving_dir else "transform.dcm"
+        filename, _ = QFileDialog.getSaveFileName(self, "Save Spatial Registration (SRO)", initial_path,
                                                   "DICOM Files (*.dcm)")
         if filename:
             truncate_ds_fields(ds)
@@ -705,15 +708,17 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
     def load_fusion_state(self):
         """
-        Load a fusion transform state from a DICOM Spatial Registration Object (SRO).
-        This function loads a previously saved 4x4 transformation matrix from a DICOM SRO file
-        (created by the Save Fusion State function) and applies it to the current fusion session.
-        The user is prompted to select the DICOM file to load.
-        Returns:
-            None
-        """
+                Load a fusion transform state from a DICOM Spatial Registration Object (SRO).
+                This function loads a previously saved 4x4 transformation matrix from a DICOM SRO file
+                (created by the Save Fusion State function) and applies it to the current fusion session.
+                The user is prompted to select the DICOM file to load.
+                Returns:
+                    None
+                """
         import pydicom
         import numpy as np
+        import os
+        from src.Model.MovingDictContainer import MovingDictContainer
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
@@ -721,7 +726,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             logging.error("No VTK engine found in load_fusion_state")
             return
 
-        filename, _ = QFileDialog.getOpenFileName(self, "Load Fusion State", "", "DICOM Files (*.dcm)")
+        moving_dir = getattr(vtk_engine, "moving_dir", None)
+
+        initial_path = moving_dir or ""
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Fusion State", initial_path, "DICOM Files (*.dcm)")
 
         if filename:
             try:
