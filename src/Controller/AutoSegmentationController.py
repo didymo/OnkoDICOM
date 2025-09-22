@@ -23,7 +23,7 @@ class AutoSegmentationController(QObject):
         Creating the requirements to run the feature
         :rtype: None
         """
-        self.view_state: AutoSegmentViewState = AutoSegmentViewState()
+        self.view_state: AutoSegmentViewState = AutoSegmentViewState() # storing state of view
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()

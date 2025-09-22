@@ -93,11 +93,11 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         tree.itemClicked.connect(callback_method) # Call back for when item is clicked
         return tree
 
-    def _enter_tree_data(self,csv_location: pathlib.Path, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
+    def _enter_tree_data(self, csv_location: pathlib.Path, tree: QTreeWidget) -> QtWidgets.QTreeWidget:
         """
         Gets the Structure Data inf the form of a pandas.DataFrame
         Which is then into the TreeWidget under their respective parents
-
+        :param csv_location: pathlib.Path
         :param tree: QtWidgets.QTreeWidget
         :return: QtWidgets.QTreeWidget
         """
@@ -109,7 +109,9 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             # Getting the Structure list from the Pandas Table
             structure_list: pandas.DataFrame = structure_data.loc[structure_data["BodySection"] == BodySection]
             for structure_name in structure_list.Structure.unique():
-                self._tree_choices_ref[structure_name] = self._input_structure(1, structure_name, body_input)
+                # in 2 lines to communicate each operation is for a different task
+                single_structure = self._input_structure(1, structure_name, body_input) # creating Item in tree
+                self._tree_choices_ref[structure_name] = single_structure # Adding Reference to dictionary for look up
         return tree
 
     @functools.lru_cache(maxsize=128, typed=False)
