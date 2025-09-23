@@ -25,83 +25,41 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :returns: None
         """
         super(AutoSegmentWindow, self).__init__()
-        self._view_state = view_state
-        self._setup_window(self) # Setting Up Window
         self.setWindowTitle("OnkoDICOM: Auto-Segmentation")
         self.setMinimumSize(QSize(800, 600))
+        self._setup_window(self) # Setting Up Window
+
+        # Member Variables
+        self._view_state = view_state
+        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, view_state.segmentation_list)
+        self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
+        self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
+        self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
 
         # Dialog Boxes
-        self.setup_dialog()
+        self._setup_save_dialog()
 
         # Left Section of the Window
         save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
         save_load_layout.addWidget(self._select_save_widget())
         save_load_layout.addWidget(self._select_button_widget(view_state))
-
-        # Widget for Saving and Loading
         save_load_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         save_load_widget.setLayout(save_load_layout)
-
-        # Widget for text output and start button
         text_start_widget: QtWidgets.QWidget = self._progress_start_widget()
 
-        # Splitting the left side Vertically
-        left_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
-        left_splitter.addWidget(save_load_widget)
-        left_splitter.addWidget(text_start_widget)
-        left_splitter.setChildrenCollapsible(False)
-        save_load_widget.setMinimumHeight(200)
-        text_start_widget.setMinimumHeight(200)
-
         # Right Section of the Window
-        self._tree_selector_label: QtWidgets.QLabel = QtWidgets.QLabel("Select Segments:")
-        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, self._view_state.segmentation_list)
-        self._select_all_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Select All")
-        self._select_all_button.clicked.connect(self._tree_selector.select_all)
-        self._select_all_button.setMaximumWidth(120)
-        self._deselect_all_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Deselect All")
-        self._deselect_all_button.clicked.connect(self._tree_selector.deselect_all)
-        self._deselect_all_button.setMaximumWidth(120)
-        self._selector_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        self._selector_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
-        self._selector_button_layout.addWidget(self._select_all_button)
-        self._selector_button_layout.addWidget(self._deselect_all_button)
-        self._selector_button: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._selector_button.setLayout(self._selector_button_layout)
-
-        self._close_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Close")
-        self._close_button.setMaximumWidth(120)
-        self._close_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        self._close_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
-        self._close_button_layout.addWidget(self._close_button)
-        self._close_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._close_button_widget.setLayout(self._close_button_layout)
-
-        self._right_button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
-        self._right_button_layout.addWidget(self._selector_button)
-        self._right_button_layout.addWidget(self._close_button_widget)
-        self._right_button: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._right_button.setLayout(self._right_button_layout)
-
-        self._right_side_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
-        self._right_side_layout.addWidget(self._tree_selector_label)
-        self._right_side_layout.addWidget(self._tree_selector)
-        self._right_side_layout.addWidget(self._right_button)
-        self._right_side: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._right_side.setLayout(self._right_side_layout)
-
-        self._splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
-
-        # Set minimum widths for both panels
-        self._splitter.setChildrenCollapsible(False)
-        left_splitter.setMinimumWidth(300)
+        tree_selector_label: QtWidgets.QLabel = QtWidgets.QLabel("Select Segments:")
         self._tree_selector.setMinimumWidth(400)
+        right_buttons: QtWidgets.QWidget = (
+            self._right_button_widget(self._right_select_buttons(self._tree_selector), self._close_button_widget()))
+        splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        splitter.setChildrenCollapsible(False)
 
         # Setting the Window Layout with splitter and widgets
+        splitter.addWidget(self._setup_left_widget(save_load_widget, text_start_widget))
+        splitter.addWidget(self._right_setup_widget(tree_selector_label, self._tree_selector, right_buttons))
         window_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        self._splitter.addWidget(left_splitter)
-        self._splitter.addWidget(self._right_side)
-        window_layout.addWidget(self._splitter)
+        window_layout.addWidget(splitter)
 
         self.setLayout(window_layout)
 
@@ -113,33 +71,34 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         return QSize(700, 600)
 
-    def setup_dialog(self) -> None:
+    def _setup_save_dialog(self) -> None:
+        # TODO: Refactor This. Probably move to it's own file
         self._save_message_box: QtWidgets.QWidget = QtWidgets.QWidget()
         self._save_message_box.setProperty("AutoSegmentSave", "save-message-box")
         self._setup_window(self._save_message_box)
         self._save_message_box.setFixedSize(QSize(400, 150))
 
-        self._box_save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
-        self._box_save_button.clicked.connect(self._view_state.save_button_connection)
-        self._box_cancel_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Cancel")
-        self._box_save_button.setProperty("QPushButtonClass", "success-button")
-        self._box_cancel_button.setProperty("QPushButtonClass", "fail-button")
+        box_save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
+        box_save_button.clicked.connect(self._view_state.save_button_connection)
+        box_cancel_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Cancel")
+        box_save_button.setProperty("QPushButtonClass", "success-button")
+        box_cancel_button.setProperty("QPushButtonClass", "fail-button")
 
-        self._save_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._save_box_buttons: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        self._save_box_buttons.addWidget(self._box_save_button)
-        self._save_box_buttons.addWidget(self._box_cancel_button)
-        self._save_button_widget.setLayout(self._save_box_buttons)
+        save_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        save_box_buttons: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        save_box_buttons.addWidget(box_save_button)
+        save_box_buttons.addWidget(box_cancel_button)
+        save_button_widget.setLayout(save_box_buttons)
 
-        self._save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
-        self._save_text.setPlaceholderText("Selection Name")
-        self._save_text.setMaxLength(25)
-        self._save_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Enter Selection Name:")
-        self._save_box_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
-        self._save_box_layout.addWidget(self._save_text_label)
-        self._save_box_layout.addWidget(self._save_text)
-        self._save_box_layout.addWidget(self._save_button_widget)
-        self._save_message_box.setLayout(self._save_box_layout)
+        save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
+        save_text.setPlaceholderText("Selection Name")
+        save_text.setMaxLength(25)
+        save_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Enter Selection Name:")
+        save_box_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
+        save_box_layout.addWidget(save_text_label)
+        save_box_layout.addWidget(save_text)
+        save_box_layout.addWidget(save_button_widget)
+        self._save_message_box.setLayout(save_box_layout)
 
     def click_save(self) -> None:
         self._save_message_box.show()
@@ -207,7 +166,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     def _select_save_widget(self) -> QtWidgets.QWidget:
         # List Widget for Loafing Saved selections
         select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Save Selections:")
-        self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
         select_save_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         select_save_layout.addWidget(select_save_label)
         select_save_layout.addWidget(self._select_save)
@@ -247,8 +205,16 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         return button_widget
 
-    # def _setup_left_widget(self) -> None:
+    def _setup_left_widget(self, save_load_widget: QtWidgets.QWidget, text_start_widget: QtWidgets.QWidget) -> QtWidgets.QSplitter:
+        left_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        left_splitter.addWidget(save_load_widget)
+        left_splitter.addWidget(text_start_widget)
+        left_splitter.setChildrenCollapsible(False)
+        save_load_widget.setMinimumHeight(200)
+        text_start_widget.setMinimumHeight(200)
+        left_splitter.setMinimumWidth(300)
 
+        return left_splitter
 
     def _progress_start_widget(self) -> QtWidgets.QWidget:
 
@@ -256,7 +222,58 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         text_start_layout: QtWidgets.QLayout = self._make_start_button(self._start_button_clicked, text_start_layout)
         text_start_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         text_start_widget.setLayout(text_start_layout)
+
         return text_start_widget
+
+    def _right_select_buttons(self, selector: SegmentSelectorWidget) -> QtWidgets.QWidget:
+        select_all_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Select All")
+        select_all_button.clicked.connect(selector.select_all)
+        select_all_button.setMaximumWidth(120)
+        deselect_all_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Deselect All")
+        deselect_all_button.clicked.connect(selector.deselect_all)
+        deselect_all_button.setMaximumWidth(120)
+        selector_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        selector_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+        selector_button_layout.addWidget(select_all_button)
+        selector_button_layout.addWidget(deselect_all_button)
+        selector_button: QtWidgets.QWidget = QtWidgets.QWidget()
+        selector_button.setLayout(selector_button_layout)
+
+        return selector_button
+
+    def _close_button_widget(self) -> QtWidgets.QWidget:
+        close_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Close")
+        close_button.setMaximumWidth(120)
+        close_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        close_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        close_button_layout.addWidget(close_button)
+        close_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
+        close_button_widget.setLayout(close_button_layout)
+
+        return close_button_widget
+
+    def _right_button_widget(self, selector_buttons: QtWidgets.QWidget, close_button_widget: QtWidgets.QWidget) -> QtWidgets.QWidget:
+        right_button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
+        right_button_layout.addWidget(selector_buttons)
+        right_button_layout.addWidget(close_button_widget)
+        right_button: QtWidgets.QWidget = QtWidgets.QWidget()
+        right_button.setLayout(right_button_layout)
+
+        return right_button
+
+    def _right_setup_widget(self,
+                            label: QtWidgets.QLabel,
+                            tree: SegmentSelectorWidget,
+                            buttons: QtWidgets.QWidget
+                            ) -> QtWidgets.QWidget:
+        right_side_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
+        right_side_layout.addWidget(label)
+        right_side_layout.addWidget(tree)
+        right_side_layout.addWidget(buttons)
+        right_side: QtWidgets.QWidget = QtWidgets.QWidget()
+        right_side.setLayout(right_side_layout)
+
+        return right_side
 
     def _make_progress_text(self) -> QtWidgets.QLayout:
         """
@@ -275,6 +292,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._progress_text.setReadOnly(True)
         self._progress_text.setToolTip("What task the auto-segmentator is currently performing")
         text_start_layout.addWidget(self._progress_text)
+
         return text_start_layout
 
     def _make_start_button(self, button_action: Callable[[], None], layout: QtWidgets.QLayout) -> QtWidgets.QLayout:
@@ -285,11 +303,11 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :param button_action: function
         :return: None
         """
-        self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
         self._start_button.setObjectName("start_button")
         # Button Action
         self._start_button.clicked.connect(button_action)
         layout.addWidget(self._start_button)
+
         return layout
 
     def _start_button_clicked(self) -> None:
