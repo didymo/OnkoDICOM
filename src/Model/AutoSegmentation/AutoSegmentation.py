@@ -23,8 +23,8 @@ class AutoSegmentation:
 
     def __init__(self, controller):
         self.controller = controller
-        self.patient_dict_container = PatientDictContainer()
-        self.dicom_dir = self.patient_dict_container.path  # Get the current loaded dir to DICOM series
+        patient_dict_container = PatientDictContainer()
+        self.dicom_dir = patient_dict_container.path  # Get the current loaded dir to DICOM series
         self.dicom_temp_dir = None
 
         self.signals = SegmentationWorkerSignals()

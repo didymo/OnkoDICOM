@@ -2,7 +2,7 @@ import threading
 import logging
 from PySide6.QtCore import Slot, QObject, Signal
 
-from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState, AutoSegCallback
+from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 from src.Model.AutoSegmentation.AutoSegmentation import AutoSegmentation
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
