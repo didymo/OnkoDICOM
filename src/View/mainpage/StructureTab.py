@@ -1,4 +1,6 @@
 import csv
+from email.policy import default
+
 import pydicom
 from pathlib import Path
 from PySide6 import QtWidgets, QtGui, QtCore
@@ -96,29 +98,42 @@ class StructureTab(QtWidgets.QWidget):
 
     def init_color_roi(self, dict_container):
         """
-        Create a dictionary containing the colors for each structure.
-        :param: either PatientDictContainer or MovingDictContainer
-        :return: Dictionary where the key is the ROI number and the value a
-        QColor object.
+        Generates a dictionary mapping ROI IDs to their display colors.
+        The function gets the ROI contour information from the dictionary container input,
+        assigns a color to each ROI (using the specified color if available, or a random color otherwise),
+        and returns a dictionary mapping ROI IDs to QColor objects.
+
+        Args:
+            dict_container: The container holding DICOM RTSS data (either PatientDict or MovingDict).
+
+        Returns:
+            dict: A dictionary mapping ROI IDs to QColor objects.
         """
         roi_color = {}
-        roi_contour_info = dict_container.get(
-            "dict_dicom_tree_rtss")['ROI Contour Sequence']
+        rtss = dict_container.get("dict_dicom_tree_rtss")
+        roi_contour_info = rtss.get("ROI Contour Sequence")
 
-        if len(roi_contour_info) > 0:
+        # Check if roi contour data dictionary exists
+        if isinstance(roi_contour_info, dict) and roi_contour_info:
             for roi_key, roi_dict in roi_contour_info.items():
-                # Get ROI number safely
-                roi_id = roi_dict.get("Referenced ROI Number")[0]
-                if roi_id is None:
+                # Get roi numbers list if available
+                roi_numbers = roi_dict.get("Referenced ROI Number")
+
+                # Check exists and is list
+                if isinstance(roi_numbers, list) and roi_numbers:
+                    roi_id = roi_numbers[0]
+                else:
                     continue  # skip if invalid
 
-                # Get display color if available
-                rgb = roi_dict.get("ROI Display Color", [[None, None, None]])[0]
-                if all(c is not None for c in rgb):
-                    r, g, b = rgb
+                # Get ROI color list if available
+                roi_colors = roi_dict.get("ROI Display Color")
+
+                # Check ROI colors is a non-empty list of lists
+                if isinstance(roi_colors, list) and roi_colors and all(isinstance(color, list) for color in roi_colors)\
+                        and len(roi_colors[0]) == 3 and all(isinstance(color, (int, float)) for color in roi_colors[0]):
+                    r, g, b = roi_colors[0]     # Assign colors from roi color list
                 else:
-                    # fallback random color
-                    r, g, b = np.random.default_rng(seed=roi_id).integers(0, 256, 3)
+                    r, g, b = np.random.default_rng(seed=roi_id).integers(0, 256, 3) # Assign random colors
 
                 roi_color[roi_id] = QtGui.QColor(r, g, b)
 
