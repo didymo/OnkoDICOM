@@ -1,6 +1,4 @@
 import csv
-from email.policy import default
-
 import pydicom
 from pathlib import Path
 from PySide6 import QtWidgets, QtGui, QtCore
