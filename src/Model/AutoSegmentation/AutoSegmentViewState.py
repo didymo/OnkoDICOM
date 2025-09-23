@@ -4,7 +4,7 @@ from src.Model.Singleton import Singleton
 
 logger = logging.Logger(__name__)
 
-def _communication_debug(word: str, member: Callable[[], None]) -> None:
+def _communication_debug(word: str, member: Callable[[str], None]) -> None:
     if member is None:
         logger.debug(f"{word} function not set: call {word}_button_callback({word}_function) to assign a function first")
 
@@ -20,27 +20,27 @@ class AutoSegmentViewState(metaclass=Singleton):
         initialising members for struct class.
         """
         # callback list in format Start, Save, Load, Delete function pointers
-        self._start: Callable[[], None] | None = None # Start
-        self._save: Callable[[], None] | None = None # Save
-        self._load: Callable[[], None] | None = None # Load
-        self._delete: Callable[[], None] | None = None # Delete
+        self._start: Callable[[str], None] | None = None # Start
+        self._save: Callable[[str], None] | None = None # Save
+        self._load: Callable[[str], None] | None = None # Load
+        self._delete: Callable[[str], None] | None = None # Delete
 
         self.segmentation_list: list[str] = []
 
-    def _communicate_connection(self, member: Callable[[], None]) -> None:
+    def _communicate_connection(self, member: Callable[[str], None], value: str) -> None:
         if member is not None:
-            member()
+            member(value)
 
-    def start_button_connection(self) -> None:
+    def start_button_connection(self, value: str) -> None:
         """
         To communicate to controller the start button was clicked.
 
         :return: None
         """
-        self._communicate_connection(self._start)
+        self._communicate_connection(self._start, value)
         _communication_debug("Start", self._start)
 
-    def set_start_button_callback(self, start_function: Callable[[], None]) -> None:
+    def set_start_button_callback(self, start_function: Callable[[str], None]) -> None:
         """
         To set the function called in the controller when the start Button is clicked
 
@@ -50,16 +50,16 @@ class AutoSegmentViewState(metaclass=Singleton):
         self._start = start_function
 
 
-    def save_button_connection(self) -> None:
+    def save_button_connection(self, value) -> None:
         """
         To communicate to controller the save button was clicked.
 
         :return: None
         """
-        self._communicate_connection(self._save)
+        self._communicate_connection(self._save, value)
         _communication_debug("Save", self._save)
 
-    def set_save_button_callback(self, save_function: Callable[[], None]) -> None:
+    def set_save_button_callback(self, save_function: Callable[[str], None]) -> None:
         """
         To set the function called in the controller when the save button is clicked
 
@@ -68,16 +68,16 @@ class AutoSegmentViewState(metaclass=Singleton):
         """
         self._save = save_function
 
-    def load_button_connection(self) -> None:
+    def load_button_connection(self, value: str) -> None:
         """
         To communicate to controller the load button was clicked.
 
         :return: None
         """
-        self._communicate_connection(self._load)
+        self._communicate_connection(self._load, value)
         _communication_debug("Load", self._load)
 
-    def set_load_button_callback(self, load_function: Callable[[], None]) -> None:
+    def set_load_button_callback(self, load_function: Callable[[str], None]) -> None:
         """
         To set the function called in the controller when the load button is clicked
 
@@ -86,16 +86,16 @@ class AutoSegmentViewState(metaclass=Singleton):
         """
         self._load = load_function
 
-    def delete_button_connection(self) -> None:
+    def delete_button_connection(self, value: str) -> None:
         """
         To communicate to controller the delete button was clicked.
 
         :return: None
         """
-        self._communicate_connection(self._delete)
+        self._communicate_connection(self._delete, value)
         _communication_debug("Delete", self._delete)
 
-    def set_delete_button_callback(self, delete_function: Callable[[], None]) -> None:
+    def set_delete_button_callback(self, delete_function: Callable[[str], None]) -> None:
         """
         To set the function called in the controller when the delete button is clicked
 

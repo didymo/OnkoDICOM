@@ -36,7 +36,7 @@ class AutoSegmentationController(QObject):
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
     # View related methods
-    def start_button_clicked(self) -> None:
+    def start_button_clicked(self, value: str) -> None:
         """
         To be called when the button to start the selected segmentation task is clicked
         :rtype: None
@@ -46,26 +46,26 @@ class AutoSegmentationController(QObject):
 
         self.run_task("total", self._view.get_segmentation_roi_subset())
 
-    def save_button_clicked(self) -> None:
+    def save_button_clicked(self, value: str) -> None:
         """
         To be called when the button to save the selected segmentation task is clicked
         :rtype: None
         """
-        print("Save")
+        print("Save " + value)
 
-    def load_button_clicked(self) -> None:
+    def load_button_clicked(self, value: str) -> None:
         """
         To be called when the button to load the selected saved segmentation is clicked
         :rtype: None
         """
-        print("Load")
+        print("Load " + value)
 
-    def delete_button_clicked(self) -> None:
+    def delete_button_clicked(self, value: str) -> None:
         """
         To be called when the button to delete the selected segmentation task is clicked
         :rtype: None
         """
-        print("Delete")
+        print("Delete " + value)
 
     def show_view(self):
         """

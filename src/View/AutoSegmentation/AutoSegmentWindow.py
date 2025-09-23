@@ -79,7 +79,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._save_message_box.setFixedSize(QSize(400, 150))
 
         box_save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
-        box_save_button.clicked.connect(self._view_state.save_button_connection)
         box_cancel_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Cancel")
         box_save_button.setProperty("QPushButtonClass", "success-button")
         box_cancel_button.setProperty("QPushButtonClass", "fail-button")
@@ -91,6 +90,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         save_button_widget.setLayout(save_box_buttons)
 
         save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
+        box_save_button.clicked.connect(lambda save: self._view_state.save_button_connection(save_text.text()))
         save_text.setPlaceholderText("Selection Name")
         save_text.setMaxLength(25)
         save_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Enter Selection Name:")
@@ -182,7 +182,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Delete Button
         delete_button = QtWidgets.QPushButton("Delete")
         delete_button.setProperty("QPushButtonClass", "fail-button")
-        delete_button.clicked.connect(connection.delete_button_connection)
+        delete_button.clicked.connect(lambda delete: connection.delete_button_connection(self._select_save.currentItem().text()))
 
         # Save Button
         save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
@@ -191,7 +191,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Load Button
         load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
-        load_button.clicked.connect(connection.load_button_connection)
+        load_button.clicked.connect(lambda load: connection.load_button_connection(self._select_save.currentItem().text()))
 
         # Adding Button Layout
         button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
@@ -317,4 +317,4 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
-        self._view_state.start_button_connection()
+        self._view_state.start_button_connection("")
