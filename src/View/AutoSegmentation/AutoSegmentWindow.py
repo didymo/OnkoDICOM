@@ -41,8 +41,11 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Button Widget for Save, Load Buttons
         self._delete_button = QtWidgets.QPushButton("Delete")
+        self._delete_button.clicked.connect(self._view_state.delete_button_connection)
         self._save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
+        self._save_button.clicked.connect(self._view_state.save_button_connection)
         self._load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
+        self._load_button.clicked.connect(self._view_state.load_button_connection)
         self._delete_button.setProperty("QPushButtonClass", "fail-button")
         self._save_button.setProperty("QPushButtonClass", "success-button")
         self._button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()

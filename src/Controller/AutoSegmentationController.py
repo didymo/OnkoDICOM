@@ -2,7 +2,7 @@ import threading
 import logging
 from PySide6.QtCore import Slot, QObject, Signal
 
-from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
+from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState, AutoSegCallback
 from src.Model.AutoSegmentation.AutoSegmentation import AutoSegmentation
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
@@ -23,7 +23,13 @@ class AutoSegmentationController(QObject):
         Creating the requirements to run the feature
         :rtype: None
         """
-        self.view_state: AutoSegmentViewState = AutoSegmentViewState(self.start_button_clicked) # storing state of view
+        # creating connections
+        self.view_state: AutoSegmentViewState = AutoSegmentViewState() # storing state of view
+        self.view_state.set_start_button_callback(self.start_button_clicked) # Start
+        self.view_state.set_save_button_callback(self.save_button_clicked) # Save
+        self.view_state.set_load_button_callback(self.load_button_clicked) # Load
+        self.view_state.set_delete_button_callback(self.delete_button_clicked) # Delete
+
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()
@@ -39,6 +45,27 @@ class AutoSegmentationController(QObject):
         self._view.disable_start_button()
 
         self.run_task("total", self._view.get_segmentation_roi_subset())
+
+    def save_button_clicked(self) -> None:
+        """
+        To be called when the button to save the selected segmentation task is clicked
+        :rtype: None
+        """
+        print("Save")
+
+    def load_button_clicked(self) -> None:
+        """
+        To be called when the button to load the selected saved segmentation is clicked
+        :rtype: None
+        """
+        print("Load")
+
+    def delete_button_clicked(self) -> None:
+        """
+        To be called when the button to delete the selected segmentation task is clicked
+        :rtype: None
+        """
+        print("Delete")
 
     def show_view(self):
         """
