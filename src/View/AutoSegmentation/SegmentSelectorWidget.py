@@ -314,6 +314,10 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # which exist with the list we are going though every value and Unchecking all of
         # as a potential method of dealing with potential bugs such as checked boxes which are
         # not checked which may or may not exist.
-        for key, item in self._tree_choices_ref:
-            item.setCheckState(1, Qt.CheckState.Unchecked)
-            self._selected_list_add_or_remove(key, Qt.CheckState.Unchecked)
+        for key, item in self._tree_choices_ref.items():
+            print(key)
+            print(item.checkState(1))
+            item.setCheckState(1, check)
+            self._selected_list_add_or_remove(key, check)
+        for item in range(self._selection_tree.topLevelItemCount()):
+            self._setting_parent_states(self._selection_tree.topLevelItem(item))

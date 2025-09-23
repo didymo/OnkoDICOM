@@ -243,6 +243,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
     def _close_button_widget(self) -> QtWidgets.QWidget:
         close_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Close")
+        close_button.clicked.connect(self.close)
         close_button.setMaximumWidth(120)
         close_button_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         close_button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
