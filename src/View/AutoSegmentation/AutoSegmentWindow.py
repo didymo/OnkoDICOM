@@ -46,7 +46,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         text_start_widget: QtWidgets.QWidget = self._progress_start_widget()
 
         # Splitting the left side Vertically
-
         left_splitter: QtWidgets.QSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         left_splitter.addWidget(save_load_widget)
         left_splitter.addWidget(text_start_widget)
@@ -145,6 +144,52 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     def click_save(self) -> None:
         self._save_message_box.show()
 
+    def set_progress_text(self, text: str) -> None:
+        """
+        Public Method to set the progress text in the progress text box.
+        To display the text to the user of what is currently being performed,
+        to inform the user as to the current aspect of the task being performed.
+
+        :param text: str
+        :return: None
+        """
+        self._progress_text.append(text)
+        cursor: QTextCursor = self._progress_text.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self._progress_text.setTextCursor(cursor)
+        self._progress_text.ensureCursorVisible()
+
+    def enable_start_button(self) -> None:
+        """Enables the start button and sets its text to "Start".
+
+        This method is used to reactivate the start button after it has been
+        disabled, typically after a segmentation task has completed or failed.
+
+        :return: None
+        """
+        self._start_button.setEnabled(True)
+        self._start_button.setText("Start")
+
+    def disable_start_button(self) -> None:
+        """Disables the start button and sets its text to "Wait".
+
+        This method is used to deactivate the start button,
+        typically during the segmentation process.
+
+        :return: None
+        """
+        self._start_button.setEnabled(False)
+        self._start_button.setText("Wait")
+
+    def get_segmentation_roi_subset(self) -> list[str]:
+        """
+        Public Method to retrieve the current selection
+        from the segmentation selection tree.
+
+        :return: list[str]
+        """
+        return self._tree_selector.get_segment_list()
+
     def _setup_window(self, window: QtWidgets.QWidget | QtWidgets.QMessageBox) -> None:
         """
         Protected Method for Setting up the window, with Title, StyleSheet, MinimumSize and Icon
@@ -162,16 +207,16 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     def _select_save_widget(self) -> QtWidgets.QWidget:
         # List Widget for Loafing Saved selections
         select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Save Selections:")
-        self.select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
+        self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
         select_save_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         select_save_layout.addWidget(select_save_label)
-        select_save_layout.addWidget(self.select_save)
+        select_save_layout.addWidget(self._select_save)
         select_save_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         select_save_widget.setLayout(select_save_layout)
 
         # TODO: Remove these add items
-        self.select_save.addItems(["One", "Two", "Three", "Four"])
-        self.select_save.addItems(["Five", "Six", "Seven", "Eight", "Nine"])
+        self._select_save.addItems(["One", "Two", "Three", "Four"])
+        self._select_save.addItems(["Five", "Six", "Seven", "Eight", "Nine"])
 
         return select_save_widget
 
@@ -254,49 +299,3 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: None
         """
         self._view_state.start_button_connection()
-
-    def set_progress_text(self, text: str) -> None:
-        """
-        Public Method to set the progress text in the progress text box.
-        To display the text to the user of what is currently being performed,
-        to inform the user as to the current aspect of the task being performed.
-
-        :param text: str
-        :return: None
-        """
-        self._progress_text.append(text)
-        cursor: QTextCursor = self._progress_text.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End)
-        self._progress_text.setTextCursor(cursor)
-        self._progress_text.ensureCursorVisible()
-
-    def enable_start_button(self) -> None:
-        """Enables the start button and sets its text to "Start".
-
-        This method is used to reactivate the start button after it has been
-        disabled, typically after a segmentation task has completed or failed.
-
-        :return: None
-        """
-        self._start_button.setEnabled(True)
-        self._start_button.setText("Start")
-
-    def disable_start_button(self) -> None:
-        """Disables the start button and sets its text to "Wait".
-
-        This method is used to deactivate the start button,
-        typically during the segmentation process.
-
-        :return: None
-        """
-        self._start_button.setEnabled(False)
-        self._start_button.setText("Wait")
-
-    def get_segmentation_roi_subset(self) -> list[str]:
-        """
-        Public Method to retrieve the current selection
-        from the segmentation selection tree.
-
-        :return: list[str]
-        """
-        return self._tree_selector.get_segment_list()
