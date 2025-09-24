@@ -310,14 +310,24 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :param check: Qt.CheckState
         :returns: None
         """
-        # Instead of just going though self._selected_list and Unchecking only the values
-        # which exist with the list we are going though every value and Unchecking all of
+        # Instead of just going though self._selected_list and Unchecking/Checking only the values
+        # which exist with the list we are going though every value and Unchecking/Checking all of
         # as a potential method of dealing with potential bugs such as checked boxes which are
         # not checked which may or may not exist.
-        for key, item in self._tree_choices_ref.items():
-            print(key)
-            print(item.checkState(1))
-            item.setCheckState(1, check)
-            self._selected_list_add_or_remove(key, check)
-        for item in range(self._selection_tree.topLevelItemCount()):
-            self._setting_parent_states(self._selection_tree.topLevelItem(item))
+
+        # This Unrolling Tree then iterating child items from tree is used iterating though the dict
+        # results in missing the visually Checking/Unchecking the checkboxes for "aorta" and "inferior_vena_cava"
+        # Can't figure out why when printing the checked state in the mapped version. "aorta" does change
+        # from Qt.CheckState.Unchecked to Qt.CheckState.Checked
+
+        # for key, value in self._tree_choices_ref:
+        #     value.setCheckState(1, check)
+        #     self._selected_list_add_or_remove(value.text(1).strip(), check)
+
+        for parent in range(self._selection_tree.topLevelItemCount()):
+            for child in range(self._selection_tree.topLevelItem(parent).childCount()):
+                item: QTreeWidgetItem = self._selection_tree.topLevelItem(parent).child(child)
+                item.setCheckState(1, check)
+                self._selected_list_add_or_remove(item.text(1).strip(), check)
+            # Setting the parent check box
+            self._setting_parent_states(self._selection_tree.topLevelItem(parent))
