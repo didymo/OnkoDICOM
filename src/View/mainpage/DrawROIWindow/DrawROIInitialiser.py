@@ -198,10 +198,9 @@ class RoiInitialiser():
         """
         pixmaps = self.p.get("pixmaps_axial")
         i = len(pixmaps)
-        j = 0
-        for _ in range(i):
+        for j in range(i):
             self.display_pixmaps.append(pixmaps[j])
-            j +=1
+            
     def change_image(self, v):
         """
         Changes the image (patient image) according to the value
