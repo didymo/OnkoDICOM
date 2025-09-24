@@ -51,21 +51,21 @@ class AutoSegmentationController(QObject):
         To be called when the button to save the selected segmentation task is clicked
         :rtype: None
         """
-        print("Save " + value)
+        print(f"Save {value}")
 
     def load_button_clicked(self, value: str) -> None:
         """
         To be called when the button to load the selected saved segmentation is clicked
         :rtype: None
         """
-        print("Load " + value)
+        print(f"Load {value}")
 
     def delete_button_clicked(self, value: str) -> None:
         """
         To be called when the button to delete the selected segmentation task is clicked
         :rtype: None
         """
-        print("Delete " + value)
+        print(f"Delete {value}")
 
     def show_view(self):
         """
