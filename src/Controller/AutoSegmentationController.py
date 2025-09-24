@@ -1,3 +1,4 @@
+import copy
 import threading
 import logging
 from PySide6.QtCore import Slot, QObject, Signal
@@ -95,7 +96,6 @@ class AutoSegmentationController(QObject):
         """
         # Instantiate AutoSegmentation passing the required settings from the UI
         auto_segmentation = AutoSegmentation(self)
-
         # Run tasks on separate thread
         auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow, args=(task, roi_subset))
         auto_seg_thread.start() # Will auto terminate at the called functions conclusion

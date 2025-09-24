@@ -128,7 +128,7 @@ class AutoSegmentation:
             input=self.dicom_temp_dir.name,
             output=output_dir,
             task=task,
-            roi_subset=copy.deepcopy(roi_subset), # Deep copy to prevent changing to the selection after starting
+            roi_subset=list(set(copy.deepcopy(roi_subset))), # Deep copy to prevent changing to the selection after starting
             output_type="nifti",
             device="gpu",
         )

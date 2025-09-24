@@ -46,7 +46,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # Reference to the list owned by another class most likely the controller class
         self._selected_list: list[str] = segmentation_list
         # References to look up items in tree without searching entire tree
-        self._tree_choices_ref: dict[str, QTreeWidgetItem] = {}
+        self._tree_choices_ref: dict[str, list[QTreeWidgetItem]] = {}
 
         # Creating Tree using PySide6
         # Nesting methods here to Indicate that each one is intended to feed into each other
@@ -130,7 +130,9 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             for structure_name in structure_list.Structure.unique():
                 # in 2 lines to communicate each operation is for a different task
                 single_structure = self._input_structure(1, structure_name, body_input) # creating Item in tree
-                self._tree_choices_ref[structure_name] = single_structure # Adding Reference to dictionary for look up
+                if structure_name not in self._tree_choices_ref.keys(): # to deal with multiple of the same choice
+                    self._tree_choices_ref[structure_name] = []
+                self._tree_choices_ref[structure_name].append(single_structure) # Adding Reference to dictionary for look up
         return tree
 
     @functools.lru_cache(maxsize=128, typed=False)
@@ -179,7 +181,8 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         """
         for selected in current_list:
             try:
-                self._tree_choices_ref[selected].setCheckState(1, Qt.CheckState.Checked)
+                for item in self._tree_choices_ref[selected]:
+                    item.setCheckState(1, Qt.CheckState.Checked)
             except KeyError:
                 logger.debug(f"Skipped Selection {selected}: Not a choice in Tree")
                 pass
@@ -315,19 +318,10 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # as a potential method of dealing with potential bugs such as checked boxes which are
         # not checked which may or may not exist.
 
-        # This Unrolling Tree then iterating child items from tree is used iterating though the dict
-        # results in missing the visually Checking/Unchecking the checkboxes for "aorta" and "inferior_vena_cava"
-        # Can't figure out why when printing the checked state in the mapped version. "aorta" does change
-        # from Qt.CheckState.Unchecked to Qt.CheckState.Checked
-
-        # for key, value in self._tree_choices_ref:
-        #     value.setCheckState(1, check)
-        #     self._selected_list_add_or_remove(value.text(1).strip(), check)
+        for key, values in self._tree_choices_ref.items():
+            for item in values:
+                item.setCheckState(1, check)
+            self._selected_list_add_or_remove(key, check)
 
         for parent in range(self._selection_tree.topLevelItemCount()):
-            for child in range(self._selection_tree.topLevelItem(parent).childCount()):
-                item: QTreeWidgetItem = self._selection_tree.topLevelItem(parent).child(child)
-                item.setCheckState(1, check)
-                self._selected_list_add_or_remove(item.text(1).strip(), check)
-            # Setting the parent check box
             self._setting_parent_states(self._selection_tree.topLevelItem(parent))
