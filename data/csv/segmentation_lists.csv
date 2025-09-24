@@ -1,173 +1,173 @@
-BodySection,OrganSystem,StandardStructureName,Structure,StructureName,Fast,Fastest
-Body,Limbs,Limbs_TS,body_extremities,Limb,false,false
-Body,Muscular,MuscleSkeletal_TS,skeletal_muscle,Skeletal muscle,false,false
-Body,Skeletal,Vertebra_TS,vertebrae_body,Vertebral body,false,false
-Body,Subcutaneous,FatTorso_TS,torso_fat,Fat,false,false
-Body,Trunk,Trunk_TS,body_trunc,Trunk,false,false
-Chest,Disease,PericardialEffusion_TS,pericardial_effusion,Effusion,false,false
-Chest,Disease,PleuralEffusion_TS,pleural_effusion,Effusion,false,false
-Chest,Pulmonary,Lung_LLL_TS,lung_lower_lobe_left,Lower lobe of lung,false,false
-Chest,Pulmonary,Lung_RLL_TS,lung_lower_lobe_right,Lower lobe of lung,false,false
-Chest,Pulmonary,Lung_RML_TS,lung_middle_lobe_right,Middle lobe of right lung,false,false
-Chest,Pulmonary,Lung_RUL_TS,lung_upper_lobe_right,Upper lobe of lung,false,false
-Chest,Pulmonary,Lung_ULL_TS,lung_upper_lobe_left,Upper lobe of lung,false,false
-Chest,Vascular,LungVessels_TS,lung_vessels,Blood vessel,false,false
-Chest ,Pulmonary,Pleura_TS,lung_pleural,Pleural membrane,false,false
-Head,Disease,IntracerebralHaemorrhage_TS,intracerebral_hemorrhage,Hemorrhage,false,false
-Head,Face,Face_TS,face,Face,false,false
-Head,Nervous,Brain_TS,brain,Brain,false,false
-Head,Skeletal,Skull_TS,skull,Skull,false,false
-LimbsLower,Skeletal,FeetPhalanges_TS,phalanges_feet,Phalanx structure,false,false
-LimbsLower,Skeletal,Femur_L_TS,femur_left,Femur,false,false
-LimbsLower,Skeletal,Femur_R_TS,femur_right,Femur,false,false
-LimbsLower,Skeletal,Femur_TS,femur,Femur,false,false
-LimbsLower,Skeletal,Fibula_TS,fibula,Fibula,false,false
-LimbsLower,Skeletal,MetatarsalBones_TS,metatarsal,Metatarsal,false,false
-LimbsLower,Skeletal,Patella_TS,patella,Patella,false,false
-LimbsLower,Skeletal,TarsalBones_TS,tarsal,Tarsal bones,false,false
-LimbsLower,Skeletal,Tibia_TS,tibia,Tibia,false,false
-LimbsUpper,Skeletal,Carpal_TS,carpal,Carpus,false,false
-LimbsUpper,Skeletal,HandPhalanges_TS,phalanges_hand,Phalanx structure,false,false
-LimbsUpper,Skeletal,Humerus_L_TS,humerus_left,Humerus,false,false
-LimbsUpper,Skeletal,Humerus_R_TS,humerus_right,Humerus,false,false
-LimbsUpper,Skeletal,Humerus_TS,humerus,Humerus,false,false
-LimbsUpper,Skeletal,Metacarpal_TS,metacarpal,Metacarpal bones,false,false
-LimbsUpper,Skeletal,Radius_TS,radius,Radius,false,false
-LimbsUpper,Skeletal,Ulna_TS,ulna,Ulna,false,false
-Lung,Disease,COVIDInfiltrates_TS,lung_covid_infiltrate,Infiltrate,false,false
-Mediastinum,Airway,LungAirways_TS,lung_trachea_bronchia,Trachea and bronchus,false,false
-Mediastinum,Airway,Trachea_TS,trachea,Trachea,false,false
-Mediastinum,Cardiac,AtrialAppendage_L_TS,atrial_appendage_left,Auricular appendage,false,false
-Mediastinum,Cardiac,Heart_TS,heart,Heart,false,false
-Mediastinum,Cardiac,HeartAtrium_L_TS,heart_atrium_left,Left atrium,false,false
-Mediastinum,Cardiac,HeartAtrium_R_TS,heart_atrium_right,Right atrium,false,false
-Mediastinum,Cardiac,HeartVentricle_L_TS,heart_ventricle_left,Left ventricle of heart,false,false
-Mediastinum,Cardiac,HeartVentricle_R_TS,heart_ventricle_right,Right ventricle of heart,false,false
-Mediastinum,Cardiac,Myocardium_TS,heart_myocardium,Myocardium,false,false
-Mediastinum,Vascular,A_Aorta_TS,aorta,Aorta,false,false
-Mediastinum,Vascular,A_Pulmonary_TS,pulmonary_artery,Pulmonary artery,false,false
-Mediastinum,Vascular,CoronaryArtery_TS,coronary_arteries,Coronary artery,false,false
-Mediastinum,Vascular,V_Brachiocephalic_L_TS,brachiocephalic_vein_left,Brachiocephalic vein,false,false
-Mediastinum,Vascular,V_Brachiocephalic_R_TS,brachiocephalic_vein_right,Brachiocephalic vein,false,false
-Mediastinum,Vascular,V_BrachiocephalicTrunk_TS,brachiocephalic_trunk,Brachiocephalic artery,false,false
-Mediastinum,Vascular,V_InferiorVenaCava_TS,inferior_vena_cava,Inferior vena cava,false,false
-Mediastinum,Vascular,V_Pulmonary_TS,pulmonary_vein,Pulmonary vein,false,false
-Mediastinum,Vascular,V_SuperiorVenaCava_TS,superior_vena_cava,Superior vena cava,false,false
-Neck,GlandularEndocrine,ThyroidGland_TS,thyroid_gland,Thyroid gland,false,false
-Neck,Skeletal,VertebraCervical_TS,vertebrae_cervical,Vertebra,false,false
-Neck,Vascular,A_CommonCarotid_L_TS,common_carotid_artery_right,Common carotid artery,false,false
-Neck,Vascular,A_CommonCarotid_R_TS,common_carotid_artery_left,Common carotid artery,false,false
-Neck,Vascular,A_Subclavian_L_TS,subclavian_artery_left,Subclavian artery,false,false
-Neck,Vascular,A_Subclavian_R_TS,subclavian_artery_right,Subclavian artery,false,false
-Pelvis,Disease,HipImplant_TS,hip_implant,Implant,false,false
-Pelvis,Genitourinary,Bladder_TS,urinary_bladder,Urinary bladder,false,false
-Pelvis,Muscular,GluteusMaximi_TS,gluteus_maximus,Gluteus maximus muscle,false,false
-Pelvis,Muscular,GluteusMaximus_L_TS,gluteus_maximus_left,Gluteus maximus muscle,false,false
-Pelvis,Muscular,GluteusMaximus_R_TS,gluteus_maximus_right,Gluteus maximus muscle,false,false
-Pelvis,Muscular,GluteusMedii_TS,gluteus_medius,Gluteus medius muscle,false,false
-Pelvis,Muscular,GluteusMedius_L_TS,gluteus_medius_left,Gluteus medius muscle,false,false
-Pelvis,Muscular,GluteusMedius_R_TS,gluteus_medius_right,Gluteus medius muscle,false,false
-Pelvis,Muscular,GluteusMinimi_TS,gluteus_minimus,Gluteus medius muscle,false,false
-Pelvis,Muscular,GluteusMinimus_L_TS,gluteus_minimus_left,Gluteus minius muscle,false,false
-Pelvis,Muscular,GluteusMinimus_R_TS,gluteus_minimus_right,Gluteus minius muscle,false,false
-Pelvis,Muscular,IliopsoasMuscle_L_TS,iliopsoas_left,Iliopsoas muscle,false,false
-Pelvis,Muscular,IliopsoasMuscle_R_TS,iliopsoas_right,Iliopsoas muscle,false,false
-Pelvis,Muscular,IliopsoasMuscles_TS,iliopsoas,Iliopsoas muscle,false,false
-Pelvis,Skeletal,Hip_L_TS,hip_left,Hip,false,false
-Pelvis,Skeletal,Hip_R_TS,hip_right,Hip,false,false
-Pelvis,Skeletal,Hip_TS,hip,Hip,false,false
-Pelvis,Skeletal,Sacrum_TS,sacrum,Sacrum,false,false
-Pelvis,Vascular,A_Iliac_L_TS,iliac_artery_left,Common iliac artery,false,false
-Pelvis,Vascular,A_Iliac_R_TS,iliac_artery_right,Common iliac artery,false,false
-Pelvis,Vascular,A_Iliac_TS,iliac_artery,Common iliac artery,false,false
-Pelvis,Vascular,V_Iliac_L_TS,iliac_vena_left,Common iliac vein,false,false
-Pelvis,Vascular,V_Iliac_R_TS,iliac_vena_right,Common iliac vein,false,false
-Pelvis,Vascular,V_Iliac_TS,iliac_vena,Common iliac vein,false,false
-PelvisMale,GlandularEndocrine,Prostate_TS,prostate,Prostate,false,false
-Skin,Subcutaneous,FatSubcutaneous_TS,subcutaneous_fat,Subcutaneous fatty tissue,false,false
-Thoracic,Skeletal,Clavicle_L_TS,clavicula_left,Clavicle,false,false
-Thoracic,Skeletal,Clavicle_R_TS,clavicula_right,Clavicle,false,false
-Thoracic,Skeletal,Clavicles_TS,clavicula,Clavicle,false,false
-Thoracic,Skeletal,CostalCartilages_TS,costal_cartilages,Costal cartilage,false,false
-Thoracic,Skeletal,Rib1_L_TS,rib_left_1,First rib,false,false
-Thoracic,Skeletal,Rib1_R_TS,rib_right_1,First rib,false,false
-Thoracic,Skeletal,Rib10_L_TS,rib_left_10,Tenth rib,false,false
-Thoracic,Skeletal,Rib10_R_TS,rib_right_10,Tenth rib,false,false
-Thoracic,Skeletal,Rib11_L_TS,rib_left_11,Eleventh rib,false,false
-Thoracic,Skeletal,Rib11_R_TS,rib_right_11,Eleventh rib,false,false
-Thoracic,Skeletal,Rib12_L_TS,rib_left_12,Twelfth rib,false,false
-Thoracic,Skeletal,Rib12_R_TS,rib_right_12,Twelfth rib,false,false
-Thoracic,Skeletal,Rib2_L_TS,rib_left_2,Second rib,false,false
-Thoracic,Skeletal,Rib2_R_TS,rib_right_2,Second rib,false,false
-Thoracic,Skeletal,Rib3_L_TS,rib_left_3,Third rib,false,false
-Thoracic,Skeletal,Rib3_R_TS,rib_right_3,Third rib,false,false
-Thoracic,Skeletal,Rib4_L_TS,rib_left_4,Fourth rib,false,false
-Thoracic,Skeletal,Rib4_R_TS,rib_right_4,Fourth rib,false,false
-Thoracic,Skeletal,Rib5_L_TS,rib_left_5,Fifth rib,false,false
-Thoracic,Skeletal,Rib5_R_TS,rib_right_5,Fifth rib,false,false
-Thoracic,Skeletal,Rib6_L_TS,rib_left_6,Sixth rib,false,false
-Thoracic,Skeletal,Rib6_R_TS,rib_right_6,Sixth rib,false,false
-Thoracic,Skeletal,Rib7_L_TS,rib_left_7,Seventh rib,false,false
-Thoracic,Skeletal,Rib7_R_TS,rib_right_7,Seventh rib,false,false
-Thoracic,Skeletal,Rib8_L_TS,rib_left_8,Eighth rib,false,false
-Thoracic,Skeletal,Rib8_R_TS,rib_right_8,Eighth rib,false,false
-Thoracic,Skeletal,Rib9_L_TS,rib_left_9,Ninth rib,false,false
-Thoracic,Skeletal,Rib9_R_TS,rib_right_9,Ninth rib,false,false
-Thoracic,Skeletal,Ribs_TS,ribs,Rib,false,false
-Thoracic,Skeletal,Scapula_L_TS,scapula_left,Scapula,false,false
-Thoracic,Skeletal,Scapula_R_TS,scapula_right,Scapula,false,false
-Thoracic,Skeletal,Scapula_TS,scapula,Scapula,false,false
-Thoracic,Skeletal,Sternum_TS,sternum,Sternum,false,false
-Thoracic,Skeletal,VB_C1_TS,vertebrae_C1,C1 vertebra,false,false
-Thoracic,Skeletal,VB_C2_TS,vertebrae_C2,C2 vertebra,false,false
-Thoracic,Skeletal,VB_C3_TS,vertebrae_C3,C3 vertebra,false,false
-Thoracic,Skeletal,VB_C4_TS,vertebrae_C4,C4 vertebra,false,false
-Thoracic,Skeletal,VB_C5_TS,vertebrae_C5,C5 vertebra,false,false
-Thoracic,Skeletal,VB_C6_TS,vertebrae_C6,C6 vertebra,false,false
-Thoracic,Skeletal,VB_C7_TS,vertebrae_C7,C7 vertebra,false,false
-Thoracic,Skeletal,VB_L1_TS,vertebrae_L1,L1 vertebra,false,false
-Thoracic,Skeletal,VB_L2_TS,vertebrae_L2,L2 vertebra,false,false
-Thoracic,Skeletal,VB_L3_TS,vertebrae_L3,L3 vertebra,false,false
-Thoracic,Skeletal,VB_L4_TS,vertebrae_L4,L4 vertebra,false,false
-Thoracic,Skeletal,VB_L5_TS,vertebrae_L5,L5 vertebra,false,false
-Thoracic,Skeletal,VB_S1_TS,vertebrae_S1,S1 vertebra,false,false
-Thoracic,Skeletal,VB_T1_TS,vertebrae_T1,T1 vertebra,false,false
-Thoracic,Skeletal,VB_T10_TS,vertebrae_T10,T10 vertebra,false,false
-Thoracic,Skeletal,VB_T11_TS,vertebrae_T11,T11 vertebra,false,false
-Thoracic,Skeletal,VB_T12_TS,vertebrae_T12,T12 vertebra,false,false
-Thoracic,Skeletal,VB_T2_TS,vertebrae_T2,T2 vertebra,false,false
-Thoracic,Skeletal,VB_T3_TS,vertebrae_T3,T3 vertebra,false,false
-Thoracic,Skeletal,VB_T4_TS,vertebrae_T4,T4 vertebra,false,false
-Thoracic,Skeletal,VB_T5_TS,vertebrae_T5,T5 vertebra,false,false
-Thoracic,Skeletal,VB_T6_TS,vertebrae_T6,T6 vertebra,false,false
-Thoracic,Skeletal,VB_T7_TS,vertebrae_T7,T7 vertebra,false,false
-Thoracic,Skeletal,VB_T8_TS,vertebrae_T8,T8 vertebra,false,false
-Thoracic,Skeletal,VB_T9_TS,vertebrae_T9,T9 vertebra,false,false
-Thoracic,Skeletal,VertebraThoracic_TS,vertebrae_thoracic,Vertebra,false,false
-Trunk,Disease,KidneyCyst_L_TS,kidney_cyst_left,Cyst,false,false
-Trunk,Disease,KidneyCyst_R_TS,kidney_cyst_right,Cyst,false,false
-Trunk,Genitourinary,Kidney_L_TS,kidney_left,Kidney,false,false
-Trunk,Genitourinary,Kidney_R_TS,kidney_right,Kidney,false,false
-Trunk,Genitourinary,Kidney_TS,kidney,Kidney,false,false
-Trunk,GlandularEndocrine,AdrenalGland_L_TS,adrenal_gland_left,Adrenal gland,false,false
-Trunk,GlandularEndocrine,AdrenalGland_R_TS,adrenal_gland_right,Adrenal gland,false,false
-Trunk,GlandularEndocrine,AdrenalGland_TS,adrenal_gland,Adrenal gland,false,false
-Trunk,Muscular,ErectorSpinaeMuscles_L_TS,autochthon_left,Deep muscle of back,false,false
-Trunk,Muscular,ErectorSpinaeMuscles_R_TS,autochthon_right,Deep muscle of back,false,false
-Trunk,Muscular,ErectorSpinaeMuscles_TS,autochthon,Deep muscle of back,false,false
-Trunk,Nervous,SpinalCord_TS,spinal_cord,Spinal cord,false,false
-Trunk,Skeletal,VertebraLumbar_TS,vertebrae_lumbar,Vertebra,false,false
-UpperAbdomen,GI,Colon_TS,colon,Colon,false,false
-UpperAbdomen,GI,Duodenum_TS,duodenum,Duodenum,false,false
-UpperAbdomen,Gi,GallBladder_TS,gallbladder,Gallbladder,false,false
-UpperAbdomen,GI,GTVliver_TS,liver_tumor,Neoplasm,false,false
-UpperAbdomen,Gi,Liver_TS,liver,Liver,false,false
-UpperAbdomen,GI,Oesophagus_TS,esophagus,Esophagus,false,false
-UpperAbdomen,Gi,Pancreas_TS,pancreas,Pancreas,false,false
-UpperAbdomen,GI,SmallBowel_TS,small_bowel,Small Intestine,false,false
-UpperAbdomen,GI,Spleen_TS,spleen,Spleen,false,false
-UpperAbdomen,GI,Stomach_TS,stomach,Stomach,false,false
-UpperAbdomen,Vascular,A_Aorta_TS,aorta,Aorta,false,false
-UpperAbdomen,Vascular,LiverVessels_TS,liver_vessels,Blood vessel,false,false
-UpperAbdomen,Vascular,V_InferiorVenaCava_TS,inferior_vena_cava,Inferior vena cava,false,false
-UpperAbdomen,Vascular,V_Portal_TS,portal_vein_and_splenic_vein,Portal vein and splenic vein,false,false
+BodySection,OrganSystem,StandardStructureName,Structure,StructureName
+Body,Limbs,Limbs_TS,body_extremities,Limb
+Body,Muscular,MuscleSkeletal_TS,skeletal_muscle,Skeletal muscle
+Body,Skeletal,Vertebra_TS,vertebrae_body,Vertebral body
+Body,Subcutaneous,FatTorso_TS,torso_fat,Fat
+Body,Trunk,Trunk_TS,body_trunc,Trunk
+Chest,Disease,PericardialEffusion_TS,pericardial_effusion,Effusion
+Chest,Disease,PleuralEffusion_TS,pleural_effusion,Effusion
+Chest,Pulmonary,Lung_LLL_TS,lung_lower_lobe_left,Lower lobe of lung
+Chest,Pulmonary,Lung_RLL_TS,lung_lower_lobe_right,Lower lobe of lung
+Chest,Pulmonary,Lung_RML_TS,lung_middle_lobe_right,Middle lobe of right lung
+Chest,Pulmonary,Lung_RUL_TS,lung_upper_lobe_right,Upper lobe of lung
+Chest,Pulmonary,Lung_ULL_TS,lung_upper_lobe_left,Upper lobe of lung
+Chest,Vascular,LungVessels_TS,lung_vessels,Blood vessel
+Chest ,Pulmonary,Pleura_TS,lung_pleural,Pleural membrane
+Head,Disease,IntracerebralHaemorrhage_TS,intracerebral_hemorrhage,Hemorrhage
+Head,Face,Face_TS,face,Face
+Head,Nervous,Brain_TS,brain,Brain
+Head,Skeletal,Skull_TS,skull,Skull
+LimbsLower,Skeletal,FeetPhalanges_TS,phalanges_feet,Phalanx structure
+LimbsLower,Skeletal,Femur_L_TS,femur_left,Femur
+LimbsLower,Skeletal,Femur_R_TS,femur_right,Femur
+LimbsLower,Skeletal,Femur_TS,femur,Femur
+LimbsLower,Skeletal,Fibula_TS,fibula,Fibula
+LimbsLower,Skeletal,MetatarsalBones_TS,metatarsal,Metatarsal
+LimbsLower,Skeletal,Patella_TS,patella,Patella
+LimbsLower,Skeletal,TarsalBones_TS,tarsal,Tarsal bones
+LimbsLower,Skeletal,Tibia_TS,tibia,Tibia
+LimbsUpper,Skeletal,Carpal_TS,carpal,Carpus
+LimbsUpper,Skeletal,HandPhalanges_TS,phalanges_hand,Phalanx structure
+LimbsUpper,Skeletal,Humerus_L_TS,humerus_left,Humerus
+LimbsUpper,Skeletal,Humerus_R_TS,humerus_right,Humerus
+LimbsUpper,Skeletal,Humerus_TS,humerus,Humerus
+LimbsUpper,Skeletal,Metacarpal_TS,metacarpal,Metacarpal bones
+LimbsUpper,Skeletal,Radius_TS,radius,Radius
+LimbsUpper,Skeletal,Ulna_TS,ulna,Ulna
+Lung,Disease,COVIDInfiltrates_TS,lung_covid_infiltrate,Infiltrate
+Mediastinum,Airway,LungAirways_TS,lung_trachea_bronchia,Trachea and bronchus
+Mediastinum,Airway,Trachea_TS,trachea,Trachea
+Mediastinum,Cardiac,AtrialAppendage_L_TS,atrial_appendage_left,Auricular appendage
+Mediastinum,Cardiac,Heart_TS,heart,Heart
+Mediastinum,Cardiac,HeartAtrium_L_TS,heart_atrium_left,Left atrium
+Mediastinum,Cardiac,HeartAtrium_R_TS,heart_atrium_right,Right atrium
+Mediastinum,Cardiac,HeartVentricle_L_TS,heart_ventricle_left,Left ventricle of heart
+Mediastinum,Cardiac,HeartVentricle_R_TS,heart_ventricle_right,Right ventricle of heart
+Mediastinum,Cardiac,Myocardium_TS,heart_myocardium,Myocardium
+Mediastinum,Vascular,A_Aorta_TS,aorta,Aorta
+Mediastinum,Vascular,A_Pulmonary_TS,pulmonary_artery,Pulmonary artery
+Mediastinum,Vascular,CoronaryArtery_TS,coronary_arteries,Coronary artery
+Mediastinum,Vascular,V_Brachiocephalic_L_TS,brachiocephalic_vein_left,Brachiocephalic vein
+Mediastinum,Vascular,V_Brachiocephalic_R_TS,brachiocephalic_vein_right,Brachiocephalic vein
+Mediastinum,Vascular,V_BrachiocephalicTrunk_TS,brachiocephalic_trunk,Brachiocephalic artery
+Mediastinum,Vascular,V_InferiorVenaCava_TS,inferior_vena_cava,Inferior vena cava
+Mediastinum,Vascular,V_Pulmonary_TS,pulmonary_vein,Pulmonary vein
+Mediastinum,Vascular,V_SuperiorVenaCava_TS,superior_vena_cava,Superior vena cava
+Neck,GlandularEndocrine,ThyroidGland_TS,thyroid_gland,Thyroid gland
+Neck,Skeletal,VertebraCervical_TS,vertebrae_cervical,Vertebra
+Neck,Vascular,A_CommonCarotid_L_TS,common_carotid_artery_right,Common carotid artery
+Neck,Vascular,A_CommonCarotid_R_TS,common_carotid_artery_left,Common carotid artery
+Neck,Vascular,A_Subclavian_L_TS,subclavian_artery_left,Subclavian artery
+Neck,Vascular,A_Subclavian_R_TS,subclavian_artery_right,Subclavian artery
+Pelvis,Disease,HipImplant_TS,hip_implant,Implant
+Pelvis,Genitourinary,Bladder_TS,urinary_bladder,Urinary bladder
+Pelvis,Muscular,GluteusMaximi_TS,gluteus_maximus,Gluteus maximus muscle
+Pelvis,Muscular,GluteusMaximus_L_TS,gluteus_maximus_left,Gluteus maximus muscle
+Pelvis,Muscular,GluteusMaximus_R_TS,gluteus_maximus_right,Gluteus maximus muscle
+Pelvis,Muscular,GluteusMedii_TS,gluteus_medius,Gluteus medius muscle
+Pelvis,Muscular,GluteusMedius_L_TS,gluteus_medius_left,Gluteus medius muscle
+Pelvis,Muscular,GluteusMedius_R_TS,gluteus_medius_right,Gluteus medius muscle
+Pelvis,Muscular,GluteusMinimi_TS,gluteus_minimus,Gluteus medius muscle
+Pelvis,Muscular,GluteusMinimus_L_TS,gluteus_minimus_left,Gluteus minius muscle
+Pelvis,Muscular,GluteusMinimus_R_TS,gluteus_minimus_right,Gluteus minius muscle
+Pelvis,Muscular,IliopsoasMuscle_L_TS,iliopsoas_left,Iliopsoas muscle
+Pelvis,Muscular,IliopsoasMuscle_R_TS,iliopsoas_right,Iliopsoas muscle
+Pelvis,Muscular,IliopsoasMuscles_TS,iliopsoas,Iliopsoas muscle
+Pelvis,Skeletal,Hip_L_TS,hip_left,Hip
+Pelvis,Skeletal,Hip_R_TS,hip_right,Hip
+Pelvis,Skeletal,Hip_TS,hip,Hip
+Pelvis,Skeletal,Sacrum_TS,sacrum,Sacrum
+Pelvis,Vascular,A_Iliac_L_TS,iliac_artery_left,Common iliac artery
+Pelvis,Vascular,A_Iliac_R_TS,iliac_artery_right,Common iliac artery
+Pelvis,Vascular,A_Iliac_TS,iliac_artery,Common iliac artery
+Pelvis,Vascular,V_Iliac_L_TS,iliac_vena_left,Common iliac vein
+Pelvis,Vascular,V_Iliac_R_TS,iliac_vena_right,Common iliac vein
+Pelvis,Vascular,V_Iliac_TS,iliac_vena,Common iliac vein
+PelvisMale,GlandularEndocrine,Prostate_TS,prostate,Prostate
+Skin,Subcutaneous,FatSubcutaneous_TS,subcutaneous_fat,Subcutaneous fatty tissue
+Thoracic,Skeletal,Clavicle_L_TS,clavicula_left,Clavicle
+Thoracic,Skeletal,Clavicle_R_TS,clavicula_right,Clavicle
+Thoracic,Skeletal,Clavicles_TS,clavicula,Clavicle
+Thoracic,Skeletal,CostalCartilages_TS,costal_cartilages,Costal cartilage
+Thoracic,Skeletal,Rib1_L_TS,rib_left_1,First rib
+Thoracic,Skeletal,Rib1_R_TS,rib_right_1,First rib
+Thoracic,Skeletal,Rib10_L_TS,rib_left_10,Tenth rib
+Thoracic,Skeletal,Rib10_R_TS,rib_right_10,Tenth rib
+Thoracic,Skeletal,Rib11_L_TS,rib_left_11,Eleventh rib
+Thoracic,Skeletal,Rib11_R_TS,rib_right_11,Eleventh rib
+Thoracic,Skeletal,Rib12_L_TS,rib_left_12,Twelfth rib
+Thoracic,Skeletal,Rib12_R_TS,rib_right_12,Twelfth rib
+Thoracic,Skeletal,Rib2_L_TS,rib_left_2,Second rib
+Thoracic,Skeletal,Rib2_R_TS,rib_right_2,Second rib
+Thoracic,Skeletal,Rib3_L_TS,rib_left_3,Third rib
+Thoracic,Skeletal,Rib3_R_TS,rib_right_3,Third rib
+Thoracic,Skeletal,Rib4_L_TS,rib_left_4,Fourth rib
+Thoracic,Skeletal,Rib4_R_TS,rib_right_4,Fourth rib
+Thoracic,Skeletal,Rib5_L_TS,rib_left_5,Fifth rib
+Thoracic,Skeletal,Rib5_R_TS,rib_right_5,Fifth rib
+Thoracic,Skeletal,Rib6_L_TS,rib_left_6,Sixth rib
+Thoracic,Skeletal,Rib6_R_TS,rib_right_6,Sixth rib
+Thoracic,Skeletal,Rib7_L_TS,rib_left_7,Seventh rib
+Thoracic,Skeletal,Rib7_R_TS,rib_right_7,Seventh rib
+Thoracic,Skeletal,Rib8_L_TS,rib_left_8,Eighth rib
+Thoracic,Skeletal,Rib8_R_TS,rib_right_8,Eighth rib
+Thoracic,Skeletal,Rib9_L_TS,rib_left_9,Ninth rib
+Thoracic,Skeletal,Rib9_R_TS,rib_right_9,Ninth rib
+Thoracic,Skeletal,Ribs_TS,ribs,Rib
+Thoracic,Skeletal,Scapula_L_TS,scapula_left,Scapula
+Thoracic,Skeletal,Scapula_R_TS,scapula_right,Scapula
+Thoracic,Skeletal,Scapula_TS,scapula,Scapula
+Thoracic,Skeletal,Sternum_TS,sternum,Sternum
+Thoracic,Skeletal,VB_C1_TS,vertebrae_C1,C1 vertebra
+Thoracic,Skeletal,VB_C2_TS,vertebrae_C2,C2 vertebra
+Thoracic,Skeletal,VB_C3_TS,vertebrae_C3,C3 vertebra
+Thoracic,Skeletal,VB_C4_TS,vertebrae_C4,C4 vertebra
+Thoracic,Skeletal,VB_C5_TS,vertebrae_C5,C5 vertebra
+Thoracic,Skeletal,VB_C6_TS,vertebrae_C6,C6 vertebra
+Thoracic,Skeletal,VB_C7_TS,vertebrae_C7,C7 vertebra
+Thoracic,Skeletal,VB_L1_TS,vertebrae_L1,L1 vertebra
+Thoracic,Skeletal,VB_L2_TS,vertebrae_L2,L2 vertebra
+Thoracic,Skeletal,VB_L3_TS,vertebrae_L3,L3 vertebra
+Thoracic,Skeletal,VB_L4_TS,vertebrae_L4,L4 vertebra
+Thoracic,Skeletal,VB_L5_TS,vertebrae_L5,L5 vertebra
+Thoracic,Skeletal,VB_S1_TS,vertebrae_S1,S1 vertebra
+Thoracic,Skeletal,VB_T1_TS,vertebrae_T1,T1 vertebra
+Thoracic,Skeletal,VB_T10_TS,vertebrae_T10,T10 vertebra
+Thoracic,Skeletal,VB_T11_TS,vertebrae_T11,T11 vertebra
+Thoracic,Skeletal,VB_T12_TS,vertebrae_T12,T12 vertebra
+Thoracic,Skeletal,VB_T2_TS,vertebrae_T2,T2 vertebra
+Thoracic,Skeletal,VB_T3_TS,vertebrae_T3,T3 vertebra
+Thoracic,Skeletal,VB_T4_TS,vertebrae_T4,T4 vertebra
+Thoracic,Skeletal,VB_T5_TS,vertebrae_T5,T5 vertebra
+Thoracic,Skeletal,VB_T6_TS,vertebrae_T6,T6 vertebra
+Thoracic,Skeletal,VB_T7_TS,vertebrae_T7,T7 vertebra
+Thoracic,Skeletal,VB_T8_TS,vertebrae_T8,T8 vertebra
+Thoracic,Skeletal,VB_T9_TS,vertebrae_T9,T9 vertebra
+Thoracic,Skeletal,VertebraThoracic_TS,vertebrae_thoracic,Vertebra
+Trunk,Disease,KidneyCyst_L_TS,kidney_cyst_left,Cyst
+Trunk,Disease,KidneyCyst_R_TS,kidney_cyst_right,Cyst
+Trunk,Genitourinary,Kidney_L_TS,kidney_left,Kidney
+Trunk,Genitourinary,Kidney_R_TS,kidney_right,Kidney
+Trunk,Genitourinary,Kidney_TS,kidney,Kidney
+Trunk,GlandularEndocrine,AdrenalGland_L_TS,adrenal_gland_left,Adrenal gland
+Trunk,GlandularEndocrine,AdrenalGland_R_TS,adrenal_gland_right,Adrenal gland
+Trunk,GlandularEndocrine,AdrenalGland_TS,adrenal_gland,Adrenal gland
+Trunk,Muscular,ErectorSpinaeMuscles_L_TS,autochthon_left,Deep muscle of back
+Trunk,Muscular,ErectorSpinaeMuscles_R_TS,autochthon_right,Deep muscle of back
+Trunk,Muscular,ErectorSpinaeMuscles_TS,autochthon,Deep muscle of back
+Trunk,Nervous,SpinalCord_TS,spinal_cord,Spinal cord
+Trunk,Skeletal,VertebraLumbar_TS,vertebrae_lumbar,Vertebra
+UpperAbdomen,GI,Colon_TS,colon,Colon
+UpperAbdomen,GI,Duodenum_TS,duodenum,Duodenum
+UpperAbdomen,Gi,GallBladder_TS,gallbladder,Gallbladder
+UpperAbdomen,GI,GTVliver_TS,liver_tumor,Neoplasm
+UpperAbdomen,Gi,Liver_TS,liver,Liver
+UpperAbdomen,GI,Oesophagus_TS,esophagus,Esophagus
+UpperAbdomen,Gi,Pancreas_TS,pancreas,Pancreas
+UpperAbdomen,GI,SmallBowel_TS,small_bowel,Small Intestine
+UpperAbdomen,GI,Spleen_TS,spleen,Spleen
+UpperAbdomen,GI,Stomach_TS,stomach,Stomach
+UpperAbdomen,Vascular,A_Aorta_TS,aorta,Aorta
+UpperAbdomen,Vascular,LiverVessels_TS,liver_vessels,Blood vessel
+UpperAbdomen,Vascular,V_InferiorVenaCava_TS,inferior_vena_cava,Inferior vena cava
+UpperAbdomen,Vascular,V_Portal_TS,portal_vein_and_splenic_vein,Portal vein and splenic vein
