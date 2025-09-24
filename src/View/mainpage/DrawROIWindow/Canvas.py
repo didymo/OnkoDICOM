@@ -75,7 +75,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         self.mid_point = []
 
         # stores the pixmaps after each draw to allow for an undo button
-        self.draw_history = [self.canvas.copy()]
+        self.draw_history = [self.canvas[self.slice_num].copy()]
         self.redo_history = []
 
         # pen setup

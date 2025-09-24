@@ -188,7 +188,6 @@ class RoiInitialiser():
             if event.key() == Qt.Key_Down:
                 self.scroller.setValue(self.scroller.value() -1)
                 self.canvas_labal.ds_is_active = False
-            return super().keyPressEvent(event)
 
     def get_pixmaps(self):
         """
