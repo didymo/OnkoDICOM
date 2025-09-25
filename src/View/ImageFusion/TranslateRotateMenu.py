@@ -1,5 +1,7 @@
 import itertools
 import threading
+import numpy as np
+import os
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
@@ -11,7 +13,6 @@ import logging
 from src.Model.DicomUtils import truncate_ds_fields
 from pydicom.dataset import FileDataset
 from pydicom.uid import generate_uid
-
 
 
 def get_color_pair_from_text(text):
@@ -455,8 +456,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     None
                 """
-        import numpy as np
-        import os
+
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
@@ -566,11 +566,13 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     tuple: (patient_name, patient_id)
                 """
+        from pydicom import dcmread
+        from src.Model.PatientDictContainer import PatientDictContainer
+
         patient_name = getattr(self, "patient_name", None)
         patient_id = getattr(self, "patient_id", None)
         if not patient_name or not patient_id:
             try:
-                from src.Model.PatientDictContainer import PatientDictContainer
                 pdc = PatientDictContainer()
                 filepaths = pdc.filepaths
                 if filepaths and isinstance(filepaths, dict):
@@ -579,7 +581,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     ]:
                         first_key = sorted(image_keys, key=lambda x: int(x))[0]
                         first_image_path = filepaths[first_key]
-                        from pydicom import dcmread
                         ds_fixed = dcmread(first_image_path, stop_before_pixels=True)
                         patient_name = getattr(ds_fixed, "PatientName", None)
                         patient_id = getattr(ds_fixed, "PatientID", None)
@@ -590,7 +591,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         if not patient_name or not patient_id:
             try:
-                from src.Model.PatientDictContainer import PatientDictContainer
                 pdc = PatientDictContainer()
                 patient_name = pdc.get("patient_name") or "FUSION"
                 patient_id = pdc.get("patient_id") or "FUSION"
@@ -680,6 +680,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 """
         from pydicom.dataset import Dataset
         from pydicom.uid import generate_uid
+
         reg = Dataset()
         reg.MatrixRegistrationSequence = [Dataset()]
         reg.MatrixRegistrationSequence[0].FrameOfReferenceTransformationMatrixType = "RIGID"
@@ -718,7 +719,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         import pydicom
         import numpy as np
 
-
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
         if vtk_engine is None:
@@ -740,6 +740,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             # Check for Spatial Registration Object
             if hasattr(ds, "RegistrationSequence"):
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
+            #fallback to private tags if above failed
             elif (0x7777, 0x0010) in ds:
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             else:
@@ -805,7 +806,9 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self.rotation_changed_callback:
             self.rotation_changed_callback(tuple(rotation))
 
+        #do not move this from here or it will throw an error
         from src.View.mainpage.MainPage import UIMainWindow
+
         mw = next(
             (
                 widget
@@ -820,4 +823,4 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if threading.current_thread() is threading.main_thread():
             QMessageBox.information(self, "Loaded", f"Spatial Registration loaded from {filename}")
         else:
-            print(f"[INFO] Spatial Registration loaded from {filename}")
+            logging.error(f"[INFO] Spatial Registration loaded from {filename}")
