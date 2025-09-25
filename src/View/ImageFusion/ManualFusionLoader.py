@@ -79,8 +79,7 @@ class ManualFusionLoader(QtCore.QObject):
                     if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
                         transform_file = f
                         break
-                except (InvalidDicomError, AttributeError, OSError) as e:
-                    logging.error(f"Error reading DICOM file '{f}': {e}")
+                except (InvalidDicomError, AttributeError, OSError):
                     continue
 
         # Use VTKEngine to load images
