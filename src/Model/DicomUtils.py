@@ -1,60 +1,64 @@
+import logging
 
+def truncate_ds_fields(ds):
+    """
+    Truncates all DICOM DS (Decimal String) fields in the dataset to a maximum of 16 characters.
 
-def truncate_ds_fields(dicom_dataset):
-    """Truncates the values of all DICOM elements with VR 'DS' to a maximum of 16 characters.
-
-    This function is called whenever a DICOM dataset is being saved, especially for RTSTRUCT and Spatial Registration (SRO) objects.
-    It ensures that all 'DS' fields conform to the DICOM standard's length restrictions, preventing save errors and improving compatibility.
+    This function ensures that all DS fields, whether single values or lists, are properly formatted
+    as strings representing floats and do not exceed the DICOM standard length. It also handles
+    stringified lists and attempts to convert and truncate each value accordingly.
 
     Args:
-        dicom_dataset: A pydicom Dataset whose 'DS' fields will be truncated.
+        ds: The pydicom Dataset whose DS fields will be truncated.
+
+    Returns:
+        None. The dataset is modified in place.
     """
-    for element in dicom_dataset.iterall():
-        if element.VR == "DS":
-            if isinstance(element.value, (list, tuple)):
+    for elem in ds.iterall():
+        if elem.VR == "DS":
+            if isinstance(elem.value, (list, tuple)):
                 # Truncate each element, ensure it's a string representing a float
-                truncated_values = []
-                for value in element.value:
+                new_vals = []
+                for v in elem.value:
                     try:
-                        float_value = float(value)
-                        truncated_str = f"{float_value:.10g}"[:16]
-                        truncated_values.append(truncated_str)
-                    except Exception:
-                        # If value is a stringified list, split and process each element
-                        if isinstance(value, str) and "[" in value and "]" in value:
-                            cleaned_value = value.strip("[] ")
-                            for part in cleaned_value.split(","):
-                                part = part.strip()
-                                if part:
+                        f = float(v)
+                        s = f"{f:.10g}"[:16]
+                        new_vals.append(s)
+                    except (ValueError, TypeError) as e:
+                        logging.error(f"Error converting DS list element '{v}' to float: {e}")
+                        # If v is a stringified list, split and process each element
+                        if isinstance(v, str) and "[" in v and "]" in v:
+                            v_clean = v.strip("[] ")
+                            for part in v_clean.split(","):
+                                if part := part.strip():
                                     try:
-                                        float_part = float(part)
-                                        truncated_part = f"{float_part:.10g}"[:16]
-                                        truncated_values.append(truncated_part)
-                                    except Exception:
+                                        f2 = float(part)
+                                        s2 = f"{f2:.10g}"[:16]
+                                        new_vals.append(s2)
+                                    except (ValueError, TypeError) as e2:
+                                        logging.error(f"Error converting DS sub-element '{part}' to float: {e2}")
                                         continue
-                        else:
-                            continue
-                element.value = truncated_values
+                elem.value = new_vals
             else:
                 # Single value: ensure string, truncate, and must be convertible to float
-                single_value = element.value
+                v = elem.value
                 try:
-                    float_value = float(single_value)
-                    truncated_str = f"{float_value:.10g}"[:16]
-                    element.value = truncated_str
-                except Exception:
-                    # If single_value is a stringified list, split and use first valid float
-                    if isinstance(single_value, str) and "[" in single_value and "]" in single_value:
-                        cleaned_value = single_value.strip("[] ")
-                        for part in cleaned_value.split(","):
+                    f = float(v)
+                    s = f"{f:.10g}"[:16]
+                    elem.value = s
+                except (ValueError, TypeError) as e:
+                    logging.error(f"Error converting DS value '{v}' to float: {e}")
+                    # If v is a stringified list, split and use first valid float
+                    if isinstance(v, str) and "[" in v and "]" in v:
+                        v_clean = v.strip("[] ")
+                        for part in v_clean.split(","):
                             part = part.strip()
                             if part:
                                 try:
-                                    float_part = float(part)
-                                    truncated_part = f"{float_part:.10g}"[:16]
-                                    element.value = truncated_part
+                                    f2 = float(part)
+                                    s2 = f"{f2:.10g}"[:16]
+                                    elem.value = s2
                                     break
-                                except Exception:
+                                except (ValueError, TypeError) as e2:
+                                    logging.error(f"Error converting DS sub-element '{part}' to float: {e2}")
                                     continue
-                    else:
-                        continue

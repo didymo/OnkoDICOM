@@ -147,7 +147,6 @@ class MovingImageLoader(ImageLoader):
         else:
             create_moving_model()
             self.load_temp_rtss(path, progress_callback, interrupt_flag)
-        print("[DEBUG] Progress: Loading Moving Model (85%)")
         progress_callback.emit(("Loading Moving Model", 85))
 
         if interrupt_flag.is_set():  # Stop loading.
@@ -176,7 +175,6 @@ class MovingImageLoader(ImageLoader):
             moving_dict_container.dataset[0], rtss_path, uid_list)
 
         truncate_ds_fields(rtss)
-        print(f"[DEBUG] Saving RTSTRUCT DICOM: {rtss_path}")
         rtss.save_as(str(rtss_path), write_like_original=False)
 
         if interrupt_flag.is_set():  # Stop loading.
