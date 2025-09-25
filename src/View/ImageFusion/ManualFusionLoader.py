@@ -24,8 +24,8 @@ class ManualFusionLoader(QtCore.QObject):
         except Exception as e:
             if progress_callback is not None:
                 progress_callback.emit(("Error loading images", e))
-                logging.error("Error loading images", e)
-            self.signal_error.emit((False, e))
+                logging.error(f"Error loading images: {e}")
+                self.signal_error.emit((False, e))
 
     def _load_with_vtk(self, progress_callback):
         """

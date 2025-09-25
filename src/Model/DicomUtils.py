@@ -1,5 +1,3 @@
-import logging
-
 def truncate_ds_fields(ds):
     """
     Truncates all DICOM DS (Decimal String) fields in the dataset to a maximum of 16 characters.
@@ -14,51 +12,43 @@ def truncate_ds_fields(ds):
     Returns:
         None. The dataset is modified in place.
     """
-    for elem in ds.iterall():
-        if elem.VR == "DS":
-            if isinstance(elem.value, (list, tuple)):
-                # Truncate each element, ensure it's a string representing a float
-                new_vals = []
-                for v in elem.value:
-                    try:
-                        f = float(v)
-                        s = f"{f:.10g}"[:16]
-                        new_vals.append(s)
-                    except (ValueError, TypeError) as e:
-                        logging.error(f"Error converting DS list element '{v}' to float: {e}")
-                        # If v is a stringified list, split and process each element
-                        if isinstance(v, str) and "[" in v and "]" in v:
-                            v_clean = v.strip("[] ")
-                            for part in v_clean.split(","):
-                                if part := part.strip():
-                                    try:
-                                        f2 = float(part)
-                                        s2 = f"{f2:.10g}"[:16]
-                                        new_vals.append(s2)
-                                    except (ValueError, TypeError) as e2:
-                                        logging.error(f"Error converting DS sub-element '{part}' to float: {e2}")
-                                        continue
-                elem.value = new_vals
-            else:
-                # Single value: ensure string, truncate, and must be convertible to float
-                v = elem.value
+
+    #TODO if u want to log errors here make sure to sanitise the data
+    def _truncate_float_str(val):
+        """Convert value to float and return as string, max 16 chars."""
+        return f"{float(val):.10g}"[:16]
+
+    def _extract_floats_from_str_list(val):
+        """Extract floats from a stringified list and return as list of strings."""
+        v_clean = val.strip("[] ")
+        result = []
+        for part in v_clean.split(","):
+            part = part.strip()
+            if part:
                 try:
-                    f = float(v)
-                    s = f"{f:.10g}"[:16]
-                    elem.value = s
-                except (ValueError, TypeError) as e:
-                    logging.error(f"Error converting DS value '{v}' to float: {e}")
-                    # If v is a stringified list, split and use first valid float
+                    result.append(_truncate_float_str(part))
+                except (ValueError, TypeError):
+                    continue
+        return result
+
+    for elem in ds.iterall():
+        if elem.VR != "DS":
+            continue
+        value = elem.value
+        if isinstance(value, (list, tuple)):
+            new_vals = []
+            for v in value:
+                try:
+                    new_vals.append(_truncate_float_str(v))
+                except (ValueError, TypeError):
                     if isinstance(v, str) and "[" in v and "]" in v:
-                        v_clean = v.strip("[] ")
-                        for part in v_clean.split(","):
-                            part = part.strip()
-                            if part:
-                                try:
-                                    f2 = float(part)
-                                    s2 = f"{f2:.10g}"[:16]
-                                    elem.value = s2
-                                    break
-                                except (ValueError, TypeError) as e2:
-                                    logging.error(f"Error converting DS sub-element '{part}' to float: {e2}")
-                                    continue
+                        new_vals.extend(_extract_floats_from_str_list(v))
+            elem.value = new_vals
+        else:
+            try:
+                elem.value = _truncate_float_str(value)
+            except (ValueError, TypeError):
+                if isinstance(value, str) and "[" in value and "]" in value:
+                    floats = _extract_floats_from_str_list(value)
+                    if floats:
+                        elem.value = floats[0]
