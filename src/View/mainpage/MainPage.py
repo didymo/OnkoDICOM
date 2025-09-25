@@ -328,6 +328,14 @@ class UIMainWindow:
                 self.draw_roi.update_draw_roi_pixmaps()
 
     def toggle_cut_lines(self):
+        """
+                Toggles the display of cut lines across all DICOM and image fusion views.
+
+                This function enables or disables the cut lines in the axial, coronal, and sagittal views,
+                as well as in all image fusion views if present. It also manages the mouse mode and the
+                enabled state of mouse mode buttons in the translation menu for each view to ensure
+                consistent user interaction when cut lines are shown or hidden.
+                """
         cut_lines_enabled = (
                 self.dicom_axial_view.horizontal_view is not None and
                 self.dicom_axial_view.vertical_view is not None and
@@ -480,6 +488,16 @@ class UIMainWindow:
 
         # Define a callback that updates all three views for translation
         def update_all_views(offset):
+            """
+                        Updates the overlay offset for all image fusion views.
+
+                        This function propagates the given offset to all image fusion views,
+                        ensuring that the overlay is updated consistently across axial, sagittal,
+                        coronal, and single fusion views.
+
+                        Args:
+                            offset: A tuple or list representing the new (x, y, z) offset.
+                        """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -495,6 +513,16 @@ class UIMainWindow:
 
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
+            """
+                        Updates the overlay rotation for all image fusion views.
+
+                        This function propagates the given rotation tuple to all image fusion views,
+                        ensuring that the overlay rotation is updated consistently across axial, sagittal,
+                        coronal, and single fusion views.
+
+                        Args:
+                            rotation_tuple: A tuple or list representing the new (rx, ry, rz) rotation in degrees.
+                        """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -509,6 +537,18 @@ class UIMainWindow:
 
         # --- Connect color pair change to all fusion views ---
         def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
+            """
+                       Propagates color pair changes to all image fusion views.
+
+                       This function updates the color scheme for all image fusion views based on the
+                       selected fixed and moving colors and whether coloring is enabled. It ensures
+                       that the color settings remain consistent across all fusion views.
+
+                       Args:
+                           fixed_color: The color assigned to the fixed image.
+                           moving_color: The color assigned to the moving image.
+                           coloring_enabled: Boolean indicating if coloring is enabled.
+                       """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
