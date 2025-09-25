@@ -153,7 +153,6 @@ class MovingImageLoader(ImageLoader):
             progress_callback.emit(("Stopping", 85))
             return False
 
-        print("[DEBUG] About to return True from MovingImageLoader.load")
         return True
 
     def load_temp_rtss(self, path, progress_callback, interrupt_flag):
