@@ -4,6 +4,7 @@ import os
 import pydicom
 import numpy as np
 from pydicom import dcmread
+from vtkmodules.util import numpy_support
 from pydicom.errors import InvalidDicomError
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.VTKEngine import VTKEngine
@@ -168,3 +169,78 @@ class ManualFusionLoader(QtCore.QObject):
             "rotation": rotation,
             "transform_file": transform_file,
         }
+
+    def on_manual_fusion_loaded(self, result):
+        """
+                Handles the completion of manual fusion image loading and updates the application state.
+
+                This method is called when manual fusion images have been loaded, either successfully or with an error.
+                It extracts the fixed and moving images from the VTK engine, stores them in the PatientDictContainer,
+                and ensures that the fusion window/level settings are initialized. It then triggers a refresh of the
+                fusion views by calling windowing_model_direct with the current or default window/level.
+
+                Args:
+                    result: A tuple (success, data) where success is a boolean indicating if loading succeeded,
+                        and data contains the loaded VTK engine and any additional information.
+
+                Returns:
+                    None
+                """
+        success, data = result
+        if not success:
+            logging.error("Manual fusion load failed:", data)
+            return
+
+        engine = data["vtk_engine"]
+
+        if hasattr(engine, "get_fixed_image"):
+            fixed_image = engine.get_fixed_image()
+        elif hasattr(engine, "fixed_reader") and hasattr(engine.fixed_reader, "GetOutput"):
+            fixed_image = engine.fixed_reader.GetOutput()
+        else:
+            fixed_image = None
+
+        if hasattr(engine, "get_moving_image"):
+            moving_image = engine.get_moving_image()
+        elif hasattr(engine, "moving_reader") and hasattr(engine.moving_reader, "GetOutput"):
+            moving_image = engine.moving_reader.GetOutput()
+        else:
+            moving_image = None
+
+            # Save manual fusion in PatientDictContainer
+        patient_dict_container = PatientDictContainer()
+        # You can store a tuple (fixed, moving, optional tfm)
+        patient_dict_container.set("manual_fusion", (fixed_image, moving_image, None))
+
+        if hasattr(fixed_image, "GetPointData"):  # VTK image
+            dims = fixed_image.GetDimensions()
+            scalars = fixed_image.GetPointData().GetScalars()
+            np_img = numpy_support.vtk_to_numpy(scalars).reshape(dims[::-1])
+            fixed_image_array = np_img
+        elif hasattr(fixed_image, "GetArrayFromImage"):  # SimpleITK image
+            fixed_image_array = fixed_image  # assume already numpy
+        else:
+            fixed_image_array = None
+
+            # Always trigger a refresh of fusion views (forces fusion update)
+        from src.Model.Windowing import windowing_model_direct
+
+        window = patient_dict_container.get("fusion_window")
+        level = patient_dict_container.get("fusion_level")
+
+        # If not set, use sensible defaults based on the fixed image array
+        if window is None or level is None:
+            # Instead of using min/max, use a clinical default (e.g. "Normal" or "Soft Tissue")
+            # You can also use the default from dict_windowing
+            dict_windowing = patient_dict_container.get("dict_windowing")
+            if dict_windowing and "Normal" in dict_windowing:
+                window, level = dict_windowing["Normal"]
+            else:
+                window = 400
+                level = 40
+            # Set these as the initial fusion window/level
+            patient_dict_container.set("fusion_window", window)
+            patient_dict_container.set("fusion_level", level)
+
+        windowing_model_direct(window=window, level=level, init=[False, False, False, True],
+                               fixed_image_array=fixed_image_array)

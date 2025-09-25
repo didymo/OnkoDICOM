@@ -9,6 +9,7 @@ from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
+from src.Model.Windowing import set_windowing_slider
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.StyleSheetReader import StyleSheetReader
 from src.View.mainpage.AutoSegmentationTab import AutoSegmentationTab
@@ -529,6 +530,19 @@ class UIMainWindow:
                         text = "Purple + Green"
                     view._on_color_pair_changed(text)
 
+        def propagate_window_level_change(window, level):
+            print(f"[propagate_window_level_change] Called with window={window}, level={level}")
+
+            for view in [
+                self.image_fusion_view_axial,
+                self.image_fusion_view_sagittal,
+                self.image_fusion_view_coronal,
+            ]:
+                print(f"[propagate_window_level_change] Updating {view.__class__.__name__}")
+
+                if hasattr(view, "on_window_level_changed"):
+                    view.on_window_level_changed(window, level)
+
         # Fusion Options Tab with Translate/Rotate Menu
         self.fusion_options_tab = None
 
@@ -571,14 +585,36 @@ class UIMainWindow:
             cut_line_color=QtGui.QColor(255, 0, 0),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
+        self.image_fusion_view_axial.orientation = "axial"
+
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
             cut_line_color=QtGui.QColor(0, 255, 0),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
+
+        self.image_fusion_view_sagittal.orientation = "sagittal"
+
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
+
+        self.image_fusion_view_coronal.orientation = "coronal"
+
+        fusion_views = [
+            self.image_fusion_view_axial,
+            self.image_fusion_view_sagittal,
+            self.image_fusion_view_coronal
+        ]
+
+        # --- Create Windowing Slider ---
+        # Pass a single view with a .slider attribute
+        self.windowing_slider = WindowingSlider(dicom_view=self.image_fusion_view_axial, width=50)
+        set_windowing_slider(self.windowing_slider, fusion_views=fusion_views)
+
+        # Attach the window/level callback
+        self.windowing_slider.fusion_window_level_callback = propagate_window_level_change
+
         self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
             self.structures_tab.fixed_container_structure_modified,
             self.structures_tab.moving_container_structure_modified)
