@@ -113,16 +113,67 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_interrogation_btn.setToolTip(
             "Enable interrogation window mode (focus overlay in a square around mouse)")
 
-        # Set icons for buttons
-        translate_icon = QIcon(resource_path("res/images/btn-icons/translate_arrow_icon.png"))
-        rotate_icon = QIcon(resource_path("res/images/btn-icons/rotate_arrow_icon.png"))
-        interrogation_icon = QIcon(resource_path("res/images/btn-icons/interrogation_window_icon.png"))
-        self.mouse_translate_btn.setIcon(translate_icon)
-        self.mouse_rotate_btn.setIcon(rotate_icon)
-        self.mouse_interrogation_btn.setIcon(interrogation_icon)
-        self.mouse_translate_btn.setIconSize(QtCore.QSize(24, 24))
-        self.mouse_rotate_btn.setIconSize(QtCore.QSize(24, 24))
-        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(24, 24))
+        # Set icon paths for normal and checked (with black border) states
+        self._icon_paths = {
+            "translate": (
+                resource_path("res/images/btn-icons/translate_arrow_icon.png"),
+                resource_path("res/images/btn-icons/translate_arrow_icon_black_border.png"),
+            ),
+            "rotate": (
+                resource_path("res/images/btn-icons/rotate_arrow_icon.png"),
+                resource_path("res/images/btn-icons/rotate_arrow_icon_black_border.png"),
+            ),
+            "interrogation": (
+                resource_path("res/images/btn-icons/interrogation_window_icon.png"),
+                resource_path("res/images/btn-icons/interrogation_window_icon_black_border.png"),
+            ),
+        }
+
+        # Set initial icons for buttons (unchecked state)
+        self.mouse_translate_btn.setIcon(QIcon(self._icon_paths["translate"][0]))
+        self.mouse_rotate_btn.setIcon(QIcon(self._icon_paths["rotate"][0]))
+        self.mouse_interrogation_btn.setIcon(QIcon(self._icon_paths["interrogation"][0]))
+        self.mouse_translate_btn.setIconSize(QtCore.QSize(30, 30))
+        self.mouse_rotate_btn.setIconSize(QtCore.QSize(30,30))
+        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(30, 30))
+
+        # Add highlight style for toggled state and black border only when checked
+        highlight_style = """
+                    QPushButton {
+                        border: none;
+                        border-radius: 6px;
+                        padding: px 8px;
+                    }
+                    QPushButton:checked {
+                        border: 1px solid black;
+                        background-color: #9d8cc3;
+                        color: black;
+                        font-weight: bold;
+                    }
+                """
+
+        self.mouse_translate_btn.setStyleSheet(highlight_style)
+        self.mouse_rotate_btn.setStyleSheet(highlight_style)
+        self.mouse_interrogation_btn.setStyleSheet(highlight_style)
+
+        # Update icons based on checked state
+        def update_icons():
+            self.mouse_translate_btn.setIcon(QIcon(
+                self._icon_paths["translate"][1] if self.mouse_translate_btn.isChecked() else
+                self._icon_paths["translate"][0]
+            ))
+            self.mouse_rotate_btn.setIcon(QIcon(
+                self._icon_paths["rotate"][1] if self.mouse_rotate_btn.isChecked() else self._icon_paths["rotate"][0]
+            ))
+            self.mouse_interrogation_btn.setIcon(QIcon(
+                self._icon_paths["interrogation"][1] if self.mouse_interrogation_btn.isChecked() else
+                self._icon_paths["interrogation"][0]
+            ))
+
+        self.mouse_translate_btn.toggled.connect(update_icons)
+        self.mouse_rotate_btn.toggled.connect(update_icons)
+        self.mouse_interrogation_btn.toggled.connect(update_icons)
+        update_icons()
 
         # Add stretch, buttons, stretch
         mouse_mode_hbox.addStretch(1)
@@ -277,14 +328,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode = mode
         if self.mouse_mode_changed_callback:
             self.mouse_mode_changed_callback(mode)
-
-    def set_mouse_mode_buttons_enabled(self, enabled: bool):
-        """
-        Enable or disable the mouse mode buttons.
-        """
-        self.mouse_translate_btn.setEnabled(enabled)
-        self.mouse_rotate_btn.setEnabled(enabled)
-        self.mouse_interrogation_btn.setEnabled(enabled)
 
     def on_offset_change(self, axis_index, value):
         """
