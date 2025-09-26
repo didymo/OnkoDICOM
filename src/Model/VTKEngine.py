@@ -119,6 +119,7 @@ class VTKEngine:
         self.fixed_reader = None
         self.moving_reader = None
         self._blend_dirty = True
+        self.moving_image_container = MovingDictContainer()
 
         # Cleanup old temp dirs on startup
         self.cleanup_old_temp_dirs()
@@ -161,8 +162,9 @@ class VTKEngine:
         self._temp_dirs = []
         atexit.register(self._cleanup_temp_dirs)
 
-        self.moving_image_container = MovingDictContainer()
-        self.sitktransform = sitk.Euler3DTransform()
+        # SimpleITK placeholder transforms
+        self.sitk_transform = sitk.Euler3DTransform()
+        self.sitk_matrix = np.eye(4, dtype=np.float64)  # Latest SITK matrix
         
 
     def cleanup_old_temp_dirs(self):
@@ -446,6 +448,48 @@ class VTKEngine:
         qimg = qimg.copy()
         return aspect_ratio_correct(qimg, h, w, orientation)
 
+
+    def _update_sitk_transform(self):
+        # Build raw rotation matrix from Euler angles (Z-Y-X order)
+        rx, ry, rz = np.deg2rad([self._rx, self._ry, self._rz])
+        cx, cy, cz = np.cos([rx, ry, rz])
+        sx, sy, sz = np.sin([rx, ry, rz])
+
+        # Compose rotation matrix R = Rz * Ry * Rx
+        R = np.array([
+            [cz*cy, cz*sy*sx - sz*cx, cz*sy*cx + sz*sx],
+            [sz*cy, sz*sy*sx + cz*cx, sz*sy*cx - cz*sx],
+            [-sy,   cy*sx,             cy*cx]
+        ])
+
+        # Raw translation vector (input)
+        t_vec = np.array([-self._tx, -self._ty, self._tz])
+
+        # Build 4x4 homogeneous matrix in LPS
+        mat_lps = np.eye(4)
+        mat_lps[:3, :3] = R
+        mat_lps[:3, 3] = t_vec
+
+        # Convert to RAS if needed
+        LPS_TO_RAS = np.diag([-1.0, -1.0, 1.0, 1.0])
+        mat_ras = LPS_TO_RAS @ mat_lps @ LPS_TO_RAS
+
+        # --- Convert LPS matrix to SITK AffineTransform ---
+        t_sitk = sitk.AffineTransform(3)
+        t_sitk.SetMatrix(R.flatten().tolist())      # 3x3 rotation part
+        t_sitk.SetTranslation(t_vec.tolist())       # translation part
+        # Note: no need to set center, since translation is independent
+
+        # Store
+        self.sitk_matrix = mat_lps      # LPS matrix for Platipy ROI transfer
+        self.sitk_matrix_ras = mat_ras  # optional RAS version
+        self.sitktransform = t_sitk     # SimpleITK transform for efficient application
+
+        # Store in your container if needed
+        self.moving_image_container.set("tfm", t_sitk)
+
+        #print("SITK Transform (LPS):", t_sitk)
+
     # ---------------- Internal Transform Application ----------------
     def _apply_transform(self, orientation=None, slice_idx=None): 
         if not self.fixed_reader or not self.moving_reader: 
@@ -462,9 +506,9 @@ class VTKEngine:
         user_t.Translate(self._tx, self._ty, self._tz)
 
         # Apply rotations
-        user_t.RotateX(-self._rx) 
-        user_t.RotateY(-self._ry) 
-        user_t.RotateZ(-self._rz) 
+        user_t.RotateX(self._rx) 
+        user_t.RotateY(self._ry) 
+        user_t.RotateZ(self._rz) 
 
         # Move volume back
         user_t.Translate(self.moving_matrix[0:3,3]) 
@@ -481,60 +525,12 @@ class VTKEngine:
         final_t.Concatenate(pre_vtk_mat)  # pre-registration 
         final_t.Concatenate(user_t)       # user-applied 
         self.transform.DeepCopy(final_t) 
+        self._update_sitk_transform()
+
+        # Apply transform visually
         self.reslice3d.SetResliceAxes(self.transform.GetMatrix()) 
         self.reslice3d.Modified() 
         self._blend_dirty = True 
-
-        # ---------------- Display-only user_transform ----------------
-        # Extract the pure rotation 3x3 from user_t
-        vtkmat = user_t.GetMatrix()
-        rot3x3 = np.eye(3)
-        for i in range(3):
-            for j in range(3):
-                rot3x3[i, j] = vtkmat.GetElement(i, j)
-
-        # LPS to RAS: flip coordinates for X,Y rotations and negate Z rotation
-        lps_to_ras = np.array([
-            [-1,  0,  0],
-            [ 0, -1,  0],
-            [ 0,  0,  1]
-        ])
-        rot_temp = lps_to_ras @ rot3x3 @ lps_to_ras.T
-
-        # Additionally flip Z rotation by negating specific matrix elements
-        rot_ras = rot_temp.copy()
-        rot_ras[0, 1] = -rot_ras[0, 1]  # Negate sin(z) component
-        rot_ras[1, 0] = -rot_ras[1, 0]  # Negate -sin(z) component
-
-        # Build display matrix
-        display_mat = np.eye(4)
-        display_mat[0:3, 0:3] = rot_ras
-        display_mat[0:3, 3] = np.array([self._tx, self._ty, self._tz])
-
-        # Convert vtkTransform (user_transform) to sitk.AffineTransform
-        vtkmat = self.user_transform.GetMatrix()
-        affine_np = np.eye(4)
-        for i in range(4):
-            for j in range(4):
-                affine_np[i, j] = vtkmat.GetElement(i, j)
-        # Invert only the Z translation for SimpleITK
-        affine_np[2, 3] *= -1
-        # SimpleITK expects a 3x3 matrix and a translation vector
-        sitk_matrix = affine_np[0:3, 0:3].flatten()
-        sitk_translation = affine_np[0:3, 3]
-        sitk_affine = sitk.AffineTransform(3)
-        sitk_affine.SetMatrix(sitk_matrix)
-        sitk_affine.SetTranslation(sitk_translation)
-        self.sitktransform = sitk_affine
-        self.moving_image_container.set("tfm", self.sitktransform)
-
-        vtk_display = vtk.vtkMatrix4x4()
-        for i in range(4):
-            for j in range(4):
-                vtk_display.SetElement(i, j, display_mat[i, j])
-
-        self.user_transform.SetMatrix(vtk_display)
-
 
 
 
