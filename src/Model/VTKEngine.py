@@ -221,6 +221,22 @@ class VTKEngine:
         return True
 
     def load_moving(self, dicom_dir: str) -> bool:
+        """
+               Loads the moving image series from the specified DICOM directory and prepares it for registration.
+
+               This method reads the moving image DICOM files, computes the voxel-to-world transformation matrix,
+               and applies a pre-registration transform to align the moving image with the fixed image. It also
+               sets up the VTK pipeline for further processing and blending.
+
+               Args:
+                   dicom_dir: The directory containing the moving image DICOM files.
+
+               Returns:
+                   bool: True if the moving image was loaded successfully, False otherwise.
+
+               Raises:
+                   ValueError: If the DICOM directory does not contain valid image slices or has invalid orientation.
+               """
         self.moving_dir = dicom_dir
         try:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
