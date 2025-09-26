@@ -29,7 +29,6 @@ class UITransferROIWindow:
         print("[DEBUG] setup_ui called")
         self.patient_dict_container = PatientDictContainer()
         self.moving_dict_container = MovingDictContainer()
-        print(self.moving_dict_container.get("tfm"))
         self.fixed_image_initial_rois = self.patient_dict_container.get("rois")
         self.moving_image_initial_rois = self.moving_dict_container.get("rois")
         print(f"[DEBUG] initial fixed_image_initial_rois keys: {list(self.fixed_image_initial_rois.keys()) if self.fixed_image_initial_rois else 'None'}")
@@ -513,11 +512,6 @@ class UITransferROIWindow:
                 self.moving_dict_container.filepaths)
             print(f"[DEBUG] moving_dicom_image type: {type(moving_dicom_image)}")
 
-            print(f"Fixed image direction: {dicom_image.GetDirection()}")
-            print(f"Fixed image origin: {dicom_image.GetOrigin()}")
-            print(f"Moving image direction: {moving_dicom_image.GetDirection()}")
-            print(f"Moving image origin: {moving_dicom_image.GetOrigin()}")
-
             if not check_interrupt_flag(interrupt_flag):
                 print("[DEBUG] save_clicked interrupted after reading moving dicom")
                 return False
@@ -595,15 +589,7 @@ class UITransferROIWindow:
 
              # transform roi from moving_dict to fixed_dict
             if self.moving_to_fixed_rois:
-                print(f"[DEBUG] About to transfer ROIs: {list(self.moving_to_fixed_rois.keys())}")
-                print(f"[DEBUG] rois_images_moving[1]: {rois_images_moving[1] if rois_images_moving else 'None'}")
-                print(f"[DEBUG] rois_images_moving[0] count: {len(rois_images_moving[0]) if rois_images_moving and len(rois_images_moving)>0 else 0}")
-                try:
-                    inv_tfm = tfm.GetInverse()
-                except Exception as e:
-                    print(f"[ERROR] Could not get inverse TFM: {e}")
-                    inv_tfm = None
-                self.transfer_rois(self.moving_to_fixed_rois, inv_tfm, dicom_image,
+                self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
                                    rois_images_moving, self.patient_dict_container)
             else:
                 print("[DEBUG] Skipping moving_to_fixed_rois transfer (none selected)")
@@ -618,8 +604,12 @@ class UITransferROIWindow:
             # transform roi from fixed_dict to moving_dict
             if self.fixed_to_moving_rois:
                 print(f"[DEBUG] About to transfer ROIs from fixed_to_moving_rois: {list(self.fixed_to_moving_rois.keys())}")
-               
-                self.transfer_rois(self.fixed_to_moving_rois, tfm,
+                try:
+                    inv_tfm = tfm.GetInverse()
+                except Exception as e:
+                    print(f"[ERROR] Could not get inverse TFM: {e}")
+                    inv_tfm = None
+                self.transfer_rois(self.fixed_to_moving_rois, inv_tfm,
                                    moving_dicom_image,
                                    rois_images_fixed, self.moving_dict_container)
             else:

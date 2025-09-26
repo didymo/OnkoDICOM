@@ -480,13 +480,15 @@ class VTKEngine:
         t_sitk.SetTranslation(t_vec.tolist())       # translation part
         # Note: no need to set center, since translation is independent
 
+        moving_tfm = t_sitk.GetInverse() # sitk expects inverse (fixed -> moving) transform for resampling
+
         # Store
         self.sitk_matrix = mat_lps      # LPS matrix for Platipy ROI transfer
         self.sitk_matrix_ras = mat_ras  # optional RAS version
         self.sitktransform = t_sitk     # SimpleITK transform for efficient application
 
         # Store in your container if needed
-        self.moving_image_container.set("tfm", t_sitk)
+        self.moving_image_container.set("tfm", moving_tfm)
 
         #print("SITK Transform (LPS):", t_sitk)
 
