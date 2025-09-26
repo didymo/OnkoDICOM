@@ -221,6 +221,10 @@ class ManualFusionLoader(QtCore.QObject):
             fixed_image_array = fixed_image  # assume already numpy
         else:
             fixed_image_array = None
+            logging.error(
+                f"Unsupported image type for fixed_image: {type(fixed_image)}. "
+                "Image array extraction failed."
+            )
 
             # Always trigger a refresh of fusion views (forces fusion update)
         from src.Model.Windowing import windowing_model_direct
