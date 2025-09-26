@@ -571,15 +571,11 @@ class UIMainWindow:
                     view._on_color_pair_changed(text)
 
         def propagate_window_level_change(window, level):
-            print(f"[propagate_window_level_change] Called with window={window}, level={level}")
-
             for view in [
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
                 self.image_fusion_view_coronal,
             ]:
-                print(f"[propagate_window_level_change] Updating {view.__class__.__name__}")
-
                 if hasattr(view, "on_window_level_changed"):
                     view.on_window_level_changed(window, level)
 

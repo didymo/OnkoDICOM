@@ -1,6 +1,3 @@
-import numpy as np
-from PySide6 import QtGui
-
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
@@ -30,12 +27,12 @@ def windowing_model(text, init):
         else:
             # Fallback to a hardcoded set or the fixed image's presets
             custom_presets = {
-                "Normal": [400, 40],  # Soft tissue, covers -160 to 240 HU
+                "Normal": [390, 40],  # Soft tissue, covers -160 to 240 HU
                 "Lung": [1600, -600],  # Lung, covers -1400 to 200 HU
                 "Bone": [2000, 300],  # Bone, covers -700 to 1300 HU
                 "Brain": [80, 40],  # Brain, covers 0 to 80 HU
-                "Soft Tissue": [400, 40],  # Alias for Normal
-                "Head and Neck": [375, 40],  # Covers -147.5 to 227.5 HU
+                "Soft Tissue": [440, 40],  # Alias for Normal
+                "Head and Neck": [275, 40],  # Covers -147.5 to 227.5 HU
             }
             windowing_limits = custom_presets.get(text, [400, 40])
     else:
