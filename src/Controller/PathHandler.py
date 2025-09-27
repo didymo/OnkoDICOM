@@ -1,18 +1,51 @@
+import os
+import sys
+import re
 from pathlib import Path
 import sys
-import os
 
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+def resource_path(relative_path, sanitizing=False):
+    """
+    Get absolute path to resource, works for dev and for PyInstaller
+    :param relative_path: str
+    :param sanitizing: bool: to remove any characters which may cause escape from the string
+    """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
+    path: str = str(os.path.join(base_path, relative_path))
 
-    return os.path.join(base_path, relative_path)
+    if sanitizing: # to Remove anything not ^. _0-9a-zA-Z
+        path: Path = path_sanitizer(path)
+    return path
 
+def path_sanitizer(path: str | Path) -> Path:
+    """
+    Converts str to Path breaks the path into individual components of the path.
+    Runs the PathHandler,text_filter(text: str) -> str method on the each component
+    then rebuild the file path using Path("path").joinpath("word").
+
+    :param path: str | Path
+    :return: Path
+    """
+    filtered_path: Path = Path()
+    for word in Path(path).parts:
+        text_sanitiser(word)
+        filtered_path: Path = Path(filtered_path).joinpath(text_sanitiser(word))
+    return filtered_path
+
+def text_sanitiser(text: str) -> str:
+    """
+    Removes all characters which are not . (fullstop),  (space), _(underscore), 0 to 9, a to z, or A to Z
+    From any text entered into it.
+
+    :param text: str
+    :return: str
+    """
+    return re.sub(r"[^. _0-9a-zA-Z(),']", "", text)
 
 def data_path(relative_path):
     """
