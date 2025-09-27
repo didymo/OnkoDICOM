@@ -138,6 +138,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_interrogation_btn.setIconSize(QtCore.QSize(30, 30))
 
         # Add highlight style for toggled state and black border only when checked
+        #TODO add to style sheet. Having issues with it not loading teh checked buttons if added
         highlight_style = """
                     QPushButton {
                         border: none;

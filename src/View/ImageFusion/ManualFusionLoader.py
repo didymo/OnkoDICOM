@@ -8,6 +8,7 @@ from vtkmodules.util import numpy_support
 from pydicom.errors import InvalidDicomError
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.VTKEngine import VTKEngine
+from src.Model.Windowing import windowing_model_direct
 
 class ManualFusionLoader(QtCore.QObject):
     signal_loaded = QtCore.Signal(object)
@@ -225,9 +226,6 @@ class ManualFusionLoader(QtCore.QObject):
                 f"Unsupported image type for fixed_image: {type(fixed_image)}. "
                 "Image array extraction failed."
             )
-
-            # Always trigger a refresh of fusion views (forces fusion update)
-        from src.Model.Windowing import windowing_model_direct
 
         window = patient_dict_container.get("fusion_window")
         level = patient_dict_container.get("fusion_level")

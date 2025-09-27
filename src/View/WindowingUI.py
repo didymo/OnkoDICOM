@@ -6,6 +6,7 @@ from src.Controller.PathHandler import resource_path
 
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
+from src.Model.PatientDictContainer import PatientDictContainer
 
 from src.Model.Windowing import windowing_model
 from src.View.StyleSheetReader import StyleSheetReader
@@ -61,7 +62,6 @@ class Windowing(QDialog):
             self.layout.addWidget(self.ct)
         # Show fusion checkbox if either MovingDictContainer is not empty
         # OR if manual fusion is loaded in PatientDictContainer
-        from src.Model.PatientDictContainer import PatientDictContainer
 
         pd_container = PatientDictContainer()
         manual_fusion_loaded = pd_container.get("manual_fusion") is not None

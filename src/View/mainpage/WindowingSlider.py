@@ -2,7 +2,6 @@ import numpy as np
 import logging
 
 from contextlib import contextmanager
-from contextlib import suppress
 from math import ceil
 
 from PySide6.QtWidgets import QWidget, QLabel, QApplication, QGridLayout, QSizePolicy
@@ -269,24 +268,20 @@ class WindowingSlider(QWidget):
         index = min(index, self.slider_density - 1)
 
         if top_bar:
-            with suppress(RuntimeError):
-                self.slider_bars[self.top].setColor("white")
+            self.slider_bars[self.top].setColor("white")
             self.top = index
-            with suppress(RuntimeError):
-                self.slider_bars[index].setColor("red")
+            self.slider_bars[index].setColor("red")
         else:
             # Ensure the bottom bar is actually rendered
             # Functionally the bar will still be correct
-            with suppress(RuntimeError):
-                self.slider_bars[
-                    max(self.bottom, WindowingSlider.MIN_BOTTOM_INDEX)
-                    ].setColor("white")
+            self.slider_bars[
+                max(self.bottom, WindowingSlider.MIN_BOTTOM_INDEX)
+                ].setColor("white")
 
             self.bottom = index
-            with suppress(RuntimeError):
-                self.slider_bars[max(index, WindowingSlider.MIN_BOTTOM_INDEX)].setColor(
-                    "red"
-                )
+            self.slider_bars[max(index, WindowingSlider.MIN_BOTTOM_INDEX)].setColor(
+                "red"
+            )
 
     def set_bars(self, top_index, bottom_index):
         """
