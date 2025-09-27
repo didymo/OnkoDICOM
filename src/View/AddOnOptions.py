@@ -32,6 +32,12 @@ class UIAddOnOptions(object):
         self.add_new_roi = None
         self.delete_roi = None
         self.image_fusion_add_on_options = None
+        self.line_style_ROI = None
+        self.opacity_ROI =None
+        self.line_style_ISO =None
+        self.opacity_ISO = None
+        self.line_width = None
+        self.alpha_value_slider =None
 
     def add_into_observer(self):
         # TO DO: Construct Observer Class rather than using an array and

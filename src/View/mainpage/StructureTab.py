@@ -49,7 +49,7 @@ class StructureTab(QtWidgets.QWidget):
         self.layout_content.setContentsMargins(0, 0, 0, 0)
         self.layout_content.setSpacing(0)
         self.layout_content.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+            QtCore.Qt.AlignmentFlag.AlignTop)
 
         # Create list of standard organ and volume names
         self.standard_organ_names = []
@@ -64,7 +64,7 @@ class StructureTab(QtWidgets.QWidget):
         self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
         modified_indicator_layout.setAlignment(
-            QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+            QtCore.Qt.AlignmentFlag.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
         modified_indicator_icon.setPixmap(QtGui.QPixmap(
@@ -142,21 +142,27 @@ class StructureTab(QtWidgets.QWidget):
         Create two lists containing standard organ and standard volume names
         as set by the Add-On options.
         """
-        with open(data_path('organName.csv'), 'r') as f:
-            self.standard_organ_names = []
+        with open(data_path('organName.csv'), 'r') as file:
+            self.standard_organ_names = self._get_column_from_csv_file(file, 0)
+        with open(data_path('volumeName.csv'), 'r') as file:
+            self.standard_volume_names = self._get_column_from_csv_file(file, 1)
 
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_organ_names.append(row[0])
+    def _get_column_from_csv_file(self, file, col_num):
+        """
+        Extracts a specific column from a CSV file, skipping the header row.
+        This helper function reads the CSV input and returns a list
+        containing the values from the specified column index.
 
-        with open(data_path('volumeName.csv'), 'r') as f:
-            self.standard_volume_names = []
+        Args:
+            file: The file object to read from.
+            col_num: The column index to extract.
 
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_volume_names.append(row[1])
+        Returns:
+            list: A list of values from the specified column.
+        """
+        csv_input = csv.reader(file)
+        header = next(file)  # Ignore the "header" of the column
+        return [row[col_num] for row in csv_input]
 
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
@@ -221,18 +227,16 @@ class StructureTab(QtWidgets.QWidget):
         for i in reversed(range(self.layout_content.count())):
             self.layout_content.itemAt(i).widget().setParent(None)
 
-        row = 0
         for roi_id, roi_dict in self.rois.items():
             # Creates a widget representing each ROI
             color = self.color_dict[roi_id]
             color.setAlpha(255)
             structure = StructureWidget(roi_id, color, roi_dict['name'], self)
             if roi_id in self.patient_dict_container.get("selected_rois"):
-                structure.checkbox.setChecked(Qt.Checked)
+                structure.checkbox.setChecked(Qt.CheckState.Checked)
             structure.structure_renamed. \
                 connect(self.fixed_container_structure_modified)
             self.layout_content.addWidget(structure)
-            row += 1
 
         self.scroll_area.setStyleSheet(
             "QScrollArea {background-color: #ffffff; border-style: none;}")
