@@ -26,7 +26,7 @@ def _gather_all_files(directory: str) -> list[str]:
     return [
         os.path.join(directory, f)
         for f in os.listdir(directory)
-        if os.path.isfile(os.path.join(directory, f))
+        if os.path.isfile(os.path.join(directory, f)) and f.lower().endswith(".dcm")
     ]
 
 def _parse_rtss_and_images(rtss_path: str, directory: str) -> dict:
