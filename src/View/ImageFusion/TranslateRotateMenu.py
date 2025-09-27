@@ -153,9 +153,9 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     }
                 """
 
-        self.mouse_translate_btn.setStyleSheet(highlight_style)
+        """self.mouse_translate_btn.setStyleSheet(highlight_style)
         self.mouse_rotate_btn.setStyleSheet(highlight_style)
-        self.mouse_interrogation_btn.setStyleSheet(highlight_style)
+        self.mouse_interrogation_btn.setStyleSheet(highlight_style)"""
 
         # Update icons based on checked state
         def update_icons():
