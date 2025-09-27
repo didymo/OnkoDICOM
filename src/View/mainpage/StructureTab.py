@@ -161,7 +161,7 @@ class StructureTab(QtWidgets.QWidget):
             list: A list of values from the specified column.
         """
         csv_input = csv.reader(file)
-        header = next(file)  # Ignore the "header" of the column
+        header = next(csv_input)  # Ignore the "header" of the column
         return [row[col_num] for row in csv_input]
 
     def init_roi_buttons(self):
