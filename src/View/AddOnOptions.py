@@ -33,7 +33,7 @@ class UIAddOnOptions(object):
         self.delete_roi = None
         self.image_fusion_add_on_options = None
 
-        # Initialise Line & Fill Configuration attributes (with defaults)
+        # Initialise Line & Fill Configuration attributes
         self.line_style_ROI = 1
         self.opacity_ROI = 10
         self.line_style_ISO = 2
