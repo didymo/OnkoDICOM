@@ -839,31 +839,20 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         else:
             rotation = [0, 0, 0]
 
-        m = vtk.vtkMatrix4x4()
-        for i, j in itertools.product(range(4), range(4)):
-            m.SetElement(i, j, matrix[i, j])
-
-        if hasattr(vtk_engine, "transform"):
-            vtk_engine.transform.SetMatrix(m)
-            vtk_engine.reslice3d.SetResliceAxes(m)
-            vtk_engine.reslice3d.Modified()
-
-        if hasattr(vtk_engine, "set_translation"):
-            vtk_engine.set_translation(*translation)
-        if hasattr(vtk_engine, "set_rotation_deg"):
-            vtk_engine.set_rotation_deg(*rotation)
-
-        self.set_offsets(translation)
-        for i in range(3):
-            self.rotate_sliders[i].blockSignals(True)
-            self.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
-            self.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
-            self.rotate_sliders[i].blockSignals(False)
-
-        if self.offset_changed_callback:
-            self.offset_changed_callback(translation)
-        if self.rotation_changed_callback:
-            self.rotation_changed_callback(tuple(rotation))
+        # Use the shared method from MainPage to apply the transform and update the menu
+        from src.View.mainpage.MainPage import UIMainWindow
+        main_window = next(
+            (w for w in QtWidgets.QApplication.topLevelWidgets() if isinstance(w, UIMainWindow)),
+            None,
+        )
+        if main_window is not None:
+            main_window._apply_matrix_and_transform_to_engine(
+                vtk_engine=vtk_engine,
+                matrix=matrix,
+                translation=translation,
+                rotation=rotation,
+                menu=self
+            )
 
         #do not move this from here or it will throw an error
         from src.View.mainpage.MainPage import UIMainWindow

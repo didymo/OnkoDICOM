@@ -1,3 +1,4 @@
+import itertools
 import logging
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
@@ -448,6 +449,13 @@ class UIMainWindow:
                 )
 
         def update_all_rotations(rotation_tuple):
+            """
+                Updates the overlay rotation for all image fusion views.
+                This function propagates the given rotation tuple to all image fusion views,
+                ensuring that the overlay rotation is updated consistently across axial, sagittal,
+                coronal, and single fusion views.
+                        """
+
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -461,6 +469,13 @@ class UIMainWindow:
                 )
 
         def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
+            """
+                Propagates color pair changes to all image fusion views.
+                This function updates the color scheme for all image fusion views based on the
+                selected fixed and moving colors and whether coloring is enabled. It ensures
+                that the color settings remain consistent across all fusion views.
+            """
+
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -482,10 +497,15 @@ class UIMainWindow:
 
         # --- Fusion Options Tab with Translate/Rotate Menu ---
         self.fusion_options_tab = None
+
+        # Ensure self.images exists before use
+        if not hasattr(self, "images"):
+            self.images = {}
         vtk_engine = None
-        if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:
+        if isinstance(self.images, dict) and "vtk_engine" in self.images:
             vtk_engine = self.images["vtk_engine"]
 
+        # Calling helper methods to set up manual fusion tab
         if manual:
             self.fusion_options_tab = TranslateRotateMenu()
             self.fusion_options_tab.set_offset_changed_callback(update_all_views)
@@ -496,6 +516,11 @@ class UIMainWindow:
             self.left_panel.setCurrentWidget(self.fusion_options_tab)
 
             def propagate_mouse_mode_change(mode):
+                """
+                    Propagates mouse mode changes to all image fusion views.
+                    This function updates the mouse interaction mode for all image fusion views and refreshes their overlays.
+                """
+
                 for view in [
                     self.image_fusion_single_view,
                     self.image_fusion_view_axial,
@@ -558,6 +583,16 @@ class UIMainWindow:
         """Create and configure the windowing slider for fusion views."""
 
         def propagate_window_level_change(window, level):
+            """
+                Propagates window and level changes to all image fusion views.
+                This function updates the window and level settings for all image fusion views,
+                ensuring that the displayed fusion images use the correct window/level values.
+
+                Args:
+                    window: The window value to set for the fusion views.
+                    level: The level value to set for the fusion views.
+                       """
+            
             for view in [
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
@@ -583,27 +618,50 @@ class UIMainWindow:
 
     def _apply_transform_if_present(self, vtk_engine):
         """Apply transform from images dict if present (from ManualFusionLoader)."""
-        if hasattr(self, "images") and isinstance(self.images, dict) and "transform_data" in self.images and \
-                self.images["transform_data"] is not None:
-            td = self.images["transform_data"]
-            menu = self.fusion_options_tab
-            import numpy as np
-            import vtk
-            m = td["matrix"]
-            translation = td["translation"]
-            rotation = td["rotation"]
-            vtkmat = vtk.vtkMatrix4x4()
-            for i in range(4):
-                for j in range(4):
-                    vtkmat.SetElement(i, j, m[i, j])
-            if hasattr(vtk_engine, "transform"):
-                vtk_engine.transform.SetMatrix(vtkmat)
-                vtk_engine.reslice3d.SetResliceAxes(vtkmat)
-                vtk_engine.reslice3d.Modified()
-            if hasattr(vtk_engine, "set_translation"):
-                vtk_engine.set_translation(*translation)
-            if hasattr(vtk_engine, "set_rotation_deg"):
-                vtk_engine.set_rotation_deg(*rotation)
+        if (
+                not hasattr(self, "images")
+                or not isinstance(self.images, dict)
+                or "transform_data" not in self.images
+                or self.images["transform_data"] is None
+        ):
+            return
+        td = self.images["transform_data"]
+        menu = self.fusion_options_tab
+
+        self._apply_matrix_and_transform_to_engine(
+            vtk_engine=vtk_engine,
+            matrix=td["matrix"],
+            translation=td["translation"],
+            rotation=td["rotation"],
+            menu=menu
+        )
+
+    def _apply_matrix_and_transform_to_engine(self, vtk_engine, matrix, translation, rotation, menu):
+        """
+        Apply a 4x4 matrix, translation, and rotation to the VTK engine and update the GUI sliders.
+        This method is shared by both the main page and TranslateRotateMenu to avoid code duplication.
+
+        Args:
+            vtk_engine: The VTKEngine instance to update.
+            matrix: 4x4 numpy array representing the transformation matrix.
+            translation: List or tuple of translation values [tx, ty, tz].
+            rotation: List or tuple of rotation values [rx, ry, rz].
+            menu: The TranslateRotateMenu instance (for updating sliders/labels).
+        """
+        import itertools
+        import vtk
+        vtkmat = vtk.vtkMatrix4x4()
+        for i, j in itertools.product(range(4), range(4)):
+            vtkmat.SetElement(i, j, matrix[i, j])
+        if hasattr(vtk_engine, "transform"):
+            vtk_engine.transform.SetMatrix(vtkmat)
+            vtk_engine.reslice3d.SetResliceAxes(vtkmat)
+            vtk_engine.reslice3d.Modified()
+        if hasattr(vtk_engine, "set_translation"):
+            vtk_engine.set_translation(*translation)
+        if hasattr(vtk_engine, "set_rotation_deg"):
+            vtk_engine.set_rotation_deg(*rotation)
+        if menu is not None:
             menu.set_offsets(translation)
             for i in range(3):
                 menu.rotate_sliders[i].blockSignals(True)
@@ -707,27 +765,6 @@ class UIMainWindow:
         self.right_panel.setCurrentWidget(self.image_fusion_view)
         self.add_on_options_controller.update_ui()
 
-    def _propagate_window_level_change(self, window, level):
-        """
-        Propagates window and level changes to all image fusion views.
-
-        This function updates the window and level settings for all image fusion views,
-        ensuring that the displayed fusion images use the correct window/level values.
-
-        Args:
-            window: The window value to set for the fusion views.
-            level: The level value to set for the fusion views.
-
-        Returns:
-            None
-        """
-        for view in [
-            self.image_fusion_view_axial,
-            self.image_fusion_view_sagittal,
-            self.image_fusion_view_coronal,
-        ]:
-            if hasattr(view, "on_window_level_changed"):
-                view.on_window_level_changed(window, level)
 
     def perform_suv2roi(self):
         """
