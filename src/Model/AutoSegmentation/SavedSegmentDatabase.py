@@ -59,18 +59,38 @@ class SavedSegmentDatabase:
 
 # Database Methods
     def get_columns(self) -> list[str]:
+        """
+        Initiates Async method to get column list
+        :return: list[str]
+        """
         return asyncio.run(self._get_columns_execution())
 
     def create_table(self) -> bool:
+        """
+        Initiates Async method to create a table
+        :return: bool
+        """
         return asyncio.run(self._create_table_execution(self.key_column))
 
     def add_boolean_column(self, column: str) -> bool:
+        """
+        Initiates Async method add a boolean column to the table
+        :return: bool
+        """
         return asyncio.run(self._add_boolean_column_execution(column))
 
     def insert_row(self, values: dict) -> bool:
+        """
+        Initiates Async method to insert a row to the table
+        :return: bool
+        """
         return asyncio.run(self._insert_row_execution(values))
 
     def select_entry_execution(self, save_name:str) -> dict[str, str | bool]:
+        """
+        Initiates Async method to get an entry from the table
+        :return: dict[str, str | bool]
+        """
         return asyncio.run(self._select_entry_execution(save_name))
 
 # Internal use Only
@@ -339,7 +359,3 @@ class SavedSegmentDatabase:
                 else:
                     raise transaction_issue
         return results
-
-if __name__ == '__main__':
-    database_engine = "Onko"
-    database = SavedSegmentDatabase("segmentation_save")
