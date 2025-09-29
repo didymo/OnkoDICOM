@@ -1,9 +1,13 @@
-import logging, asyncio, pathlib, random, sqlite3
+import logging
+import asyncio
+import pathlib
+import random
+import sqlite3
 from collections.abc import Callable
-
 from src.Controller.PathHandler import database_path
 
 logger = logging.getLogger(__name__)
+
 
 class SavedSegmentDatabase:
     """
@@ -27,14 +31,16 @@ class SavedSegmentDatabase:
         self.column_list: list[str] = self.get_columns()
 
         # Setting Up Database Table of the database being accessed
-        logger.debug("Setting value for self.database_location and creating Table")
+        logger.debug(
+            "Setting value for self.database_location and creating Table")
         self.database_location: pathlib.Path = database_path()
         self._create_table()
 
 # GUI Update Method
     def set_feedback_callback(self, callback: Callable[[str], None]) -> None:
         """
-        Setting the callback function to the Controller the database update text to be displayed on the GUI
+        Setting the callback function to the Controller the database
+        update text to be displayed on the GUI.
         Allowing updating for the text to be displayed on the GUI.
 
         :param callback: function(str)
@@ -58,7 +64,7 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._insert_row_execution(values))
 
-    def select_entry(self, save_name:str) -> dict[str, str | bool]:
+    def select_entry(self, save_name: str) -> dict[str, str | bool]:
         """
         Initiates Async method to get an entry from the table
         :return: dict[str, str | bool]
@@ -68,7 +74,8 @@ class SavedSegmentDatabase:
 # Internal use Only
     def _send_feedback(self, text: str) -> None:
         """
-        Giving the new test feed back to the Controller for display on the GUI using Function set using
+        Giving the new test feed back to the Controller for
+        display on the GUI using Function set using
         `obj.set_feedback_callback(callback_function)`.
 
         :param text: str
@@ -95,9 +102,11 @@ class SavedSegmentDatabase:
     # Async Methods
     async def _get_columns_execution(self) -> list[str]:
         """
-        This method is to retrieve a list of column names from the database table
+        This method is to retrieve a list of column
+        names from the database table
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :return: list[str]
         """
         logger.debug("Getting columns names of {}".format(self.table_name))
@@ -109,20 +118,28 @@ class SavedSegmentDatabase:
         logger.debug("Converting Column names from {} to dict")
         column_list: list[str] = []
         for column in column_info:
-            column_list.append(column[1]) # 1 is the column name column
+            column_list.append(column[1])  # 1 is the column name column
         return column_list
 
     async def _create_table_execution(self, key_column: str) -> bool:
         """
         Creating Table in the Database with only one column for the key value.
-        if the table does not exist this creates the table in the database with the using the string set in
-        `self.table_name` as the table name set during initialisation with variable table_name: str.
+        if the table does not exist this creates the table
+        in the database with the using the string set in
+        `self.table_name` as the table name set during
+        initialisation with variable table_name: str.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param key_column: str: the name of the
         :return: bool
         """
-        logger.debug("Creating table {} with column {} in {}".format(self.table_name, key_column, self.database_location))
+        logger.debug("Creating table {} with column {} in {}"
+                     .format(self.table_name,
+                             key_column,
+                             self.database_location
+                             )
+                     )
         # Creating table statement and cleaning it
         statement: str = (
                 # NOT NULL: Column to find save
@@ -138,15 +155,22 @@ class SavedSegmentDatabase:
 
     async def _add_boolean_column_execution(self, column_name: str) -> bool:
         """
-        Adding a new Boolean column to the table which has been created during `self._create_table(key_name)`
+        Adding a new Boolean column to the table which
+        has been created during `self._create_table(key_name)`
         The boolean column DEFAULT value is False.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process
+        but may not need to be running the entire time.
         :param column_name: str
         :return: bool
         """
 
-        logger.debug("Adding column {} in {}, {}".format(column_name, self.table_name, self.database_location))
+        logger.debug("Adding column {} in {}, {}"
+                     .format(column_name,
+                             self.table_name,
+                             self.database_location
+                             )
+                     )
         statement: str = (
                     # BOOLEAN: as we only need to store if it is saved
                     # NOT NULL: as it is Binary State
@@ -222,14 +246,16 @@ class SavedSegmentDatabase:
         logger.debug("Executing Select")
         column_values = await self._running_read_statement(statement)
         column_list: list[str] = await self._get_columns_execution()
-        # index 0 cause even though it is returning a single tuple, to keep the select generalized returning a list is preferable
+        # index 0 cause even though it is returning a single tuple,
+        # to keep the select generalized returning a list is preferable
         output_temp: dict[str, str] = dict(zip(column_list, column_values[0]))
         output: dict[str, str | bool] = {}
         for key, value in output_temp.items():
             if key == self.key_column:
                 output[key]: str = value
                 continue
-            output[key]: bool = bool(int(value)) # converting
+            # converting to string "0" is still True but int 0 is False
+            output[key]: bool = bool(int(value))
 
         logger.debug("Select Dict: {}".format(output_temp))
         return output
@@ -250,16 +276,19 @@ class SavedSegmentDatabase:
         Making Changes the Database to allow updates such as
         adding tables, column, rows, and
         updating rows.
-        This function primarily deals with checking if the statement is a valid statement and
-        dealing with exceptions raised from the attempt at writing to the database table.
+        This function primarily deals with checking
+        if the statement is a valid statement and
+        dealing with exceptions raised from the
+        attempt at writing to the database table.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param statement: str
         :return: bool
         """
         # statement = text_sanitiser(statement).strip().join(";")
         result = False
-        if sqlite3.complete_statement(statement): # Ensuring the statement is a complete statement
+        if sqlite3.complete_statement(statement):  # Ensuring the statement is a complete statement
             logger.debug("Executing Statement: {}".format(statement))
             try:
                 await self._run_write_operation(statement)
@@ -286,12 +315,16 @@ class SavedSegmentDatabase:
                                    min_retry_interval: float = 1.0,
                                    max_retry_interval: float = 5.0) -> None:
         """
-        Method the attempts to write to the database with the given statement.
-        This method if an attempt results in a sqlite3.OperationalError then method will reattempt
-        the transaction a number of times (max_attempts) with wait interval of a random number seconds
+        Method the attempts to write to the
+        database with the given statement.
+        This method if an attempt results in a
+        sqlite3.OperationalError then method will reattempt
+        the transaction a number of times (max_attempts)
+        with wait interval of a random number seconds
         within the interval min_retry_interval and max_retry_interval.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param statement: str
         :param max_attempts: int
         :param min_retry_interval: float
@@ -307,8 +340,10 @@ class SavedSegmentDatabase:
                     connection.commit()
                     return
             except Exception as transaction_issue:
-                if transaction_issue.args[0] == sqlite3.OperationalError and attempt < max_attempts:
-                    output = "Operational Error on Write: Attempting Retry. Attempt #{}".format(attempt+1)
+                if (transaction_issue.args[0] == sqlite3.OperationalError
+                        and attempt < max_attempts):
+                    output = ("Operational Error on Write: Attempting Retry. Attempt #{}"
+                              .format(attempt+1))
                     logger.debug(output)
                     self._send_feedback(output)
                     await asyncio.sleep(random.uniform(min_retry_interval, max_retry_interval))
@@ -319,16 +354,20 @@ class SavedSegmentDatabase:
     async def _running_read_statement(self, statement: str) -> list[str]:
         """
         Fetching information from the Database Table
-        This function primarily deals with checking if the statement is a valid statement and
-        dealing with exceptions raised from the attempt at writing to the database table.
+        This function primarily deals with checking
+        if the statement is a valid statement and
+        dealing with exceptions raised from the
+        attempt at writing to the database table.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param statement: str
         :return: bool
         """
         # statement = text_sanitiser(statement).strip().join(";")
-        results: list[str] = ["Fail"]  # assigning list to be returned; if list cannot retrieve list
-        if sqlite3.complete_statement(statement): # Ensuring the statement is a complete statement
+        # assigning list to be returned; if list cannot retrieve list
+        results: list[str] = []  # assigning list to be returned; if list cannot retrieve list
+        if sqlite3.complete_statement(statement):  # Ensuring the statement is a complete statement
             logger.debug("Executing Statement: {}".format(statement))
             try:
                 data = await self._run_read_operation(statement)
@@ -350,17 +389,21 @@ class SavedSegmentDatabase:
         return results
 
     async def _run_read_operation(self,
-                                   statement: str,
-                                   max_attempts: int = 3,
-                                   min_retry_interval: float = 1.0,
-                                   max_retry_interval: float = 5.0) -> list[str]:
+                                  statement: str,
+                                  max_attempts: int = 3,
+                                  min_retry_interval: float = 1.0,
+                                  max_retry_interval: float = 5.0) -> list[str]:
         """
-        Method the attempts to read from the database with the given statement.
-        This method if an attempt results in a sqlite3.OperationalError then method will reattempt
-        the transaction a number of times (max_attempts) with wait interval of a random number seconds
+        Method the attempts to read from the
+        database with the given statement.
+        This method if an attempt results in
+        a sqlite3.OperationalError then method will reattempt
+        the transaction a number of times (max_attempts)
+        with wait interval of a random number seconds
         within the interval min_retry_interval and max_retry_interval.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param statement: str
         :param max_attempts: int
         :param min_retry_interval: float
@@ -368,7 +411,7 @@ class SavedSegmentDatabase:
         :return: list[str]
         :raises: Exception
         """
-        results: list[str] = [] # Empty List to show nothing was retrieved
+        results: list[str] = []  # Empty List to show nothing was retrieved
         for attempt in range(max_attempts):
             logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
             try:
@@ -376,8 +419,10 @@ class SavedSegmentDatabase:
                     connection.row_factory = sqlite3.Row
                     results = connection.execute(statement).fetchall()
             except Exception as transaction_issue:
-                if transaction_issue.args[0] == sqlite3.OperationalError and attempt < max_attempts:
-                    output = "Operational Error on Read: Attempting Retry. Attempt #{}".format(attempt + 1)
+                if (transaction_issue.args[0] == sqlite3.OperationalError
+                        and attempt < max_attempts):
+                    output = ("Operational Error on Read: Attempting Retry. Attempt #{}"
+                              .format(attempt + 1))
                     logger.debug(output)
                     self._send_feedback(output)
                     await asyncio.sleep(random.uniform(min_retry_interval, max_retry_interval))
