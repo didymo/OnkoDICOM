@@ -9,9 +9,12 @@ from pathlib import Path
 from src.Model.Singleton import Singleton
 
 
-def set_up_hidden_dir():
+def set_up_hidden_dir(directory: str) -> None:
     """
     Set up the hidden directory
+
+    :param directory: str
+    :return: None
     """
     path = Path.home().joinpath('.OnkoDICOM')
     os.environ['USER_ONKODICOM_HIDDEN'] = str(path)
@@ -63,7 +66,8 @@ class Configuration(metaclass=Singleton):
     """
 
     def __init__(self, db_file='OnkoDICOM.db'):
-        set_up_hidden_dir()
+        self.directory: str = ".OnkoDICOM"
+        set_up_hidden_dir(self.directory)
         self.db_file_path = Path(
             os.environ['USER_ONKODICOM_HIDDEN']).joinpath(db_file)
         self.set_up_config_db()
@@ -98,7 +102,7 @@ class Configuration(metaclass=Singleton):
                 data_file_absolute_tree.append(os.path.join(root, name))
 
         # Walk through directory, get the list of files
-        path = Path.home().joinpath("OnkoDICOM")
+        path = Path.home().joinpath(self.directory)
         if not os.path.exists(path):
             os.mkdir(path)
 
@@ -123,7 +127,7 @@ class Configuration(metaclass=Singleton):
         :param new_file: The file name of the file to copy to.
         """
         # Make new data folder if it does not exist
-        new_data_folder = str(Path.home().joinpath('OnkoDICOM', 'data'))
+        new_data_folder = str(Path.home().joinpath(self.directory, 'data'))
         if not os.path.exists(new_data_folder):
             os.mkdir(new_data_folder)
 

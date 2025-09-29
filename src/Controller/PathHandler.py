@@ -25,7 +25,7 @@ def resource_path(relative_path, sanitizing=False):
 def path_sanitizer(path: str | Path) -> Path:
     """
     Converts str to Path breaks the path into individual components of the path.
-    Runs the PathHandler,text_filter(text: str) -> str method on the each component
+    Runs the PathHandler,text_filter(text: str) -> str method on each component
     then rebuild the file path using Path("path").joinpath("word").
 
     :param path: str | Path
@@ -45,7 +45,7 @@ def text_sanitiser(text: str) -> str:
     :param text: str
     :return: str
     """
-    return re.sub(r"[^. _0-9a-zA-Z(),']", "", text)
+    return re.sub(r"[^. _0-9a-zA-Z]", "", text)
 
 def data_path(relative_path):
     """
@@ -57,7 +57,7 @@ def data_path(relative_path):
     """
     # Get the absolute path (hidden directory)
     home_dir = Path.home()
-    hidden_dir = home_dir.joinpath('OnkoDICOM', 'data')
+    hidden_dir = home_dir.joinpath('.OnkoDICOM', 'data')
     absolute_path = hidden_dir.joinpath(relative_path)
 
     # Check to see if the file exists in the hidden directory. Return if it
@@ -74,3 +74,11 @@ def data_path(relative_path):
         for name in files:
             if name == relative_path:
                 return os.path.join(root, name)
+
+def database_path() -> Path:
+    """
+    To get the path of the database.
+
+    :return: Path
+    """
+    return Path.home().joinpath('.OnkoDICOM', 'OnkoDICOM.db')
