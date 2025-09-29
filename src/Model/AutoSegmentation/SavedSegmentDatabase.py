@@ -21,6 +21,7 @@ class SavedSegmentDatabase:
         # Location of the database being accessed
         logger.debug("Checking and setting value for self.database_location")
         self.database_location: pathlib.Path = database_path()
+        self.create_table()
 
 
     def database_name(self) -> str:
