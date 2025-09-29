@@ -24,6 +24,7 @@ class SavedSegmentDatabase:
         self.table_name: str = table_name
         self.feedback_callback: Callable[[str], None] | None = None
         self.key_column: str = "save_name"
+        self.column_list: list[str] = self.get_columns()
 
         # Setting Up Database Table of the database being accessed
         logger.debug("Setting value for self.database_location and creating Table")
@@ -150,13 +151,37 @@ class SavedSegmentDatabase:
                     # BOOLEAN: as we only need to store if it is saved
                     # NOT NULL: as it is Binary State
                     # DEFAULT FALSE: As it will always be unsaved unless it is saved
-                    "ALTER TABLE {} ADD COLUMN {} NUMBER(0, 1) NOT NULL DEFAULT FALSE;"
+                    "ALTER TABLE {} ADD COLUMN {} NUMBER(0, 1) NOT NULL DEFAULT 0;"
                     .format(self.table_name, column_name.strip())
         )
         logger.debug("Executing Add Column")
         return await self._running_write_statement(statement)
 
-    async def _insert_row_execution(self, column_values: dict) -> bool:
+    async def _extend_table(self, column_list: dict[str, str | bool]) -> bool:
+        """
+        Filtering Out which columns already exist in the table
+        than adding all the columns which don't exist in the table to the table
+
+        :param column_list: dict[str, str | bool]
+        :return: bool
+        """
+        success: bool = True
+        column_list: list[str] = list(column_list.keys())
+        new_column_list: list[str] = []
+        logger.debug("Extending table {}".format(self.table_name))
+        logger.debug("Creating New Column List")
+        for item in column_list:
+            if item not in self.column_list:
+                new_column_list.append(item)
+        logger.debug("New Column List: {}".format(new_column_list))
+        for new_column in new_column_list:
+            if not await self._add_boolean_column_execution(new_column):
+                success: bool = False
+            logger.debug("New Columns added {}".format(new_column))
+        self.column_list: list[str] = self.get_columns()
+        return success
+
+    async def _insert_row_execution(self, column_values: dict[str, str | bool]) -> bool:
         """
         Inserting a row into the table to be stored for future use.
 
@@ -165,6 +190,9 @@ class SavedSegmentDatabase:
         :return: bool
         """
         logger.debug("Inserting Row in {}".format(self.table_name))
+        if not await self._extend_table(column_values):
+            logger.debug("Failed to update Table Columns for current Input")
+            return False
         statement: str = (
             "INSERT INTO {} ({}) VALUES ({});"
             .format(self.table_name,
