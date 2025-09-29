@@ -10,6 +10,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.MovingModel import create_moving_model
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.GetPatientInfo import DicomTree
+from src.Model.DicomUtils import truncate_ds_fields
 
 from src.View.ImageLoader import ImageLoader
 
@@ -171,6 +172,9 @@ class MovingImageLoader(ImageLoader):
             moving_dict_container.dataset)
         rtss = create_initial_rtss_from_ct(
             moving_dict_container.dataset[0], rtss_path, uid_list)
+
+        truncate_ds_fields(rtss)
+        rtss.save_as(str(rtss_path), write_like_original=False)
 
         if interrupt_flag.is_set():  # Stop loading.
             print("stopped")

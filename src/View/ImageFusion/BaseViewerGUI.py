@@ -17,6 +17,8 @@ class BaseFusionView(DicomView):
         self.overlay_item = None
         self.overlay_images = None
         self.overlay_offset = (0, 0)
+        self._prev_mouse_mode = None
+        self._cut_line_active = False
 
         self.slice_view = slice_view
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
@@ -187,14 +189,12 @@ class BaseFusionView(DicomView):
             painter.drawText(qimg.rect(), QtCore.Qt.AlignCenter, "No Image")
             painter.end()
         pixmap = QtGui.QPixmap.fromImage(qimg)
-
-        # Recreate GraphicsScene so cut lines are kept in sync
-        self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
-        self.base_item.setPos(0,0)
-        self.base_item.setZValue(0)
-
-        self.scene = GraphicsScene(self.base_item, self.horizontal_view, self.vertical_view)
-        self.view.setScene(self.scene)
+        # Display as the base image (no overlay needed, since VTKEngine blends)
+        if self.base_item is None:
+            self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
+            self.scene.addItem(self.base_item)
+        else:
+            self.base_item.setPixmap(pixmap)
         # Remove overlay item if present
         if self.overlay_item is not None:
             self.scene.removeItem(self.overlay_item)
@@ -408,6 +408,34 @@ class BaseFusionView(DicomView):
             w = scene_size.width()
             h = scene_size.height()
             self._handle_rotate_click(x, y, w, h)
+
+    def save_and_set_mouse_mode_none(self):
+        """
+               Save the current mouse mode and set it to 'none'.
+               Safe to call multiple times; only the first call has an effect.
+               """
+        # If already active ignore
+        if self._cut_line_active:
+            return
+
+        current_mode = self.get_mouse_mode()
+        self._prev_mouse_mode = current_mode if current_mode != "none" else None
+        self._cut_line_active = True
+        self.translation_menu.set_mouse_mode("none")
+
+    def restore_prev_mouse_mode(self):
+        """
+                Restore the previously saved mouse mode if available.
+                Safe to call multiple times; only the first call has an effect.
+                """
+        if not self._cut_line_active:
+            # Nothing to restore
+            return
+
+        if self._prev_mouse_mode is not None:
+            self.translation_menu.set_mouse_mode(self._prev_mouse_mode)
+        self._prev_mouse_mode = None
+        self._cut_line_active = False
 
     def _handle_translate_click(self, x, y, w, h):
         def axial_trans(x, y, w, h):

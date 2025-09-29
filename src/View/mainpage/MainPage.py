@@ -320,12 +320,24 @@ class UIMainWindow:
                 self.draw_roi.update_draw_roi_pixmaps()
 
     def toggle_cut_lines(self):
-        if self.dicom_axial_view.horizontal_view is None or \
-                self.dicom_axial_view.vertical_view is None or \
-                self.dicom_coronal_view.horizontal_view is None or \
-                self.dicom_coronal_view.vertical_view is None or \
-                self.dicom_sagittal_view.horizontal_view is None or \
-                self.dicom_sagittal_view.vertical_view is None:
+        """
+                Toggles the display of cut lines across all DICOM and image fusion views.
+
+                This function enables or disables the cut lines in the axial, coronal, and sagittal views,
+                as well as in all image fusion views if present. It also manages the mouse mode and the
+                enabled state of mouse mode buttons in the translation menu for each view to ensure
+                consistent user interaction when cut lines are shown or hidden.
+                """
+        cut_lines_enabled = (
+                self.dicom_axial_view.horizontal_view is not None and
+                self.dicom_axial_view.vertical_view is not None and
+                self.dicom_coronal_view.horizontal_view is not None and
+                self.dicom_coronal_view.vertical_view is not None and
+                self.dicom_sagittal_view.horizontal_view is not None and
+                self.dicom_sagittal_view.vertical_view is not None
+        )
+
+        if not cut_lines_enabled:
             self.dicom_axial_view.set_views(self.dicom_coronal_view,
                                             self.dicom_sagittal_view)
             self.dicom_coronal_view.set_views(self.dicom_axial_view,
@@ -337,30 +349,55 @@ class UIMainWindow:
             self.dicom_coronal_view.set_views(None, None)
             self.dicom_sagittal_view.set_views(None, None)
 
-        if hasattr(self, 'image_fusion_view'):
-            if self.image_fusion_view is not None:
-                if self.image_fusion_view_axial.horizontal_view is None or \
-                        self.image_fusion_view_axial.vertical_view is None or \
-                        self.image_fusion_view_coronal.horizontal_view is None \
-                        or self.image_fusion_view_coronal.vertical_view is None \
-                        or \
-                        self.image_fusion_view_sagittal.horizontal_view is None \
-                        or \
-                        self.image_fusion_view_sagittal.vertical_view is None:
-                    self.image_fusion_view_axial.set_views(
-                        self.image_fusion_view_coronal,
-                        self.image_fusion_view_sagittal)
-                    self.image_fusion_view_coronal.set_views(
-                        self.image_fusion_view_axial,
-                        self.image_fusion_view_sagittal)
-
-                    self.image_fusion_view_sagittal.set_views(
-                        self.image_fusion_view_axial,
-                        self.image_fusion_view_coronal)
-                else:
-                    self.image_fusion_view_axial.set_views(None, None)
-                    self.image_fusion_view_coronal.set_views(None, None)
-                    self.image_fusion_view_sagittal.set_views(None, None)
+        if hasattr(self, 'image_fusion_view') and self.image_fusion_view is not None:
+            fusion_cut_lines_enabled = (
+                    self.image_fusion_view_axial.horizontal_view is not None and
+                    self.image_fusion_view_axial.vertical_view is not None and
+                    self.image_fusion_view_coronal.horizontal_view is not None and
+                    self.image_fusion_view_coronal.vertical_view is not None and
+                    self.image_fusion_view_sagittal.horizontal_view is not None and
+                    self.image_fusion_view_sagittal.vertical_view is not None
+            )
+            if not fusion_cut_lines_enabled:
+                self.image_fusion_view_axial.set_views(
+                    self.image_fusion_view_coronal,
+                    self.image_fusion_view_sagittal)
+                self.image_fusion_view_coronal.set_views(
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal)
+                self.image_fusion_view_sagittal.set_views(
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_coronal)
+                # --- Save and set mouse mode to none for all fusion views ---
+                for view in [
+                    self.image_fusion_single_view,
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal,
+                    self.image_fusion_view_coronal,
+                ]:
+                    if hasattr(view, "save_and_set_mouse_mode_none"):
+                        view.save_and_set_mouse_mode_none()
+                    # Disable mouse mode buttons
+                    if hasattr(view, "translation_menu") and hasattr(view.translation_menu,
+                                                                     "set_mouse_mode_buttons_enabled"):
+                        view.translation_menu.set_mouse_mode_buttons_enabled(False)
+            else:
+                self.image_fusion_view_axial.set_views(None, None)
+                self.image_fusion_view_coronal.set_views(None, None)
+                self.image_fusion_view_sagittal.set_views(None, None)
+                # --- Restore previous mouse mode for all fusion views ---
+                for view in [
+                    self.image_fusion_single_view,
+                    self.image_fusion_view_axial,
+                    self.image_fusion_view_sagittal,
+                    self.image_fusion_view_coronal,
+                ]:
+                    if hasattr(view, "restore_prev_mouse_mode"):
+                        view.restore_prev_mouse_mode()
+                    # Enable mouse mode buttons
+                    if hasattr(view, "translation_menu") and hasattr(view.translation_menu,
+                                                                     "set_mouse_mode_buttons_enabled"):
+                        view.translation_menu.set_mouse_mode_buttons_enabled(True)
 
     def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
@@ -443,6 +480,16 @@ class UIMainWindow:
 
         # Define a callback that updates all three views for translation
         def update_all_views(offset):
+            """
+                        Updates the overlay offset for all image fusion views.
+
+                        This function propagates the given offset to all image fusion views,
+                        ensuring that the overlay is updated consistently across axial, sagittal,
+                        coronal, and single fusion views.
+
+                        Args:
+                            offset: A tuple or list representing the new (x, y, z) offset.
+                        """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -458,6 +505,16 @@ class UIMainWindow:
 
         # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
+            """
+                        Updates the overlay rotation for all image fusion views.
+
+                        This function propagates the given rotation tuple to all image fusion views,
+                        ensuring that the overlay rotation is updated consistently across axial, sagittal,
+                        coronal, and single fusion views.
+
+                        Args:
+                            rotation_tuple: A tuple or list representing the new (rx, ry, rz) rotation in degrees.
+                        """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -472,6 +529,18 @@ class UIMainWindow:
 
         # --- Connect color pair change to all fusion views ---
         def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
+            """
+                       Propagates color pair changes to all image fusion views.
+
+                       This function updates the color scheme for all image fusion views based on the
+                       selected fixed and moving colors and whether coloring is enabled. It ensures
+                       that the color settings remain consistent across all fusion views.
+
+                       Args:
+                           fixed_color: The color assigned to the fixed image.
+                           moving_color: The color assigned to the moving image.
+                           coloring_enabled: Boolean indicating if coloring is enabled.
+                       """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -549,6 +618,40 @@ class UIMainWindow:
         # Track the last interacted slice orientation and index for rotation axis
         self.last_fusion_slice_orientation = "axial"
         self.last_fusion_slice_idx = 0
+
+        # --- Apply transform if present in images dict (from ManualFusionLoader) ---
+        if hasattr(self, "images") and isinstance(self.images, dict) and "transform_data" in self.images and \
+                self.images["transform_data"] is not None:
+            td = self.images["transform_data"]
+            menu = self.fusion_options_tab
+            import numpy as np
+            import vtk
+            m = td["matrix"]
+            translation = td["translation"]
+            rotation = td["rotation"]
+            vtkmat = vtk.vtkMatrix4x4()
+            for i in range(4):
+                for j in range(4):
+                    vtkmat.SetElement(i, j, m[i, j])
+            if hasattr(vtk_engine, "transform"):
+                vtk_engine.transform.SetMatrix(vtkmat)
+                vtk_engine.reslice3d.SetResliceAxes(vtkmat)
+                vtk_engine.reslice3d.Modified()
+            if hasattr(vtk_engine, "set_translation"):
+                vtk_engine.set_translation(*translation)
+            if hasattr(vtk_engine, "set_rotation_deg"):
+                vtk_engine.set_rotation_deg(*rotation)
+            # Update the menu sliders
+            menu.set_offsets(translation)
+            for i in range(3):
+                menu.rotate_sliders[i].blockSignals(True)
+                menu.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
+                menu.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
+                menu.rotate_sliders[i].blockSignals(False)
+            if menu.offset_changed_callback:
+                menu.offset_changed_callback(translation)
+            if menu.rotation_changed_callback:
+                menu.rotation_changed_callback(tuple(rotation))
 
         def on_slider_changed(orientation, value):
             self.last_fusion_slice_orientation = orientation

@@ -77,6 +77,11 @@ class AutoSegmentationController(QObject):
             self._view = AutoSegmentWindow(self.view_state)
         self._view.show()
 
+        # Bring window to front and make active (if already visible)
+        if self._view.isVisible():
+            self._view.raise_()
+            self._view.activateWindow()
+
     def update_progress_text(self, text: str) -> None:
         """
         Access the view of the feature and updates the progress text on the UI element

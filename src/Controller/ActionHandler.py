@@ -377,7 +377,7 @@ class ActionHandler:
             row_s = dt.PixelSpacing[0]
             col_s = dt.PixelSpacing[1]
             dt.convert_pixel_data()
-            pixmap = self.patient_dict_container.get("pixmaps_axial")[slider_id]
+            pixmap = self.patient_dict_container.get("pixmaps_axial")[ slider_id]
             self.__main_page.call_class.run_transect(
                 self.__main_page,
                 view,
