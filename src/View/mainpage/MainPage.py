@@ -419,10 +419,8 @@ class UIMainWindow:
 
     def create_image_fusion_tab(self, manual=False):
         """
-        This function is used to create the tab for image fusion.
-        For manual fusion, overlays the base and overlay images without autofusion.
-        Adds a "Fusion Options" tab with the Translate/Rotate menu.
-        Uses self.fixed_image_sitk and self.moving_image_sitk if available.
+        Creates and configures the Image Fusion tab, including all fusion views, options, and callbacks.
+        This method sets up the fusion views, windowing slider, ROI transfer options, and handles transform loading and static overlays.
         """
         # Set a flag for Zooming
         self.action_handler.has_image_registration_four = True
@@ -431,21 +429,12 @@ class UIMainWindow:
         moving_dict_container = MovingDictContainer()
 
         # Only check for modality if dataset is not None
-        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss") and len(self.structures_tab.rois.items()) == 0:
+        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss") and len(
+                self.structures_tab.rois.items()) == 0:
             self.structures_tab.update_ui(moving=True)
 
-        # Define a callback that updates all three views for translation
+        # --- Define callbacks for fusion options ---
         def update_all_views(offset):
-            """
-                        Updates the overlay offset for all image fusion views.
-
-                        This function propagates the given offset to all image fusion views,
-                        ensuring that the overlay is updated consistently across axial, sagittal,
-                        coronal, and single fusion views.
-
-                        Args:
-                            offset: A tuple or list representing the new (x, y, z) offset.
-                        """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -458,19 +447,7 @@ class UIMainWindow:
                     slice_idx=self.last_fusion_slice_idx
                 )
 
-
-        # Define a callback that updates all three views for rotation
         def update_all_rotations(rotation_tuple):
-            """
-                        Updates the overlay rotation for all image fusion views.
-
-                        This function propagates the given rotation tuple to all image fusion views,
-                        ensuring that the overlay rotation is updated consistently across axial, sagittal,
-                        coronal, and single fusion views.
-
-                        Args:
-                            rotation_tuple: A tuple or list representing the new (rx, ry, rz) rotation in degrees.
-                        """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -483,20 +460,7 @@ class UIMainWindow:
                     slice_idx=self.last_fusion_slice_idx
                 )
 
-        # --- Connect color pair change to all fusion views ---
         def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
-            """
-                       Propagates color pair changes to all image fusion views.
-
-                       This function updates the color scheme for all image fusion views based on the
-                       selected fixed and moving colors and whether coloring is enabled. It ensures
-                       that the color settings remain consistent across all fusion views.
-
-                       Args:
-                           fixed_color: The color assigned to the fixed image.
-                           moving_color: The color assigned to the moving image.
-                           coloring_enabled: Boolean indicating if coloring is enabled.
-                       """
             for view in [
                 self.image_fusion_single_view,
                 self.image_fusion_view_axial,
@@ -504,7 +468,6 @@ class UIMainWindow:
                 self.image_fusion_view_coronal,
             ]:
                 if hasattr(view, "_on_color_pair_changed"):
-                    # Compose the text as in the combo box for compatibility
                     if not coloring_enabled:
                         text = "No Colors (Grayscale)"
                     elif fixed_color == "Purple" and moving_color == "Green":
@@ -517,17 +480,11 @@ class UIMainWindow:
                         text = "Purple + Green"
                     view._on_color_pair_changed(text)
 
-        def propagate_window_level_change(window, level):
-            for view in [
-                self.image_fusion_view_axial,
-                self.image_fusion_view_sagittal,
-                self.image_fusion_view_coronal,
-            ]:
-                if hasattr(view, "on_window_level_changed"):
-                    view.on_window_level_changed(window, level)
-
-        # Fusion Options Tab with Translate/Rotate Menu
+        # --- Fusion Options Tab with Translate/Rotate Menu ---
         self.fusion_options_tab = None
+        vtk_engine = None
+        if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:
+            vtk_engine = self.images["vtk_engine"]
 
         if manual:
             self.fusion_options_tab = TranslateRotateMenu()
@@ -538,7 +495,6 @@ class UIMainWindow:
             self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
             self.left_panel.setCurrentWidget(self.fusion_options_tab)
 
-            # --- Set mouse mode changed callback to update ALL views ---
             def propagate_mouse_mode_change(mode):
                 for view in [
                     self.image_fusion_single_view,
@@ -548,18 +504,31 @@ class UIMainWindow:
                 ]:
                     if hasattr(view, "_on_mouse_mode_changed"):
                         view._on_mouse_mode_changed(mode)
-                        # Force overlay refresh so window appears immediately
                         view.refresh_overlay_now()
 
             self.fusion_options_tab.set_mouse_mode_changed_callback(propagate_mouse_mode_change)
 
-        # VTKEngine integration
-        vtk_engine = None
-        # Try to get vtk_engine from loader result (set by TopLevelController)
-        if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:
-            vtk_engine = self.images["vtk_engine"]
+        # --- Create and configure fusion views ---
+        self._init_fusion_views(vtk_engine)
+        self._init_windowing_slider()
+        self._init_roi_transfer_option_view()
+        self._init_fusion_slice_tracking()
+        self._apply_transform_if_present(vtk_engine)
+        self._connect_slider_callbacks()
+        self._set_slider_ranges()
+        self._setup_static_overlays_if_no_vtk(vtk_engine)
+        self._rescale_and_update_fusion_views()
+        self._setup_fusion_four_views_layout()
+        self._finalize_fusion_tab()
 
-        # Pass the shared TranslateRotateMenu to all fusion views
+    def _get_vtk_engine_from_images(self):
+        """Helper to extract vtk_engine from self.images if present."""
+        if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:
+            return self.images["vtk_engine"]
+        return None
+
+    def _init_fusion_views(self, vtk_engine):
+        """Initialize all fusion views and set their orientation."""
         self.image_fusion_single_view = ImageFusionAxialView(
             vtk_engine=vtk_engine, translation_menu=self.fusion_options_tab)
         self.image_fusion_view = QStackedWidget()
@@ -569,44 +538,51 @@ class UIMainWindow:
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
         self.image_fusion_view_axial.orientation = "axial"
-
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
             cut_line_color=QtGui.QColor(0, 255, 0),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
-
         self.image_fusion_view_sagittal.orientation = "sagittal"
-
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
-
         self.image_fusion_view_coronal.orientation = "coronal"
-
-        fusion_views = [
+        self._fusion_views = [
             self.image_fusion_view_axial,
             self.image_fusion_view_sagittal,
             self.image_fusion_view_coronal
         ]
 
-        # --- Create Windowing Slider ---
-        # Pass a single view with a .slider attribute
-        self.windowing_slider = WindowingSlider(dicom_view=self.image_fusion_view_axial, width=50)
-        set_windowing_slider(self.windowing_slider, fusion_views=fusion_views)
+    def _init_windowing_slider(self):
+        """Create and configure the windowing slider for fusion views."""
 
-        # Attach the window/level callback
+        def propagate_window_level_change(window, level):
+            for view in [
+                self.image_fusion_view_axial,
+                self.image_fusion_view_sagittal,
+                self.image_fusion_view_coronal,
+            ]:
+                if hasattr(view, "on_window_level_changed"):
+                    view.on_window_level_changed(window, level)
+
+        self.windowing_slider = WindowingSlider(dicom_view=self.image_fusion_view_axial, width=50)
+        set_windowing_slider(self.windowing_slider, fusion_views=self._fusion_views)
         self.windowing_slider.fusion_window_level_callback = propagate_window_level_change
 
+    def _init_roi_transfer_option_view(self):
+        """Initialize the ROI transfer option view for fusion."""
         self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
             self.structures_tab.fixed_container_structure_modified,
             self.structures_tab.moving_container_structure_modified)
 
-        # Track the last interacted slice orientation and index for rotation axis
+    def _init_fusion_slice_tracking(self):
+        """Track the last interacted slice orientation and index for rotation axis."""
         self.last_fusion_slice_orientation = "axial"
         self.last_fusion_slice_idx = 0
 
-        # --- Apply transform if present in images dict (from ManualFusionLoader) ---
+    def _apply_transform_if_present(self, vtk_engine):
+        """Apply transform from images dict if present (from ManualFusionLoader)."""
         if hasattr(self, "images") and isinstance(self.images, dict) and "transform_data" in self.images and \
                 self.images["transform_data"] is not None:
             td = self.images["transform_data"]
@@ -628,7 +604,6 @@ class UIMainWindow:
                 vtk_engine.set_translation(*translation)
             if hasattr(vtk_engine, "set_rotation_deg"):
                 vtk_engine.set_rotation_deg(*rotation)
-            # Update the menu sliders
             menu.set_offsets(translation)
             for i in range(3):
                 menu.rotate_sliders[i].blockSignals(True)
@@ -640,29 +615,32 @@ class UIMainWindow:
             if menu.rotation_changed_callback:
                 menu.rotation_changed_callback(tuple(rotation))
 
+    def _connect_slider_callbacks(self):
+        """Connect each fusion view's slider to update the last interacted orientation/index."""
+
         def on_slider_changed(orientation, value):
             self.last_fusion_slice_orientation = orientation
             self.last_fusion_slice_idx = value
 
-        # Connect each fusion view's slider to update the last interacted orientation/index
         self.image_fusion_view_axial.slider.valueChanged.connect(
             lambda v: on_slider_changed("axial", v))
         self.image_fusion_view_coronal.slider.valueChanged.connect(
             lambda v: on_slider_changed("coronal", v))
         self.image_fusion_view_sagittal.slider.valueChanged.connect(
             lambda v: on_slider_changed("sagittal", v))
-        
-        # Set slider ranges to VTK extents for all fusion views 
+
+    def _set_slider_ranges(self):
+        """Set slider ranges to VTK extents for all fusion views."""
         for view in [self.image_fusion_view_axial, self.image_fusion_view_coronal, self.image_fusion_view_sagittal]:
             if hasattr(view, "set_slider_range_from_vtk"):
                 view.set_slider_range_from_vtk()
 
-        # If not using VTKEngine, fall back to static overlays
+    def _setup_static_overlays_if_no_vtk(self, vtk_engine):
+        """If not using VTKEngine, fall back to static overlays."""
         if vtk_engine is None and hasattr(self, "fixed_image_sitk") and hasattr(self, "moving_image_sitk"):
             import SimpleITK as sitk
             import numpy as np
 
-            # Convert images to numpy arrays for display
             fixed_arr = sitk.GetArrayFromImage(self.fixed_image_sitk)
             moving_arr = sitk.GetArrayFromImage(self.moving_image_sitk)
 
@@ -673,19 +651,14 @@ class UIMainWindow:
                 qimg = QImage(arr.data, w, h, w, QImage.Format_Grayscale8)
                 return QPixmap.fromImage(qimg)
 
-            # Axial: slices along z
             axial_images = [numpy_to_qpixmap(fixed_arr[i, :, :]) for i in range(fixed_arr.shape[0])]
-            # Coronal: slices along y
             coronal_images = [numpy_to_qpixmap(fixed_arr[:, i, :]) for i in range(fixed_arr.shape[1])]
-            # Sagittal: slices along x
             sagittal_images = [numpy_to_qpixmap(fixed_arr[:, :, i]) for i in range(fixed_arr.shape[2])]
 
-            # Store overlays for slider use
             self.image_fusion_view_axial.overlay_images = axial_images
             self.image_fusion_view_coronal.overlay_images = coronal_images
             self.image_fusion_view_sagittal.overlay_images = sagittal_images
 
-            # Connect slider to update overlay
             self.image_fusion_view_axial.slider.valueChanged.connect(
                 lambda: self.image_fusion_view_axial.image_display())
             self.image_fusion_view_coronal.slider.valueChanged.connect(
@@ -693,12 +666,12 @@ class UIMainWindow:
             self.image_fusion_view_sagittal.slider.valueChanged.connect(
                 lambda: self.image_fusion_view_sagittal.image_display())
 
-            # Initial display
             self.image_fusion_view_axial.image_display()
             self.image_fusion_view_coronal.image_display()
             self.image_fusion_view_sagittal.image_display()
 
-        # Rescale the size of the scenes inside the 3-slice views
+    def _rescale_and_update_fusion_views(self):
+        """Rescale the size of the scenes inside the 3-slice views and update them."""
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
@@ -706,6 +679,8 @@ class UIMainWindow:
         self.image_fusion_view_sagittal.update_view(zoom_change=True)
         self.image_fusion_view_coronal.update_view(zoom_change=True)
 
+    def _setup_fusion_four_views_layout(self):
+        """Setup the layout for the four fusion views."""
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
         for i in range(2):
@@ -717,25 +692,42 @@ class UIMainWindow:
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
-
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_roi_transfer_option_view, 1, 1
         )
-
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
-
         self.image_fusion_view.addWidget(self.image_fusion_four_views)
         self.image_fusion_view.addWidget(self.image_fusion_single_view)
         self.image_fusion_view.setCurrentWidget(self.image_fusion_four_views)
 
-        # Add Image Fusion Tab
+    def _finalize_fusion_tab(self):
+        """Add the Image Fusion tab to the right panel and update the Add On Option GUI."""
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
-
-        # Update the Add On Option GUI
         self.add_on_options_controller.update_ui()
 
+    def _propagate_window_level_change(self, window, level):
+        """
+        Propagates window and level changes to all image fusion views.
+
+        This function updates the window and level settings for all image fusion views,
+        ensuring that the displayed fusion images use the correct window/level values.
+
+        Args:
+            window: The window value to set for the fusion views.
+            level: The level value to set for the fusion views.
+
+        Returns:
+            None
+        """
+        for view in [
+            self.image_fusion_view_axial,
+            self.image_fusion_view_sagittal,
+            self.image_fusion_view_coronal,
+        ]:
+            if hasattr(view, "on_window_level_changed"):
+                view.on_window_level_changed(window, level)
 
     def perform_suv2roi(self):
         """

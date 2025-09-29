@@ -454,65 +454,116 @@ class BaseFusionView(DicomView):
         self._cut_line_active = False
 
     def _handle_translate_click(self, x, y, w, h):
+        """
+          Handles mouse clicks for translation mode in the fusion view.
+          Determines the translation direction based on the click position and updates the overlay offset accordingly.
+
+          Args:
+              x: The x-coordinate of the mouse click.
+              y: The y-coordinate of the mouse click.
+              w: The width of the scene.
+              h: The height of the scene.
+
+          Returns:
+              None
+          """
+
+        # Define translation logic for each orientation
         def axial_trans(x, y, w, h):
+            # Axial: left/right or up/down depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
                 return 0.0, 1.0 if y < h / 2 else -1.0, 0.0
 
         def sagittal_trans(x, y, w, h):
+            # Sagittal: up/down or in/out depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return 0.0, 1.0 if x < w / 2 else -1.0, 0.0
             else:
                 return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
 
         def coronal_trans(x, y, w, h):
+            # Coronal: left/right or in/out depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
                 return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
 
+        # Lookup for orientation-specific translation
         translate_lookup = {
             "axial": axial_trans,
             "sagittal": sagittal_trans,
             "coronal": coronal_trans,
         }
+
+        # Get translation direction based on click position and orientation
         dx, dy, dz = translate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
+
+        # Get current translation values from VTK engine, or default to zero
         curr = [self.vtk_engine._tx, self.vtk_engine._ty, self.vtk_engine._tz] if self.vtk_engine else [0.0, 0.0, 0.0]
+
+        # Compute new offset by adding direction to current translation
         new_offset = (curr[0] + dx, curr[1] + dy, curr[2] + dz)
+
+        # Update the translation sliders in the menu, apply the offest and update the view
         self.translation_menu.set_offsets(new_offset)
         self.update_overlay_offset(new_offset, orientation=self.slice_view, slice_idx=self.slider.value())
 
     def _handle_rotate_click(self, x, y, w, h):
+        """
+               Handles mouse clicks for rotation mode in the fusion view.
+               Determines the rotation direction and axis based on the click position and updates the overlay rotation accordingly.
+
+               Args:
+                   x: The x-coordinate of the mouse click.
+                   y: The y-coordinate of the mouse click.
+                   w: The width of the scene.
+                   h: The height of the scene.
+
+               Returns:
+                   None
+               """
+
+        # Define rotation logic for each orientation
         def axial_rot(x, y, w, h):
+            # Axial: rotate around Z or X depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return (0.0, 0.0, 0.5 if x < w / 2 else -0.5)
             else:
                 return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
 
         def sagittal_rot(x, y, w, h):
+            # Sagittal: rotate around X or Y depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return (0.5 if x < w / 2 else -0.5, 0.0, 0.0)
             else:
                 return (0.0, -0.5 if y < h / 2 else 0.5, 0.0)
 
         def coronal_rot(x, y, w, h):
+            # Coronal: rotate around Y or X depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return (0.0, -0.5 if x < w / 2 else 0.5, 0.0)
             else:
                 return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
 
+        # Lookup for orientation-specific rotation
         rotate_lookup = {
             "axial": axial_rot,
             "sagittal": sagittal_rot,
             "coronal": coronal_rot,
         }
+        # Get rotation direction based on click position and orientation
         rx, ry, rz = rotate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
+        # Get current rotation values from VTK engine, or default to zero
         curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
+        # Compute new rotation by adding direction to current rotation
         new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
+        # Update the rotation sliders in the menu
         self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0] * 10)))
         self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1] * 10)))
         self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2] * 10)))
+        # Apply the new rotation to the overlay and update the view
         self.update_overlay_rotation(new_rot, orientation=self.slice_view, slice_idx=self.slider.value())
 
 
@@ -639,5 +690,4 @@ class BaseFusionView(DicomView):
             window = getattr(self.vtk_engine, "window", 400)
         if level is None:
             level = getattr(self.vtk_engine, "level", 40)
-        # print(f"Setting VTKEngine window={window}, level={level}")
         self.vtk_engine.set_window_level(float(window), float(level))

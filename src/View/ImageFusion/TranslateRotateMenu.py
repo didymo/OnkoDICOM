@@ -40,6 +40,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
     """
 
     def __init__(self, _back_callback=None):
+        """
+              Initializes the TranslateRotateMenu widget for manual image fusion.
+              Sets up the UI elements for translation, rotation, opacity, color selection, and mouse mode controls, and connects their signals.
+              """
         super().__init__()
         self.offset_changed_callback = None
         self.mouse_mode = None
@@ -98,7 +102,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             # Mouse Mode Toolbar (Translate/Rotate/Interrogation)
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
-        mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
+        mouse_mode_hbox.setContentsMargins(8, 0, 8, 0)
 
         self.mouse_translate_btn = QtWidgets.QPushButton()
         self.mouse_rotate_btn = QtWidgets.QPushButton()
@@ -133,9 +137,9 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_translate_btn.setIcon(QIcon(self._icon_paths["translate"][0]))
         self.mouse_rotate_btn.setIcon(QIcon(self._icon_paths["rotate"][0]))
         self.mouse_interrogation_btn.setIcon(QIcon(self._icon_paths["interrogation"][0]))
-        self.mouse_translate_btn.setIconSize(QtCore.QSize(30, 30))
-        self.mouse_rotate_btn.setIconSize(QtCore.QSize(30,30))
-        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(30, 30))
+        self.mouse_translate_btn.setIconSize(QtCore.QSize(20, 20))
+        self.mouse_rotate_btn.setIconSize(QtCore.QSize(20,20))
+        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(20, 22))
 
         # Add highlight style for toggled state and black border only when checked
         #TODO add to style sheet. Having issues with it not loading teh checked buttons if added
@@ -159,12 +163,19 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         # Update icons based on checked state
         def update_icons():
+            """
+               Updates the icons for the mouse mode buttons based on their checked state.
+               This function sets the icon for each button to its checked or unchecked version.
+               """
+
+            # Changing teh icons to border and no border as per checked state
             self.mouse_translate_btn.setIcon(QIcon(
                 self._icon_paths["translate"][1] if self.mouse_translate_btn.isChecked() else
                 self._icon_paths["translate"][0]
             ))
             self.mouse_rotate_btn.setIcon(QIcon(
-                self._icon_paths["rotate"][1] if self.mouse_rotate_btn.isChecked() else self._icon_paths["rotate"][0]
+                self._icon_paths["rotate"][1] if self.mouse_rotate_btn.isChecked() else
+                self._icon_paths["rotate"][0]
             ))
             self.mouse_interrogation_btn.setIcon(QIcon(
                 self._icon_paths["interrogation"][1] if self.mouse_interrogation_btn.isChecked() else
@@ -197,6 +208,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self._last_checked_button = None
 
         def on_mouse_mode_btn_clicked(btn):
+            """
+                Handles mouse mode button clicks to toggle between translation, rotation, and interrogation modes.
+                Updates the internal mouse mode state and triggers the mouse mode changed callback if set.
+                """
             if self._last_checked_button == btn and btn.isChecked():
                 # uncheck button if active
                 self.mouse_mode_group.setExclusive(False)
