@@ -6,7 +6,13 @@ from src.Controller.PathHandler import database_path
 logger = logging.getLogger(__name__)
 
 class SavedSegmentDatabase:
-    def __init__(self, table_name: str) -> None:
+    """
+    Class for accessing the database table for
+    AutoSegmentation GUI save options to be stored into and retrieved from
+    Default Table Name if `AutoSegmentation` and the Key column is "save_name"
+    """
+
+    def __init__(self, table_name: str = "AutoSegmentation") -> None:
         """
         Initialize the Database engine to save/get data from persistent storage
         This class is specific to the AutoSegmentation Database handling.
@@ -51,7 +57,7 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._insert_row_execution(values))
 
-    def select_entry_execution(self, save_name:str) -> dict[str, str | bool]:
+    def select_entry(self, save_name:str) -> dict[str, str | bool]:
         """
         Initiates Async method to get an entry from the table
         :return: dict[str, str | bool]
