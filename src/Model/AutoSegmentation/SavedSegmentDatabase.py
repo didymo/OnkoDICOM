@@ -18,23 +18,13 @@ class SavedSegmentDatabase:
         self.table_name: str = table_name
         self.feedback_callback: Callable[[str], None] | None = None
         self.key_column: str = "save_name"
-        # Location of the database being accessed
-        logger.debug("Checking and setting value for self.database_location")
+
+        # Setting Up Database Table of the database being accessed
+        logger.debug("Setting value for self.database_location and creating Table")
         self.database_location: pathlib.Path = database_path()
-        self.create_table()
+        self._create_table()
 
-
-    def database_name(self) -> str:
-        """
-        For child classes to overwrite and change the name of the database for other table implementations
-        This is basically single use so this also ensures the smallest possible lifetime.
-        As all it needs to do is get pulled in to the creation of the database location.
-
-        :return: name
-        """
-        logger.debug("Setting database name")
-        return "OnkoDICOM.db"
-
+# GUI Update Method
     def set_feedback_callback(self, callback: Callable[[str], None]) -> None:
         """
         Setting the callback function to the Controller the database update text to be displayed on the GUI
@@ -46,18 +36,6 @@ class SavedSegmentDatabase:
         logger.debug("Setting feedback callback")
         self.feedback_callback: Callable[[str], None] = callback
 
-    def _send_feedback(self, text: str) -> None:
-        """
-        Giving the new test feed back to the Controller for display on the GUI using Function set using
-        `obj.set_feedback_callback(callback_function)`.
-
-        :param text: str
-        :return: None
-        """
-        logger.debug("Sending feedback {}".format(text))
-        if self.feedback_callback is not None:
-            self.feedback_callback(text)
-
 # Database Methods
     def get_columns(self) -> list[str]:
         """
@@ -65,20 +43,6 @@ class SavedSegmentDatabase:
         :return: list[str]
         """
         return asyncio.run(self._get_columns_execution())
-
-    def create_table(self) -> bool:
-        """
-        Initiates Async method to create a table
-        :return: bool
-        """
-        return asyncio.run(self._create_table_execution(self.key_column))
-
-    def add_boolean_column(self, column: str) -> bool:
-        """
-        Initiates Async method add a boolean column to the table
-        :return: bool
-        """
-        return asyncio.run(self._add_boolean_column_execution(column))
 
     def insert_row(self, values: dict) -> bool:
         """
@@ -95,6 +59,32 @@ class SavedSegmentDatabase:
         return asyncio.run(self._select_entry_execution(save_name))
 
 # Internal use Only
+    def _send_feedback(self, text: str) -> None:
+        """
+        Giving the new test feed back to the Controller for display on the GUI using Function set using
+        `obj.set_feedback_callback(callback_function)`.
+
+        :param text: str
+        :return: None
+        """
+        logger.debug("Sending feedback {}".format(text))
+        if self.feedback_callback is not None:
+            self.feedback_callback(text)
+
+    def _create_table(self) -> bool:
+        """
+        Initiates Async method to create a table
+        :return: bool
+        """
+        return asyncio.run(self._create_table_execution(self.key_column))
+
+    def _add_boolean_column(self, column: str) -> bool:
+        """
+        Initiates Async method add a boolean column to the table
+        :return: bool
+        """
+        return asyncio.run(self._add_boolean_column_execution(column))
+
     # Async Methods
     async def _get_columns_execution(self) -> list[str]:
         """
