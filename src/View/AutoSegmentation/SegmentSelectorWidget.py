@@ -46,7 +46,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # Reference to the list owned by another class most likely the controller class
         self._selected_list: list[str] = segmentation_list
         # References to look up items in tree without searching entire tree
-        self._tree_choices_ref: dict[str, QTreeWidgetItem] = {}
+        self._tree_choices_ref: dict[str, list[QTreeWidgetItem]] = {}
 
         # Creating Tree using PySide6
         # Nesting methods here to Indicate that each one is intended to feed into each other
@@ -78,6 +78,22 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :returns: list[str]:
         """
         return self._selected_list
+
+    def select_all(self) -> None:
+        """
+        Checking all Options and adding all values to the self.selected_list
+
+        :returns: None
+        """
+        self._uniform_selection(Qt.CheckState.Checked)
+
+    def deselect_all(self) -> None:
+        """
+        Unchecking all Options and removing them from self.selected_list
+
+        :returns: None
+        """
+        self._uniform_selection(Qt.CheckState.Unchecked)
 
     def _create_selection_tree(self, callback_method: Callable[[QTreeWidgetItem, int], None]) -> QtWidgets.QTreeWidget:
         """
@@ -114,7 +130,9 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             for structure_name in structure_list.Structure.unique():
                 # in 2 lines to communicate each operation is for a different task
                 single_structure = self._input_structure(1, structure_name, body_input) # creating Item in tree
-                self._tree_choices_ref[structure_name] = single_structure # Adding Reference to dictionary for look up
+                if structure_name not in self._tree_choices_ref.keys(): # to deal with multiple of the same choice
+                    self._tree_choices_ref[structure_name] = []
+                self._tree_choices_ref[structure_name].append(single_structure) # Adding Reference to dictionary for look up
         return tree
 
     @functools.lru_cache(maxsize=128, typed=False)
@@ -163,7 +181,8 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         """
         for selected in current_list:
             try:
-                self._tree_choices_ref[selected].setCheckState(1, Qt.CheckState.Checked)
+                for item in self._tree_choices_ref[selected]:
+                    item.setCheckState(1, Qt.CheckState.Checked)
             except KeyError:
                 logger.debug(f"Skipped Selection {selected}: Not a choice in Tree")
                 pass
@@ -271,6 +290,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             return
         item.setCheckState(0, Qt.CheckState.PartiallyChecked)
 
+
     def _selected_list_add_or_remove(self, body_text: str , state: Qt.CheckState) -> None:
         """
         To add or remove an item from the self._selection_list member when a selection has changed
@@ -285,8 +305,23 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
             self._selected_list.remove(body_text)
 
+    def _uniform_selection(self, check: Qt.CheckState) -> None:
+        """
+        Method to set all check boxes to the same state as well as
+        adding or removing all values from self.selected List.
 
+        :param check: Qt.CheckState
+        :returns: None
+        """
+        # Instead of just going though self._selected_list and Unchecking/Checking only the values
+        # which exist with the list we are going though every value and Unchecking/Checking all of
+        # as a potential method of dealing with potential bugs such as checked boxes which are
+        # not checked which may or may not exist.
 
+        for key, values in self._tree_choices_ref.items():
+            for item in values:
+                item.setCheckState(1, check)
+            self._selected_list_add_or_remove(key, check)
 
-
-
+        for parent in range(self._selection_tree.topLevelItemCount()):
+            self._setting_parent_states(self._selection_tree.topLevelItem(parent))
