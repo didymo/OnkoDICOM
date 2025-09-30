@@ -16,7 +16,7 @@ class SavedSegmentDatabase:
     Default Table Name if `AutoSegmentation` and the Key column is "save_name"
     """
 
-    def __init__(self, table_name: str = "AutoSegmentation") -> None:
+    def __init__(self, data_store=None, table_name: str = "AutoSegmentation") -> None:
         """
         Initialize the Database engine to save/get data from persistent storage
         This class is specific to the AutoSegmentation Database handling.
@@ -25,16 +25,27 @@ class SavedSegmentDatabase:
         :return: None
         """
         logger.debug("Initializing SavedSegmentDatabase")
+        # Members
         self.table_name: str = table_name
-        self.feedback_callback: Callable[[str], None] | None = None
         self.key_column: str = "save_name"
-        self.column_list: list[str] = self.get_columns()
+        self.column_list: list[str] = []
+        self.results_dict: dict[str, str | bool] = {}
+
+        # Callbacks
+        # self._data_store = data_store
+        # self.feedback_callback: Callable[[str], None] | None = None
 
         # Setting Up Database Table of the database being accessed
         logger.debug(
             "Setting value for self.database_location and creating Table")
         self.database_location: pathlib.Path = database_path()
-        self._create_table()
+
+        asyncio.run(self.__construction_async())
+
+    async def __construction_async(self) -> None:
+        await self._create_table_execution(self.key_column)
+        self.column_list: list[str] = await self._get_columns_execution()
+
 
 # GUI Update Method
     def set_feedback_callback(self, callback: Callable[[str], None]) -> None:
@@ -50,7 +61,7 @@ class SavedSegmentDatabase:
         self.feedback_callback: Callable[[str], None] = callback
 
 # Database Methods
-    def get_columns(self) -> list[str]:
+    async def get_columns(self) -> list[str]:
         """
         Initiates Async method to get column list
         :return: list[str]
@@ -71,6 +82,9 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._select_entry_execution(save_name))
 
+    def get_save_list(self) -> list[str]:
+        return self._dict_to_list(self.results_dict)
+
 # Internal use Only
     def _send_feedback(self, text: str) -> None:
         """
@@ -82,9 +96,9 @@ class SavedSegmentDatabase:
         :return: None
         """
         logger.debug("Sending feedback {}".format(text))
-        if self.feedback_callback is not None:
-            self.feedback_callback(text)
-
+        # if self._data_store.data_transfer is not None:
+        #     self._data_store.data_transfer(text)
+        pass
     def _create_table(self) -> bool:
         """
         Initiates Async method to create a table
@@ -98,6 +112,13 @@ class SavedSegmentDatabase:
         :return: bool
         """
         return asyncio.run(self._add_boolean_column_execution(column))
+
+    def _dict_to_list(self, inp: dict[str, str | bool]) -> list[str]:
+        output_list: list[str] = []
+        for key, entry in inp.items():
+            if entry and key != self.key_column:
+                output_list.append(key)
+        return output_list
 
     # Async Methods
     async def _get_columns_execution(self) -> list[str]:
@@ -175,7 +196,7 @@ class SavedSegmentDatabase:
                     # BOOLEAN: as we only need to store if it is saved
                     # NOT NULL: as it is Binary State
                     # DEFAULT FALSE: As it will always be unsaved unless it is saved
-                    "ALTER TABLE {} ADD COLUMN {} NUMBER(0, 1) NOT NULL DEFAULT 0;"
+                    "ALTER TABLE {} ADD COLUMN {} BOOLEAN NOT NULL DEFAULT FALSE;"
                     .format(self.table_name, column_name.strip())
         )
         logger.debug("Executing Add Column")
@@ -202,7 +223,7 @@ class SavedSegmentDatabase:
             if not await self._add_boolean_column_execution(new_column):
                 success: bool = False
             logger.debug("New Columns added {}".format(new_column))
-        self.column_list: list[str] = self.get_columns()
+        self.column_list: list[str] = await self._get_columns_execution()
         return success
 
     async def _insert_row_execution(self, column_values: dict[str, str | bool]) -> bool:
@@ -218,10 +239,14 @@ class SavedSegmentDatabase:
             logger.debug("Failed to update Table Columns for current Input")
             return False
         statement: str = (
-            "INSERT INTO {} ({}) VALUES ({});"
+            "INSERT INTO {} ({}) VALUES ('{}', {});"
             .format(self.table_name,
                     ", ".join(column_values.keys()),
-                    ", ".join("'{}'".format(value) for value in column_values.values())
+                    column_values[self.key_column],
+                    ", ".join("{}".format(value)
+                              for key, value
+                              in column_values.items()
+                              if key != self.key_column)
                     )
         )
         logger.debug(statement)
@@ -245,17 +270,17 @@ class SavedSegmentDatabase:
         logger.debug(statement)
         logger.debug("Executing Select")
         column_values = await self._running_read_statement(statement)
+        column_values = column_values[0] # to dereference out of the array
         column_list: list[str] = await self._get_columns_execution()
-        # index 0 cause even though it is returning a single tuple,
         # to keep the select generalized returning a list is preferable
-        output_temp: dict[str, str] = dict(zip(column_list, column_values[0]))
+        output_temp: dict[str, str | bool] = dict(zip(column_list, column_values))
         output: dict[str, str | bool] = {}
         for key, value in output_temp.items():
             if key == self.key_column:
                 output[key]: str = value
                 continue
-            # converting to string "0" is still True but int 0 is False
-            output[key]: bool = bool(int(value))
+            # Database saves Booleans as 1 or 0 converting back to boolean
+            output[key]: bool = bool(value)
 
         logger.debug("Select Dict: {}".format(output_temp))
         return output
@@ -429,3 +454,6 @@ class SavedSegmentDatabase:
                 else:
                     raise transaction_issue
         return results
+
+if __name__ == "__main__":
+    SavedSegmentDatabase()
