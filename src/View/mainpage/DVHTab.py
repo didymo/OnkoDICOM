@@ -13,6 +13,7 @@ from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2csv, dvh2rtdose, rtdose2dvh
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class DVHTab(QtWidgets.QWidget):
@@ -185,14 +186,6 @@ class DVHTab(QtWidgets.QWidget):
                 progress_window.exec_()
 
                 self.export_rtdose()
-        else:
-            stylesheet_path = ""
-
-            # Select appropriate style sheet
-            if platform.system() == 'Darwin':
-                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
-            else:
-                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
 
             # Create a message box and add attributes
             mb = QtWidgets.QMessageBox()
@@ -211,7 +204,7 @@ class DVHTab(QtWidgets.QWidget):
             mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
 
             # Apply stylesheet to the message box and add icon to the window
-            mb.setStyleSheet(open(stylesheet_path).read())
+            mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
 
             mb.exec_()
