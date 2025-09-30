@@ -4,6 +4,7 @@ import pathlib
 import random
 import sqlite3
 from src.Controller.PathHandler import database_path
+from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +16,16 @@ class SavedSegmentDatabase:
     Default Table Name if `AutoSegmentation` and the Key column is "save_name"
     """
 
-    def __init__(self, data_store=None, table_name: str = "AutoSegmentation", key_column: str = "save_name") -> None:
+    def __init__(self,
+                 data_store: AutoSegmentViewState = None,
+                 table_name: str = "AutoSegmentation",
+                 key_column: str = "save_name"
+                 ) -> None:
         """
         Initialize the Database engine to save/get data from persistent storage
         This class is specific to the AutoSegmentation Database handling.
 
+        :param data_store:
         :param table_name: str
         :return: None
         """
@@ -43,6 +49,7 @@ class SavedSegmentDatabase:
     def get_columns(self) -> list[str]:
         """
         Initiates Async method to get column list
+
         :return: list[str]
         """
         return asyncio.run(self._get_columns_execution())
@@ -50,6 +57,7 @@ class SavedSegmentDatabase:
     def insert_row(self, values: dict) -> bool:
         """
         Initiates Async method to insert a row to the table
+
         :return: bool
         """
         return asyncio.run(self._insert_row_execution(values))
@@ -57,6 +65,8 @@ class SavedSegmentDatabase:
     def select_entry(self, save_name: str) -> list[str]:
         """
         Initiates Async method to get an entry from the table
+
+        :param save_name: str
         :return: dict[str, str | bool]
         """
         return asyncio.run(self._select_entry_execution(save_name))
@@ -78,6 +88,7 @@ class SavedSegmentDatabase:
     def _create_table(self) -> bool:
         """
         Initiates Async method to create a table
+
         :return: bool
         """
         return asyncio.run(self._create_table_execution(self.key_column))
@@ -85,6 +96,8 @@ class SavedSegmentDatabase:
     def _add_boolean_column(self, column: str) -> bool:
         """
         Initiates Async method add a boolean column to the table
+
+        :param column: str
         :return: bool
         """
         return asyncio.run(self._add_boolean_column_execution(column))
@@ -93,6 +106,9 @@ class SavedSegmentDatabase:
         """
         Initiates Async method to convert a sqlite3.Row to a list
         Of the column values which are true
+
+        :param row: sqlite3.Row
+        :return: list[str]
         """
         output_list: list[str] = []
         for key in row.keys():
@@ -187,6 +203,8 @@ class SavedSegmentDatabase:
         Filtering Out which columns already exist in the table
         than adding all the columns which don't exist in the table to the table
 
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param column_list: dict[str, str | bool]
         :return: bool
         """
@@ -210,7 +228,8 @@ class SavedSegmentDatabase:
         """
         Inserting a row into the table to be stored for future use.
 
-        Async Method as it may take time to process but may not need to be running the entire time.
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param column_values: dict
         :return: bool
         """
@@ -239,6 +258,8 @@ class SavedSegmentDatabase:
         This will be a dict which contains with the column name as the key and the
         values as string for the save_name and the Boolean for each option
 
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :param save_name: str
         :return: dict
         """
@@ -263,6 +284,8 @@ class SavedSegmentDatabase:
         Creating the engine which we use to connect to the database to make changes using member
         from `self.database_location`.
 
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
         :return: sqlite3.Connection
         """
         logger.debug(f"Creating connection from {self.database_location}")
