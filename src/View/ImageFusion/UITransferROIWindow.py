@@ -556,7 +556,7 @@ class UITransferROIWindow:
             return True
         
         except Exception as e:
-            traceback.print_exc()
+            print(e)
             try:
                 progress_callback.emit(("Error during ROI transfer", 90))
             except Exception:
@@ -576,7 +576,7 @@ class UITransferROIWindow:
 
         :param exception: exception thrown
         """
-        traceback.print_exc()
+        print(exception)
         QMessageBox.about(self.progress_window,
                           "Unable to transfer ROIs",
                           "Please check your image set and ROI data.")
@@ -641,7 +641,7 @@ class UITransferROIWindow:
                         sitk_image = original_roi_list[0][index]
                     except Exception as e:
                         print(f"[ERROR] Could not fetch sitk_image for roi '{roi_name}' at index {index}: {e}")
-                        traceback.print_exc()
+                        print(e)
                         continue
 
                     try:
@@ -653,14 +653,14 @@ class UITransferROIWindow:
                             continue
                     except Exception as e:
                         print(f"[ERROR] Exception during apply_linear_transform for ROI '{roi_name}': {e}")
-                        traceback.print_exc()
+                        print(e)
                         continue
 
                     try:
                         contour = sitk.GetArrayViewFromImage(new_contour)
                     except Exception as e:
                         print(f"[ERROR] Could not convert new_contour to array for ROI '{roi_name}': {e}")
-                        traceback.print_exc()
+                        print(e)
                         continue
 
                     try:
@@ -680,7 +680,7 @@ class UITransferROIWindow:
                                 patient_dict_container)
                         except Exception as e:
                             print(f"[ERROR] Exception while saving ROI '{roi_name}': {e}")
-                            traceback.print_exc()
+                            print(e)
                     break
 
             if not found:
@@ -701,7 +701,7 @@ class UITransferROIWindow:
             slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
         except Exception as e:
             print(f"[ERROR] get_dict_slice_to_uid failed: {e}")
-            traceback.print_exc()
+            print(e)
             return
         total_slices = len(slice_ids_dict)
         for contour in contours:
@@ -722,7 +722,7 @@ class UITransferROIWindow:
                 polygon_list = ROI.calculate_concave_hull_of_points(coords)
             except Exception as e:
                 print(f"[ERROR] calculate_concave_hull_of_points failed for slice {key}: {e}")
-                traceback.print_exc()
+                print(e)
                 polygon_list = []
             if len(polygon_list) > 0:
                 rois_to_save[key] = {
@@ -734,7 +734,7 @@ class UITransferROIWindow:
                 rois_to_save, patient_dict_container)
         except Exception as e:
             print(f"[ERROR] convert_hull_list_to_contours_data failed: {e}")
-            traceback.print_exc()
+            print(e)
             return
 
         if len(roi_list) > 0:
@@ -748,7 +748,7 @@ class UITransferROIWindow:
                     self.moving_dict_container.set("rtss_modified", True)
                 except Exception as e:
                     print(f"[ERROR] Failed saving ROI '{roi_name}' to moving container: {e}")
-                    traceback.print_exc()
+                    print(e)
             else:
                 try:
                     new_rtss = ROI.create_roi(
@@ -758,7 +758,7 @@ class UITransferROIWindow:
                     self.patient_dict_container.set("rtss_modified", True)
                 except Exception as e:
                     print(f"[ERROR] Failed saving ROI '{roi_name}' to patient container: {e}")
-                    traceback.print_exc()
+                    print(e)
         else:
             print(f"[ERROR] No contours to save for '{roi_name}' (roi_list empty)")
 
