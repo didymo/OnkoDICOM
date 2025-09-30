@@ -16,7 +16,7 @@ class SavedSegmentDatabase:
     Default Table Name if `AutoSegmentation` and the Key column is "save_name"
     """
 
-    def __init__(self, data_store=None, table_name: str = "AutoSegmentation") -> None:
+    def __init__(self, data_store=None, table_name: str = "AutoSegmentation", key_column: str = "save_name") -> None:
         """
         Initialize the Database engine to save/get data from persistent storage
         This class is specific to the AutoSegmentation Database handling.
@@ -27,15 +27,12 @@ class SavedSegmentDatabase:
         logger.debug("Initializing SavedSegmentDatabase")
         # Members
         self.table_name: str = table_name
-        self.key_column: str = "save_name"
+        self.key_column: str = key_column
+        self.data_store = data_store
+
+        # Database Column List
         self.column_list: list[str] = []
-        self.results_dict: dict[str, str | bool] = {}
 
-        # Callbacks
-        # self._data_store = data_store
-        # self.feedback_callback: Callable[[str], None] | None = None
-
-        # Setting Up Database Table of the database being accessed
         logger.debug(
             "Setting value for self.database_location and creating Table")
         self.database_location: pathlib.Path = database_path()
@@ -61,7 +58,7 @@ class SavedSegmentDatabase:
         self.feedback_callback: Callable[[str], None] = callback
 
 # Database Methods
-    async def get_columns(self) -> list[str]:
+    def get_columns(self) -> list[str]:
         """
         Initiates Async method to get column list
         :return: list[str]
@@ -75,15 +72,12 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._insert_row_execution(values))
 
-    def select_entry(self, save_name: str) -> dict[str, str | bool]:
+    def select_entry(self, save_name: str) -> list[str]:
         """
         Initiates Async method to get an entry from the table
         :return: dict[str, str | bool]
         """
         return asyncio.run(self._select_entry_execution(save_name))
-
-    def get_save_list(self) -> list[str]:
-        return self._dict_to_list(self.results_dict)
 
 # Internal use Only
     def _send_feedback(self, text: str) -> None:
@@ -113,10 +107,14 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._add_boolean_column_execution(column))
 
-    def _dict_to_list(self, inp: dict[str, str | bool]) -> list[str]:
+    def _row_to_list(self, row: sqlite3.Row) -> list[str]:
+        """
+        Initiates Async method to convert a sqlite3.Row to a list
+        Of the column values which are true
+        """
         output_list: list[str] = []
-        for key, entry in inp.items():
-            if entry and key != self.key_column:
+        for key in row.keys():
+            if row[key] and key != "save_name":
                 output_list.append(key)
         return output_list
 
@@ -134,7 +132,7 @@ class SavedSegmentDatabase:
         statement: str = "PRAGMA table_info('{}');".format(self.table_name)
 
         # Getting Column List
-        column_info: list[str] = await self._running_read_statement(statement)
+        column_info: list[sqlite3.Row] = await self._running_read_statement(statement)
 
         logger.debug("Converting Column names from {} to dict")
         column_list: list[str] = []
@@ -253,7 +251,7 @@ class SavedSegmentDatabase:
         logger.debug("Executing Insert Row")
         return await self._running_write_statement(statement)
 
-    async def _select_entry_execution(self, save_name: str) -> dict:
+    async def _select_entry_execution(self, save_name: str) -> list[str]:
         """
         Selecting a Specific Entry from the Table.
         This will be a dict which contains with the column name as the key and the
@@ -269,21 +267,14 @@ class SavedSegmentDatabase:
         )
         logger.debug(statement)
         logger.debug("Executing Select")
-        column_values = await self._running_read_statement(statement)
-        column_values = column_values[0] # to dereference out of the array
-        column_list: list[str] = await self._get_columns_execution()
-        # to keep the select generalized returning a list is preferable
-        output_temp: dict[str, str | bool] = dict(zip(column_list, column_values))
-        output: dict[str, str | bool] = {}
-        for key, value in output_temp.items():
-            if key == self.key_column:
-                output[key]: str = value
-                continue
-            # Database saves Booleans as 1 or 0 converting back to boolean
-            output[key]: bool = bool(value)
+        # to keep the select generalized returning a list of objects is preferable even though
+        # it is only ever going to have one
+        column_values: list[sqlite3.Row] = await self._running_read_statement(statement)
+        column_values: sqlite3.Row = column_values[0] # to dereference out of the array
+        column_list: list[str] = self._row_to_list(column_values)
 
-        logger.debug("Select Dict: {}".format(output_temp))
-        return output
+        logger.debug("Select Dict: {}".format(column_list))
+        return column_list
 
     def _create_connection(self) -> sqlite3.Connection:
         """
@@ -376,7 +367,7 @@ class SavedSegmentDatabase:
                     raise transaction_issue
 
     # Reading From Table
-    async def _running_read_statement(self, statement: str) -> list[str]:
+    async def _running_read_statement(self, statement: str) -> list[sqlite3.Row]:
         """
         Fetching information from the Database Table
         This function primarily deals with checking
@@ -387,16 +378,15 @@ class SavedSegmentDatabase:
         Async Method as it may take time to process but
         may not need to be running the entire time.
         :param statement: str
-        :return: bool
+        :return: list[sqlite3.Row]
         """
         # statement = text_sanitiser(statement).strip().join(";")
         # assigning list to be returned; if list cannot retrieve list
-        results: list[str] = []  # assigning list to be returned; if list cannot retrieve list
+        results: list[sqlite3.Row] | None = None  # assigning list to be returned; if list cannot retrieve list
         if sqlite3.complete_statement(statement):  # Ensuring the statement is a complete statement
             logger.debug("Executing Statement: {}".format(statement))
             try:
-                data = await self._run_read_operation(statement)
-                results: list[str] = data
+                results: list[sqlite3.Row] = await self._run_read_operation(statement)
                 feedback = "Data Read from Database"
             except sqlite3.OperationalError:
                 feedback = "Operational Error: Transaction not processed."
@@ -417,7 +407,7 @@ class SavedSegmentDatabase:
                                   statement: str,
                                   max_attempts: int = 3,
                                   min_retry_interval: float = 1.0,
-                                  max_retry_interval: float = 5.0) -> list[str]:
+                                  max_retry_interval: float = 5.0) -> list[sqlite3.Row]:
         """
         Method the attempts to read from the
         database with the given statement.
@@ -433,16 +423,16 @@ class SavedSegmentDatabase:
         :param max_attempts: int
         :param min_retry_interval: float
         :param max_retry_interval: float
-        :return: list[str]
+        :return: list[sqlite3.Row]
         :raises: Exception
         """
-        results: list[str] = []  # Empty List to show nothing was retrieved
+        results: list[sqlite3.Row] = []  # Empty List to show nothing was retrieved
         for attempt in range(max_attempts):
             logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
             try:
                 with self._create_connection() as connection:
                     connection.row_factory = sqlite3.Row
-                    results = connection.execute(statement).fetchall()
+                    results : list[sqlite3.Row] = connection.execute(statement).fetchall()
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
                         and attempt < max_attempts):
@@ -456,4 +446,5 @@ class SavedSegmentDatabase:
         return results
 
 if __name__ == "__main__":
-    SavedSegmentDatabase()
+    a = SavedSegmentDatabase()
+    print(a.get_columns())
