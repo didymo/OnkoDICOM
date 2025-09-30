@@ -16,7 +16,6 @@ from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
 from src.View.StyleSheetReader import StyleSheetReader
 from src.View.resources_open_patient_rc import *
-from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -703,10 +702,6 @@ class UIImageFusionWindow(object):
                 # Manual fusion: add dummy keys for main window compatibility
                 images["fixed_image"] = None
                 images["moving_image"] = None
-                # --- Set manual_fusion in PatientDictContainer ---
-                loader = ManualFusionLoader([], None)  # dummy loader for static call
-                loader.on_manual_fusion_loaded((True, images))
-
             wrapper = FusionResultWrapper(images, self.progress_window)
             self.image_fusion_info_initialized.emit(wrapper)
         elif hasattr(results, "update_progress"):
