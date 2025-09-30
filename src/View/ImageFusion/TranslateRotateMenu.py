@@ -2,16 +2,22 @@ import itertools
 import threading
 import numpy as np
 import os
+import logging
+import pydicom
+import datetime
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
 from src.Controller.PathHandler import resource_path
-from PySide6.QtWidgets import QFileDialog, QMessageBox
-import logging
 from src.Model.DicomUtils import truncate_ds_fields
+from src.Model.PatientDictContainer import PatientDictContainer
 from pydicom.dataset import FileDataset
+from pydicom.uid import generate_uid
+from pydicom import dcmread
+from pydicom.dataset import Dataset
 from pydicom.uid import generate_uid
 
 
@@ -591,7 +597,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     tuple: (fixed_ds, fixed_series_uid, fixed_image_uid)
                 """
-        from src.Model.PatientDictContainer import PatientDictContainer
         pdc = PatientDictContainer()
         fixed_ds = pdc.dataset[0] if pdc.dataset and 0 in pdc.dataset else None
         fixed_series_uid = getattr(fixed_ds, "SeriesInstanceUID", "1.2.3.4.5.6.7.8.1")
@@ -625,8 +630,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     tuple: (patient_name, patient_id)
                 """
-        from pydicom import dcmread
-        from src.Model.PatientDictContainer import PatientDictContainer
+        
 
         patient_name = getattr(self, "patient_name", None)
         patient_id = getattr(self, "patient_id", None)
@@ -678,8 +682,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     pydicom.Dataset: The file meta dataset.
                 """
-        import pydicom
-        from pydicom.uid import generate_uid
+        
         file_meta = pydicom.Dataset()
         file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.66.1"  # Spatial Registration Storage
         file_meta.MediaStorageSOPInstanceUID = generate_uid()
@@ -696,7 +699,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     patient_id: The patient ID.
                     file_meta: The file meta dataset.
                 """
-        import datetime
+    
         dt = datetime.datetime.now()
         ds.PatientName = patient_name
         ds.PatientID = patient_id
@@ -720,7 +723,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     fixed_series_uid: The SeriesInstanceUID of the fixed image.
                     fixed_image_uid: The SOPInstanceUID of the fixed image.
                 """
-        from pydicom.dataset import Dataset
+        
         ds.ReferencedSeriesSequence = [Dataset()]
         ds.ReferencedSeriesSequence[0].SeriesInstanceUID = fixed_series_uid
         ds.ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
@@ -737,8 +740,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     moving_series_uid: The SeriesInstanceUID of the moving image.
                     moving_image_uid: The SOPInstanceUID of the moving image.
                 """
-        from pydicom.dataset import Dataset
-        from pydicom.uid import generate_uid
+
 
         reg = Dataset()
         reg.MatrixRegistrationSequence = [Dataset()]
@@ -775,8 +777,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     None
                 """
-        import pydicom
-        import numpy as np
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
@@ -820,7 +820,8 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         Returns:
             None
         """
-        import vtk
+        # Import main window here to avoid circular imports
+        from src.View.mainpage.MainPage import UIMainWindow
 
         # --- Extract 4x4 transform matrix from SRO ---
         reg_seq = ds.RegistrationSequence[0]
@@ -839,8 +840,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         else:
             rotation = [0, 0, 0]
 
-        # Use the shared method from MainPage to apply the transform and update the menu
-        from src.View.mainpage.MainPage import UIMainWindow
         main_window = next(
             (w for w in QtWidgets.QApplication.topLevelWidgets() if isinstance(w, UIMainWindow)),
             None,
@@ -854,8 +853,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 menu=self
             )
 
-        #do not move this from here or it will throw an error
-        from src.View.mainpage.MainPage import UIMainWindow
+        
 
         mw = next(
             (
