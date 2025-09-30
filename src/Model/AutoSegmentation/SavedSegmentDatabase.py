@@ -3,7 +3,6 @@ import asyncio
 import pathlib
 import random
 import sqlite3
-from collections.abc import Callable
 from src.Controller.PathHandler import database_path
 
 logger = logging.getLogger(__name__)
@@ -28,34 +27,17 @@ class SavedSegmentDatabase:
         # Members
         self.table_name: str = table_name
         self.key_column: str = key_column
-        self.data_store = data_store
+        self._data_store = data_store
 
         # Database Column List
         self.column_list: list[str] = []
 
         logger.debug(
-            "Setting value for self.database_location and creating Table")
+            "Setting value for self.database_location and creating Table"
+        )
         self.database_location: pathlib.Path = database_path()
 
-        asyncio.run(self.__construction_async())
-
-    async def __construction_async(self) -> None:
-        await self._create_table_execution(self.key_column)
-        self.column_list: list[str] = await self._get_columns_execution()
-
-
-# GUI Update Method
-    def set_feedback_callback(self, callback: Callable[[str], None]) -> None:
-        """
-        Setting the callback function to the Controller the database
-        update text to be displayed on the GUI.
-        Allowing updating for the text to be displayed on the GUI.
-
-        :param callback: function(str)
-        :return: None
-        """
-        logger.debug("Setting feedback callback")
-        self.feedback_callback: Callable[[str], None] = callback
+        self._create_table()
 
 # Database Methods
     def get_columns(self) -> list[str]:
@@ -90,9 +72,9 @@ class SavedSegmentDatabase:
         :return: None
         """
         logger.debug("Sending feedback {}".format(text))
-        # if self._data_store.data_transfer is not None:
-        #     self._data_store.data_transfer(text)
-        pass
+        if self._data_store.data_transfer is not None:
+            self._data_store.data_transfer(text)
+
     def _create_table(self) -> bool:
         """
         Initiates Async method to create a table
@@ -114,7 +96,7 @@ class SavedSegmentDatabase:
         """
         output_list: list[str] = []
         for key in row.keys():
-            if row[key] and key != "save_name":
+            if row[key] and key != self.key_column:
                 output_list.append(key)
         return output_list
 
@@ -444,7 +426,3 @@ class SavedSegmentDatabase:
                 else:
                     raise transaction_issue
         return results
-
-if __name__ == "__main__":
-    a = SavedSegmentDatabase()
-    print(a.get_columns())
