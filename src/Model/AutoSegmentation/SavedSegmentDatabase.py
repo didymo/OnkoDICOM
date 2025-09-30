@@ -82,8 +82,8 @@ class SavedSegmentDatabase:
         :return: None
         """
         logger.debug("Sending feedback {}".format(text))
-        if self._data_store.data_transfer is not None:
-            self._data_store.data_transfer(text)
+        if self._data_store.database_feedback is not None:
+            self._data_store.database_feeback(text)
 
     def _create_table(self) -> bool:
         """
