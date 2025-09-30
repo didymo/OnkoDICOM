@@ -2,16 +2,22 @@ import itertools
 import threading
 import numpy as np
 import os
+import logging
+import pydicom
+import datetime
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 from src.View.ImageFusion.TransformMatrixDialog import TransformMatrixDialog
 from src.Controller.PathHandler import resource_path
-from PySide6.QtWidgets import QFileDialog, QMessageBox
-import logging
 from src.Model.DicomUtils import truncate_ds_fields
+from src.Model.PatientDictContainer import PatientDictContainer
 from pydicom.dataset import FileDataset
+from pydicom.uid import generate_uid
+from pydicom import dcmread
+from pydicom.dataset import Dataset
 from pydicom.uid import generate_uid
 
 
@@ -40,6 +46,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
     """
 
     def __init__(self, _back_callback=None):
+        """
+              Initializes the TranslateRotateMenu widget for manual image fusion.
+              Sets up the UI elements for translation, rotation, opacity, color selection, and mouse mode controls, and connects their signals.
+              """
         super().__init__()
         self.offset_changed_callback = None
         self.mouse_mode = None
@@ -98,7 +108,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             # Mouse Mode Toolbar (Translate/Rotate/Interrogation)
         mouse_mode_hbox = QtWidgets.QHBoxLayout()
         mouse_mode_hbox.setSpacing(20)
-        mouse_mode_hbox.setContentsMargins(0, 0, 0, 0)
+        mouse_mode_hbox.setContentsMargins(8, 0, 8, 0)
 
         self.mouse_translate_btn = QtWidgets.QPushButton()
         self.mouse_rotate_btn = QtWidgets.QPushButton()
@@ -113,16 +123,75 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_interrogation_btn.setToolTip(
             "Enable interrogation window mode (focus overlay in a square around mouse)")
 
-        # Set icons for buttons
-        translate_icon = QIcon(resource_path("res/images/btn-icons/translate_arrow_icon.png"))
-        rotate_icon = QIcon(resource_path("res/images/btn-icons/rotate_arrow_icon.png"))
-        interrogation_icon = QIcon(resource_path("res/images/btn-icons/interrogation_window_icon.png"))
-        self.mouse_translate_btn.setIcon(translate_icon)
-        self.mouse_rotate_btn.setIcon(rotate_icon)
-        self.mouse_interrogation_btn.setIcon(interrogation_icon)
-        self.mouse_translate_btn.setIconSize(QtCore.QSize(24, 24))
-        self.mouse_rotate_btn.setIconSize(QtCore.QSize(24, 24))
-        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(24, 24))
+        # Set icon paths for normal and checked (with black border) states
+        self._icon_paths = {
+            "translate": (
+                resource_path("res/images/btn-icons/translate_arrow_icon.png"),
+                resource_path("res/images/btn-icons/translate_arrow_icon_black_border.png"),
+            ),
+            "rotate": (
+                resource_path("res/images/btn-icons/rotate_arrow_icon.png"),
+                resource_path("res/images/btn-icons/rotate_arrow_icon_black_border.png"),
+            ),
+            "interrogation": (
+                resource_path("res/images/btn-icons/interrogation_window_icon.png"),
+                resource_path("res/images/btn-icons/interrogation_window_icon_black_border.png"),
+            ),
+        }
+
+        # Set initial icons for buttons (unchecked state)
+        self.mouse_translate_btn.setIcon(QIcon(self._icon_paths["translate"][0]))
+        self.mouse_rotate_btn.setIcon(QIcon(self._icon_paths["rotate"][0]))
+        self.mouse_interrogation_btn.setIcon(QIcon(self._icon_paths["interrogation"][0]))
+        self.mouse_translate_btn.setIconSize(QtCore.QSize(20, 20))
+        self.mouse_rotate_btn.setIconSize(QtCore.QSize(20,20))
+        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(20, 22))
+
+        # Add highlight style for toggled state and black border only when checked
+        #TODO add to style sheet. Having issues with it not loading teh checked buttons if added
+        highlight_style = """
+                    QPushButton {
+                        border: none;
+                        border-radius: 6px;
+                        padding: px 8px;
+                    }
+                    QPushButton:checked {
+                        border: 1px solid black;
+                        background-color: #9d8cc3;
+                        color: black;
+                        font-weight: bold;
+                    }
+                """
+
+        """self.mouse_translate_btn.setStyleSheet(highlight_style)
+        self.mouse_rotate_btn.setStyleSheet(highlight_style)
+        self.mouse_interrogation_btn.setStyleSheet(highlight_style)"""
+
+        # Update icons based on checked state
+        def update_icons():
+            """
+               Updates the icons for the mouse mode buttons based on their checked state.
+               This function sets the icon for each button to its checked or unchecked version.
+               """
+
+            # Changing teh icons to border and no border as per checked state
+            self.mouse_translate_btn.setIcon(QIcon(
+                self._icon_paths["translate"][1] if self.mouse_translate_btn.isChecked() else
+                self._icon_paths["translate"][0]
+            ))
+            self.mouse_rotate_btn.setIcon(QIcon(
+                self._icon_paths["rotate"][1] if self.mouse_rotate_btn.isChecked() else
+                self._icon_paths["rotate"][0]
+            ))
+            self.mouse_interrogation_btn.setIcon(QIcon(
+                self._icon_paths["interrogation"][1] if self.mouse_interrogation_btn.isChecked() else
+                self._icon_paths["interrogation"][0]
+            ))
+
+        self.mouse_translate_btn.toggled.connect(update_icons)
+        self.mouse_rotate_btn.toggled.connect(update_icons)
+        self.mouse_interrogation_btn.toggled.connect(update_icons)
+        update_icons()
 
         # Add stretch, buttons, stretch
         mouse_mode_hbox.addStretch(1)
@@ -145,6 +214,10 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self._last_checked_button = None
 
         def on_mouse_mode_btn_clicked(btn):
+            """
+                Handles mouse mode button clicks to toggle between translation, rotation, and interrogation modes.
+                Updates the internal mouse mode state and triggers the mouse mode changed callback if set.
+                """
             if self._last_checked_button == btn and btn.isChecked():
                 # uncheck button if active
                 self.mouse_mode_group.setExclusive(False)
@@ -277,14 +350,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode = mode
         if self.mouse_mode_changed_callback:
             self.mouse_mode_changed_callback(mode)
-
-    def set_mouse_mode_buttons_enabled(self, enabled: bool):
-        """
-        Enable or disable the mouse mode buttons.
-        """
-        self.mouse_translate_btn.setEnabled(enabled)
-        self.mouse_rotate_btn.setEnabled(enabled)
-        self.mouse_interrogation_btn.setEnabled(enabled)
 
     def on_offset_change(self, axis_index, value):
         """
@@ -532,7 +597,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     tuple: (fixed_ds, fixed_series_uid, fixed_image_uid)
                 """
-        from src.Model.PatientDictContainer import PatientDictContainer
         pdc = PatientDictContainer()
         fixed_ds = pdc.dataset[0] if pdc.dataset and 0 in pdc.dataset else None
         fixed_series_uid = getattr(fixed_ds, "SeriesInstanceUID", "1.2.3.4.5.6.7.8.1")
@@ -566,8 +630,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     tuple: (patient_name, patient_id)
                 """
-        from pydicom import dcmread
-        from src.Model.PatientDictContainer import PatientDictContainer
+        
 
         patient_name = getattr(self, "patient_name", None)
         patient_id = getattr(self, "patient_id", None)
@@ -619,8 +682,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     pydicom.Dataset: The file meta dataset.
                 """
-        import pydicom
-        from pydicom.uid import generate_uid
+        
         file_meta = pydicom.Dataset()
         file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.66.1"  # Spatial Registration Storage
         file_meta.MediaStorageSOPInstanceUID = generate_uid()
@@ -637,7 +699,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     patient_id: The patient ID.
                     file_meta: The file meta dataset.
                 """
-        import datetime
+    
         dt = datetime.datetime.now()
         ds.PatientName = patient_name
         ds.PatientID = patient_id
@@ -661,7 +723,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     fixed_series_uid: The SeriesInstanceUID of the fixed image.
                     fixed_image_uid: The SOPInstanceUID of the fixed image.
                 """
-        from pydicom.dataset import Dataset
+        
         ds.ReferencedSeriesSequence = [Dataset()]
         ds.ReferencedSeriesSequence[0].SeriesInstanceUID = fixed_series_uid
         ds.ReferencedSeriesSequence[0].ReferencedImageSequence = [Dataset()]
@@ -678,8 +740,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     moving_series_uid: The SeriesInstanceUID of the moving image.
                     moving_image_uid: The SOPInstanceUID of the moving image.
                 """
-        from pydicom.dataset import Dataset
-        from pydicom.uid import generate_uid
+
 
         reg = Dataset()
         reg.MatrixRegistrationSequence = [Dataset()]
@@ -716,8 +777,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                 Returns:
                     None
                 """
-        import pydicom
-        import numpy as np
 
         vtk_engine = self._get_vtk_engine_callback() if hasattr(self,
                                                                 "_get_vtk_engine_callback") and self._get_vtk_engine_callback else None
@@ -761,7 +820,8 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         Returns:
             None
         """
-        import vtk
+        # Import main window here to avoid circular imports
+        from src.View.mainpage.MainPage import UIMainWindow
 
         # --- Extract 4x4 transform matrix from SRO ---
         reg_seq = ds.RegistrationSequence[0]
@@ -780,34 +840,20 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         else:
             rotation = [0, 0, 0]
 
-        m = vtk.vtkMatrix4x4()
-        for i, j in itertools.product(range(4), range(4)):
-            m.SetElement(i, j, matrix[i, j])
+        main_window = next(
+            (w for w in QtWidgets.QApplication.topLevelWidgets() if isinstance(w, UIMainWindow)),
+            None,
+        )
+        if main_window is not None:
+            main_window._apply_matrix_and_transform_to_engine(
+                vtk_engine=vtk_engine,
+                matrix=matrix,
+                translation=translation,
+                rotation=rotation,
+                menu=self
+            )
 
-        if hasattr(vtk_engine, "transform"):
-            vtk_engine.transform.SetMatrix(m)
-            vtk_engine.reslice3d.SetResliceAxes(m)
-            vtk_engine.reslice3d.Modified()
-
-        if hasattr(vtk_engine, "set_translation"):
-            vtk_engine.set_translation(*translation)
-        if hasattr(vtk_engine, "set_rotation_deg"):
-            vtk_engine.set_rotation_deg(*rotation)
-
-        self.set_offsets(translation)
-        for i in range(3):
-            self.rotate_sliders[i].blockSignals(True)
-            self.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
-            self.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
-            self.rotate_sliders[i].blockSignals(False)
-
-        if self.offset_changed_callback:
-            self.offset_changed_callback(translation)
-        if self.rotation_changed_callback:
-            self.rotation_changed_callback(tuple(rotation))
-
-        #do not move this from here or it will throw an error
-        from src.View.mainpage.MainPage import UIMainWindow
+        
 
         mw = next(
             (

@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore
 
 from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
+from src.Model.PatientDictContainer import PatientDictContainer
 
 class ImageFusionAxialView(BaseFusionView):
     def __init__(self, roi_color=None,
@@ -13,6 +14,7 @@ class ImageFusionAxialView(BaseFusionView):
         metadata_formatted: whether the metadata needs to be formatted 
         (only metadata in the four view need to be formatted)
         """
+        self.orientation = None
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
         super().__init__('axial', roi_color, iso_color, cut_line_color, vtk_engine=vtk_engine, translation_menu=translation_menu)
@@ -215,8 +217,8 @@ class ImageFusionAxialView(BaseFusionView):
         total_slices = len(self.patient_dict_container.get("pixmaps_axial"))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
-        window = self.patient_dict_container.get("window")
-        level = self.patient_dict_container.get("level")
+        window = self.patient_dict_container.get("fusion_window")
+        level = self.patient_dict_container.get("fusion_level")
         slice_pos = dataset['SliceLocation'].value
 
         if hasattr(dataset, 'PatientPosition'):
@@ -249,3 +251,47 @@ class ImageFusionAxialView(BaseFusionView):
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
+
+    def on_window_level_changed(self, window, level):
+        """
+        Callback to update window/level for this fusion view.
+        """
+        pd = PatientDictContainer()
+        pd.set("fusion_window", window)
+        pd.set("fusion_level", level)
+        self.vtk_engine.set_window_level(float(window), float(level))
+        self.update_color_overlay()
+
+    def update_color_overlay(self):
+        """
+                  Called when window/level changes; refreshes the displayed fusion colors.
+              """
+
+        if self.vtk_engine is not None:
+            self.overlay_images = None  # Always clear overlays for VTK/manual fusion
+            self._extracted_from_update_color_overlay_8()
+        else:
+            # Only update overlays if not using VTK/manual fusion
+            pd = PatientDictContainer()
+            self.overlay_images = pd.get(f"color_{self.slice_view}")
+            if self.overlay_images:
+                print(f"Overlay images loaded: {len(self.overlay_images)} slices")
+            else:
+                print("No overlay images found!")
+
+        self.image_display()
+        # Force a full view update to redraw ROI/cut lines
+
+        self.update_view()
+
+    # TODO Rename this here and in `update_color_overlay`
+    def _extracted_from_update_color_overlay_8(self):
+        pd = PatientDictContainer()
+        window = pd.get("fusion_window")
+        level = pd.get("fusion_level")
+        if window is None:
+            window = getattr(self.vtk_engine, "window", 400)
+        if level is None:
+            level = getattr(self.vtk_engine, "level", 40)
+        # print(f"Setting VTKEngine window={window}, level={level}")
+        self.vtk_engine.set_window_level(float(window), float(level))
