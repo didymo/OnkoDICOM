@@ -4,11 +4,17 @@ import os
 import pydicom
 import numpy as np
 from pydicom import dcmread
+from vtkmodules.util import numpy_support
 from pydicom.errors import InvalidDicomError
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.VTKEngine import VTKEngine
+from src.Model.Windowing import windowing_model_direct
 
 class ManualFusionLoader(QtCore.QObject):
+    """
+       Loads fixed and moving DICOM images for manual image fusion using VTK and manages transform extraction.
+       This class handles the loading process, extraction of any saved spatial registration transforms, and emits signals with the results or errors.
+       """
     signal_loaded = QtCore.Signal(object)
     signal_error = QtCore.Signal(object)
 
@@ -19,6 +25,17 @@ class ManualFusionLoader(QtCore.QObject):
         self.patient_id = patient_id
 
     def load(self, interrupt_flag=None, progress_callback=None):
+        """
+               Loads the fixed and moving images for manual fusion using VTK and emits the result.
+               This method attempts to load the images and any associated transform, emitting progress updates and errors as needed.
+
+               Args:
+                   interrupt_flag: Optional flag to interrupt the loading process (not used).
+                   progress_callback: Optional callback function to report progress updates.
+
+               Returns:
+                   None. Emits the result via the signal_loaded or signal_error signals.
+               """
         try:
             self._load_with_vtk(progress_callback)
         except Exception as e:
@@ -114,7 +131,6 @@ class ManualFusionLoader(QtCore.QObject):
             "transform_data": transform_data,
         }))
 
-    # TODO Rename this here and in `_load_with_vtk`
     def _extracted_from__load_with_vtk_62(self, ds, np, transform_file):
         """
                 Extracts transformation matrix, translation, and rotation from a DICOM Spatial Registration Object (SRO).
@@ -132,7 +148,7 @@ class ManualFusionLoader(QtCore.QObject):
                 Returns:
                     dict: A dictionary containing the matrix, translation, rotation, and transform_file.
                 """
-
+        # Try to extract the 4x4 transformation matrix from the DICOM SRO
         try:
             reg_seq = ds.RegistrationSequence[0]
             mat_seq = reg_seq.MatrixRegistrationSequence[0]
@@ -142,11 +158,14 @@ class ManualFusionLoader(QtCore.QObject):
             logging.error(f"Error extracting transformation matrix from SRO: {e}")
             raise
 
-            # Extract translation from private tag if present, else from matrix
+
+        # Extract translation from private tag if present, else from matrix
         try:
             if (0x7777, 0x0020) in ds:
+                # User-saved translation (as comma-separated string)
                 translation = [float(x) for x in ds[(0x7777, 0x0020)].value.split(",")]
             else:
+                # Default: use translation from the matrix
                 translation = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
         except Exception as e:
             logging.error(f"Error extracting translation from SRO: {e}")
@@ -155,16 +174,100 @@ class ManualFusionLoader(QtCore.QObject):
             # Extract rotation from private tag if present, else default to [0, 0, 0]
         try:
             if (0x7777, 0x0021) in ds:
+                # User-saved rotation (as comma-separated string)
                 rotation = [float(x) for x in ds[(0x7777, 0x0021)].value.split(",")]
             else:
+                # Default: no rotation
                 rotation = [0, 0, 0]
         except Exception as e:
             logging.error(f"Error extracting rotation from SRO: {e}")
             rotation = [0, 0, 0]
 
+        # Return all extracted transform data in a dictionary
         return {
             "matrix": matrix,
             "translation": translation,
             "rotation": rotation,
             "transform_file": transform_file,
         }
+
+    def on_manual_fusion_loaded(self, result):
+        """
+                Handles the completion of manual fusion image loading and updates the application state.
+
+                This method is called when manual fusion images have been loaded, either successfully or with an error.
+                It extracts the fixed and moving images from the VTK engine, stores them in the PatientDictContainer,
+                and ensures that the fusion window/level settings are initialized. It then triggers a refresh of the
+                fusion views by calling windowing_model_direct with the current or default window/level.
+
+                Args:
+                    result: A tuple (success, data) where success is a boolean indicating if loading succeeded,
+                        and data contains the loaded VTK engine and any additional information.
+
+                Returns:
+                    None
+                """
+        success, data = result
+        if not success:
+            logging.error("Manual fusion load failed:", data)
+            return
+
+        engine = data["vtk_engine"]
+
+        # Extract the fixed image from the VTK engine
+        if hasattr(engine, "get_fixed_image"):
+            fixed_image = engine.get_fixed_image()
+        elif hasattr(engine, "fixed_reader") and hasattr(engine.fixed_reader, "GetOutput"):
+            fixed_image = engine.fixed_reader.GetOutput()
+        else:
+            fixed_image = None
+
+        # Extract the moving image from the VTK engine
+        if hasattr(engine, "get_moving_image"):
+            moving_image = engine.get_moving_image()
+        elif hasattr(engine, "moving_reader") and hasattr(engine.moving_reader, "GetOutput"):
+            moving_image = engine.moving_reader.GetOutput()
+        else:
+            moving_image = None
+
+        # Save manual fusion in PatientDictContainer
+        patient_dict_container = PatientDictContainer()
+        # You can store a tuple (fixed, moving, optional tfm)
+        patient_dict_container.set("manual_fusion", (fixed_image, moving_image, None))
+
+        # Convert the fixed image to a numpy array if possible
+        if hasattr(fixed_image, "GetPointData"):  # VTK image
+            dims = fixed_image.GetDimensions()
+            scalars = fixed_image.GetPointData().GetScalars()
+            np_img = numpy_support.vtk_to_numpy(scalars).reshape(dims[::-1])
+            fixed_image_array = np_img
+        elif hasattr(fixed_image, "GetArrayFromImage"):  # SimpleITK image
+            fixed_image_array = fixed_image  # assume already numpy
+        else:
+            fixed_image_array = None
+            logging.error(
+                f"Unsupported image type for fixed_image: {type(fixed_image)}. "
+                "Image array extraction failed."
+            )
+
+        # Retrieve current window and level settings
+        window = patient_dict_container.get("fusion_window")
+        level = patient_dict_container.get("fusion_level")
+
+        # If not set, use sensible defaults based on the fixed image array
+        if window is None or level is None:
+            # Instead of using min/max, use a clinical default (e.g. "Normal" or "Soft Tissue")
+            # You can also use the default from dict_windowing
+            dict_windowing = patient_dict_container.get("dict_windowing")
+            if dict_windowing and "Normal" in dict_windowing:
+                window, level = dict_windowing["Normal"]
+            else:
+                window = 400
+                level = 40
+            # Set these as the initial fusion window/level
+            patient_dict_container.set("fusion_window", window)
+            patient_dict_container.set("fusion_level", level)
+
+        # Trigger a refresh of the fusion views with the current window/level
+        windowing_model_direct(window=window, level=level, init=[False, False, False, True],
+                               fixed_image_array=fixed_image_array)
