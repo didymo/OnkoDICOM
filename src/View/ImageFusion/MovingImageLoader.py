@@ -10,6 +10,7 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.MovingModel import create_moving_model
 from src.Model.ROI import create_initial_rtss_from_ct
 from src.Model.GetPatientInfo import DicomTree
+from src.Model.DicomUtils import truncate_ds_fields
 
 from src.View.ImageLoader import ImageLoader
 
@@ -88,6 +89,13 @@ class MovingImageLoader(ImageLoader):
         uid_list = ImageLoading.get_image_uid_list(moving_dict_container.dataset)
         rtss = create_initial_rtss_from_ct(moving_dict_container.dataset[0], rtss_path, uid_list)
 
+       truncate_ds_fields(rtss)
+          rtss.save_as(str(rtss_path), write_like_original=False)
+
+          if interrupt_flag.is_set():  # Stop loading.
+              print("stopped")
+              return False
+        
         rois = ImageLoading.get_roi_info(rtss)
         moving_dict_container.set("rois", rois)
 
@@ -161,7 +169,7 @@ class MovingImageLoader(ImageLoader):
                 path, read_data_dict, file_names_dict = self.get_common_path_and_datasets()
             except ImageLoading.NotAllowedClassError:
                 raise ImageLoading.NotAllowedClassError
-
+                
             moving_dict_container = self.init_container(path, read_data_dict, file_names_dict)
 
             if interrupt_flag.is_set():

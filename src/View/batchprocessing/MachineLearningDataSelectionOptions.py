@@ -1,9 +1,9 @@
 import logging
-import platform
 from PySide6 import QtWidgets
 from os.path import expanduser
-from src.Controller.PathHandler import resource_path
 import pandas as pd
+
+from src.View.StyleSheetReader import StyleSheetReader
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -19,28 +19,24 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
+        stylesheet: StyleSheetReader = StyleSheetReader()
 
         label_dvh = QtWidgets.QLabel(
             "Please choose the input CSV file location for DVH Data:"
         )
-        label_dvh.setStyleSheet(self.stylesheet)
+        label_dvh.setStyleSheet(stylesheet.get_stylesheet())
 
         label_pyrad = QtWidgets.QLabel(
             "Please choose the input CSV file location for Pyradiomics Data:"
         )
-        label_pyrad.setStyleSheet(self.stylesheet)
+        label_pyrad.setStyleSheet(stylesheet.get_stylesheet())
 
         self.directory_layout = QtWidgets.QFormLayout()
 
         # Directory text box for DVH Data
         self.directory_input_dvh_data = QtWidgets.QLineEdit(
             "No file selected")
-        self.directory_input_dvh_data.setStyleSheet(self.stylesheet)
+        self.directory_input_dvh_data.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_dvh_data.setEnabled(False)
 
         # Button For DVH Data to set location
@@ -49,12 +45,12 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.change_button_dvh_data.clicked.connect(
             self.show_file_browser_dvh_data)
         self.change_button_dvh_data.setObjectName("NormalButton")
-        self.change_button_dvh_data.setStyleSheet(self.stylesheet)
+        self.change_button_dvh_data.setStyleSheet(stylesheet.get_stylesheet())
 
         # Directory text box for Pyradiomics Data
         self.directory_input_pyrad = QtWidgets.QLineEdit(
             "No file selected")
-        self.directory_input_pyrad.setStyleSheet(self.stylesheet)
+        self.directory_input_pyrad.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_pyrad.setEnabled(False)
 
         # Button For Pyradiomics Data to set location
@@ -64,7 +60,7 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
         self.change_button_pyradiomics_data.clicked.connect(
             self.show_file_browser_pyrad)
         self.change_button_pyradiomics_data.setObjectName("NormalButton")
-        self.change_button_pyradiomics_data.setStyleSheet(self.stylesheet)
+        self.change_button_pyradiomics_data.setStyleSheet(stylesheet.get_stylesheet())
 
         # Set DVH data
         self.directory_layout.addWidget(label_dvh)
@@ -78,23 +74,23 @@ class MachineLearningDataSelectionOptions(QtWidgets.QWidget):
 
         # create dropdown menu for dvh values to select from
         self.dvh_dropdown_menu = QtWidgets.QComboBox()
-        self.dvh_dropdown_menu.setStyleSheet(self.stylesheet)
+        self.dvh_dropdown_menu.setStyleSheet(stylesheet.get_stylesheet())
         self.dvh_dropdown_menu.setEditable(True)
         self.dvh_dropdown_menu.lineEdit().setReadOnly(True)
 
         # create dropdown menu for dvh values to select from
         self.pyrad_dropdown_menu = QtWidgets.QComboBox()
-        self.pyrad_dropdown_menu.setStyleSheet(self.stylesheet)
+        self.pyrad_dropdown_menu.setStyleSheet(stylesheet.get_stylesheet())
         self.pyrad_dropdown_menu.setEditable(True)
         self.pyrad_dropdown_menu.lineEdit().setReadOnly(True)
 
         # create labels for dropdown menus
         self.dvh_dropdown_label = QtWidgets.QLabel(
             "Please select the DVH ROI to filter by:")
-        self.dvh_dropdown_label.setStyleSheet(self.stylesheet)
+        self.dvh_dropdown_label.setStyleSheet(stylesheet.get_stylesheet())
         self.pyrad_dropdown_label = QtWidgets.QLabel(
             "Please select the PyRad ROI to filter by:")
-        self.pyrad_dropdown_label.setStyleSheet(self.stylesheet)
+        self.pyrad_dropdown_label.setStyleSheet(stylesheet.get_stylesheet())
 
         # add dropdowns to main_layout
         self.directory_layout.addRow(self.dvh_dropdown_label)

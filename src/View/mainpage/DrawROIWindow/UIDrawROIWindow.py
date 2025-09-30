@@ -1,5 +1,4 @@
 import logging
-import platform
 
 import pydicom
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -15,6 +14,7 @@ from src.Model import ROI
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ROI import calculate_concave_hull_of_points
 from src.View.ProgressWindow import ProgressWindow
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.mainpage.DicomAxialView import DicomAxialView
 from src.View.mainpage.DrawROIWindow.DrawBoundingBox import DrawBoundingBox
 from src.View.mainpage.DrawROIWindow.Drawing import Drawing
@@ -150,11 +150,6 @@ class UIDrawROIWindow:
         """
 
         # Initialise a DrawROIWindow
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
@@ -715,7 +710,7 @@ class UIDrawROIWindow:
             self.draw_roi_window_main_box)
 
         self.retranslate_ui(self.draw_roi_window_instance)
-        self.draw_roi_window_instance.setStyleSheet(stylesheet)
+        self.draw_roi_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.draw_roi_window_instance. \
             setCentralWidget(self.draw_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(self.draw_roi_window_instance)

@@ -7,9 +7,9 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QHBoxLayout, \
     QTreeWidgetItem, QMessageBox, QAbstractItemView, QSizePolicy
 from src.Controller.PathHandler import resource_path
 from src.Model import ROI
-import platform
 
 from src.Model.Worker import Worker
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class UIDeleteROIWindow:
@@ -35,11 +35,6 @@ class UIDeleteROIWindow:
         self.deleting_rois_structure_tuple = deleting_rois_structure_tuple
 
         # Initialise a DeleteROIWindow
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
@@ -290,7 +285,7 @@ class UIDeleteROIWindow:
         # Set the central widget for the main window and style the window
         delete_roi_window_instance.\
             setCentralWidget(self.delete_roi_window_instance_central_widget)
-        delete_roi_window_instance.setStyleSheet(stylesheet)
+        delete_roi_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         # Load the ROIs in
         self.display_rois_in_list_view_keep()

@@ -1,7 +1,6 @@
-import platform
 from pydicom import dcmread
 from PySide6 import QtCore, QtGui, QtWidgets
-from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class SUV2ROIOptions(QtWidgets.QWidget):
@@ -18,13 +17,6 @@ class SUV2ROIOptions(QtWidgets.QWidget):
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
-
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         # Create QLabel to display information, and text and font
         self.info_label = QtWidgets.QLabel()
@@ -129,12 +121,12 @@ class SUV2ROIOptions(QtWidgets.QWidget):
             if patient_ids[patient_id] is None:
                 # Create line edit
                 patient_weight_widget = QtWidgets.QLineEdit()
-                patient_weight_widget.setStyleSheet(self.stylesheet)
+
             else:
                 # Create label
                 patient_weight_widget = \
                     QtWidgets.QLabel(patient_ids[patient_id])
-                patient_weight_widget.setStyleSheet(self.stylesheet)
+            patient_weight_widget.setStyleSheet(StyleSheetReader().get_stylesheet())
 
             # Add row to table
             self.table_pet_weight.insertRow(i)

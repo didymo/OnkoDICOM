@@ -41,13 +41,13 @@ class MLTestResultsWindow(QtWidgets.QDialog):
             )
 
         # # Get stylesheet
-        self.stylesheet = StyleSheetReader()
+        stylesheet = StyleSheetReader()
 
         # Set stylesheet
-        self.summary_label.setStyleSheet(self.stylesheet())
-        self.scroll_area.setStyleSheet(self.stylesheet())
-        self.save_ml_predicted_txt.setStyleSheet(self.stylesheet())
-        self.save_ml_predicted_csv.setStyleSheet(self.stylesheet())
+        self.summary_label.setStyleSheet(stylesheet.get_stylesheet())
+        self.scroll_area.setStyleSheet(stylesheet.get_stylesheet())
+        self.save_ml_predicted_txt.setStyleSheet(stylesheet.get_stylesheet())
+        self.save_ml_predicted_csv.setStyleSheet(stylesheet.get_stylesheet())
 
         # Make QLabel wrap text
         self.summary_label.setWordWrap(True)

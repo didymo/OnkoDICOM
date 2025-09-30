@@ -1,8 +1,8 @@
 import csv
-import platform
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.Controller.PathHandler import data_path, resource_path
 from src.View.InputDialogs import Dialog_Dose
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class ISO2ROIOptions(QtWidgets.QWidget):
@@ -19,13 +19,6 @@ class ISO2ROIOptions(QtWidgets.QWidget):
 
         # Create the main layout
         self.main_layout = QtWidgets.QVBoxLayout()
-
-        # Get the stylesheet
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
 
         self.create_table_view()
         self.create_buttons()
@@ -54,8 +47,9 @@ class ISO2ROIOptions(QtWidgets.QWidget):
         self.delete_roi.setProperty("QPushButtonClass", "fail-button")
 
         # Set button stylesheet
-        self.add_new_roi.setStyleSheet(self.stylesheet)
-        self.delete_roi.setStyleSheet(self.stylesheet)
+        stylesheet: StyleSheetReader = StyleSheetReader()
+        self.add_new_roi.setStyleSheet(stylesheet.get_stylesheet())
+        self.delete_roi.setStyleSheet(stylesheet.get_stylesheet())
 
         # Set text
         _translate = QtCore.QCoreApplication.translate

@@ -14,7 +14,6 @@ from src.View.util.ProgressWindowHelper import connectSaveROIProgress
 from src.View.mainpage.DicomAxialView import DicomAxialView
 
 from src.Controller.PathHandler import resource_path
-import platform
 
 
 class UIManipulateROIWindow:
@@ -93,9 +92,6 @@ class UIManipulateROIWindow:
         Add the view widget and the slider in the layout.
         Add the whole container 'tab2_view' as a tab in the main page.
         """
-
-        # Initialise a ManipulateROIWindow
-        stylesheet = StyleSheetReader()
 
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
@@ -350,7 +346,7 @@ class UIManipulateROIWindow:
             self.manipulate_roi_window_main_box)
 
         self.retranslate_ui(self.manipulate_roi_window_instance)
-        self.manipulate_roi_window_instance.setStyleSheet(stylesheet())
+        self.manipulate_roi_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.manipulate_roi_window_instance.setCentralWidget(
             self.manipulate_roi_window_instance_central_widget)
         QtCore.QMetaObject.connectSlotsByName(
