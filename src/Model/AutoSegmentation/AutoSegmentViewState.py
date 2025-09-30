@@ -4,7 +4,14 @@ from src.Model.Singleton import Singleton
 
 logger = logging.Logger(__name__)
 
-def _communication_debug(word: str, member: Callable[[str], None]) -> None:
+def _communication_debug(word: str, member: Callable[[str], None] | Callable[[str, list[str]], None]) -> None:
+    """
+    Debug statement to log any potential issues
+
+    :param word: str
+    :param member: Callable[[str], None] | Callable[[str, list[str]], None]
+    :return: None
+    """
     if member is None:
         logger.debug(f"{word} function not set: call {word}_button_callback({word}_function) to assign a function first")
 
@@ -21,13 +28,19 @@ class AutoSegmentViewState(metaclass=Singleton):
         """
         # callback list in format Start, Save, Load, Delete function pointers
         self._start: Callable[[str], None] | None = None # Start
-        self._save: Callable[[str], None] | None = None # Save
+        self._save: Callable[[str, list[str]], None] | None = None # Save
         self._load: Callable[[str], None] | None = None # Load
         self._delete: Callable[[str], None] | None = None # Delete
 
         self.segmentation_list: list[str] = []
 
     def _communicate_connection(self, member: Callable[[str], None], value: str) -> None:
+        """
+        Checking is call back exists and execute the call back
+
+        :param member: Callable[[str], None]
+        :param value: str
+        """
         if member is not None:
             member(value)
 
@@ -50,16 +63,19 @@ class AutoSegmentViewState(metaclass=Singleton):
         self._start = start_function
 
 
-    def save_button_connection(self, value) -> None:
+    def save_button_connection(self, save_name:str) -> None:
         """
-        To communicate to controller the save button was clicked.
+        To communicate to controller the save button was clicked and
+        to transfer information such as the save name and the saved data list
 
+        :param save_name: str
         :return: None
         """
-        self._communicate_connection(self._save, value)
+        if self._save is not None:
+            self._save(save_name, self.segmentation_list)
         _communication_debug("Save", self._save)
 
-    def set_save_button_callback(self, save_function: Callable[[str], None]) -> None:
+    def set_save_button_callback(self, save_function: Callable[[str, list[str]], None]) -> None:
         """
         To set the function called in the controller when the save button is clicked
 

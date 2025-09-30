@@ -5,6 +5,7 @@ from PySide6.QtCore import Slot, QObject, Signal
 
 from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 from src.Model.AutoSegmentation.AutoSegmentation import AutoSegmentation
+from src.Model.AutoSegmentation.SavedSegmentDatabase import SavedSegmentDatabase
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Controller.RTStructFileLoader import load_rtss_file_to_patient_dict
 from src.View.AutoSegmentation.AutoSegmentWindow import AutoSegmentWindow
@@ -34,6 +35,7 @@ class AutoSegmentationController(QObject):
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()
+        self.database: SavedSegmentDatabase = SavedSegmentDatabase(self.view_state)
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
     # View related methods
@@ -47,19 +49,20 @@ class AutoSegmentationController(QObject):
 
         self.run_task("total", self._view.get_segmentation_roi_subset())
 
-    def save_button_clicked(self, value: str) -> None:
+    def save_button_clicked(self, save_name: str, save_list: list[str]) -> None:
         """
         To be called when the button to save the selected segmentation task is clicked
         :rtype: None
         """
-        print(f"Save {value}")
+
+        self.database.insert_row(save_name, save_list)
 
     def load_button_clicked(self, value: str) -> None:
         """
         To be called when the button to load the selected saved segmentation is clicked
         :rtype: None
         """
-        print(f"Load {value}")
+        self.database.select_entry(value)
 
     def delete_button_clicked(self, value: str) -> None:
         """

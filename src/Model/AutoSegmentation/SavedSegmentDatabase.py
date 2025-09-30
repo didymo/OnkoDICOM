@@ -1,3 +1,4 @@
+import copy
 import logging
 import asyncio
 import pathlib
@@ -54,13 +55,13 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._get_columns_execution())
 
-    def insert_row(self, values: dict) -> bool:
+    def insert_row(self, save_name: str, values: list[str]) -> bool:
         """
         Initiates Async method to insert a row to the table
 
         :return: bool
         """
-        return asyncio.run(self._insert_row_execution(values))
+        return asyncio.run(self._insert_row_execution(save_name , copy.deepcopy(values)))
 
     def select_entry(self, save_name: str) -> list[str]:
         """
@@ -69,7 +70,7 @@ class SavedSegmentDatabase:
         :param save_name: str
         :return: dict[str, str | bool]
         """
-        return asyncio.run(self._select_entry_execution(save_name))
+        return asyncio.run(self._select_entry_execution(copy.deepcopy(save_name)))
 
 # Internal use Only
     def _send_feedback(self, text: str) -> None:
@@ -198,7 +199,7 @@ class SavedSegmentDatabase:
         logger.debug("Executing Add Column")
         return await self._running_write_statement(statement)
 
-    async def _extend_table(self, column_list: dict[str, str | bool]) -> bool:
+    async def _extend_table(self, column_list: list[str]) -> bool:
         """
         Filtering Out which columns already exist in the table
         than adding all the columns which don't exist in the table to the table
@@ -209,7 +210,6 @@ class SavedSegmentDatabase:
         :return: bool
         """
         success: bool = True
-        column_list: list[str] = list(column_list.keys())
         new_column_list: list[str] = []
         logger.debug("Extending table {}".format(self.table_name))
         logger.debug("Creating New Column List")
@@ -224,7 +224,7 @@ class SavedSegmentDatabase:
         self.column_list: list[str] = await self._get_columns_execution()
         return success
 
-    async def _insert_row_execution(self, column_values: dict[str, str | bool]) -> bool:
+    async def _insert_row_execution(self, save_name: str, column_values: list[str]) -> bool:
         """
         Inserting a row into the table to be stored for future use.
 
@@ -238,14 +238,12 @@ class SavedSegmentDatabase:
             logger.debug("Failed to update Table Columns for current Input")
             return False
         statement: str = (
-            "INSERT INTO {} ({}) VALUES ('{}', {});"
+            "INSERT INTO {} ({}, {}) VALUES ('{}', {});"
             .format(self.table_name,
-                    ", ".join(column_values.keys()),
-                    column_values[self.key_column],
-                    ", ".join("{}".format(value)
-                              for key, value
-                              in column_values.items()
-                              if key != self.key_column)
+                    self.key_column,
+                    ", ".join(item for item in column_values),
+                    save_name,
+                    ", ".join("{}".format(True) for _ in column_values)
                     )
         )
         logger.debug(statement)
