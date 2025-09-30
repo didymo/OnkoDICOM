@@ -33,7 +33,7 @@ class SavedSegmentDatabase:
         # Members
         self.table_name: str = table_name
         self.key_column: str = key_column
-        self._data_store = data_store
+        self._data_store: AutoSegmentViewState = data_store
 
         # Database Column List
         self.column_list: list[str] = []
@@ -437,7 +437,7 @@ class SavedSegmentDatabase:
             try:
                 with self._create_connection() as connection:
                     connection.row_factory = sqlite3.Row
-                    results : list[sqlite3.Row] = connection.execute(statement).fetchall()
+                    results: list[sqlite3.Row] = connection.execute(statement).fetchall()
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
                         and attempt < max_attempts):
