@@ -110,7 +110,7 @@ def lps_point_to_ras(pt: np.ndarray) -> np.ndarray:
     else:
         v = pt.astype(float)
     vr = (LPS_TO_RAS @ v)
-    return vr[0:3]
+    return vr[:3]
 
 def cleanup_old_dicom_temp_dirs(temp_root=None):
     """

@@ -432,9 +432,10 @@ class UITransferROIWindow:
         """
         This function is to check if the transfer list is empty
         """
-        empty = len(self.fixed_to_moving_rois) == 0 \
-               and len(self.moving_to_fixed_rois) == 0
-        return empty
+        return (
+            len(self.fixed_to_moving_rois) == 0
+            and len(self.moving_to_fixed_rois) == 0
+        )
 
     def save_clicked(self, interrupt_flag, progress_callback):
         """
@@ -612,7 +613,7 @@ class UITransferROIWindow:
 
         """
         def _normalize_name(name: str) -> str:
-            # Replace spaces with underscores and lowercase for consistent matching
+            # Replace spaces with underscores and lowercase for consistent matching after initial normalization
             return name.replace(" ", "_").lower()
 
         if original_roi_list is None:
@@ -762,4 +763,8 @@ class UITransferROIWindow:
         self.close()
 
     def _normalize_keys(self, keys):
+        """
+        Normalizes a list of ROI names by replacing spaces with underscores.
+        This function is used to standardize ROI names for consistent matching and processing.
+        """
         return ["_".join(k.split()) for k in keys]
