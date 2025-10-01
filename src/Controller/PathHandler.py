@@ -78,7 +78,9 @@ def data_path(relative_path):
 def database_path() -> Path:
     """
     To get the path of the database.
+    This path was set up in
+    `Configuration.Configuration.__init__`
 
     :return: Path
     """
-    return data_path('OnkoDICOM.db')
+    return Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath('OnkoDICOM.db')
