@@ -47,6 +47,7 @@ class ButtonInputBox(QWidget):
         self.feedback.setProperty("QLabelClass", "info-feedback")
         box_layout.addWidget(self.feedback)
         self.feedback.hide()
+        self.text = None
         if text_box:
             self.text: QLineEdit = QLineEdit()
             self.text.setPlaceholderText("Selection Name")
@@ -60,8 +61,7 @@ class ButtonInputBox(QWidget):
         else:
             positive_button.setProperty("QPushButtonClass", "success-button")
         if positive_action is not None:
-            if text_box:
-                positive_button.clicked.connect(self._positive_action)
+            positive_button.clicked.connect(self._positive_action)
 
         box_cancel_button: QPushButton = QPushButton("Cancel")
         if reversed_buttons:
@@ -87,7 +87,7 @@ class ButtonInputBox(QWidget):
 
         :returns: None
         """
-        if self.text:
+        if self.text is not None:
             self.typed_text = self.text.text()
         if self.delete_word:
             self.typed_text = self.delete_word

@@ -143,7 +143,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
     def _select_save_widget(self) -> QtWidgets.QWidget:
         # List Widget for Loafing Saved selections
-        select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Save Selections:")
+        select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Saved Selections:")
         self.database_feedback = QtWidgets.QLabel()
         self.database_feedback.setProperty("QLabelClass", "info-feedback")
         select_save_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
@@ -318,6 +318,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         if not self.save_list:
             self._disable_load_button()
             self._disable_delete_button()
+        self._delete_close()
 
     def _delete_button_clicked(self) -> None:
         """
