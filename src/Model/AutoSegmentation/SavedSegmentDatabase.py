@@ -6,7 +6,7 @@ import random
 import sqlite3
 from collections.abc import Callable
 
-from src.Controller.PathHandler import database_path
+from src.Controller.PathHandler import database_path, text_sanitiser
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,10 @@ class SavedSegmentDatabase:
         :return: None
         """
         logger.debug("Initializing SavedSegmentDatabase")
+        # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
+        table_name = text_sanitiser(table_name)
+        key_column = text_sanitiser(key_column)
+
         # Members
         self._table_name: str = table_name
         self._key_column: str = key_column
@@ -72,6 +76,11 @@ class SavedSegmentDatabase:
 
         :return: bool
         """
+        # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
+        save_name = text_sanitiser(save_name)
+        for value in values:
+            text_sanitiser(value)
+
         return asyncio.run(self._insert_row_execution(save_name , copy.deepcopy(values)))
 
     def select_entry(self, save_name: str) -> list[str]:
@@ -81,15 +90,19 @@ class SavedSegmentDatabase:
         :param save_name: str
         :return: dict[str, str | bool]
         """
+        # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
+        save_name = text_sanitiser(save_name)
         return asyncio.run(self._select_entry_execution(copy.deepcopy(save_name)))
 
-    def delete_entry(self, save_name: str) -> list[str]:
+    def delete_entry(self, save_name: str) -> bool:
         """
         Initiates Async method to delete an entry from the table
 
         :param save_name: str
         :return: None
         """
+        # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
+        save_name = text_sanitiser(save_name)
         return asyncio.run(self._delete_entry_execution(copy.deepcopy(save_name)))
 
 # Internal use Only
