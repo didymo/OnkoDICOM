@@ -4,8 +4,9 @@ import asyncio
 import pathlib
 import random
 import sqlite3
+from collections.abc import Callable
+
 from src.Controller.PathHandler import database_path
-from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 
 logger = logging.getLogger(__name__)
 
@@ -18,31 +19,41 @@ class SavedSegmentDatabase:
     """
 
     def __init__(self,
-                 data_store: AutoSegmentViewState = None,
                  table_name: str = "AutoSegmentation",
-                 key_column: str = "save_name"
+                 key_column: str = "save_name",
+                 feed_back: Callable[[str], None] = None,
+                 max_retry: int = 3,
+                 min_retry_interval: float = 1.0,
+                 max_retry_interval: float = 5.0
                  ) -> None:
         """
         Initialize the Database engine to save/get data from persistent storage
         This class is specific to the AutoSegmentation Database handling.
 
-        :param data_store:
         :param table_name: str
+        :param key_column: str
+        :param feed_back: Callable[[str], None]
+        :param max_retry: int
+        :param min_retry_interval: float
+        :param max_retry_interval: float
         :return: None
         """
         logger.debug("Initializing SavedSegmentDatabase")
         # Members
-        self.table_name: str = table_name
-        self.key_column: str = key_column
-        self._data_store: AutoSegmentViewState = data_store
+        self._table_name: str = table_name
+        self._key_column: str = key_column
+        self._feedback: Callable[[str], None] = feed_back
+        self._max_attempts: int = max_retry
+        self._min_retry_interval: float = min_retry_interval
+        self._max_retry_interval: float = max_retry_interval
 
         # Database Column List
-        self.column_list: list[str] = []
+        self._column_list: list[str] = []
 
         logger.debug(
             "Setting value for self.database_location and creating Table"
         )
-        self.database_location: pathlib.Path = database_path()
+        self._database_location: pathlib.Path = database_path()
 
         self._create_table()
 
@@ -83,8 +94,8 @@ class SavedSegmentDatabase:
         :return: None
         """
         logger.debug("Sending feedback {}".format(text))
-        if self._data_store.database_feedback is not None:
-            self._data_store.database_feeback(text)
+        if self._feedback is not None:
+            self._feedback(text)
 
     def _create_table(self) -> bool:
         """
@@ -92,7 +103,7 @@ class SavedSegmentDatabase:
 
         :return: bool
         """
-        return asyncio.run(self._create_table_execution(self.key_column))
+        return asyncio.run(self._create_table_execution(self._key_column))
 
     def _add_boolean_column(self, column: str) -> bool:
         """
@@ -113,7 +124,7 @@ class SavedSegmentDatabase:
         """
         output_list: list[str] = []
         for key in row.keys():
-            if row[key] and key != self.key_column:
+            if row[key] and key != self._key_column:
                 output_list.append(key)
         return output_list
 
@@ -127,8 +138,8 @@ class SavedSegmentDatabase:
         may not need to be running the entire time.
         :return: list[str]
         """
-        logger.debug("Getting columns names of {}".format(self.table_name))
-        statement: str = "PRAGMA table_info('{}');".format(self.table_name)
+        logger.debug("Getting columns names of {}".format(self._table_name))
+        statement: str = "PRAGMA table_info('{}');".format(self._table_name)
 
         # Getting Column List
         column_info: list[sqlite3.Row] = await self._running_read_statement(statement)
@@ -153,9 +164,9 @@ class SavedSegmentDatabase:
         :return: bool
         """
         logger.debug("Creating table {} with column {} in {}"
-                     .format(self.table_name,
+                     .format(self._table_name,
                              key_column,
-                             self.database_location
+                             self._database_location
                              )
                      )
         # Creating table statement and cleaning it
@@ -164,7 +175,7 @@ class SavedSegmentDatabase:
                 # DEFAULT NULL: So we forced to put in value
                 # PRIMARY KEY: Is the main way we are finding the save
                 "CREATE TABLE IF NOT EXISTS {} ({} VARCHAR(25) NOT NULL DEFAULT NULL PRIMARY KEY);"
-                .format(self.table_name, key_column.strip())
+                .format(self._table_name, key_column.strip())
                 .strip()
         )
 
@@ -185,8 +196,8 @@ class SavedSegmentDatabase:
 
         logger.debug("Adding column {} in {}, {}"
                      .format(column_name,
-                             self.table_name,
-                             self.database_location
+                             self._table_name,
+                             self._database_location
                              )
                      )
         statement: str = (
@@ -194,7 +205,7 @@ class SavedSegmentDatabase:
                     # NOT NULL: as it is Binary State
                     # DEFAULT FALSE: As it will always be unsaved unless it is saved
                     "ALTER TABLE {} ADD COLUMN {} BOOLEAN NOT NULL DEFAULT FALSE;"
-                    .format(self.table_name, column_name.strip())
+                    .format(self._table_name, column_name.strip())
         )
         logger.debug("Executing Add Column")
         return await self._running_write_statement(statement)
@@ -211,10 +222,10 @@ class SavedSegmentDatabase:
         """
         success: bool = True
         new_column_list: list[str] = []
-        logger.debug("Extending table {}".format(self.table_name))
+        logger.debug("Extending table {}".format(self._table_name))
         logger.debug("Creating New Column List")
         for item in column_list:
-            if item not in self.column_list:
+            if item not in self._column_list:
                 new_column_list.append(item)
         logger.debug("New Column List: {}".format(new_column_list))
         for new_column in new_column_list:
@@ -233,14 +244,14 @@ class SavedSegmentDatabase:
         :param column_values: dict
         :return: bool
         """
-        logger.debug("Inserting Row in {}".format(self.table_name))
+        logger.debug("Inserting Row in {}".format(self._table_name))
         if not await self._extend_table(column_values):
             logger.debug("Failed to update Table Columns for current Input")
             return False
         statement: str = (
             "INSERT INTO {} ({}, {}) VALUES ('{}', {});"
-            .format(self.table_name,
-                    self.key_column,
+            .format(self._table_name,
+                    self._key_column,
                     ", ".join(item for item in column_values),
                     save_name,
                     ", ".join("{}".format(True) for _ in column_values)
@@ -261,10 +272,10 @@ class SavedSegmentDatabase:
         :param save_name: str
         :return: dict
         """
-        logger.debug("Selecting entry in {}".format(self.table_name))
+        logger.debug("Selecting entry in {}".format(self._table_name))
         statement: str = (
             "SELECT * FROM {} WHERE save_name='{}';"
-            .format(self.table_name.strip(), save_name.strip())
+            .format(self._table_name.strip(), save_name.strip())
         )
         logger.debug(statement)
         logger.debug("Executing Select")
@@ -286,8 +297,8 @@ class SavedSegmentDatabase:
         may not need to be running the entire time.
         :return: sqlite3.Connection
         """
-        logger.debug(f"Creating connection from {self.database_location}")
-        return sqlite3.connect(self.database_location, detect_types=sqlite3.PARSE_COLNAMES)
+        logger.debug(f"Creating connection from {self._database_location}")
+        return sqlite3.connect(self._database_location, detect_types=sqlite3.PARSE_COLNAMES)
 
     # Writing to Table
     async def _running_write_statement(self, statement: str) -> bool:
@@ -328,11 +339,7 @@ class SavedSegmentDatabase:
         self._send_feedback(feedback)
         return result
 
-    async def _run_write_operation(self,
-                                   statement: str,
-                                   max_attempts: int = 3,
-                                   min_retry_interval: float = 1.0,
-                                   max_retry_interval: float = 5.0) -> None:
+    async def _run_write_operation(self, statement: str) -> None:
         """
         Method the attempts to write to the
         database with the given statement.
@@ -345,13 +352,10 @@ class SavedSegmentDatabase:
         Async Method as it may take time to process but
         may not need to be running the entire time.
         :param statement: str
-        :param max_attempts: int
-        :param min_retry_interval: float
-        :param max_retry_interval: float
         :return: None
         :raises: Exception
         """
-        for attempt in range(max_attempts):
+        for attempt in range(self._max_attempts):
             logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
             try:
                 with self._create_connection() as connection:
@@ -360,12 +364,12 @@ class SavedSegmentDatabase:
                     return
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
-                        and attempt < max_attempts):
+                        and attempt < self._max_attempts):
                     output = ("Operational Error on Write: Attempting Retry. Attempt #{}"
                               .format(attempt+1))
                     logger.debug(output)
                     self._send_feedback(output)
-                    await asyncio.sleep(random.uniform(min_retry_interval, max_retry_interval))
+                    await asyncio.sleep(random.uniform(self._min_retry_interval, self._max_retry_interval))
                 else:
                     raise transaction_issue
 
@@ -406,11 +410,7 @@ class SavedSegmentDatabase:
         self._send_feedback(feedback)
         return results
 
-    async def _run_read_operation(self,
-                                  statement: str,
-                                  max_attempts: int = 3,
-                                  min_retry_interval: float = 1.0,
-                                  max_retry_interval: float = 5.0) -> list[sqlite3.Row]:
+    async def _run_read_operation(self, statement: str) -> list[sqlite3.Row]:
         """
         Method the attempts to read from the
         database with the given statement.
@@ -423,14 +423,11 @@ class SavedSegmentDatabase:
         Async Method as it may take time to process but
         may not need to be running the entire time.
         :param statement: str
-        :param max_attempts: int
-        :param min_retry_interval: float
-        :param max_retry_interval: float
         :return: list[sqlite3.Row]
         :raises: Exception
         """
         results: list[sqlite3.Row] = []  # Empty List to show nothing was retrieved
-        for attempt in range(max_attempts):
+        for attempt in range(self._max_attempts):
             logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
             try:
                 with self._create_connection() as connection:
@@ -438,12 +435,12 @@ class SavedSegmentDatabase:
                     results: list[sqlite3.Row] = connection.execute(statement).fetchall()
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
-                        and attempt < max_attempts):
+                        and attempt < self._max_attempts):
                     output = ("Operational Error on Read: Attempting Retry. Attempt #{}"
                               .format(attempt + 1))
                     logger.debug(output)
                     self._send_feedback(output)
-                    await asyncio.sleep(random.uniform(min_retry_interval, max_retry_interval))
+                    await asyncio.sleep(random.uniform(self._min_retry_interval, self._max_retry_interval))
                 else:
                     raise transaction_issue
         return results
