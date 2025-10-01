@@ -106,7 +106,8 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
     def click_save(self) -> None:
         self._save_message_box.show()
-        self._save_message_box.raise_()
+        self._save_message_box.setFocus()
+        self._save_message_box.activateWindow()
 
 
     def set_progress_text(self, text: str) -> None:
@@ -183,6 +184,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     def add_save_item(self, text: str) -> None:
         """
         Adding a new item to the Selector Widget
+        :param text: str
         """
         self._select_save.addItem(text)
 
