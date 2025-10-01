@@ -35,7 +35,9 @@ class AutoSegmentationController(QObject):
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()
-        self.database: SavedSegmentDatabase = SavedSegmentDatabase(self.view_state)
+        self.database: SavedSegmentDatabase = SavedSegmentDatabase("AutoSegmentationSaves",
+                                                                   "save_name",
+                                                                   self.update_database_state)
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
     # View related methods
@@ -69,7 +71,15 @@ class AutoSegmentationController(QObject):
         To be called when the button to delete the selected segmentation task is clicked
         :rtype: None
         """
-        print(f"Delete {value}")
+        self.database.delete_entry(value)
+
+    def database_save_list(self) -> None:
+        """
+        Gets a list of all saved segmentaion choices and ads them to the Selector widget
+        :rtype: None
+        """
+        save_list: list[str] = self.database.get_save_list()
+        self._view.add_save_list(save_list)
 
     def show_view(self):
         """
@@ -78,12 +88,16 @@ class AutoSegmentationController(QObject):
         """
         if self._view is None:
             self._view = AutoSegmentWindow(self.view_state)
+        self.database_save_list()
         self._view.show()
 
         # Bring window to front and make active (if already visible)
         if self._view.isVisible():
             self._view.raise_()
             self._view.activateWindow()
+
+    def update_database_state(self, text: str) -> None:
+        pass
 
     def update_progress_text(self, text: str) -> None:
         """

@@ -19,7 +19,7 @@ class SavedSegmentDatabase:
     """
 
     def __init__(self,
-                 table_name: str = "AutoSegmentation",
+                 table_name: str = "AutoSegmentationSaves",
                  key_column: str = "save_name",
                  feed_back: Callable[[str], None] = None,
                  max_retry: int = 3,
@@ -80,7 +80,6 @@ class SavedSegmentDatabase:
         if save_column is None:
             save_column: str = self._key_column
         save_column: str = text_sanitiser(save_column)
-        print(save_column)
         return asyncio.run(self._get_column_execution(save_column))
 
     def insert_row(self, save_name: str, values: list[str]) -> bool:

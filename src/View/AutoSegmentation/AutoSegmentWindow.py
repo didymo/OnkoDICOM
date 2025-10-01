@@ -172,11 +172,28 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         select_save_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         select_save_widget.setLayout(select_save_layout)
 
-        # TODO: Remove these add items
-        self._select_save.addItems(["One", "Two", "Three", "Four"])
-        self._select_save.addItems(["Five", "Six", "Seven", "Eight", "Nine"])
-
         return select_save_widget
+
+    def add_save_item(self, text: str) -> None:
+        """
+        Adding a new item to the Selector Widget
+        """
+        self._select_save.addItem(text)
+
+    def add_save_list(self, saves: list[str]) -> None:
+        """
+        Adding a list of save names to the Selector Widget
+        :param saves: list[str]
+        :return: None
+        """
+        self._select_save.addItems(saves)
+
+    def remove_save_item(self) -> None:
+        """
+        Deleting Selected Row from the Selector Widget
+        :return: None
+        """
+        self._select_save.takeItem(self._select_save.currentRow())
 
     def _select_button_widget(self, connection: AutoSegmentViewState) -> QtWidgets.QWidget:
         # Delete Button
