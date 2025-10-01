@@ -90,9 +90,6 @@ class SavedSegmentDatabase:
         """
         # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
         save_name: str = text_sanitiser(save_name)
-        for value in values:
-            text_sanitiser(value)
-
         return asyncio.run(self._insert_row_execution(save_name , copy.deepcopy(values)))
 
     def select_entry(self, save_name: str) -> list[str]:
@@ -297,7 +294,6 @@ class SavedSegmentDatabase:
         logger.debug("Inserting Row in {}".format(self._table_name))
         if not await self._extend_table(column_values):
             logger.debug("Failed to update Table Columns for current Input")
-            return False
         statement: str = (
             "INSERT INTO {} ({}, {}) VALUES ('{}', {});"
             .format(self._table_name,

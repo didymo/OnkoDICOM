@@ -56,8 +56,8 @@ class AutoSegmentationController(QObject):
         To be called when the button to save the selected segmentation task is clicked
         :rtype: None
         """
-
         self.database.insert_row(save_name, save_list)
+        self._view.add_save_item(save_name)
 
     def load_button_clicked(self, value: str) -> None:
         """

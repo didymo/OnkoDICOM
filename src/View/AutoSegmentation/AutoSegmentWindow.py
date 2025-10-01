@@ -89,16 +89,19 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         save_box_buttons.addWidget(box_cancel_button)
         save_button_widget.setLayout(save_box_buttons)
 
-        save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
-        box_save_button.clicked.connect(lambda save: self._view_state.save_button_connection(save_text.text()))
-        save_text.setPlaceholderText("Selection Name")
-        save_text.setMaxLength(25)
+        self.save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
+        box_save_button.clicked.connect(self.save_send)
+        self.save_text.setPlaceholderText("Selection Name")
+        self.save_text.setMaxLength(25)
         save_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Enter Selection Name:")
         save_box_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         save_box_layout.addWidget(save_text_label)
-        save_box_layout.addWidget(save_text)
+        save_box_layout.addWidget(self.save_text)
         save_box_layout.addWidget(save_button_widget)
         self._save_message_box.setLayout(save_box_layout)
+
+    def save_send(self):
+        self._view_state.save_button_connection(self.save_text.text())
 
     def click_save(self) -> None:
         self._save_message_box.show()
