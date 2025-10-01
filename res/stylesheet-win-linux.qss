@@ -647,8 +647,7 @@ QRadioButton#FusionModeRadio:disabled, QLabel#FusionModeLabel:disabled {
     opacity: 0.35;
 }
 
-AutoSegmentWindow {
+QWidget[WidgetClass="widget-window"] {
     color: #000000;
     background-color: #F5F4F5;
-
 }

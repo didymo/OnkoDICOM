@@ -4,9 +4,11 @@ from PySide6.QtGui import QTextCursor, QPixmap, QIcon
 from PySide6.QtCore import QSize
 
 from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
+from src.View.AutoSegmentation.ButtonInputBox import ButtonInputBox
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
 import src.View.StyleSheetReader as StyleSheetReader
 from src.Controller.PathHandler import resource_path
+from src.View.WindowBarIconSetup import setup_window
 
 
 class AutoSegmentWindow(QtWidgets.QWidget):
@@ -25,9 +27,9 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :returns: None
         """
         super(AutoSegmentWindow, self).__init__()
-        self.setWindowTitle("OnkoDICOM: Auto-Segmentation")
+        self.setProperty("WidgetClass", "widget-window")
         self.setMinimumSize(QSize(800, 600))
-        self._setup_window(self) # Setting Up Window
+        setup_window(self, "OnkoDICOM: Auto-Segmentation") # Setting Up Window
 
         # Member Variables
         self._view_state = view_state
@@ -36,9 +38,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
         self.save_list: list[str] = []
-
-        # Dialog Boxes
-        self._setup_save_dialog()
+        self.save_window: ButtonInputBox | None = None
 
         # Left Section of the Window
         save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
@@ -72,47 +72,24 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         return QSize(700, 600)
 
-    def _setup_save_dialog(self) -> None:
-        # TODO: Refactor This. Probably move to it's own file
-        self._save_message_box: QtWidgets.QWidget = QtWidgets.QWidget()
-        self._save_message_box.setProperty("AutoSegmentSave", "save-message-box")
-        self._setup_window(self._save_message_box)
-        self._save_message_box.setFixedSize(QSize(400, 150))
-
-        box_save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
-        box_cancel_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Cancel")
-        box_save_button.setProperty("QPushButtonClass", "success-button")
-        box_cancel_button.setProperty("QPushButtonClass", "fail-button")
-
-        save_button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
-        save_box_buttons: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
-        save_box_buttons.addWidget(box_save_button)
-        save_box_buttons.addWidget(box_cancel_button)
-        save_button_widget.setLayout(save_box_buttons)
-
-        self.save_text: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
-        box_save_button.clicked.connect(self.save_send)
-        self.save_text.setPlaceholderText("Selection Name")
-        self.save_text.setMaxLength(25)
-        save_text_label: QtWidgets.QLabel = QtWidgets.QLabel("Enter Selection Name:")
-        save_box_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
-        save_box_layout.addWidget(save_text_label)
-        save_box_layout.addWidget(self.save_text)
-        save_box_layout.addWidget(save_button_widget)
-        self._save_message_box.setLayout(save_box_layout)
-
-    def save_send(self):
-        text = self.save_text.text()
-        if text not in self.save_list:
+    def save_send(self, text: str) -> None:
+        if text != "" and text not in self.save_list:
             self.save_list.append(text)
             self._view_state.save_button_connection(text)
-            self._save_message_box.close()
+            self.save_close()
+
+    def save_close(self):
+        self.save_window.close()
+        self.save_window: None = None
 
     def click_save(self) -> None:
-        self._save_message_box.show()
-        self._save_message_box.setFocus()
-        self._save_message_box.activateWindow()
-
+        self.save_window: ButtonInputBox = ButtonInputBox("Input Save Name:",
+                                                          self.save_send,
+                                                          self.save_close,
+                                                          text_box=True)
+        self.save_window.show()
+        self.save_window.raise_()
+        self.save_window.activateWindow()
 
     def set_progress_text(self, text: str) -> None:
         """
