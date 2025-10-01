@@ -65,6 +65,7 @@ class AutoSegmentationController(QObject):
         :rtype: None
         """
         self.database.select_entry(value)
+        self._view.load_selection(self.database.select_entry(value))
 
     def delete_button_clicked(self, value: str) -> None:
         """

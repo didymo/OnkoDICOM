@@ -156,6 +156,10 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         return self._tree_selector.get_segment_list()
 
+    def load_selection(self, load_list: list[str]) -> None:
+        self._tree_selector.deselect_all()
+        self._tree_selector.load_selections(load_list)
+
     def _setup_window(self, window: QtWidgets.QWidget | QtWidgets.QMessageBox) -> None:
         """
         Protected Method for Setting up the window, with Title, StyleSheet, MinimumSize and Icon

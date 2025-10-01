@@ -61,7 +61,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
 
         # Only Really needed if view is destroyed.
         if segmentation_list:
-            self._load_selections(segmentation_list)
+            self.load_selections(segmentation_list)
 
     def sizeHint(self) -> QSize:
         """
@@ -172,7 +172,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         structure_input.setText(column, f"   {structure}")
         return structure_input
 
-    def _load_selections(self, current_list: list[str]) -> None:
+    def load_selections(self, current_list: list[str]) -> None:
         """
         Setting the selection in the segmentation selector tree to the options given in a list
 
