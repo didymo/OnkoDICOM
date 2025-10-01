@@ -38,7 +38,7 @@ class AutoSegmentationController(QObject):
         self.patient_dict_container = PatientDictContainer()
         self.database: SavedSegmentDatabase = SavedSegmentDatabase("AutoSegmentationSaves",
                                                                    "save_name",
-                                                                   self.update_database_state)
+                                                                   self.update_database_feedback)
         # Member Variables
         self.save_list: list[str] | None = None # Will be initialized on window open
 
@@ -102,8 +102,12 @@ class AutoSegmentationController(QObject):
             self._view.raise_()
             self._view.activateWindow()
 
-    def update_database_state(self, text: str) -> None:
-        pass
+    def update_database_feedback(self, text: str) -> None:
+        if self._view is not None:
+            self._view.database_feedback.hide()
+            if text:
+                self._view.database_feedback.show()
+            self._view.database_feedback.setText(text)
 
     def update_progress_text(self, text: str) -> None:
         """

@@ -81,4 +81,4 @@ def database_path() -> Path:
 
     :return: Path
     """
-    return Path.home().joinpath('.OnkoDICOM', 'OnkoDICOM.db')
+    return data_path('OnkoDICOM.db')

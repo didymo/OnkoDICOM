@@ -181,8 +181,11 @@ class AutoSegmentWindow(QtWidgets.QWidget):
     def _select_save_widget(self) -> QtWidgets.QWidget:
         # List Widget for Loafing Saved selections
         select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Save Selections:")
+        self.database_feedback = QtWidgets.QLabel()
+        self.database_feedback.setProperty("QLabelClass", "info-feedback")
         select_save_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         select_save_layout.addWidget(select_save_label)
+        select_save_layout.addWidget(self.database_feedback)
         select_save_layout.addWidget(self._select_save)
         select_save_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         select_save_widget.setLayout(select_save_layout)
@@ -203,6 +206,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: None
         """
         self.save_list = saves
+        self._select_save.clear()
         self._select_save.addItems(saves)
 
     def remove_save_item(self) -> None:
@@ -338,7 +342,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :param button_action: function
         :return: None
         """
-        self._start_button.setObjectName("start_button")
+        self._start_button.setObjectName("seg_start_button")
         # Button Action
         self._start_button.clicked.connect(button_action)
         layout.addWidget(self._start_button)

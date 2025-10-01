@@ -387,19 +387,19 @@ class SavedSegmentDatabase:
             logger.debug("Executing Statement: {}".format(statement))
             try:
                 await self._run_write_operation(statement)
-                feedback = "Data Written to Database"
+                feedback = ""
                 result = True
             except sqlite3.OperationalError:
-                feedback = "Operational Error: Transaction not processed."
-                logger.debug(feedback)
+                feedback = "Issue: Save Failed"
+                logger.debug("Operational Error: Transaction not processed.")
             except sqlite3.IntegrityError:
-                feedback = "Integrity Error: Constraint Error"
-                logger.debug(feedback)
+                feedback = "Issue: Save Failed"
+                logger.debug("Integrity Error: Constraint Error")
             except sqlite3.ProgrammingError:
-                feedback = "Programming Error: Check Connection and number of inputs"
-                logger.debug(feedback)
+                feedback = "Issue: Save Failed"
+                logger.debug("Programming Error: Check Connection and number of inputs")
         else:
-            feedback = "Invalid Statement: {}".format(statement)
+            feedback = "Issue: Save Failed"
             logger.debug(feedback)
         self._send_feedback(feedback)
         return result
@@ -421,7 +421,7 @@ class SavedSegmentDatabase:
         :raises: Exception
         """
         for attempt in range(self._max_attempts):
-            logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
+            logger.debug("Attempting to Write to Database")
             try:
                 with self._create_connection() as connection:
                     connection.execute(statement)
@@ -430,7 +430,7 @@ class SavedSegmentDatabase:
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
                         and attempt < self._max_attempts):
-                    output = ("Operational Error on Write: Attempting Retry. Attempt #{}"
+                    output = ("Write Error: Attempt #{}"
                               .format(attempt+1))
                     logger.debug(output)
                     self._send_feedback(output)
@@ -460,16 +460,16 @@ class SavedSegmentDatabase:
             logger.debug("Executing Statement: {}".format(statement))
             try:
                 results: list[sqlite3.Row] | tuple = await self._run_read_operation(statement, map_obj)
-                feedback = "Data Read from Database"
+                feedback = ""
             except sqlite3.OperationalError:
-                feedback = "Operational Error: Transaction not processed."
-                logger.debug(feedback)
+                feedback = "Issue: Read Failed"
+                logger.debug("Operational Error: Transaction not processed.")
             except sqlite3.IntegrityError:
-                feedback = "Integrity Error: Constraint Error"
-                logger.debug(feedback)
+                feedback = "Issue: Read Failed"
+                logger.debug("Operational Error: Transaction not processed.")
             except sqlite3.ProgrammingError:
-                feedback = "Programming Error: Check Connection and number of inputs"
-                logger.debug(feedback)
+                feedback = "Issue: Read Failed"
+                logger.debug("Operational Error: Transaction not processed.")
         else:
             logger.debug("Invalid Statement: {}".format(statement))
             feedback = "Invalid Statement: {}".format(statement)
@@ -495,7 +495,7 @@ class SavedSegmentDatabase:
         """
         results: list[sqlite3.Row] = []  # Empty List to show nothing was retrieved
         for attempt in range(self._max_attempts):
-            logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
+            logger.debug("Attempting to Read from Database")
             try:
                 with self._create_connection() as connection:
                     if map_obj:
@@ -504,7 +504,7 @@ class SavedSegmentDatabase:
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
                         and attempt < self._max_attempts):
-                    output = ("Operational Error on Read: Attempting Retry. Attempt #{}"
+                    output = ("Read Error: Attempt #{}"
                               .format(attempt + 1))
                     logger.debug(output)
                     self._send_feedback(output)

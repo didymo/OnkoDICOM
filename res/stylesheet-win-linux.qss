@@ -85,6 +85,10 @@ QLabel {
     color: #000000;
 }
 
+QLabel[QLabelClass="info-feedback"] {
+    color: #ff0000;
+}
+
 QLabel[QLabelClass="window-title"] {
     margin: 8px;
     padding: 4px;
@@ -92,10 +96,12 @@ QLabel[QLabelClass="window-title"] {
     border-radius: 0;
     font-size: 32px;
 }
+
 QLabel[QLabelClass~="tree-view-label"] {
     padding: 8px;
     font-size: 20px;
 }
+
 QLabel[QLabelClass~="tree-view-label-keep-delete"] {
     color: #f5f5f5;
 }
