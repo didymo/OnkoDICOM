@@ -102,9 +102,12 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
     def save_send(self):
         self._view_state.save_button_connection(self.save_text.text())
+        self._save_message_box.close()
 
     def click_save(self) -> None:
         self._save_message_box.show()
+        self._save_message_box.raise_()
+
 
     def set_progress_text(self, text: str) -> None:
         """
