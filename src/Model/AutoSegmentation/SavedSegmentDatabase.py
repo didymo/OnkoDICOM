@@ -40,8 +40,8 @@ class SavedSegmentDatabase:
         """
         logger.debug("Initializing SavedSegmentDatabase")
         # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
-        table_name = text_sanitiser(table_name)
-        key_column = text_sanitiser(key_column)
+        table_name: str = text_sanitiser(table_name)
+        key_column: str = text_sanitiser(key_column)
 
         # Members
         self._table_name: str = table_name
@@ -60,6 +60,7 @@ class SavedSegmentDatabase:
         self._database_location: pathlib.Path = database_path()
 
         self._create_table()
+        self.get_save_list(key_column)
 
 # Database Methods
     def get_columns(self) -> list[str]:
@@ -70,6 +71,18 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._get_columns_execution())
 
+    def get_save_list(self, save_column: str = None) -> list[str]:
+        """
+        Gets the list of save names stored in the database this will be the key column of that table
+
+        :return: list[str]
+        """
+        if save_column is None:
+            save_column: str = self._key_column
+        save_column: str = text_sanitiser(save_column)
+        print(save_column)
+        return asyncio.run(self._get_column_execution(save_column))
+
     def insert_row(self, save_name: str, values: list[str]) -> bool:
         """
         Initiates Async method to insert a row to the table
@@ -77,7 +90,7 @@ class SavedSegmentDatabase:
         :return: bool
         """
         # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
-        save_name = text_sanitiser(save_name)
+        save_name: str = text_sanitiser(save_name)
         for value in values:
             text_sanitiser(value)
 
@@ -91,7 +104,7 @@ class SavedSegmentDatabase:
         :return: dict[str, str | bool]
         """
         # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
-        save_name = text_sanitiser(save_name)
+        save_name: str = text_sanitiser(save_name)
         return asyncio.run(self._select_entry_execution(copy.deepcopy(save_name)))
 
     def delete_entry(self, save_name: str) -> bool:
@@ -102,7 +115,7 @@ class SavedSegmentDatabase:
         :return: None
         """
         # Ensuring all inputs are with in the set [. _0-9a-zA-Z]
-        save_name = text_sanitiser(save_name)
+        save_name: str = text_sanitiser(save_name)
         return asyncio.run(self._delete_entry_execution(copy.deepcopy(save_name)))
 
 # Internal use Only
@@ -125,7 +138,7 @@ class SavedSegmentDatabase:
 
         :return: bool
         """
-        return asyncio.run(self._create_table_execution(self._key_column))
+        return asyncio.run(self._create_table_execution())
 
     def _add_boolean_column(self, column: str) -> bool:
         """
@@ -164,13 +177,30 @@ class SavedSegmentDatabase:
         statement: str = "PRAGMA table_info('{}');".format(self._table_name)
 
         # Getting Column List
-        column_info: list[sqlite3.Row] = await self._running_read_statement(statement)
+        column_info: list[sqlite3.Row] = await self._running_read_statement(statement, map_obj=True)
 
         logger.debug("Converting Column names from {} to dict")
         column_list: list[str] = []
         for column in column_info:
             column_list.append(column[1])  # 1 is the column name column
         return column_list
+
+    async def _get_column_execution(self, column_name: str) -> list[str]:
+        """
+        Getting a list of values from the specified column will default to the self._key_column of non specified
+
+        :param column_name: str
+        :return: list[str]
+        """
+        logger.debug("Getting columns values of {} from {}".format(column_name, self._table_name))
+        statement: str = "SELECT {} FROM {};".format(column_name, self._table_name)
+        values = await self._running_read_statement(statement)
+
+        logger.debug("Converting Column values from list[tuple[str]] to list[str]")
+        save_list: list[str] = []
+        for value in values:
+            save_list.append(value[0])
+        return save_list
 
     async def _create_table_execution(self) -> bool:
         """
@@ -302,7 +332,7 @@ class SavedSegmentDatabase:
         logger.debug("Executing Select")
         # to keep the select generalized returning a list of objects is preferable even though
         # it is only ever going to have one
-        column_values: list[sqlite3.Row] = await self._running_read_statement(statement)
+        column_values: list[sqlite3.Row] = await self._running_read_statement(statement, map_obj=True)
         column_values: sqlite3.Row = column_values[0] # to dereference out of the array
         column_list: list[str] = self._row_to_list(column_values)
 
@@ -414,7 +444,7 @@ class SavedSegmentDatabase:
                     raise transaction_issue
 
     # Reading From Table
-    async def _running_read_statement(self, statement: str) -> list[sqlite3.Row]:
+    async def _running_read_statement(self, statement: str , map_obj:bool = True) -> list[sqlite3.Row] | tuple:
         """
         Fetching information from the Database Table
         This function primarily deals with checking
@@ -425,15 +455,16 @@ class SavedSegmentDatabase:
         Async Method as it may take time to process but
         may not need to be running the entire time.
         :param statement: str
-        :return: list[sqlite3.Row]
+        :param map_obj: bool
+        :return: list[sqlite3.Row] | tuple
         """
         # statement = text_sanitiser(statement).strip().join(";")
         # assigning list to be returned; if list cannot retrieve list
-        results: list[sqlite3.Row] | None = None  # assigning list to be returned; if list cannot retrieve list
+        results: list[sqlite3.Row] | tuple | None = None  # assigning list to be returned; if list cannot retrieve list
         if sqlite3.complete_statement(statement):  # Ensuring the statement is a complete statement
             logger.debug("Executing Statement: {}".format(statement))
             try:
-                results: list[sqlite3.Row] = await self._run_read_operation(statement)
+                results: list[sqlite3.Row] | tuple = await self._run_read_operation(statement, map_obj)
                 feedback = "Data Read from Database"
             except sqlite3.OperationalError:
                 feedback = "Operational Error: Transaction not processed."
@@ -450,7 +481,7 @@ class SavedSegmentDatabase:
         self._send_feedback(feedback)
         return results
 
-    async def _run_read_operation(self, statement: str) -> list[sqlite3.Row]:
+    async def _run_read_operation(self, statement: str, map_obj: bool = True) -> list[sqlite3.Row] | tuple:
         """
         Method the attempts to read from the
         database with the given statement.
@@ -463,7 +494,8 @@ class SavedSegmentDatabase:
         Async Method as it may take time to process but
         may not need to be running the entire time.
         :param statement: str
-        :return: list[sqlite3.Row]
+        :param map_obj: bool
+        :return: list[sqlite3.Row] | tuple
         :raises: Exception
         """
         results: list[sqlite3.Row] = []  # Empty List to show nothing was retrieved
@@ -471,8 +503,9 @@ class SavedSegmentDatabase:
             logger.debug("Operational Error: Attempting Retry. Attempt #{}".format(attempt))
             try:
                 with self._create_connection() as connection:
-                    connection.row_factory = sqlite3.Row
-                    results: list[sqlite3.Row] = connection.execute(statement).fetchall()
+                    if map_obj:
+                        connection.row_factory = sqlite3.Row
+                    results: list[sqlite3.Row] | tuple = connection.execute(statement).fetchall()
             except Exception as transaction_issue:
                 if (transaction_issue.args[0] == sqlite3.OperationalError
                         and attempt < self._max_attempts):
