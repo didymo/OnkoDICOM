@@ -35,6 +35,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
+        self.save_list: list[str] = []
 
         # Dialog Boxes
         self._setup_save_dialog()
@@ -101,8 +102,11 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._save_message_box.setLayout(save_box_layout)
 
     def save_send(self):
-        self._view_state.save_button_connection(self.save_text.text())
-        self._save_message_box.close()
+        text = self.save_text.text()
+        if text not in self.save_list:
+            self.save_list.append(text)
+            self._view_state.save_button_connection(text)
+            self._save_message_box.close()
 
     def click_save(self) -> None:
         self._save_message_box.show()
@@ -198,6 +202,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :param saves: list[str]
         :return: None
         """
+        self.save_list = saves
         self._select_save.addItems(saves)
 
     def remove_save_item(self) -> None:

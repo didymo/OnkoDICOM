@@ -32,12 +32,16 @@ class AutoSegmentationController(QObject):
         self.view_state.set_load_button_callback(self.load_button_clicked) # Load
         self.view_state.set_delete_button_callback(self.delete_button_clicked) # Delete
 
+        # Object Connections
         self._view = None
         self._model = None
         self.patient_dict_container = PatientDictContainer()
         self.database: SavedSegmentDatabase = SavedSegmentDatabase("AutoSegmentationSaves",
                                                                    "save_name",
                                                                    self.update_database_state)
+        # Member Variables
+        self.save_list: list[str] | None = None # Will be initialized on window open
+
         # self.threadpool = QThreadPool() - Raises Seg Fault
 
     # View related methods
@@ -73,14 +77,15 @@ class AutoSegmentationController(QObject):
         :rtype: None
         """
         self.database.delete_entry(value)
+        self._view.remove_save_item()
 
     def database_save_list(self) -> None:
         """
         Gets a list of all saved segmentaion choices and ads them to the Selector widget
         :rtype: None
         """
-        save_list: list[str] = self.database.get_save_list()
-        self._view.add_save_list(save_list)
+        self.save_list: list[str] = self.database.get_save_list()
+        self._view.add_save_list(self.save_list)
 
     def show_view(self):
         """
