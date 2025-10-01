@@ -83,6 +83,15 @@ class SavedSegmentDatabase:
         """
         return asyncio.run(self._select_entry_execution(copy.deepcopy(save_name)))
 
+    def delete_entry(self, save_name: str) -> list[str]:
+        """
+        Initiates Async method to delete an entry from the table
+
+        :param save_name: str
+        :return: None
+        """
+        return asyncio.run(self._delete_entry_execution(copy.deepcopy(save_name)))
+
 # Internal use Only
     def _send_feedback(self, text: str) -> None:
         """
@@ -150,7 +159,7 @@ class SavedSegmentDatabase:
             column_list.append(column[1])  # 1 is the column name column
         return column_list
 
-    async def _create_table_execution(self, key_column: str) -> bool:
+    async def _create_table_execution(self) -> bool:
         """
         Creating Table in the Database with only one column for the key value.
         if the table does not exist this creates the table
@@ -160,12 +169,11 @@ class SavedSegmentDatabase:
 
         Async Method as it may take time to process but
         may not need to be running the entire time.
-        :param key_column: str: the name of the
         :return: bool
         """
         logger.debug("Creating table {} with column {} in {}"
                      .format(self._table_name,
-                             key_column,
+                             self._key_column,
                              self._database_location
                              )
                      )
@@ -175,7 +183,7 @@ class SavedSegmentDatabase:
                 # DEFAULT NULL: So we forced to put in value
                 # PRIMARY KEY: Is the main way we are finding the save
                 "CREATE TABLE IF NOT EXISTS {} ({} VARCHAR(25) NOT NULL DEFAULT NULL PRIMARY KEY);"
-                .format(self._table_name, key_column.strip())
+                .format(self._table_name, self._key_column.strip())
                 .strip()
         )
 
@@ -275,7 +283,7 @@ class SavedSegmentDatabase:
         logger.debug("Selecting entry in {}".format(self._table_name))
         statement: str = (
             "SELECT * FROM {} WHERE save_name='{}';"
-            .format(self._table_name.strip(), save_name.strip())
+            .format(self._table_name.strip(), save_name)
         )
         logger.debug(statement)
         logger.debug("Executing Select")
@@ -287,6 +295,25 @@ class SavedSegmentDatabase:
 
         logger.debug("Select Dict: {}".format(column_list))
         return column_list
+
+    async def _delete_entry_execution(self, save_name: str) -> bool:
+        """
+        Deleting a Specific Entry from the Table.
+
+        Async Method as it may take time to process but
+        may not need to be running the entire time.
+
+        :param save_name: str
+        :return: bool
+        """
+        logger.debug("Deleting entry in {}".format(self._table_name))
+
+        statement: str = (
+            "DELETE FROM {} WHERE save_name='{}';"
+            .format(self._table_name, save_name)
+        )
+        logger.debug("Executing Delete Column")
+        return await self._running_write_statement(statement)
 
     def _create_connection(self) -> sqlite3.Connection:
         """
