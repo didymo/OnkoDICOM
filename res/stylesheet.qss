@@ -549,8 +549,7 @@ QSlider::add-page:vertical {
     margin-right:5px;
 }
 
-AutoSegmentWindow {
+QWidget[WidgetClass="widget-window"] {
     color: #000000;
     background-color: #F5F4F5;
-
 }

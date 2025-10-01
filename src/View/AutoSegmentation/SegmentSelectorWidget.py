@@ -25,7 +25,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent, segmentation_list: list[str], data_location="data/csv") -> None:
+    def __init__(self, parent, segmentation_list: list[str], data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Constructs the parent class of QtWidgets.QWidget
@@ -53,6 +53,9 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         self._selection_tree = self._resize_columns(
             self._enter_tree_data(csv_location=pathlib.Path(data_location)/"segmentation_lists.csv", tree=self._create_selection_tree(
                 self._body_section_clicked)))
+
+        # Callback Methods
+        self.update_save_start = update_callback
 
         # Adding the layout and the Widget to the parent Widget
         layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout() # Creating Window Layout
@@ -301,9 +304,11 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         """
         if state == Qt.CheckState.Checked and body_text not in self._selected_list:
             self._selected_list.append(body_text)
-            return
         if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
             self._selected_list.remove(body_text)
+        if self.update_save_start is not None:
+            self.update_save_start()
+
 
     def _uniform_selection(self, check: Qt.CheckState) -> None:
         """

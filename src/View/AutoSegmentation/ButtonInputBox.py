@@ -17,7 +17,8 @@ class ButtonInputBox(QWidget):
                  positive_action: Callable[[str | None], None]=None,
                  negative_action: Callable[[], None]=None,
                  text_box=False,
-                 reversed_buttons=False) -> None:
+                 reversed_buttons=False,
+                 delete_word = None) -> None:
         """
         A Message Box which has the with labels and actions to run when buttons are clicked
         With optional Text box and ability to reverse the colours of the buttons
@@ -37,14 +38,19 @@ class ButtonInputBox(QWidget):
         self._send: Callable[[str], None] = positive_action
         self._close: Callable[[], None] = negative_action
         self.typed_text: str = ""
+        self.delete_word: str = delete_word
 
         box_layout: QVBoxLayout = QVBoxLayout()
         text_label: QLabel = QLabel(input_text)
+        box_layout.addWidget(text_label)
+        self.feedback = QLabel()
+        self.feedback.setProperty("QLabelClass", "info-feedback")
+        box_layout.addWidget(self.feedback)
+        self.feedback.hide()
         if text_box:
             self.text: QLineEdit = QLineEdit()
             self.text.setPlaceholderText("Selection Name")
             self.text.setMaxLength(25)
-            box_layout.addWidget(text_label)
             box_layout.addWidget(self.text)
 
         positive_button: QPushButton = QPushButton("OK")
@@ -83,6 +89,8 @@ class ButtonInputBox(QWidget):
         """
         if self.text:
             self.typed_text = self.text.text()
+        if self.delete_word:
+            self.typed_text = self.delete_word
         return self._send(self.typed_text)
 
     def _negative_action(self) -> None:

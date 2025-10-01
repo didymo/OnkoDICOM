@@ -71,7 +71,7 @@ class AutoSegmentViewState(metaclass=Singleton):
         :param save_name: str
         :return: None
         """
-        if self._save is not None:
+        if self._save is not None and self.segmentation_list:
             self._save(save_name, self.segmentation_list)
         _communication_debug("Save", self._save)
 

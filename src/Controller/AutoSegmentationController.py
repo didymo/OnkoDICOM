@@ -61,7 +61,6 @@ class AutoSegmentationController(QObject):
         :rtype: None
         """
         self.database.insert_row(save_name, save_list)
-        self._view.add_save_item(save_name)
 
     def load_button_clicked(self, value: str) -> None:
         """
@@ -78,7 +77,7 @@ class AutoSegmentationController(QObject):
         """
         if value in self.save_list:
             self.database.delete_entry(value)
-            self._view.remove_save_item()
+            self._view.remove_save_item(value)
 
     def database_save_list(self) -> None:
         """
@@ -104,6 +103,13 @@ class AutoSegmentationController(QObject):
             self._view.activateWindow()
 
     def update_database_feedback(self, text: str) -> None:
+        """
+        To transmit information from the database about any issues that may arises
+        when attempting to save or read from the database
+
+        :param text: str
+        :rtype: None
+        """
         if self._view is not None:
             self._view.database_feedback.hide()
             if text:

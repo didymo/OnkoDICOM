@@ -1,3 +1,4 @@
+import copy
 from typing import Callable
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QTextCursor, QPixmap, QIcon
@@ -33,12 +34,14 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Member Variables
         self._view_state = view_state
-        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, view_state.segmentation_list)
+        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, view_state.segmentation_list, update_callback=self.update_save_button)
         self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
+        self._start_button.setEnabled(False)
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self._select_save: QtWidgets.QListWidget = QtWidgets.QListWidget()
         self.save_list: list[str] = []
-        self.save_window: ButtonInputBox | None = None
+        self._save_window: ButtonInputBox | None = None
+        self.running: bool = False
 
         # Left Section of the Window
         save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
@@ -95,6 +98,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
+        self.running: bool = False
         self._start_button.setEnabled(True)
         self._start_button.setText("Start")
 
@@ -106,6 +110,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         :return: None
         """
+        self.running: bool = True
         self._start_button.setEnabled(False)
         self._start_button.setText("Wait")
 
@@ -152,24 +157,27 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
     def _select_button_widget(self) -> QtWidgets.QWidget:
         # Delete Button
-        delete_button = QtWidgets.QPushButton("Delete")
-        delete_button.setProperty("QPushButtonClass", "fail-button")
-        delete_button.clicked.connect(self._delete_button_clicked)
+        self._delete_button = QtWidgets.QPushButton("Delete")
+        self._delete_button.setProperty("QPushButtonClass", "fail-button")
+        self._delete_button.clicked.connect(self._delete_button_clicked)
+        self._delete_button.setEnabled(False)
 
         # Save Button
-        save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
-        save_button.setProperty("QPushButtonClass", "success-button")
-        save_button.clicked.connect(self._save_button_clicked)
+        self._save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
+        self._save_button.setProperty("QPushButtonClass", "success-button")
+        self._save_button.clicked.connect(self._save_button_clicked)
+        self._save_button.setEnabled(False)
 
         # Load Button
-        load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
-        load_button.clicked.connect(self._load_button_clicked)
+        self._load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
+        self._load_button.clicked.connect(self._load_button_clicked)
+        self._load_button.setEnabled(False)
 
         # Adding Button Layout
         button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(delete_button)
-        button_layout.addWidget(save_button)
-        button_layout.addWidget(load_button)
+        button_layout.addWidget(self._delete_button)
+        button_layout.addWidget(self._save_button)
+        button_layout.addWidget(self._load_button)
 
         # Button Widget
         button_widget: QtWidgets.QWidget = QtWidgets.QWidget()
@@ -291,7 +299,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         self._view_state.start_button_connection("")
 
-    def _get_text(self) -> str:
+    def _get_list_text(self) -> str:
         """
         To get the text out the List Selector
 
@@ -299,27 +307,91 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         """
         return self._select_save.currentItem().text()
 
-    def _delete_button_clicked(self) -> None:
+    def _delete_send(self, output: str) -> None:
         """
         Protected method to be called when the delete button is clicked.
 
         :return: None
         """
-        try:
-          output: str = self._get_text()
-        except AttributeError:
-            return
         if output:
             self._view_state.delete_button_connection(output)
+        if not self.save_list:
+            self._disable_load_button()
+            self._disable_delete_button()
+
+    def _delete_button_clicked(self) -> None:
+        """
+        Events to occur when the delete button is clicked:
+
+        :return: None
+        """
+        try:
+            output: str = copy.deepcopy(self._get_list_text())
+            self._delete_window: ButtonInputBox = ButtonInputBox("Are You Sure You would like to Delete: {}". format(output),
+                                                                 self._delete_send,
+                                                                 self._delete_close,
+                                                                 text_box=False,
+                                                                 reversed_buttons=True,
+                                                                 delete_word=output)
+        except AttributeError:
+            return
+        self._delete_window.show()
+        self._delete_window.raise_()
+        self._delete_window.activateWindow()
+
+    def _delete_close(self) -> None:
+        """
+        When the Cancel Button is clicked on the Delete window
+
+        :return: None
+        """
+        if self._delete_window is not None:
+            self._delete_window.close()
+            self._delete_window: None = None
+
+    def _disable_delete_button(self):
+        """
+        Disabling the delete button when cannot be used
+
+        :return: None
+        """
+        self._delete_button.setEnabled(False)
+
+    def _enable_delete_button(self):
+        """
+        Enabling the delete button when can be used
+
+        :return: None
+        """
+        self._delete_button.setEnabled(True)
 
     def _save_button_clicked(self) -> None:
-        self.save_window: ButtonInputBox = ButtonInputBox("Input Save Name:",
-                                                          self.save_send,
-                                                          self.save_close,
+        """
+        Opening the window for text input when the save button is clicked.
+        Will also rais the window to the fron if is already open
+
+        :return: None
+        """
+        self._save_window: ButtonInputBox = ButtonInputBox("Input Save Name:",
+                                                          self._save_send,
+                                                          self._save_close,
                                                           text_box=True)
-        self.save_window.show()
-        self.save_window.raise_()
-        self.save_window.activateWindow()
+        self._save_window.show()
+        self._save_window.raise_()
+        self._save_window.activateWindow()
+
+    def update_save_button(self) -> None:
+        """
+        To disable and enable the save button is a selection has been selected
+        """
+        if self._view_state.segmentation_list:
+            self._save_button.setEnabled(True)
+            if not self.running:
+                self._start_button.setEnabled(True)
+            return
+        self._save_button.setEnabled(False)
+        self._start_button.setEnabled(False)
+
 
     def _load_button_clicked(self) -> None:
         """
@@ -328,27 +400,65 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: None
         """
         try:
-            output: str = self._get_text()
+            output: str = self._get_list_text()
         except AttributeError:
             return
         if output:
             self._view_state.load_button_connection(output)
 
-    def save_send(self, text: str) -> None:
-        if text != "" and text not in self.save_list:
-            self.save_list.append(text)
-            self._view_state.save_button_connection(text)
-            self.save_close()
+    def _disable_load_button(self):
+        """
+        Disabling the load button when cannot be used
 
-    def save_close(self):
-        self.save_window.close()
-        self.save_window: None = None
+        :return: None
+        """
+        self._load_button.setEnabled(False)
+
+    def _enable_load_button(self):
+        """
+        Enabling the load button when can be used
+
+        :return: None
+        """
+        self._load_button.setEnabled(True)
+
+    def _save_send(self, text: str) -> None:
+        """
+        Chack and Transmit information to the Controller then update feed back to the user
+
+        :param text: str
+        :return: None
+        """
+        if text != "" and text not in self.save_list:
+            self.add_save_item(text)
+            self._view_state.save_button_connection(text)
+            self._save_close()
+            return
+        if text:
+            self._save_window.feedback.setText("Name already exists use unused name")
+        else:
+            self._save_window.feedback.setText("Please enter save name")
+        self._save_window.setFixedSize(QSize(400, 175))
+        self._save_window.feedback.show()
+
+    def _save_close(self):
+        """
+        To close the save window after OK or Cancel have been clicked
+
+        :return: None
+        """
+        self._save_window.close()
+        self._save_window: None = None
 
     def add_save_item(self, text: str) -> None:
         """
         Adding a new item to the Selector Widget
         :param text: str
         """
+        self.save_list.append(text)
+        if self.save_list:
+            self._enable_load_button()
+            self._enable_delete_button()
         self._select_save.addItem(text)
 
     def add_save_list(self, saves: list[str]) -> None:
@@ -358,12 +468,18 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: None
         """
         self.save_list = saves
+        if self.save_list:
+            self._enable_load_button()
+            self._enable_delete_button()
         self._select_save.clear()
         self._select_save.addItems(saves)
 
-    def remove_save_item(self) -> None:
+    def remove_save_item(self, output: str) -> None:
         """
         Deleting Selected Row from the Selector Widget
+
+        :param output: str
         :return: None
         """
         self._select_save.takeItem(self._select_save.currentRow())
+        self.save_list.remove(output)
