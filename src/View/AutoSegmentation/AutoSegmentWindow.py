@@ -43,7 +43,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         # Left Section of the Window
         save_load_layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout()
         save_load_layout.addWidget(self._select_save_widget())
-        save_load_layout.addWidget(self._select_button_widget(view_state))
+        save_load_layout.addWidget(self._select_button_widget())
         save_load_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         save_load_widget.setLayout(save_load_layout)
         text_start_widget: QtWidgets.QWidget = self._progress_start_widget()
@@ -71,25 +71,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :returns: QSize:
         """
         return QSize(700, 600)
-
-    def save_send(self, text: str) -> None:
-        if text != "" and text not in self.save_list:
-            self.save_list.append(text)
-            self._view_state.save_button_connection(text)
-            self.save_close()
-
-    def save_close(self):
-        self.save_window.close()
-        self.save_window: None = None
-
-    def click_save(self) -> None:
-        self.save_window: ButtonInputBox = ButtonInputBox("Input Save Name:",
-                                                          self.save_send,
-                                                          self.save_close,
-                                                          text_box=True)
-        self.save_window.show()
-        self.save_window.raise_()
-        self.save_window.activateWindow()
 
     def set_progress_text(self, text: str) -> None:
         """
@@ -169,44 +150,20 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         return select_save_widget
 
-    def add_save_item(self, text: str) -> None:
-        """
-        Adding a new item to the Selector Widget
-        :param text: str
-        """
-        self._select_save.addItem(text)
-
-    def add_save_list(self, saves: list[str]) -> None:
-        """
-        Adding a list of save names to the Selector Widget
-        :param saves: list[str]
-        :return: None
-        """
-        self.save_list = saves
-        self._select_save.clear()
-        self._select_save.addItems(saves)
-
-    def remove_save_item(self) -> None:
-        """
-        Deleting Selected Row from the Selector Widget
-        :return: None
-        """
-        self._select_save.takeItem(self._select_save.currentRow())
-
-    def _select_button_widget(self, connection: AutoSegmentViewState) -> QtWidgets.QWidget:
+    def _select_button_widget(self) -> QtWidgets.QWidget:
         # Delete Button
         delete_button = QtWidgets.QPushButton("Delete")
         delete_button.setProperty("QPushButtonClass", "fail-button")
-        delete_button.clicked.connect(lambda delete: connection.delete_button_connection(self._select_save.currentItem().text()))
+        delete_button.clicked.connect(self._delete_button_clicked)
 
         # Save Button
         save_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Save")
         save_button.setProperty("QPushButtonClass", "success-button")
-        save_button.clicked.connect(self.click_save)
+        save_button.clicked.connect(self._save_button_clicked)
 
         # Load Button
         load_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Load")
-        load_button.clicked.connect(lambda load: connection.load_button_connection(self._select_save.currentItem().text()))
+        load_button.clicked.connect(self._load_button_clicked)
 
         # Adding Button Layout
         button_layout: QtWidgets.QLayout = QtWidgets.QHBoxLayout()
@@ -333,3 +290,80 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         :return: None
         """
         self._view_state.start_button_connection("")
+
+    def _get_text(self) -> str:
+        """
+        To get the text out the List Selector
+
+        :return: str
+        """
+        return self._select_save.currentItem().text()
+
+    def _delete_button_clicked(self) -> None:
+        """
+        Protected method to be called when the delete button is clicked.
+
+        :return: None
+        """
+        try:
+          output: str = self._get_text()
+        except AttributeError:
+            return
+        if output:
+            self._view_state.delete_button_connection(output)
+
+    def _save_button_clicked(self) -> None:
+        self.save_window: ButtonInputBox = ButtonInputBox("Input Save Name:",
+                                                          self.save_send,
+                                                          self.save_close,
+                                                          text_box=True)
+        self.save_window.show()
+        self.save_window.raise_()
+        self.save_window.activateWindow()
+
+    def _load_button_clicked(self) -> None:
+        """
+        Protected method to be called when the load button is clicked.
+
+        :return: None
+        """
+        try:
+            output: str = self._get_text()
+        except AttributeError:
+            return
+        if output:
+            self._view_state.load_button_connection(output)
+
+    def save_send(self, text: str) -> None:
+        if text != "" and text not in self.save_list:
+            self.save_list.append(text)
+            self._view_state.save_button_connection(text)
+            self.save_close()
+
+    def save_close(self):
+        self.save_window.close()
+        self.save_window: None = None
+
+    def add_save_item(self, text: str) -> None:
+        """
+        Adding a new item to the Selector Widget
+        :param text: str
+        """
+        self._select_save.addItem(text)
+
+    def add_save_list(self, saves: list[str]) -> None:
+        """
+        Adding a list of save names to the Selector Widget
+        :param saves: list[str]
+        :return: None
+        """
+        self.save_list = saves
+        self._select_save.clear()
+        self._select_save.addItems(saves)
+
+    def remove_save_item(self) -> None:
+        """
+        Deleting Selected Row from the Selector Widget
+        :return: None
+        """
+        self._select_save.takeItem(self._select_save.currentRow())

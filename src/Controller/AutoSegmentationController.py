@@ -76,8 +76,9 @@ class AutoSegmentationController(QObject):
         To be called when the button to delete the selected segmentation task is clicked
         :rtype: None
         """
-        self.database.delete_entry(value)
-        self._view.remove_save_item()
+        if value in self.save_list:
+            self.database.delete_entry(value)
+            self._view.remove_save_item()
 
     def database_save_list(self) -> None:
         """
