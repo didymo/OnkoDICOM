@@ -304,9 +304,9 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :returns: None
         """
         if state == Qt.CheckState.Checked and body_text not in self._selected_list:
-            self._selected_list.append(body_text)
+            self._selected_list.append(body_text.strip())
         if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
-            self._selected_list.remove(body_text)
+            self._selected_list.remove(body_text.strip())
         if self.update_save_start is not None:
             self.update_save_start()
 
