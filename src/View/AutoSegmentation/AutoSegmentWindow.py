@@ -127,20 +127,6 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._tree_selector.deselect_all()
         self._tree_selector.load_selections(load_list)
 
-    def _setup_window(self, window: QtWidgets.QWidget | QtWidgets.QMessageBox) -> None:
-        """
-        Protected Method for Setting up the window, with Title, StyleSheet, MinimumSize and Icon
-
-        :returns: None
-        """
-        # Adding Window Attributes
-        window.setStyleSheet(StyleSheetReader.get_stylesheet())
-
-        # Adding Window Icon
-        window_icon: QIcon() = QIcon()
-        window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Mode.Normal, QIcon.State.Off)
-        window.setWindowIcon(window_icon)
-
     def _select_save_widget(self) -> QtWidgets.QWidget:
         # List Widget for Loafing Saved selections
         select_save_label: QtWidgets.QLabel = QtWidgets.QLabel("Saved Selections:")

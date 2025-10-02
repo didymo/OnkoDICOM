@@ -16,6 +16,6 @@ def setup_window(window: QWidget, title: str) -> None:
     window.setWindowTitle(title)
 
     # Adding Window Icon
-    window_icon: QIcon() = QIcon()
+    window_icon: QIcon = QIcon()
     window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")), QIcon.Mode.Normal, QIcon.State.Off)
     window.setWindowIcon(window_icon)

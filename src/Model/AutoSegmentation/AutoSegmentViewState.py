@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable
 from src.Model.Singleton import Singleton
 
-logger = logging.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 def _communication_debug(word: str, member: Callable[[str], None] | Callable[[str, list[str]], None]) -> None:
     """

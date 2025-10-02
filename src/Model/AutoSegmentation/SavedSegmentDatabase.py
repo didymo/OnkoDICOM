@@ -153,11 +153,7 @@ class SavedSegmentDatabase:
         :param row: sqlite3.Row
         :return: list[str]
         """
-        output_list: list[str] = []
-        for key in row.keys():
-            if row[key] and key != self._key_column:
-                output_list.append(key)
-        return output_list
+        return [key for key in row.keys() if row[key] and key != self._key_column]
 
     # Async Methods
     async def _get_columns_execution(self) -> list[str]:
@@ -175,11 +171,8 @@ class SavedSegmentDatabase:
         # Getting Column List
         column_info: list[sqlite3.Row] = await self._running_read_statement(statement, map_obj=True)
 
-        logger.debug("Converting Column names from {} to dict")
-        column_list: list[str] = []
-        for column in column_info:
-            column_list.append(column[1])  # 1 is the column name column
-        return column_list
+        logger.debug("Converting Column names from {} to list")
+        return [column[1] for column in column_info] # 1 is the column name column
 
     async def _get_column_execution(self, column_name: str) -> list[str]:
         """
@@ -300,7 +293,7 @@ class SavedSegmentDatabase:
                     self._key_column,
                     ", ".join(item for item in column_values),
                     save_name,
-                    ", ".join("{}".format(True) for _ in column_values)
+                    ", ".join("True" for _ in column_values)
                     )
         )
         logger.debug(statement)
