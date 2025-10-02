@@ -6,6 +6,7 @@ import logging
 import pydicom
 import datetime
 
+from PIL.ImageQt import QPixmap
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -23,8 +24,14 @@ from pydicom.uid import generate_uid
 
 def get_color_pair_from_text(text):
     """
-    Utility function to map color pair combo text to (fixed_color, moving_color, coloring_enabled).
-    """
+        Maps a combo box selection string to corresponding color pair values.
+
+        Args:
+            text (str): The string from the color combo box (e.g. "Purple + Green").
+
+        Returns:
+            tuple[str, str, bool]: (fixed_color, moving_color, coloring_enabled)
+        """
     match text:
         case "No Colors (Grayscale)":
             return "Grayscale", "Grayscale", False
@@ -39,272 +46,40 @@ def get_color_pair_from_text(text):
 
 class TranslateRotateMenu(QtWidgets.QWidget):
     """
-    A menu for adjusting translation, rotation, and opacity of the overlay image.
-    Displays sliders for 'LR', 'PA', and 'IS' for both translation and rotation,
-    and an opacity slider. Designed for a portrait layout.
-    Also includes color selection and coloring enable/disable.
-    """
+        Widget for manual image fusion controls.
+
+        Provides:
+          - Color selection for overlay visualization.
+          - Translation sliders (LR, PA, IS).
+          - Rotation sliders (LR, PA, IS).
+          - Mouse interaction modes (translate, rotate, interrogation).
+          - Opacity adjustment.
+          - Buttons for reset/save/load/show transform matrix.
+        """
 
     def __init__(self, _back_callback=None):
         """
-              Initializes the TranslateRotateMenu widget for manual image fusion.
-              Sets up the UI elements for translation, rotation, opacity, color selection, and mouse mode controls, and connects their signals.
+              Initializes the TranslateRotateMenu widget.
+
+              Args:
+                  _back_callback (callable, optional): Callback invoked when going 'back'.
               """
         super().__init__()
         self.offset_changed_callback = None
         self.mouse_mode = None
 
+        # Main layout (vertical stacking of all sections)
         layout = QtWidgets.QVBoxLayout()
 
-        # Colour selection and coloring enable
-        color_pair_options = [
-            "No Colors (Grayscale)",
-            "Purple + Green",
-            "Blue + Yellow",
-            "Red + Cyan"
-        ]
-        color_pair_hbox = QtWidgets.QHBoxLayout()
-        color_pair_hbox.addWidget(QtWidgets.QLabel("Overlay Colors:"))
-        self.color_pair_combo = QtWidgets.QComboBox()
-        self.color_pair_combo.addItems(color_pair_options)
-        self.color_pair_combo.setCurrentText("Purple + Green")
-        color_pair_hbox.addWidget(self.color_pair_combo)
-        layout.addLayout(color_pair_hbox)
+        # Initialize all UI sections
+        self._init_color_pair_section(layout)
+        self._init_translate_section(layout)
+        self._init_mouse_mode_toolbar(layout)
+        self._init_rotate_section(layout)
+        self._init_opacity_section(layout)
+        self._init_transform_buttons(layout)
 
-        # Store current color/enable state
-        self.fixed_color, self.moving_color, self.coloring_enabled = get_color_pair_from_text("Purple + Green")
-
-        # Connect signal for color pair selection
-        self.color_pair_combo.currentTextChanged.connect(self._on_color_pair_changed)
-
-        # Translate section
-        layout.addSpacing(4)
-        layout.addWidget(QtWidgets.QLabel("Translate:"), alignment=Qt.AlignLeft)
-        self.translate_sliders = []
-        self.translate_labels = []
-        for i, axis in enumerate(['LR', 'PA', 'IS']):
-            hbox = QtWidgets.QHBoxLayout()
-            label = QtWidgets.QLabel(axis)
-            label.setFixedWidth(30)
-            slider = QtWidgets.QSlider(Qt.Horizontal)
-            slider.setMinimum(-500)
-            slider.setMaximum(500)
-            slider.setValue(0)
-            slider.setSingleStep(1)  # 1mm per step
-            slider.setPageStep(1)
-            slider.setTickInterval(0)
-            slider.setTracking(True)
-            slider.valueChanged.connect(self._make_offset_change_handler(i))
-            value_label = QtWidgets.QLabel("0 mm")
-            value_label.setFixedWidth(50)
-
-            hbox.addWidget(label)
-            hbox.addWidget(slider)
-            hbox.addWidget(value_label)
-            layout.addLayout(hbox)
-            self.translate_sliders.append(slider)
-            self.translate_labels.append(value_label)
-
-            # Mouse Mode Toolbar (Translate/Rotate/Interrogation)
-            
-        mouse_mode_hbox = QtWidgets.QHBoxLayout()
-        mouse_mode_hbox.setSpacing(20)
-        mouse_mode_hbox.setContentsMargins(8, 0, 8, 0)
-
-        self.mouse_translate_btn = QtWidgets.QPushButton()
-        self.mouse_rotate_btn = QtWidgets.QPushButton()
-        self.mouse_interrogation_btn = QtWidgets.QPushButton()
-        self.mouse_none_btn = QtWidgets.QPushButton()
-        self.mouse_translate_btn.setCheckable(True)
-        self.mouse_rotate_btn.setCheckable(True)
-        self.mouse_interrogation_btn.setCheckable(True)
-        self.mouse_none_btn.setCheckable(True)
-        self.mouse_translate_btn.setToolTip("Enable mouse translation mode")
-        self.mouse_rotate_btn.setToolTip("Enable mouse rotation mode")
-        self.mouse_interrogation_btn.setToolTip(
-            "Enable interrogation window mode (focus overlay in a square around mouse)")
-
-        # Set icon paths for normal and checked (with black border) states
-        self._icon_paths = {
-            "translate": (
-                resource_path("res/images/btn-icons/translate_arrow_icon.png"),
-                resource_path("res/images/btn-icons/translate_arrow_icon_black_border.png"),
-            ),
-            "rotate": (
-                resource_path("res/images/btn-icons/rotate_arrow_icon.png"),
-                resource_path("res/images/btn-icons/rotate_arrow_icon_black_border.png"),
-            ),
-            "interrogation": (
-                resource_path("res/images/btn-icons/interrogation_window_icon.png"),
-                resource_path("res/images/btn-icons/interrogation_window_icon_black_border.png"),
-            ),
-        }
-
-        # Set initial icons for buttons (unchecked state)
-        self.mouse_translate_btn.setIcon(QIcon(self._icon_paths["translate"][0]))
-        self.mouse_rotate_btn.setIcon(QIcon(self._icon_paths["rotate"][0]))
-        self.mouse_interrogation_btn.setIcon(QIcon(self._icon_paths["interrogation"][0]))
-        self.mouse_translate_btn.setIconSize(QtCore.QSize(20, 20))
-        self.mouse_rotate_btn.setIconSize(QtCore.QSize(20,20))
-        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(20, 22))
-
-        # Add highlight style for toggled state and black border only when checked
-        #TODO add to style sheet. Having issues with it not loading teh checked buttons if added
-        highlight_style = """
-                    QPushButton {
-                        border: none;
-                        border-radius: 6px;
-                        padding: px 8px;
-                    }
-                    QPushButton:checked {
-                        border: 1px solid black;
-                        background-color: #9d8cc3;
-                        color: black;
-                        font-weight: bold;
-                    }
-                """
-
-        """self.mouse_translate_btn.setStyleSheet(highlight_style)
-        self.mouse_rotate_btn.setStyleSheet(highlight_style)
-        self.mouse_interrogation_btn.setStyleSheet(highlight_style)"""
-
-        # Update icons based on checked state
-        def update_icons():
-            """
-               Updates the icons for the mouse mode buttons based on their checked state.
-               This function sets the icon for each button to its checked or unchecked version.
-               """
-
-            # Changing teh icons to border and no border as per checked state
-            self.mouse_translate_btn.setIcon(QIcon(
-                self._icon_paths["translate"][1] if self.mouse_translate_btn.isChecked() else
-                self._icon_paths["translate"][0]
-            ))
-            self.mouse_rotate_btn.setIcon(QIcon(
-                self._icon_paths["rotate"][1] if self.mouse_rotate_btn.isChecked() else
-                self._icon_paths["rotate"][0]
-            ))
-            self.mouse_interrogation_btn.setIcon(QIcon(
-                self._icon_paths["interrogation"][1] if self.mouse_interrogation_btn.isChecked() else
-                self._icon_paths["interrogation"][0]
-            ))
-
-        self.mouse_translate_btn.toggled.connect(update_icons)
-        self.mouse_rotate_btn.toggled.connect(update_icons)
-        self.mouse_interrogation_btn.toggled.connect(update_icons)
-        update_icons()
-
-        # Add stretch, buttons, stretch
-        mouse_mode_hbox.addStretch(1)
-        mouse_mode_hbox.addWidget(self.mouse_translate_btn)
-        mouse_mode_hbox.addWidget(self.mouse_rotate_btn)
-        mouse_mode_hbox.addWidget(self.mouse_interrogation_btn)
-        mouse_mode_hbox.addStretch(1)
-
-        # Insert the button row
-        layout.insertLayout(1, mouse_mode_hbox)
-
-        # Button group to ensure only one is checked at a time
-        self.mouse_mode_group = QtWidgets.QButtonGroup(self)
-        self.mouse_mode_group.setExclusive(True)
-        self.mouse_mode_group.addButton(self.mouse_translate_btn)
-        self.mouse_mode_group.addButton(self.mouse_rotate_btn)
-        self.mouse_mode_group.addButton(self.mouse_interrogation_btn)
-
-
-        # Track last clicked button for "toggle off"
-        self._last_checked_button = None
-
-        def on_mouse_mode_btn_clicked(btn):
-            """
-                Handles mouse mode button clicks to toggle between translation, rotation, and interrogation modes.
-                Updates the internal mouse mode state and triggers the mouse mode changed callback if set.
-                """
-            if self._last_checked_button == btn and btn.isChecked():
-                # uncheck button if active
-                self.mouse_mode_group.setExclusive(False)
-                btn.setChecked(False)
-                self.mouse_mode_group.setExclusive(True)
-                self._last_checked_button = None
-                self.mouse_mode = None
-            else:
-                # activate the clicked button
-                self._last_checked_button = btn
-                if btn == self.mouse_translate_btn:
-                    self.mouse_mode = "translate"
-                elif btn == self.mouse_rotate_btn:
-                    self.mouse_mode = "rotate"
-                elif btn == self.mouse_interrogation_btn:
-                    self.mouse_mode = "interrogation"
-
-                elif btn == self.mouse_interrogation_btn:
-                    self.mouse_mode = "interrogation"
-                elif btn == self.mouse_none_btn:
-                    self.mouse_mode = None
-
-            # Call callback if set
-            if self.mouse_mode_changed_callback:
-                self.mouse_mode_changed_callback(self.mouse_mode)
-
-        self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
-        self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
-        self.mouse_interrogation_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_interrogation_btn))
-
-        # Rotate section
-        layout.addSpacing(8)
-        layout.addWidget(QtWidgets.QLabel("Rotate:"), alignment=Qt.AlignLeft)
-        self.rotate_sliders = []
-        self.rotate_labels = []
-        self.rotation_changed_callback = None
-        for i, axis in enumerate(['LR', 'PA', 'IS']):
-            hbox = QtWidgets.QHBoxLayout()
-            label = QtWidgets.QLabel(axis)
-            label.setFixedWidth(30)
-            slider = QtWidgets.QSlider(Qt.Horizontal)
-            slider.setMinimum(-1800)  # -180.0 deg (in 0.1 deg steps)
-            slider.setMaximum(1800)   # +180.0 deg (in 0.1 deg steps)
-            slider.setValue(0)
-            slider.setSingleStep(1)   # 0.1 deg per step
-            slider.valueChanged.connect(self._make_rotation_change_handler(i))
-            value_label = QtWidgets.QLabel("0°")
-            value_label.setFixedWidth(50)
-            hbox.addWidget(label)
-            hbox.addWidget(slider)
-            hbox.addWidget(value_label)
-            layout.addLayout(hbox)
-            self.rotate_sliders.append(slider)
-            self.rotate_labels.append(value_label)
-
-        # Opacity section
-        layout.addSpacing(8)
-        layout.addWidget(QtWidgets.QLabel("Opacity:"), alignment=Qt.AlignLeft)
-        self.opacity_slider = QtWidgets.QSlider(Qt.Horizontal)
-        self.opacity_slider.setMinimum(0)
-        self.opacity_slider.setMaximum(100)
-        self.opacity_slider.setValue(50)
-        layout.addWidget(self.opacity_slider)
-
-        # Reset Transform Button
-        reset_btn = QtWidgets.QPushButton("Reset Transform")
-        reset_btn.setToolTip("Reset all translation and rotation to zero")
-        reset_btn.clicked.connect(self.reset_transform)
-        layout.addWidget(reset_btn)
-
-        # Add Save/Load buttons
-        save_button = QtWidgets.QPushButton("Save Fusion State")
-        load_button = QtWidgets.QPushButton("Load Fusion State")
-        save_button.clicked.connect(self.save_fusion_state)
-        load_button.clicked.connect(self.load_fusion_state)
-        # Add to layout (assume self.layout() is a QVBoxLayout)
-        layout.addWidget(save_button)
-        layout.addWidget(load_button)
-
-        # Show Transform Matrix Button
-        show_matrix_btn = QtWidgets.QPushButton("Show Transform Matrix")
-        show_matrix_btn.setToolTip("Show the current 4x4 transformation matrix")
-        show_matrix_btn.clicked.connect(self.show_transform_matrix)
-        layout.addWidget(show_matrix_btn)
-
+        # Add stretch so content stays at top, flexible space at bottom
         layout.addStretch(1)
         self.setLayout(layout)
 
@@ -317,8 +92,273 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.moving_color = "Green"
         self.coloring_enabled = True
 
-        # Mouse mode callback (to be set by parent)
+        # Mouse mode callback (set by parent)
         self.mouse_mode_changed_callback = None
+
+    def _init_color_pair_section(self, layout):
+        """
+                Creates the overlay color pair selection combo box.
+                """
+        color_pair_options = [
+            "No Colors (Grayscale)",
+            "Purple + Green",
+            "Blue + Yellow",
+            "Red + Cyan"
+        ]
+        color_pair_hbox = QtWidgets.QHBoxLayout()
+        color_pair_hbox.addWidget(QtWidgets.QLabel("Overlay Colors:"))
+
+        # Combo box with predefined color pair options
+        self.color_pair_combo = QtWidgets.QComboBox()
+        self.color_pair_combo.addItems(color_pair_options)
+        self.color_pair_combo.setCurrentText("Purple + Green")
+        color_pair_hbox.addWidget(self.color_pair_combo)
+
+        # Add section to main layout
+        layout.addLayout(color_pair_hbox)
+
+        # Initialize with default colors
+        self.fixed_color, self.moving_color, self.coloring_enabled = get_color_pair_from_text("Purple + Green")
+
+        # Connect event when color selection changes
+        self.color_pair_combo.currentTextChanged.connect(self._on_color_pair_changed)
+
+    def _init_translate_section(self, layout):
+        """
+                Creates translation sliders for LR, PA, and IS axes.
+                Each slider controls translation in millimeters.
+                """
+        layout.addSpacing(4)
+        layout.addWidget(QtWidgets.QLabel("Translate:"), alignment=Qt.AlignLeft)
+        self.translate_sliders = []
+        self.translate_labels = []
+
+        # Loop over the three anatomical axes
+        for i, axis in enumerate(['LR', 'PA', 'IS']):
+            hbox = QtWidgets.QHBoxLayout()
+            label = QtWidgets.QLabel(axis)
+
+            # Axis label
+            label.setFixedWidth(30)
+
+            # Slider with mm range
+            slider = QtWidgets.QSlider(Qt.Horizontal)
+            slider.setMinimum(-500)
+            slider.setMaximum(500)
+            slider.setValue(0)
+            slider.setSingleStep(1)  # 1mm per step
+            slider.setPageStep(1)
+            slider.setTickInterval(0)
+            slider.setTracking(True)
+            slider.valueChanged.connect(self._make_offset_change_handler(i))
+
+            # Display value label
+            value_label = QtWidgets.QLabel("0 mm")
+            value_label.setFixedWidth(50)
+
+            # Pack row
+            hbox.addWidget(label)
+            hbox.addWidget(slider)
+            hbox.addWidget(value_label)
+            layout.addLayout(hbox)
+
+            # Keep references
+            self.translate_sliders.append(slider)
+            self.translate_labels.append(value_label)
+
+    def _init_mouse_mode_toolbar(self, layout):
+        """
+                Creates toolbar for mouse interaction modes (translate, rotate, interrogation).
+                Allows toggling between exclusive modes.
+                """
+        mouse_mode_hbox = QtWidgets.QHBoxLayout()
+        mouse_mode_hbox.setSpacing(5)
+        mouse_mode_hbox.setContentsMargins(5, 2, 5, 2)
+
+        # Buttons for each mode
+        self.mouse_translate_btn = QtWidgets.QPushButton()
+        self.mouse_rotate_btn = QtWidgets.QPushButton()
+        self.mouse_interrogation_btn = QtWidgets.QPushButton()
+        self.mouse_none_btn = QtWidgets.QPushButton()
+
+        # Tooltips
+        self.mouse_translate_btn.setToolTip("Enable mouse translation mode")
+        self.mouse_rotate_btn.setToolTip("Enable mouse rotation mode")
+        self.mouse_interrogation_btn.setToolTip(
+            "Enable interrogation window mode (focus overlay in a square around mouse)")
+
+        # Icon sizes
+        self.mouse_translate_btn.setIconSize(QtCore.QSize(20, 20))
+        self.mouse_rotate_btn.setIconSize(QtCore.QSize(20, 20))
+        self.mouse_interrogation_btn.setIconSize(QtCore.QSize(20, 22))
+
+        # Use QIcon's built-in modes for checked/unchecked states
+        self.mouse_translate_btn.setCheckable(True)
+        self.mouse_rotate_btn.setCheckable(True)
+        self.mouse_interrogation_btn.setCheckable(True)
+
+        # Set alternate icons for checked state using addPixmap
+        translate_icon = QIcon()
+        translate_icon.addPixmap(QPixmap(resource_path("res/images/btn-icons/translate_arrow_icon.png")),
+                                 QIcon.Mode.Normal, QIcon.State.Off)
+        translate_icon.addPixmap(QPixmap(resource_path("res/images/btn-icons/translate_arrow_icon_black_border.png")),
+                                 QIcon.Mode.Normal, QIcon.State.On)
+        self.mouse_translate_btn.setIcon(translate_icon)
+
+        rotate_icon = QIcon()
+        rotate_icon.addPixmap(QPixmap(resource_path("res/images/btn-icons/rotate_arrow_icon.png")), QIcon.Mode.Normal,
+                              QIcon.State.Off)
+        rotate_icon.addPixmap(QPixmap(resource_path("res/images/btn-icons/rotate_arrow_icon_black_border.png")),
+                              QIcon.Mode.Normal, QIcon.State.On)
+        self.mouse_rotate_btn.setIcon(rotate_icon)
+
+        interrogation_icon = QIcon()
+        interrogation_icon.addPixmap(QPixmap(resource_path("res/images/btn-icons/interrogation_window_icon.png")),
+                                     QIcon.Mode.Normal, QIcon.State.Off)
+        interrogation_icon.addPixmap(
+            QPixmap(resource_path("res/images/btn-icons/interrogation_window_icon_black_border.png")),
+            QIcon.Mode.Normal, QIcon.State.On)
+        self.mouse_interrogation_btn.setIcon(interrogation_icon)
+
+        # Center buttons horizontally
+        mouse_mode_hbox.addStretch(1)
+        mouse_mode_hbox.addWidget(self.mouse_translate_btn)
+        mouse_mode_hbox.addWidget(self.mouse_rotate_btn)
+        mouse_mode_hbox.addWidget(self.mouse_interrogation_btn)
+        mouse_mode_hbox.addStretch(1)
+
+        # Insert below color pair section with spacing
+        layout.insertSpacing(1, 8)
+        layout.insertLayout(2, mouse_mode_hbox)
+
+        # Make buttons mutually exclusive
+        self.mouse_mode_group = QtWidgets.QButtonGroup(self)
+        self.mouse_mode_group.setExclusive(True)
+        self.mouse_mode_group.addButton(self.mouse_translate_btn)
+        self.mouse_mode_group.addButton(self.mouse_rotate_btn)
+        self.mouse_mode_group.addButton(self.mouse_interrogation_btn)
+
+        # Track last checked for "toggle off" behavior
+        self._last_checked_button = None
+
+        def on_mouse_mode_btn_clicked(btn):
+            """
+            Handles mouse mode button clicks to toggle between translation, rotation, and interrogation modes.
+            Updates the internal mouse mode state and triggers the mouse mode changed callback if set.
+            """
+            if self._last_checked_button == btn and btn.isChecked():
+                # Toggle off if same button clicked twice
+                self.mouse_mode_group.setExclusive(False)
+                btn.setChecked(False)
+                self.mouse_mode_group.setExclusive(True)
+                self._last_checked_button = None
+                self.mouse_mode = None
+            else:
+                # Otherwise set mode accordingly
+                self._last_checked_button = btn
+                if btn == self.mouse_translate_btn:
+                    self.mouse_mode = "translate"
+                elif btn == self.mouse_rotate_btn:
+                    self.mouse_mode = "rotate"
+                elif btn == self.mouse_interrogation_btn:
+                    self.mouse_mode = "interrogation"
+                elif btn == self.mouse_none_btn:
+                    self.mouse_mode = None
+
+            # Notify parent if callback set
+            if self.mouse_mode_changed_callback:
+                self.mouse_mode_changed_callback(self.mouse_mode)
+
+        # Connect signals
+        self.mouse_translate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_translate_btn))
+        self.mouse_rotate_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_rotate_btn))
+        self.mouse_interrogation_btn.clicked.connect(lambda: on_mouse_mode_btn_clicked(self.mouse_interrogation_btn))
+
+    def _init_rotate_section(self, layout):
+        """
+                Creates rotation sliders for LR, PA, and IS axes.
+                Each slider controls rotation in degrees (0.1° per step).
+                """
+        layout.addSpacing(5)
+
+        # Add the rotation sliders
+        layout.addWidget(QtWidgets.QLabel("Rotate:"), alignment=Qt.AlignLeft)
+        self.rotate_sliders = []
+        self.rotate_labels = []
+        self.rotation_changed_callback = None
+
+        # Loop over the three anatomical axes
+        for i, axis in enumerate(['LR', 'PA', 'IS']):
+            hbox = QtWidgets.QHBoxLayout()
+
+            # Axis label
+            label = QtWidgets.QLabel(axis)
+            label.setFixedWidth(30)
+
+            # Slider with degrees range
+            slider = QtWidgets.QSlider(Qt.Horizontal)
+            slider.setMinimum(-1800)  # -180.0 deg (in 0.1 deg steps)
+            slider.setMaximum(1800)  # +180.0 deg (in 0.1 deg steps)
+            slider.setValue(0)
+            slider.setSingleStep(1)  # 0.1 deg per step
+            slider.valueChanged.connect(self._make_rotation_change_handler(i))
+
+            # Display value label
+            value_label = QtWidgets.QLabel("0°")
+            value_label.setFixedWidth(50)
+
+            # Pack row
+            hbox.addWidget(label)
+            hbox.addWidget(slider)
+            hbox.addWidget(value_label)
+            layout.addLayout(hbox)
+
+            # Keep references
+            self.rotate_sliders.append(slider)
+            self.rotate_labels.append(value_label)
+
+    def _init_opacity_section(self, layout):
+        """
+                Creates an opacity slider (0–100%).
+                """
+        layout.addSpacing(5)
+        layout.addWidget(QtWidgets.QLabel("Opacity:"), alignment=Qt.AlignLeft)
+
+        # Setting the values and adding the widget
+        self.opacity_slider = QtWidgets.QSlider(Qt.Horizontal)
+        self.opacity_slider.setMinimum(0)
+        self.opacity_slider.setMaximum(100)
+        self.opacity_slider.setValue(50)
+        layout.addWidget(self.opacity_slider)
+
+    def _init_transform_buttons(self, layout):
+        """
+                Adds transform-related action buttons:
+                  - Reset transform
+                  - Save/load state
+                  - Show transform matrix
+                """
+        # Reset button
+        reset_btn = QtWidgets.QPushButton("Reset Transform")
+        reset_btn.setToolTip("Reset all translation and rotation to zero")
+        reset_btn.clicked.connect(self.reset_transform)
+        layout.addWidget(reset_btn)
+
+        # Save button
+        save_button = QtWidgets.QPushButton("Save Fusion State")
+        save_button.clicked.connect(self.save_fusion_state)
+        layout.addWidget(save_button)
+
+        # Load button
+        load_button = QtWidgets.QPushButton("Load Fusion State")
+        load_button.clicked.connect(self.load_fusion_state)
+        layout.addWidget(load_button)
+
+        # Show matrix button
+        show_matrix_btn = QtWidgets.QPushButton("Show Transform Matrix")
+        show_matrix_btn.setToolTip("Show the current 4x4 transformation matrix")
+        show_matrix_btn.clicked.connect(self.show_transform_matrix)
+        layout.addWidget(show_matrix_btn)
 
     def set_mouse_mode_changed_callback(self, callback):
         """
