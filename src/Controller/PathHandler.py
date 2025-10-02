@@ -45,7 +45,7 @@ def text_sanitiser(text: str) -> str:
     :param text: str
     :return: str
     """
-    return re.sub(r"[^. _0-9a-zA-Z]", "", text)
+    return re.sub(r"[!@#$%^&*(){}|';:?/><~`=\[\]\\]", "", text)
 
 def data_path(relative_path):
     """
