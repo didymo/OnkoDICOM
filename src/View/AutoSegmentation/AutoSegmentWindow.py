@@ -1,14 +1,12 @@
 import copy
 from typing import Callable
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtGui import QTextCursor, QPixmap, QIcon
+from PySide6.QtGui import QTextCursor
 from PySide6.QtCore import QSize
 
 from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 from src.View.AutoSegmentation.ButtonInputBox import ButtonInputBox
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
-import src.View.StyleSheetReader as StyleSheetReader
-from src.Controller.PathHandler import resource_path
 from src.View.WindowBarIconSetup import setup_window
 
 

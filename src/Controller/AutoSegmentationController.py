@@ -1,4 +1,3 @@
-import copy
 import threading
 import logging
 from PySide6.QtCore import Slot, QObject, Signal
