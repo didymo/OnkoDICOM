@@ -186,6 +186,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             try:
                 for item in self._tree_choices_ref[selected]:
                     item.setCheckState(1, Qt.CheckState.Checked)
+                    self._selected_list_add_or_remove(item.text(1), Qt.CheckState.Checked)
             except KeyError:
                 logger.debug(f"Skipped Selection {selected}: Not a choice in Tree")
                 pass
