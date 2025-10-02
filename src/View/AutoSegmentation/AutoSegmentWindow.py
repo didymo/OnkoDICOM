@@ -376,8 +376,9 @@ class AutoSegmentWindow(QtWidgets.QWidget):
             if not self.running:
                 self._start_button.setEnabled(True)
             return
-        self._save_button.setEnabled(False)
-        self._start_button.setEnabled(False)
+        if not self._view_state.segmentation_list:
+            self._save_button.setEnabled(False)
+            self._start_button.setEnabled(False)
 
 
     def _load_button_clicked(self) -> None:
