@@ -1,3 +1,4 @@
+import contextlib
 import itertools
 import logging
 from PySide6 import QtCore, QtWidgets, QtGui
@@ -37,7 +38,6 @@ from src.View.ImageFusion.ImageFusionSagittalView import \
 from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
-
 
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
@@ -415,6 +415,10 @@ class UIMainWindow:
         Creates and configures the Image Fusion tab, including all fusion views, options, and callbacks.
         This method sets up the fusion views, windowing slider, ROI transfer options, and handles transform loading and static overlays.
         """
+
+        # Call the cleanup method to close all old widgets, sliders and tabs
+        self._cleanup_old_fusion_widgets_and_tabs()
+
         # Set a flag for Zooming
         self.action_handler.has_image_registration_four = True
 
@@ -538,6 +542,38 @@ class UIMainWindow:
         self._setup_fusion_four_views_layout()
         self._finalize_fusion_tab()
 
+    def _cleanup_old_fusion_widgets_and_tabs(self):
+        """
+        Helper to clean up old fusion widgets, sliders, and remove the fusion tab from the right panel if it exists.
+        """
+        for attr in [
+            'image_fusion_single_view',
+            'image_fusion_view_axial',
+            'image_fusion_view_sagittal',
+            'image_fusion_view_coronal',
+            'image_fusion_view',
+            'fusion_options_tab',
+            'windowing_slider',
+            'image_fusion_roi_transfer_option_view',
+            'image_fusion_four_views',
+        ]:
+            if hasattr(self, attr):
+                widget = getattr(self, attr)
+                if isinstance(widget, QtWidgets.QWidget):
+                    with contextlib.suppress(Exception):
+                        # Only call deleteLater if the widget is not already deleted
+                        # (PySide6: if parent() is None, it's already deleted)
+                        if widget is not None and widget.parent() is not None:
+                            widget.deleteLater()
+                delattr(self, attr)
+
+        # Remove the fusion tab from the right panel if it exists
+        if hasattr(self, "right_panel") and hasattr(self, "image_fusion_view"):
+            for i in range(self.right_panel.count()):
+                if self.right_panel.widget(i) == self.image_fusion_view:
+                    self.right_panel.removeTab(i)
+                    break
+
     def _get_vtk_engine_from_images(self):
         """Helper to extract vtk_engine from self.images if present."""
         if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:
@@ -584,7 +620,7 @@ class UIMainWindow:
                     window: The window value to set for the fusion views.
                     level: The level value to set for the fusion views.
                        """
-            
+
             for view in [
                 self.image_fusion_view_axial,
                 self.image_fusion_view_sagittal,
@@ -593,10 +629,11 @@ class UIMainWindow:
                 if hasattr(view, "on_window_level_changed"):
                     view.on_window_level_changed(window, level)
 
+                # Use the global singleton for the windowing slider
+
         self.windowing_slider = WindowingSlider(dicom_view=self.image_fusion_view_axial, width=50)
         set_windowing_slider(self.windowing_slider, fusion_views=self._fusion_views)
         self.windowing_slider.fusion_window_level_callback = propagate_window_level_change
-
     def _init_roi_transfer_option_view(self):
         """Initialize the ROI transfer option view for fusion."""
         self.image_fusion_roi_transfer_option_view = ROITransferOptionView(

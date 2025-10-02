@@ -1,4 +1,4 @@
-from PySide6 import QtCore
+from PySide6 import QtCore, QtWidgets
 import logging
 import os
 import pydicom
@@ -254,7 +254,6 @@ class ManualFusionLoader(QtCore.QObject):
         window = patient_dict_container.get("fusion_window")
         level = patient_dict_container.get("fusion_level")
 
-        # If not set, use sensible defaults based on the fixed image array
         if window is None or level is None:
             # Instead of using min/max, use a clinical default (e.g. "Normal" or "Soft Tissue")
             # You can also use the default from dict_windowing
@@ -268,6 +267,3 @@ class ManualFusionLoader(QtCore.QObject):
             patient_dict_container.set("fusion_window", window)
             patient_dict_container.set("fusion_level", level)
 
-        # Trigger a refresh of the fusion views with the current window/level
-        windowing_model_direct(window=window, level=level, init=[False, False, False, True],
-                               fixed_image_array=fixed_image_array)
