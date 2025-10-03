@@ -97,6 +97,9 @@ class PatientDictContainer(metaclass=Singleton):
         :param keyword: Keyword argument to look for.
         :return: Value if keyword found, else None.
         """
+        if self.additional_data is None:
+            return None
+
         return self.additional_data.get(keyword)
 
     def has_modality(self, dicom_type):

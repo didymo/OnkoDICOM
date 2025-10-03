@@ -1,12 +1,16 @@
 from __future__ import annotations
-import sys, os
+import os
 from pathlib import Path
 import numpy as np
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtGui
 import vtk
 from vtkmodules.util import numpy_support
 import pydicom
-import tempfile, shutil, atexit, gc, glob
+import tempfile
+import shutil
+import atexit
+import glob
+import logging
 
 # ------------------------------ DICOM Utilities ------------------------------
 
@@ -100,13 +104,15 @@ def cleanup_old_dicom_temp_dirs(temp_root=None):
     for folder in glob.glob(pattern):
         try:
             shutil.rmtree(folder)
-            print(f"[CLEANUP] Removed old temp folder: {folder}")
+            logging.warning(f"[CLEANUP] Removed old temp folder: {folder}")
         except Exception as e:
-            print(f"[WARN] Could not remove {folder}: {e}")
+            logging.error(f"[WARN] Could not remove {folder}: {e}")
 
 
 
 # ------------------------------ VTK Processing Engine ------------------------------
+WINDOW_DEFAULT = 390
+LEVEL_DEFAULT = 40
 
 class VTKEngine:
     ORI_AXIAL = "axial"
@@ -117,6 +123,11 @@ class VTKEngine:
         self.fixed_reader = None
         self.moving_reader = None
         self._blend_dirty = True
+
+        # Always initialize window/level to defaults
+        # These are the same as "Normal" selection in the slider. Want it to first load as that
+        self.window = WINDOW_DEFAULT
+        self.level = LEVEL_DEFAULT
 
         # Cleanup old temp dirs on startup
         self.cleanup_old_temp_dirs()
@@ -171,7 +182,7 @@ class VTKEngine:
             try:
                 shutil.rmtree(d, ignore_errors=True)
             except Exception as e:
-                print(f"[WARN] Failed to clean temp dir {d}: {e}")
+                logging.warning(f"[WARN] Failed to clean temp dir {d}: {e}")
         self._temp_dirs.clear()
 
 
@@ -181,7 +192,7 @@ class VTKEngine:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
         except ValueError as e:
-            print(e)
+            logging.exception(e)
             return False
 
         r = vtk.vtkDICOMImageReader()
@@ -238,7 +249,7 @@ class VTKEngine:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
         except ValueError as e:
-            print(e)
+            logging.exception(e)
             return False
 
         r = vtk.vtkDICOMImageReader()
@@ -362,6 +373,15 @@ class VTKEngine:
         if self.moving_reader:
             self.reslice3d.Update()
 
+        # Use instance window/level if set, else defaults
+        window_center = getattr(self, "level", LEVEL_DEFAULT)
+        window_width = getattr(self, "window", WINDOW_DEFAULT)
+
+        # If window/level is set to "auto" (e.g., -1), use per-slice min/max
+        if window_center == -1 and window_width == -1:
+            # We'll set these per-slice below
+            pass
+
         def vtk_to_np_slice(img, orientation, slice_idx, window_center=40, window_width=400):
             """
             Converts a VTK image into a 2D NumPy slice with window/level applied.
@@ -405,9 +425,10 @@ class VTKEngine:
             arr2d = (arr2d * 255.0).astype(np.uint8)
             return np.ascontiguousarray(arr2d)
 
-        # Extract slices from fixed and moving volumes
-        fixed_slice = vtk_to_np_slice(fixed_img, orientation, slice_idx)
-        moving_slice = vtk_to_np_slice(moving_img, orientation, slice_idx) if moving_img else None
+        fixed_slice = vtk_to_np_slice(fixed_img, orientation, slice_idx, window_center=window_center,
+                                      window_width=window_width)
+        moving_slice = vtk_to_np_slice(moving_img, orientation, slice_idx, window_center=window_center,
+                                       window_width=window_width) if moving_img else None
         return fixed_slice, moving_slice
 
     def get_slice_qimage(self, orientation: str, slice_idx: int, fixed_color="Purple", moving_color="Green",
@@ -622,3 +643,11 @@ class VTKEngine:
             self.reslice3d.SetInterpolationModeToLinear()
         else:
             self.reslice3d.SetInterpolationModeToNearestNeighbor()
+
+    def set_window_level(self, window: float, level: float):
+        """
+        Set the window and level for the VTK rendering pipeline.
+        This does not automatically trigger a redraw; the next call to get_slice_qimage will use these values.
+        """
+        self.window = window
+        self.level = level
