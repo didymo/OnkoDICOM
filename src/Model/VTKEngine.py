@@ -107,6 +107,8 @@ def cleanup_old_dicom_temp_dirs(temp_root=None):
 
 
 # ------------------------------ VTK Processing Engine ------------------------------
+WINDOW_DEFAULT = 390
+LEVEL_DEFAULT = 40
 
 class VTKEngine:
     ORI_AXIAL = "axial"
@@ -119,8 +121,9 @@ class VTKEngine:
         self._blend_dirty = True
 
         # Always initialize window/level to defaults
-        self.window = 400
-        self.level = 40
+        # These are the same as "Normal" selection in the slider. Want it to first load as that
+        self.window = WINDOW_DEFAULT
+        self.level = LEVEL_DEFAULT
 
         # Cleanup old temp dirs on startup
         self.cleanup_old_temp_dirs()
@@ -175,7 +178,7 @@ class VTKEngine:
             try:
                 shutil.rmtree(d, ignore_errors=True)
             except Exception as e:
-                logging.error(f"[WARN] Failed to clean temp dir {d}: {e}")
+                logging.warning(f"[WARN] Failed to clean temp dir {d}: {e}")
         self._temp_dirs.clear()
 
 
@@ -185,7 +188,7 @@ class VTKEngine:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
         except ValueError as e:
-            logging.error(e)
+            logging.exception(e)
             return False
 
         r = vtk.vtkDICOMImageReader()
@@ -242,7 +245,7 @@ class VTKEngine:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
         except ValueError as e:
-            logging.error(e)
+            logging.exception(e)
             return False
 
         r = vtk.vtkDICOMImageReader()
@@ -367,8 +370,8 @@ class VTKEngine:
             self.reslice3d.Update()
 
         # Use instance window/level if set, else defaults
-        window_center = getattr(self, "level", 40)
-        window_width = getattr(self, "window", 400)
+        window_center = getattr(self, "level", LEVEL_DEFAULT)
+        window_width = getattr(self, "window", WINDOW_DEFAULT)
 
         # If window/level is set to "auto" (e.g., -1), use per-slice min/max
         if window_center == -1 and window_width == -1:

@@ -42,10 +42,10 @@ def windowing_model(text, init):
     window = windowing_limits[0]
     level = windowing_limits[1]
 
-    windowing_model_direct(level, window, init)
+    windowing_model_direct(window, level, init)
 
 
-def windowing_model_direct(level, window, init, fixed_image_array=None):
+def windowing_model_direct(window, level, init, fixed_image_array=None):
     """
     Function triggered when a window is selected from the menu,
     or when the windowing slider bars are adjusted

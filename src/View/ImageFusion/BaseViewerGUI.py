@@ -343,6 +343,8 @@ class BaseFusionView(DicomView):
 
     def _on_mouse_mode_changed(self, mode):
         """
+                Note: Interrogation window is the nickname Dr Miller calls the Window button in manual fusion.
+
                 Handles changes to the mouse interaction mode for the fusion view.
 
                 This method updates the internal mouse mode state and manages the interrogation window position.
