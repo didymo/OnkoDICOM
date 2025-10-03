@@ -45,11 +45,12 @@ class TransformMatrixDialog(QtWidgets.QDialog):
                 self.table.setItem(i, j, item)
         self._resize_to_table()
 
-    def set_matrix(self, vtk_transform):
-        mat = vtk_transform.GetMatrix()
+    def set_matrix(self, mat):
+        self._current_matrix = mat
         for i in range(4):
             for j in range(4):
-                item = QtWidgets.QTableWidgetItem(f"{mat.GetElement(i,j):.2f}")
+                value = float(mat[i, j]) if hasattr(mat, "__getitem__") else mat.GetElement(i, j)
+                item = QtWidgets.QTableWidgetItem(f"{value:.5f}")
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table.setItem(i, j, item)
         self._resize_to_table()

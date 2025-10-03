@@ -264,6 +264,8 @@ class UITransferROIWindow:
         self.patient_A_initial_rois_list_widget = QListWidget(self)
         self.patient_A_initial_rois_list_widget.itemDoubleClicked.connect(
             self.patient_A_initial_roi_double_clicked)
+        if not self.fixed_image_initial_rois:
+            print("[WARNING] No fixed_image_initial_rois found when initialising list")
         for idx in self.fixed_image_initial_rois:
             roi_label = QListWidgetItem(
                 self.fixed_image_initial_rois[idx]['name'])
@@ -280,6 +282,8 @@ class UITransferROIWindow:
         self.patient_B_initial_rois_list_widget = QListWidget(self)
         self.patient_B_initial_rois_list_widget.itemDoubleClicked.connect(
             self.patient_B_initial_roi_double_clicked)
+        if not self.moving_image_initial_rois:
+            print("[WARNING] No moving_image_initial_rois found when initialising list")
         for idx in self.moving_image_initial_rois:
             roi_label = QListWidgetItem(
                 self.moving_image_initial_rois[idx]['name'])
@@ -428,8 +432,10 @@ class UITransferROIWindow:
         """
         This function is to check if the transfer list is empty
         """
-        return len(self.fixed_to_moving_rois) == 0 \
-               and len(self.moving_to_fixed_rois) == 0
+        return (
+            len(self.fixed_to_moving_rois) == 0
+            and len(self.moving_to_fixed_rois) == 0
+        )
 
     def save_clicked(self, interrupt_flag, progress_callback):
         """
@@ -440,91 +446,116 @@ class UITransferROIWindow:
         :param progress_callback: signal that receives the current
                                   progress of the loading.
         """
-        progress_callback.emit(("Converting images to sitk", 0))
+        try:
+            progress_callback.emit(("Converting images to sitk", 0))
 
-        # check if interrupt flag is set
-        if not check_interrupt_flag(interrupt_flag):
+            # check if interrupt flag is set
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            rtss = self.patient_dict_container.get("dataset_rtss")
+
+            # get sitk for the fixed image
+            dicom_image = read_dicom_image_to_sitk(
+                self.patient_dict_container.filepaths)
+
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            # get array of roi indexes from sitk images
+            rois_images_fixed = transform_point_set_from_dicom_struct(
+                dicom_image, rtss, self._normalize_keys(self.fixed_to_moving_rois.keys()),
+                spacing_override=None, interrupt_flag=interrupt_flag)
+
+            moving_rtss = self.moving_dict_container.get("dataset_rtss")
+
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            # get sitk for the moving image
+            moving_dicom_image = read_dicom_image_to_sitk(
+                self.moving_dict_container.filepaths)
+
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            # get array of roi indexes from sitk images
+            progress_callback \
+                .emit(("Retrieving ROIs from \nboth image sets", 20))
+
+            # check if interrupt flag is set
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            if moving_rtss:
+                rois_images_moving = transform_point_set_from_dicom_struct(
+                    moving_dicom_image,
+                    moving_rtss,
+                    self._normalize_keys(self.moving_to_fixed_rois.keys()),
+                    spacing_override=None,
+                    interrupt_flag=interrupt_flag)
+            
+            else:
+                rois_images_moving = ([], [])
+
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            tfm = self.moving_dict_container.get("tfm")
+
+    
+
+            # Check if there are any ROIs to process ---
+            if not self.moving_to_fixed_rois and not self.fixed_to_moving_rois:
+                progress_callback.emit(("No ROIs selected for transfer.", 90))
+                return True
+
+            progress_callback.emit(
+                ("Transfering ROIs from moving \nto fixed image set", 40))
+
+            # check if interrupt flag is set
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+             # transform roi from moving_dict to fixed_dict
+            if self.moving_to_fixed_rois:
+                self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
+                                   rois_images_moving, self.patient_dict_container)
+                
+            progress_callback.emit(
+                ("Transfering ROIs from fixed \nto moving image set", 60))
+
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+
+            # transform roi from fixed_dict to moving_dict
+            if self.fixed_to_moving_rois:
+                try:
+                    inv_tfm = tfm.GetInverse()
+                except Exception as e:
+                    print(f"[ERROR] Could not get inverse TFM: {e}")
+                    inv_tfm = None
+                self.transfer_rois(self.fixed_to_moving_rois, inv_tfm,
+                                   moving_dicom_image,
+                                   rois_images_fixed, self.moving_dict_container)
+
+            progress_callback.emit(
+                ("Saving ROIs to RTSS", 80))
+
+            # check if interrupt flag is set
+            if not check_interrupt_flag(interrupt_flag):
+                return False
+            
+            progress_callback.emit(("Reloading window", 90))
+            return True
+        
+        except Exception as e:
+            print(e)
+            try:
+                progress_callback.emit(("Error during ROI transfer", 90))
+            except Exception:
+                pass
             return False
-
-        rtss = self.patient_dict_container.get("dataset_rtss")
-
-        # get sitk for the fixed image
-        dicom_image = read_dicom_image_to_sitk(
-            self.patient_dict_container.filepaths)
-
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        # get array of roi indexes from sitk images
-        rois_images_fixed = transform_point_set_from_dicom_struct(
-            dicom_image, rtss, self.fixed_to_moving_rois.keys(),
-            spacing_override=None, interrupt_flag=interrupt_flag)
-
-        moving_rtss = self.moving_dict_container.get("dataset_rtss")
-
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        # get sitk for the moving image
-        moving_dicom_image = read_dicom_image_to_sitk(
-            self.moving_dict_container.filepaths)
-
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        # get array of roi indexes from sitk images
-        progress_callback \
-            .emit(("Retrieving ROIs from \nboth image sets", 20))
-
-        # check if interrupt flag is set
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        if moving_rtss:
-            rois_images_moving = transform_point_set_from_dicom_struct(
-                moving_dicom_image,
-                moving_rtss,
-                self.moving_to_fixed_rois.keys(),
-                spacing_override=None,
-                interrupt_flag=interrupt_flag)
-        else:
-            rois_images_moving = ([], [])
-
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        tfm = self.moving_dict_container.get("tfm")
-
-        progress_callback.emit(
-            ("Transfering ROIs from moving \nto fixed image set", 40))
-
-        # check if interrupt flag is set
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        # transform roi from moving_dict to fixed_dict
-        self.transfer_rois(self.moving_to_fixed_rois, tfm, dicom_image,
-                           rois_images_moving, self.patient_dict_container)
-
-        progress_callback.emit(
-            ("Transfering ROIs from fixed \nto moving image set", 60))
-
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-
-        # transform roi from moving_dict to fixed_dict
-        self.transfer_rois(self.fixed_to_moving_rois, tfm.GetInverse(),
-                           moving_dicom_image,
-                           rois_images_fixed, self.moving_dict_container)
-
-        progress_callback.emit(
-            ("Saving ROIs to RTSS", 80))
-
-        # check if interrupt flag is set
-        if not check_interrupt_flag(interrupt_flag):
-            return False
-        progress_callback.emit(("Reloading window", 90))
-        return True
 
     def transfer_roi_clicked(self):
         """
@@ -539,6 +570,7 @@ class UITransferROIWindow:
 
         :param exception: exception thrown
         """
+        print(exception)
         QMessageBox.about(self.progress_window,
                           "Unable to transfer ROIs",
                           "Please check your image set and ROI data.")
@@ -580,19 +612,73 @@ class UITransferROIWindow:
         :param patient_dict_container: container of the transfer image set.
 
         """
+        def _normalize_name(name: str) -> str:
+            # Replace spaces with underscores and lowercase for consistent matching after initial normalization
+            return name.replace(" ", "_").lower()
+
+        if original_roi_list is None:
+            print("[ERROR] original_roi_list is None - nothing to transfer")
+            return
+
+        # Precompute normalized original ROI names
+        normalized_original_names = [_normalize_name(n) for n in original_roi_list[1]]
+
         for roi_name, new_roi_name in transfer_dict.items():
+            found = False
+            normalized_roi_name = _normalize_name(roi_name)
+
             for index, name in enumerate(original_roi_list[1]):
-                if name == roi_name:
-                    sitk_image = original_roi_list[0][index]
-                    new_contour = apply_linear_transform(
-                        input_image=sitk_image, transform=tfm,
-                        reference_image=reference_image, is_structure=True)
-                    contour = sitk.GetArrayViewFromImage(new_contour)
+                if normalized_original_names[index] == normalized_roi_name:
+                    found = True
+
+                    try:
+                        sitk_image = original_roi_list[0][index]
+                    except Exception as e:
+                        print(f"[ERROR] Could not fetch sitk_image for roi '{roi_name}' at index {index}: {e}")
+                        print(e)
+                        continue
+
+                    try:
+                        new_contour = apply_linear_transform(
+                            input_image=sitk_image, transform=tfm,
+                            reference_image=reference_image, is_structure=True)
+                        if new_contour is None:
+                            print(f"[ERROR] apply_linear_transform returned None for ROI '{roi_name}'")
+                            continue
+                    except Exception as e:
+                        print(f"[ERROR] Exception during apply_linear_transform for ROI '{roi_name}': {e}")
+                        print(e)
+                        continue
+
+                    try:
+                        contour = sitk.GetArrayViewFromImage(new_contour)
+                    except Exception as e:
+                        print(f"[ERROR] Could not convert new_contour to array for ROI '{roi_name}': {e}")
+                        print(e)
+                        continue
+
+                    try:
+                        nonzero = np.count_nonzero(contour)
+                    except Exception as e:
+                        print(f"[ERROR] np.count_nonzero failed for ROI '{roi_name}': {e}")
+                        nonzero = 0
+
                     contours = np.transpose(contour.nonzero())
-                    self.save_roi_to_patient_dict_container(
-                        contours,
-                        new_roi_name,
-                        patient_dict_container)
+                    if contours.shape[0] == 0:
+                        print(f"[ERROR] ROI '{roi_name}' produced an empty mask after transformation, skipping save.")
+                    else:
+                        try:
+                            self.save_roi_to_patient_dict_container(
+                                contours,
+                                new_roi_name,
+                                patient_dict_container)
+                        except Exception as e:
+                            print(f"[ERROR] Exception while saving ROI '{roi_name}': {e}")
+                            print(e)
+                    break
+
+            if not found:
+                print(f"[WARNING] ROI name '{roi_name}' not found in original_roi_list names: {original_roi_list[1]}")
 
     def save_roi_to_patient_dict_container(self, contours, roi_name,
                                            patient_dict_container):
@@ -605,10 +691,15 @@ class UITransferROIWindow:
 
         """
         pixels_coords_dict = {}
-        slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
+        try:
+            slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
+        except Exception as e:
+            print(f"[ERROR] get_dict_slice_to_uid failed: {e}")
+            print(e)
+            return
         total_slices = len(slice_ids_dict)
         for contour in contours:
-            curr_slice_id = total_slices - contour[0]
+            curr_slice_id = contour[0]
             if curr_slice_id >= total_slices:
                 curr_slice_id = 0
             if curr_slice_id not in pixels_coords_dict:
@@ -621,32 +712,59 @@ class UITransferROIWindow:
         rois_to_save = {}
         for key in pixels_coords_dict.keys():
             coords = pixels_coords_dict[key]
-            polygon_list = ROI.calculate_concave_hull_of_points(coords)
+            try:
+                polygon_list = ROI.calculate_concave_hull_of_points(coords)
+            except Exception as e:
+                print(f"[ERROR] calculate_concave_hull_of_points failed for slice {key}: {e}")
+                print(e)
+                polygon_list = []
             if len(polygon_list) > 0:
                 rois_to_save[key] = {
                     'ds': patient_dict_container.dataset[key],
                     'coords': polygon_list
                 }
-        roi_list = ROI.convert_hull_list_to_contours_data(
-            rois_to_save, patient_dict_container)
+        try:
+            roi_list = ROI.convert_hull_list_to_contours_data(
+                rois_to_save, patient_dict_container)
+        except Exception as e:
+            print(f"[ERROR] convert_hull_list_to_contours_data failed: {e}")
+            print(e)
+            return
 
         if len(roi_list) > 0:
             print("Saving ", roi_name)
             if isinstance(patient_dict_container, MovingDictContainer):
-                new_rtss = ROI.create_roi(
-                    patient_dict_container.get("dataset_rtss"),
-                    roi_name, roi_list, rtss_owner="MOVING")
-                self.moving_dict_container.set("dataset_rtss", new_rtss)
-                self.moving_dict_container.set("rtss_modified", True)
+                try:
+                    new_rtss = ROI.create_roi(
+                        patient_dict_container.get("dataset_rtss"),
+                        roi_name, roi_list, rtss_owner="MOVING")
+                    self.moving_dict_container.set("dataset_rtss", new_rtss)
+                    self.moving_dict_container.set("rtss_modified", True)
+                except Exception as e:
+                    print(f"[ERROR] Failed saving ROI '{roi_name}' to moving container: {e}")
+                    print(e)
             else:
-                new_rtss = ROI.create_roi(
-                    patient_dict_container.get("dataset_rtss"),
-                    roi_name, roi_list)
-                self.patient_dict_container.set("dataset_rtss", new_rtss)
-                self.patient_dict_container.set("rtss_modified", True)
+                try:
+                    new_rtss = ROI.create_roi(
+                        patient_dict_container.get("dataset_rtss"),
+                        roi_name, roi_list)
+                    self.patient_dict_container.set("dataset_rtss", new_rtss)
+                    self.patient_dict_container.set("rtss_modified", True)
+                except Exception as e:
+                    print(f"[ERROR] Failed saving ROI '{roi_name}' to patient container: {e}")
+                    print(e)
+        else:
+            print(f"[ERROR] No contours to save for '{roi_name}' (roi_list empty)")
 
     def closeWindow(self):
         """
         function to close transfer roi window
         """
         self.close()
+
+    def _normalize_keys(self, keys):
+        """
+        Normalizes a list of ROI names by replacing spaces with underscores.
+        This function is used to standardize ROI names for consistent matching and processing.
+        """
+        return ["_".join(k.split()) for k in keys]
