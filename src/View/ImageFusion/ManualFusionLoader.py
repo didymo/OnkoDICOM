@@ -7,11 +7,7 @@ from pydicom import dcmread
 from vtkmodules.util import numpy_support
 from pydicom.errors import InvalidDicomError
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Model.MovingDictContainer import MovingDictContainer
-from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
-
 from src.Model.VTKEngine import VTKEngine
-from src.Model.Windowing import windowing_model_direct
 
 class ManualFusionLoader(QtCore.QObject):
     """
@@ -26,6 +22,8 @@ class ManualFusionLoader(QtCore.QObject):
         self.selected_files = selected_files
         self.patient_name = patient_name
         self.patient_id = patient_id
+        self.cancelled = False
+        self._interrupt_flag = None
 
     def load(self, interrupt_flag=None, progress_callback=None):
         """
@@ -39,33 +37,54 @@ class ManualFusionLoader(QtCore.QObject):
                Returns:
                    None. Emits the result via the signal_loaded or signal_error signals.
                """
+         # Store interrupt flag
+        self._interrupt_flag = interrupt_flag
         try:
-            self._load_with_vtk(progress_callback, interrupt_flag)
+            # Check for interrupt before starting
+            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+                if progress_callback is not None:
+                    progress_callback.emit(("Loading cancelled", 0))
+                self.signal_error.emit((False, "Loading cancelled"))
+                return
+            self._load_with_vtk(progress_callback)
         except Exception as e:
             if progress_callback is not None:
                 progress_callback.emit(("Error loading images", e))
                 logging.error(f"Error loading images: {e}")
                 self.signal_error.emit((False, e))
 
-
-    def _load_with_vtk(self, progress_callback, interrupt_flag=None):
+    def _load_with_vtk(self, progress_callback):
         """
-        Loads the fixed and moving images using VTK for manual fusion and optionally extracts a saved transform.
+                Loads the fixed and moving images using VTK for manual fusion and optionally extracts a saved transform.
 
-        This function loads the fixed and moving image series from the selected directories using VTKEngine,
-        validates that all selected files are from the same directory, and checks for a selected transform DICOM.
-        If a transform DICOM is found, it extracts the transformation data for use in restoring a previous session.
-        Emits the loaded VTKEngine and any extracted transform data via the signal_loaded signal.
+                This function loads the fixed and moving image series from the selected directories using VTKEngine,
+                validates that all selected files are from the same directory, and checks for a selected transform DICOM.
+                If a transform DICOM is found, it extracts the transformation data for use in restoring a previous session.
+                Emits the loaded VTKEngine and any extracted transform data via the signal_loaded signal.
 
-        Args:
-            progress_callback: A callback function to report progress updates.
+                Args:
+                    progress_callback: A callback function to report progress updates.
 
-        Returns:
-            None. Emits the result via the signal_loaded signal.
-        """
+                Returns:
+                    None. Emits the result via the signal_loaded signal.
+                """
+        # Check for interrupt before starting
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            if progress_callback is not None:
+                progress_callback.emit(("Loading cancelled", 0))
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
+
         # Progress: loading fixed image
         if progress_callback is not None:
             progress_callback.emit(("Loading fixed image (VTK)...", 10))
+
+        # Check for interrupt before loading fixed
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            if progress_callback is not None:
+                progress_callback.emit(("Loading cancelled", 10))
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
 
         # Gather fixed filepaths (directory)
         patient_dict_container = PatientDictContainer()
@@ -90,7 +109,6 @@ class ManualFusionLoader(QtCore.QObject):
             moving_dir = dirs.pop()
 
             # Check if any selected file is a transform DICOM (Spatial Registration)
-
             for f in self.selected_files:
                 try:
                     ds = dcmread(f, stop_before_pixels=True)
@@ -104,6 +122,7 @@ class ManualFusionLoader(QtCore.QObject):
 
         # Use VTKEngine to load images
         engine = VTKEngine()
+
         fixed_loaded = engine.load_fixed(fixed_dir)
         if not fixed_loaded:
             raise RuntimeError("Failed to load fixed image with VTK.")
@@ -111,16 +130,25 @@ class ManualFusionLoader(QtCore.QObject):
         if progress_callback is not None:
             progress_callback.emit(("Loading overlay image (VTK)...", 50))
 
+        # Check for interrupt before loading moving
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            if progress_callback is not None:
+                progress_callback.emit(("Loading cancelled", 50))
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
+
         moving_loaded = engine.load_moving(moving_dir)
-        
         if not moving_loaded:
             raise RuntimeError("Failed to load moving image with VTK.")
 
-        moving_image_loader = MovingImageLoader(self.selected_files, None, self)
-        moving_model_populated = moving_image_loader.load_manual_mode(interrupt_flag, progress_callback)
+        if progress_callback is not None:
+            progress_callback.emit(("Loaded moving image (VTK)...", 60))
 
-        if not moving_model_populated:
-            raise RuntimeError("Failed to populate Moving Model Container")
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            if progress_callback is not None:
+                progress_callback.emit(("Loading cancelled", 60))
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
 
         # If a transform DICOM was found and is ticked, extract transform data only
         transform_data = None
@@ -132,15 +160,28 @@ class ManualFusionLoader(QtCore.QObject):
             if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
                 transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
 
-
+        # Do any overlay generation or heavy work here if needed
         if progress_callback is not None:
-            progress_callback.emit(("Finalising", 90))
+            progress_callback.emit(("Preparing overlays...", 90))
+            QtCore.QCoreApplication.processEvents()
+
+        # Final interrupt check before emitting loaded signal
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            if progress_callback is not None:
+                progress_callback.emit(("Loading cancelled", 90))
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
 
         # Only emit the VTKEngine for downstream use; overlays will be generated on-the-fly
         self.signal_loaded.emit((True, {
             "vtk_engine": engine,
             "transform_data": transform_data,
         }))
+
+        # Emit 100% progress just before closing/loading is complete
+        if progress_callback is not None:
+            progress_callback.emit(("Complete", 100))
+            QtCore.QCoreApplication.processEvents()
 
     def _extracted_from__load_with_vtk_62(self, ds, np, transform_file):
         """
@@ -265,7 +306,6 @@ class ManualFusionLoader(QtCore.QObject):
         window = patient_dict_container.get("fusion_window")
         level = patient_dict_container.get("fusion_level")
 
-        # If not set, use sensible defaults based on the fixed image array
         if window is None or level is None:
             # Instead of using min/max, use a clinical default (e.g. "Normal" or "Soft Tissue")
             # You can also use the default from dict_windowing
@@ -279,6 +319,3 @@ class ManualFusionLoader(QtCore.QObject):
             patient_dict_container.set("fusion_window", window)
             patient_dict_container.set("fusion_level", level)
 
-        # Trigger a refresh of the fusion views with the current window/level
-        windowing_model_direct(window=window, level=level, init=[False, False, False, True],
-                               fixed_image_array=fixed_image_array)
