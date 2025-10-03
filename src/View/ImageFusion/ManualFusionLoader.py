@@ -7,6 +7,8 @@ from pydicom import dcmread
 from vtkmodules.util import numpy_support
 from pydicom.errors import InvalidDicomError
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
+from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Model.VTKEngine import VTKEngine
 
 class ManualFusionLoader(QtCore.QObject):
@@ -70,8 +72,6 @@ class ManualFusionLoader(QtCore.QObject):
                 """
         # Check for interrupt before starting
         if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-            if progress_callback is not None:
-                progress_callback.emit(("Loading cancelled", 0))
             self.signal_error.emit((False, "Loading cancelled"))
             return
 
@@ -81,8 +81,6 @@ class ManualFusionLoader(QtCore.QObject):
 
         # Check for interrupt before loading fixed
         if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-            if progress_callback is not None:
-                progress_callback.emit(("Loading cancelled", 10))
             self.signal_error.emit((False, "Loading cancelled"))
             return
 
@@ -103,7 +101,7 @@ class ManualFusionLoader(QtCore.QObject):
                 )
                 if progress_callback is not None:
                     progress_callback.emit(("Error loading images", error_msg))
-                    logging.error(error_msg)
+                    logging.error("<manualFusionLoader.py_load_with_vtk: >", error_msg)
                 self.signal_error.emit((False, error_msg))
                 return
             moving_dir = dirs.pop()
@@ -117,7 +115,8 @@ class ManualFusionLoader(QtCore.QObject):
                     if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
                         transform_file = f
                         break
-                except (InvalidDicomError, AttributeError, OSError):
+                except (InvalidDicomError, AttributeError, OSError) as e:
+                    logging.warning("<manualFusionLoader.py_load_with_vtk>Error reading DICOM file", e)
                     continue
 
         # Use VTKEngine to load images
@@ -125,6 +124,7 @@ class ManualFusionLoader(QtCore.QObject):
 
         fixed_loaded = engine.load_fixed(fixed_dir)
         if not fixed_loaded:
+            logging.error("<manualFusionLoader.py>Could not load fixed image")
             raise RuntimeError("Failed to load fixed image with VTK.")
 
         if progress_callback is not None:
@@ -132,23 +132,25 @@ class ManualFusionLoader(QtCore.QObject):
 
         # Check for interrupt before loading moving
         if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-            if progress_callback is not None:
-                progress_callback.emit(("Loading cancelled", 50))
             self.signal_error.emit((False, "Loading cancelled"))
             return
 
         moving_loaded = engine.load_moving(moving_dir)
         if not moving_loaded:
+            logging.error("<manualFusionLoader.py_load_with_vtk>Failed to load moving image with VTK.")
             raise RuntimeError("Failed to load moving image with VTK.")
 
-        if progress_callback is not None:
-            progress_callback.emit(("Loaded moving image (VTK)...", 60))
+        moving_image_loader = MovingImageLoader(self.selected_files, None, self)
+        moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
 
-        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-            if progress_callback is not None:
-                progress_callback.emit(("Loading cancelled", 60))
-            self.signal_error.emit((False, "Loading cancelled"))
-            return
+        if not moving_model_populated:
+            # Check if interrupted, emit cancel signal immediately
+            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+                self.signal_error.emit((False, "Loading cancelled"))
+                return
+            # Otherwise, it was a real error
+            logging.error("<manualFusionLoader.py_load_with_vtk> Failed to populate Moving Model Container")
+            raise RuntimeError("Failed to populate Moving Model Container")
 
         # If a transform DICOM was found and is ticked, extract transform data only
         transform_data = None
@@ -167,8 +169,6 @@ class ManualFusionLoader(QtCore.QObject):
 
         # Final interrupt check before emitting loaded signal
         if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-            if progress_callback is not None:
-                progress_callback.emit(("Loading cancelled", 90))
             self.signal_error.emit((False, "Loading cancelled"))
             return
 
