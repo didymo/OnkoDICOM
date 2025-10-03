@@ -311,20 +311,6 @@ class BaseFusionView(DicomView):
                 self.vtk_engine.set_translation(x, y, z)
         self.refresh_overlay()
 
-        # --- Propagate to all linked fusion views if in multi-view mode ---
-        # Only propagate if this view has a translation_menu and it is shared
-        if hasattr(self, "translation_menu") and hasattr(self.translation_menu, "offset_changed_callback"):
-            # Avoid infinite recursion: only propagate if this is the callback source
-            if getattr(self, "_is_propagating_offset", False):
-                return
-            self._is_propagating_offset = True
-            try:
-                # Call the callback to update all views (if set)
-                if callable(self.translation_menu.offset_changed_callback):
-                    self.translation_menu.offset_changed_callback(offset)
-            finally:
-                self._is_propagating_offset = False
-
         # --- Update matrix dialog if open ---
         if hasattr(self.translation_menu, "_matrix_dialog") and self.translation_menu._matrix_dialog is not None:
             engine = None
@@ -581,17 +567,6 @@ class BaseFusionView(DicomView):
                 slice_idx = self.slider.value()
             self.vtk_engine.set_rotation_deg(rx, ry, rz, orientation=orientation, slice_idx=slice_idx)
         self.refresh_overlay()
-
-        # --- Propagate to all linked fusion views if in multi-view mode ---
-        if hasattr(self, "translation_menu") and hasattr(self.translation_menu, "rotation_changed_callback"):
-            if getattr(self, "_is_propagating_rotation", False):
-                return
-            self._is_propagating_rotation = True
-            try:
-                if callable(self.translation_menu.rotation_changed_callback):
-                    self.translation_menu.rotation_changed_callback(rotation_tuple)
-            finally:
-                self._is_propagating_rotation = False
 
         # --- Update matrix dialog if open ---
         if hasattr(self.translation_menu, "_matrix_dialog") and self.translation_menu._matrix_dialog is not None:

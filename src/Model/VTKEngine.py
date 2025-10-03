@@ -324,8 +324,10 @@ class VTKEngine:
 
         pre_transform = np.eye(4)
         pre_transform[0:3,0:3] = R
-        pre_transform[0:3,3] = t
+        #pre_transform[0:3,3] = t   # dont apply translation to keep top corners aligned
         self.pre_transform = pre_transform
+
+        self.undo = np.array([t[0], t[1], -t[2]]) # store pre-translation for later undo in matrix
 
         print("--- Pre-registration transform ---")
         print(pre_transform)
@@ -612,6 +614,7 @@ class VTKEngine:
 
         # Raw translation vector (input)
         t_vec = np.array([-self._tx, -self._ty, self._tz])
+        t_vec += self.undo  # apply pre-translation undo
 
         # Build 4x4 homogeneous matrix in LPS
         mat_lps = np.eye(4)
@@ -631,9 +634,9 @@ class VTKEngine:
         moving_tfm = t_sitk.GetInverse() # sitk expects inverse (fixed -> moving) transform for resampling
 
         # Store
-        self.sitk_matrix = mat_lps      # LPS matrix for Platipy ROI transfer
-        self.sitk_matrix_ras = mat_ras  # optional RAS version
-        self.sitktransform = t_sitk     # SimpleITK transform for efficient application
+        self.sitk_matrix = mat_ras      # RAS matrix for display
+        self.sitk_matrix_lps = mat_lps  # LPS version
+        self.sitktransform = t_sitk     # SimpleITK transform (LPS)
 
         # Store in contaier for roi transfer
         self.moving_image_container.set("tfm", moving_tfm)
