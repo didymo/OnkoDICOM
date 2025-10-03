@@ -1,12 +1,16 @@
 from __future__ import annotations
-import sys, os
+import os
 from pathlib import Path
 import numpy as np
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtGui
 import vtk
 from vtkmodules.util import numpy_support
 import pydicom
-import tempfile, shutil, atexit, gc, glob, logging
+import tempfile
+import shutil
+import atexit
+import glob
+import logging
 
 # ------------------------------ DICOM Utilities ------------------------------
 
