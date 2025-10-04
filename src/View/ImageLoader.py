@@ -37,8 +37,16 @@ class ImageLoader(QtCore.QObject):
         self.existing_rtss = existing_rtss
         self.calc_dvh = False
         self.advised_calc_dvh = False
-        self.acknowledged_incorrect_slice = True
-        self.parent_window.signal_acknowledge_incorrect_slice.connect(self.acknowledge_incorrect_slice)
+
+    def wait_for_acknowledgment(self):
+        from PySide6.QtCore import QEventLoop
+        loop = QEventLoop()
+
+        def on_acknowledge():
+            loop.quit()
+
+        self.parent_window.signal_acknowledge_incorrect_slice.connect(on_acknowledge)
+        loop.exec()
 
     def load(self, interrupt_flag, progress_callback):
         """
@@ -56,8 +64,8 @@ class ImageLoader(QtCore.QObject):
                 self.selected_files, parent_window=self
             )
             # If incorrect slice found, will loop to await user acknowledgment
-            while not self.acknowledged_incorrect_slice:
-                pass
+            self.wait_for_acknowledgment()
+
         except ImageLoading.NotAllowedClassError as e:
             logging.error(f"ImageLoader.load: {repr(e)}")
             raise ImageLoading.NotAllowedClassError from e

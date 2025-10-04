@@ -117,7 +117,7 @@ class OpenPatientProgressWindow(ProgressWindow):
             self.display_files_deleted_result(slices_not_deleted)
 
         else:
-            self.signal_acknowledge_incorrect_slice.emit(True)
+            self.signal_acknowledge_incorrect_slice.emit()
 
     def display_files_deleted_result(self, slices_not_deleted: list) -> None:
         """
@@ -145,4 +145,4 @@ class OpenPatientProgressWindow(ProgressWindow):
         return_value = msgbox.exec_()
 
         if return_value == QMessageBox.StandardButton.Ok:
-            self.signal_acknowledge_incorrect_slice.emit(True)
+            self.signal_acknowledge_incorrect_slice.emit()

@@ -160,8 +160,10 @@ def _is_correct_orientation(slice_data: FileDataset) -> bool:
         comp_result = np.dot(img_normal, [0,0,1])
 
         return abs(comp_result) > 0.90
-    except:
-        raise AttributeError
+    except AttributeError as e:
+        logging.error(f"Input missing ImageOrientationPatient attribute: {e}")
+        return False
+
 
 def get_datasets(filepath_list, file_type=None, parent_window=None):
     """
