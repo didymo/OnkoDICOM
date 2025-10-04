@@ -1,6 +1,8 @@
 from PySide6 import QtWidgets, QtCore
 
 from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
+from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.DicomUtils import update_color_overlay_for_fusion
 
 class ImageFusionAxialView(BaseFusionView):
     def __init__(self, roi_color=None,
@@ -13,6 +15,7 @@ class ImageFusionAxialView(BaseFusionView):
         metadata_formatted: whether the metadata needs to be formatted 
         (only metadata in the four view need to be formatted)
         """
+        self.orientation = None
         self.slice_view = 'axial'
         self.metadata_formatted = metadata_formatted
         super().__init__('axial', roi_color, iso_color, cut_line_color, vtk_engine=vtk_engine, translation_menu=translation_menu)
@@ -111,6 +114,14 @@ class ImageFusionAxialView(BaseFusionView):
                          QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
         bottom.addWidget(bottom_right_widget,
                          QtCore.Qt.AlignRight | QtCore.Qt.AlignRight)
+        
+        # Make the widgets transparent to mouse events
+        top_left_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        top_right_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        bottom_left_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        bottom_right_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        top_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        bottom_widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
 
         # Add the bottom and top widgets to the view
         self.metadata_layout.addWidget(
@@ -207,8 +218,8 @@ class ImageFusionAxialView(BaseFusionView):
         total_slices = len(self.patient_dict_container.get("pixmaps_axial"))
         row_img = dataset['Rows'].value
         col_img = dataset['Columns'].value
-        window = self.patient_dict_container.get("window")
-        level = self.patient_dict_container.get("level")
+        window = self.patient_dict_container.get("fusion_window")
+        level = self.patient_dict_container.get("fusion_level")
         slice_pos = dataset['SliceLocation'].value
 
         if hasattr(dataset, 'PatientPosition'):
@@ -241,3 +252,19 @@ class ImageFusionAxialView(BaseFusionView):
             polygons = self.patient_dict_container.get("dict_polygons_axial")[
                 roi_name][curr_slice]
             super().draw_roi_polygons(roi, polygons)
+
+    def on_window_level_changed(self, window, level):
+        """
+        Callback to update window/level for this fusion view.
+        """
+        pd = PatientDictContainer()
+        pd.set("fusion_window", window)
+        pd.set("fusion_level", level)
+        self.vtk_engine.set_window_level(float(window), float(level))
+        self.update_color_overlay()
+
+    def update_color_overlay(self):
+        """
+                  Called when window/level changes; refreshes the displayed fusion colors.
+              """
+        update_color_overlay_for_fusion(self)
