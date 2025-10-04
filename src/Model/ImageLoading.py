@@ -190,7 +190,9 @@ def get_datasets(filepath_list, file_type=None, parent_window=None):
             read_file = dcmread(file)
 
         if read_file.SOPClassUID not in allowed_classes:
-            raise NotAllowedClassError
+            raise NotAllowedClassError(
+                f"File '{file}' has disallowed SOPClassUID '{read_file.SOPClassUID}'"
+            )
 
         allowed_class = allowed_classes[read_file.SOPClassUID]
 
