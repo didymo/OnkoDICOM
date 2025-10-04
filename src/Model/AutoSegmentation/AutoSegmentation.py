@@ -99,7 +99,7 @@ class AutoSegmentation:
                 ValueError: If the DICOM directory is not set or copying fails.
          """
         if not self.file_paths:
-            raise FileNotFoundError(f"No dicom files found in {self.file_paths}")
+            raise ValueError(f"No dicom files found in {self.file_paths}")
         # Create temporary directory
         self.dicom_temp_dir = tempfile.TemporaryDirectory()
 
