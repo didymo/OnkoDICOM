@@ -20,6 +20,9 @@ class ProgressWindow(QDialog):
     # Signal that emits when calc dvh is advised
     signal_advise_calc_dvh = QtCore.Signal(bool)
 
+    # Signal that emits when incorrect slice is acknowledged
+    signal_acknowledge_incorrect_slice = QtCore.Signal(bool)
+
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)
 

@@ -20,6 +20,7 @@ durability of the process).
 """
 
 import collections
+import contextlib
 import logging
 import math
 import re
@@ -28,8 +29,13 @@ from multiprocessing import Queue, Process
 
 import numpy as np
 from dicompylercore import dvhcalc
-from pydicom import dcmread, DataElement
+from pydicom import dcmread, DataElement, FileDataset
 from pydicom.errors import InvalidDicomError
+
+from src.View.ImageLoader import ImageLoader
+
+logger = logging.getLogger(__name__)
+
 
 allowed_classes = {
     # CT Image
@@ -123,8 +129,41 @@ class NotInteroperableWithOnkoDICOMError(Exception):
         Exception (_type_): _description_
     """
 
+def _is_correct_orientation(slice_data: FileDataset) -> bool:
+    """
+    Determines if a DICOM slice is oriented in an axial plane.
+    Checks the orientation of a DICOM slice by calculating its normal vector
+    and comparing it to the standard Z-axis. Slices within approximately
+    45 degrees of the axial plane are considered correctly oriented.
 
-def get_datasets(filepath_list, file_type=None):
+    Args:
+        slice_data: A DICOM FileDataset representing a single slice.
+
+    Returns:
+        True if the slice is within the axial plane, False otherwise.
+
+    Raises:
+        AttributeError: If ImageOrientationPatient attribute is missing.
+    """
+    try:
+        # Get image orientation data
+        img_orient_pos = slice_data.ImageOrientationPatient
+
+        # get the direction cosines for row and col
+        row_cosine = img_orient_pos[:3]
+        col_cosine = img_orient_pos[3:]
+
+        # find the normal vector for slice
+        img_normal = np.cross(row_cosine, col_cosine)
+
+        # compare to z axis [0,0,1] or [0,0,-1]
+        comp_result = np.dot(img_normal, [0,0,1])
+
+        return abs(comp_result) > 0.90
+    except:
+        raise AttributeError
+
+def get_datasets(filepath_list, file_type=None, parent_window=None):
     """
     This function generates two dictionaries: the dictionary of PyDicom
     datasets, and the dictionary of filepaths. These two dictionaries
@@ -139,59 +178,70 @@ def get_datasets(filepath_list, file_type=None):
     """
     read_data_dict = {}
     file_names_dict = {}
+    incorrectly_aligned_slices = []
 
     slice_count = 0
     sr_count = 0
     for file in natural_sort(filepath_list):
-        try:
-            read_file = dcmread(file)
-        except InvalidDicomError:
-            pass
-        else:
-            if read_file.SOPClassUID in allowed_classes:
-                allowed_class = allowed_classes[read_file.SOPClassUID]
-                is_interoperable = True
-                is_missing = missing_interop_elements(read_file)
-                is_interoperable = len(is_missing) == 0
-                if not is_interoperable:
-                    missing_elements = ", ".join(is_missing)
-                    error_message = "Interoperability failure:"
-                    error_message += f"<br>{file} "
-                    error_message += "<br>is missing " + missing_elements
-                    error_message += f"<br>needed for SOP Class {read_file.SOPClassUID}"
-                    logging.error(error_message)
-                    raise NotInteroperableWithOnkoDICOMError(error_message)
-                if allowed_class["sliceable"]:
-                    slice_name = slice_count
-                    slice_count += 1
-                else:
-                    # Read from Series Description to determine what is
-                    # stored in the SR file.
-                    if allowed_class["name"] == "sr":
-                        if read_file.SeriesDescription == "CLINICAL-DATA":
-                            slice_name = "sr-cd"
-                        elif read_file.SeriesDescription == "PYRADIOMICS":
-                            slice_name = "sr-rad"
-                        else:
-                            slice_name = "sr-other-" + str(sr_count)
-                            sr_count += 1
-                    else:
-                        slice_name = allowed_class["name"]
 
-                if file_type is None or read_file.Modality == file_type:
-                    read_data_dict[slice_name] = read_file
-                    file_names_dict[slice_name] = file
+        with contextlib.suppress(InvalidDicomError):
+            read_file = dcmread(file)
+
+        if read_file.SOPClassUID not in allowed_classes:
+            raise NotAllowedClassError
+
+        allowed_class = allowed_classes[read_file.SOPClassUID]
+
+        # Check slice is Axial - might add option for user to delete from directory
+        if allowed_class['sliceable'] and not _is_correct_orientation(read_file):
+            logger.warning(f"Skipping {file} as it is not an axial slice")
+            incorrectly_aligned_slices.append(file)
+            continue
+
+
+        is_missing = missing_interop_elements(read_file)
+        is_interoperable = len(is_missing) == 0
+
+        if not is_interoperable:
+            missing_elements = ", ".join(is_missing)
+            error_message = "Interoperability failure:"
+            error_message += f"<br>{file} "
+            error_message += f"<br>is missing {missing_elements}"
+            error_message += f"<br>needed for SOP Class {read_file.SOPClassUID}"
+            logging.error(error_message)
+            raise NotInteroperableWithOnkoDICOMError(error_message)
+
+        if allowed_class["sliceable"]:
+            slice_name = slice_count
+            slice_count += 1
+        elif allowed_class["name"] == "sr":
+            if read_file.SeriesDescription == "CLINICAL-DATA":
+                slice_name = "sr-cd"
+            elif read_file.SeriesDescription == "PYRADIOMICS":
+                slice_name = "sr-rad"
             else:
-                raise NotAllowedClassError
+                slice_name = f"sr-other-{str(sr_count)}"
+                sr_count += 1
+        else:
+            slice_name = allowed_class["name"]
+
+        if file_type is None or read_file.Modality == file_type:
+            read_data_dict[slice_name] = read_file
+            file_names_dict[slice_name] = file
 
     sorted_read_data_dict, sorted_file_names_dict = image_stack_sort(
         read_data_dict, file_names_dict
     )
 
+    # Notify user of abnormal slice alignment on initial load
+    if incorrectly_aligned_slices and type(parent_window) is ImageLoader:
+        parent_window.acknowledged_incorrect_slice = False
+        parent_window.incorrect_slice_orientation.emit(incorrectly_aligned_slices)
+
     return sorted_read_data_dict, sorted_file_names_dict
 
 
-def missing_interop_elements(read_file) -> bool:
+def missing_interop_elements(read_file) -> list:
     """Check for element values that are missing but needed by OnkoDICOM
 
     Args:
@@ -240,15 +290,15 @@ def img_stack_displacement(orientation, position):
     :return: Float of the image position patient along the image stack
         axis.
     """
-    ds_orient_x = orientation[0:3]
-    ds_orient_y = orientation[3:6]
+    ds_orient_x = orientation[:3]
+    ds_orient_y = orientation[3:]
     orient_x = np.array(list(map(float, ds_orient_x)))
     orient_y = np.array(list(map(float, ds_orient_y)))
     orient_z = np.cross(orient_x, orient_y)
     img_pos_patient = np.array(list(map(float, position)))
-    displacement = orient_z.dot(img_pos_patient)
-
-    return displacement
+    
+    # Return the calculated displacement
+    return orient_z.dot(img_pos_patient)
 
 
 def get_dict_sort_on_displacement(item):
@@ -327,12 +377,10 @@ def image_stack_sort(read_data_dict, file_names_dict):
     new_read_data_dict = {}
     new_file_names_dict = {}
 
-    i = 0
-    for sorted_dataset in sorted_dict_on_displacement:
+    for i, sorted_dataset in enumerate(sorted_dict_on_displacement):
         new_read_data_dict[i] = sorted_dataset[1]
         original_index = sorted_dataset[0]
         new_file_names_dict[i] = new_image_file_names_dict[original_index]
-        i += 1
 
     new_read_data_dict.update(new_non_image_dict)
     new_file_names_dict.update(new_non_image_file_names_dict)
