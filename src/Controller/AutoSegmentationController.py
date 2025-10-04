@@ -37,7 +37,7 @@ class AutoSegmentationController(QObject):
         self.patient_dict_container = PatientDictContainer()
         self.database: SavedSegmentDatabase = SavedSegmentDatabase("AutoSegmentationSaves",
                                                                    "save_name",
-                                                                   self.communicate_database_error)
+                                                                   self.communicate_database_state)
         # Member Variables
         self.save_list: list[str] | None = None # Will be initialized on window open
 
