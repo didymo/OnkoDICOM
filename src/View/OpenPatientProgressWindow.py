@@ -66,16 +66,16 @@ class OpenPatientProgressWindow(ProgressWindow):
             # 'AcceptRole' is 0 and 'RejectRole' is 1 thus by assigning
             # 'No' to 'AcceptRole' and 'Yes' to 'RejectRole' the buttons
             # are positioned as desired.
-            mb.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
-            mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
+            mb.addButton(button_no, QtWidgets.QMessageBox.ButtonRole.AcceptRole)
+            mb.addButton(button_yes, QtWidgets.QMessageBox.ButtonRole.RejectRole)
 
             # Apply stylesheet to the message box and add icon to the window
             mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath(
                 'res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
-            return_value = mb.exec_()
+            mb.exec_()
 
-            if return_value == button_yes:
+            if mb.clickedButton() == button_yes:
                 self.signal_advise_calc_dvh.emit(True)
             else:
                 self.signal_advise_calc_dvh.emit(False)
@@ -95,28 +95,26 @@ class OpenPatientProgressWindow(ProgressWindow):
         slices_str = "\n".join(os.path.basename(slice_path) for slice_path in slice_list)
 
         # Setup message box
-        msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(QPixmap(resource_path('res/images/icon.icns'))
-                             .scaledToHeight(100, QtCore.Qt.TransformationMode.SmoothTransformation))
-        msgbox.setWindowTitle("Incorrect Slice Alignment")
-        msgbox.setText(f"The following slices are not Axially aligned and have been omitted from the dataset:\n\n {slices_str}\n\n"
-                       f"Would you like to permanently delete the file(s)? \n(Warning, this action is irreversible!)")
+        text = f"The following slices are not Axially aligned and"\
+            f" have been omitted from the dataset:\n\n {slices_str}"\
+            f"\n\nWould you like to delete the file(s)? \n"\
+            f"(Warning, this action is irreversible!)"
+        msgbox = self._styled_msgbox("Incorrect Slice Alignment", text)
 
         # Add buttons in specific order
         button_no = QtWidgets.QPushButton("No")
         button_yes = QtWidgets.QPushButton("Yes")
-        msgbox.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
-        msgbox.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
+        msgbox.addButton(button_no, QtWidgets.QMessageBox.ButtonRole.AcceptRole)
+        msgbox.addButton(button_yes, QtWidgets.QMessageBox.ButtonRole.RejectRole)
 
-        msgbox.setStyleSheet(StyleSheetReader().get_stylesheet())
-        return_value = msgbox.exec_()
+        msgbox.exec_()
 
-        if return_value == button_yes:
+        if msgbox.clickedButton() == button_yes:
             # Call to delete files pass slice_list
             slices_not_deleted = delete_files(slice_list)
             self.display_files_deleted_result(slices_not_deleted)
 
-        else:
+        elif msgbox.clickedButton() == button_no:
             self.signal_acknowledge_incorrect_slice.emit()
 
     def display_files_deleted_result(self, slices_not_deleted: list) -> None:
@@ -129,21 +127,39 @@ class OpenPatientProgressWindow(ProgressWindow):
         Args:
             slices_not_deleted: A list of file paths that could not be deleted.
         """
-        msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(QPixmap(resource_path('res/images/icon.icns'))
-                             .scaledToHeight(100, QtCore.Qt.TransformationMode.SmoothTransformation)) # Improves scaling on retina displays
-        msgbox.setWindowTitle("Files Deleted")
-
         if slices_not_deleted:
             failed_str = "\n".join(os.path.basename(f) for f in slices_not_deleted)
-            msgbox.setText(f"The following file(s) were not deleted:\n\n{failed_str}\n\n"
-                           f"Please manually delete them.")
+            text = f"The following file(s) were not deleted:\n\n{failed_str}\n\n\
+                    Please manually delete them."
         else:
-            msgbox.setText("Files were successfully deleted.")
-        msgbox.setStandardButtons(QMessageBox.StandardButton.Ok)
+            text = "Files were successfully deleted."
 
-        msgbox.setStyleSheet(StyleSheetReader().get_stylesheet())
-        return_value = msgbox.exec_()
+        msgbox = self._styled_msgbox("Files Deleted", text)
+        button_ok = QtWidgets.QPushButton("Ok")
+        msgbox.addButton(button_ok, QtWidgets.QMessageBox.ButtonRole.AcceptRole)
+        msgbox.exec_()
 
-        if return_value == QMessageBox.StandardButton.Ok:
+        if msgbox.clickedButton() == button_ok:
             self.signal_acknowledge_incorrect_slice.emit()
+
+    def _styled_msgbox(self, title: str, text: str, icon_path: str = 'res/images/icon.icns') -> QMessageBox:
+        """
+        Creates a consistently styled QMessageBox with OnkoDICOM branding.
+        Generates a QMessageBox with a standardized appearance.
+
+        Args:
+            title: The window title for the message box.
+            text: The main text content of the message box.
+            icon_path: Path to the icon image, defaults to OnkoDICOM icon.
+
+        Returns:
+            A configured QMessageBox ready for display.
+        """
+        msgbox = QMessageBox(self)
+        pixmap = (QPixmap(resource_path(icon_path))
+                  .scaledToHeight(100, QtCore.Qt.TransformationMode.SmoothTransformation))
+        msgbox.setIconPixmap(pixmap)
+        msgbox.setWindowTitle(title)
+        msgbox.setText(text)
+        msgbox.setStyleSheet(StyleSheetReader().get_stylesheet())
+        return msgbox
