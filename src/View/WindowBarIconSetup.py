@@ -6,7 +6,9 @@ from src.Controller.PathHandler import resource_path
 
 def setup_window(window: QWidget, title: str) -> None:
     """
-    Protected Method for Setting up the window, with Title, StyleSheet, MinimumSize and Icon
+    For Setting up the window, with Title, StyleSheet, and Icon
+    applying the stylesheet to the window, setting the title and setting the window
+
     :param window: QtWidgets.QWidget
     :param title: str
     :returns: None

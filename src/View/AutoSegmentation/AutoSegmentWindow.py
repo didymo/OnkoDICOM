@@ -32,7 +32,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Member Variables
         self._view_state = view_state
-        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, view_state.segmentation_list, update_callback=self.update_save_button)
+        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, view_state.segmentation_list, update_callback=self.update_save_start_button_states)
         self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
         self._start_button.setEnabled(False)
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
@@ -365,7 +365,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self._save_window.raise_()
         self._save_window.activateWindow()
 
-    def update_save_button(self) -> None:
+    def update_save_start_button_states(self) -> None:
         """
         To disable and enable the save button is a selection has been selected
         """

@@ -55,7 +55,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
                 self._body_section_clicked)))
 
         # Callback Methods
-        self.update_save_start = update_callback
+        self.update_save_start_button_states = update_callback
 
         # Adding the layout and the Widget to the parent Widget
         layout: QtWidgets.QLayout = QtWidgets.QVBoxLayout() # Creating Window Layout
@@ -307,8 +307,8 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             self._selected_list.append(body_text.strip())
         if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
             self._selected_list.remove(body_text.strip())
-        if self.update_save_start is not None:
-            self.update_save_start()
+        if self.update_save_start_button_states is not None:
+            self.update_save_start_button_states()
 
 
     def _uniform_selection(self, check: Qt.CheckState) -> None:

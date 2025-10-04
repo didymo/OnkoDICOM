@@ -25,11 +25,11 @@ class AutoSegmentationController(QObject):
         :rtype: None
         """
         # creating connections
-        self.view_state: AutoSegmentViewState = AutoSegmentViewState() # storing state of view
-        self.view_state.set_start_button_callback(self.start_button_clicked) # Start
-        self.view_state.set_save_button_callback(self.save_button_clicked) # Save
-        self.view_state.set_load_button_callback(self.load_button_clicked) # Load
-        self.view_state.set_delete_button_callback(self.delete_button_clicked) # Delete
+        self.view_state: AutoSegmentViewState = AutoSegmentViewState()
+        self.view_state.set_start_button_callback(self.start_button_clicked)
+        self.view_state.set_save_button_callback(self.save_button_clicked)
+        self.view_state.set_load_button_callback(self.load_button_clicked)
+        self.view_state.set_delete_button_callback(self.delete_button_clicked)
 
         # Object Connections
         self._view = None
@@ -37,7 +37,7 @@ class AutoSegmentationController(QObject):
         self.patient_dict_container = PatientDictContainer()
         self.database: SavedSegmentDatabase = SavedSegmentDatabase("AutoSegmentationSaves",
                                                                    "save_name",
-                                                                   self.update_database_feedback)
+                                                                   self.communicate_database_error)
         # Member Variables
         self.save_list: list[str] | None = None # Will be initialized on window open
 
@@ -78,9 +78,9 @@ class AutoSegmentationController(QObject):
             self.database.delete_entry(value)
             self._view.remove_save_item(value)
 
-    def database_save_list(self) -> None:
+    def get_saved_segmentations_list(self) -> None:
         """
-        Gets a list of all saved segmentaion choices and ads them to the Selector widget
+        Gets a list of all saved segmentation choices and adds them to the Selector widget
         :rtype: None
         """
         self.save_list: list[str] = self.database.get_save_list()
@@ -88,12 +88,15 @@ class AutoSegmentationController(QObject):
 
     def show_view(self):
         """
-        To Display the view on Screen
+        Checks if self._view has an instance of AutoSegmentWindow instanced,
+        if it does not then creates a new instance of AutoSegmentWindow,
+        Retrieves the list of saves from the database to display in the view
+        adds it to the view the brings the view to the fron to front of the window stack
         :rtype: None
         """
         if self._view is None:
             self._view = AutoSegmentWindow(self.view_state)
-        self.database_save_list()
+            self.get_saved_segmentations_list()
         self._view.show()
 
         # Bring window to front and make active (if already visible)
@@ -101,10 +104,12 @@ class AutoSegmentationController(QObject):
             self._view.raise_()
             self._view.activateWindow()
 
-    def update_database_feedback(self, text: str) -> None:
+    def communicate_database_state(self, text: str) -> None:
         """
-        To transmit information from the database about any issues that may arises
-        when attempting to save or read from the database
+        To communicate to the user about database states which may result in the Database
+        failing to read or write and retry attempts. This will communicate to the user
+        the latest issue user feed back information about the issue being handled in regard
+        to the database
 
         :param text: str
         :rtype: None

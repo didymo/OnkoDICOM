@@ -9,8 +9,12 @@ from src.View.WindowBarIconSetup import setup_window
 
 class ButtonInputBox(QWidget):
     """
-    A Message Box which has the with labels and actions to run when buttons are clicked
-    With optional Text box and ability to reverse the colours of the buttons
+    A Message Box which with QLabels and actions to run when buttons are clicked
+    With optional Text box for user text input and ability to reverse the colours of the buttons
+
+    This will be useful when you need to ask th user a question where there are
+    2 sets of actions that can be taken which can be assigned to the buttons with the option of having text input
+    which can be passed to the callback functions.
     """
     def __init__(self,
                  input_text: str="[Input Text]",
