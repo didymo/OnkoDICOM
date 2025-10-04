@@ -485,7 +485,7 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
             # Close the Add-On Options Window after saving
             if hasattr(self.window, 'structures_tab'):
                 self.window.structures_tab.init_standard_names()
-                self.window.structures_tab.update_content()
+                self.window.structures_tab.request_update_structures.emit()
 
             self.close()
 

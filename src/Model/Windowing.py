@@ -42,10 +42,10 @@ def windowing_model(text, init):
     window = windowing_limits[0]
     level = windowing_limits[1]
 
-    windowing_model_direct(level, window, init)
+    windowing_model_direct(window, level, init)
 
 
-def windowing_model_direct(level, window, init, fixed_image_array=None):
+def windowing_model_direct(window, level, init, fixed_image_array=None):
     """
     Function triggered when a window is selected from the menu,
     or when the windowing slider bars are adjusted
@@ -127,14 +127,26 @@ def windowing_model_direct(level, window, init, fixed_image_array=None):
 
 def set_windowing_slider(slider, fusion_views=None):
     """
-       Sets the global windowing slider and optionally assigns fusion views for window/level updates.
+        Sets the global windowing slider and optionally assigns fusion views for window/level updates.
 
-       This function registers the provided slider as the global windowing slider used for window/level
-       adjustments throughout the application. If a list of fusion views is provided, it also assigns
-       these views to the slider for coordinated window/level updates in image fusion mode.
-       """
+        This function registers the provided slider as the global windowing slider used for window/level
+        adjustments throughout the application. If a list of fusion views is provided, it also assigns
+        these views to the slider for coordinated window/level updates in image fusion mode.
+
+        Note: This will overwrite the global windowing_slider. Only one slider (DICOM or fusion) can be active at a time.
+        Always call this when switching between DICOM and fusion tabs, or when opening a new patient.
+
+        Args:
+            slider: The WindowingSlider instance to set as global.
+            fusion_views: Optional list of fusion views to assign to the slider.
+
+        Returns:
+            None
+        """
     global windowing_slider
     windowing_slider = slider
 
     if fusion_views is not None:
         windowing_slider.fusion_views = fusion_views
+    elif hasattr(windowing_slider, "fusion_views"):
+        windowing_slider.fusion_views = None

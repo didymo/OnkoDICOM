@@ -2,6 +2,7 @@ from PySide6 import QtWidgets, QtCore
 
 from src.View.ImageFusion.BaseViewerGUI import BaseFusionView
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.DicomUtils import update_color_overlay_for_fusion
 
 class ImageFusionAxialView(BaseFusionView):
     def __init__(self, roi_color=None,
@@ -266,32 +267,4 @@ class ImageFusionAxialView(BaseFusionView):
         """
                   Called when window/level changes; refreshes the displayed fusion colors.
               """
-
-        if self.vtk_engine is not None:
-            self.overlay_images = None  # Always clear overlays for VTK/manual fusion
-            self._extracted_from_update_color_overlay_8()
-        else:
-            # Only update overlays if not using VTK/manual fusion
-            pd = PatientDictContainer()
-            self.overlay_images = pd.get(f"color_{self.slice_view}")
-            if self.overlay_images:
-                print(f"Overlay images loaded: {len(self.overlay_images)} slices")
-            else:
-                print("No overlay images found!")
-
-        self.image_display()
-        # Force a full view update to redraw ROI/cut lines
-
-        self.update_view()
-
-    # TODO Rename this here and in `update_color_overlay`
-    def _extracted_from_update_color_overlay_8(self):
-        pd = PatientDictContainer()
-        window = pd.get("fusion_window")
-        level = pd.get("fusion_level")
-        if window is None:
-            window = getattr(self.vtk_engine, "window", 400)
-        if level is None:
-            level = getattr(self.vtk_engine, "level", 40)
-        # print(f"Setting VTKEngine window={window}, level={level}")
-        self.vtk_engine.set_window_level(float(window), float(level))
+        update_color_overlay_for_fusion(self)

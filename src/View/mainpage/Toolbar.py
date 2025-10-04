@@ -50,6 +50,8 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.action_handler.action_image_fusion)
         self.addSeparator()
+        self.addAction(self.action_handler.autosegmentation)
+        self.addSeparator()
         self.addAction(self.action_handler.action_add_ons)
         self.addWidget(spacer)
         self.addWidget(self.button_export)

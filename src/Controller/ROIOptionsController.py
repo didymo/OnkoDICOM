@@ -2,7 +2,7 @@ import logging
 
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
-from src.View.mainpage.DrawROIWindow.UIDrawROIWindow import UIDrawROIWindow
+from src.View.mainpage.DrawROIWindow.DrawROIInitialiser import RoiInitialiser
 from src.View.mainpage.ManipulateROIWindow import *
 
 
@@ -47,7 +47,7 @@ class ROIDelOption:
         self.options_window.show()
 
 
-class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
+class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
     """
     Create the ROI Draw Options class based on the UI from the file in
     View/ROI Draw Option
@@ -57,10 +57,15 @@ class RoiDrawOptions(QtWidgets.QMainWindow, UIDrawROIWindow):
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
+        self._central = QtWidgets.QWidget(self)
+        self.setCentralWidget(self._central)
+        self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
+                    self.signal_draw_roi_closed)
+        self.ROI_button.roi_name_emit.connect(self.canvas_labal.set_roi_name)
 
     def update_ui(self, rois, dataset_rtss):
-        self.setup_ui(self, rois, dataset_rtss, self.signal_roi_drawn, self.signal_draw_roi_closed)
+        self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
+                    self.signal_draw_roi_closed)
 
 
 class ROIDrawOption:
@@ -88,12 +93,12 @@ class ROIDrawOption:
             self.draw_window.signal_roi_drawn.connect(
                 self.structure_modified_function)
             self.draw_window.signal_draw_roi_closed.connect(
-                self.remove_roi_draw_instance
-            )
+                self.remove_roi_draw_instance)
         else:
             self.draw_window.update_ui(rois, dataset_rtss)
 
         return self.draw_window
+
 
     def remove_roi_draw_window(self):
         if hasattr(self, "draw_window"):

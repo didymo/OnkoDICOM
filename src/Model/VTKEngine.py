@@ -1,33 +1,18 @@
 from __future__ import annotations
-import sys, os
+import os
 from pathlib import Path
 import numpy as np
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtGui
 import vtk
 from vtkmodules.util import numpy_support
 import pydicom
-import tempfile, shutil, atexit, gc, glob, logging
-import SimpleITK as sitk
-from src.Model.MovingDictContainer import MovingDictContainer
+import tempfile
+import shutil
+import atexit
+import glob
+import logging
 
-"""
-Definitions:
-- LPS: Left-Posterior-Superior coordinate system (DICOM standard)
-- RAS: Right-Anterior-Superior coordinate system (used for display in OnkoDICOM and for transforms
-       but is converted back to LPS for DICOM export/ROI transfer)
-- Voxel: index-based coordinate in image space
-- World: physical coordinate in mm
-- Pre-registration transform: initial rigid transform to apply moving image in correct orientation/position
-        (This is done manually as VTK cannot robustly read the ImagePositionPatient tag)
-
-This module provides a VTK-based engine for loading, transforming, and blending. The main process
-that happens here is:
-1) Load fixed and moving images from DICOM directories using vtkDICOMImageReader
-2) Compute voxel->LPS matrices from DICOM tags and convert to voxel->RAS
-3) Compute pre-registration transform from fixed to moving (rigid only)
-"""
-
-# Helper functions for DICOM handling and matrix computations
+# ------------------------------ DICOM Utilities ------------------------------
 
 def get_first_slice_ipp(folder):
     """
@@ -130,6 +115,12 @@ def cleanup_old_dicom_temp_dirs(temp_root=None):
             logging.error(f"[WARN] Could not remove {folder}: {e}")
 
 
+
+# ------------------------------ VTK Processing Engine ------------------------------
+
+WINDOW_DEFAULT = 390
+LEVEL_DEFAULT = 40
+
 class VTKEngine:
     ORI_AXIAL = "axial"
     ORI_CORONAL = "coronal"
@@ -142,8 +133,9 @@ class VTKEngine:
         self.moving_image_container = MovingDictContainer()
 
         # Always initialize window/level to defaults
-        self.window = 400
-        self.level = 40
+        # These are the same as "Normal" selection in the slider. Want it to first load as that
+        self.window = WINDOW_DEFAULT
+        self.level = LEVEL_DEFAULT
 
         # Cleanup old temp dirs on startup
         self.cleanup_old_temp_dirs()
@@ -203,7 +195,7 @@ class VTKEngine:
             try:
                 shutil.rmtree(d, ignore_errors=True)
             except Exception as e:
-                logging.error(f"[WARN] Failed to clean temp dir {d}: {e}")
+                logging.warning(f"[WARN] Failed to clean temp dir {d}: {e}")
         self._temp_dirs.clear()
 
 
@@ -223,7 +215,7 @@ class VTKEngine:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)
         except ValueError as e:
-            logging.error(e)
+            logging.exception(e)
             return False
 
         r = vtk.vtkDICOMImageReader()
@@ -284,7 +276,7 @@ class VTKEngine:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
             self._temp_dirs.append(slice_dir)
         except ValueError as e:
-            logging.error(e)
+            logging.exception(e)
             return False
 
         r = vtk.vtkDICOMImageReader()
@@ -394,8 +386,8 @@ class VTKEngine:
             self.reslice3d.Update()
 
         # Use instance window/level if set, else defaults
-        window_center = getattr(self, "level", 40)
-        window_width = getattr(self, "window", 400)
+        window_center = getattr(self, "level", LEVEL_DEFAULT)
+        window_width = getattr(self, "window", WINDOW_DEFAULT)
 
         # If window/level is set to "auto" (e.g., -1), use per-slice min/max
         if window_center == -1 and window_width == -1:

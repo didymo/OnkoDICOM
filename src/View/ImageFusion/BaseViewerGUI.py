@@ -7,6 +7,7 @@ from src.Model.VTKEngine import VTKEngine
 from src.Model.PatientDictContainer import PatientDictContainer
 from PySide6 import QtCore
 from src.View.ImageFusion.TranslateRotateMenu import get_color_pair_from_text
+from src.Model.DicomUtils import update_color_overlay_for_fusion
 
 
 class BaseFusionView(DicomView):
@@ -190,7 +191,7 @@ class BaseFusionView(DicomView):
             painter.drawText(qimg.rect(), QtCore.Qt.AlignCenter, "No Image")
             painter.end()
         pixmap = QtGui.QPixmap.fromImage(qimg)
-
+        
         # Recreate GraphicsScene so cut lines are kept in sync
         self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
         self.base_item.setPos(0,0)
@@ -198,6 +199,13 @@ class BaseFusionView(DicomView):
 
         self.scene = GraphicsScene(self.base_item, self.horizontal_view, self.vertical_view)
         self.view.setScene(self.scene)
+        
+        # Display as the base image (no overlay needed, since VTKEngine blends)
+        if self.base_item is None:
+            self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
+            self.scene.addItem(self.base_item)
+        else:
+            self.base_item.setPixmap(pixmap)
         # Remove overlay item if present
         if self.overlay_item is not None:
             self.scene.removeItem(self.overlay_item)
@@ -321,6 +329,9 @@ class BaseFusionView(DicomView):
 
     def _on_mouse_mode_changed(self, mode):
         """
+                Note: Interrogation window is the nickname Dr Miller calls the Window button in manual fusion.
+                everything inside the window shows the base layer while outside shows the overlay and base layers
+                 
                 Handles changes to the mouse interaction mode for the fusion view.
 
                 This method updates the internal mouse mode state and manages the interrogation window position.
@@ -545,6 +556,7 @@ class BaseFusionView(DicomView):
         curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
         # Compute new rotation by adding direction to current rotation
         new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
+
         # Update the rotation sliders in the menu
         self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0] * 10)))
         self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1] * 10)))
@@ -634,35 +646,4 @@ class BaseFusionView(DicomView):
         """
                   Called when window/level changes; refreshes the displayed fusion colors.
               """
-        if self.vtk_engine is not None:
-            self.overlay_images = None  # Always clear overlays for VTK/manual fusion
-            self._extracted_from_update_color_overlay_8()
-        else:
-            # Only update overlays if not using VTK/manual fusion
-            pd = PatientDictContainer()
-            self.overlay_images = pd.get(f"color_{self.slice_view}")
-
-        self.image_display()
-        # Force a full view update to redraw ROI/cut lines
-        self.update_view()
-
-    # TODO Rename this here and in `update_color_overlay`
-    def _extracted_from_update_color_overlay_8(self):
-        """
-                Updates the window and level settings for the VTK engine based on the current fusion view state.
-
-                This helper function retrieves the current window and level values from the PatientDictContainer,
-                falling back to the VTK engine's defaults if not set, and applies them to the VTK engine to ensure
-                the displayed fusion image uses the correct window/level.
-
-                Returns:
-                    None
-                """
-        pd = PatientDictContainer()
-        window = pd.get("fusion_window")
-        level = pd.get("fusion_level")
-        if window is None:
-            window = getattr(self.vtk_engine, "window", 400)
-        if level is None:
-            level = getattr(self.vtk_engine, "level", 40)
-        self.vtk_engine.set_window_level(float(window), float(level))
+        update_color_overlay_for_fusion(self)
