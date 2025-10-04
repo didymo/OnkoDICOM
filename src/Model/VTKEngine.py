@@ -197,9 +197,9 @@ class VTKEngine:
         self._temp_dirs = []
         atexit.register(self._cleanup_temp_dirs)
 
-        # SITK transform (for manual calculation and display to user)
+        # SITK transform (for manual calculation and display to user and for ROI transfer)
         self.sitk_transform = sitk.Euler3DTransform()
-        self.sitk_matrix = np.eye(4, dtype=np.float64)  # Latest SITK matrix
+        self.sitk_matrix = np.eye(4, dtype=np.float64)  # Latest SITK matrix for display (RAS)
         
 
     def cleanup_old_temp_dirs(self):
@@ -338,7 +338,8 @@ class VTKEngine:
         #pre_transform[0:3,3] = t   # dont apply translation to keep top corners aligned
         self.pre_transform = pre_transform
 
-        self.undo = np.array([t[0], t[1], -t[2]]) # store pre-translation for later undo in matrix
+        # store pre-translation for later undo in matrix
+        self.undo = np.array([t[0], t[1], -t[2]]) # we invert Z for the inversion of the transform but then LPS->RAS (double negative for x and y)
 
         print("--- Pre-registration transform ---")
         print(pre_transform)
@@ -624,6 +625,7 @@ class VTKEngine:
         ])
 
         # Raw translation vector (input)
+        # Invert x and y for RAS controls
         t_vec = np.array([-self._tx, -self._ty, self._tz])
         t_vec += self.undo  # apply pre-translation undo
 
@@ -646,7 +648,6 @@ class VTKEngine:
 
         # Store
         self.sitk_matrix = mat_ras      # RAS matrix for display
-        self.sitk_matrix_lps = mat_lps  # LPS version
         self.sitktransform = t_sitk     # SimpleITK transform (LPS)
 
         # Store in contaier for roi transfer

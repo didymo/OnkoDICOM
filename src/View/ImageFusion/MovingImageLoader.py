@@ -120,8 +120,8 @@ class MovingImageLoader(ImageLoader):
         # load datasets and common path
         try:
             path, read_data_dict, file_names_dict = self.get_common_path_and_datasets()
-        except ImageLoading.NotAllowedClassError:
-            raise ImageLoading.NotAllowedClassError
+        except ImageLoading.NotAllowedClassError as e:
+            raise ImageLoading.NotAllowedClassError from e
 
         moving_dict_container = self.init_container(path, read_data_dict, file_names_dict)
 

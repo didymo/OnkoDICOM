@@ -46,6 +46,13 @@ class TransformMatrixDialog(QtWidgets.QDialog):
         self._resize_to_table()
 
     def set_matrix(self, mat):
+        """Sets and displays a new 4x4 transformation matrix in the dialog.
+
+        Updates the table to show the provided matrix values with formatting for readability.
+
+        Args:
+            mat: The 4x4 matrix to display. Can be a NumPy array or an object with GetElement(i, j).
+        """
         self._current_matrix = mat
         for i in range(4):
             for j in range(4):
