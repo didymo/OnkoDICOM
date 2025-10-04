@@ -236,6 +236,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         self.mouse_mode_group.setExclusive(True)
         self.mouse_mode_group.addButton(self.mouse_translate_btn)
         self.mouse_mode_group.addButton(self.mouse_rotate_btn)
+
         self.mouse_mode_group.addButton(self.mouse_interrogation_btn)
 
         # Track last checked for "toggle off" behavior
@@ -260,6 +261,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
                     self.mouse_mode = "translate"
                 elif btn == self.mouse_rotate_btn:
                     self.mouse_mode = "rotate"
+
                 elif btn == self.mouse_interrogation_btn:
                     self.mouse_mode = "interrogation"
                 elif btn == self.mouse_none_btn:
