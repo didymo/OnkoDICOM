@@ -11,7 +11,26 @@ import shutil
 import atexit
 import glob
 import logging
+import SimpleITK as sitk
+from src.Model.MovingDictContainer import MovingDictContainer
 
+"""
+Definitions:
+- LPS: Left-Posterior-Superior coordinate system (DICOM standard)
+- RAS: Right-Anterior-Superior coordinate system (used for display in OnkoDICOM and for transforms
+       but is converted back to LPS for DICOM export/ROI transfer)
+- Voxel: index-based coordinate in image space
+- World: physical coordinate in mm
+- Pre-registration transform: initial rigid transform to apply moving image in correct orientation/position
+        (This is done manually as VTK cannot robustly read the ImagePositionPatient tag)
+This module provides a VTK-based engine for loading, transforming, and blending. The main process
+that happens here is:
+1) Load fixed and moving images from DICOM directories using vtkDICOMImageReader
+2) Compute voxel->LPS matrices from DICOM tags and convert to voxel->RAS
+3) Compute pre-registration transform from fixed to moving (rigid only)
+"""
+
+# Helper functions for DICOM handling and matrix computations
 # ------------------------------ DICOM Utilities ------------------------------
 
 def get_first_slice_ipp(folder):
