@@ -448,7 +448,7 @@ class UITransferROIWindow:
                                   progress of the loading.
         """
         try:
-            progress_callback.emit(("Converting images to sitk", 0))
+            progress_callback.emit(("Fetching image sets", 0))
 
             # check if interrupt flag is set
             if not check_interrupt_flag(interrupt_flag):
@@ -534,7 +534,7 @@ class UITransferROIWindow:
                 try:
                     inv_tfm = tfm.GetInverse()
                 except Exception as e:
-                    logging.error(f"Could not get inverse TFM: {e}")
+                    logging.error(f"Could not get inverse transform: {e}")
                     inv_tfm = None
                 self.transfer_rois(self.fixed_to_moving_rois, inv_tfm,
                                    moving_dicom_image,
@@ -608,7 +608,7 @@ class UITransferROIWindow:
         :param transfer_dict: dictionary of rois to be transfer.
         key is original roi names, value is the name after transferred.
         :param original_roi_list: tuple of sitk rois from the base image.
-        :param tfm: the tfm that contains information for transferring rois
+        :param tfm: the transform matrix for transferring rois
         :param reference_image: the reference (base) image
         :param patient_dict_container: container of the transfer image set.
 

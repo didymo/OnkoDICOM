@@ -244,7 +244,7 @@ class VTKEngine:
         # Flip from LPS to RAS 
         flip = vtk.vtkImageFlip()
         flip.SetInputConnection(r.GetOutputPort())
-        flip.SetFilteredAxis(1)
+        flip.SetFilteredAxis(1) # flip y-axis to match program orientation elsewhere
         flip.Update()
         self.fixed_reader = flip
 
@@ -253,13 +253,12 @@ class VTKEngine:
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.fixed_matrix = lps_matrix_to_ras(vox2lps)
 
-        print("Fixed voxel->RAS matrix (no flip):")
-        print(self.fixed_matrix)
+        logging.info("Fixed voxel->RAS matrix (no flip):\n%s", self.fixed_matrix)
 
         # Debug: check RAS origin
         ras_origin = np.array([0.0, 0.0, 0.0, 1.0])
         voxel_at_ras0 = np.linalg.inv(self.fixed_matrix) @ ras_origin
-        print("Voxel coords of RAS (0,0,0):", voxel_at_ras0)
+        logging.info("Voxel coords of RAS (0,0,0): %s", voxel_at_ras0)
 
         # Cleanup temp folder
         shutil.rmtree(slice_dir, ignore_errors=True)
@@ -314,13 +313,12 @@ class VTKEngine:
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.moving_matrix = lps_matrix_to_ras(vox2lps)
 
-        print("Moving voxel->RAS matrix (no flip):")
-        print(self.moving_matrix)
+        logging.info("Moving voxel->RAS matrix (no flip):\n%s", self.moving_matrix)
 
         # Debug: check RAS origin
         ras_origin = np.array([0.0, 0.0, 0.0, 1.0])
         voxel_at_ras0 = np.linalg.inv(self.moving_matrix) @ ras_origin
-        print("Voxel coords of RAS (0,0,0):", voxel_at_ras0)
+        logging.info("Voxel coords of RAS (0,0,0): %s", voxel_at_ras0)
 
         # Cleanup temp folder
         shutil.rmtree(slice_dir, ignore_errors=True)
@@ -341,9 +339,8 @@ class VTKEngine:
         # store pre-translation for later undo in matrix
         self.undo = np.array([t[0], t[1], -t[2]]) # we invert Z for the inversion of the transform but then LPS->RAS (double negative for x and y)
 
-        print("--- Pre-registration transform ---")
-        print(pre_transform)
-        print("Pre-reg translation (mm):", t)
+        logging.info("--- Pre-registration transform ---\n%s", pre_transform)
+        logging.info("Pre-reg translation (mm) [not applied to moving image]: %s", t)
 
         # Apply pre-transform in VTK
         vtkmat = vtk.vtkMatrix4x4()
@@ -653,8 +650,6 @@ class VTKEngine:
 
         # Store in contaier for roi transfer
         self.moving_image_container.set("tfm", moving_tfm)
-
-        #print("SITK Transform (LPS):", t_sitk)
 
     # Internal transform application
     def _apply_transform(self, orientation=None, slice_idx=None): 

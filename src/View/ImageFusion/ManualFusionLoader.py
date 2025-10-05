@@ -101,7 +101,7 @@ class ManualFusionLoader(QtCore.QObject):
                 )
                 if progress_callback is not None:
                     progress_callback.emit(("Error loading images", error_msg))
-                    logging.error("<manualFusionLoader.py_load_with_vtk: >", error_msg)
+                    logging.error("manualFusionLoader.py_load_with_vtk: ", error_msg)
                 self.signal_error.emit((False, error_msg))
                 return
             moving_dir = dirs.pop()
