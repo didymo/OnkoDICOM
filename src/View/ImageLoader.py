@@ -38,7 +38,14 @@ class ImageLoader(QtCore.QObject):
         self.calc_dvh = False
         self.advised_calc_dvh = False
 
-    def wait_for_acknowledgment(self):
+    def wait_for_acknowledgment(self) -> None:
+        """
+        Pauses the loading process and waits for user acknowledgment of incorrect slice orientation.
+        This method creates a QEventLoop to block further execution until the user acknowledges 
+        any issues with slice orientation. It connects to a signal from the parent window that 
+        will quit the event loop when triggered.
+        """
+
         from PySide6.QtCore import QEventLoop
         loop = QEventLoop()
 
