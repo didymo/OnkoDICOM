@@ -639,6 +639,7 @@ class VTKEngine:
         mat_ras = LPS_TO_RAS @ mat_lps @ LPS_TO_RAS
 
         # Convert LPS matrix to SITK AffineTransform
+        # SITK expects python lists instead of a numpy array as they can cause compatibility issues
         t_sitk = sitk.AffineTransform(3)
         t_sitk.SetMatrix(R.flatten().tolist())      # 3x3 rotation part
         t_sitk.SetTranslation(t_vec.tolist())       # translation part

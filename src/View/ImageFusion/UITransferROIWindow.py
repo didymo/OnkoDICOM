@@ -1,5 +1,6 @@
 import SimpleITK as sitk
 import numpy as np
+import logging
 from PySide6 import QtCore, QtGui
 from PySide6.QtGui import Qt, QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QPushButton, \
@@ -265,7 +266,7 @@ class UITransferROIWindow:
         self.patient_A_initial_rois_list_widget.itemDoubleClicked.connect(
             self.patient_A_initial_roi_double_clicked)
         if not self.fixed_image_initial_rois:
-            print("[WARNING] No fixed_image_initial_rois found when initialising list")
+            logging.warning("No fixed_image_initial_rois found when initialising list")
         for idx in self.fixed_image_initial_rois:
             roi_label = QListWidgetItem(
                 self.fixed_image_initial_rois[idx]['name'])
@@ -283,7 +284,7 @@ class UITransferROIWindow:
         self.patient_B_initial_rois_list_widget.itemDoubleClicked.connect(
             self.patient_B_initial_roi_double_clicked)
         if not self.moving_image_initial_rois:
-            print("[WARNING] No moving_image_initial_rois found when initialising list")
+            logging.warning("No moving_image_initial_rois found when initialising list")
         for idx in self.moving_image_initial_rois:
             roi_label = QListWidgetItem(
                 self.moving_image_initial_rois[idx]['name'])
@@ -533,7 +534,7 @@ class UITransferROIWindow:
                 try:
                     inv_tfm = tfm.GetInverse()
                 except Exception as e:
-                    print(f"[ERROR] Could not get inverse TFM: {e}")
+                    logging.error(f"Could not get inverse TFM: {e}")
                     inv_tfm = None
                 self.transfer_rois(self.fixed_to_moving_rois, inv_tfm,
                                    moving_dicom_image,
@@ -550,7 +551,7 @@ class UITransferROIWindow:
             return True
         
         except Exception as e:
-            print(e)
+            logging.error(f"Exception in save_clicked: {e}")           
             try:
                 progress_callback.emit(("Error during ROI transfer", 90))
             except Exception:
@@ -570,7 +571,7 @@ class UITransferROIWindow:
 
         :param exception: exception thrown
         """
-        print(exception)
+        logging.error(f"ROI transfer error: {exception}")
         QMessageBox.about(self.progress_window,
                           "Unable to transfer ROIs",
                           "Please check your image set and ROI data.")
@@ -617,7 +618,7 @@ class UITransferROIWindow:
             return name.replace(" ", "_").lower()
 
         if original_roi_list is None:
-            print("[ERROR] original_roi_list is None - nothing to transfer")
+            logging.error("original_roi_list is None - nothing to transfer")
             return
 
         # Precompute normalized original ROI names
@@ -634,8 +635,7 @@ class UITransferROIWindow:
                     try:
                         sitk_image = original_roi_list[0][index]
                     except Exception as e:
-                        print(f"[ERROR] Could not fetch sitk_image for roi '{roi_name}' at index {index}: {e}")
-                        print(e)
+                        logging.error(f"Could not fetch sitk_image for roi '{roi_name}' at index {index}: {e}")
                         continue
 
                     try:
@@ -643,29 +643,27 @@ class UITransferROIWindow:
                             input_image=sitk_image, transform=tfm,
                             reference_image=reference_image, is_structure=True)
                         if new_contour is None:
-                            print(f"[ERROR] apply_linear_transform returned None for ROI '{roi_name}'")
+                            logging.error(f"apply_linear_transform returned None for ROI '{roi_name}'")
                             continue
                     except Exception as e:
-                        print(f"[ERROR] Exception during apply_linear_transform for ROI '{roi_name}': {e}")
-                        print(e)
+                        logging.error(f"Exception during apply_linear_transform for ROI '{roi_name}': {e}")
                         continue
 
                     try:
                         contour = sitk.GetArrayViewFromImage(new_contour)
                     except Exception as e:
-                        print(f"[ERROR] Could not convert new_contour to array for ROI '{roi_name}': {e}")
-                        print(e)
+                        logging.error(f"Could not convert new_contour to array for ROI '{roi_name}': {e}")
                         continue
 
                     try:
                         nonzero = np.count_nonzero(contour)
                     except Exception as e:
-                        print(f"[ERROR] np.count_nonzero failed for ROI '{roi_name}': {e}")
+                        logging.error(f"np.count_nonzero failed for ROI '{roi_name}': {e}")
                         nonzero = 0
 
                     contours = np.transpose(contour.nonzero())
                     if contours.shape[0] == 0:
-                        print(f"[ERROR] ROI '{roi_name}' produced an empty mask after transformation, skipping save.")
+                        logging.error(f"ROI '{roi_name}' produced an empty mask after transformation, skipping save.")
                     else:
                         try:
                             self.save_roi_to_patient_dict_container(
@@ -673,12 +671,11 @@ class UITransferROIWindow:
                                 new_roi_name,
                                 patient_dict_container)
                         except Exception as e:
-                            print(f"[ERROR] Exception while saving ROI '{roi_name}': {e}")
-                            print(e)
+                            logging.error(f"Exception while saving ROI '{roi_name}': {e}")
                     break
 
             if not found:
-                print(f"[WARNING] ROI name '{roi_name}' not found in original_roi_list names: {original_roi_list[1]}")
+                logging.warning(f"ROI name '{roi_name}' not found in original_roi_list names: {original_roi_list[1]}")
 
     def save_roi_to_patient_dict_container(self, contours, roi_name,
                                            patient_dict_container):
@@ -694,8 +691,7 @@ class UITransferROIWindow:
         try:
             slice_ids_dict = get_dict_slice_to_uid(patient_dict_container)
         except Exception as e:
-            print(f"[ERROR] get_dict_slice_to_uid failed: {e}")
-            print(e)
+            logging.error(f"get_dict_slice_to_uid failed: {e}")
             return
         total_slices = len(slice_ids_dict)
         for contour in contours:
@@ -715,8 +711,7 @@ class UITransferROIWindow:
             try:
                 polygon_list = ROI.calculate_concave_hull_of_points(coords)
             except Exception as e:
-                print(f"[ERROR] calculate_concave_hull_of_points failed for slice {key}: {e}")
-                print(e)
+                logging.error(f"calculate_concave_hull_of_points failed for slice {key}: {e}")
                 polygon_list = []
             if len(polygon_list) > 0:
                 rois_to_save[key] = {
@@ -727,8 +722,7 @@ class UITransferROIWindow:
             roi_list = ROI.convert_hull_list_to_contours_data(
                 rois_to_save, patient_dict_container)
         except Exception as e:
-            print(f"[ERROR] convert_hull_list_to_contours_data failed: {e}")
-            print(e)
+            logging.error(f"convert_hull_list_to_contours_data failed: {e}")
             return
 
         if len(roi_list) > 0:
@@ -741,8 +735,7 @@ class UITransferROIWindow:
                     self.moving_dict_container.set("dataset_rtss", new_rtss)
                     self.moving_dict_container.set("rtss_modified", True)
                 except Exception as e:
-                    print(f"[ERROR] Failed saving ROI '{roi_name}' to moving container: {e}")
-                    print(e)
+                    logging.error(f"Failed saving ROI '{roi_name}' to moving container: {e}")
             else:
                 try:
                     new_rtss = ROI.create_roi(
@@ -751,10 +744,9 @@ class UITransferROIWindow:
                     self.patient_dict_container.set("dataset_rtss", new_rtss)
                     self.patient_dict_container.set("rtss_modified", True)
                 except Exception as e:
-                    print(f"[ERROR] Failed saving ROI '{roi_name}' to patient container: {e}")
-                    print(e)
+                    logging.error(f"Failed saving ROI '{roi_name}' to patient container: {e}")
         else:
-            print(f"[ERROR] No contours to save for '{roi_name}' (roi_list empty)")
+            logging.error(f"No contours to save for '{roi_name}' (roi_list empty)")
 
     def closeWindow(self):
         """
