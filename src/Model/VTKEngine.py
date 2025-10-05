@@ -11,11 +11,34 @@ import shutil
 import atexit
 import glob
 import logging
+import SimpleITK as sitk
+from src.Model.MovingDictContainer import MovingDictContainer
 
+"""
+Definitions:
+- LPS: Left-Posterior-Superior coordinate system (DICOM standard)
+- RAS: Right-Anterior-Superior coordinate system (used for display in OnkoDICOM and for transforms
+       but is converted back to LPS for DICOM export/ROI transfer)
+- Voxel: index-based coordinate in image space
+- World: physical coordinate in mm
+- Pre-registration transform: initial rigid transform to apply moving image in correct orientation/position
+        (This is done manually as VTK cannot robustly read the ImagePositionPatient tag)
+This module provides a VTK-based engine for loading, transforming, and blending. The main process
+that happens here is:
+1) Load fixed and moving images from DICOM directories using vtkDICOMImageReader
+2) Compute voxel->LPS matrices from DICOM tags and convert to voxel->RAS
+3) Compute pre-registration transform from fixed to moving (rigid only)
+"""
+
+# Helper functions for DICOM handling and matrix computations
 # ------------------------------ DICOM Utilities ------------------------------
 
 def get_first_slice_ipp(folder):
-    """Return the ImagePositionPatient of the first slice in the folder."""
+    """
+    Return the ImagePositionPatient of the first slice in the folder.
+    We assume that the IPP of the first slice is representative of the series.
+    VTK will handle slice ordering internally.
+    """
     # Get all DICOM files
     files = sorted([os.path.join(folder,f) for f in os.listdir(folder) if f.lower().endswith(".dcm")])
     if not files:
@@ -50,7 +73,8 @@ def compute_dicom_matrix(reader, origin_override=None):
 def prepare_dicom_slice_dir(input_dir: str) -> str:
     """
     Copy only CT/MR slices into a temporary folder. Ignore RTDOSE, RTPLAN, RTSTRUCT.
-    Returns the path to the temporary directory.
+    Returns the path to the temporary directory. We do this to avoid VTK import issues.
+    Clean-up of the temp dir is handled by cleanup_temp_dirs() at program exit.
     """
     temp_dir = tempfile.mkdtemp(prefix="dicom_slices_")
     found = False
@@ -94,8 +118,9 @@ def lps_point_to_ras(pt: np.ndarray) -> np.ndarray:
 
 def cleanup_old_dicom_temp_dirs(temp_root=None):
     """
-    Scan temp folder for old dicom slice dirs and delete them.
-    Windows-safe: ignores folders in use.
+    Scan temp folder for old dicom slice dirs and delete them. 
+    This because atexit cleanup may leave some behind.
+    OS-safe: ignores folders in use.
     """
     if temp_root is None:
         temp_root = tempfile.gettempdir()
@@ -111,6 +136,7 @@ def cleanup_old_dicom_temp_dirs(temp_root=None):
 
 
 # ------------------------------ VTK Processing Engine ------------------------------
+
 WINDOW_DEFAULT = 390
 LEVEL_DEFAULT = 40
 
@@ -123,6 +149,7 @@ class VTKEngine:
         self.fixed_reader = None
         self.moving_reader = None
         self._blend_dirty = True
+        self.moving_image_container = MovingDictContainer()
 
         # Always initialize window/level to defaults
         # These are the same as "Normal" selection in the slider. Want it to first load as that
@@ -149,7 +176,7 @@ class VTKEngine:
         self.blend.SetOpacity(0, 1.0)
         self.blend.SetOpacity(1, 0.5)
 
-        # Offscreen renderer (unused for display but kept for pipeline completeness)
+        # Legacy offscreen renderer (unused for display but kept for pipeline completeness)
         self.renderer = vtk.vtkRenderer()
         self.render_window = vtk.vtkRenderWindow()
         self.render_window.SetOffScreenRendering(1)
@@ -170,6 +197,11 @@ class VTKEngine:
         self._temp_dirs = []
         atexit.register(self._cleanup_temp_dirs)
 
+        # SITK transform (for manual calculation and display to user and for ROI transfer)
+        self.sitk_transform = sitk.Euler3DTransform()
+        self.sitk_matrix = np.eye(4, dtype=np.float64)  # Latest SITK matrix for display (RAS)
+        
+
     def cleanup_old_temp_dirs(self):
         cleanup_old_dicom_temp_dirs()
 
@@ -186,11 +218,21 @@ class VTKEngine:
         self._temp_dirs.clear()
 
 
-    # ---------------- Fixed Volume ----------------
+    # Loading fixed layer
     def load_fixed(self, dicom_dir: str) -> bool:
+        """
+        Loads a fixed DICOM image volume from the specified directory and prepares it for visualization.
+        This method reads the DICOM slices, computes the voxel-to-RAS transformation, and sets up the VTK pipeline for the fixed image.
+
+        Args:
+            dicom_dir (str): Path to the directory containing the fixed DICOM image series.
+
+        Returns:
+            bool: True if the fixed image was loaded successfully, False otherwise.
+        """
         try:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
-            self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
+            self._temp_dirs.append(slice_dir)
         except ValueError as e:
             logging.exception(e)
             return False
@@ -199,55 +241,58 @@ class VTKEngine:
         r.SetDirectoryName(str(slice_dir))
         r.Update()
 
+        # Flip from LPS to RAS 
         flip = vtk.vtkImageFlip()
         flip.SetInputConnection(r.GetOutputPort())
-        flip.SetFilteredAxis(1)
+        flip.SetFilteredAxis(1) # flip y-axis to match program orientation elsewhere
         flip.Update()
         self.fixed_reader = flip
 
+        # Compute voxel->LPS then LPS->RAS
         origin = get_first_slice_ipp(slice_dir)
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.fixed_matrix = lps_matrix_to_ras(vox2lps)
-        print("Fixed voxel->RAS matrix:")
-        print(self.fixed_matrix)
 
-        # Safe to delete temp folder AFTER all computations however
-        # VTK still holds onto directory folder with a single slice
-        # inside, but this will be deleted on next run.
+        logging.info("Fixed voxel->RAS matrix (no flip):\n%s", self.fixed_matrix)
+
+        # Debug: check RAS origin
+        ras_origin = np.array([0.0, 0.0, 0.0, 1.0])
+        voxel_at_ras0 = np.linalg.inv(self.fixed_matrix) @ ras_origin
+        logging.info("Voxel coords of RAS (0,0,0): %s", voxel_at_ras0)
+
+        # Cleanup temp folder
         shutil.rmtree(slice_dir, ignore_errors=True)
         self._temp_dirs.remove(slice_dir)
 
-        img = flip.GetOutput()
+        # Set background level
+        img = r.GetOutput()
         scalars = numpy_support.vtk_to_numpy(img.GetPointData().GetScalars())
         if scalars is not None and scalars.size > 0:
-            min_val = float(scalars.min())
-            self.reslice3d.SetBackgroundLevel(min_val)
+            self.reslice3d.SetBackgroundLevel(float(scalars.min()))
 
+        # Render step
         self._wire_blend()
         self._sync_reslice_output_to_fixed()
         return True
 
+
+    # Loading moving layer
     def load_moving(self, dicom_dir: str) -> bool:
         """
-               Loads the moving image series from the specified DICOM directory and prepares it for registration.
 
-               This method reads the moving image DICOM files, computes the voxel-to-world transformation matrix,
-               and applies a pre-registration transform to align the moving image with the fixed image. It also
-               sets up the VTK pipeline for further processing and blending.
+        Loads a moving DICOM image volume from the specified directory and prepares it for registration and visualization.
+        This method reads the DICOM slices, computes the voxel-to-RAS transformation, calculates the pre-registration transform, and sets up the VTK pipeline for the moving image.
 
-               Args:
-                   dicom_dir: The directory containing the moving image DICOM files.
+        Args:
+            dicom_dir (str): Path to the directory containing the moving DICOM image series.
 
-               Returns:
-                   bool: True if the moving image was loaded successfully, False otherwise.
-
-               Raises:
-                   ValueError: If the DICOM directory does not contain valid image slices or has invalid orientation.
-               """
+        Returns:
+            bool: True if the moving image was loaded successfully, False otherwise.
+        """
         self.moving_dir = dicom_dir
         try:
             slice_dir = prepare_dicom_slice_dir(dicom_dir)
-            self._temp_dirs.append(slice_dir)  # track temp dir for cleanup
+            self._temp_dirs.append(slice_dir)
         except ValueError as e:
             logging.exception(e)
             return False
@@ -256,83 +301,66 @@ class VTKEngine:
         r.SetDirectoryName(str(slice_dir))
         r.Update()
 
+        # Flip from LPS to RAS
         flip = vtk.vtkImageFlip()
         flip.SetInputConnection(r.GetOutputPort())
         flip.SetFilteredAxis(1)
         flip.Update()
         self.moving_reader = flip
 
-        # compute moving matrix like fixed
+        # Compute voxel->LPS then LPS->RAS
         origin = get_first_slice_ipp(slice_dir)
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.moving_matrix = lps_matrix_to_ras(vox2lps)
-        print("Moving voxel->RAS matrix:")
-        print(self.moving_matrix)
 
-        # Safe to delete temp folder AFTER all computations however
-        # VTK still holds onto directory folder with a single slice
-        # inside, but this will be deleted on next run.
+        logging.info("Moving voxel->RAS matrix (no flip):\n%s", self.moving_matrix)
+
+        # Debug: check RAS origin
+        ras_origin = np.array([0.0, 0.0, 0.0, 1.0])
+        voxel_at_ras0 = np.linalg.inv(self.moving_matrix) @ ras_origin
+        logging.info("Voxel coords of RAS (0,0,0): %s", voxel_at_ras0)
+
+        # Cleanup temp folder
         shutil.rmtree(slice_dir, ignore_errors=True)
         self._temp_dirs.remove(slice_dir)
 
-        # --- Compute pre-registration transform ---
-        fixed_to_world = self.fixed_matrix
-        moving_to_world = self.moving_matrix
+        # Compute pre-registration transform
+        R_fixed = self.fixed_matrix[0:3,0:3] / np.array([np.linalg.norm(self.fixed_matrix[0:3,i]) for i in range(3)])
+        R_moving = self.moving_matrix[0:3,0:3] / np.array([np.linalg.norm(self.moving_matrix[0:3,i]) for i in range(3)])
+        R = R_fixed.T @ R_moving
 
+        t = self.moving_matrix[0:3,3] - self.fixed_matrix[0:3,3]
 
-        # --- Compute pre-registration transform including rotation ---
-        fixed_to_world = self.fixed_matrix
-        moving_to_world = self.moving_matrix
-
-        # Compute rotation part (direction cosines only, no spacing)
-        fixed_axes_norms = np.array([np.linalg.norm(fixed_to_world[0:3, i]) for i in range(3)])
-        moving_axes_norms = np.array([np.linalg.norm(moving_to_world[0:3, i]) for i in range(3)])
-
-        if np.any(fixed_axes_norms == 0):
-            raise ValueError("Zero-length axis detected in fixed image orientation matrix. Cannot normalize direction cosines.")
-        if np.any(moving_axes_norms == 0):
-            raise ValueError("Zero-length axis detected in moving image orientation matrix. Cannot normalize direction cosines.")
-
-        R_fixed = fixed_to_world[0:3, 0:3] / fixed_axes_norms
-        R_moving = moving_to_world[0:3, 0:3] / moving_axes_norms
-        R = R_fixed.T @ R_moving   # relative rotation
-
-        # Compute translation in mm (just difference of IPPs, in world coords)
-        t = moving_to_world[0:3, 3] - fixed_to_world[0:3, 3]
-
-        # Build prereg transform
         pre_transform = np.eye(4)
-        pre_transform[0:3, 0:3] = R
-        pre_transform[0:3, 3] = t
+        pre_transform[0:3,0:3] = R
+        #pre_transform[0:3,3] = t   # dont apply translation to keep top corners aligned
         self.pre_transform = pre_transform
 
-        # Debug prints
-        print("--- Fixed matrix ---")
-        print(fixed_to_world)
-        print("--- Moving matrix ---")
-        print(moving_to_world)
-        print("--- Pre-registration transform ---")
-        print(pre_transform)
-        print("Pre-reg translation (mm):", t)
+        # store pre-translation for later undo in matrix
+        self.undo = np.array([t[0], t[1], -t[2]]) # we invert Z for the inversion of the transform but then LPS->RAS (double negative for x and y)
 
-        # --- Apply pre-transform in VTK ---
+        logging.info("--- Pre-registration transform ---\n%s", pre_transform)
+        logging.info("Pre-reg translation (mm) [not applied to moving image]: %s", t)
+
+        # Apply pre-transform in VTK
         vtkmat = vtk.vtkMatrix4x4()
         for i in range(4):
             for j in range(4):
-                vtkmat.SetElement(i, j, pre_transform[i, j])
+                vtkmat.SetElement(i,j, pre_transform[i,j])
 
+        # Render step
         self.reslice3d.SetInputConnection(flip.GetOutputPort())
         self.reslice3d.SetResliceAxes(vtkmat)
         self._sync_reslice_output_to_fixed()
         self._wire_blend()
-
         return True
 
 
 
 
 
-    # ---------------- Transformation Utilities ----------------
+
+    # Transformation Utilities
     def set_translation(self, tx: float, ty: float, tz: float):
         self._tx, self._ty, self._tz = float(tx), float(ty), float(tz)
         self._apply_transform()
@@ -361,9 +389,10 @@ class VTKEngine:
     # ---------------- Slice Extraction ----------------
     def get_slice_numpy(self, orientation: str, slice_idx: int) -> tuple[np.ndarray | None, np.ndarray | None]:
         """
-           Extracts a 2D NumPy slice from the fixed and moving volumes
-           based on the chosen orientation (axial, coronal, sagittal).
-           """
+        Extracts a 2D NumPy slice from the fixed and moving volumes
+        based on the chosen orientation (axial, coronal, sagittal).
+        """
+
         if self.fixed_reader is None:
             return None, None
 
@@ -425,6 +454,7 @@ class VTKEngine:
             arr2d = (arr2d * 255.0).astype(np.uint8)
             return np.ascontiguousarray(arr2d)
 
+
         fixed_slice = vtk_to_np_slice(fixed_img, orientation, slice_idx, window_center=window_center,
                                       window_width=window_width)
         moving_slice = vtk_to_np_slice(moving_img, orientation, slice_idx, window_center=window_center,
@@ -434,8 +464,12 @@ class VTKEngine:
     def get_slice_qimage(self, orientation: str, slice_idx: int, fixed_color="Purple", moving_color="Green",
                              coloring_enabled=True, mask_rect=None) -> QtGui.QImage:
         """
-               mask_rect: (x, y, size) or None. If set, only show overlay in a square of given size centered at (x, y).
-               """
+        Returns a QImage of the blended fixed and moving slices at the specified orientation and index.
+
+        fixed_color, moving_color: "Grayscale", "Green", "Purple", "Blue", "Yellow", "Red", "Cyan"
+        mask_rect: (x, y, size) or None. If set, only show overlay in a square of given size centered at (x, y).
+        """
+
         fixed_slice, moving_slice = self.get_slice_numpy(orientation, slice_idx)
         if fixed_slice is None:
             return QtGui.QImage()
@@ -443,9 +477,9 @@ class VTKEngine:
 
         def aspect_ratio_correct(qimg, h, w, orientation):
             """
-                 Rescales an image so physical spacing is respected.
-                 Different orientations require different voxel spacings.
-                 """
+            Rescales an image so physical spacing is respected.
+            Different orientations require different voxel spacings.
+            """
             if self.fixed_reader is None:
                 return qimg
 
@@ -508,6 +542,12 @@ class VTKEngine:
         # Blend opacity setting for moving image (used later in display pipeline)
         blend = self.blend.GetOpacity(1) if self.moving_reader is not None else 0.0
 
+
+        # Each lambda takes a 2D grayscale array (arr) and returns a 3D array with shape 
+        # (height, width, 3), where the last dimension represents the RGB color channels. 
+        # The mapping is done by stacking arrays along the last axis, with each channel 
+        # (R, G, B) set to either the original grayscale values or zeros, depending on the 
+        # desired color.
         color_map = {
             "Grayscale":   lambda arr: arr,
             "Green":       lambda arr: np.stack([np.zeros_like(arr), arr, np.zeros_like(arr)], axis=-1),
@@ -519,12 +559,12 @@ class VTKEngine:
         }
 
 
-
         def grayscale_qimage(arr2d, h, w, orientation):
             qimg = QtGui.QImage(arr2d.data, w, h, w, QtGui.QImage.Format_Grayscale8)
             qimg = qimg.copy()
             return aspect_ratio_correct(qimg, h, w, orientation)
 
+        # When greyscale is selected, we can skip color mapping and blending
         if not coloring_enabled:
             if moving_slice is None:
                 return grayscale_qimage(fixed_slice, h, w, orientation)
@@ -534,6 +574,7 @@ class VTKEngine:
                          moving_slice.astype(np.float32) * alpha).astype(np.uint8)
                 return grayscale_qimage(arr2d, h, w, orientation)
 
+        # Blending with coloring
         fixed_f = fixed_slice.astype(np.float32)
         if moving_slice is None:
             if fixed_color == "Grayscale":
@@ -562,62 +603,114 @@ class VTKEngine:
         qimg = qimg.copy()
         return aspect_ratio_correct(qimg, h, w, orientation)
 
-    # ---------------- Internal Transform Application ----------------
-    def _apply_transform(self, orientation=None, slice_idx=None):
-        if not self.fixed_reader or not self.moving_reader:
-            return
 
-        img = self.fixed_reader.GetOutput()
-        extent = img.GetExtent()
+    def _update_sitk_transform(self):
+        """
+        Update the internal SimpleITK transform based on current translation/rotation parameters.
+        The transform is built in LPS coordinates and then converted to RAS for display.
+        """
+        # Build raw rotation matrix from Euler angles (Z-Y-X order)
+        rx, ry, rz = np.deg2rad([self._rx, self._ry, self._rz])
+        cx, cy, cz = np.cos([rx, ry, rz])
+        sx, sy, sz = np.sin([rx, ry, rz])
 
-        # Center voxel indices (i,j,k)
-        center_voxel = np.array([
-            0.5 * (extent[0] + extent[1]),
-            0.5 * (extent[2] + extent[3]),
-            0.5 * (extent[4] + extent[5]),
-            1.0
-        ], dtype=float)
+        # Compose rotation matrix R = Rz * Ry * Rx
+        R = np.array([
+            [cz*cy, cz*sy*sx - sz*cx, cz*sy*cx + sz*sx],
+            [sz*cy, sz*sy*sx + cz*cx, sz*sy*cx - cz*sx],
+            [-sy,   cy*sx,             cy*cx]
+        ])
 
-        # Use voxel->RAS matrix to compute center in RAS
-        center_world_h = self.fixed_matrix @ center_voxel
-        center_world = center_world_h[:3]
+        # Raw translation vector (input)
+        # Invert x and y for RAS controls
+        t_vec = np.array([-self._tx, -self._ty, self._tz])
+        t_vec += self.undo  # apply pre-translation undo
 
+        # Build 4x4 homogeneous matrix in LPS
+        mat_lps = np.eye(4)
+        mat_lps[:3, :3] = R
+        mat_lps[:3, 3] = t_vec
 
-        # ---------------- User transform only ----------------
-        user_t = vtk.vtkTransform()
-        user_t.PostMultiply()
-        user_t.Translate(-center_world)
-        user_t.RotateX(self._rx)
-        user_t.RotateY(self._ry)
-        user_t.RotateZ(self._rz)
-        user_t.Translate(center_world)
+        # Convert to RAS if needed
+        LPS_TO_RAS = np.diag([-1.0, -1.0, 1.0, 1.0])
+        mat_ras = LPS_TO_RAS @ mat_lps @ LPS_TO_RAS
+
+        # Convert LPS matrix to SITK AffineTransform
+        # SITK expects python lists instead of a numpy array as they can cause compatibility issues
+        t_sitk = sitk.AffineTransform(3)
+        t_sitk.SetMatrix(R.flatten().tolist())      # 3x3 rotation part
+        t_sitk.SetTranslation(t_vec.tolist())       # translation part
+        # Note: no need to set center, since translation is independent
+
+        moving_tfm = t_sitk.GetInverse() # sitk expects inverse (fixed -> moving) transform for resampling
+
+        # Store
+        self.sitk_matrix = mat_ras      # RAS matrix for display
+        self.sitktransform = t_sitk     # SimpleITK transform (LPS)
+
+        # Store in contaier for roi transfer
+        self.moving_image_container.set("tfm", moving_tfm)
+
+    # Internal transform application
+    def _apply_transform(self, orientation=None, slice_idx=None): 
+        """
+        Applies the current user and pre-registration transforms to the moving image volume.
+        This updates the VTK pipeline so that the moving image is resliced and displayed according to the latest translation and rotation parameters.
+
+        Args:
+            orientation (str, optional): The orientation of the slice (axial, coronal, sagittal), if relevant for the transform.
+            slice_idx (int, optional): The index of the slice to which the transform may be applied.
+        """
+        #TODO: Rotation around current slice if orientation and slice_idx are given
+        if not self.fixed_reader or not self.moving_reader: 
+            return 
+
+        # User transform applied to pipeline
+        user_t = vtk.vtkTransform() 
+        user_t.PostMultiply() 
+
+        # Move volume to DICOM origin for rotation
+        user_t.Translate(-self.moving_matrix[0:3,3])
+
+        # Apply world-based translation
         user_t.Translate(self._tx, self._ty, self._tz)
 
-        # Save **just the user transform** for GUI
-        self.user_transform.DeepCopy(user_t)
+        # Apply rotations
+        user_t.RotateX(self._rx) 
+        user_t.RotateY(self._ry) 
+        user_t.RotateZ(self._rz) 
 
-        # ---------------- Combined transform for reslice ----------------
-        final_t = vtk.vtkTransform()
-        final_t.PostMultiply()
-        pre_vtk_mat = vtk.vtkMatrix4x4()
-        for i in range(4):
-            for j in range(4):
-                pre_vtk_mat.SetElement(i, j, self.pre_transform[i, j])
+        # Move volume back
+        user_t.Translate(self.moving_matrix[0:3,3]) 
 
-        final_t.Concatenate(pre_vtk_mat)  # pre-registration
-        final_t.Concatenate(user_t)       # user transform
+        # Combined transform for reslice/display
+        final_t = vtk.vtkTransform() 
+        final_t.PostMultiply() 
 
-        self.transform.DeepCopy(final_t)
-        self.reslice3d.SetResliceAxes(self.transform.GetMatrix())
-        self.reslice3d.Modified()
-        self._blend_dirty = True
+        # Combine pre-registration + user transform
+        pre_vtk_mat = vtk.vtkMatrix4x4() 
+        for i in range(4): 
+            for j in range(4): 
+                pre_vtk_mat.SetElement(i, j, self.pre_transform[i, j]) 
+
+        final_t.Concatenate(pre_vtk_mat)  # pre-registration 
+        final_t.Concatenate(user_t)       # user-applied 
+        self.transform.DeepCopy(final_t) 
+        self._update_sitk_transform()
+
+        # Apply transform visually
+        self.reslice3d.SetResliceAxes(self.transform.GetMatrix()) 
+        self.reslice3d.Modified() 
+        self._blend_dirty = True 
 
 
 
-
-
-    # ---------------- Pipeline Utilities ----------------
+    # Pipeline utilities
     def _wire_blend(self):
+        """
+        Connects the fixed and moving image volumes to the VTK image blend pipeline.
+        This method ensures that the blend input is updated whenever the fixed or moving images change.
+        """
         self.blend.RemoveAllInputs()
         if self.fixed_reader is not None:
             self.blend.AddInputConnection(self.fixed_reader.GetOutputPort())
@@ -626,6 +719,11 @@ class VTKEngine:
         self._blend_dirty = True
 
     def _sync_reslice_output_to_fixed(self):
+        """
+        Synchronizes the output properties of the resliced moving image to match the fixed image.
+        This ensures that the resliced moving image has the same origin and extent as the fixed image for accurate overlay and comparison.
+        Origin differences are handled by the pre-registration transform.
+        """
         if self.fixed_reader is None:
             return
         fixed = self.fixed_reader.GetOutput()
@@ -639,6 +737,13 @@ class VTKEngine:
 
 
     def set_interpolation_linear(self, linear: bool = True):
+        """
+        Sets the interpolation mode for reslicing the moving image.
+        Enables linear interpolation if 'linear' is True, otherwise uses nearest neighbor interpolation.
+
+        Args:
+            linear (bool): If True, use linear interpolation; if False, use nearest neighbor interpolation.
+        """
         if linear:
             self.reslice3d.SetInterpolationModeToLinear()
         else:
@@ -651,3 +756,4 @@ class VTKEngine:
         """
         self.window = window
         self.level = level
+

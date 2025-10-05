@@ -103,7 +103,10 @@ class Controller:
         else:
             self.main_window.update_ui()
 
-        if isinstance(self.image_fusion_window, ImageFusionWindow):
+        # Start auto fusion if in auto fusion mode
+        if isinstance(self.image_fusion_window, ImageFusionWindow) and \
+           hasattr(self.image_fusion_window, "auto_radio") and \
+           self.image_fusion_window.auto_radio.isChecked():
             progress_window.update_progress(
                 ("Registering Images...\nThis may take a few minutes.",
                 90))

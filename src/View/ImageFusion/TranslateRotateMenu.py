@@ -419,7 +419,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.user_transform)
+                self._matrix_dialog.set_matrix(engine.sitk_matrix)
 
     def set_offset_changed_callback(self, callback):
         """
@@ -466,7 +466,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.user_transform)
+                self._matrix_dialog.set_matrix(engine.sitk_matrix)
 
     def set_offsets(self, offsets):
         """
@@ -525,7 +525,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         if self._matrix_dialog and self._get_vtk_engine_callback:
             engine = self._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self._matrix_dialog.set_matrix(engine.user_transform)
+                self._matrix_dialog.set_matrix(engine.sitk_matrix)
 
     def _make_offset_change_handler(self, idx):
         return lambda value: self.on_offset_change(idx, value)
@@ -556,7 +556,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         # Get the VTKEngine instance from the callback
         engine = self._get_vtk_engine_callback() if self._get_vtk_engine_callback else None
         if engine is not None and hasattr(engine, "transform"):
-            self._matrix_dialog.set_matrix(engine.transform)
+            self._matrix_dialog.set_matrix(engine.sitk_matrix)
         self._matrix_dialog.show()
         self._matrix_dialog.raise_()
         self._matrix_dialog.activateWindow()

@@ -528,7 +528,7 @@ class UIImageFusionWindow(object):
                 self.check_existing_rtss(checked_nodes) and 'REG' not in selected_series_types:
             header = "The associated RTSTRUCT must be selected."
             proceed = False
-        elif self.auto_radio.isChecked() and 'RTDOSE' in selected_series_types:
+        elif 'RTDOSE' in selected_series_types:
             header = "Cannot fuse with a RTDOSE file."
             proceed = False
         else:
