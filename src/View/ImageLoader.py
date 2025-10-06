@@ -37,6 +37,7 @@ class ImageLoader(QtCore.QObject):
         self.existing_rtss = existing_rtss
         self.calc_dvh = False
         self.advised_calc_dvh = False
+        self.detected_incorrect_slice = False
 
     def wait_for_acknowledgment(self) -> None:
         """
@@ -70,8 +71,11 @@ class ImageLoader(QtCore.QObject):
             read_data_dict, file_names_dict = ImageLoading.get_datasets(
                 self.selected_files, parent_window=self
             )
-            # If incorrect slice found, will loop to await user acknowledgment
-            self.wait_for_acknowledgment()
+            # Enter ack loop if incorrect slice detected
+            if self.detected_incorrect_slice:
+                # If incorrect slice found, will loop to await user acknowledgment
+                self.wait_for_acknowledgment()
+                self.detected_incorrect_slice = False  # reset boolean
 
         except ImageLoading.NotAllowedClassError as e:
             logging.error(f"ImageLoader.load: {repr(e)}")
@@ -317,5 +321,5 @@ class ImageLoader(QtCore.QObject):
         self.calc_dvh = advice
 
     @Slot()
-    def acknowledge_incorrect_slice(self, value):
-        self.acknowledged_incorrect_slice = value
+    def detected_incorrect_slice(self, value):
+        self.detected_incorrect_slice = value
