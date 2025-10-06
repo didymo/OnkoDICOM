@@ -3,6 +3,7 @@ import os
 import platform
 from pathlib import Path
 
+from PySide6.QtCore import Slot
 from pydicom import dcmread, dcmwrite
 from PySide6 import QtCore
 
@@ -26,6 +27,8 @@ class ImageLoader(QtCore.QObject):
     """
 
     signal_request_calc_dvh = QtCore.Signal()
+    incorrect_slice_orientation = QtCore.Signal(list)
+    incorrect_slices_deleted = QtCore.Signal(list)
 
     def __init__(self, selected_files, existing_rtss, parent_window, *args, **kwargs):
         super(ImageLoader, self).__init__(*args, **kwargs)
@@ -34,6 +37,23 @@ class ImageLoader(QtCore.QObject):
         self.existing_rtss = existing_rtss
         self.calc_dvh = False
         self.advised_calc_dvh = False
+
+    def wait_for_acknowledgment(self) -> None:
+        """
+        Pauses the loading process and waits for user acknowledgment of incorrect slice orientation.
+        This method creates a QEventLoop to block further execution until the user acknowledges 
+        any issues with slice orientation. It connects to a signal from the parent window that 
+        will quit the event loop when triggered.
+        """
+
+        from PySide6.QtCore import QEventLoop
+        loop = QEventLoop()
+
+        def on_acknowledge():
+            loop.quit()
+
+        self.parent_window.signal_acknowledge_incorrect_slice.connect(on_acknowledge)
+        loop.exec()
 
     def load(self, interrupt_flag, progress_callback):
         """
@@ -48,8 +68,11 @@ class ImageLoader(QtCore.QObject):
             # Gets the common root folder.
             path = os.path.dirname(os.path.commonprefix(self.selected_files))
             read_data_dict, file_names_dict = ImageLoading.get_datasets(
-                self.selected_files
+                self.selected_files, parent_window=self
             )
+            # If incorrect slice found, will loop to await user acknowledgment
+            self.wait_for_acknowledgment()
+
         except ImageLoading.NotAllowedClassError as e:
             logging.error(f"ImageLoader.load: {repr(e)}")
             raise ImageLoading.NotAllowedClassError from e
@@ -292,3 +315,7 @@ class ImageLoader(QtCore.QObject):
     def update_calc_dvh(self, advice):
         self.advised_calc_dvh = True
         self.calc_dvh = advice
+
+    @Slot()
+    def acknowledge_incorrect_slice(self, value):
+        self.acknowledged_incorrect_slice = value

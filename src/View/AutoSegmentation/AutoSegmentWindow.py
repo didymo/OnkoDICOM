@@ -1,8 +1,11 @@
 import copy
 from typing import Callable
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtGui import QTextCursor
+from PySide6.QtGui import QTextCursor, QPixmap
 from PySide6.QtCore import QSize
+from PySide6.QtWidgets import QMessageBox
+from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 from src.Model.AutoSegmentation.AutoSegmentViewState import AutoSegmentViewState
 from src.View.AutoSegmentation.ButtonInputBox import ButtonInputBox
@@ -111,6 +114,39 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         self.running: bool = True
         self._start_button.setEnabled(False)
         self._start_button.setText("Wait")
+
+    def segmentation_successful_dialog(self, status: bool) -> None:
+        """
+        Displays a dialog indicating the result of the auto-segmentation process.
+        Shows a message box to inform the user about the success or failure of the
+        auto-segmentation task. On user acknowledgment, it re-enables the start
+        button and closes the window.
+
+        Args:
+            status: Boolean indicating whether the segmentation was successful.
+        """
+        msgbox = QMessageBox()
+        msgbox.setStyleSheet(StyleSheetReader().get_stylesheet())
+        msgbox.setIconPixmap(
+            QPixmap(resource_path('res/images/icon.icns'))
+            .scaledToHeight(100, QtCore.Qt.TransformationMode.SmoothTransformation)
+        )
+        if status:
+            msgbox.setWindowTitle("Auto-Segmentation Successful")
+            msgbox.setText("Auto-Segmentation completed successfully.\n\n"
+                           "The resulting structures have been saved to 'rtss.dcm' in the parent directory.")
+        else:
+            msgbox.setWindowTitle("Auto-Segmentation Failed")
+            msgbox.setText("Auto-Segmentation could not be completed.\n"
+                           "Please see the log file for more information.")
+
+        msgbox.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msgbox.setDefaultButton(QMessageBox.StandardButton.Ok)
+        result = msgbox.exec()
+
+        if result == QMessageBox.StandardButton.Ok:
+            self.enable_start_button()
+            self.close()
 
     def get_segmentation_roi_subset(self) -> list[str]:
         """

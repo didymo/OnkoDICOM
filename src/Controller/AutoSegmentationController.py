@@ -145,18 +145,15 @@ class AutoSegmentationController(QObject):
 
     @Slot()
     def on_segmentation_finished(self) -> None:
-        # Update the text edit UI
         self.update_progress_text("Loading the RTSTRUCT file")
         load_rtss_file_to_patient_dict(self.patient_dict_container)
         self.update_progress_text("Populating Structures Tab.")
         self.update_structure_list.emit()
-        self.update_progress_text("Structures Loaded")
 
-        # Enable once segmentation complete
-        self._view.enable_start_button()
+        self._view.segmentation_successful_dialog(True)
 
     @Slot()
     def on_segmentation_error(self, error) -> None:
         logging.error(error)
-        # Enable once segmentation complete
-        self._view.enable_start_button()
+
+        self._view.segmentation_successful_dialog(False)

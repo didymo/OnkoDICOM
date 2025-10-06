@@ -2,8 +2,10 @@ import os
 import sys
 import re
 from pathlib import Path
-import sys
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def resource_path(relative_path, sanitizing=False):
     """
@@ -83,3 +85,25 @@ def database_path() -> Path:
     """
 
     return Path.home().joinpath('.OnkoDICOM', 'OnkoDICOM.db')
+
+def delete_files(file_list: list) -> list:
+    """
+    Attempts to delete a list of files and tracks deletion failures.
+    Iterates through the provided list of file paths, attempting to delete
+    each file and keeping track of files that could not be deleted.
+
+    Args:
+        file_list: A list of file paths to be deleted.
+
+    Returns:
+        A list of file paths that could not be deleted.
+    """
+    failed = []
+    for file in file_list:
+        try:
+            os.remove(file)
+        except Exception as e:
+            logger.error(f"Failed to delete file {file}: {e}")
+            failed.append(file)
+
+    return failed
