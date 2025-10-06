@@ -134,7 +134,7 @@ def _is_correct_orientation(slice_data: FileDataset) -> bool:
     Determines if a DICOM slice is oriented in an axial plane.
     Checks the orientation of a DICOM slice by calculating its normal vector
     and comparing it to the standard Z-axis. Slices within approximately
-    45 degrees of the axial plane are considered correctly oriented.
+    25 degrees of the axial plane are considered correctly oriented.
 
     Args:
         slice_data: A DICOM FileDataset representing a single slice.

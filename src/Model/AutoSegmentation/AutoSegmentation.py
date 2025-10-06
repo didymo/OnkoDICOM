@@ -93,7 +93,7 @@ class AutoSegmentation:
         """
             Copies the file paths from patient dict to a temporary location for processing.
             This method creates a temporary directory and copies the DICOM files paths
-            into it, excludes rtdose, rtplan, adn rtstruct files.
+            into it, excludes rtdose, rtplan, and rtstruct files.
 
             Raises:
                 ValueError: If the DICOM directory is not set or copying fails.
@@ -137,8 +137,7 @@ class AutoSegmentation:
             task=task,
             roi_subset=list(set(copy.deepcopy(roi_subset))), # Deep copy to prevent changing to the selection after starting
             output_type="nifti",
-            device="gpu",
-            fastest=True
+            device="gpu"
         )
 
     def _convert_to_rtstruct(self, nifti_dir, output_rt) -> None:
