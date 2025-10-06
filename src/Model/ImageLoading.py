@@ -238,7 +238,7 @@ def get_datasets(filepath_list, file_type=None, parent_window=None):
 
     # Notify user of abnormal slice alignment on initial load
     if incorrectly_aligned_slices and isinstance(parent_window, ImageLoader):
-        parent_window.detected_incorrect_slice = True
+        parent_window.is_incorrect_slice = True
         parent_window.incorrect_slice_orientation.emit(incorrectly_aligned_slices)
 
     return sorted_read_data_dict, sorted_file_names_dict
