@@ -118,6 +118,19 @@ class ManualFusionLoader(QtCore.QObject):
                 except (InvalidDicomError, AttributeError, OSError) as e:
                     logging.warning("<manualFusionLoader.py_load_with_vtk>Error reading DICOM file", e)
                     continue
+        
+        # Populate moving model container before processing with VTK so origin can be read the same way as ROI Transfer logic
+        moving_image_loader = MovingImageLoader(self.selected_files, None, self)
+        moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
+
+        if not moving_model_populated:
+            # Check if interrupted, emit cancel signal immediately
+            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+                self.signal_error.emit((False, "Loading cancelled"))
+                return
+            # Emit error if loading failed
+            logging.error("<manualFusionLoader.py_load_with_vtk> Failed to populate Moving Model Container")
+            raise RuntimeError("Failed to populate Moving Model Container")
 
         # Use VTKEngine to load images
         engine = VTKEngine()
@@ -139,18 +152,6 @@ class ManualFusionLoader(QtCore.QObject):
         if not moving_loaded:
             logging.error("<manualFusionLoader.py_load_with_vtk>Failed to load moving image with VTK.")
             raise RuntimeError("Failed to load moving image with VTK.")
-
-        moving_image_loader = MovingImageLoader(self.selected_files, None, self)
-        moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
-
-        if not moving_model_populated:
-            # Check if interrupted, emit cancel signal immediately
-            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-                self.signal_error.emit((False, "Loading cancelled"))
-                return
-            # Otherwise, it was a real error
-            logging.error("<manualFusionLoader.py_load_with_vtk> Failed to populate Moving Model Container")
-            raise RuntimeError("Failed to populate Moving Model Container")
 
         # If a transform DICOM was found and is ticked, extract transform data only
         transform_data = None

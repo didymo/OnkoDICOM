@@ -695,7 +695,9 @@ class UITransferROIWindow:
             return
         total_slices = len(slice_ids_dict)
         for contour in contours:
-            curr_slice_id = contour[0]
+            # Keep total_slices - contour[0] to be consistent with OnkoDICOM
+            # viewer display slice index
+            curr_slice_id = total_slices - contour[0]
             if curr_slice_id >= total_slices:
                 curr_slice_id = 0
             if curr_slice_id not in pixels_coords_dict:
