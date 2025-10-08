@@ -113,7 +113,7 @@ class MovingImageLoader(ImageLoader):
     def load(self, interrupt_flag, progress_callback, manual=False):
         # initial callback
         if manual:
-            progress_callback.emit(("Generating Moving Model", 60))
+            progress_callback.emit(("Generating Moving Model", 20))
         else:
             progress_callback.emit(("Creating datasets...", 0))
         
@@ -138,7 +138,7 @@ class MovingImageLoader(ImageLoader):
         # handle RTSS (roi + contour data)
         if 'rtss' in file_names_dict:
             if manual:
-                progress_callback.emit(("Getting ROI + Contour data...", 65))
+                progress_callback.emit(("Getting ROI + Contour data...", 25))
             else:
                 progress_callback.emit(("Getting ROI + Contour data...", 10))
 
@@ -152,7 +152,7 @@ class MovingImageLoader(ImageLoader):
             # handle DVH calculation
             if 'rtdose' in file_names_dict and self.calc_dvh:
                 if manual:
-                    progress_callback.emit(("Calculating DVHs...", 75))
+                    progress_callback.emit(("Calculating DVHs...", 40))
                 else:
                     progress_callback.emit(("Calculating DVHs...", 60))
                 ok = self.handle_dvh(dataset_rtss, rois, dict_thickness,
@@ -164,7 +164,7 @@ class MovingImageLoader(ImageLoader):
         else:
             # no RTSS present, create temporary RTSS
             if manual:
-                progress_callback.emit(("Generating temporary rtss...", 80))
+                progress_callback.emit(("Generating temporary rtss...", 40))
             else:
                 progress_callback.emit(("Generating temporary rtss...", 20))
             
@@ -172,8 +172,12 @@ class MovingImageLoader(ImageLoader):
             if not ok or interrupt_flag.is_set():
                 return False
 
-        # Show moving model loading (next step in workflow for both manual and auto)
-        progress_callback.emit(("Loading Moving Model", 85))
+        # Show moving model loading
+        if manual:
+            progress_callback.emit(("Loading Moving Model", 45))
+        else:
+            progress_callback.emit(("Loading Moving Model", 85))
+        
         if interrupt_flag.is_set():
             progress_callback.emit(("Stopping", 85))
             return False

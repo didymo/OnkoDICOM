@@ -894,7 +894,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             None,
         )
         if main_window is not None:
-            main_window._apply_matrix_and_transform_to_engine(
+            main_window.apply_matrix_and_transform_to_engine(
                 vtk_engine=vtk_engine,
                 matrix=matrix,
                 translation=translation,

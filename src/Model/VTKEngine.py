@@ -12,7 +12,10 @@ import atexit
 import glob
 import logging
 import SimpleITK as sitk
+from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
+from src.View.util.PatientDictContainerHelper import get_dict_slice_to_uid, \
+    read_dicom_image_to_sitk
 
 """
 Definitions:
@@ -33,18 +36,18 @@ that happens here is:
 # Helper functions for DICOM handling and matrix computations
 # ------------------------------ DICOM Utilities ------------------------------
 
-def get_first_slice_ipp(folder):
+def get_first_slice_ipp(filepaths):
     """
-    Return the ImagePositionPatient of the first slice in the folder.
-    We assume that the IPP of the first slice is representative of the series.
-    VTK will handle slice ordering internally.
+    Return the origin that SimpleITK uses when reading the DICOM series.
+    We use the exact same process to gather origin data as transfer ROI logic.
     """
-    # Get all DICOM files
-    files = sorted([os.path.join(folder,f) for f in os.listdir(folder) if f.lower().endswith(".dcm")])
-    if not files:
-        return np.array([0.0,0.0,0.0])
-    ds = pydicom.dcmread(files[0])
-    return np.array(ds.ImagePositionPatient, dtype=float)
+    try:
+        dicom_image = read_dicom_image_to_sitk(filepaths)
+        return np.array(dicom_image.GetOrigin()) 
+        
+    except Exception as e:
+        logging.error(f"Could not read DICOM series with SimpleITK: {e}")
+        return np.array([0.0, 0.0, 0.0])
 
 def compute_dicom_matrix(reader, origin_override=None):
     """Return a 4x4 voxel-to-world matrix for vtkDICOMImageReader."""
@@ -149,6 +152,7 @@ class VTKEngine:
         self.fixed_reader = None
         self.moving_reader = None
         self._blend_dirty = True
+        self.patient_dict_container = PatientDictContainer()
         self.moving_image_container = MovingDictContainer()
 
         # Always initialize window/level to defaults
@@ -249,7 +253,7 @@ class VTKEngine:
         self.fixed_reader = flip
 
         # Compute voxel->LPS then LPS->RAS
-        origin = get_first_slice_ipp(slice_dir)
+        origin = get_first_slice_ipp(self.patient_dict_container.filepaths)
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.fixed_matrix = lps_matrix_to_ras(vox2lps)
 
@@ -309,7 +313,7 @@ class VTKEngine:
         self.moving_reader = flip
 
         # Compute voxel->LPS then LPS->RAS
-        origin = get_first_slice_ipp(slice_dir)
+        origin = get_first_slice_ipp(self.moving_image_container.filepaths)
         vox2lps = compute_dicom_matrix(r, origin_override=origin)
         self.moving_matrix = lps_matrix_to_ras(vox2lps)
 
@@ -610,7 +614,8 @@ class VTKEngine:
         The transform is built in LPS coordinates and then converted to RAS for display.
         """
         # Build raw rotation matrix from Euler angles (Z-Y-X order)
-        rx, ry, rz = np.deg2rad([self._rx, self._ry, self._rz])
+        # Invert x and y for RAS controls
+        rx, ry, rz = np.deg2rad([-self._rx, -self._ry, self._rz])
         cx, cy, cz = np.cos([rx, ry, rz])
         sx, sy, sz = np.sin([rx, ry, rz])
 
@@ -675,10 +680,10 @@ class VTKEngine:
         # Apply world-based translation
         user_t.Translate(self._tx, self._ty, self._tz)
 
-        # Apply rotations
-        user_t.RotateX(self._rx) 
-        user_t.RotateY(self._ry) 
-        user_t.RotateZ(self._rz) 
+        # Apply rotations (in RAS, hence inverted)
+        user_t.RotateX(-self._rx) 
+        user_t.RotateY(-self._ry) 
+        user_t.RotateZ(-self._rz) 
 
         # Move volume back
         user_t.Translate(self.moving_matrix[0:3,3]) 
