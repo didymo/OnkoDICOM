@@ -125,7 +125,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     paint_bucket = True
 
     # First flood with alpha = 100
-    draw_roi_window.units_box.transparency_slider.setValue(100)
+    draw_roi_window._toolbar.transparency_slider.setValue(100)
     color = draw_roi_window.pen.color()
     color.setAlpha(100)
     draw_roi_window.pen.setColor(color)
@@ -138,7 +138,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     ).toImage().pixelColor(*mid_point).alpha()
 
     # Second flood with alpha = 50
-    draw_roi_window.units_box.transparency_slider.setValue(50)
+    draw_roi_window._toolbar.transparency_slider.setValue(50)
     color = draw_roi_window.pen.color()
     color.setAlpha(50)
     draw_roi_window.pen.setColor(color)

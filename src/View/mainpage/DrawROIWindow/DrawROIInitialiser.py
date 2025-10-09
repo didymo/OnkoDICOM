@@ -185,27 +185,14 @@ class RoiInitialiser():
         
 
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
-
-        # Creates a layout for the tools to fit insid
-        tools_layout = QtWidgets.QVBoxLayout()
-        tools_layout.setContentsMargins(0, 0, 0, 0)
-        tools_layout.setSpacing(0)
-        tools_layout.setAlignment(Qt.AlignTop)
-        tools_container = QtWidgets.QWidget()
-        tools_container.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
-        tools_container.setLayout(tools_layout)
-        tools_layout.addWidget(self.left_label)
-        tools_layout.addStretch(1)
-        # Create a layout to hold the left panel and the main canvas
-        # Create a QWidget to hold both the left panel and the central label
-        # Add the left panel to the layout
+        # Add the left panel(button box) to the layout
         # Add the canvas label to the layout
         # Set the central widget to be our layout container
         central = self.centralWidget() if isinstance(self, QtWidgets.QMainWindow) else self
         main = QtWidgets.QHBoxLayout(central)
         main.setContentsMargins(0, 0, 0, 0)
         main.setSpacing(8)
-        main.addWidget(tools_container)
+        main.addWidget(self.left_label)
         main.addWidget(self.scroller)
         main.addWidget(self.view)
 

@@ -54,62 +54,29 @@ class CutsomToolbar(QToolBar):
         self.addAction(quick_copy_down)
 
         self.addSeparator()
-        pen_size_label  = QLabel("Brush Size :")
-        self.addWidget(pen_size_label)
-        pen_size_spinbox = QSpinBox()
-        pen_size_spinbox.setFocusPolicy(Qt.ClickFocus)
-        pen_size_spinbox.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
-        pen_size_spinbox.setRange(1,100)
-        pen_size_spinbox.setValue(12)
-        pen_size_spinbox.valueChanged.connect(self.update_pen_size)
-        self.addWidget(pen_size_spinbox)
-        self.addSeparator()
+        spin_defs = [
+            ("Brush Size :",      1,   100,  12,   self.update_pen_size),
+            ("Pixel Range Min :",  0,  6000,   0,   self.update_pixel_min),
+            ("Pixel Range Max :",  0,  6000,6000,  self.update_pixel_max),
+            ("Erase Dags :",       0,262144,  20,  self.update_erase_dags),
+            ("Opacity :",          1,   255, 126,  self.update_transparency),
+        ]
 
-        #Min Pixel range (lower Bounds)
-        pixel_min_range_label = QLabel("Pixel Range Min :")
-        self.addWidget(pixel_min_range_label)
-        pixel_range_min = QSpinBox()
-        pixel_range_min.setFocusPolicy(Qt.ClickFocus)
-        pixel_range_min.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
-        pixel_range_min.setRange(0,6000)
-        pixel_range_min.valueChanged.connect(self.update_pixel_min)
-        pixel_range_min.setValue(0)
-        self.addWidget(pixel_range_min)
-        self.addSeparator()
-
-        #Upper bounds of the pixel range
-        pixel_range_max_lanbel = QLabel("Pixel Range Max :")
-        self.addWidget(pixel_range_max_lanbel)
-        pixel_range_max = QSpinBox()
-        pixel_range_max.setFocusPolicy(Qt.ClickFocus)
-        pixel_range_max.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
-        pixel_range_max.setRange(0,6000)
-        pixel_range_max.valueChanged.connect(self.update_pixel_max)
-        pixel_range_max.setValue(6000)
-        self.addWidget(pixel_range_max)
-        self.addSeparator()
-
-        erase_dags_num_label = QLabel("Erase Dags :")
-        self.addWidget(erase_dags_num_label)
-        erase_dags_num = QSpinBox()
-        erase_dags_num.setFocusPolicy(Qt.ClickFocus)
-        erase_dags_num.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
-        erase_dags_num.setRange(0,262144)
-        erase_dags_num.valueChanged.connect(self.update_erase_dags)
-        erase_dags_num.setValue(20)
-        self.addWidget(erase_dags_num)
-        self.addSeparator()
+        for text, mn, mx, val, slot in spin_defs:
+            self._add_labeled_spinbox(text, mn, mx, val, slot)
         
-        #Transparency Widget
-        transparency_slider_label = QLabel("Opacity :")
-        self.addWidget(transparency_slider_label)
-        transparency_slider = QSpinBox()
-        transparency_slider.setFocusPolicy(Qt.ClickFocus)
-        transparency_slider.editingFinished.connect(lambda: self.setFocus(Qt.OtherFocusReason))
-        transparency_slider.setRange(1,255)
-        transparency_slider.valueChanged.connect(self.update_transparency)
-        transparency_slider.setValue(126)
-        self.addWidget(transparency_slider)
+    def _add_labeled_spinbox(self, label_text, minimum, maximum, default, slot):
+        self.addSeparator()
+        lbl = QLabel(label_text)
+        self.addWidget(lbl)
+
+        sb = QSpinBox()
+        sb.setFocusPolicy(Qt.ClickFocus)
+        sb.editingFinished.connect(lambda _=None: self.setFocus(Qt.OtherFocusReason))
+        sb.setRange(minimum, maximum)
+        sb.setValue(default)
+        sb.valueChanged.connect(slot)
+        self.addWidget(sb)
 
     def change_colour(self):
         """Allows us to change the colour of the pen"""

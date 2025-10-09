@@ -34,103 +34,32 @@ class LeftPannel(QtWidgets.QWidget):
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(0)
 
-        select_roi_type = QPushButton()
-        select_roi_type.setIcon(QIcon("res/images/DrawRoi-icons/body-check.png"))
-        select_roi_type.setToolTip("Select ROI Name")
-        brush = QPushButton()
-        brush.setToolTip("Brush Tool")
-        brush.setIcon(QIcon("res/images/DrawRoi-icons/paint.png"))
-        brush.setCheckable(True)
-        pen = QPushButton()
-        pen.setToolTip("Laso Brush Tool")
-        pen.setIcon(QIcon("res/images/DrawRoi-icons/pen-swirl.png"))
-        pen.setCheckable(True)
-        eraser_roi = QPushButton()
-        eraser_roi.setToolTip("Trim ROI Tool")
-        eraser_roi.setIcon(QIcon("res/images/DrawRoi-icons/eraser.png"))
-        eraser_roi.setCheckable(True)
-        eraser_draw = QPushButton()
-        eraser_draw.setIcon(QIcon("res/images/DrawRoi-icons/icons8-remove-image-24.png"))
-        eraser_draw.setToolTip("Erease the current slice")
-        #eraser_roi.setIcon(QIcon("res/images/DrawRoi-icons/.png"))
-        transect = QPushButton()
-        transect.setToolTip("Transect Tool")
-        transect.setIcon(QIcon("res/images/btn-icons/transect_purple_icon.png"))
-        transect.setCheckable(True)
-        copy = QPushButton()
-        copy.setToolTip("Copy current drawing onto another slice")
-        copy.setIcon(QIcon("res/images/DrawRoi-icons/copy-alt.png"))
-        save = QPushButton()
-        save.setIcon(QIcon("res/images/DrawRoi-icons/icons8-save-48.png"))
-        save.setToolTip("Save")
-        save.setProperty("QPushButtonClass", "success-button")
-        fill = QPushButton()
-        fill.setToolTip("Fill Tool")
-        fill.setIcon(QIcon("res/images/DrawRoi-icons/fill.png"))
-        fill.setCheckable(True)
-        multi = QPushButton()
-        multi.setToolTip("Multi Layer Contour Tool")
-        multi.setIcon(QIcon("res/images/DrawRoi-icons/layer-plus.png"))
-        multi.setCheckable(True)
-        erase_dag = QPushButton()
-        erase_dag.setToolTip("Erase Dags")
-        erase_dag.setIcon(QIcon("res/images/DrawRoi-icons/broom.png"))
-        cancel = QPushButton()
-        cancel.setIcon(QIcon("res/images/DrawRoi-icons/icons8-cancel-50.png"))
-        cancel.setProperty("QPushButtonClass", "fail-button")
-        cancel.setToolTip("Cancel")
-        zapper = QPushButton()
-        zapper.setToolTip("'Zapper' Tool, click and drage to erase sections")
-        zapper.setIcon(QIcon("res/images/DrawRoi-icons/bolt.png"))
-        zapper.setCheckable(True)
-        
-        self.button_group.addButton(select_roi_type)
-        self.button_group.addButton(brush)
-        self.button_group.addButton(pen)
-        self.button_group.addButton(eraser_draw)
-        self.button_group.addButton(eraser_roi)
-        self.button_group.addButton(transect)
-        self.button_group.addButton(copy)
-        self.button_group.addButton(save)
-        self.button_group.addButton(fill)
-        self.button_group.addButton(erase_dag)
-        self.button_group.addButton(multi)
-        self.button_group.addButton(cancel)
-        self.button_group.addButton(zapper)
+        btn_cfgs = [
+            # (icon,    tooltip,                            checkable, slot,                         property)
+            ("body-check.png",     "Select ROI Name",             False,     self.show_roi_type_options, None),
+            ("paint.png",          "Brush Tool",                  True,      self.brush_tool,           None),
+            ("pen-swirl.png",      "Laso Brush Tool",             True,      self.pen_tool,             None),
+            ("eraser.png",         "Trim ROI Tool",               True,      self.eraser_roi_tool,      None),
+            ("icons8-remove-image-24.png", "Erase Slice",        False,     self.eraser_draw_tool,     None),
+            ("fill.png",           "Fill Tool",                   True,      self.fill_tool,            None),
+            ("layer-plus.png",     "Multi Layer Contour Tool",    True,      self.multi_button,         None),
+            ("copy-alt.png",       "Copy current drawing...",     False,     self.copy_button,          None),
+            ("bolt.png",           "Zapper Tool",                 True,      self.zapper_button,        None),
+            ("broom.png",          "Erase Dags",                  False,     self.canvas_label.erase_dags, None),
+            ("icons8-save-48.png", "Save",                        False,     self.save_button,          "success-button"),
+            ("icons8-cancel-50.png","Cancel",                     False,     self.cancel_button,        "fail-button"),
+        ]
 
+        for row, (icon, tip, checkable, slot, prop) in enumerate(btn_cfgs):
+            btn = QPushButton()
+            btn.setIcon(QIcon(f"res/images/DrawRoi-icons/{icon}"))
+            btn.setToolTip(tip)
+            if checkable:    btn.setCheckable(True)
+            if prop:         btn.setProperty("QPushButtonClass", prop)
+            self.button_group.addButton(btn)
+            btn.clicked.connect(slot)
+            layout.addWidget(btn, row, 0)
 
-        #Links the buttons to actions
-        select_roi_type.clicked.connect(self.show_roi_type_options)
-        brush.clicked.connect(self.brush_tool)
-        pen.clicked.connect(self.pen_tool)
-        eraser_roi.clicked.connect(self.eraser_roi_tool)
-        eraser_draw.clicked.connect(self.eraser_draw_tool)
-        transect.clicked.connect(self.transect_tool)
-        copy.clicked.connect(self.copy_button)
-        save.clicked.connect(self.save_button)
-        fill.clicked.connect(self.fill_tool)
-        erase_dag.clicked.connect(self.canvas_label.erase_dags)
-        multi.clicked.connect(self.multi_button)
-        cancel.clicked.connect(self.cancel_button)
-        zapper.clicked.connect(self.zapper_button)
-
-  
-        #Sets the buttons in the layout
-        layout.addWidget(select_roi_type, 0,0)
-        layout.addWidget(brush,1,0)
-        layout.addWidget(pen, 2,0)
-        layout.addWidget(eraser_roi,3,0)
-        layout.addWidget(eraser_draw,4,0)
-        layout.addWidget(fill, 5,0)
-        layout.addWidget(multi,6,0)
-        layout.addWidget(copy,7,0)
-        layout.addWidget(zapper,8,0)
-        layout.addWidget(transect,9,0)
-        layout.addWidget(erase_dag, 10,0)
-        layout.addWidget(save,11,0)
-        layout.addWidget(cancel,12,0)
-        
-        
         #adds the layout to the grid_group_box
         #Bundles everything up yay!
         self._grid_group_box.setLayout(layout)
@@ -161,14 +90,19 @@ class LeftPannel(QtWidgets.QWidget):
 
         # Check to see if the ROI already exists
         for _, value in existing_rois.items():
-            if roi_name in value['name']:
+            if roi_name == value['name']:
                 roi_exists = True
 
         if roi_exists:
-            QMessageBox.about(self,
-                              "ROI already exists in RTSS",
-                              "Would you like to continue?")
-
+            reply = QMessageBox.question(
+                self,
+                "ROI already exists in RTSS",
+                "ROI already exists in RTSS. Would you like to continue?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if reply != QMessageBox.Yes:
+                return
         self.roi_name_emit.emit(roi_name)
         self.parent.update_metadata()
         
@@ -215,15 +149,6 @@ class LeftPannel(QtWidgets.QWidget):
         Return : None
         """
         self.canvas_label.erase_roi()
-
-    def transect_tool(self):
-        """
-        This fucntion activates the transect tool
-        Parms : None
-        Return : None
-        """
-        self.canvas_label.setCursor(Qt.ArrowCursor)
-        self.canvas_label.set_tool(4)
 
     def copy_button(self):
         """This fucntion activates the copy pop up window"""
