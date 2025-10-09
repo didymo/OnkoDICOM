@@ -45,7 +45,6 @@ class LeftPannel(QtWidgets.QWidget):
             ("layer-plus.png",     "Multi Layer Contour Tool",    True,      self.multi_button,         None),
             ("copy-alt.png",       "Copy current drawing...",     False,     self.copy_button,          None),
             ("bolt.png",           "Zapper Tool",                 True,      self.zapper_button,        None),
-            ("transect_purple_icon.png","Transect Tool",           True,      self.transect_tool,        None),
             ("broom.png",          "Erase Dags",                  False,     self.canvas_label.erase_dags, None),
             ("icons8-save-48.png", "Save",                        False,     self.save_button,          "success-button"),
             ("icons8-cancel-50.png","Cancel",                     False,     self.cancel_button,        "fail-button"),
