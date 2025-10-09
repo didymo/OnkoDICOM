@@ -5,7 +5,6 @@ import pydicom
 from src.View.mainpage.DrawROIWindow.Toolbar import CutsomToolbar
 from src.View.mainpage.DrawROIWindow.ButtonBox import LeftPannel
 from src.View.mainpage.DrawROIWindow.Canvas import CanvasLabel
-from src.View.mainpage.DrawROIWindow.UnitsBox import UnitsBox
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.ScrollLoader import ScrollWheel
 from src.View.mainpage.DrawROIWindow.ROINameButton import ROIName
@@ -61,6 +60,7 @@ class RoiInitialiser():
         Parms : None
         Return : None
         """
+        self.canvas_labal.setCursor(Qt.ArrowCursor)
         self.canvas_labal.set_tool(4)
 
     def close_window(self):
@@ -181,7 +181,6 @@ class RoiInitialiser():
         self.update_metadata()
         
 
-        self.units_box = UnitsBox(self, self.pen, self.canvas_labal)
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
         self.ROI_button = ROIName(self,roi_name="Select ROI")
 
@@ -195,7 +194,6 @@ class RoiInitialiser():
         tools_container.setLayout(tools_layout)
         tools_layout.addWidget(self.ROI_button)
         tools_layout.addWidget(self.left_label)
-        tools_layout.addWidget(self.units_box)
         tools_layout.addStretch(1)
         # Create a layout to hold the left panel and the main canvas
         # Create a QWidget to hold both the left panel and the central label
@@ -215,8 +213,8 @@ class RoiInitialiser():
         self.addToolBar(self._toolbar)
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
-        self.units_box.opasity_value.connect(self.left_label.update_opasity)
-        self.units_box.update_cursor_size.connect(self.left_label.update_cursor)
+        self._toolbar.opasity_value.connect(self.left_label.update_opasity)
+        self._toolbar.update_cursor_size.connect(self.left_label.update_cursor)
 
     def make_stack(self,*widgets, align=Qt.AlignLeft | Qt.AlignTop):
         w = QtWidgets.QWidget(self._hud)
@@ -317,9 +315,9 @@ class RoiInitialiser():
         Return : None
         """
         self.multi_window = multiPopUp(self.scroller.maximum(), self.scroller.value(),
-                                          self.units_box.transparency_slider.value(),
-                                           self.units_box.pixel_range_max.value(),
-                                           self.units_box.pixel_range_min.value())
+                                          self._toolbar.transparency_slider.value(),
+                                           self._toolbar.pixel_range_max.value(),
+                                           self._toolbar.pixel_range_min.value())
         self.multi_window.contour_number.connect(self.canvas_labal.multi_layer_commit)
         self.multi_window.max_range_signal.connect(self.canvas_labal.set_max_pixel_value)
         self.multi_window.min_range_signal.connect(self.canvas_labal.set_min_pixel_value)

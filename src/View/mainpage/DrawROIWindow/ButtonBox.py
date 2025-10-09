@@ -28,7 +28,7 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.setExclusive(True)
         self._grid_group_box = QGroupBox()
         layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0, 0, 4, 4)
         layout.setSpacing(0)
         brush = QPushButton()
         brush.setToolTip("Brush Tool")
@@ -54,6 +54,8 @@ class LeftPannel(QtWidgets.QWidget):
         copy.setToolTip("Copy current drawing onto another slice")
         copy.setIcon(QIcon("res/images/DrawRoi-icons/copy-alt.png"))
         save = QPushButton("Save")
+        save.setIcon(QIcon("res/images/DrawRoi-icons/icons8-save-48.png"))
+        save.setToolTip()
         save.setProperty("QPushButtonClass", "success-button")
         fill = QPushButton()
         fill.setToolTip("Fill Tool")
@@ -66,8 +68,10 @@ class LeftPannel(QtWidgets.QWidget):
         erase_dag = QPushButton()
         erase_dag.setToolTip("Erase Dags")
         erase_dag.setIcon(QIcon("res/images/DrawRoi-icons/broom.png"))
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton()
+        cancel.setIcon(QIcon("res/images/DrawRoi-icons/icons8-cancel-50.png"))
         cancel.setProperty("QPushButtonClass", "fail-button")
+        cancel.setToolTip("Cancel")
         zapper = QPushButton()
         zapper.setToolTip("'Zapper' Tool, click and drage to erase sections")
         zapper.setIcon(QIcon("res/images/DrawRoi-icons/bolt.png"))
@@ -103,24 +107,24 @@ class LeftPannel(QtWidgets.QWidget):
 
         #Sets the buttons in the layout 2 by 3
         layout.addWidget(brush,0,0)
-        layout.addWidget(pen, 0,1)
-        layout.addWidget(eraser_roi,1,0)
-        layout.addWidget(eraser_draw,1,1)
-        layout.addWidget(multi,2,0)
-        layout.addWidget(fill, 2,1)
-        layout.addWidget(copy,3,0)
-        layout.addWidget(zapper,3,1)
-        layout.addWidget(transect,4,0)
-        layout.addWidget(erase_dag, 4,1)
-        layout.addWidget(save,5,0)
-        layout.addWidget(cancel,5,1)
+        layout.addWidget(pen, 1,0)
+        layout.addWidget(eraser_roi,2,0)
+        layout.addWidget(eraser_draw,3,0)
+        layout.addWidget(fill, 4,0)
+        layout.addWidget(multi,5,0)
+        layout.addWidget(copy,6,0)
+        layout.addWidget(zapper,7,0)
+        layout.addWidget(transect,8,0)
+        layout.addWidget(erase_dag, 9,0)
+        layout.addWidget(save,10,0)
+        layout.addWidget(cancel,11,0)
         
         #adds the layout to the grid_group_box
         #Bundles everything up yay!
         self._grid_group_box.setLayout(layout)
         main_layout = QtWidgets.QVBoxLayout()  # Create main layout for the left panel
         main_layout.addWidget(self._grid_group_box)  # Add the group box to the main layout
-        self.setLayout(main_layout) 
+        self.setLayout(main_layout)
         
     def brush_tool(self):
         """

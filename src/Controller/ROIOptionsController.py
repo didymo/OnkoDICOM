@@ -74,6 +74,9 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
         if obj is self.view.viewport() and event.type() == QtCore.QEvent.Resize:
             self._hud.setGeometry(self.view.viewport().rect())
             return False  # don't consume; just reacting
+        if obj is self.view.viewport() and event.type() == QtCore.QEvent.Wheel:
+            self._hud.setGeometry(self.view.viewport().rect())
+            return False  # don't consume; just reacting
         return super().eventFilter(obj, event)
 
 
