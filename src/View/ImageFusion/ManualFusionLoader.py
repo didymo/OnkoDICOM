@@ -52,7 +52,7 @@ class ManualFusionLoader(QtCore.QObject):
         except Exception as e:
             if progress_callback is not None:
                 progress_callback.emit(("Error loading images", e))
-                logging.error(f"Error loading images: {e}")
+                logging.error("Error loading images: %s\n%s", e)
                 self.signal_error.emit((False, e))
 
     def _load_with_vtk(self, progress_callback):
@@ -90,6 +90,10 @@ class ManualFusionLoader(QtCore.QObject):
         moving_dir = None
         transform_file = None
 
+        # An array for the image files to filter out the transform file
+        image_files = []
+        transform_file = None
+
         if self.selected_files:
             # Validate all selected files are from the same directory
             dirs = {os.path.dirname(f) for f in self.selected_files}
@@ -106,7 +110,9 @@ class ManualFusionLoader(QtCore.QObject):
                 return
             moving_dir = dirs.pop()
 
-            # Check if any selected file is a transform DICOM (Spatial Registration)
+            # Separate image series and transform DICOMs
+            #NOTE: This needs to be here as moving load expects only image series so we need to filter out the transform (if selected)
+            # then only after that apply the transform
             for f in self.selected_files:
                 try:
                     ds = dcmread(f, stop_before_pixels=True)
@@ -114,13 +120,14 @@ class ManualFusionLoader(QtCore.QObject):
                     sop_class = getattr(ds, "SOPClassUID", "")
                     if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
                         transform_file = f
-                        break
+                    else:
+                        image_files.append(f)
                 except (InvalidDicomError, AttributeError, OSError) as e:
                     logging.warning("<manualFusionLoader.py_load_with_vtk>Error reading DICOM file", e)
                     continue
-        
+
         # Populate moving model container before processing with VTK so origin can be read the same way as ROI Transfer logic
-        moving_image_loader = MovingImageLoader(self.selected_files, None, self)
+        moving_image_loader = MovingImageLoader(image_files, None, self)
         moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
 
         if not moving_model_populated:
@@ -156,12 +163,20 @@ class ManualFusionLoader(QtCore.QObject):
         # If a transform DICOM was found and is ticked, extract transform data only
         transform_data = None
         if transform_file is not None:
-            if progress_callback is not None:
-                progress_callback.emit(("Extracting saved transform...", 80))
-            ds = pydicom.dcmread(transform_file)
-            # Check if they are registered or have a private tag set in save function in translate rotation menu
-            if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
-                transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
+            try:
+                if progress_callback is not None:
+                    progress_callback.emit(("Extracting saved transform...", 80))
+                ds = pydicom.dcmread(transform_file)
+                if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
+                    transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
+                else:
+                    raise ValueError("Selected transform.dcm is not a valid Spatial Registration Object.")
+            except Exception as e:
+                logging.error(f"Error extracting transform from {transform_file}: {e}")
+                if progress_callback is not None:
+                    progress_callback.emit(("Error extracting transform", 80))
+                self.signal_error.emit((False, f"Error extracting transform: {e}"))
+                return
 
         # Do any overlay generation or heavy work here if needed
         if progress_callback is not None:
