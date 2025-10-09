@@ -1,18 +1,53 @@
-from pathlib import Path
-import sys
 import os
+import sys
+import re
+from pathlib import Path
 
+import logging
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+logger = logging.getLogger(__name__)
+
+def resource_path(relative_path, sanitizing=False):
+    """
+    Get absolute path to resource, works for dev and for PyInstaller
+    :param relative_path: str
+    :param sanitizing: bool: to remove any characters which may cause escape from the string
+    """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
+    path: str = str(os.path.join(base_path, relative_path))
 
-    return os.path.join(base_path, relative_path)
+    if sanitizing: # to Remove anything not ^. _0-9a-zA-Z
+        path: Path = path_sanitizer(path)
+    return path
 
+def path_sanitizer(path: str | Path) -> Path:
+    """
+    Converts str to Path breaks the path into individual components of the path.
+    Runs the PathHandler,text_filter(text: str) -> str method on each component
+    then rebuild the file path using Path("path").joinpath("word").
+
+    :param path: str | Path
+    :return: Path
+    """
+    filtered_path: Path = Path()
+    for word in Path(path).parts:
+        text_sanitiser(word)
+        filtered_path: Path = Path(filtered_path).joinpath(text_sanitiser(word))
+    return filtered_path
+
+def text_sanitiser(text: str) -> str:
+    """
+    Removes all characters which are not . (fullstop),  (space), _(underscore), 0 to 9, a to z, or A to Z
+    From any text entered into it.
+
+    :param text: str
+    :return: str
+    """
+    return re.sub(r"[!@#$%^&*(){}|';:?/><~`=\[\]\\]", "", text)
 
 def data_path(relative_path):
     """
@@ -24,7 +59,7 @@ def data_path(relative_path):
     """
     # Get the absolute path (hidden directory)
     home_dir = Path.home()
-    hidden_dir = home_dir.joinpath('OnkoDICOM', 'data')
+    hidden_dir = home_dir.joinpath('.OnkoDICOM', 'data')
     absolute_path = hidden_dir.joinpath(relative_path)
 
     # Check to see if the file exists in the hidden directory. Return if it
@@ -41,3 +76,34 @@ def data_path(relative_path):
         for name in files:
             if name == relative_path:
                 return os.path.join(root, name)
+
+def database_path() -> Path:
+    """
+    To get the path of the database.
+
+    :return: Path
+    """
+
+    return Path.home().joinpath('.OnkoDICOM', 'OnkoDICOM.db')
+
+def delete_files(file_list: list) -> list:
+    """
+    Attempts to delete a list of files and tracks deletion failures.
+    Iterates through the provided list of file paths, attempting to delete
+    each file and keeping track of files that could not be deleted.
+
+    Args:
+        file_list: A list of file paths to be deleted.
+
+    Returns:
+        A list of file paths that could not be deleted.
+    """
+    failed = []
+    for file in file_list:
+        try:
+            os.remove(file)
+        except Exception as e:
+            logger.error(f"Failed to delete file {file}: {e}")
+            failed.append(file)
+
+    return failed

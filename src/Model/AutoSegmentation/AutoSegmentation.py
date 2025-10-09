@@ -23,9 +23,10 @@ class AutoSegmentation:
 
     def __init__(self, controller):
         self.controller = controller
-        self.patient_dict_container = PatientDictContainer()
-        self.dicom_dir = self.patient_dict_container.path  # Get the current loaded dir to DICOM series
+        patient_dict_container = PatientDictContainer()
+        self.dicom_dir = patient_dict_container.path  # Get the current loaded dir to DICOM series
         self.dicom_temp_dir = None
+        self.file_paths = patient_dict_container.filepaths # dict, where keys = slice number/RT modality and values = filepaths
 
         self.signals = SegmentationWorkerSignals()
 
@@ -90,25 +91,31 @@ class AutoSegmentation:
 
     def _copy_temp_dicom_dir(self) -> None:
         """
-        Copies the DICOM directory to a temporary location for processing.
-        This method creates a temporary directory and copies the DICOM files
-        into it, excluding RTSTRUCT files.
+            Copies the file paths from patient dict to a temporary location for processing.
+            This method creates a temporary directory and copies the DICOM files paths
+            into it, excludes rtdose, rtplan, and rtstruct files.
 
-        Raises:
-            ValueError: If the DICOM directory is not set or copying fails.
-        """
-        if not self.dicom_dir:
-            raise ValueError(f"No dicom directory found: {self.dicom_dir!r}")
+            Raises:
+                ValueError: If the DICOM directory is not set or copying fails.
+         """
+        if not self.file_paths:
+            raise ValueError(f"No dicom files found in {self.file_paths}")
+        # Create temporary directory
         self.dicom_temp_dir = tempfile.TemporaryDirectory()
-        try:
-            shutil.copytree(
-                self.dicom_dir,
-                self.dicom_temp_dir.name,
-                ignore=shutil.ignore_patterns("rt*.dcm"),
-                dirs_exist_ok=True,
-            )
-        except Exception as e:
-            raise ValueError(f"Failed to copy DICOM files: {e}") from e
+
+        # Copy each source file to the temporary directory
+        for name, src_file_path in self.file_paths.items():
+
+            # Exclude files
+            if name in ['rtdose', 'rtss', 'rtplan']:
+                continue
+            # Create new file path
+            dest_file_path = os.path.join(self.dicom_temp_dir.name, os.path.basename(src_file_path))
+            try:
+                shutil.copyfile(src_file_path, dest_file_path)
+            except Exception as e:
+                self.signals.error.emit(str(e))
+
 
     def _run_totalsegmentation(self, task, roi_subset, output_dir) -> None:
         """
@@ -128,9 +135,9 @@ class AutoSegmentation:
             input=self.dicom_temp_dir.name,
             output=output_dir,
             task=task,
-            roi_subset=copy.deepcopy(roi_subset), # Deep copy to prevent changing to the selection after starting
+            roi_subset=list(set(copy.deepcopy(roi_subset))), # Deep copy to prevent changing to the selection after starting
             output_type="nifti",
-            device="gpu",
+            device="gpu"
         )
 
     def _convert_to_rtstruct(self, nifti_dir, output_rt) -> None:
@@ -171,7 +178,8 @@ class AutoSegmentation:
     def _cleanup_temp_dir(self) -> None:
         """
         Cleans up the temporary DICOM directory if it exists.
-        This method ensures that any temporary directory created for DICOM files is properly removed after processing.
+        This method ensures that any temporary directory created
+        for DICOM files is properly removed after processing.
 
         Returns:
             None

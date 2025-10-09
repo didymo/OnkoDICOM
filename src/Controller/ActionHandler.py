@@ -311,7 +311,11 @@ class ActionHandler:
         """
         ptct = PTCTDictContainer()
         mvd = MovingDictContainer()
-        if ptct.is_empty() and mvd.is_empty():
+
+        # Always show the windowing dialog if the manual fusion tab is open
+        manual_fusion_tab_open = hasattr(self.__main_page,
+                                         "image_fusion_view") and self.__main_page.image_fusion_view is not None
+        if (ptct.is_empty() and mvd.is_empty()) and not manual_fusion_tab_open:
             windowing_model(text, [True, False, False, False])
             self.update_views()
         else:

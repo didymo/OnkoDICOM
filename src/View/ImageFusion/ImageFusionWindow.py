@@ -16,6 +16,7 @@ from src.View.ImageFusion.ImageFusionProgressWindow \
     import ImageFusionProgressWindow
 from src.View.StyleSheetReader import StyleSheetReader
 from src.View.resources_open_patient_rc import *
+from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
 
 from src.Controller.PathHandler import resource_path
 import platform
@@ -523,8 +524,8 @@ class UIImageFusionWindow(object):
             # Check that selected items properly reference each other
             header = "Selected series do not reference each other."
             proceed = False
-        elif 'RTSTRUCT' not in selected_series_types and \
-            self.check_existing_rtss(checked_nodes):
+        elif self.auto_radio.isChecked() and 'RTSTRUCT' not in selected_series_types and \
+                self.check_existing_rtss(checked_nodes) and 'REG' not in selected_series_types:
             header = "The associated RTSTRUCT must be selected."
             proceed = False
         elif 'RTDOSE' in selected_series_types:
@@ -539,17 +540,18 @@ class UIImageFusionWindow(object):
 
     def check_selected_items_referencing(self, items):
         """
-        Check if selected tree items properly reference each other.
-        :param items: List of selected DICOMWidgetItems.
-        :return: True if the selected items belong to the same tree branch.
-        """
+                Check if selected tree items properly reference each other.
+                :param items: List of selected DICOMWidgetItems.
+                :return: True if the selected items belong to the same tree branch.
+                """
         # Dictionary of series of different file types
         series = {
             "IMAGE": None,
             "RTSTRUCT": None,
             "RTPLAN": None,
             "RTDOSE": None,
-            "SR": None
+            "SR": None,
+            "REG": None
         }
 
         for item in items:
@@ -559,15 +561,35 @@ class UIImageFusionWindow(object):
             else:
                 series["IMAGE"] = item
 
-        # Check if the RTSTRUCT, RTPLAN, and RTDOSE are a child item of the
-        # image series
+            # In manual fusion, allow both RTSTRUCT and REG to be selected even if they are siblings
+        if hasattr(self, "manual_radio") and self.manual_radio.isChecked():
+            parents = {
+                series[key].parent()
+                for key in ["RTSTRUCT", "REG"]
+                if series[key] is not None
+                and hasattr(series[key], "parent")
+                and series[key].parent() is not None
+            }
+            if series["IMAGE"]:
+                parents.add(series["IMAGE"])
+                # If all selected items share the same parent or are the parent, allow
+            if len(parents) <= 2:
+                return True
+                # Fallback: allow if all selected items are under the same image series
+            return all(
+                (series[key] is None or (
+                        hasattr(series[key], "parent") and series[key].parent() == series["IMAGE"]))
+                for key in ["RTSTRUCT", "REG"]
+            )
+
+        # Original logic for auto fusion and other cases
         if series["IMAGE"]:
             if series["RTSTRUCT"] and series["RTSTRUCT"].parent() != \
-                    series["IMAGE"]:
+                                series["IMAGE"]:
                 return False
 
             if series["RTPLAN"] and \
-                    series["RTPLAN"].parent().parent() != series["IMAGE"]:
+                                series["RTPLAN"].parent().parent() != series["IMAGE"]:
                 return False
 
             if series["SR"] and series["SR"].parent() != series["IMAGE"]:
@@ -635,7 +657,20 @@ class UIImageFusionWindow(object):
             # # Start loading in a thread (simulate progress window behavior)
             # self.progress_window.start(loader.load)
             from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
-            loader = ManualFusionLoader(selected_files, self.progress_window)
+            pdc = PatientDictContainer()
+            patient_name = None
+            patient_id = None
+            filepaths = pdc.filepaths
+            if filepaths and isinstance(filepaths, dict):
+                if image_keys := [k for k in filepaths.keys() if str(k).isdigit()]:
+                    first_key = sorted(image_keys, key=lambda x: int(x))[0]
+                    from pydicom import dcmread
+                    ds_fixed = dcmread(filepaths[first_key], stop_before_pixels=True)
+                    patient_name = getattr(ds_fixed, "PatientName", None)
+                    patient_id = getattr(ds_fixed, "PatientID", None)
+
+            loader = ManualFusionLoader(selected_files, self.progress_window, patient_name=patient_name,
+                                        patient_id=patient_id)
             start_method = lambda: self.progress_window.start(loader.load)
             signal_source = loader
 
@@ -668,6 +703,10 @@ class UIImageFusionWindow(object):
                 # Manual fusion: add dummy keys for main window compatibility
                 images["fixed_image"] = None
                 images["moving_image"] = None
+                # --- Set manual_fusion in PatientDictContainer ---
+                loader = ManualFusionLoader([], None)  # dummy loader for static call
+                loader.on_manual_fusion_loaded((True, images))
+
             wrapper = FusionResultWrapper(images, self.progress_window)
             self.image_fusion_info_initialized.emit(wrapper)
         elif hasattr(results, "update_progress"):

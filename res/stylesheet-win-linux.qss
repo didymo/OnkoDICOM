@@ -17,7 +17,7 @@ QDialog {
     background-color: #F5F4F5;
 }
 
-QMMessageBox {
+QMessageBox {
     color: #000000;
     background-color: #F5F4F5;
 }
@@ -85,6 +85,10 @@ QLabel {
     color: #000000;
 }
 
+QLabel[QLabelClass="info-feedback"] {
+    color: #ff0000;
+}
+
 QLabel[QLabelClass="window-title"] {
     margin: 8px;
     padding: 4px;
@@ -92,10 +96,12 @@ QLabel[QLabelClass="window-title"] {
     border-radius: 0;
     font-size: 32px;
 }
+
 QLabel[QLabelClass~="tree-view-label"] {
     padding: 8px;
     font-size: 20px;
 }
+
 QLabel[QLabelClass~="tree-view-label-keep-delete"] {
     color: #f5f5f5;
 }
@@ -130,9 +136,12 @@ QPushButton:pressed { /* -20% saturation */
     background-color: #5c2eb8;
 }
 
-QPushButton:checked { /* +10% saturation */
-    background-color: #b299e6;
+QPushButton:checked {
+    background-color: #C9BEE2;
+    border: 2px solid black;
+    border-radius: 6px;
 }
+
 
 QPushButton#SUV2ROI_Button {
     background-color: transparent;
@@ -234,11 +243,11 @@ QLineEdit {
     margin: 4px;
     padding: 0 4px;
     min-height: 36px;
-    border-bottom: 3px solid #b3b3b3;
+    border-bottom: 4px solid #b3b3b3;
     border-radius: 0;
     font-size: 14px;
     color: #000000;
-    background-color: #F5F4F5;
+    background-color: #e6e6eb;
 }
 
 QLineEdit#BatchROICleaning {
@@ -272,6 +281,28 @@ QLineEdit:focus {
     border-bottom: 3px solid #5c2eb8;
 }
 
+QListWidget {
+    color: #000000;
+    background-color: #e6e6eb;
+    border-bottom: 4px solid #b3b3b3;
+}
+
+QListWidget:hover {
+    border-bottom: 4px solid #9370DB;
+}
+
+QListWidget::item {
+    color: #000000;
+    background-color: #e6e6eb;
+    min-height: 36px;
+    font-size: 14px;
+}
+QListWidget::item:selected {
+    background-color: #9370DB;
+    color: #ffffff;
+    border: 2px solid #9370DB;
+}
+
 /*This part is the styling for QTreeView in general*/
 QTreeView#OpenPatientWindowPatientsTree {
     margin: 0 12px 4px 12px;
@@ -284,6 +315,7 @@ QHeaderView {
 QTreeView {
     color: #000000;
     background-color: #e6e6eb;
+    selection-background-color: transparent;
 }
 
 QTreeView::item {
@@ -305,9 +337,7 @@ QTreeView::item:selected:!focus {
 QTreeView::item:hover:!focus:!selected, QTreeView::item:hover:selected {
     background-color: #b299e6;
 }
-QTreeView {
-	selection-background-color: transparent;
-}
+
 QTreeView::indicator {
     width: 30px;
     height: 30px;
@@ -473,7 +503,6 @@ QComboBox#DicomTreeviewComboBox {
     color: #000000
 }
 
-
 QCalendarWidget QTableView, QTableView {
     background-color: #ffffff;
     color: #000000;
@@ -528,6 +557,11 @@ QCalendarWidget QToolButton#qt_calendar_prevmonth {
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
     icon-size: 24px;
     qproperty-icon: url(./res/images/qcalendarwidget/right_icon.png);
+}
+
+QWidget[AutoSegmentSave="save-message-box"] {
+    color: #000000;
+    background-color: #F5F4F5;
 }
 
 QWidget#DeleteRoiWindowKeepWidget, QWidget#DeleteRoiWindowDeleteWidget {
@@ -616,8 +650,7 @@ QRadioButton#FusionModeRadio:disabled, QLabel#FusionModeLabel:disabled {
     opacity: 0.35;
 }
 
-AutoSegmentWindow {
+QWidget[WidgetClass="widget-window"] {
     color: #000000;
     background-color: #F5F4F5;
-
 }
