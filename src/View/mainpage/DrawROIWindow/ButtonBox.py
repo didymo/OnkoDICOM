@@ -3,9 +3,12 @@ from typing import Optional
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QButtonGroup, QMessageBox
 from PySide6.QtGui import QPixmap, QPixmap, QPainter, QPen, QColor,QCursor, QIcon
 from PySide6.QtCore import Qt, Slot, Signal
+from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
+from src.Model.PatientDictContainer import PatientDictContainer
 
 class LeftPannel(QtWidgets.QWidget):
     """Holds the left pannels buttons"""
+    roi_name_emit = Signal(str)
     def __init__(self, parent = None, pen = None, canvas_label = None):
         super().__init__(parent)
         self.canvas_label = canvas_label
@@ -28,8 +31,12 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.setExclusive(True)
         self._grid_group_box = QGroupBox()
         layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 4, 4)
+        layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(0)
+
+        select_roi_type = QPushButton()
+        select_roi_type.setIcon(QIcon("res/images/DrawRoi-icons/body-check.png"))
+        select_roi_type.setToolTip("Select ROI Name")
         brush = QPushButton()
         brush.setToolTip("Brush Tool")
         brush.setIcon(QIcon("res/images/DrawRoi-icons/paint.png"))
@@ -53,9 +60,9 @@ class LeftPannel(QtWidgets.QWidget):
         copy = QPushButton()
         copy.setToolTip("Copy current drawing onto another slice")
         copy.setIcon(QIcon("res/images/DrawRoi-icons/copy-alt.png"))
-        save = QPushButton("Save")
+        save = QPushButton()
         save.setIcon(QIcon("res/images/DrawRoi-icons/icons8-save-48.png"))
-        save.setToolTip()
+        save.setToolTip("Save")
         save.setProperty("QPushButtonClass", "success-button")
         fill = QPushButton()
         fill.setToolTip("Fill Tool")
@@ -77,6 +84,7 @@ class LeftPannel(QtWidgets.QWidget):
         zapper.setIcon(QIcon("res/images/DrawRoi-icons/bolt.png"))
         zapper.setCheckable(True)
         
+        self.button_group.addButton(select_roi_type)
         self.button_group.addButton(brush)
         self.button_group.addButton(pen)
         self.button_group.addButton(eraser_draw)
@@ -92,6 +100,7 @@ class LeftPannel(QtWidgets.QWidget):
 
 
         #Links the buttons to actions
+        select_roi_type.clicked.connect(self.show_roi_type_options)
         brush.clicked.connect(self.brush_tool)
         pen.clicked.connect(self.pen_tool)
         eraser_roi.clicked.connect(self.eraser_roi_tool)
@@ -105,19 +114,22 @@ class LeftPannel(QtWidgets.QWidget):
         cancel.clicked.connect(self.cancel_button)
         zapper.clicked.connect(self.zapper_button)
 
-        #Sets the buttons in the layout 2 by 3
-        layout.addWidget(brush,0,0)
-        layout.addWidget(pen, 1,0)
-        layout.addWidget(eraser_roi,2,0)
-        layout.addWidget(eraser_draw,3,0)
-        layout.addWidget(fill, 4,0)
-        layout.addWidget(multi,5,0)
-        layout.addWidget(copy,6,0)
-        layout.addWidget(zapper,7,0)
-        layout.addWidget(transect,8,0)
-        layout.addWidget(erase_dag, 9,0)
-        layout.addWidget(save,10,0)
-        layout.addWidget(cancel,11,0)
+  
+        #Sets the buttons in the layout
+        layout.addWidget(select_roi_type, 0,0)
+        layout.addWidget(brush,1,0)
+        layout.addWidget(pen, 2,0)
+        layout.addWidget(eraser_roi,3,0)
+        layout.addWidget(eraser_draw,4,0)
+        layout.addWidget(fill, 5,0)
+        layout.addWidget(multi,6,0)
+        layout.addWidget(copy,7,0)
+        layout.addWidget(zapper,8,0)
+        layout.addWidget(transect,9,0)
+        layout.addWidget(erase_dag, 10,0)
+        layout.addWidget(save,11,0)
+        layout.addWidget(cancel,12,0)
+        
         
         #adds the layout to the grid_group_box
         #Bundles everything up yay!
@@ -125,6 +137,40 @@ class LeftPannel(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout()  # Create main layout for the left panel
         main_layout.addWidget(self._grid_group_box)  # Add the group box to the main layout
         self.setLayout(main_layout)
+        
+    def show_roi_type_options(self):
+        """
+        Creates and displays roi type options popup
+        Parm : None
+        Return : None
+        """
+        self.choose_roi_name_window = SelectROIPopUp()
+        self.choose_roi_name_window.signal_roi_name.connect(
+            self.set_selected_roi_name)
+        self.choose_roi_name_window.show()
+        
+    def set_selected_roi_name(self, roi_name):
+        """
+        function to set selected roi name
+        :param roi_name: roi name selected
+        """
+        roi_exists = False
+
+        patient_dict_container = PatientDictContainer()
+        existing_rois = patient_dict_container.get("rois")
+
+        # Check to see if the ROI already exists
+        for _, value in existing_rois.items():
+            if roi_name in value['name']:
+                roi_exists = True
+
+        if roi_exists:
+            QMessageBox.about(self,
+                              "ROI already exists in RTSS",
+                              "Would you like to continue?")
+
+        self.roi_name_emit.emit(roi_name)
+        self.parent.update_metadata()
         
     def brush_tool(self):
         """

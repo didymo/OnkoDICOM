@@ -65,7 +65,6 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
         self.setCentralWidget(self._central)
         self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
                     self.signal_draw_roi_closed)
-        self.ROI_button.roi_name_emit.connect(self.canvas_labal.set_roi_name)
 
     def update_ui(self, rois, dataset_rtss):
         self.set_up(rois, dataset_rtss, self.signal_roi_drawn,

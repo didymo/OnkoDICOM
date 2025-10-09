@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtGui import QPen, QKeyEvent,QKeySequence, QWheelEvent, QShortcut
+from PySide6.QtGui import QPen
 from PySide6.QtCore import Qt, Slot
 import pydicom
 from src.View.mainpage.DrawROIWindow.Toolbar import CutsomToolbar
@@ -7,7 +7,6 @@ from src.View.mainpage.DrawROIWindow.ButtonBox import LeftPannel
 from src.View.mainpage.DrawROIWindow.Canvas import CanvasLabel
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.View.mainpage.DrawROIWindow.ScrollLoader import ScrollWheel
-from src.View.mainpage.DrawROIWindow.ROINameButton import ROIName
 from src.View.mainpage.DrawROIWindow.CopyRoi import CopyROI
 from src.View.mainpage.DrawROIWindow.MultiLayerConturePopup import multiPopUp
 
@@ -103,6 +102,8 @@ class RoiInitialiser():
         self.label_image_size = QtWidgets.QLabel()
         self.label_zoom = QtWidgets.QLabel()
         self.label_patient_pos = QtWidgets.QLabel()
+        self.current_roi = QtWidgets.QLabel()
+        
 
         # 2) Base image item
         self.image = self.display_pixmaps[self.scroller.value()]
@@ -153,6 +154,7 @@ class RoiInitialiser():
        # build the four corners as stacks
         top_left     = self.make_stack(self.label_image_id, self.label_image_pos, align=Qt.AlignLeft  | Qt.AlignTop)
         top_right    = self.make_stack(self.label_wl ,align=Qt.AlignRight | Qt.AlignTop)
+        middle       = self.make_stack(self.current_roi, align=Qt.AlignCenter|Qt.AlignTop)
         bottom_left  = self.make_stack(self.label_image_size, self.label_zoom,    align=Qt.AlignLeft  | Qt.AlignBottom)
         bottom_right = self.make_stack(self.label_patient_pos, align=Qt.AlignRight | Qt.AlignBottom)
         # if you had bottom-right items, create another stack; here we have only two per side
@@ -160,6 +162,7 @@ class RoiInitialiser():
         # place stacks into a 3x3 grid (corners only)
         grid.addWidget(top_left,     0, 0, Qt.AlignLeft  | Qt.AlignTop)
         grid.addWidget(top_right,    0, 2, Qt.AlignRight | Qt.AlignTop)
+        grid.addWidget(middle , 0 , 1 , Qt.AlignCenter|Qt.AlignTop)
         grid.addWidget(bottom_left,  2, 0, Qt.AlignLeft  | Qt.AlignBottom)
         grid.addWidget(bottom_right,  2, 2, Qt.AlignRight  | Qt.AlignBottom)
 
@@ -182,17 +185,15 @@ class RoiInitialiser():
         
 
         self.left_label = LeftPannel(self, self.pen, self.canvas_labal)
-        self.ROI_button = ROIName(self,roi_name="Select ROI")
 
         # Creates a layout for the tools to fit insid
         tools_layout = QtWidgets.QVBoxLayout()
         tools_layout.setContentsMargins(0, 0, 0, 0)
-        tools_layout.setSpacing(0)                    
+        tools_layout.setSpacing(0)
         tools_layout.setAlignment(Qt.AlignTop)
         tools_container = QtWidgets.QWidget()
         tools_container.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         tools_container.setLayout(tools_layout)
-        tools_layout.addWidget(self.ROI_button)
         tools_layout.addWidget(self.left_label)
         tools_layout.addStretch(1)
         # Create a layout to hold the left panel and the main canvas
@@ -215,6 +216,7 @@ class RoiInitialiser():
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
         self._toolbar.opasity_value.connect(self.left_label.update_opasity)
         self._toolbar.update_cursor_size.connect(self.left_label.update_cursor)
+        self.left_label.roi_name_emit.connect(self.canvas_labal.set_roi_name)
 
     def make_stack(self,*widgets, align=Qt.AlignLeft | Qt.AlignTop):
         w = QtWidgets.QWidget(self._hud)
@@ -292,6 +294,11 @@ class RoiInitialiser():
             "Image Size: %sx%spx" % (str(row_img), str(col_img)))
         z = self.zoom_variable * 100
         self.label_zoom.setText(f"Zoom: {z:.2f}%")
+        if self.canvas_labal.roi_name is None:
+             self.current_roi.setText("No ROI Seleted")
+        else:
+             self.current_roi.setText(self.canvas_labal.roi_name)
+       
 
     def close_roi_window(self):
         """Closes the roi window"""

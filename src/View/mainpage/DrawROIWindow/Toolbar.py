@@ -24,25 +24,32 @@ class CutsomToolbar(QToolBar):
 
         colourAction = QAction(self)
         colourAction.setIcon(QIcon("res/images/DrawRoi-icons/icons8-color-swatch-48.png"))
+        colourAction.setToolTip("Change Colour")
         colourAction.triggered.connect(self.change_colour)
         self.addAction(colourAction)
 
         #Undo feature / redo feature
         undo_button = QAction(self)
         undo_button.setIcon(QIcon("res/images/DrawRoi-icons/undo-alt.png"))
+        undo_button.setToolTip("Undo")
         undo_button.triggered.connect(self.undo_button)
         self.addAction(undo_button)
 
         redo_button = QAction(self)
         redo_button.setIcon(QIcon("res/images/DrawRoi-icons/redo-alt.png"))
+        redo_button.setToolTip("Redo")
         redo_button.triggered.connect(self.redo_button)
         self.addAction(redo_button)
 
-        quick_copy = QAction("Quick Copy Up", self)
+        quick_copy = QAction(self)
+        quick_copy.setIcon(QIcon("res/images/DrawRoi-icons/Quick-copy-up.png"))
+        quick_copy.setToolTip("Quick Copy Up")
         quick_copy.triggered.connect(lambda checked=False: self.quick_copy(True))
         self.addAction(quick_copy)
 
-        quick_copy_down = QAction("Quick Copy Down", self)
+        quick_copy_down = QAction(self)
+        quick_copy_down.setToolTip("Quick Copy Down")
+        quick_copy_down.setIcon(QIcon("res/images/DrawRoi-icons/Quick-copy-down.png"))
         quick_copy_down.triggered.connect(lambda checked=False: self.quick_copy(False))
         self.addAction(quick_copy_down)
 
