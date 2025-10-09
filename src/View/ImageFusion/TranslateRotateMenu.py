@@ -869,7 +869,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             if hasattr(ds, "RegistrationSequence"):
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             #fallback to private tags if above failed
-            elif (0x7777, 0x0010) in ds:
+            elif (0x7777, 0x0020) in ds or (0x7777, 0x0021) in ds:
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             else:
                 logging.error("No spatial registration found in DICOM file.\nPlease select a transform.dcm file "

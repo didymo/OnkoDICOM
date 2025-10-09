@@ -188,7 +188,7 @@ class ManualFusionLoader(QtCore.QObject):
                 ds = pydicom.dcmread(transform_file)
 
                 # See explanation at top for more details on private tags
-                if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
+                if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0020) in ds or (0x7777, 0x0021) in ds:
                     transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
                 else:
                     raise ValueError("Selected transform.dcm is not a valid Spatial Registration Object.")
