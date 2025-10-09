@@ -21,6 +21,26 @@ from pydicom import dcmread
 from pydicom.dataset import Dataset
 from pydicom.uid import generate_uid
 
+"""
+    For all private tags 0x7777, 0x0020 / 0x7777, 0x0021 / etc
+    these are private dicom tags for extra info used as fallback if the normal registration tag for loading the saved transform fails. 
+    (saving normal rego first means it can be used by other programs. Private tags can only be read by onko dicom).
+    they must use an odd group number i.e 0x7777 and an element number i.e 0x0010, can be saved as any odd number group 
+    and must be consistent in the program as it needs to know it to read private tags
+
+    This is saved and set in Translate rotation menu _create_spatial_registration_dicom
+    9/10/25 in line 650 & 651
+    
+    # Save user translation/rotation as private tags for round-trip
+        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
+        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
+        
+    see links for more details
+        https://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_7.8.html
+        https://pydicom.github.io/pydicom/stable/guides/user/private_data_elements.html
+
+"""
+
 
 def get_color_pair_from_text(text):
     """
@@ -849,7 +869,7 @@ class TranslateRotateMenu(QtWidgets.QWidget):
             if hasattr(ds, "RegistrationSequence"):
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             #fallback to private tags if above failed
-            elif (0x7777, 0x0010) in ds:
+            elif (0x7777, 0x0020) in ds or (0x7777, 0x0021) in ds:
                 self._extracted_from_load_fusion_state_sro(ds, np, vtk_engine, filename)
             else:
                 logging.error("No spatial registration found in DICOM file.\nPlease select a transform.dcm file "
