@@ -17,6 +17,7 @@ class CutsomToolbar(QToolBar):
         #Sets communication between classes
         self.canvas_label = canvas_label
         self.left_label = left_label
+        self.opasity_spinBox = None
 
         #sets darwing variables
         self.is_drawing = False
