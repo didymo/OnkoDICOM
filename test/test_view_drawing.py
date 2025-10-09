@@ -126,8 +126,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     paint_bucket = True
 
     # First flood with alpha = 100
-    tb = draw_roi_window._toolbar
-    opacity = tb.findChild(QSpinBox, "Opacity")
+    opacity = draw_roi_window._toolbar.findChild(QSpinBox, "Opacity")
     assert opacity is not None
     opacity.setValue(100)
     color = draw_roi_window.pen.color()
