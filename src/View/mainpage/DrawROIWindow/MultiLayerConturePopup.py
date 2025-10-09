@@ -25,7 +25,7 @@ class multiPopUp(QDialog):
         self.lower_bounds.setRange(1,slice_num)
         self.lower_bounds.setValue(self.cs)
 
-        opasity_label = QLabel("Opasity")
+        opasity_label = QLabel("Opacity")
         self.opasity_spinbox = QSpinBox()
         self.opasity_spinbox.setRange(1,255)
         self.opasity_spinbox.setValue(opasity)

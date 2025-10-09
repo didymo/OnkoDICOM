@@ -55,11 +55,11 @@ class CutsomToolbar(QToolBar):
 
         self.addSeparator()
         spin_defs = [
-            ("Brush Size :",      1,   100,  12,   self.update_pen_size),
-            ("Pixel Range Min :",  0,  6000,   0,   self.update_pixel_min),
-            ("Pixel Range Max :",  0,  6000,6000,  self.update_pixel_max),
-            ("Erase Dags :",       0,262144,  20,  self.update_erase_dags),
-            ("Opacity :",          1,   255, 126,  self.update_transparency),
+            ("Brush Size",      1,   100,  12,   self.update_pen_size),
+            ("Pixel Range Min",  0,  6000,   0,   self.update_pixel_min),
+            ("Pixel Range Max",  0,  6000,6000,  self.update_pixel_max),
+            ("Erase Dags",       0,262144,  20,  self.update_erase_dags),
+            ("Opacity",          1,   255, 126,  self.update_transparency),
         ]
 
         for text, mn, mx, val, slot in spin_defs:
@@ -67,7 +67,7 @@ class CutsomToolbar(QToolBar):
         
     def _add_labeled_spinbox(self, label_text, minimum, maximum, default, slot):
         self.addSeparator()
-        lbl = QLabel(label_text)
+        lbl = QLabel(label_text, " :")
         self.addWidget(lbl)
 
         sb = QSpinBox()
@@ -76,6 +76,7 @@ class CutsomToolbar(QToolBar):
         sb.setRange(minimum, maximum)
         sb.setValue(default)
         sb.valueChanged.connect(slot)
+        sb.setObjectName(label_text)
         self.addWidget(sb)
 
     def change_colour(self):

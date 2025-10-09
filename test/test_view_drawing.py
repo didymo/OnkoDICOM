@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QMouseEvent
-from pydicom import dcmread
+from PySide6.QtWidgets import QSpinBox
 from pydicom.errors import InvalidDicomError
 from src.Controller.GUIController import MainWindow
 from src.Model import ImageLoading
@@ -125,7 +125,10 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     paint_bucket = True
 
     # First flood with alpha = 100
-    draw_roi_window._toolbar.transparency_slider.setValue(100)
+    tb = draw_roi_window._toolbar
+    opacity = tb.findChild(QSpinBox, "Opacity")
+    assert opacity is not None
+    opacity.setValue(100)
     color = draw_roi_window.pen.color()
     color.setAlpha(100)
     draw_roi_window.pen.setColor(color)
@@ -138,7 +141,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     ).toImage().pixelColor(*mid_point).alpha()
 
     # Second flood with alpha = 50
-    draw_roi_window._toolbar.transparency_slider.setValue(50)
+    opacity.setValue(50)
     color = draw_roi_window.pen.color()
     color.setAlpha(50)
     draw_roi_window.pen.setColor(color)
