@@ -48,6 +48,7 @@ class multiPopUp(QDialog):
 
         confirm_button = QPushButton("Confirm")
         confirm_button.clicked.connect(self.confirm_button)
+
          
         layout.addWidget(self.current_slice_label, 0,0)
         layout.addWidget(self.upper_bounds_label, 1,0)

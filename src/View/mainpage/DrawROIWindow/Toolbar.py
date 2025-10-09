@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QToolBar, QColorDialog
-from PySide6.QtGui import QAction, QColor, QFontDatabase
+from PySide6.QtGui import QAction, QColor, QFontDatabase, QIcon
 from PySide6.QtCore import Signal
 
 
@@ -20,16 +20,19 @@ class CutsomToolbar(QToolBar):
         self.is_drawing = False
         self.rt_value = False
 
-        colourAction = QAction("Choose Colour",self)
+        colourAction = QAction(self)
+        colourAction.setIcon(QIcon("res/images/DrawRoi-icons/icons8-color-swatch-48.png"))
         colourAction.triggered.connect(self.change_colour)
         self.addAction(colourAction)
 
         #Undo feature / redo feature
-        undo_button = QAction("Undo", self)
+        undo_button = QAction(self)
+        undo_button.setIcon(QIcon("res/images/DrawRoi-icons/undo-alt.png"))
         undo_button.triggered.connect(self.undo_button)
         self.addAction(undo_button)
 
-        redo_button = QAction("Redo", self)
+        redo_button = QAction(self)
+        redo_button.setIcon(QIcon("res/images/DrawRoi-icons/redo-alt.png"))
         redo_button.triggered.connect(self.redo_button)
         self.addAction(redo_button)
 

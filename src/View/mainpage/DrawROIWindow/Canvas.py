@@ -414,6 +414,11 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
             self.canvas[self.slice_num] = self.redo_history.pop()
             self.setPixmap(self.canvas[self.slice_num])
 
+    def smoothing(self): 
+        """
+        Reduces the current drawing then expands, if any lines  
+        """
+
     def set_pixel_layer(self, ds):
         """
         Takes the pixels values and creates a mask array over the dicom values

@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtGui import QPen, QKeyEvent
+from PySide6.QtGui import QPen, QKeyEvent,QKeySequence, QWheelEvent, QShortcut
 from PySide6.QtCore import Qt, Slot
 import pydicom
 from src.View.mainpage.DrawROIWindow.Toolbar import CutsomToolbar
@@ -21,16 +21,17 @@ class RoiInitialiser():
         self.dataset_rtss = dataset_rtss
         self.p = PatientDictContainer()
         self.display_pixmaps = []
+        self.zoom_variable = 1.00
         self.get_pixmaps()
         self.setup_ui()
         self.build_toolbar()
-        self.zoom_variable = 1.00
 
     def onZoomInClicked(self):
         """
         Handles the event of the zoom in button
         Parms : None
         Return : None
+        
         """
         self.zoom_variable *= 1.05
         self.apply_zoom()
@@ -51,6 +52,8 @@ class RoiInitialiser():
         Return : None
         """
         self.view.setTransform(QtGui.QTransform().scale(self.zoom_variable, self.zoom_variable))
+        z = self.zoom_variable * 100
+        self.label_zoom.setText(f"Zoom: {z:.2f}%")
     
     def transect_handler(self):
         """
@@ -75,14 +78,13 @@ class RoiInitialiser():
         self.get_pixmaps()
         self.change_image(self.scroller.value())
 
-
-
     def setup_ui(self):
         """
         sets up the ui
         Parms : None
         Return : None
         """
+
         # Initialize the pen
         self.pen = QPen()
         self.pen.setWidth(6)
@@ -95,6 +97,12 @@ class RoiInitialiser():
         
         # 1) Scene on the view
         self.scene = QtWidgets.QGraphicsScene(self)
+        self.label_image_id = QtWidgets.QLabel()
+        self.label_image_pos = QtWidgets.QLabel()
+        self.label_wl = QtWidgets.QLabel()
+        self.label_image_size = QtWidgets.QLabel()
+        self.label_zoom = QtWidgets.QLabel()
+        self.label_patient_pos = QtWidgets.QLabel()
 
         # 2) Base image item
         self.image = self.display_pixmaps[self.scroller.value()]
@@ -126,10 +134,47 @@ class RoiInitialiser():
         self.view.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
         self.view.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.view.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.view.setLineWidth(0); self.view.setMidLineWidth(0)
+        self.view.setLineWidth(0)
+        self.view.setMidLineWidth(0)
         self.view.viewport().setAutoFillBackground(False)
         self.view.setBackgroundBrush(Qt.NoBrush)
         self.scene.setBackgroundBrush(Qt.black)
+
+        self._hud = QtWidgets.QWidget(self.view.viewport())
+        self._hud.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        self._hud.setAttribute(QtCore.Qt.WA_NoSystemBackground, True)
+        self._hud.setStyleSheet("background: transparent;")
+
+        grid = QtWidgets.QGridLayout(self._hud)
+        grid.setContentsMargins(8, 8, 8, 8)
+        grid.setHorizontalSpacing(0)
+        grid.setVerticalSpacing(0)
+
+        # Reuse your existing labels (no scene parenting)
+        for lbl in (self.label_image_id, self.label_image_pos, self.label_wl,
+                    self.label_image_size, self.label_zoom, self.label_patient_pos):
+            lbl.setStyleSheet("color: white; background: rgba(0,0,0,90); padding: 2px 6px; border-radius: 4px;")
+            lbl.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+
+        # Place labels into corners/sides of the HUD grid
+      
+
+        grid.addWidget(self.label_image_id, 0, 0, Qt.AlignLeft | Qt.AlignTop)
+        grid.addWidget(self.label_image_pos, 0, 0, Qt.AlignLeft | Qt.AlignBottom)
+
+        grid.addWidget(self.label_wl,         0, 1, Qt.AlignRight | Qt.AlignTop)
+        grid.addWidget(self.label_patient_pos,2, 1, Qt.AlignRight | Qt.AlignBottom)
+
+        grid.addWidget(self.label_image_size, 2, 0, Qt.AlignLeft  | Qt.AlignTop)
+        grid.addWidget(self.label_zoom,       2, 0, Qt.AlignLeft | Qt.AlignBottom)
+
+        # Size the HUD to cover the whole viewport
+        self._hud.setGeometry(self.view.viewport().rect())
+
+        # Keep HUD sized when the view resizes
+        self.view.viewport().installEventFilter(self)
+
+        self.update_metadata()
         
 
         self.units_box = UnitsBox(self, self.pen, self.canvas_labal)
@@ -177,18 +222,6 @@ class RoiInitialiser():
         """
         return self._toolbar
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        """Handles up and down arrow keys"""
-        if self.scroller.value() +1 > self.scroller.maximum or self.scroller.value() -1 < self.scroller.minimum:
-            return
-        else:
-            if event.key() == Qt.Key_Up:
-                self.scroller.setValue(self.scroller.value() +1)
-                self.canvas_labal.ds_is_active = False
-            if event.key() == Qt.Key_Down:
-                self.scroller.setValue(self.scroller.value() -1)
-                self.canvas_labal.ds_is_active = False
-
     def get_pixmaps(self):
         """
         Gets all of the pixmap data and returns it
@@ -208,6 +241,42 @@ class RoiInitialiser():
         """
         image = self.display_pixmaps[v]
         self.image_item.setPixmap(image)
+        self.update_metadata()
+
+    def update_metadata(self):
+        """
+        Update metadata displayed on the DICOM Image view.
+        """
+        # Retrieve dictionary from the dataset of the slice
+        id = self.scroller.value()
+        dataset = self.p.dataset[id]
+
+        # Set margin for axial view
+
+
+        # Information to display
+        self.current_slice_number = dataset['InstanceNumber'].value
+        total_slices = len(self.p.get("pixmaps_axial"))
+        row_img = dataset['Rows'].value
+        col_img = dataset['Columns'].value
+        window = self.p.get("window")
+        level = self.p.get("level")
+        slice_pos = dataset['ImagePositionPatient'].value[2]
+
+        if hasattr(dataset, 'PatientPosition'):
+            patient_pos = dataset['PatientPosition'].value
+            self.label_patient_pos.setText(
+                "Patient Position: %s" % (str(patient_pos)))
+
+        # Update labels
+        self.label_image_id.setText(
+            "Image: %s / %s" % (str(self.current_slice_number), str(total_slices)))
+        self.label_image_pos.setText("Position: %s mm" % (str(slice_pos)))
+        self.label_wl.setText("W/L: %s/%s" % (str(window), str(level)))
+        self.label_image_size.setText(
+            "Image Size: %sx%spx" % (str(row_img), str(col_img)))
+        z = self.zoom_variable * 100
+        self.label_zoom.setText(f"Zoom: {z:.2f}%")
 
     def close_roi_window(self):
         """Closes the roi window"""
@@ -238,7 +307,7 @@ class RoiInitialiser():
         self.multi_window.max_range_signal.connect(self.canvas_labal.set_max_pixel_value)
         self.multi_window.min_range_signal.connect(self.canvas_labal.set_min_pixel_value)
         self.multi_window.show()
-    
+
     def window_pop_up(self):
         """
         Opens the popup

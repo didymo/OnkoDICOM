@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 from typing import Optional
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QButtonGroup, QMessageBox
-from PySide6.QtGui import QPixmap, QPixmap, QPainter, QPen, QColor,QCursor
+from PySide6.QtGui import QPixmap, QPixmap, QPainter, QPen, QColor,QCursor, QIcon
 from PySide6.QtCore import Qt, Slot, Signal
 
 class LeftPannel(QtWidgets.QWidget):
@@ -29,25 +29,48 @@ class LeftPannel(QtWidgets.QWidget):
         self._grid_group_box = QGroupBox()
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)       
-        brush = QPushButton("Brush")
+        layout.setSpacing(0)
+        brush = QPushButton()
+        brush.setToolTip("Brush Tool")
+        brush.setIcon(QIcon("res/images/DrawRoi-icons/paint.png"))
         brush.setCheckable(True)
-        pen = QPushButton("Pen")
+        pen = QPushButton()
+        pen.setToolTip("Laso Brush Tool")
+        pen.setIcon(QIcon("res/images/DrawRoi-icons/pen-swirl.png"))
         pen.setCheckable(True)
-        eraser_roi = QPushButton("Trim ROI")
+        eraser_roi = QPushButton()
+        eraser_roi.setToolTip("Trim ROI Tool")
+        eraser_roi.setIcon(QIcon("res/images/DrawRoi-icons/eraser.png"))
         eraser_roi.setCheckable(True)
-        eraser_draw = QPushButton("Remove ROI")
-        transect = QPushButton("Transect")
+        eraser_draw = QPushButton()
+        eraser_draw.setIcon(QIcon("res/images/DrawRoi-icons/icons8-remove-image-24.png"))
+        eraser_draw.setToolTip("Erease the current slice")
+        #eraser_roi.setIcon(QIcon("res/images/DrawRoi-icons/.png"))
+        transect = QPushButton()
+        transect.setToolTip("Transect Tool")
+        transect.setIcon(QIcon("res/images/btn-icons/transect_purple_icon.png"))
         transect.setCheckable(True)
-        copy = QPushButton("Copy ROI")
+        copy = QPushButton()
+        copy.setToolTip("Copy current drawing onto another slice")
+        copy.setIcon(QIcon("res/images/DrawRoi-icons/copy-alt.png"))
         save = QPushButton("Save")
-        fill = QPushButton("Fill")
+        save.setProperty("QPushButtonClass", "success-button")
+        fill = QPushButton()
+        fill.setToolTip("Fill Tool")
+        fill.setIcon(QIcon("res/images/DrawRoi-icons/fill.png"))
         fill.setCheckable(True)
-        multi = QPushButton("Multi")
+        multi = QPushButton()
+        multi.setToolTip("Multi Layer Contour Tool")
+        multi.setIcon(QIcon("res/images/DrawRoi-icons/layer-plus.png"))
         multi.setCheckable(True)
-        erase_dag = QPushButton("Erase DAGs")
+        erase_dag = QPushButton()
+        erase_dag.setToolTip("Erase Dags")
+        erase_dag.setIcon(QIcon("res/images/DrawRoi-icons/broom.png"))
         cancel = QPushButton("Cancel")
-        zapper = QPushButton("Zapper")
+        cancel.setProperty("QPushButtonClass", "fail-button")
+        zapper = QPushButton()
+        zapper.setToolTip("'Zapper' Tool, click and drage to erase sections")
+        zapper.setIcon(QIcon("res/images/DrawRoi-icons/bolt.png"))
         zapper.setCheckable(True)
         
         self.button_group.addButton(brush)
@@ -119,6 +142,7 @@ class LeftPannel(QtWidgets.QWidget):
         """
         self.canvas_label.pen.setColor(self.last_colour)
         self.canvas_label.set_tool(3)
+        self.canvas_label.pen.setWidth(2)
         self.canvas_label.setCursor(Qt.CrossCursor)
 
     def eraser_roi_tool(self):
@@ -247,7 +271,7 @@ class LeftPannel(QtWidgets.QWidget):
         Parm QColor : v
         Return : None 
         """
-        self.last_colour = v 
+        self.last_colour = v
 
     @Slot(int)
     def update_opasity(self, v):
