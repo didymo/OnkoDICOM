@@ -11,6 +11,26 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Model.VTKEngine import VTKEngine
 
+"""
+    For all private tags 0x7777, 0x0020 / 0x7777, 0x0021 / etc
+    these are private dicom tags for extra info used as fallback if the normal registration tag for loading the saved transform fails. 
+    (saving normal rego first means it can be used by other programs. Private tags can only be read by onko dicom).
+    they must use an odd group number i.e 0x7777 and an element number i.e 0x0010, can be saved as any odd number group 
+    and must be consistent in the program as it needs to know it to read private tags
+    This is saved and set in Translate rotation menu _create_spatial_registration_dicom
+    9/10/25 in line 650 & 651
+    
+    # Save user translation/rotation as private tags for round-trip
+        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
+        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
+
+
+    see links for more details
+        https://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_7.8.html
+        https://pydicom.github.io/pydicom/stable/guides/user/private_data_elements.html
+
+"""
+
 class ManualFusionLoader(QtCore.QObject):
     """
        Loads fixed and moving DICOM images for manual image fusion using VTK and manages transform extraction.
@@ -52,7 +72,7 @@ class ManualFusionLoader(QtCore.QObject):
         except Exception as e:
             if progress_callback is not None:
                 progress_callback.emit(("Error loading images", e))
-                logging.error("Error loading images: %s\n%s", e)
+                logging.exception("Error loading images: %s\n%s", e)
                 self.signal_error.emit((False, e))
 
     def _load_with_vtk(self, progress_callback):
@@ -88,10 +108,9 @@ class ManualFusionLoader(QtCore.QObject):
         patient_dict_container = PatientDictContainer()
         fixed_dir = patient_dict_container.path
         moving_dir = None
-        transform_file = None
 
         # An array for the image files to filter out the transform file
-        image_files = []
+        selected_image_files = []
         transform_file = None
 
         if self.selected_files:
@@ -121,13 +140,13 @@ class ManualFusionLoader(QtCore.QObject):
                     if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
                         transform_file = f
                     else:
-                        image_files.append(f)
+                        selected_image_files.append(f)
                 except (InvalidDicomError, AttributeError, OSError) as e:
                     logging.warning("<manualFusionLoader.py_load_with_vtk>Error reading DICOM file", e)
                     continue
 
         # Populate moving model container before processing with VTK so origin can be read the same way as ROI Transfer logic
-        moving_image_loader = MovingImageLoader(image_files, None, self)
+        moving_image_loader = MovingImageLoader(selected_image_files, None, self)
         moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
 
         if not moving_model_populated:
@@ -167,6 +186,8 @@ class ManualFusionLoader(QtCore.QObject):
                 if progress_callback is not None:
                     progress_callback.emit(("Extracting saved transform...", 80))
                 ds = pydicom.dcmread(transform_file)
+
+                # See explanation at top for more details on private tags
                 if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
                     transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
                 else:
@@ -225,7 +246,6 @@ class ManualFusionLoader(QtCore.QObject):
         except Exception as e:
             logging.error(f"Error extracting transformation matrix from SRO: {e}")
             raise
-
 
         # Extract translation from private tag if present, else from matrix
         try:
