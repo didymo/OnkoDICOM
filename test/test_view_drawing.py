@@ -5,6 +5,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QSpinBox
+from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from src.Controller.GUIController import MainWindow
 from src.Model import ImageLoading
