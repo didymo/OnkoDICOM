@@ -150,23 +150,27 @@ class RoiInitialiser():
         grid.setHorizontalSpacing(0)
         grid.setVerticalSpacing(0)
 
-        # Reuse your existing labels (no scene parenting)
-        for lbl in (self.label_image_id, self.label_image_pos, self.label_wl,
-                    self.label_image_size, self.label_zoom, self.label_patient_pos):
-            lbl.setStyleSheet("color: white; background: rgba(0,0,0,90); padding: 2px 6px; border-radius: 4px;")
-            lbl.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+       # build the four corners as stacks
+        top_left     = self.make_stack(self.label_image_id, self.label_image_pos, align=Qt.AlignLeft  | Qt.AlignTop)
+        top_right    = self.make_stack(self.label_wl ,align=Qt.AlignRight | Qt.AlignTop)
+        bottom_left  = self.make_stack(self.label_image_size, self.label_zoom,    align=Qt.AlignLeft  | Qt.AlignBottom)
+        bottom_right = self.make_stack(self.label_patient_pos, align=Qt.AlignRight | Qt.AlignBottom)
+        # if you had bottom-right items, create another stack; here we have only two per side
 
-        # Place labels into corners/sides of the HUD grid
-      
+        # place stacks into a 3x3 grid (corners only)
+        grid.addWidget(top_left,     0, 0, Qt.AlignLeft  | Qt.AlignTop)
+        grid.addWidget(top_right,    0, 2, Qt.AlignRight | Qt.AlignTop)
+        grid.addWidget(bottom_left,  2, 0, Qt.AlignLeft  | Qt.AlignBottom)
+        grid.addWidget(bottom_right,  2, 2, Qt.AlignRight  | Qt.AlignBottom)
 
-        grid.addWidget(self.label_image_id, 0, 0, Qt.AlignLeft | Qt.AlignTop)
-        grid.addWidget(self.label_image_pos, 0, 0, Qt.AlignLeft | Qt.AlignBottom)
+        # make the CENTER row/column absorb space to push corners apart
+        grid.setRowStretch(0, 0)
+        grid.setRowStretch(1, 1)   # middle row expands
+        grid.setRowStretch(2, 0)
 
-        grid.addWidget(self.label_wl,         0, 1, Qt.AlignRight | Qt.AlignTop)
-        grid.addWidget(self.label_patient_pos,2, 1, Qt.AlignRight | Qt.AlignBottom)
-
-        grid.addWidget(self.label_image_size, 2, 0, Qt.AlignLeft  | Qt.AlignTop)
-        grid.addWidget(self.label_zoom,       2, 0, Qt.AlignLeft | Qt.AlignBottom)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)  # middle column expands
+        grid.setColumnStretch(2, 0)
 
         # Size the HUD to cover the whole viewport
         self._hud.setGeometry(self.view.viewport().rect())
@@ -213,6 +217,19 @@ class RoiInitialiser():
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
         self.units_box.opasity_value.connect(self.left_label.update_opasity)
         self.units_box.update_cursor_size.connect(self.left_label.update_cursor)
+
+    def make_stack(self,*widgets, align=Qt.AlignLeft | Qt.AlignTop):
+        w = QtWidgets.QWidget(self._hud)
+        w.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        lay = QtWidgets.QVBoxLayout(w)
+        lay.setContentsMargins(0, 0, 0, 0)  # no extra padding around the stack
+        lay.setSpacing(4)                   # small gap BETWEEN labels (tweak to taste)
+        for lbl in widgets:
+            lbl.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+            # optional: compact pill style
+            lbl.setStyleSheet("color: white; background: rgba(0,0,0,90); padding: 2px 6px; border-radius: 4px;")
+            lay.addWidget(lbl, 0, align)
+        return w
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
         """
