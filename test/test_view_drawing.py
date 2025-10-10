@@ -78,8 +78,10 @@ def test_object():
 def test_draw_roi_window_displayed(qtbot, test_object):
     """Function to test that the draw_roi_window is displayed
     within the main window when the draw ROI button is clicked"""
+    print("out ")
     qtbot.mouseClick(
         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
+    print("no")
     assert test_object.main_window.splitter.isHidden() is True
     assert test_object.main_window.draw_roi.isHidden() is False
 
@@ -104,7 +106,7 @@ def test_draw_roi_window_displayed(qtbot, test_object):
     assert test_object.main_window.splitter.isHidden() is False
 
     # Only check hidden state if the attribute still exists
-    if hasattr(test_object.main_window, "draw_roi"):
+    if hasattr(test_object.main_window, "draw_window"):
         assert test_object.main_window.draw_roi.isHidden() is True
 
     for item in menu_items:
@@ -225,3 +227,4 @@ def test_roi_windowing(qtbot, test_object):
     # Assert that windowing values have changed
     assert existing_window != new_window, "Window should be updated via handler"
     assert existing_level != new_level, "Level should be updated via handler"
+

@@ -150,7 +150,6 @@ class RoiInitialiser():
         grid.setContentsMargins(8, 8, 8, 8)
         grid.setHorizontalSpacing(0)
         grid.setVerticalSpacing(0)
-
        # build the four corners as stacks
         top_left     = self.make_stack(self.label_image_id, self.label_image_pos, align=Qt.AlignLeft  | Qt.AlignTop)
         top_right    = self.make_stack(self.label_wl ,align=Qt.AlignRight | Qt.AlignTop)
@@ -180,7 +179,6 @@ class RoiInitialiser():
 
         # Keep HUD sized when the view resizes
         self.view.viewport().installEventFilter(self)
-
         self.update_metadata()
         
 
@@ -216,6 +214,7 @@ class RoiInitialiser():
             lbl.setStyleSheet("color: white; background: rgba(0,0,0,90); padding: 2px 6px; border-radius: 4px;")
             lay.addWidget(lbl, 0, align)
         return w
+
 
     def build_toolbar(self) -> QtWidgets.QToolBar:
         """

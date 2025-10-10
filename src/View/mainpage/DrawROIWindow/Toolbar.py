@@ -22,7 +22,6 @@ class CutsomToolbar(QToolBar):
         #sets darwing variables
         self.is_drawing = False
         self.rt_value = False
-
         colourAction = QAction(self)
         colourAction.setIcon(QIcon("res/images/DrawRoi-icons/icons8-color-swatch-48.png"))
         colourAction.setToolTip("Change Colour")
@@ -53,7 +52,6 @@ class CutsomToolbar(QToolBar):
         quick_copy_down.setIcon(QIcon("res/images/DrawRoi-icons/Quick-copy-down.png"))
         quick_copy_down.triggered.connect(lambda checked=False: self.quick_copy(False))
         self.addAction(quick_copy_down)
-
         self.addSeparator()
         spin_defs = [
             ("Brush Size",      1,   100,  12,   self.update_pen_size),
@@ -68,16 +66,14 @@ class CutsomToolbar(QToolBar):
         
     def _add_labeled_spinbox(self, label_text, minimum, maximum, default, slot):
         self.addSeparator()
-        lbl = QLabel(label_text, " :")
+        lbl = QLabel(label_text + " :")
         self.addWidget(lbl)
-
         sb = QSpinBox()
         sb.setFocusPolicy(Qt.ClickFocus)
         sb.editingFinished.connect(lambda _=None: self.setFocus(Qt.OtherFocusReason))
         sb.setRange(minimum, maximum)
         sb.setValue(default)
         sb.valueChanged.connect(slot)
-        sb.setObjectName(label_text)
         self.addWidget(sb)
 
     def change_colour(self):
