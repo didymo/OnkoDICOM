@@ -234,7 +234,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         # Removes full body section when the body section unchecked
         self._parent_section_changed(item, Qt.CheckState.Unchecked)
 
-    def _child_states(self, item: QTreeWidgetItem, body_text) -> None:
+    def _child_states(self, item: QTreeWidgetItem, body_text: str) -> None:
         """
         Determines if check box was checked or unchecked then determines the action it needs to take
 

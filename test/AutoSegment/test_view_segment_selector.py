@@ -1,5 +1,7 @@
 import pytest
 import pathlib
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidgetItem, QTreeWidget
 
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
@@ -24,10 +26,18 @@ def tree_widget_item() -> QTreeWidgetItem:
     """
     test_parent: QTreeWidgetItem = QTreeWidgetItem()
     test_parent.setText(0, "parent")
+    test_parent.setFlags(test_parent.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+    test_parent.setCheckState(0, Qt.CheckState.Unchecked)
+
     test_child1: QTreeWidgetItem = QTreeWidgetItem(test_parent)
     test_child1.setText(1,"child1")
+    test_child1.setFlags(test_parent.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+    test_child1.setCheckState(1, Qt.CheckState.Unchecked)
+
     test_child2: QTreeWidgetItem = QTreeWidgetItem(test_parent)
     test_child2.setText(1,"child2")
+    test_child2.setFlags(test_parent.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+    test_child2.setCheckState(1, Qt.CheckState.Unchecked)
 
     return test_parent
 
@@ -211,23 +221,165 @@ def test_input_structure(selection_object, tree_widget_item) -> None:
     assert tree_widget_item.child(2)
     assert tree_widget_item.child(2).text(1).strip() == "child3"
 
-def test_body_section_clicked(selection_object, tree_widget_item) -> None:
-    pass
+def test_parent_body_section_clicked(selection_object, tree_widget_item) -> None:
+    """
+    Test to ensure that if the parent body sections are check that the child Body sections will also be checked
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    :return: None
+    """
+    assert tree_widget_item.child(0).checkState(1).value == 0
+    assert tree_widget_item.child(0).checkState(1).value != 2
+    assert tree_widget_item.child(1).checkState(1).value == 0
+    assert tree_widget_item.child(1).checkState(1).value != 2
+    assert not tree_widget_item.setCheckState(0, Qt.CheckState.Checked)
+    assert not selection_object._body_section_clicked(tree_widget_item, 0)
+    assert tree_widget_item.child(0).checkState(1).value != 0
+    assert tree_widget_item.child(0).checkState(1).value == 2
+    assert tree_widget_item.child(1).checkState(1).value != 0
+    assert tree_widget_item.child(1).checkState(1).value == 2
+
+def test_child_body_section_clicked(selection_object, tree_widget_item) -> None:
+    """
+    Test to ensure that if the parent body sections will check when all their children are checked
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    :return: None
+    """
+    # Unchecked Children
+    assert tree_widget_item.checkState(0).value == 0
+    assert tree_widget_item.checkState(0).value != 1
+    assert tree_widget_item.checkState(0).value != 2
+
+    # One Checked Children
+    child = 0
+    assert not tree_widget_item.child(child).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._body_section_clicked(tree_widget_item.child(child), 1)
+    assert tree_widget_item.checkState(0).value != 0
+    assert tree_widget_item.checkState(0).value == 1
+    assert tree_widget_item.checkState(0).value != 2
+
+    # All Children Checked
+    child = 1
+    assert not tree_widget_item.child(child).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._body_section_clicked(tree_widget_item.child(child), 1)
+    assert tree_widget_item.checkState(0).value != 0
+    assert tree_widget_item.checkState(0).value != 1
+    assert tree_widget_item.checkState(0).value == 2
 
 def test_parent_states(selection_object, tree_widget_item) -> None:
-    pass
+    """
+    Test To ensure that the selection between setting the children of the parent ot check or Unchecked works correctly
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    :return: None
+    """
+    # Checked State
+    assert not tree_widget_item.setCheckState(0, Qt.CheckState.Checked)
+    assert not selection_object._parent_states(tree_widget_item)
+
+    # Unchecked State
+    assert not tree_widget_item.setCheckState(0, Qt.CheckState.Unchecked)
+    assert not selection_object._parent_states(tree_widget_item)
 
 def test_child_states(selection_object, tree_widget_item) -> None:
-    pass
+    """
+    Test to see if checking a child selection adds to the list of selected segments
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    :return: None
+    """
+    assert not selection_object.get_segment_list()
+    assert not selection_object._child_states(tree_widget_item, "parent")
+    assert not selection_object.get_segment_list()
+    assert not tree_widget_item.child(0).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._child_states(tree_widget_item.child(0), "child1")
+    assert selection_object.get_segment_list()
+    assert selection_object.get_segment_list()[0] == "child1"
+    assert not tree_widget_item.child(0).setCheckState(1, Qt.CheckState.Unchecked)
+    assert not selection_object._child_states(tree_widget_item.child(0), "child1")
+    assert not selection_object.get_segment_list()
 
 def test_parent_section_changed(selection_object, tree_widget_item) -> None:
-    pass
+    """
+    Test to determine if checking a parent section adds all its children to the list of selected Segments
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    :return: None
+    """
+    assert not selection_object.get_segment_list()
+    assert not selection_object._parent_section_changed(tree_widget_item, Qt.CheckState.Checked)
+    assert selection_object.get_segment_list()
+    assert not selection_object._parent_section_changed(tree_widget_item, Qt.CheckState.Unchecked)
+    assert not selection_object.get_segment_list()
+
 
 def test_specific_structure_changed(selection_object, tree_widget_item) -> None:
-    pass
+    """
+    Test to determine if checking or unchecking a specific structure will update the parent check box aswell as update the selected segment list
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    """
+    assert not selection_object.get_segment_list()
+    assert not tree_widget_item.child(0).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(0), "child1", Qt.CheckState.Checked)
+    assert tree_widget_item.child(0).checkState(1) == Qt.CheckState.Checked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.PartiallyChecked
+    assert selection_object.get_segment_list()
+    assert selection_object.get_segment_list()[0] == "child1"
+
+    assert not tree_widget_item.child(1).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(1), "child2", Qt.CheckState.Checked)
+    assert tree_widget_item.child(1).checkState(1) == Qt.CheckState.Checked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.Checked
+    assert selection_object.get_segment_list()[1] == "child2"
+
+    assert not tree_widget_item.child(0).setCheckState(1, Qt.CheckState.Unchecked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(0), "child1", Qt.CheckState.Unchecked)
+    assert tree_widget_item.child(0).checkState(1) == Qt.CheckState.Unchecked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.PartiallyChecked
+    assert selection_object.get_segment_list()[0] == "child2"
+
+    assert not tree_widget_item.child(1).setCheckState(1, Qt.CheckState.Unchecked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(0), "child2", Qt.CheckState.Unchecked)
+    assert tree_widget_item.child(0).checkState(1) == Qt.CheckState.Unchecked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.Unchecked
+    assert not selection_object.get_segment_list()
+
 
 def test_setting_parent_states(selection_object, tree_widget_item) -> None:
-    pass
+    """
+    Check to determine if the parent state updates when the child states is checked
+
+    :param selection_object: SegmentSelectorWidget
+    :param tree_widget_item: QtWidgets.QTreeWidgetItem
+    :return: None
+    """
+    assert not tree_widget_item.child(0).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(0), "child1", Qt.CheckState.Checked)
+    assert tree_widget_item.child(0).checkState(1) == Qt.CheckState.Checked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.PartiallyChecked
+
+    assert not tree_widget_item.child(1).setCheckState(1, Qt.CheckState.Checked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(1), "child2", Qt.CheckState.Checked)
+    assert tree_widget_item.child(1).checkState(1) == Qt.CheckState.Checked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.Checked
+
+    assert not tree_widget_item.child(0).setCheckState(1, Qt.CheckState.Unchecked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(0), "child1", Qt.CheckState.Unchecked)
+    assert tree_widget_item.child(0).checkState(1) == Qt.CheckState.Unchecked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.PartiallyChecked
+
+    assert not tree_widget_item.child(1).setCheckState(1, Qt.CheckState.Unchecked)
+    assert not selection_object._specific_structure_changed(tree_widget_item.child(0), "child2", Qt.CheckState.Unchecked)
+    assert tree_widget_item.child(0).checkState(1) == Qt.CheckState.Unchecked
+    assert tree_widget_item.checkState(0) == Qt.CheckState.Unchecked
 
 
 
