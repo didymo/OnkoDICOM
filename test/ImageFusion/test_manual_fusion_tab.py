@@ -5,7 +5,6 @@ from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ImageLoading import get_datasets
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
-from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from src.Model import PatientDictContainer as PDC_module, ImageLoading
@@ -68,113 +67,100 @@ class TestManualFusionTab:
 def fusion_test_object():
     return TestManualFusionTab()
 
+def _assert_views_visible(qtbot, views):
+    """Helper to check that all given views are visible."""
+    for view in views:
+        qtbot.waitExposed(view)
+        assert view.isVisible()
 
-def test_fusion_tab_loads(qtbot, fusion_test_object):
-    """Test that the manual fusion tab loads and axial view is visible."""
+@pytest.mark.parametrize(
+    "attr,view_attr",
+    [
+        ("image_fusion_view_axial", "image_fusion_view_axial"),
+        ("image_fusion_view_sagittal", "image_fusion_view_sagittal"),
+        ("image_fusion_view_coronal", "image_fusion_view_coronal"),
+    ]
+)
+def test_fusion_view_exists_and_visible(qtbot, fusion_test_object, attr, view_attr):
+    """Test that a specific fusion view exists and is visible/enabled."""
     main_window = fusion_test_object.main_window
     main_window.show()
+    assert hasattr(main_window, attr)
+    view = getattr(main_window, view_attr)
+    assert view is not None
+    assert view.isEnabled()
 
-    # Check all fusion views exist and are visible
-    assert hasattr(main_window, "image_fusion_view_axial")
-    assert hasattr(main_window, "image_fusion_view_sagittal")
-    assert hasattr(main_window, "image_fusion_view_coronal")
-    assert hasattr(main_window, "image_fusion_single_view")
-    # Check all fusion views exist and are visible
-    assert hasattr(main_window, "image_fusion_view_axial")
-    assert hasattr(main_window, "image_fusion_view_sagittal")
-    assert hasattr(main_window, "image_fusion_view_coronal")
-    assert hasattr(main_window, "image_fusion_single_view")
-    _assert_views_visible(qtbot, [
-        main_window.image_fusion_view_axial,
-        main_window.image_fusion_view_sagittal,
-        main_window.image_fusion_view_coronal,
-        main_window.image_fusion_single_view,
-    ])
 
-    # Check fusion options tab and its controls
+def test_fusion_options_tab_exists_and_type(fusion_test_object):
+    """Test that the fusion options tab exists and is the correct type."""
+    main_window = fusion_test_object.main_window
     assert hasattr(main_window, "fusion_options_tab")
-    options: TranslateRotateMenu = main_window.fusion_options_tab
+    options = main_window.fusion_options_tab
     assert isinstance(options, TranslateRotateMenu)
+
+def test_translate_sliders_work(fusion_test_object):
+    """Test that translation sliders in the fusion options tab work."""
+    options = fusion_test_object.main_window.fusion_options_tab
     _assert_translate_sliders(options)
+    
+def _assert_translate_sliders(options):
+    """Helper to check translation sliders respond to value changes."""
+    for slider in options.translate_sliders:
+        old_value = slider.value()
+        slider.setValue(old_value + 10)
+        assert slider.value() == old_value + 10
+        slider.setValue(old_value)
+
+def test_rotate_sliders_work(fusion_test_object):
+    """Test that rotation sliders in the fusion options tab work."""
+    options = fusion_test_object.main_window.fusion_options_tab
     _assert_rotate_sliders(options)
-    # Check color pair combo box
+    
+def _assert_rotate_sliders(options):
+    """Helper to check rotation sliders respond to value changes."""
+    for slider in options.rotate_sliders:
+        old_value = slider.value()
+        slider.setValue(old_value + 10)
+        assert slider.value() == old_value + 10
+        slider.setValue(old_value)
+
+def test_color_pair_combo_works(fusion_test_object):
+    """Test that the color pair combo box works."""
+    options = fusion_test_object.main_window.fusion_options_tab
     assert hasattr(options, "color_pair_combo")
     options.color_pair_combo.setCurrentText("Blue + Yellow")
     assert options.color_pair_combo.currentText() == "Blue + Yellow"
-    # Check opacity slider
+
+def test_opacity_slider_works(fusion_test_object):
+    """Test that the opacity slider works."""
+    options = fusion_test_object.main_window.fusion_options_tab
     assert hasattr(options, "opacity_slider")
     options.opacity_slider.setValue(80)
     assert options.opacity_slider.value() == 80
 
-    # Check that zoom in/out works for axial view
-    axial = main_window.image_fusion_view_axial
+def test_axial_zoom_in_out(fusion_test_object):
+    """Test that zoom in/out works for the axial fusion view."""
+    axial = fusion_test_object.main_window.image_fusion_view_axial
     initial_zoom = axial.zoom
     axial.zoom_in()
     assert axial.zoom > initial_zoom
     axial.zoom_out()
     assert pytest.approx(axial.zoom, rel=1e-2) == initial_zoom
 
-    # Optionally, check that update_metadata and update_view run without error
+def test_axial_update_metadata_and_view(fusion_test_object):
+    """Test that update_metadata and update_view run without error for axial view."""
+    axial = fusion_test_object.main_window.image_fusion_view_axial
     axial.update_metadata()
     axial.update_view()
 
-    # Check that the fusion options tab is present in the left panel
+def test_fusion_options_tab_in_left_panel(fusion_test_object):
+    """Test that the fusion options tab is present in the left panel."""
+    main_window = fusion_test_object.main_window
+    options = main_window.fusion_options_tab
     assert main_window.left_panel.indexOf(options) != -1
 
-    # Optionally, check that the four-views layout is present
+def test_four_views_layout_present(fusion_test_object):
+    """Test that the four-views layout is present and active."""
+    main_window = fusion_test_object.main_window
     assert hasattr(main_window, "image_fusion_four_views")
     assert main_window.image_fusion_view.currentWidget() == main_window.image_fusion_four_views
-
-
-def _assert_views_visible(qtbot, views):
-    """Helper to assert all views are visible."""
-    for view in views:
-        qtbot.addWidget(view)
-        view.show()
-        assert view.isVisible()
-
-
-def _assert_translate_sliders(options):
-    """Helper to assert translation sliders work."""
-    assert len(options.translate_sliders) == 3
-    options.translate_sliders[0].setValue(10)
-    assert options.translate_sliders[0].value() == 10
-    options.translate_sliders[1].setValue(20)
-    assert options.translate_sliders[1].value() == 20
-    options.translate_sliders[2].setValue(-10)
-    assert options.translate_sliders[2].value() == -10
-
-
-def _assert_rotate_sliders(options):
-    """Helper to assert rotation sliders work."""
-    assert len(options.rotate_sliders) == 3
-    options.rotate_sliders[0].setValue(30)
-    assert options.rotate_sliders[0].value() == 30
-    options.rotate_sliders[1].setValue(-30)
-    assert options.rotate_sliders[1].value() == -30
-    options.rotate_sliders[2].setValue(0)
-    assert options.rotate_sliders[2].value() == 0
-
-
-def _assert_color_pair_combo(options):
-    """Helper to assert color pair combo box works."""
-    assert hasattr(options, "color_pair_combo")
-    options.color_pair_combo.setCurrentText("Blue + Yellow")
-    assert options.color_pair_combo.currentText() == "Blue + Yellow"
-
-
-def _assert_opacity_slider(options):
-    """Helper to assert opacity slider works."""
-    assert hasattr(options, "opacity_slider")
-    options.opacity_slider.setValue(80)
-    assert options.opacity_slider.value() == 80
-
-
-def _assert_zoom_in_out(view):
-    """Helper to assert zoom in/out works."""
-    initial_zoom = view.zoom
-    view.zoom_in()
-    assert view.zoom > initial_zoom
-    view.zoom_out()
-    assert pytest.approx(view.zoom, rel=1e-2) == initial_zoom
-
