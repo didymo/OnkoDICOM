@@ -11,6 +11,26 @@ from src.Model.MovingDictContainer import MovingDictContainer
 from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Model.VTKEngine import VTKEngine
 
+"""
+    For all private tags 0x7777, 0x0020 / 0x7777, 0x0021 / etc
+    these are private dicom tags for extra info used as fallback if the normal registration tag for loading the saved transform fails. 
+    (saving normal rego first means it can be used by other programs. Private tags can only be read by onko dicom).
+    they must use an odd group number i.e 0x7777 and an element number i.e 0x0010, can be saved as any odd number group 
+    and must be consistent in the program as it needs to know it to read private tags
+    This is saved and set in Translate rotation menu _create_spatial_registration_dicom
+    9/10/25 in line 650 & 651
+    
+    # Save user translation/rotation as private tags for round-trip
+        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
+        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
+
+
+    see links for more details
+        https://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_7.8.html
+        https://pydicom.github.io/pydicom/stable/guides/user/private_data_elements.html
+
+"""
+
 class ManualFusionLoader(QtCore.QObject):
     """
        Loads fixed and moving DICOM images for manual image fusion using VTK and manages transform extraction.
@@ -52,7 +72,7 @@ class ManualFusionLoader(QtCore.QObject):
         except Exception as e:
             if progress_callback is not None:
                 progress_callback.emit(("Error loading images", e))
-                logging.error(f"Error loading images: {e}")
+                logging.exception("Error loading images: %s\n%s", e)
                 self.signal_error.emit((False, e))
 
     def _load_with_vtk(self, progress_callback):
@@ -88,6 +108,9 @@ class ManualFusionLoader(QtCore.QObject):
         patient_dict_container = PatientDictContainer()
         fixed_dir = patient_dict_container.path
         moving_dir = None
+
+        # An array for the image files to filter out the transform file
+        selected_image_files = []
         transform_file = None
 
         if self.selected_files:
@@ -106,7 +129,9 @@ class ManualFusionLoader(QtCore.QObject):
                 return
             moving_dir = dirs.pop()
 
-            # Check if any selected file is a transform DICOM (Spatial Registration)
+            # Separate image series and transform DICOMs
+            #NOTE: This needs to be here as moving load expects only image series so we need to filter out the transform (if selected)
+            # then only after that apply the transform
             for f in self.selected_files:
                 try:
                     ds = dcmread(f, stop_before_pixels=True)
@@ -114,10 +139,24 @@ class ManualFusionLoader(QtCore.QObject):
                     sop_class = getattr(ds, "SOPClassUID", "")
                     if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
                         transform_file = f
-                        break
+                    else:
+                        selected_image_files.append(f)
                 except (InvalidDicomError, AttributeError, OSError) as e:
                     logging.warning("<manualFusionLoader.py_load_with_vtk>Error reading DICOM file", e)
                     continue
+
+        # Populate moving model container before processing with VTK so origin can be read the same way as ROI Transfer logic
+        moving_image_loader = MovingImageLoader(selected_image_files, None, self)
+        moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
+
+        if not moving_model_populated:
+            # Check if interrupted, emit cancel signal immediately
+            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+                self.signal_error.emit((False, "Loading cancelled"))
+                return
+            # Emit error if loading failed
+            logging.error("<manualFusionLoader.py_load_with_vtk> Failed to populate Moving Model Container")
+            raise RuntimeError("Failed to populate Moving Model Container")
 
         # Use VTKEngine to load images
         engine = VTKEngine()
@@ -140,27 +179,25 @@ class ManualFusionLoader(QtCore.QObject):
             logging.error("<manualFusionLoader.py_load_with_vtk>Failed to load moving image with VTK.")
             raise RuntimeError("Failed to load moving image with VTK.")
 
-        moving_image_loader = MovingImageLoader(self.selected_files, None, self)
-        moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag, progress_callback)
-
-        if not moving_model_populated:
-            # Check if interrupted, emit cancel signal immediately
-            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
-                self.signal_error.emit((False, "Loading cancelled"))
-                return
-            # Otherwise, it was a real error
-            logging.error("<manualFusionLoader.py_load_with_vtk> Failed to populate Moving Model Container")
-            raise RuntimeError("Failed to populate Moving Model Container")
-
         # If a transform DICOM was found and is ticked, extract transform data only
         transform_data = None
         if transform_file is not None:
-            if progress_callback is not None:
-                progress_callback.emit(("Extracting saved transform...", 80))
-            ds = pydicom.dcmread(transform_file)
-            # Check if they are registered or have a private tag set in save function in translate rotation menu
-            if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0010) in ds:
-                transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
+            try:
+                if progress_callback is not None:
+                    progress_callback.emit(("Extracting saved transform...", 80))
+                ds = pydicom.dcmread(transform_file)
+
+                # See explanation at top for more details on private tags
+                if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0020) in ds or (0x7777, 0x0021) in ds:
+                    transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
+                else:
+                    raise ValueError("Selected transform.dcm is not a valid Spatial Registration Object.")
+            except Exception as e:
+                logging.error(f"Error extracting transform from {transform_file}: {e}")
+                if progress_callback is not None:
+                    progress_callback.emit(("Error extracting transform", 80))
+                self.signal_error.emit((False, f"Error extracting transform: {e}"))
+                return
 
         # Do any overlay generation or heavy work here if needed
         if progress_callback is not None:
@@ -209,7 +246,6 @@ class ManualFusionLoader(QtCore.QObject):
         except Exception as e:
             logging.error(f"Error extracting transformation matrix from SRO: {e}")
             raise
-
 
         # Extract translation from private tag if present, else from matrix
         try:

@@ -695,9 +695,11 @@ class UITransferROIWindow:
             return
         total_slices = len(slice_ids_dict)
         for contour in contours:
-            curr_slice_id = contour[0]
-            if curr_slice_id >= total_slices:
-                curr_slice_id = 0
+            # Use total_slices - contour[0] - 1 to avoid off-by-one errors
+            curr_slice_id = total_slices - contour[0] - 1
+            if curr_slice_id < 0 or curr_slice_id >= total_slices:
+                logging.warning(f"Calculated curr_slice_id {curr_slice_id} out of bounds for total_slices {total_slices}, skipping this contour.")
+                continue
             if curr_slice_id not in pixels_coords_dict:
                 pixels_coords_dict[curr_slice_id] = [
                     tuple([contour[2], contour[1]])]
