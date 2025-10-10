@@ -35,7 +35,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
 
         # Member Variables
         self._view_state = view_state
-        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(self, view_state.segmentation_list, update_callback=self.update_save_start_button_states)
+        self._tree_selector: SegmentSelectorWidget = SegmentSelectorWidget(view_state.segmentation_list, update_callback=self.update_save_start_button_states)
         self._start_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Start")
         self._start_button.setEnabled(False)
         self._progress_text: QtWidgets.QTextEdit = QtWidgets.QTextEdit()

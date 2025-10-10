@@ -25,26 +25,28 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent, segmentation_list: list[str], data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
+    def __init__(self, segmentation_list: list[str] = None, data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
         """
         Initialisation of the SegmentSelectorWidget.
-        Constructs the parent class of QtWidgets.QWidget
         Creates the list for the storage of the selected segments
         Generates Tree
         Sets up the layout of the Widget
 
-        :param parent: QWidget
         :param segmentation_list: list[str]
         :param data_location: str
         :returns: None
         """
 
-        super(SegmentSelectorWidget, self).__init__(parent)
+        super(SegmentSelectorWidget, self).__init__()
         self.setStyleSheet(StyleSheetReader().get_stylesheet()) # To style the Widget
 
         # Class Members
         # Reference to the list owned by another class most likely the controller class
-        self._selected_list: list[str] = segmentation_list
+        if segmentation_list is not None:
+            self._selected_list: list[str] = segmentation_list
+        else:
+            self._selected_list: list[str] = []
+
         # References to look up items in tree without searching entire tree
         self._tree_choices_ref: dict[str, list[QTreeWidgetItem]] = {}
 
@@ -295,14 +297,30 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         item.setCheckState(0, Qt.CheckState.PartiallyChecked)
 
 
-    def _selected_list_add_or_remove(self, body_text: str , state: Qt.CheckState) -> None:
+    def _selected_list_add_or_remove(self, body_text: str , state: Qt.CheckState | int) -> None:
         """
         To add or remove an item from the self._selection_list member when a selection has changed
 
+        To reduce the reliance of tests on an external module PySide6 the
+        option of using int as a state input is allowed
+        If State is int then the values are:
+        < 0 = Unchecked
+        0 = Unchecked
+        1 = PartiallyChecked
+        2 = Checked
+        > 2 = Checked
+
+
         :param body_text: str
-        :param state: Qt.CheckState
+        :param state: Qt.CheckState | int
         :returns: None
         """
+        if type(state) == int:
+            if state > 2:
+                state = 2
+            elif state < 0:
+                state = 0
+            state = Qt.CheckState(state)
         if state == Qt.CheckState.Checked and body_text not in self._selected_list:
             self._selected_list.append(body_text.strip())
         if state == Qt.CheckState.Unchecked and body_text in self._selected_list:
@@ -311,19 +329,32 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
             self.update_save_start_button_states()
 
 
-    def _uniform_selection(self, check: Qt.CheckState) -> None:
+    def _uniform_selection(self, check: Qt.CheckState | int) -> None:
         """
         Method to set all check boxes to the same state as well as
         adding or removing all values from self.selected List.
 
-        :param check: Qt.CheckState
+        To reduce the reliance of tests on an external module PySide6 the
+        option of using int as a state input is allowed
+        If State is int then the values are:
+        < 1 = Unchecked
+        1 = Unchecked
+        2 = Checked
+        > 2 = Checked
+
+        :param check: Qt.CheckState | int
         :returns: None
         """
         # Instead of just going though self._selected_list and Unchecking/Checking only the values
         # which exist with the list we are going though every value and Unchecking/Checking all of
         # as a potential method of dealing with potential bugs such as checked boxes which are
         # not checked which may or may not exist.
-
+        if type(check) == int:
+            if check > 1:
+                check = 2
+            else:
+                check = 0
+            check = Qt.CheckState(check)
         for key, values in self._tree_choices_ref.items():
             for item in values:
                 item.setCheckState(1, check)
