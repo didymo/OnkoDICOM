@@ -75,7 +75,7 @@ def test_object():
     return test
 
 
-def test_draw_roi_window_displayed(qtbot, test_object):
+def main_window(qtbot, test_object):
     """Function to test that the draw_roi_window is displayed
     within the main window when the draw ROI button is clicked"""
     qtbot.mouseClick(
