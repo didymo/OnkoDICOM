@@ -75,7 +75,7 @@ def test_object():
     return test
 
 
-def main_window(qtbot, test_object):
+def test_draw_roi_window_displayed(qtbot, test_object):
     """Function to test that the draw_roi_window is displayed
     within the main window when the draw ROI button is clicked"""
     qtbot.mouseClick(
@@ -125,7 +125,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     paint_bucket = True
 
     # First flood with alpha = 100
-    draw_roi_window._toolbar.update_transparency(100)
+    draw_roi_window.update_transparency(100)
     color = draw_roi_window.pen.color()
     color.setAlpha(100)
     draw_roi_window.pen.setColor(color)
@@ -138,7 +138,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     ).toImage().pixelColor(*mid_point).alpha()
 
     # Second flood with alpha = 50
-    draw_roi_window._toolbar.update_transparency(50)
+    draw_roi_window.update_transparency(50)
     color = draw_roi_window.pen.color()
     color.setAlpha(50)
     draw_roi_window.pen.setColor(color)
