@@ -106,7 +106,7 @@ def test_draw_roi_window_displayed(qtbot, test_object):
     assert test_object.main_window.splitter.isHidden() is False
 
     # Only check hidden state if the attribute still exists
-    if hasattr(test_object.main_window, "draw_window"):
+    if hasattr(test_object.main_window, "draw_roi"):
         assert test_object.main_window.draw_roi.isHidden() is True
 
     for item in menu_items:
