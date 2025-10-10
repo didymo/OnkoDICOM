@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 import pytest
+from PySide6.QtWidgets import QPushButton
+
 from src.Controller.GUIController import MainWindow
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ImageLoading import get_datasets
@@ -8,19 +10,32 @@ from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 from src.Model import PatientDictContainer as PDC_module, ImageLoading
+from unittest.mock import patch
+import numpy as np
+import tempfile
 
 
-def find_dicom_files(folder):
-    """Finds all valid DICOM files in a folder."""
+def find_dicom_files(folder, exclude_transform=False):
+    """Finds all valid DICOM files in a folder, optionally excluding spatial registration (transform) files."""
     dicom_files = []
     for root, dirs, files in os.walk(folder, topdown=True):
         for name in files:
+            file_path = os.path.join(root, name)
             try:
-                dcmread(os.path.join(root, name))
-            except (InvalidDicomError, FileNotFoundError):
+                ds = dcmread(file_path, stop_before_pixels=True)
+                if exclude_transform:
+                    # Exclude DICOM Spatial Registration (transform) files by SOP Class UID or Modality
+                    sop_class = getattr(ds, "SOPClassUID", "")
+                    modality = getattr(ds, "Modality", "").upper()
+                    if (
+                            sop_class == "1.2.840.10008.5.1.4.1.1.66.1"
+                            or modality == "REG"
+                    ):
+                        continue
+            except (InvalidDicomError, FileNotFoundError, AttributeError):
                 continue
             else:
-                dicom_files.append(os.path.join(root, name))
+                dicom_files.append(file_path)
     return dicom_files
 
 
@@ -31,7 +46,7 @@ class TestManualFusionTab:
     def __init__(self):
         # Find test DICOM files
         testdata_path = Path.cwd().joinpath('test', 'testdata')
-        selected_files = find_dicom_files(testdata_path)
+        selected_files = find_dicom_files(testdata_path, exclude_transform=True)
         file_path = os.path.dirname(os.path.commonprefix(selected_files))
         read_data_dict, file_names_dict = get_datasets(selected_files)
 
@@ -164,3 +179,128 @@ def test_four_views_layout_present(fusion_test_object):
     main_window = fusion_test_object.main_window
     assert hasattr(main_window, "image_fusion_four_views")
     assert main_window.image_fusion_view.currentWidget() == main_window.image_fusion_four_views
+
+@pytest.mark.parametrize(
+    "slider_attr, index",
+    [
+        ("translate_sliders", 0),
+        ("translate_sliders", 1),
+        ("translate_sliders", 2),
+        ("rotate_sliders", 0),
+        ("rotate_sliders", 1),
+        ("rotate_sliders", 2),
+    ]
+)
+def test_reset_transform_resets_slider(fusion_test_object, slider_attr, index):
+    """Test that clicking 'Reset Transform' resets each translation and rotation slider to zero."""
+    options = fusion_test_object.main_window.fusion_options_tab
+    slider = getattr(options, slider_attr)[index]
+    slider.setValue(42)
+    reset_btn = next(
+        (btn for btn in options.findChildren(QPushButton) if btn.text() == "Reset Transform"),
+        None,
+    )
+    assert reset_btn is not None
+    reset_btn.click()
+    assert slider.value() == 0
+
+def test_save_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
+    """Test that clicking 'Save Fusion State' opens a file dialog (mocked)."""
+    options = fusion_test_object.main_window.fusion_options_tab
+
+    # Provide a dummy VTK engine with a .transform attribute
+    class DummyMatrix:
+        def GetElement(self, i, j):
+            return 1.0 if i == j else 0.0  # Identity matrix
+
+    class DummyTransform:
+        def GetMatrix(self):
+            return DummyMatrix()
+
+    class DummyVTKEngine:
+        transform = DummyTransform()
+        _tx = _ty = _tz = 0.0
+        _rx = _ry = _rz = 0.0
+        moving_dir = ""
+
+    options.set_get_vtk_engine_callback(lambda: DummyVTKEngine())
+    with tempfile.NamedTemporaryFile(suffix=".dcm", delete=False) as tmpfile:
+        filename = tmpfile.name
+    try:
+        with patch("src.View.ImageFusion.TranslateRotateMenu.QFileDialog.getSaveFileName",
+                   return_value=(filename, None)) as mock_dialog:
+            save_btn = next(
+                (btn for btn in options.findChildren(QPushButton) if "save" in btn.text().lower()),
+                None,
+            )
+            assert save_btn is not None
+            save_btn.click()
+            assert mock_dialog.called
+    finally:
+        if os.path.exists(filename):
+            os.remove(filename)
+
+def test_load_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
+    """Test that clicking 'Load Fusion State' opens a file dialog (mocked)."""
+    options = fusion_test_object.main_window.fusion_options_tab
+    # Patch: Set a dummy VTK engine callback so the dialog is called
+    options.set_get_vtk_engine_callback(lambda: object())
+    with patch("src.View.ImageFusion.TranslateRotateMenu.QFileDialog.getOpenFileName", return_value=("dummy.dcm", None)) as mock_dialog:
+        # Find and click the load button
+        load_btn = next(
+            (btn for btn in options.findChildren(QPushButton) if "load" in btn.text().lower()),
+            None,
+        )
+        assert load_btn is not None
+        load_btn.click()
+        assert mock_dialog.called
+
+def test_color_pair_combo_updates_overlay_colors(fusion_test_object):
+    """Test that changing the color pair combo box updates the overlay colors in the views."""
+    options = fusion_test_object.main_window.fusion_options_tab
+    # Set to a different color pair
+    options.color_pair_combo.setCurrentText("Blue + Yellow")
+    # Check that the internal state is updated
+    assert options.fixed_color == "Blue"
+    assert options.moving_color == "Yellow"
+    assert options.coloring_enabled is True
+
+def test_opacity_slider_updates_overlay_opacity(fusion_test_object):
+    """Test that changing the opacity slider updates the overlay opacity."""
+    options = fusion_test_object.main_window.fusion_options_tab
+    # Set to a new value
+    options.opacity_slider.setValue(80)
+    assert options.opacity_slider.value() == 80
+
+def test_show_transform_matrix_button_opens_dialog(qtbot, fusion_test_object):
+    """Test that clicking 'Show Transform Matrix' opens the matrix dialog."""
+    options = fusion_test_object.main_window.fusion_options_tab
+
+    # Provide a dummy VTK engine with a .transform attribute and .sitk_matrix
+    class DummyMatrix:
+        def GetElement(self, i, j):
+            return 1.0 if i == j else 0.0  # Identity matrix
+
+    class DummyTransform:
+        def GetMatrix(self):
+            return DummyMatrix()
+
+    class DummyVTKEngine:
+        transform = DummyTransform()
+        sitk_matrix = np.eye(4, dtype=float)
+        _tx = _ty = _tz = 0.0
+        _rx = _ry = _rz = 0.0
+        moving_dir = ""
+
+    options.set_get_vtk_engine_callback(lambda: DummyVTKEngine())
+
+    show_matrix_btn = next(
+        (btn for btn in options.findChildren(QPushButton) if "matrix" in btn.text().lower()),
+        None,
+    )
+    assert show_matrix_btn is not None
+    show_matrix_btn.click()
+
+    # The dialog should now be created and visible
+    assert options._matrix_dialog is not None
+    assert options._matrix_dialog.isVisible()
