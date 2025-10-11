@@ -4,17 +4,34 @@ from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
 
-from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.ImageLoading import get_datasets
 from src.View.ImageFusion.ManualFusionLoader import ManualFusionLoader
 from src.Model.VTKEngine import VTKEngine
-
 from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 
+"""
+Tests for OnkoDICOM's image fusion infrastructure.
+
+These tests verify that:
+- DICOM image slices (CT, MR, PT) can be found and loaded from test data directories.
+- The MovingImageLoader and ManualFusionLoader can load moving image series for fusion.
+- The VTKEngine can load both fixed and moving image series for manual fusion.
+- The fusion infrastructure works without requiring RTSS/ROI data or GUI components.
+
+No GUI is launched; these are logic and engine-level tests only.
+"""
 
 def find_image_slices(folder):
-    """Finds only image slice DICOM files (CT, MR, PT) in a folder."""
+    """
+    Finds only image slice DICOM files (CT, MR, PT) in a folder.
+
+    Args:
+        folder (str or Path): The folder to search for DICOM files.
+
+    Returns:
+        list: List of file paths to DICOM image slices.
+    """
     dicom_files = []
     for root, dirs, files in os.walk(folder, topdown=True):
         for name in files:
@@ -29,7 +46,15 @@ def find_image_slices(folder):
     return dicom_files
 
 def find_first_two_image_dirs(testdata_path):
-    """Finds the first two subdirectories with image slices in testdata_path."""
+    """
+    Finds the first two subdirectories with image slices in testdata_path.
+
+    Args:
+        testdata_path (Path): Path to the test data directory.
+
+    Returns:
+        tuple: The first two subdirectories containing image slices.
+    """
     image_dirs = []
     for subdir in sorted(testdata_path.iterdir()):
         if subdir.is_dir():
@@ -42,14 +67,26 @@ def find_first_two_image_dirs(testdata_path):
     return image_dirs[0], image_dirs[1]
 
 class DummyInterruptFlag:
+    """
+    Dummy interrupt flag for simulating an interruptible process.
+    """
     def is_set(self):
         return False
 
 class DummyProgressCallback:
+    """
+    Dummy progress callback for simulating progress reporting.
+    """
     def emit(self, *args, **kwargs):
         pass
 
 def test_moving_image_loader_debug(fusion_test_data):
+    """
+    Test that the MovingImageLoader can load moving images in manual mode.
+
+    Args:
+        fusion_test_data (tuple): Test data fixture.
+    """
     _, _, _, moving_files = fusion_test_data
     loader = MovingImageLoader(moving_files, None, None)
     result = loader.load_manual_mode(DummyInterruptFlag(), DummyProgressCallback())
@@ -57,16 +94,30 @@ def test_moving_image_loader_debug(fusion_test_data):
     assert result
 
 def sort_by_instance_number(files):
+    """
+    Sorts a list of DICOM files by their InstanceNumber attribute.
+
+    Args:
+        files (list): List of DICOM file paths.
+
+    Returns:
+        list: Sorted list of file paths.
+    """
     def get_instance_number(f):
         try:
             return int(dcmread(f, stop_before_pixels=True).InstanceNumber)
-        except Exception:
+        except (InvalidDicomError, FileNotFoundError, AttributeError, ValueError):
             return 0
     return sorted(files, key=get_instance_number)
 
 @pytest.fixture
 def fusion_test_data():
-    # Dynamically find the first two image series directories
+    """
+    Pytest fixture to provide test data for fusion tests.
+
+    Returns:
+        tuple: (file_path, read_data_dict, file_names_dict, moving_files)
+    """
     testdata_path = Path.cwd().joinpath('test', 'testdata')
     fixed_dir, moving_dir = find_first_two_image_dirs(testdata_path)
     fixed_files = find_image_slices(fixed_dir)
@@ -80,12 +131,16 @@ def fusion_test_data():
     return file_path, read_data_dict, file_names_dict, moving_files
 
 def test_manual_fusion_vtk_engine_exists(fusion_test_data):
-    """Test that the VTK engine is created for manual fusion (no RTSS required)."""
+    """
+    Test that the VTK engine is created for manual fusion (no RTSS required).
+
+    Args:
+        fusion_test_data (tuple): Test data fixture.
+    """
     file_path, read_data_dict, file_names_dict, moving_files = fusion_test_data
     patient_dict_container = PatientDictContainer()
     patient_dict_container.clear()
     patient_dict_container.set_initial_values(file_path, read_data_dict, file_names_dict)
-    # Try loading the moving images directly
 
     loader = MovingImageLoader(moving_files, None, None)
     result = loader.load_manual_mode(DummyInterruptFlag(), DummyProgressCallback())
@@ -98,62 +153,90 @@ def test_manual_fusion_vtk_engine_exists(fusion_test_data):
     moving_dir = os.path.dirname(moving_files[0])
     moving_loaded = engine.load_moving(moving_dir)
     assert moving_loaded, "VTKEngine failed to load moving image"
-    # If you get here, both fixed and moving images loaded successfully
 
-def test_manual_fusion_fixed_and_moving_images_loaded(qtbot, fusion_test_data):
-    """Test that both fixed and moving images are loaded in the VTK engine."""
+def test_manual_fusion_fixed_and_moving_images_loaded(fusion_test_data):
+    """
+    Test that both fixed and moving images are loaded in the VTK engine.
+
+    Args:
+        fusion_test_data (tuple): Test data fixture.
+    """
     file_path, read_data_dict, file_names_dict, moving_files = fusion_test_data
     patient_dict_container = PatientDictContainer()
     patient_dict_container.clear()
     patient_dict_container.set_initial_values(file_path, read_data_dict, file_names_dict)
 
-    moving_dir = os.path.dirname(moving_files[0])
-    moving_files_sorted = sorted(moving_files)
-    moving_read_data_dict, moving_file_names_dict = get_datasets(moving_files_sorted)
-    moving_dict_container = MovingDictContainer()
-    moving_dict_container.clear()
-    moving_dict_container.set_initial_values(moving_dir, moving_read_data_dict, moving_file_names_dict)
-
-    print("fixed_dir:", file_path)
-    print("fixed_files:", sorted(find_image_slices(file_path)))
-    print("moving_dir:", moving_dir)
-    print("moving_files:", moving_files_sorted)
     loader = ManualFusionLoader(moving_files)
     result = {}
 
-    def on_loaded(res):
+    def _capture_result(res):
         result["value"] = res
 
-    loader.signal_loaded.connect(on_loaded)
+    loader.signal_loaded.connect(_capture_result)
     loader.load(DummyInterruptFlag(), DummyProgressCallback())
-    qtbot.waitUntil(lambda: "value" in result, timeout=10000)
-    success, data = result["value"]
-    assert success
+    _wait_for_loader(result)
+    _assert_vtk_engine_images_loaded(result["value"])
 
+def _wait_for_loader(result_dict):
+    """
+    Waits for the loader to finish by checking for the "value" key in the result_dict.
+
+    Args:
+        result_dict (dict): Dictionary to check for loader result.
+
+    Raises:
+        RuntimeError: If the loader does not finish in time.
+    """
+    import time
+    for _ in range(100):
+        if "value" in result_dict:
+            return
+        time.sleep(0.1)
+    raise RuntimeError("Loader did not finish in time")
+
+def _assert_vtk_engine_images_loaded(loaded_tuple):
+    """
+    Asserts that the VTK engine has loaded both fixed and moving images.
+
+    Args:
+        loaded_tuple (tuple): (success, data) tuple from loader.
+    """
+    success, data = loaded_tuple
+    assert success
     vtk_engine = data["vtk_engine"]
-    # Debug: check what is actually loaded in the engine
-    print("VTKEngine:", vtk_engine)
-    if hasattr(vtk_engine, "fixed_reader"):
-        print("fixed_reader:", vtk_engine.fixed_reader)
-        if hasattr(vtk_engine.fixed_reader, "GetOutput"):
-            print("fixed_reader.GetOutput():", vtk_engine.fixed_reader.GetOutput())
-    if hasattr(vtk_engine, "moving_reader"):
-        print("moving_reader:", vtk_engine.moving_reader)
-        if hasattr(vtk_engine.moving_reader, "GetOutput"):
-            print("moving_reader.GetOutput():", vtk_engine.moving_reader.GetOutput())
-    if hasattr(vtk_engine, "get_fixed_image"):
-        print("get_fixed_image():", vtk_engine.get_fixed_image())
-    if hasattr(vtk_engine, "get_moving_image"):
-        print("get_moving_image():", vtk_engine.get_moving_image())
-    fixed_image = None
-    if hasattr(vtk_engine, "get_fixed_image"):
-        fixed_image = vtk_engine.get_fixed_image()
-    if fixed_image is None and hasattr(vtk_engine, "fixed_reader") and hasattr(vtk_engine.fixed_reader, "GetOutput"):
-        fixed_image = vtk_engine.fixed_reader.GetOutput()
-    moving_image = None
-    if hasattr(vtk_engine, "get_moving_image"):
-        moving_image = vtk_engine.get_moving_image()
-    if moving_image is None and hasattr(vtk_engine, "moving_reader") and hasattr(vtk_engine.moving_reader, "GetOutput"):
-        moving_image = vtk_engine.moving_reader.GetOutput()
+    fixed_image = _get_fixed_image_from_engine(vtk_engine)
+    moving_image = _get_moving_image_from_engine(vtk_engine)
     assert fixed_image is not None
     assert moving_image is not None
+
+def _get_fixed_image_from_engine(vtk_engine):
+    """
+    Helper to extract the fixed image from the VTK engine.
+
+    Args:
+        vtk_engine (VTKEngine): The VTK engine instance.
+
+    Returns:
+        The fixed image object, or None if not found.
+    """
+    if hasattr(vtk_engine, "get_fixed_image"):
+        return vtk_engine.get_fixed_image()
+    if hasattr(vtk_engine, "fixed_reader") and hasattr(vtk_engine.fixed_reader, "GetOutput"):
+        return vtk_engine.fixed_reader.GetOutput()
+    return None
+
+def _get_moving_image_from_engine(vtk_engine):
+    """
+    Helper to extract the moving image from the VTK engine.
+
+    Args:
+        vtk_engine (VTKEngine): The VTK engine instance.
+
+    Returns:
+        The moving image object, or None if not found.
+    """
+    if hasattr(vtk_engine, "get_moving_image"):
+        return vtk_engine.get_moving_image()
+    if hasattr(vtk_engine, "moving_reader") and hasattr(vtk_engine.moving_reader, "GetOutput"):
+        return vtk_engine.moving_reader.GetOutput()
+    return None

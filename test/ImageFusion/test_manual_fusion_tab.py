@@ -14,6 +14,22 @@ from unittest.mock import patch
 import numpy as np
 import tempfile
 
+"""
+Tests for the OnkoDICOM manual fusion tab GUI.
+
+These tests verify that:
+- The main window and manual fusion tab can be set up with test DICOM data.
+- All fusion views (axial, sagittal, coronal) are present, visible, and enabled.
+- The fusion options tab and its controls (sliders, combo boxes, buttons) exist and work as expected.
+- Translation and rotation sliders respond to value changes and can be reset.
+- Color pair and opacity controls update the overlay as expected.
+- Zoom, metadata, and view update functions work for the fusion views.
+- The fusion options tab is present in the left panel and the four-views layout is active.
+- Saving and loading fusion state opens the correct file dialogs (mocked).
+- The transform matrix dialog can be opened and is visible.
+
+These are GUI-level integration tests for the manual fusion workflow.
+"""
 
 def find_dicom_files(folder, exclude_transform=False):
     """Finds all valid DICOM files in a folder, optionally excluding spatial registration (transform) files."""
@@ -226,19 +242,23 @@ def test_save_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
     options.set_get_vtk_engine_callback(lambda: DummyVTKEngine())
     with tempfile.NamedTemporaryFile(suffix=".dcm", delete=False) as tmpfile:
         filename = tmpfile.name
-    try:
-        with patch("src.View.ImageFusion.TranslateRotateMenu.QFileDialog.getSaveFileName",
-                   return_value=(filename, None)) as mock_dialog:
-            save_btn = next(
-                (btn for btn in options.findChildren(QPushButton) if "save" in btn.text().lower()),
-                None,
-            )
-            assert save_btn is not None
-            save_btn.click()
-            assert mock_dialog.called
-    finally:
-        if os.path.exists(filename):
-            os.remove(filename)
+
+    _assert_save_fusion_state_opens_file_dialog(options, filename)
+
+    # Always clean up the temp file (no conditional)
+    os.remove(filename)
+
+def _assert_save_fusion_state_opens_file_dialog(options, filename):
+    """Helper to check that save fusion state opens the file dialog and clicks the button."""
+    with patch("src.View.ImageFusion.TranslateRotateMenu.QFileDialog.getSaveFileName",
+               return_value=(filename, None)) as mock_dialog:
+        save_btn = next(
+            (btn for btn in options.findChildren(QPushButton) if "save" in btn.text().lower()),
+            None,
+        )
+        assert save_btn is not None
+        save_btn.click()
+        assert mock_dialog.called
 
 def test_load_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
     """Test that clicking 'Load Fusion State' opens a file dialog (mocked)."""
