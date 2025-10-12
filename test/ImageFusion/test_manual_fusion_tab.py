@@ -28,7 +28,6 @@ These tests verify that:
 - Saving and loading fusion state opens the correct file dialogs (mocked).
 - The transform matrix dialog can be opened and is visible.
 
-These are GUI-level integration tests for the manual fusion workflow.
 """
 
 def find_dicom_files(folder, exclude_transform=False):

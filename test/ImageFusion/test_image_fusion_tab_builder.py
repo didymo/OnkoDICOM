@@ -1,5 +1,4 @@
 # test/test_view_image_fusion_tab_builder.py
-
 import pytest
 from unittest.mock import MagicMock
 

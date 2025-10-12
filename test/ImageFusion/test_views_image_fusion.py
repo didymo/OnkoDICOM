@@ -1,5 +1,6 @@
 import pytest
 import os
+import time
 from pathlib import Path
 from pydicom import dcmread
 from pydicom.errors import InvalidDicomError
@@ -146,7 +147,7 @@ def test_manual_fusion_vtk_engine_exists(fusion_test_data):
     result = loader.load_manual_mode(DummyInterruptFlag(), DummyProgressCallback())
     print("MovingImageLoader.load_manual_mode result:", result)
     assert result, "MovingImageLoader failed to load moving images"
-    # Now try loading into VTKEngine
+    # Load into VTKEngine
     engine = VTKEngine()
     fixed_loaded = engine.load_fixed(file_path)
     assert fixed_loaded, "VTKEngine failed to load fixed image"
@@ -187,7 +188,6 @@ def _wait_for_loader(result_dict):
     Raises:
         RuntimeError: If the loader does not finish in time.
     """
-    import time
     for _ in range(100):
         if "value" in result_dict:
             return
