@@ -307,9 +307,9 @@ class RoiInitialiser():
         Return : None
         """
         self.multi_window = multiPopUp(self.scroller.maximum(), self.scroller.value(),
-                                          self._toolbar.transparency_slider.value(),
-                                           self._toolbar.pixel_range_max.value(),
-                                           self._toolbar.pixel_range_min.value())
+                                          self._toolbar.opasity_value_num,
+                                           self._toolbar.pixel_range_max,
+                                           self._toolbar.pixel_range_min)
         self.multi_window.contour_number.connect(self.canvas_labal.multi_layer_commit)
         self.multi_window.max_range_signal.connect(self.canvas_labal.set_max_pixel_value)
         self.multi_window.min_range_signal.connect(self.canvas_labal.set_min_pixel_value)

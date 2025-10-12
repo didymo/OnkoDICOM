@@ -9,6 +9,10 @@ class CutsomToolbar(QToolBar):
     colour = Signal(QColor)
     opasity_value = Signal(int)
     update_cursor_size = Signal()
+    opasity_value_num = 126
+    pixel_range_max = 6000
+    pixel_range_min = 0
+
 
     def __init__(self, parent=None, canvas_label = None, left_label = None):
         super().__init__("Toolbar", parent)
@@ -58,11 +62,14 @@ class CutsomToolbar(QToolBar):
             ("Pixel Range Min",  0,  6000,   0,   self.update_pixel_min),
             ("Pixel Range Max",  0,  6000,6000,  self.update_pixel_max),
             ("Erase Dags",       0,262144,  20,  self.update_erase_dags),
-            ("Opacity",          1,   255, 126,  self.update_transparency),
+            ("Opacity",          0,   255, 126,  self.update_transparency),
         ]
 
         for text, mn, mx, val, slot in spin_defs:
             self._add_labeled_spinbox(text, mn, mx, val, slot)
+        
+
+        
         
     def _add_labeled_spinbox(self, label_text, minimum, maximum, default, slot):
         self.addSeparator()
@@ -120,6 +127,7 @@ class CutsomToolbar(QToolBar):
         colour.setAlpha(value)
         self.canvas_label.pen.setColor(colour)
         self.canvas_label.max_alpha = value
+        self.opasity_value_num = value
         self.opasity_value.emit(value)
 
 
@@ -129,6 +137,7 @@ class CutsomToolbar(QToolBar):
         Parm int : value
         Return : None
         """
+        self.pixel_range_min = value
         self.canvas_label.min_range = value
         self.canvas_label.lock_pixel()
 
@@ -138,6 +147,7 @@ class CutsomToolbar(QToolBar):
         Parm int : value
         Return : None
         """
+        self.pixel_range_max = value
         self.canvas_label.max_range = value
         self.canvas_label.lock_pixel()
 
