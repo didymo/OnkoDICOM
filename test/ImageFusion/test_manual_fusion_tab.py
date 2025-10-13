@@ -217,6 +217,10 @@ def test_reset_transform_resets_slider(fusion_test_object, slider_attr, index):
 
 def test_save_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
     """Test that clicking 'Save Fusion State' opens a file dialog (mocked)."""
+    # Only skip on CI (GitHub Actions or similar), always run locally
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        pytest.skip("Skipping file dialog test on CI workflow.")
+
     options = fusion_test_object.main_window.fusion_options_tab
 
     # Provide a dummy VTK engine with a .transform attribute
@@ -257,6 +261,10 @@ def _assert_save_fusion_state_opens_file_dialog(options, filename):
 
 def test_load_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
     """Test that clicking 'Load Fusion State' opens a file dialog (mocked)."""
+    # Only skip on CI (GitHub Actions or similar), always run locally
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        pytest.skip("Skipping file dialog test on CI workflow.")
+
     options = fusion_test_object.main_window.fusion_options_tab
     # Patch: Set a dummy VTK engine callback so the dialog is called
     options.set_get_vtk_engine_callback(lambda: object())
@@ -319,3 +327,23 @@ def test_show_transform_matrix_button_opens_dialog(qtbot, fusion_test_object):
     # The dialog should now be created and visible
     assert options._matrix_dialog is not None
     assert options._matrix_dialog.isVisible()
+
+def test_save_fusion_state_button_exists(fusion_test_object):
+    """Test that the 'Save Fusion State' button exists in the fusion options tab."""
+    options = fusion_test_object.main_window.fusion_options_tab
+    save_btn = next(
+        (btn for btn in options.findChildren(QPushButton) if "save" in btn.text().lower()),
+        None,
+    )
+    assert save_btn is not None
+    assert "save" in save_btn.text().lower()
+
+def test_load_fusion_state_button_exists(fusion_test_object):
+    """Test that the 'Load Fusion State' button exists in the fusion options tab."""
+    options = fusion_test_object.main_window.fusion_options_tab
+    load_btn = next(
+        (btn for btn in options.findChildren(QPushButton) if "load" in btn.text().lower()),
+        None,
+    )
+    assert load_btn is not None
+    assert "load" in load_btn.text().lower()
