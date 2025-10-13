@@ -49,12 +49,7 @@ def find_image_slices(folder):
 def find_first_two_image_dirs(testdata_path):
     """
     Finds the first two subdirectories with image slices in testdata_path.
-
-    Args:
-        testdata_path (Path): Path to the test data directory.
-
-    Returns:
-        tuple: The first two subdirectories containing image slices.
+    If only one is found, returns it twice.
     """
     image_dirs = []
     for subdir in sorted(testdata_path.iterdir()):
@@ -63,9 +58,12 @@ def find_first_two_image_dirs(testdata_path):
                 image_dirs.append(subdir)
             if len(image_dirs) == 2:
                 break
-    if len(image_dirs) < 2:
+    if len(image_dirs) == 1:
+        # Use the same directory for both fixed and moving
+        return image_dirs[0], image_dirs[0]
+    if len(image_dirs) < 1:
         raise RuntimeError("Not enough image series found in testdata for fusion test.")
-    return image_dirs[0], image_dirs[1]
+    return image_dirs[0], image_dirs[1] if len(image_dirs) > 1 else image_dirs[0]
 
 class DummyInterruptFlag:
     """
