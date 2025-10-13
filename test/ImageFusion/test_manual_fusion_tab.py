@@ -30,6 +30,15 @@ These tests verify that:
 
 """
 
+
+@pytest.fixture(autouse=True)
+def reset_patient_dict_container():
+    # Arrange
+    yield
+    # Act/Assert: after each test, clear the singleton
+    PatientDictContainer().clear()
+
+
 def find_dicom_files(folder, exclude_transform=False):
     """Finds all valid DICOM files in a folder, optionally excluding spatial registration (transform) files."""
     dicom_files = []

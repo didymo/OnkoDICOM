@@ -23,6 +23,14 @@ These tests verify that:
 No GUI is launched; these are logic and engine-level tests only.
 """
 
+
+@pytest.fixture(autouse=True)
+def reset_patient_dict_container():
+    # Arrange
+    yield
+    # Act/Assert: after each test, clear the singleton
+    PatientDictContainer().clear()
+
 def find_image_slices(folder):
     """
     Finds only image slice DICOM files (CT, MR, PT) in a folder.
