@@ -65,10 +65,6 @@ class TestManualFusionTab:
         file_path = os.path.dirname(os.path.commonprefix(selected_files))
         read_data_dict, file_names_dict = get_datasets(selected_files)
 
-        # Legacy: reindex CT if needed
-        if "ct" in read_data_dict:
-            read_data_dict = dict(enumerate(read_data_dict["ct"]))
-
         # Initialize PatientDictContainer singleton
         patient_dict_container = PatientDictContainer()
         patient_dict_container.clear()

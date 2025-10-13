@@ -91,7 +91,6 @@ def test_moving_image_loader_debug(fusion_test_data):
     _, _, _, moving_files = fusion_test_data
     loader = MovingImageLoader(moving_files, None, None)
     result = loader.load_manual_mode(DummyInterruptFlag(), DummyProgressCallback())
-    print("MovingImageLoader.load_manual_mode result:", result)
     assert result
 
 def sort_by_instance_number(files):
@@ -145,7 +144,6 @@ def test_manual_fusion_vtk_engine_exists(fusion_test_data):
 
     loader = MovingImageLoader(moving_files, None, None)
     result = loader.load_manual_mode(DummyInterruptFlag(), DummyProgressCallback())
-    print("MovingImageLoader.load_manual_mode result:", result)
     assert result, "MovingImageLoader failed to load moving images"
     # Load into VTKEngine
     engine = VTKEngine()
