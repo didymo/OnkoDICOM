@@ -7,6 +7,7 @@ import SimpleITK as sitk
 import numpy as np
 from rt_utils import RTStructBuilder, RTStruct
 from src.Controller.PathHandler import data_path
+from src.Model.PatientDictContainer import PatientDictContainer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -147,6 +148,15 @@ def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: 
 
     logger.info(f"Converting {nifti_image_name} to RTStruct")
 
+    rtss_dataset = rtstruct.ds
+
+    # Determine next available ROINumber - avoids potential duplicates
+    if hasattr(rtss_dataset, "StructureSetROISequence") and len(rtss_dataset.StructureSetROISequence) > 0:
+        existing_nums = [int(roi.ROINumber) for roi in rtss_dataset.StructureSetROISequence]
+        next_roi_num = max(existing_nums) + 1
+    else:
+        next_roi_num = 1
+
     # Load & orient Nifti image
     nifti_img = sitk.DICOMOrient(sitk.ReadImage(nifti_image_path), 'LPS')
 
@@ -165,6 +175,12 @@ def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: 
     nifti_array_transposed = np.transpose(nifti_array, (1, 2, 0))
 
     rtstruct.add_roi(mask=nifti_array_transposed, name=structure_name)
+
+    # patch the ROI number to the newly added ROIs
+    # this avoids duplicate ROI Numbers that can make existing ROIs appear to be overwritten
+    rtss_dataset.StructureSetROISequence[-1].ROINumber = next_roi_num
+    rtss_dataset.ROIContourSequence[-1].ReferencedROINumber = next_roi_num
+    rtss_dataset.RTROIObservationsSequence[-1].ReferencedROINumber = next_roi_num
 
 def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: str) -> bool:
 
@@ -190,16 +206,15 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
     # Orientate the Dicom image to LPS (Left, Posterior, Superior) standard
     dicom_img = sitk.DICOMOrient(_load_dicom_series_as_sitk(dicom_path), 'LPS')
 
-    # Build or load the rtstruct
-    if os.path.exists(output_path):
-        logger.info(f"Loading existing RTStruct: {output_path}")
-        rtstruct = RTStructBuilder.create_from(
-            rt_struct_path=output_path,
-            dicom_series_path=dicom_path
-        )
+    patient_dict_container = PatientDictContainer()
+    rtss_path = patient_dict_container.filepaths['rtss']
+
+    # Load the rtstruct from patient dictionary if it exists, else create file
+    if os.path.exists(rtss_path):
+        rtstruct = RTStructBuilder.create_from(rt_struct_path=rtss_path,dicom_series_path=dicom_path)
     else:
-        logger.info("Creating new RTStruct")
         rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
+        rtss_path = output_path # Change to default "rtss.dcm"
 
     # Get the list of nifti files from path (handles .nii and .nii.gz for robustness)
     nifti_files_list: list[str] = glob.glob(os.path.join(nifti_path, "*.nii.gz"))
@@ -215,7 +230,7 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
     try:
         for img_path in nifti_files_list:
             _process_nifti_file(str(img_path), dicom_img, rtstruct, segment_name_map)
-        rtstruct.save(output_path)
+        rtstruct.save(rtss_path)
         return True
     except Exception as e:
         logger.error(f"Conversion failed: {type(e).__name__}: {e}")
