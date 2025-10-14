@@ -134,7 +134,7 @@ class AutoSegmentWindow(QtWidgets.QWidget):
         if status:
             msgbox.setWindowTitle("Auto-Segmentation Successful")
             msgbox.setText("Auto-Segmentation completed successfully.\n\n"
-                           "The resulting structures have been saved to the RTStruct file in the parent directory.")
+                           "The new structures have been saved to the RTStruct file in the parent directory.")
         else:
             msgbox.setWindowTitle("Auto-Segmentation Failed")
             msgbox.setText("Auto-Segmentation could not be completed.\n"
