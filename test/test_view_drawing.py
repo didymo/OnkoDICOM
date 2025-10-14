@@ -78,10 +78,8 @@ def test_object():
 def test_draw_roi_window_displayed(qtbot, test_object):
     """Function to test that the draw_roi_window is displayed
     within the main window when the draw ROI button is clicked"""
-    print("out ")
     qtbot.mouseClick(
         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
-    print("no")
     assert test_object.main_window.splitter.isHidden() is True
     assert test_object.main_window.draw_roi.isHidden() is False
 
