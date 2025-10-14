@@ -1,11 +1,14 @@
 from PySide6 import QtWidgets
 from typing import Optional
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QButtonGroup, QMessageBox
-from PySide6.QtGui import QPixmap, QPixmap, QPainter, QPen, QColor,QCursor
+from PySide6.QtGui import QPixmap, QPixmap, QPainter, QPen, QColor,QCursor, QIcon
 from PySide6.QtCore import Qt, Slot, Signal
+from src.View.mainpage.DrawROIWindow.SelectROIPopUp import SelectROIPopUp
+from src.Model.PatientDictContainer import PatientDictContainer
 
 class LeftPannel(QtWidgets.QWidget):
     """Holds the left pannels buttons"""
+    roi_name_emit = Signal(str)
     def __init__(self, parent = None, pen = None, canvas_label = None):
         super().__init__(parent)
         self.canvas_label = canvas_label
@@ -28,76 +31,80 @@ class LeftPannel(QtWidgets.QWidget):
         self.button_group.setExclusive(True)
         self._grid_group_box = QGroupBox()
         layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)       
-        brush = QPushButton("Brush")
-        brush.setCheckable(True)
-        pen = QPushButton("Pen")
-        pen.setCheckable(True)
-        eraser_roi = QPushButton("Trim ROI")
-        eraser_roi.setCheckable(True)
-        eraser_draw = QPushButton("Remove ROI")
-        transect = QPushButton("Transect")
-        transect.setCheckable(True)
-        copy = QPushButton("Copy ROI")
-        save = QPushButton("Save")
-        fill = QPushButton("Fill")
-        fill.setCheckable(True)
-        multi = QPushButton("Multi")
-        multi.setCheckable(True)
-        erase_dag = QPushButton("Erase DAGs")
-        cancel = QPushButton("Cancel")
-        zapper = QPushButton("Zapper")
-        zapper.setCheckable(True)
-        
-        self.button_group.addButton(brush)
-        self.button_group.addButton(pen)
-        self.button_group.addButton(eraser_draw)
-        self.button_group.addButton(eraser_roi)
-        self.button_group.addButton(transect)
-        self.button_group.addButton(copy)
-        self.button_group.addButton(save)
-        self.button_group.addButton(fill)
-        self.button_group.addButton(erase_dag)
-        self.button_group.addButton(multi)
-        self.button_group.addButton(cancel)
-        self.button_group.addButton(zapper)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(0)
 
+        btn_cfgs = [
+            # (icon,    tooltip,                            checkable, slot,                         property)
+            ("body-check.png",     "Select ROI Name",             False,     self.show_roi_type_options, None),
+            ("paint.png",          "Brush Tool",                  True,      self.brush_tool,           None),
+            ("pen-swirl.png",      "Laso Brush Tool",             True,      self.pen_tool,             None),
+            ("eraser.png",         "Trim ROI Tool",               True,      self.eraser_roi_tool,      None),
+            ("icons8-remove-image-24.png", "Erase Slice",        False,     self.eraser_draw_tool,     None),
+            ("fill.png",           "Fill Tool",                   True,      self.fill_tool,            None),
+            ("layer-plus.png",     "Multi Layer Contour Tool",    True,      self.multi_button,         None),
+            ("copy-alt.png",       "Copy current drawing...",     False,     self.copy_button,          None),
+            ("bolt.png",           "Zapper Tool",                 True,      self.zapper_button,        None),
+            ("broom.png",          "Erase Dags",                  False,     self.canvas_label.erase_dags, None),
+            ("icons8-save-48.png", "Save",                        False,     self.save_button,          "success-button"),
+            ("icons8-cancel-50.png","Cancel",                     False,     self.cancel_button,        "fail-button"),
+        ]
 
-        #Links the buttons to actions
-        brush.clicked.connect(self.brush_tool)
-        pen.clicked.connect(self.pen_tool)
-        eraser_roi.clicked.connect(self.eraser_roi_tool)
-        eraser_draw.clicked.connect(self.eraser_draw_tool)
-        transect.clicked.connect(self.transect_tool)
-        copy.clicked.connect(self.copy_button)
-        save.clicked.connect(self.save_button)
-        fill.clicked.connect(self.fill_tool)
-        erase_dag.clicked.connect(self.canvas_label.erase_dags)
-        multi.clicked.connect(self.multi_button)
-        cancel.clicked.connect(self.cancel_button)
-        zapper.clicked.connect(self.zapper_button)
+        for row, (icon, tip, checkable, slot, prop) in enumerate(btn_cfgs):
+            btn = QPushButton()
+            btn.setIcon(QIcon(f"res/images/DrawRoi-icons/{icon}"))
+            btn.setToolTip(tip)
+            if checkable:    btn.setCheckable(True)
+            if prop:         btn.setProperty("QPushButtonClass", prop)
+            self.button_group.addButton(btn)
+            btn.clicked.connect(slot)
+            layout.addWidget(btn, row, 0)
 
-        #Sets the buttons in the layout 2 by 3
-        layout.addWidget(brush,0,0)
-        layout.addWidget(pen, 0,1)
-        layout.addWidget(eraser_roi,1,0)
-        layout.addWidget(eraser_draw,1,1)
-        layout.addWidget(multi,2,0)
-        layout.addWidget(fill, 2,1)
-        layout.addWidget(copy,3,0)
-        layout.addWidget(zapper,3,1)
-        layout.addWidget(transect,4,0)
-        layout.addWidget(erase_dag, 4,1)
-        layout.addWidget(save,5,0)
-        layout.addWidget(cancel,5,1)
-        
         #adds the layout to the grid_group_box
         #Bundles everything up yay!
         self._grid_group_box.setLayout(layout)
         main_layout = QtWidgets.QVBoxLayout()  # Create main layout for the left panel
         main_layout.addWidget(self._grid_group_box)  # Add the group box to the main layout
-        self.setLayout(main_layout) 
+        self.setLayout(main_layout)
+        
+    def show_roi_type_options(self):
+        """
+        Creates and displays roi type options popup
+        Parm : None
+        Return : None
+        """
+        self.choose_roi_name_window = SelectROIPopUp()
+        self.choose_roi_name_window.signal_roi_name.connect(
+            self.set_selected_roi_name)
+        self.choose_roi_name_window.show()
+        
+    def set_selected_roi_name(self, roi_name):
+        """
+        function to set selected roi name
+        :param roi_name: roi name selected
+        """
+        roi_exists = False
+
+        patient_dict_container = PatientDictContainer()
+        existing_rois = patient_dict_container.get("rois")
+
+        # Check to see if the ROI already exists
+        for _, value in existing_rois.items():
+            if roi_name == value['name']:
+                roi_exists = True
+
+        if roi_exists:
+            reply = QMessageBox.question(
+                self,
+                "ROI already exists in RTSS",
+                "ROI already exists in RTSS. Would you like to continue?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if reply != QMessageBox.Yes:
+                return
+        self.roi_name_emit.emit(roi_name)
+        self.parent.update_metadata()
         
     def brush_tool(self):
         """
@@ -119,6 +126,7 @@ class LeftPannel(QtWidgets.QWidget):
         """
         self.canvas_label.pen.setColor(self.last_colour)
         self.canvas_label.set_tool(3)
+        self.canvas_label.pen.setWidth(2)
         self.canvas_label.setCursor(Qt.CrossCursor)
 
     def eraser_roi_tool(self):
@@ -141,15 +149,6 @@ class LeftPannel(QtWidgets.QWidget):
         Return : None
         """
         self.canvas_label.erase_roi()
-
-    def transect_tool(self):
-        """
-        This fucntion activates the transect tool
-        Parms : None
-        Return : None
-        """
-        self.canvas_label.setCursor(Qt.ArrowCursor)
-        self.canvas_label.set_tool(4)
 
     def copy_button(self):
         """This fucntion activates the copy pop up window"""
@@ -247,7 +246,7 @@ class LeftPannel(QtWidgets.QWidget):
         Parm QColor : v
         Return : None 
         """
-        self.last_colour = v 
+        self.last_colour = v
 
     @Slot(int)
     def update_opasity(self, v):
