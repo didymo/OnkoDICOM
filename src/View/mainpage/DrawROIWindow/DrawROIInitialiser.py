@@ -67,6 +67,7 @@ class RoiInitialiser():
         Closes the window
         """
         self.close_window_signal.emit()
+        self._toolbar.close()
         self.close()
 
     def update_draw_roi_pixmaps(self):
