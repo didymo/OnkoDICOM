@@ -208,9 +208,14 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
 
     patient_dict_container = PatientDictContainer()
     rtss_path = patient_dict_container.filepaths['rtss']
+    print(rtss_path)
 
-    # Load the rtstruct from patient dictionary
-    rtstruct = RTStructBuilder.create_from(rt_struct_path=rtss_path,dicom_series_path=dicom_path)
+    # Load the rtstruct from patient dictionary if it exists, else create file
+    if os.path.exists(rtss_path):
+        rtstruct = RTStructBuilder.create_from(rt_struct_path=rtss_path,dicom_series_path=dicom_path)
+    else:
+        rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
+        rtss_path = output_path # Change to default "rtss.dcm"
 
     # Get the list of nifti files from path (handles .nii and .nii.gz for robustness)
     nifti_files_list: list[str] = glob.glob(os.path.join(nifti_path, "*.nii.gz"))
