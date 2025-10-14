@@ -72,8 +72,8 @@ def load_rtss_file_to_patient_dict(patient_dict_container: PatientDictContainer)
     the extracted information.  It also initializes the 'selected_rois'
     list in the container.
     """
-
     rtss_path = patient_dict_container.filepaths["rtss"]
+
     if not rtss_path:
         logger.error("No rtss file found")
         return
@@ -85,6 +85,9 @@ def load_rtss_file_to_patient_dict(patient_dict_container: PatientDictContainer)
         patient_dict_container.set(key, val)
 
     # Set the new RTSS dataset in the patient dictionary
-    patient_dict_container.dataset['rtss'] = dcmread(rtss_path)
+    try:
+        patient_dict_container.dataset['rtss'] = dcmread(rtss_path)
+    except Exception as e:
+        logger.error(f"Failed to read the Rtstruct file at {rtss_path}: {e}")
 
     patient_dict_container.set("selected_rois", [])

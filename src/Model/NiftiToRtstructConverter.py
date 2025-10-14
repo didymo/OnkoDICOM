@@ -176,7 +176,7 @@ def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: 
 
     rtstruct.add_roi(mask=nifti_array_transposed, name=structure_name)
 
-    # patch the ROI number to the newly added sequences
+    # patch the ROI number to the newly added ROIs
     # this avoids duplicate ROI Numbers that can make existing ROIs appear to be overwritten
     rtss_dataset.StructureSetROISequence[-1].ROINumber = next_roi_num
     rtss_dataset.ROIContourSequence[-1].ReferencedROINumber = next_roi_num
@@ -208,7 +208,6 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
 
     patient_dict_container = PatientDictContainer()
     rtss_path = patient_dict_container.filepaths['rtss']
-    print(rtss_path)
 
     # Load the rtstruct from patient dictionary if it exists, else create file
     if os.path.exists(rtss_path):
