@@ -83,4 +83,8 @@ def load_rtss_file_to_patient_dict(patient_dict_container: PatientDictContainer)
     # load parsed data into patient_dict_container
     for key, val in data.items():
         patient_dict_container.set(key, val)
+
+    # Set the new RTSS dataset in the patient dictionary
+    patient_dict_container.dataset['rtss'] = dcmread(rtss_path)
+
     patient_dict_container.set("selected_rois", [])
