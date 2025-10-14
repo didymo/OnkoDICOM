@@ -23,4 +23,4 @@ dist/
 
 # Ignore Apple specific files
 .DS_Store
-dummy.dcm
+
