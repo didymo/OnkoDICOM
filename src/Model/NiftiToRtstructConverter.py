@@ -148,11 +148,11 @@ def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: 
 
     logger.info(f"Converting {nifti_image_name} to RTStruct")
 
-    rtss_dataset = rtstruct.ds
+    rtstruct_ds = rtstruct.ds
 
     # Determine next available ROINumber - avoids potential duplicates
-    if hasattr(rtss_dataset, "StructureSetROISequence") and len(rtss_dataset.StructureSetROISequence) > 0:
-        existing_nums = [int(roi.ROINumber) for roi in rtss_dataset.StructureSetROISequence]
+    if hasattr(rtstruct_ds, "StructureSetROISequence") and len(rtstruct_ds.StructureSetROISequence) > 0:
+        existing_nums = [int(roi.ROINumber) for roi in rtstruct_ds.StructureSetROISequence]
         next_roi_num = max(existing_nums) + 1
     else:
         next_roi_num = 1
@@ -178,9 +178,9 @@ def _process_nifti_file(nifti_image_path: str, dicom_img: sitk.Image, rtstruct: 
 
     # patch the ROI number to the newly added ROIs
     # this avoids duplicate ROI Numbers that can make existing ROIs appear to be overwritten
-    rtss_dataset.StructureSetROISequence[-1].ROINumber = next_roi_num
-    rtss_dataset.ROIContourSequence[-1].ReferencedROINumber = next_roi_num
-    rtss_dataset.RTROIObservationsSequence[-1].ReferencedROINumber = next_roi_num
+    rtstruct_ds.StructureSetROISequence[-1].ROINumber = next_roi_num
+    rtstruct_ds.ROIContourSequence[-1].ReferencedROINumber = next_roi_num
+    rtstruct_ds.RTROIObservationsSequence[-1].ReferencedROINumber = next_roi_num
 
 def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: str) -> bool:
 
@@ -215,6 +215,7 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
     else:
         rtstruct = RTStructBuilder.create_new(dicom_series_path=dicom_path)
         rtss_path = output_path # Change to default "rtss.dcm"
+        patient_dict_container.filepaths['rtss'] = rtss_path
 
     # Get the list of nifti files from path (handles .nii and .nii.gz for robustness)
     nifti_files_list: list[str] = glob.glob(os.path.join(nifti_path, "*.nii.gz"))
