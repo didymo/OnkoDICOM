@@ -211,7 +211,7 @@ class LeftPannel(QtWidgets.QWidget):
         size: int,
         outline: QColor = QColor("black"),
         fill: Optional[QColor] = None,   # pass QColor("white") when you want it filled
-        outline_width: int = 1,
+        outline_width: int = 3,
         hotspot_center: bool = True,
     ) -> QCursor:
         # Transparent canvas

@@ -72,7 +72,7 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
                     self.signal_draw_roi_closed)
         
     def eventFilter(self, obj, event):
-        print(event.type())
+        """Monitors events then interups to perform cirtain values"""
         if obj is self.view.viewport() and event.type() == QtCore.QEvent.Resize:
             self._hud.setGeometry(self.view.viewport().rect())
             return False  # don't consume; just reacting
