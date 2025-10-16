@@ -5,30 +5,28 @@ from src.Controller.AutoSegmentationController import AutoSegmentationController
 
 
 @pytest.fixture
-def patch_deps():
+def controller():
     with patch("src.Controller.AutoSegmentationController.AutoSegmentViewState") as vs, \
-         patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
-         patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
-         patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
-        yield vs, db
+            patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
+            patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
+            patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
+        ctrl = AutoSegmentationController()
+        ctrl._view = Mock()
+        ctrl.save_list = ["foo", "bar"]
+        return ctrl
 
-@pytest.fixture
-def controller(patch_deps):
-    vs, db = patch_deps
-    ctrl = AutoSegmentationController()
-    ctrl._view = Mock()
-    ctrl.save_list = ["foo", "bar"]
-    return ctrl
-
-def test_init_sets_callbacks_and_members(patch_deps):
+def test_init_sets_callbacks_and_members():
     # Arrange
-    vs, db = patch_deps
-    # Act
-    ctrl = AutoSegmentationController()
-    # Assert
-    assert isinstance(ctrl.view_state, type(vs()))
-    assert hasattr(ctrl, "database")
-    assert hasattr(ctrl, "patient_dict_container")
+    with patch("src.Controller.AutoSegmentationController.AutoSegmentViewState") as vs, \
+            patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
+            patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
+            patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
+        # Act
+        ctrl = AutoSegmentationController()
+        # Assert
+        assert isinstance(ctrl.view_state, type(vs()))
+        assert hasattr(ctrl, "database")
+        assert hasattr(ctrl, "patient_dict_container")
 
 def test_start_button_clicked_calls_disable_and_run_task(controller):
     # Arrange
@@ -88,39 +86,46 @@ def test_get_saved_segmentations_list_calls_db_and_view(controller):
     controller._view.add_save_list.assert_called_with(["foo", "bar"])
     assert controller.save_list == ["foo", "bar"]
 
-def test_show_view_creates_and_shows_view(patch_deps):
+def test_show_view_creates_and_shows_view():
     # Arrange
-    vs, db = patch_deps
-    with patch("src.Controller.AutoSegmentationController.AutoSegmentWindow") as win_cls:
-        win = win_cls.return_value
-        win.isVisible.return_value = True
-        ctrl = AutoSegmentationController()
-        ctrl._view = None
-        ctrl.get_saved_segmentations_list = Mock()
-        # Act
-        ctrl.show_view()
-        # Assert
-        win.show.assert_called_once()
-        win.raise_.assert_called_once()
-        win.activateWindow.assert_called_once()
-        ctrl.get_saved_segmentations_list.assert_called_once()
+    with patch("src.Controller.AutoSegmentationController.AutoSegmentViewState") as vs, \
+            patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
+            patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
+            patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
 
-def test_show_view_existing_view(patch_deps):
+        with patch("src.Controller.AutoSegmentationController.AutoSegmentWindow") as win_cls:
+            win = win_cls.return_value
+            win.isVisible.return_value = True
+            ctrl = AutoSegmentationController()
+            ctrl._view = None
+            ctrl.get_saved_segmentations_list = Mock()
+            # Act
+            ctrl.show_view()
+            # Assert
+            win.show.assert_called_once()
+            win.raise_.assert_called_once()
+            win.activateWindow.assert_called_once()
+            ctrl.get_saved_segmentations_list.assert_called_once()
+
+def test_show_view_existing_view():
     # Arrange
-    vs, db = patch_deps
-    with patch("src.Controller.AutoSegmentationController.AutoSegmentWindow") as win_cls:
-        win = win_cls.return_value
-        win.isVisible.return_value = True
-        ctrl = AutoSegmentationController()
-        ctrl._view = win
-        ctrl.get_saved_segmentations_list = Mock()
-        # Act
-        ctrl.show_view()
-        # Assert
-        win.show.assert_called_once()
-        win.raise_.assert_called_once()
-        win.activateWindow.assert_called_once()
-        ctrl.get_saved_segmentations_list.assert_not_called()
+    with patch("src.Controller.AutoSegmentationController.AutoSegmentViewState") as vs, \
+            patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
+            patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
+            patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
+        with patch("src.Controller.AutoSegmentationController.AutoSegmentWindow") as win_cls:
+            win = win_cls.return_value
+            win.isVisible.return_value = True
+            ctrl = AutoSegmentationController()
+            ctrl._view = win
+            ctrl.get_saved_segmentations_list = Mock()
+            # Act
+            ctrl.show_view()
+            # Assert
+            win.show.assert_called_once()
+            win.raise_.assert_called_once()
+            win.activateWindow.assert_called_once()
+            ctrl.get_saved_segmentations_list.assert_not_called()
 
 def test_communicate_database_state_shows_and_sets_text(controller):
     # Arrange
@@ -142,15 +147,18 @@ def test_communicate_database_state_hides_if_no_text(controller):
     controller._view.database_feedback.show.assert_not_called()
     controller._view.database_feedback.setText.assert_called_with("")
 
-def test_communicate_database_state_no_view(patch_deps):
+def test_communicate_database_state_no_view():
     # Arrange
-    vs, db = patch_deps
-    ctrl = AutoSegmentationController()
-    ctrl._view = None
-    # Act
-    ctrl.communicate_database_state("msg")
-    # Assert
-    # No exception, nothing to assert
+    with patch("src.Controller.AutoSegmentationController.AutoSegmentViewState") as vs, \
+            patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
+            patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
+            patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
+        ctrl = AutoSegmentationController()
+        ctrl._view = None
+        # Act
+        ctrl.communicate_database_state("msg")
+        # Assert
+        # No exception, nothing to assert
 
 def test_update_progress_text_calls_view(controller):
     # Arrange
