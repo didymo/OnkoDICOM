@@ -4,13 +4,15 @@ from unittest.mock import patch, Mock, MagicMock
 from src.Controller.AutoSegmentationController import AutoSegmentationController
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def patch_deps():
     with patch("src.Controller.AutoSegmentationController.AutoSegmentViewState") as vs, \
-         patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db:
+            patch("src.Controller.AutoSegmentationController.PatientDictContainer"), \
+            patch("src.Controller.AutoSegmentationController.SavedSegmentDatabase") as db, \
+            patch("src.Controller.AutoSegmentationController.AutoSegmentWindow"):
         yield vs, db
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def controller(patch_deps):
     vs, db = patch_deps
     ctrl = AutoSegmentationController()
