@@ -378,7 +378,7 @@ class WindowingSlider(QWidget):
                     view.overlay_images = pd.get(f"color_{orientation}")
                     view.image_display()
             except Exception as e:
-                logging.error("Error updating fusion overlays:", e)
+                logging.error(f"Error updating fusion overlays: {e}")
 
             # Refresh all views in the main window
             if self.action_handler is not None:
