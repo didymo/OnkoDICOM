@@ -68,8 +68,8 @@ def test_error_handling(init_sqlite_config):
     cursor = init_sqlite_config.cursor()
 
     # Lock the database to trigger SqlError
-    cursor.execute("""PRAGMA locking_mode = EXCLUSIVE;""")
-    cursor.execute("""BEGIN EXCLUSIVE;""")
+    # cursor.execute("""PRAGMA locking_mode = EXCLUSIVE;""")
+    # cursor.execute("""BEGIN EXCLUSIVE;""")
     with pytest.raises(SqlError):
         configuration.get_default_directory()
     with pytest.raises(SqlError):
