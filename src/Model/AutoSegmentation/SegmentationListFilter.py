@@ -1,5 +1,6 @@
 import pandas
 import pathlib
+import contextlib
 from src.Controller.PathHandler import resource_path
 
 
@@ -28,7 +29,7 @@ def _dict_row_filter(data: pandas.DataFrame, csv_column: str = None, filter_valu
     :return: pandas.DataFrame
     """
 
-    if filter_values is not None and csv_column is not None:
+    if filter_values and csv_column is not None:
         filter_list: dict | list[...] | None = None
         if isinstance(filter_values, dict):
             filter_list: list[str] = list(filter_values.values())
@@ -45,18 +46,12 @@ def _column_filter(data: pandas.DataFrame, column_list: list[str]) -> pandas.Dat
     :param *args: list[str]: list of column to filter to
     :return: pandas.DataFrame
     """
-
+    output: pandas.DataFrame = pandas.DataFrame()
     if column_list is not None and not data.empty:
-        output: pandas.DataFrame = pandas.DataFrame()
         for column in column_list:
-            try:
+            with contextlib.suppress(KeyError):
                 output[column]: pandas.Series = data[column]
-            finally:
-                continue
-        if output.empty:
-            return data
-        return output
-    return data
+    return data if output.empty else output
 
 def _strip_whitespace(data: pandas.DataFrame) -> pandas.DataFrame:
     """

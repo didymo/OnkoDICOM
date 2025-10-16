@@ -1,8 +1,7 @@
-import pytest
 import pathlib
-
+import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTreeWidgetItem, QTreeWidget
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from src.View.AutoSegmentation.SegmentSelectorWidget import SegmentSelectorWidget
 
@@ -125,6 +124,8 @@ def test_remove_selection(test_add_selection: SegmentSelectorWidget) -> None:
     assert test_add_selection.get_segment_list() == []
     assert not test_add_selection._selected_list_add_or_remove("brain", -5)
     assert not test_add_selection._selected_list_add_or_remove("not_brain", -5)
+    assert test_add_selection.get_segment_list() != ["lung"]
+    assert not test_add_selection._selected_list_add_or_remove("lung", 0)
 
 def test_enter_tree_data(selection_object) -> None:
     """
