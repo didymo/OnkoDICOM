@@ -6,7 +6,7 @@ from pathlib import Path
 from src.Model.Configuration import Configuration, SqlError
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="module")
 def init_sqlite_config(request):
     configuration = Configuration('TestSqliteConfig.db')
     db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath('TestSqliteConfig.db')
@@ -52,7 +52,7 @@ def test_get_default_directory(init_sqlite_config):
     new_default_dir = "/home/test/dir"
     # Insert new default dir
     init_sqlite_config.execute("""INSERT INTO configuration (id, default_dir) 
-                                    VALUES (1, "%s");""" % new_default_dir)
+                                    VALUES (2, "%s");""" % new_default_dir)
     init_sqlite_config.commit()
 
     # Get default dir from configuration object
