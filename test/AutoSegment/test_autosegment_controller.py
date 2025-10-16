@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from src.Controller.AutoSegmentationController import AutoSegmentationController
 
