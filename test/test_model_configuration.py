@@ -26,7 +26,7 @@ def test_if_config_table_exists(init_sqlite_config):
     # Select from sqlite_master the info of Configuration table
     cursor = init_sqlite_config.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name='CONFIGURATION'")
-    rec8ord = cursor.fetchone()
+    record = cursor.fetchone()
 
     # Check if Configuration table exists
     assert record is not None
