@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock, Mock
 import sqlite3
 import pathlib
 import asyncio
+import gc
 from src.Model.AutoSegmentation.SavedSegmentDatabase import SavedSegmentDatabase
 
 @pytest.fixture
@@ -26,6 +27,7 @@ def patch_logger():
 def patch_asyncio_run():
     with patch("src.Model.AutoSegmentation.SavedSegmentDatabase.asyncio.run") as arun:
         yield arun
+    gc.collect()
 
 def test_init_calls_create_table_and_get_save_list(patch_db_path, patch_text_sanitiser, patch_logger):
     # Arrange
