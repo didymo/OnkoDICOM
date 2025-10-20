@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class TransectWindow(QWidget):
     """Class to display the transect graph"""
-    def __init__(self, hu_values = []):
+    def __init__(self, hu_values = None):
         super().__init__()
         self.plot_transect_from_hu(hu_values= hu_values)
 

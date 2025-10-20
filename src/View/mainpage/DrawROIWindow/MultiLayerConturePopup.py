@@ -69,7 +69,7 @@ class multiPopUp(QDialog):
         """Emits the slice numbers that are to be drawn on"""
         self.contour_number.emit(self.upper_bounds.value(),self.lower_bounds.value())
         self.close()
-        
+
     def update_pixel_min(self, value):
         """Updates the lower bounds of the pixel range for ROI
         Parm: int : value

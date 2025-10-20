@@ -80,6 +80,7 @@ class CutsomToolbar(QToolBar):
         sb.editingFinished.connect(lambda _=None: self.setFocus(Qt.OtherFocusReason))
         sb.setRange(minimum, maximum)
         sb.setValue(default)
+        sb.setObjectName(label_text)
         sb.valueChanged.connect(slot)
         self.addWidget(sb)
 
@@ -140,6 +141,8 @@ class CutsomToolbar(QToolBar):
         self.pixel_range_min = value
         self.canvas_label.min_range = value
         self.canvas_label.lock_pixel()
+        min = self.findChild(QSpinBox, "Pixel Range Min")
+        min.setValue(value)
 
     def update_pixel_max(self, value):
         """
@@ -149,7 +152,11 @@ class CutsomToolbar(QToolBar):
         """
         self.pixel_range_max = value
         self.canvas_label.max_range = value
-        self.canvas_label.lock_pixel()
+        self.canvas_label.lock_pixel()       
+
+        max = self.findChild(QSpinBox, "Pixel Range Max")
+        max.setValue(value)
+
 
     def update_erase_dags(self, value):
         """

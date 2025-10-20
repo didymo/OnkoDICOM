@@ -311,8 +311,9 @@ class RoiInitialiser():
                                            self._toolbar.pixel_range_max,
                                            self._toolbar.pixel_range_min)
         self.multi_window.contour_number.connect(self.canvas_labal.multi_layer_commit)
-        self.multi_window.max_range_signal.connect(self.canvas_labal.set_max_pixel_value)
-        self.multi_window.min_range_signal.connect(self.canvas_labal.set_min_pixel_value)
+        self.multi_window.max_range_signal.connect(self._toolbar.update_pixel_max)
+        self.multi_window.min_range_signal.connect(self._toolbar.update_pixel_min)
+
         self.multi_window.show()
 
     def window_pop_up(self):

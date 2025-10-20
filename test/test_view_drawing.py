@@ -110,9 +110,8 @@ def test_draw_roi_window_displayed(qtbot, test_object):
     for item in menu_items:
         assert item.isEnabled() is True
 
-"""
 def test_change_transparency_slider_value(qtbot, test_object, init_config):
-    Test that the transparency slider affects the alpha of newly drawn pixels.
+    """Test that the transparency slider affects the alpha of newly drawn pixels."""
     # Trigger the draw window
     qtbot.mouseClick(
         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton
@@ -154,7 +153,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
 
     # Clear canvas to ensure no conflicts with other tests
     draw_roi_window.canvas_labal.erase_roi()
-"""
+
 
 def test_manual_drawing(qtbot, test_object, init_config):
     """Test that manual drawing changes the canvas where previously empty."""
