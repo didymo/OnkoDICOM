@@ -61,7 +61,6 @@ class RoiInitialiser():
         """
         self.canvas_labal.setCursor(Qt.ArrowCursor)
         self.canvas_labal.set_tool(4)
-
     def close_window(self):
         """
         Closes the window
@@ -281,7 +280,7 @@ class RoiInitialiser():
         z = self.zoom_variable * 100
         self.label_zoom.setText(f"Zoom: {z:.2f}%")
         if self.canvas_labal.roi_name is None:
-             self.current_roi.setText("No ROI Seleted")
+             self.current_roi.setText("No ROI Selected")
         else:
              self.current_roi.setText(self.canvas_labal.roi_name)
        
