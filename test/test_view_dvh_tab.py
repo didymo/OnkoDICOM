@@ -4,6 +4,7 @@ import time
 
 import PySide6
 import matplotlib
+import matplotlib.pyplot as plt
 import pytest
 from pathlib import Path
 from PySide6 import QtWidgets
@@ -83,7 +84,8 @@ class TestDVHTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestDVHTab()
-    return test
+    yield test
+    plt.close('all')
 
 
 def wait_for_widget(layout, timeout=1000):
