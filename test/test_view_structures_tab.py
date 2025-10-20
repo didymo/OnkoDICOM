@@ -88,8 +88,6 @@ def test_object():
     test = TestStructureTab()
     yield test
     test.main_window.close()
-    test.main_window = None
-    gc.collect()
 
 
 def test_structure_tab_check_checkboxes(test_object):
