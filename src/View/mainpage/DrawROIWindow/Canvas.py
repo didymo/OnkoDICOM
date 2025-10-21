@@ -662,7 +662,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         Parm v : String
         """
         self.roi_name = v
-        
 
     @Slot(int)
     def set_max_pixel_value(self, v):

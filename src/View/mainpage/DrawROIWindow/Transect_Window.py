@@ -6,12 +6,14 @@ class TransectWindow(QWidget):
     """Class to display the transect graph"""
     def __init__(self, hu_values = None):
         super().__init__()
+        if hu_values is None:
+            hu_values = []
         self.plot_transect_from_hu(hu_values= hu_values)
 
-    def plot_transect_from_hu(self, 
+    def plot_transect_from_hu(self,
     hu_values,
     pix_spacing=1.0,
-    thresholds_mm=None,     # (left_mm, right_mm) along the transect; if None -> (second sample, last sample)
+    thresholds_mm=None,  
     is_roi_draw=True,
     show=True,
     ):
