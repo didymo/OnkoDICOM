@@ -34,6 +34,8 @@ from src.Model.batchprocessing. \
 
 class TestObject:
 
+    __test__ = False
+
     def __init__(self):
         self.batch_dir = Path.cwd().joinpath('test', 'batchtestdata')
         self.dicom_structure = DICOMDirectorySearch.get_dicom_structure(
