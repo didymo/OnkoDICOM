@@ -40,9 +40,6 @@ def qapp_auto():
     qInstallMessageHandler(qt_message_handler)
     yield app
     app.processEvents()
-    threadPool = QThreadPool()
-    threadPool.clear()
-    threadPool.waitForDone(-1)
     app.quit()
 
 
