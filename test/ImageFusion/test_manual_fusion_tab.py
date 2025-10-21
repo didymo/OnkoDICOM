@@ -124,6 +124,7 @@ def test_fusion_view_exists_and_visible(qtbot, fusion_test_object, attr, view_at
     view = getattr(main_window, view_attr)
     assert view is not None
     assert view.isEnabled()
+    main_window.close()
 
 
 def test_fusion_options_tab_exists_and_type(fusion_test_object):
