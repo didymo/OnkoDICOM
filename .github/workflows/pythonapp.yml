@@ -130,6 +130,8 @@ jobs:
         # Check system resources
         free -m
         ulimit -a
+        ulimit -c unlimited || true
+        echo "Core pattern:" && cat /proc/sys/kernel/core_pattern || true
 
     - name: Testing and Coverage with pytest
       run: |
