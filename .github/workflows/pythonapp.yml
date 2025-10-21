@@ -46,13 +46,7 @@ jobs:
     env:
       DISPLAY: ':99.0'
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-      PYTHONFAULTHANDLER: "1"        # dumps Python stacks of all threads on fatal signals
-      PYTHONTRACEMALLOC: "1"         # helps spot object/lifetime patterns in logs
-      PYTHONMALLOC: "debug"          # glibc/Python allocator checks
-      GLIBC_TUNABLES: "glibc.malloc.check=3"
-      G_SLICE: "always-malloc"
-      QT_DEBUG_PLUGINS: "1"          # Qt plugin load trace
-      QT_QPA_PLATFORM: "offscreen"   # avoid GUI/X oddities; keep Xvfb as fallback
+      # USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
       
     steps:
     - uses: actions/checkout@v3
@@ -130,8 +124,6 @@ jobs:
         # Check system resources
         free -m
         ulimit -a
-        ulimit -c unlimited || true
-        echo "Core pattern:" && cat /proc/sys/kernel/core_pattern || true
 
     - name: Testing and Coverage with pytest
       run: |
