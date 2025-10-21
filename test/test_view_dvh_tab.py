@@ -86,6 +86,7 @@ def test_object():
     test = TestDVHTab()
     yield test
     plt.close('all')
+    test.main_window.close()
 
 
 def wait_for_widget(layout, timeout=1000):

@@ -100,7 +100,9 @@ class TestManualFusionTab:
 
 @pytest.fixture(scope="module")
 def fusion_test_object():
-    return TestManualFusionTab()
+    test = TestManualFusionTab()
+    yield test
+    test.main_window.close()
 
 def _assert_views_visible(qtbot, views):
     """Helper to check that all given views are visible."""
@@ -124,7 +126,6 @@ def test_fusion_view_exists_and_visible(qtbot, fusion_test_object, attr, view_at
     view = getattr(main_window, view_attr)
     assert view is not None
     assert view.isEnabled()
-    main_window.close()
 
 
 def test_fusion_options_tab_exists_and_type(fusion_test_object):
