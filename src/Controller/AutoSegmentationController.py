@@ -141,6 +141,7 @@ class AutoSegmentationController(QObject):
         auto_segmentation = AutoSegmentation(self)
         # Run tasks on separate thread
         auto_seg_thread = threading.Thread(target=auto_segmentation.run_segmentation_workflow, args=(task, roi_subset))
+        auto_seg_thread.daemon = True
         auto_seg_thread.start() # Will auto terminate at the called functions conclusion
 
     @Slot()
