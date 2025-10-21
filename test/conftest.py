@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 import pytest
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import qInstallMessageHandler
+from PySide6.QtCore import qInstallMessageHandler, QThreadPool
 import traceback
 
 from src.Model.Configuration import Configuration
@@ -40,6 +40,9 @@ def qapp_auto():
     qInstallMessageHandler(qt_message_handler)
     yield app
     app.processEvents()
+    threadPool = QThreadPool()
+    threadPool.clear()
+    threadPool.waitForDone(-1)
     app.quit()
 
 
