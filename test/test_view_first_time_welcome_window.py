@@ -34,8 +34,6 @@ def test_first_time_welcome_window(qtbot, tmpdir, init_first_time_window_config)
     assert first_time_welcome_window.save_dir_button.text() == "Confirm"
     assert first_time_welcome_window.skip_button.text() == "Skip"
 
-    first_time_welcome_window.show()
-
     # Test with directory box empty
     first_time_welcome_window.first_time_welcome_input_box.clear()
 
