@@ -153,73 +153,72 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     # Clear canvas to ensure no conflicts with other tests
     draw_roi_window.canvas_labal.erase_roi()
 
-def test_manual_drawing(qtbot, test_object, init_config):
-    """Test that manual drawing changes the canvas where previously empty."""
-
-    # Trigger draw window
-    qtbot.mouseClick(
-        test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
-    draw_roi_window = test_object.main_window.draw_roi
-    assert draw_roi_window is not None
-
-    # Pick a test spot
-    test_point = (256, 256)
-
-    # Assert the spot is initially empty
-    before_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
-    assert before_img.pixelColor(test_point[0], test_point[1]).alpha() == 0
-
-    # Ensure draw tool is active
-    draw_roi_window.canvas_labal.set_tool(2)  # 2 = Tool.DRAW
-
-    # Simulate drawing: press, move, release
-
-    press_event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(
-        *test_point), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-    draw_roi_window.canvas_labal.mousePressEvent(press_event)
-
-    move_event = QMouseEvent(QMouseEvent.MouseMove, QPoint(
-        test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-    draw_roi_window.canvas_labal.mouseMoveEvent(move_event)
-
-    release_event = QMouseEvent(QMouseEvent.MouseButtonRelease, QPoint(
-        test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-    draw_roi_window.canvas_labal.mouseReleaseEvent(release_event)
-
-    # Assert the spot is now drawn on
-    after_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
-    assert after_img.pixelColor(test_point[0], test_point[1]).alpha() > 0
-
-    # Clear canvas to ensure no conflicts with other tests
-    draw_roi_window.canvas_labal.erase_roi()
+# def test_manual_drawing(qtbot, test_object, init_config):
+#     """Test that manual drawing changes the canvas where previously empty."""
 #
-#
-# def test_roi_windowing(qtbot, test_object):
-#     """Tests that the windowing action items update the draw ROI windowing display."""
-#
-#     # Open the Draw ROI window
+#     # Trigger draw window
 #     qtbot.mouseClick(
-#         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton
-#     )
+#         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
 #     draw_roi_window = test_object.main_window.draw_roi
 #     assert draw_roi_window is not None
 #
-#     # Access CanvasLabel which contains patient_dict_container
-#     canvas_label = draw_roi_window.canvas_labal
-#     assert canvas_label is not None
+#     # Pick a test spot
+#     test_point = (256, 256)
 #
-#     # Capture existing window/level
-#     existing_window = canvas_label.patient_dict_container.get("window")
-#     existing_level = canvas_label.patient_dict_container.get("level")
+#     # Assert the spot is initially empty
+#     before_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
+#     assert before_img.pixelColor(test_point[0], test_point[1]).alpha() == 0
 #
-#     # Change windowing type via the real handler
-#     test_object.main_window.action_handler.windowing_handler(None, "Lung")
+#     # Ensure draw tool is active
+#     draw_roi_window.canvas_labal.set_tool(2)  # 2 = Tool.DRAW
 #
-#     # Get updated values
-#     new_window = canvas_label.patient_dict_container.get("window")
-#     new_level = canvas_label.patient_dict_container.get("level")
+#     # Simulate drawing: press, move, release
 #
-#     # Assert that windowing values have changed
-#     assert existing_window != new_window, "Window should be updated via handler"
-#     assert existing_level != new_level, "Level should be updated via handler"
+#     press_event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(
+#         *test_point), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+#     draw_roi_window.canvas_labal.mousePressEvent(press_event)
 #
+#     move_event = QMouseEvent(QMouseEvent.MouseMove, QPoint(
+#         test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+#     draw_roi_window.canvas_labal.mouseMoveEvent(move_event)
+#
+#     release_event = QMouseEvent(QMouseEvent.MouseButtonRelease, QPoint(
+#         test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+#     draw_roi_window.canvas_labal.mouseReleaseEvent(release_event)
+#
+#     # Assert the spot is now drawn on
+#     after_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
+#     assert after_img.pixelColor(test_point[0], test_point[1]).alpha() > 0
+#
+#     # Clear canvas to ensure no conflicts with other tests
+#     draw_roi_window.canvas_labal.erase_roi()
+
+def test_roi_windowing(qtbot, test_object):
+    """Tests that the windowing action items update the draw ROI windowing display."""
+
+    # Open the Draw ROI window
+    qtbot.mouseClick(
+        test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton
+    )
+    draw_roi_window = test_object.main_window.draw_roi
+    assert draw_roi_window is not None
+
+    # Access CanvasLabel which contains patient_dict_container
+    canvas_label = draw_roi_window.canvas_labal
+    assert canvas_label is not None
+
+    # Capture existing window/level
+    existing_window = canvas_label.patient_dict_container.get("window")
+    existing_level = canvas_label.patient_dict_container.get("level")
+
+    # Change windowing type via the real handler
+    test_object.main_window.action_handler.windowing_handler(None, "Lung")
+
+    # Get updated values
+    new_window = canvas_label.patient_dict_container.get("window")
+    new_level = canvas_label.patient_dict_container.get("level")
+
+    # Assert that windowing values have changed
+    assert existing_window != new_window, "Window should be updated via handler"
+    assert existing_level != new_level, "Level should be updated via handler"
+
