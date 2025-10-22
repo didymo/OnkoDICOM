@@ -85,7 +85,8 @@ class TestStructureTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
-    return test
+    yield test
+    test.main_window.close()
 
 
 def test_structure_tab_check_checkboxes(test_object):
