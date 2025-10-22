@@ -136,6 +136,99 @@ jobs:
         # Append this for fail under x percent "--cov-fail-under=80"
         poetry run python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=.
 
+  build_mac:
+    needs: fetch_cache
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.12'
+          - '3.10'
+          - '3.11'
+        os:
+          # - 'ubuntu-20.04'
+          - 'ubuntu-24.04'
+
+    name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+
+    env:
+      DISPLAY: ':99.0'
+      TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
+      # USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python - --version 1.8.5
+        poetry --version
+
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python }}
+        cache: 'poetry'
+
+    - name: Upgrade pip and setuptools
+      run: |
+        pip install --upgrade pip wheel setuptools
+
+    - name: Install plastimatch
+      run: |
+        sudo apt-get update
+        sudo apt-get install plastimatch
+
+    - name: Install dependencies
+      run: |
+        # python -m pip install --upgrade pip wheel setuptools
+        poetry install --no-root
+
+    # currently having poetry going straight to the github main branch for pyradiomics ~ 3.1.1
+    # - name: Workaround Install pyradiomics (no-use-pep517)
+    #     # https://github.com/AIM-Harvard/pyradiomics/issues/653#issuecomment-1245039225
+    #     # pyradiomics 3.1.0 has a metadata mismatch
+    #   run: |
+    #     poetry run pip install pyradiomics==3.0.1
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Download Cached Test Data
+      uses: actions/cache@v3
+      with:
+        enableCrossOsArchive: true
+        fail-on-cache-miss: true
+        path: DICOM-RT-02.zip
+        key: ${{ env.TestDataUrl }}
+
+    - name: Install test data
+      run: |
+        sudo apt-get install unzip
+        mkdir test/testdata
+        mkdir test/batchtestdata
+        unzip DICOM-RT-02.zip -d test/testdata
+        unzip DICOM-RT-02.zip -d test/batchtestdata
+        sudo chmod -R 777 test/testdata
+        sudo chmod -R 777 test/batchtestdata
+
+    - name: Testing and Coverage with pytest
+      run: |
+
+        # First try single test file without coverage as part of debugging Ubuntu 24.04 build
+        # export QT_DEBUG_PLUGINS=1
+        # export PYTHONFAULTHANDLER=1
+        # poetry run python -m pytest "test/test_machine_learning_preprocessing.py" -v -s
+
+        # Append this for fail under x percent "--cov-fail-under=80"
+        poetry run python -m pytest "test/" -v --durations=10 --cov-config=.coveragerc --cov-report term-missing --cov=.
+
 
   build_Windows:
     needs: fetch_cache
