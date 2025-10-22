@@ -67,5 +67,4 @@ def test_first_time_welcome_window(qtbot, tmpdir, init_first_time_window_config)
     os.remove(csv_path)
 
     # Closing the window
-    qtbot.closeAllWindows()
     first_time_welcome_window.close()
