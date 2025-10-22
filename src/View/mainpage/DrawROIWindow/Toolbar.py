@@ -14,9 +14,8 @@ class CutsomToolbar(QToolBar):
     pixel_range_min = 0
 
 
-    def __init__(self, parent=None, canvas_label = None, left_label = None):
-        super().__init__("Toolbar", parent)
-        self.parent = parent
+    def __init__(self, canvas_label = None, left_label = None):
+        super().__init__("Toolbar")
         self.setFont(QFontDatabase.systemFont(QFontDatabase.GeneralFont))
         #Sets communication between classes
         self.canvas_label = canvas_label
@@ -56,7 +55,6 @@ class CutsomToolbar(QToolBar):
         quick_copy_down.setIcon(QIcon("res/images/DrawRoi-icons/Quick-copy-down.png"))
         quick_copy_down.triggered.connect(lambda checked=False: self.quick_copy(False))
         self.addAction(quick_copy_down)
-        self.addSeparator()
         spin_defs = [
             ("Brush Size",      1,   100,  12,   self.update_pen_size),
             ("Pixel Range Min",  0,  6000,   0,   self.update_pixel_min),
@@ -67,10 +65,7 @@ class CutsomToolbar(QToolBar):
 
         for text, mn, mx, val, slot in spin_defs:
             self._add_labeled_spinbox(text, mn, mx, val, slot)
-        
 
-        
-        
     def _add_labeled_spinbox(self, label_text, minimum, maximum, default, slot):
         self.addSeparator()
         lbl = QLabel(label_text + " :")

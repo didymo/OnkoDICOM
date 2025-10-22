@@ -10,12 +10,6 @@ import faulthandler, sys, threading
 
 from src.Model.Configuration import Configuration
 
-
-faulthandler.enable(all_threads=True, file=sys.stderr)
-print("Threads at start:")
-for t in threading.enumerate():
-    print(t.name, "ident=", t.ident, "native_id=", getattr(t, "native_id", "n/a"))
-    
 def qt_message_handler(msg_type, context, message):
     print(f"Qt Message - Type: {msg_type}")
     print(f"Context: {context}")

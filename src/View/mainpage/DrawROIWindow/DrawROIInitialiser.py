@@ -194,7 +194,7 @@ class RoiInitialiser():
         main.addWidget(self.scroller)
         main.addWidget(self.view)
 
-        self._toolbar = CutsomToolbar(self, self.canvas_labal, self.left_label)
+        self._toolbar = CutsomToolbar(self.canvas_labal, self.left_label)
         self.addToolBar(self._toolbar)
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
