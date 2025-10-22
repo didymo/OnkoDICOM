@@ -209,10 +209,6 @@ class RoiInitialiser():
         image = self.display_pixmaps[v]
         self.image_item.setPixmap(image)
 
-    def close_roi_window(self):
-        """Closes the roi window"""
-        self._toolbar.close()
-
     def copy_roi(self):
         """
         Allows the ablity to copy ROIs onto different areas and handles the popups
