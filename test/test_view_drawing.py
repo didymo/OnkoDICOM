@@ -99,7 +99,7 @@ def test_draw_roi_window_displayed(qtbot, test_object):
         assert item.isEnabled() is False
 
     # Close the ROI window
-    test_object.main_window.draw_roi.close_window()
+    test_object.main_window.draw_roi.close_roi_window()
 
     # Assertions after closing
     assert test_object.main_window.splitter.isHidden() is False
@@ -110,8 +110,6 @@ def test_draw_roi_window_displayed(qtbot, test_object):
 
     for item in menu_items:
         assert item.isEnabled() is True
-
-    test_object.main_window.structures_tab.button_roi_draw.close_roi_window()
 
 
 def test_change_transparency_slider_value(qtbot, test_object, init_config):
