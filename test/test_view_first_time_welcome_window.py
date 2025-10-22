@@ -7,7 +7,7 @@ from src.Controller.GUIController import FirstTimeWelcomeWindow
 from src.Model.Configuration import Configuration
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def init_first_time_window_config(request):
     configuration = Configuration('TestFirstTimeWelcomeWindow.db')
     db_file_path = Path(os.environ['USER_ONKODICOM_HIDDEN']).joinpath('TestFirstTimeWelcomeWindow.db')
