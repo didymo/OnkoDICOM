@@ -68,7 +68,7 @@ class TestDrawingMock:
         self.main_window = MainWindow()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_object():
     """Function to initialise a Drawing window object."""
     test = TestDrawingMock()
