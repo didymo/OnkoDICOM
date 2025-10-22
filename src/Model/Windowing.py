@@ -16,6 +16,7 @@ def windowing_model(text, init):
     """
     patient_dict_container = PatientDictContainer()
 
+
     # Use custom window/level for manual fusion overlays (init[3])
     #TODO This is just a patch. Need to figure out why VTK doesnt work with default dicom windowing
     if init[3]:
