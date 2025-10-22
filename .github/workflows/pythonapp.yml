@@ -129,8 +129,8 @@ jobs:
       run: |
 
         # First try single test file without coverage as part of debugging Ubuntu 24.04 build
-        # export QT_DEBUG_PLUGINS=1
-        # export PYTHONFAULTHANDLER=1
+        export QT_DEBUG_PLUGINS=1
+        export PYTHONFAULTHANDLER=1
         # export MPLBACKEND=Agg
         # poetry run python -m pytest "test/test_machine_learning_preprocessing.py" -v -s
 
