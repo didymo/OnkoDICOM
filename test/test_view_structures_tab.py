@@ -81,11 +81,12 @@ class TestStructureTab:
         self.curr_slice = self.dicom_view.patient_dict_container.get("dict_uid")[slider_id]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module", autouse=True)
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
-    return test
+    yield test
+    test.main_window.close()
 
 
 def test_structure_tab_check_checkboxes(test_object):
