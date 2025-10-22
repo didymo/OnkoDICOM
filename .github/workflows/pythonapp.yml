@@ -177,8 +177,8 @@ jobs:
 
     - name: Install plastimatch
       run: |
-        sudo apt-get update
-        sudo apt-get install plastimatch
+        brew update
+        brew install plastimatch
 
     - name: Install dependencies
       run: |
