@@ -20,11 +20,11 @@ def windowing_model(text, init):
     #TODO This is just a patch. Need to figure out why VTK doesnt work with default dicom windowing
     if init[3]:
         custom_presets = {
-            "Normal": [390, 40],  # Soft tissue, covers -160 to 240 HU
+            "Normal": [400, 40],  # Normal levels (typical soft tissue window)
             "Lung": [1600, -600],  # Lung, covers -1400 to 200 HU
             "Bone": [2000, 300],  # Bone, covers -700 to 1300 HU
             "Brain": [80, 40],  # Brain, covers 0 to 80 HU
-            "Soft Tissue": [440, 40],  # Alias for Normal
+            "Soft Tissue": [440, 40],  # Soft tissue, covers -180 to 260 HU (muscle, fat, organs)
             "Head and Neck": [275, 40],  # Covers -147.5 to 227.5 HU
         }
         windowing_limits = custom_presets.get(text, [400, 40])
