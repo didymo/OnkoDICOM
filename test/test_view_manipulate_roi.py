@@ -83,7 +83,8 @@ class TestManipulateROI:
 def test_object():
     """Function to pass a shared TestManipulateROI object to each test."""
     test = TestManipulateROI()
-    return test
+    yield test
+    test.main_window.close()
 
 
 def test_input_form(test_object):

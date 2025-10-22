@@ -83,7 +83,8 @@ class TestDVHTab:
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestDVHTab()
-    return test
+    yield test
+    test.main_window.close()
 
 
 def wait_for_widget(layout, timeout=1000):
