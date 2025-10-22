@@ -363,7 +363,7 @@ class WindowingSlider(QWidget):
 
         # Apply the window/level changes using the model
         with wait_cursor():
-            windowing_model_direct(level, window, send)
+            windowing_model_direct(window, level, send)
 
             # Update fusion overlays if present
             try:
