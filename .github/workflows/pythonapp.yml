@@ -177,8 +177,8 @@ jobs:
 
     - name: Install plastimatch
       run: |
-        brew update
-        brew install plastimatch
+        sudo port update
+        sudo port plastimatch
 
     - name: Install dependencies
       run: |
