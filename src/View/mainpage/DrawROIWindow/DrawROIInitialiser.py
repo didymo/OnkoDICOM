@@ -285,10 +285,6 @@ class RoiInitialiser():
              self.current_roi.setText(self.canvas_labal.roi_name)
        
 
-    def close_roi_window(self):
-        """Closes the roi window"""
-        self._toolbar.close()
-
     def copy_roi(self):
         """
         Allows the ablity to copy ROIs onto different areas and handles the popups
