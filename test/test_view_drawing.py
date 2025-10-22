@@ -109,90 +109,89 @@ def test_draw_roi_window_displayed(qtbot, test_object):
     for item in menu_items:
         assert item.isEnabled() is True
 
-# def test_change_transparency_slider_value(qtbot, test_object, init_config):
-#     """Test that the transparency slider affects the alpha of newly drawn pixels."""
-#     # Trigger the draw window
-#     qtbot.mouseClick(
-#         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton
-#     )
-#     draw_roi_window = test_object.main_window.draw_roi
-#     assert draw_roi_window is not None
-#
-#     mid_point = (256, 256)  # Pixel to test
-#
-#     paint_bucket = True
-#
-#     # First flood with alpha = 100
-#     draw_roi_window._toolbar.update_transparency(100)
-#     color = draw_roi_window.pen.color()
-#     color.setAlpha(100)
-#     draw_roi_window.pen.setColor(color)
-#
-#     draw_roi_window.canvas_labal.flood(mid_point, paint_bucket)
-#     # Update the pixmap so pixel reading is correct
-#     draw_roi_window.canvas_labal.setPixmap(
-#         draw_roi_window.canvas_labal.canvas[draw_roi_window.canvas_labal.slice_num])
-#     before_alpha = draw_roi_window.canvas_labal.pixmap(
-#     ).toImage().pixelColor(*mid_point).alpha()
-#
-#     # Second flood with alpha = 50
-#     draw_roi_window._toolbar.update_transparency(50)
-#     color = draw_roi_window.pen.color()
-#     color.setAlpha(50)
-#     draw_roi_window.pen.setColor(color)
-#
-#     draw_roi_window.canvas_labal.flood(mid_point, paint_bucket)
-#     draw_roi_window.canvas_labal.setPixmap(
-#         draw_roi_window.canvas_labal.canvas[draw_roi_window.canvas_labal.slice_num])
-#     after_alpha = draw_roi_window.canvas_labal.pixmap(
-#     ).toImage().pixelColor(*mid_point).alpha()
-#
-#     # Assert that the two floods produced different alpha values
-#     assert before_alpha != after_alpha
-#
-#     # Clear canvas to ensure no conflicts with other tests
-#     draw_roi_window.canvas_labal.erase_roi()
+def test_change_transparency_slider_value(qtbot, test_object, init_config):
+    """Test that the transparency slider affects the alpha of newly drawn pixels."""
+    # Trigger the draw window
+    qtbot.mouseClick(
+        test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton
+    )
+    draw_roi_window = test_object.main_window.draw_roi
+    assert draw_roi_window is not None
 
-#
-# def test_manual_drawing(qtbot, test_object, init_config):
-#     """Test that manual drawing changes the canvas where previously empty."""
-#
-#     # Trigger draw window
-#     qtbot.mouseClick(
-#         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
-#     draw_roi_window = test_object.main_window.draw_roi
-#     assert draw_roi_window is not None
-#
-#     # Pick a test spot
-#     test_point = (256, 256)
-#
-#     # Assert the spot is initially empty
-#     before_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
-#     assert before_img.pixelColor(test_point[0], test_point[1]).alpha() == 0
-#
-#     # Ensure draw tool is active
-#     draw_roi_window.canvas_labal.set_tool(2)  # 2 = Tool.DRAW
-#
-#     # Simulate drawing: press, move, release
-#
-#     press_event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(
-#         *test_point), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-#     draw_roi_window.canvas_labal.mousePressEvent(press_event)
-#
-#     move_event = QMouseEvent(QMouseEvent.MouseMove, QPoint(
-#         test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-#     draw_roi_window.canvas_labal.mouseMoveEvent(move_event)
-#
-#     release_event = QMouseEvent(QMouseEvent.MouseButtonRelease, QPoint(
-#         test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-#     draw_roi_window.canvas_labal.mouseReleaseEvent(release_event)
-#
-#     # Assert the spot is now drawn on
-#     after_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
-#     assert after_img.pixelColor(test_point[0], test_point[1]).alpha() > 0
-#
-#     # Clear canvas to ensure no conflicts with other tests
-#     draw_roi_window.canvas_labal.erase_roi()
+    mid_point = (256, 256)  # Pixel to test
+
+    paint_bucket = True
+
+    # First flood with alpha = 100
+    draw_roi_window._toolbar.update_transparency(100)
+    color = draw_roi_window.pen.color()
+    color.setAlpha(100)
+    draw_roi_window.pen.setColor(color)
+
+    draw_roi_window.canvas_labal.flood(mid_point, paint_bucket)
+    # Update the pixmap so pixel reading is correct
+    draw_roi_window.canvas_labal.setPixmap(
+        draw_roi_window.canvas_labal.canvas[draw_roi_window.canvas_labal.slice_num])
+    before_alpha = draw_roi_window.canvas_labal.pixmap(
+    ).toImage().pixelColor(*mid_point).alpha()
+
+    # Second flood with alpha = 50
+    draw_roi_window._toolbar.update_transparency(50)
+    color = draw_roi_window.pen.color()
+    color.setAlpha(50)
+    draw_roi_window.pen.setColor(color)
+
+    draw_roi_window.canvas_labal.flood(mid_point, paint_bucket)
+    draw_roi_window.canvas_labal.setPixmap(
+        draw_roi_window.canvas_labal.canvas[draw_roi_window.canvas_labal.slice_num])
+    after_alpha = draw_roi_window.canvas_labal.pixmap(
+    ).toImage().pixelColor(*mid_point).alpha()
+
+    # Assert that the two floods produced different alpha values
+    assert before_alpha != after_alpha
+
+    # Clear canvas to ensure no conflicts with other tests
+    draw_roi_window.canvas_labal.erase_roi()
+
+def test_manual_drawing(qtbot, test_object, init_config):
+    """Test that manual drawing changes the canvas where previously empty."""
+
+    # Trigger draw window
+    qtbot.mouseClick(
+        test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
+    draw_roi_window = test_object.main_window.draw_roi
+    assert draw_roi_window is not None
+
+    # Pick a test spot
+    test_point = (256, 256)
+
+    # Assert the spot is initially empty
+    before_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
+    assert before_img.pixelColor(test_point[0], test_point[1]).alpha() == 0
+
+    # Ensure draw tool is active
+    draw_roi_window.canvas_labal.set_tool(2)  # 2 = Tool.DRAW
+
+    # Simulate drawing: press, move, release
+
+    press_event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(
+        *test_point), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+    draw_roi_window.canvas_labal.mousePressEvent(press_event)
+
+    move_event = QMouseEvent(QMouseEvent.MouseMove, QPoint(
+        test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+    draw_roi_window.canvas_labal.mouseMoveEvent(move_event)
+
+    release_event = QMouseEvent(QMouseEvent.MouseButtonRelease, QPoint(
+        test_point[0]+5, test_point[1]+5), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+    draw_roi_window.canvas_labal.mouseReleaseEvent(release_event)
+
+    # Assert the spot is now drawn on
+    after_img = draw_roi_window.canvas_labal.pixmap().toImage().copy()
+    assert after_img.pixelColor(test_point[0], test_point[1]).alpha() > 0
+
+    # Clear canvas to ensure no conflicts with other tests
+    draw_roi_window.canvas_labal.erase_roi()
 #
 #
 # def test_roi_windowing(qtbot, test_object):
