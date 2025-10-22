@@ -1,5 +1,5 @@
 import logging
-
+from PySide6.QtGui import QKeySequence, QShortcut
 from src.View.ImageFusion.UITransferROIWindow import UITransferROIWindow
 from src.View.mainpage.DeleteROIWindow import *
 from src.View.mainpage.DrawROIWindow.DrawROIInitialiser import RoiInitialiser
@@ -54,18 +54,29 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
     """
     signal_roi_drawn = QtCore.Signal(tuple)
     signal_draw_roi_closed = QtCore.Signal()
+    
 
     def __init__(self, rois, dataset_rtss):
         super(RoiDrawOptions, self).__init__()
+        QShortcut(QKeySequence(Qt.Key_Up),   self, activated=lambda: self.scroller.setValue(min(self.scroller.value()+1, self.scroller.maximum())))
+        QShortcut(QKeySequence(Qt.Key_Down), self, activated=lambda: self.scroller.setValue(max(self.scroller.value()-1, self.scroller.minimum())))
+
         self._central = QtWidgets.QWidget(self)
         self.setCentralWidget(self._central)
         self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
                     self.signal_draw_roi_closed)
-        self.ROI_button.roi_name_emit.connect(self.canvas_labal.set_roi_name)
 
     def update_ui(self, rois, dataset_rtss):
         self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
                     self.signal_draw_roi_closed)
+    def eventFilter(self, obj, event):
+        if obj is self.view.viewport() and event.type() == QtCore.QEvent.Resize:
+            self._hud.setGeometry(self.view.viewport().rect())
+            return False  # don't consume; just reacting
+        if obj is self.view.viewport() and event.type() == QtCore.QEvent.Wheel:
+            self._hud.setGeometry(self.view.viewport().rect())
+            return False  # don't consume; just reacting
+        return super().eventFilter(obj, event)
 
 
 class ROIDrawOption:

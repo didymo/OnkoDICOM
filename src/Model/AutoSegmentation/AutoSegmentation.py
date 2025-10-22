@@ -66,12 +66,12 @@ class AutoSegmentation:
             self._copy_temp_dicom_dir()
             self._run_totalsegmentation(task, roi_subset, output_dir)
             self._convert_to_rtstruct(output_dir, output_rt)
-            self._cleanup_nifti_dir(output_dir)
             self.signals.finished.emit()
         except Exception as e:
             self.signals.error.emit(str(e))
             logger.exception("Segmentation workflow failed")
         finally:
+            self._cleanup_nifti_dir(output_dir)
             self._cleanup_temp_dir()
 
     def _prepare_output_paths(self) -> tuple[str, str]:
