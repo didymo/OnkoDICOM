@@ -66,51 +66,49 @@ class TestDrawingMock:
 
         # main window
         self.main_window = MainWindow()
-#
-#
-# @pytest.fixture(scope="module")
-# def test_object():
-#     """Function to initialise a Drawing window object."""
-#     test = TestDrawingMock()
-#     return test
-#
-#
-# def test_draw_roi_window_displayed(qtbot, test_object):
-#     """Function to test that the draw_roi_window is displayed
-#     within the main window when the draw ROI button is clicked"""
-#     qtbot.mouseClick(
-#         test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
-#     assert test_object.main_window.splitter.isHidden() is True
-#     assert test_object.main_window.draw_roi.isHidden() is False
-#
-#     assert test_object.main_window.draw_roi is not None
-#
-#     menu_items = [
-#         test_object.main_window.action_handler.action_save_structure,
-#         test_object.main_window.action_handler.action_save_as_anonymous,
-#         test_object.main_window.action_handler.action_one_view,
-#         test_object.main_window.action_handler.action_four_views,
-#         test_object.main_window.action_handler.action_show_cut_lines,
-#         test_object.main_window.action_handler.action_image_fusion
-#     ]
-#
-#     for item in menu_items:
-#         assert item.isEnabled() is False
-#
-#     # Close the ROI window
-#     test_object.main_window.draw_roi.close_window()
-#
-#     # Assertions after closing
-#     assert test_object.main_window.splitter.isHidden() is False
-#
-#     # Only check hidden state if the attribute still exists
-#     if hasattr(test_object.main_window, "draw_roi"):
-#         assert test_object.main_window.draw_roi.isHidden() is True
-#
-#     for item in menu_items:
-#         assert item.isEnabled() is True
-#
-#
+
+@pytest.fixture(scope="module")
+def test_object():
+    """Function to initialise a Drawing window object."""
+    test = TestDrawingMock()
+    return test
+
+
+def test_draw_roi_window_displayed(qtbot, test_object):
+    """Function to test that the draw_roi_window is displayed
+    within the main window when the draw ROI button is clicked"""
+    qtbot.mouseClick(
+        test_object.main_window.structures_tab.button_roi_draw, Qt.LeftButton)
+    assert test_object.main_window.splitter.isHidden() is True
+    assert test_object.main_window.draw_roi.isHidden() is False
+
+    assert test_object.main_window.draw_roi is not None
+
+    menu_items = [
+        test_object.main_window.action_handler.action_save_structure,
+        test_object.main_window.action_handler.action_save_as_anonymous,
+        test_object.main_window.action_handler.action_one_view,
+        test_object.main_window.action_handler.action_four_views,
+        test_object.main_window.action_handler.action_show_cut_lines,
+        test_object.main_window.action_handler.action_image_fusion
+    ]
+
+    for item in menu_items:
+        assert item.isEnabled() is False
+
+    # Close the ROI window
+    test_object.main_window.draw_roi.close_window()
+
+    # Assertions after closing
+    assert test_object.main_window.splitter.isHidden() is False
+
+    # Only check hidden state if the attribute still exists
+    if hasattr(test_object.main_window, "draw_roi"):
+        assert test_object.main_window.draw_roi.isHidden() is True
+
+    for item in menu_items:
+        assert item.isEnabled() is True
+
 # def test_change_transparency_slider_value(qtbot, test_object, init_config):
 #     """Test that the transparency slider affects the alpha of newly drawn pixels."""
 #     # Trigger the draw window
@@ -154,7 +152,7 @@ class TestDrawingMock:
 #
 #     # Clear canvas to ensure no conflicts with other tests
 #     draw_roi_window.canvas_labal.erase_roi()
-#
+
 #
 # def test_manual_drawing(qtbot, test_object, init_config):
 #     """Test that manual drawing changes the canvas where previously empty."""
