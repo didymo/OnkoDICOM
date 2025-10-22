@@ -99,7 +99,7 @@ def test_draw_roi_window_displayed(qtbot, test_object):
         assert item.isEnabled() is False
 
     # Close the ROI window
-    test_object.main_window.draw_roi.close_roi_window()
+    test_object.main_window.draw_roi.close_window()
 
     # Assertions after closing
     assert test_object.main_window.splitter.isHidden() is False
@@ -156,7 +156,7 @@ def test_change_transparency_slider_value(qtbot, test_object, init_config):
     # Clear canvas to ensure no conflicts with other tests
     draw_roi_window.canvas_labal.erase_roi()
 
-    draw_roi_window.close_roi_window()
+    draw_roi_window.close_window()
 
 def test_manual_drawing(qtbot, test_object, init_config):
     """Test that manual drawing changes the canvas where previously empty."""
@@ -198,7 +198,7 @@ def test_manual_drawing(qtbot, test_object, init_config):
     # Clear canvas to ensure no conflicts with other tests
     draw_roi_window.canvas_labal.erase_roi()
 
-    draw_roi_window.close_roi_window()
+    draw_roi_window.close_window()
 
 def test_roi_windowing(qtbot, test_object):
     """Tests that the windowing action items update the draw ROI windowing display."""
@@ -229,5 +229,5 @@ def test_roi_windowing(qtbot, test_object):
     assert existing_window != new_window, "Window should be updated via handler"
     assert existing_level != new_level, "Level should be updated via handler"
 
-    draw_roi_window.close_roi_window()
+    draw_roi_window.close_window()
 

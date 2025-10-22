@@ -284,11 +284,6 @@ class RoiInitialiser():
              self.current_roi.setText("No ROI Seleted")
         else:
              self.current_roi.setText(self.canvas_labal.roi_name)
-       
-
-    def close_roi_window(self):
-        """Closes the roi window"""
-        self._toolbar.close()
 
     def copy_roi(self):
         """
