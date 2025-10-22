@@ -67,7 +67,8 @@ class TestDrawingMock:
         # main window
         self.main_window = MainWindow()
 
-@pytest.fixture(scope="module")
+
+@pytest.fixture(scope="function")
 def test_object():
     """Function to initialise a Drawing window object."""
     test = TestDrawingMock()
@@ -109,6 +110,7 @@ def test_draw_roi_window_displayed(qtbot, test_object):
 
     for item in menu_items:
         assert item.isEnabled() is True
+
 
 def test_change_transparency_slider_value(qtbot, test_object, init_config):
     """Test that the transparency slider affects the alpha of newly drawn pixels."""
