@@ -66,7 +66,7 @@ class LeftPannel(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout()  # Create main layout for the left panel
         main_layout.addWidget(self._grid_group_box)  # Add the group box to the main layout
         self.setLayout(main_layout)
-        
+
     def show_roi_type_options(self):
         """
         Creates and displays roi type options popup
@@ -77,7 +77,7 @@ class LeftPannel(QtWidgets.QWidget):
         self.choose_roi_name_window.signal_roi_name.connect(
             self.set_selected_roi_name)
         self.choose_roi_name_window.show()
-        
+
     def set_selected_roi_name(self, roi_name):
         """
         function to set selected roi name
@@ -105,7 +105,7 @@ class LeftPannel(QtWidgets.QWidget):
                 return
         self.roi_name_emit.emit(roi_name)
         self.parent.update_metadata()
-        
+
     def brush_tool(self):
         """
         This fucntion changes the draw tool to a brush
@@ -198,20 +198,20 @@ class LeftPannel(QtWidgets.QWidget):
                 return
         else:
             self.parent.close_window()
-        
+
     def zapper_button(self):
         """Fucntion to activate the zapper function"""
         self.canvas_label.setCursor(Qt.ArrowCursor)
         self.canvas_label.pen.setColor(Qt.transparent)
         self.canvas_label.set_tool(5)
 
-    
+
     #ChatGPT Code
     def make_circle_cursor(self,
         size: int,
         outline: QColor = QColor("black"),
         fill: Optional[QColor] = None,   # pass QColor("white") when you want it filled
-        outline_width: int = 1,
+        outline_width: int = 3,
         hotspot_center: bool = True,
     ) -> QCursor:
         # Transparent canvas

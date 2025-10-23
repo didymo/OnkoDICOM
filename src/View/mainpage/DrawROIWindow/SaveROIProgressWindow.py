@@ -15,7 +15,6 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
     #signal_roi_saved = QtCore.Signal(object)  # Emits the new dataset
     def __init__(self, *args, **kwargs):
         super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
-        print("Did somthing as well")
         layout = QtWidgets.QVBoxLayout()
         text = QtWidgets.QLabel("Creating ROI...")
         layout.addWidget(text)
@@ -31,9 +30,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
         :param roi_name: ROIName
         :param roi_list: list of contours to be saved
         """
-        print("Did somthing")
         worker = Worker(ROI.create_roi, dataset_rtss, roi_name, roi_list)
-        print("tried 2 help")
         worker.signals.result.connect(self.roi_saved)
         self.threadpool.start(worker)
 

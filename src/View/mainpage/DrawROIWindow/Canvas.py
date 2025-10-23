@@ -88,7 +88,7 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         # transect Pen
         self.t_pen = QPen()
         self.t_pen.setWidth(1)
-        self.t_pen.setColor(QColor(255, 105, 180))
+        self.t_pen.setColor(QColor(Qt.red))
         self.t_pen.setCapStyle(Qt.FlatCap)
         self.t_pen.setJoinStyle(Qt.MiterJoin)
 
@@ -279,7 +279,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
 
 
         self.t_window = TransectWindow(transected_values)
-        self.t_window.show()
         self.canvas[self.slice_num] = self.transect_pixmap_copy
         self.setPixmap(self.canvas[self.slice_num])
 
@@ -663,7 +662,6 @@ class CanvasLabel(QtWidgets.QGraphicsPixmapItem):
         Parm v : String
         """
         self.roi_name = v
-        
 
     @Slot(int)
     def set_max_pixel_value(self, v):

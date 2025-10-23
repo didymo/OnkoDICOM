@@ -14,9 +14,8 @@ class CutsomToolbar(QToolBar):
     pixel_range_min = 0
 
 
-    def __init__(self, parent=None, canvas_label = None, left_label = None):
-        super().__init__("Toolbar", parent)
-        self.parent = parent
+    def __init__(self, canvas_label = None, left_label = None):
+        super().__init__("Toolbar")
         self.setFont(QFontDatabase.systemFont(QFontDatabase.GeneralFont))
         #Sets communication between classes
         self.canvas_label = canvas_label
@@ -56,7 +55,6 @@ class CutsomToolbar(QToolBar):
         quick_copy_down.setIcon(QIcon("res/images/DrawRoi-icons/Quick-copy-down.png"))
         quick_copy_down.triggered.connect(lambda checked=False: self.quick_copy(False))
         self.addAction(quick_copy_down)
-        self.addSeparator()
         spin_defs = [
             ("Brush Size",      1,   100,  12,   self.update_pen_size),
             ("Pixel Range Min",  0,  6000,   0,   self.update_pixel_min),
@@ -67,10 +65,7 @@ class CutsomToolbar(QToolBar):
 
         for text, mn, mx, val, slot in spin_defs:
             self._add_labeled_spinbox(text, mn, mx, val, slot)
-        
 
-        
-        
     def _add_labeled_spinbox(self, label_text, minimum, maximum, default, slot):
         self.addSeparator()
         lbl = QLabel(label_text + " :")
@@ -80,6 +75,7 @@ class CutsomToolbar(QToolBar):
         sb.editingFinished.connect(lambda _=None: self.setFocus(Qt.OtherFocusReason))
         sb.setRange(minimum, maximum)
         sb.setValue(default)
+        sb.setObjectName(label_text)
         sb.valueChanged.connect(slot)
         self.addWidget(sb)
 
@@ -140,6 +136,8 @@ class CutsomToolbar(QToolBar):
         self.pixel_range_min = value
         self.canvas_label.min_range = value
         self.canvas_label.lock_pixel()
+        min = self.findChild(QSpinBox, "Pixel Range Min")
+        min.setValue(value)
 
     def update_pixel_max(self, value):
         """
@@ -149,7 +147,11 @@ class CutsomToolbar(QToolBar):
         """
         self.pixel_range_max = value
         self.canvas_label.max_range = value
-        self.canvas_label.lock_pixel()
+        self.canvas_label.lock_pixel()       
+
+        max = self.findChild(QSpinBox, "Pixel Range Max")
+        max.setValue(value)
+
 
     def update_erase_dags(self, value):
         """

@@ -61,7 +61,6 @@ class RoiInitialiser():
         """
         self.canvas_labal.setCursor(Qt.ArrowCursor)
         self.canvas_labal.set_tool(4)
-
     def close_window(self):
         """
         Closes the window
@@ -195,7 +194,7 @@ class RoiInitialiser():
         main.addWidget(self.scroller)
         main.addWidget(self.view)
 
-        self._toolbar = CutsomToolbar(self, self.canvas_labal, self.left_label)
+        self._toolbar = CutsomToolbar(self.canvas_labal, self.left_label)
         self.addToolBar(self._toolbar)
         self._toolbar.colour.connect(self.left_label.update_colour)
         self.canvas_labal.emitter.rtss_for_saving.connect(self.saved_roi_drawing)
@@ -281,7 +280,7 @@ class RoiInitialiser():
         z = self.zoom_variable * 100
         self.label_zoom.setText(f"Zoom: {z:.2f}%")
         if self.canvas_labal.roi_name is None:
-             self.current_roi.setText("No ROI Seleted")
+             self.current_roi.setText("No ROI Selected")
         else:
              self.current_roi.setText(self.canvas_labal.roi_name)
        
@@ -308,8 +307,9 @@ class RoiInitialiser():
                                            self._toolbar.pixel_range_max,
                                            self._toolbar.pixel_range_min)
         self.multi_window.contour_number.connect(self.canvas_labal.multi_layer_commit)
-        self.multi_window.max_range_signal.connect(self.canvas_labal.set_max_pixel_value)
-        self.multi_window.min_range_signal.connect(self.canvas_labal.set_min_pixel_value)
+        self.multi_window.max_range_signal.connect(self._toolbar.update_pixel_max)
+        self.multi_window.min_range_signal.connect(self._toolbar.update_pixel_min)
+
         self.multi_window.show()
 
     def window_pop_up(self):

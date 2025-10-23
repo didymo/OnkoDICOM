@@ -25,7 +25,6 @@ class UIAddOnOptions(object):
         self.add_standard_volume_name = None
         self.note = None
         self.fill_options = None
-        self.draw_roi = None
         self.change_default_directory_frame = None
         self.clinical_data_csv_dir_frame = None
         self.table_roi = None
@@ -39,7 +38,6 @@ class UIAddOnOptions(object):
         self.line_style_ISO = 2
         self.opacity_ISO = 5
         self.line_width = 2.0
-        self.alpha_value_slider = 5
 
     def add_into_observer(self):
         # TO DO: Construct Observer Class rather than using an array and
@@ -57,8 +55,7 @@ class UIAddOnOptions(object):
         self.observer_array.append(self.import_organ_csv)
         self.observer_array.append(self.add_standard_volume_name)
         self.observer_array.append(self.note)
-        self.observer_array.append(self.fill_options)
-        self.observer_array.append(self.draw_roi)
+        self.observer_array.append(self.fill_options) 
         self.observer_array.append(self.change_default_directory_frame)
         self.observer_array.append(self.clinical_data_csv_dir_frame)
         self.observer_array.append(self.table_roi)
@@ -67,7 +64,7 @@ class UIAddOnOptions(object):
         self.observer_array.append(self.image_fusion_add_on_options)
 
     def setup_ui(self, add_on_options, roi_line, roi_opacity, iso_line,
-                 iso_opacity, line_width, alpha_value):
+                 iso_opacity, line_width):
         """
         Create the window and the components for each option view.
         """
@@ -91,7 +88,6 @@ class UIAddOnOptions(object):
         self.patient_hash_options = PatientHashId(self)
         self.line_fill_options = LineFillOptions(
             self, roi_line, roi_opacity, iso_line, iso_opacity, line_width)
-        self.draw_roi_options = DrawROIOptions(self, alpha_value)
         self.iso2roi_options = RoiFromIsodoseOptions(self)
         self.change_default_directory = ChangeDefaultDirectory(self)
         self.clinical_data_csv_dir_options = \
@@ -132,7 +128,6 @@ class UIAddOnOptions(object):
         self.option_layout.addWidget(self.table_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(self.table_ids, 1, 0, 1, 3)
         self.option_layout.addWidget(self.fill_options, 1, 0, 1, 3)
-        self.option_layout.addWidget(self.draw_roi, 1, 0, 1, 3)
         self.option_layout.addWidget(
             self.change_default_directory_frame, 1, 0, 1, 3)
         self.option_layout.addWidget(self.clinical_data_csv_dir_frame,
@@ -287,19 +282,6 @@ class UIAddOnOptions(object):
                 item.setVisible(False)
 
             self.fill_options.setVisible(True)
-
-        elif type == "Draw ROI configuration":
-            for item in self.observer_array:
-                item.setVisible(False)
-            # Update the alpha value before displaying, can change value in DrawROI window
-            with open(data_path("draw_roi_configuration"), "r") as draw_roi_cfg_file:
-                options = draw_roi_cfg_file.read().splitlines()
-                if len(options) > 0:
-                    alpha_value = float(options[0])
-                else:
-                    alpha_value = 0.9
-            self.draw_roi_options.window.alpha_value_slider.setValue(alpha_value * 10)
-            self.draw_roi.setVisible(True)
 
         elif type == "Default directory":
             for item in self.observer_array:
@@ -822,60 +804,6 @@ class LineFillOptions(object):
         """
         self.window.opacityLabel_ISO.setText("ISO Fill Opacity: \t {}%".format(
             int(self.window.opacity_ISO.value())))
-
-
-class DrawROIOptions(object):
-    """
-    Manage the UI of the Draw ROI options.
-    """
-
-    def __init__(self, window_options, alpha_value):
-        """
-        Create the components for the UI of the Draw ROI options and
-        set the layout.
-        """
-        self.window = window_options
-        self.alpha_value = alpha_value
-
-        window_options.draw_roi_layout = QtWidgets.QFormLayout(
-            window_options.widget)
-        window_options.draw_roi = QtWidgets.QWidget(window_options.widget)
-        self.create_slider_alpha_value()
-        self.set_layout()
-
-    def set_layout(self):
-        """
-        Add the components into a layout and initialize the values
-        according to the last configuration settings.
-        """
-        # Adding the components into a layout
-        self.window.draw_roi_layout.addRow(self.window.alpha_value_label,
-                                           self.window.alpha_value_slider)
-
-        self.window.draw_roi.setLayout(self.window.draw_roi_layout)
-        self.window.draw_roi.setVisible(False)
-
-    def create_slider_alpha_value(self):
-        """
-        Create slider for setting the alpha value
-        """
-        self.window.alpha_value_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self.window.draw_roi)
-        self.window.alpha_value_slider.setMinimum(2)
-        self.window.alpha_value_slider.setMaximum(9)
-        self.window.alpha_value_slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
-        self.window.alpha_value_slider.setTickInterval(1)
-        self.window.alpha_value_slider.setValue(self.alpha_value * 10)
-        self.window.alpha_value_slider.valueChanged.connect(self.update_alpha_value)
-        self.window.alpha_value_label = QtWidgets.QLabel(
-            "Alpha Value: \t {}".format(
-                self.window.alpha_value_slider.value() / 10))
-
-    def update_alpha_value(self):
-        """
-        Update the label display when slider is changed
-        """
-        self.window.alpha_value_label.setText("Alpha Value: \t {}".format(
-            self.window.alpha_value_slider.value() / 10))
 
 
 class ChangeDefaultDirectory(object):

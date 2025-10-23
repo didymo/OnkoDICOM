@@ -60,6 +60,7 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
         super(RoiDrawOptions, self).__init__()
         QShortcut(QKeySequence(Qt.Key_Up),   self, activated=lambda: self.scroller.setValue(min(self.scroller.value()+1, self.scroller.maximum())))
         QShortcut(QKeySequence(Qt.Key_Down), self, activated=lambda: self.scroller.setValue(max(self.scroller.value()-1, self.scroller.minimum())))
+        
 
         self._central = QtWidgets.QWidget(self)
         self.setCentralWidget(self._central)
@@ -69,13 +70,28 @@ class RoiDrawOptions(QtWidgets.QMainWindow, RoiInitialiser):
     def update_ui(self, rois, dataset_rtss):
         self.set_up(rois, dataset_rtss, self.signal_roi_drawn,
                     self.signal_draw_roi_closed)
+        
     def eventFilter(self, obj, event):
+        """Monitors events then interups to perform cirtain values"""
         if obj is self.view.viewport() and event.type() == QtCore.QEvent.Resize:
             self._hud.setGeometry(self.view.viewport().rect())
             return False  # don't consume; just reacting
-        if obj is self.view.viewport() and event.type() == QtCore.QEvent.Wheel:
+        #12 is the  number acosiated with the arrow press event
+        #will trigger when the arrow key is pressed
+        if event.type() == 12:
             self._hud.setGeometry(self.view.viewport().rect())
-            return False  # don't consume; just reacting
+            return False
+         #scroll wheel changes the image
+        if event.type() == QtCore.QEvent.Type.Wheel:
+            self._hud.setGeometry(self.view.viewport().rect())
+            dy = event.pixelDelta().y() or event.angleDelta().y()
+            if dy > 0:
+                #scroll up
+                self.scroller.setValue(self.scroller.value()+1)
+            elif dy < 0:
+                #scroll down
+                self.scroller.setValue(self.scroller.value()-1)
+            return True
         return super().eventFilter(obj, event)
 
 
