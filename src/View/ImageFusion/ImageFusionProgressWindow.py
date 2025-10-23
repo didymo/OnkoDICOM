@@ -1,5 +1,7 @@
-import platform
+import platform, queue
 from pathlib import Path
+
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.View.ProgressWindow import ProgressWindow
@@ -70,3 +72,19 @@ class ImageFusionProgressWindow(ProgressWindow):
                 self.signal_advise_calc_dvh.emit(True)
             else:
                 self.signal_advise_calc_dvh.emit(False)
+
+    def set_progress_queue(self, progress_queue):
+        self._progress_queue = progress_queue
+        self._progress_timer = QTimer(self)
+        self._progress_timer.timeout.connect(self._poll_progress_queue)
+        self._progress_timer.start(100)  # poll every 100 ms
+
+    def _poll_progress_queue(self):
+        if not hasattr(self, "_progress_queue"):
+            return
+        try:
+            while True:
+                msg = self._progress_queue.get_nowait()
+                self.update_progress(msg)
+        except queue.Empty:
+            pass
