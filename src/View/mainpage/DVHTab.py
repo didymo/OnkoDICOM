@@ -160,7 +160,7 @@ class DVHTab(QtWidgets.QWidget):
             ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
 
         plt.subplots_adjust(bottom=0.3)
-
+        plt.close()
         return fig
 
     def prompt_calc_dvh(self):

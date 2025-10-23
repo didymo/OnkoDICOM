@@ -16,29 +16,22 @@ def windowing_model(text, init):
     """
     patient_dict_container = PatientDictContainer()
 
+
     # Use custom window/level for manual fusion overlays (init[3])
     #TODO This is just a patch. Need to figure out why VTK doesnt work with default dicom windowing
     if init[3]:
-        # You can use a custom dictionary here, or load from MovingDictContainer
-        moving_dict_container = MovingDictContainer()
-        dict_windowing_moving = moving_dict_container.get("dict_windowing_moving")
-        if dict_windowing_moving and text in dict_windowing_moving:
-            windowing_limits = dict_windowing_moving[text]
-        else:
-            # Fallback to a hardcoded set or the fixed image's presets
-            custom_presets = {
-                "Normal": [390, 40],  # Soft tissue, covers -160 to 240 HU
-                "Lung": [1600, -600],  # Lung, covers -1400 to 200 HU
-                "Bone": [2000, 300],  # Bone, covers -700 to 1300 HU
-                "Brain": [80, 40],  # Brain, covers 0 to 80 HU
-                "Soft Tissue": [440, 40],  # Alias for Normal
-                "Head and Neck": [275, 40],  # Covers -147.5 to 227.5 HU
-            }
-            windowing_limits = custom_presets.get(text, [400, 40])
+        custom_presets = {
+            "Normal": [400, 40],  # Normal levels (typical soft tissue window)
+            "Lung": [1600, -600],  # Lung, covers -1400 to 200 HU
+            "Bone": [2000, 300],  # Bone, covers -700 to 1300 HU
+            "Brain": [80, 40],  # Brain, covers 0 to 80 HU
+            "Soft Tissue": [440, 40],  # Soft tissue, covers -180 to 260 HU (muscle, fat, organs)
+            "Head and Neck": [275, 40],  # Covers -147.5 to 227.5 HU
+        }
+        windowing_limits = custom_presets.get(text, [400, 40])
     else:
         windowing_limits = patient_dict_container.get("dict_windowing")[text]
 
-    # Set window and level to the new values
     window = windowing_limits[0]
     level = windowing_limits[1]
 
@@ -110,12 +103,14 @@ def windowing_model_direct(window, level, init, fixed_image_array=None):
                 'windowing_slider' in globals()
                 and windowing_slider is not None
                 and hasattr(windowing_slider, "fusion_views")
-                and windowing_slider.fusion_views is not None
+                and windowing_slider.fusion_views
         ):
             for view in windowing_slider.fusion_views:
                 if hasattr(view, "vtk_engine") and view.vtk_engine is not None:
+
                     view.vtk_engine.set_window_level(float(window), float(level))
                 if hasattr(view, "update_color_overlay"):
+
                     view.update_color_overlay()
             # Also call the fusion window/level callback if present (ensures views update)
             if hasattr(windowing_slider, "fusion_window_level_callback") and callable(
@@ -146,7 +141,5 @@ def set_windowing_slider(slider, fusion_views=None):
     global windowing_slider
     windowing_slider = slider
 
-    if fusion_views is not None:
-        windowing_slider.fusion_views = fusion_views
-    elif hasattr(windowing_slider, "fusion_views"):
-        windowing_slider.fusion_views = None
+    windowing_slider.fusion_views = fusion_views if fusion_views is not None else []
+
