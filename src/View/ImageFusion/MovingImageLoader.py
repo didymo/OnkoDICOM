@@ -1,8 +1,10 @@
+import logging
 import os
 import platform
 from pathlib import Path
 
 from PySide6 import QtCore
+from PySide6.QtWidgets import QMessageBox
 from pydicom import dcmread
 
 from src.Model import ImageLoading
@@ -81,8 +83,10 @@ class MovingImageLoader(ImageLoader):
         return True
 
     def create_model_and_rtss(self, path):
-        create_moving_model()
-        return self.load_temp_rtss(path)
+        ok = self.load_temp_rtss(path)
+        if ok:
+            create_moving_model()
+        return ok
 
     def load_temp_rtss(self, path):
         moving_dict_container = MovingDictContainer()
@@ -124,8 +128,15 @@ class MovingImageLoader(ImageLoader):
         except ImageLoading.NotAllowedClassError as e:
             raise ImageLoading.NotAllowedClassError from e
 
-        moving_dict_container = self.init_container(path, read_data_dict, file_names_dict)
-
+        try:
+            moving_dict_container = self.init_container(path, read_data_dict, file_names_dict)
+        except Exception as e:
+            return self._extracted_from_load_17(
+                "TRACE: Exception in init_container:",
+                e,
+                progress_callback,
+                "Error initializing container",
+            )
         if interrupt_flag.is_set():
             return False
 
@@ -136,21 +147,27 @@ class MovingImageLoader(ImageLoader):
             while not self.advised_calc_dvh:
                 pass
 
-        # handle RTSS (roi + contour data)
         if 'rtss' in file_names_dict:
             if manual:
                 progress_callback(("Getting ROI + Contour data...", 25))
             elif hasattr(progress_callback, "emit"):
                 progress_callback.emit(("Getting ROI + Contour data...", 10))
 
-            dataset_rtss, rois, dict_thickness = self.handle_rtss(
-                file_names_dict, read_data_dict, moving_dict_container
-            )
-
+            try:
+                dataset_rtss, rois, dict_thickness = self.handle_rtss(
+                    file_names_dict, read_data_dict, moving_dict_container
+                )
+            except Exception as e:
+                return self._extracted_from_load_17(
+                    "TRACE: Exception in handle_rtss:",
+                    e,
+                    progress_callback,
+                    "Error loading RTSS",
+                )
             if interrupt_flag.is_set():
+                logging.error("TRACE: MovingImageLoader.load - interrupted after handle_rtss")
                 return False
 
-            # handle DVH calculation
             if 'rtdose' in file_names_dict and self.calc_dvh:
                 if manual:
                     progress_callback(("Calculating DVHs...", 40))
@@ -173,20 +190,26 @@ class MovingImageLoader(ImageLoader):
             if not ok or interrupt_flag.is_set():
                 return False
 
-        # Show moving model loading
-        if manual:
-            progress_callback(("Loading Moving Model", 45))
-        elif hasattr(progress_callback, "emit"):
-            progress_callback.emit(("Loading Moving Model", 85))
+            # Show moving model loading
+            if manual:
+                progress_callback(("Loading Moving Model", 45))
+            elif hasattr(progress_callback, "emit"):
+                progress_callback.emit(("Loading Moving Model", 85))
 
-        if interrupt_flag.is_set() and manual:
-            progress_callback(("Stopping", 85))
-        elif hasattr(progress_callback, "emit"):
-            progress_callback.emit(("Stopping", 85))
-
-            return False
-
+            if interrupt_flag.is_set() and manual:
+                progress_callback(("Stopping", 85))
+                return False
+            elif hasattr(progress_callback, "emit"):
+                progress_callback.emit(("Stopping", 85))
+                return False
         return True
+
+    # TODO Rename this here and in `load`
+    def _extracted_from_load_17(self, arg0, e, progress_callback, arg3):
+        logging.exception(arg0, e)
+        if hasattr(progress_callback, "emit"):
+            progress_callback.emit((arg3, 10))
+        return False
 
     # manual fusion loader
     def load_manual_mode(self, interrupt_flag, progress_callback):

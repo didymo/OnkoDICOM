@@ -189,6 +189,10 @@ class UIImageFusionWindow(object):
 
         self.open_patient_window_instance_vertical_box.addWidget(fusion_mode_container)
 
+        #  Re-validate selection when fusion mode changes ---
+        self.manual_radio.toggled.connect(self._on_fusion_mode_changed)
+        self.auto_radio.toggled.connect(self._on_fusion_mode_changed)
+
         # Create a horizontal box to hold the Cancel and Open button
         self.open_patient_window_patient_open_actions_horizontal_box = \
             QHBoxLayout()
@@ -703,32 +707,42 @@ class UIImageFusionWindow(object):
 
     def on_loaded(self, results):
         """
-        Executes when the progress bar finishes loaded the selected files.
-        Emits a wrapper object that provides update_progress for compatibility with the main window.
-        """
-        # Handle both manual and auto fusion result types
-        if isinstance(results, tuple) and results[0] is True:
-            # Manual fusion: results is (True, images_dict)
-            images = results[1]
-            if isinstance(images, dict) and "vtk_engine" in images:
-                # Manual fusion: add dummy keys for main window compatibility
-                images["fixed_image"] = None
-                images["moving_image"] = None
-                # --- Set manual_fusion in PatientDictContainer ---
-                loader = ManualFusionLoader([], None)  # dummy loader for static call
-                loader.on_manual_fusion_loaded((True, images))
+                       Executes when the progress bar finishes loaded the selected files.
+                       Emits a wrapper object that provides update_progress for compatibility with the main window.
+                       """
 
-            wrapper = FusionResultWrapper(images, self.progress_window)
-            self.image_fusion_info_initialized.emit(wrapper)
+        # Handle both manual and auto fusion result types
+        if isinstance(results, tuple):
+            if results[0] is True:
+                # Manual fusion: results is (True, images_dict)
+                images = results[1]
+                if isinstance(images, dict) and "vtk_engine" in images:
+                    # Manual fusion: add dummy keys for main window compatibility
+                    images["fixed_image"] = None
+                    images["moving_image"] = None
+                    # --- Set manual_fusion in PatientDictContainer ---
+                    loader = ManualFusionLoader([], None)  # dummy loader for static call
+                    loader.on_manual_fusion_loaded((True, images))
+
+                wrapper = FusionResultWrapper(images, self.progress_window)
+                self.image_fusion_info_initialized.emit(wrapper)
+            else:
+                # Tuple but not success: treat as error
+                error_msg = results[1] if len(results) > 1 else "Unknown error"
+                QMessageBox.warning(self.progress_window, "Fusion Error", f"Fusion failed: {error_msg}")
         elif hasattr(results, "update_progress"):
-            # Autofusion: results is a ProgressWindow or similar
             wrapper = FusionResultWrapper(results, self.progress_window)
             self.image_fusion_info_initialized.emit(wrapper)
+        elif results is True:
+            images = {}
+            wrapper = FusionResultWrapper(images, self.progress_window)
+            self.image_fusion_info_initialized.emit(wrapper)
+        elif results is False:
+            QMessageBox.warning(self.progress_window, "Fusion Error", "Auto fusion failed to load images.")
         else:
-            # Unexpected result type
-            QMessageBox.warning(self, "Fusion Error", "Unexpected result type returned from fusion loader.")
-
-
+            QMessageBox.warning(self.progress_window,
+                                "Fusion Error",
+                                f"Unexpected result type returned from fusion loader: {type(results)}")
 
 
     def on_loading_error(self, exception):
@@ -747,6 +761,26 @@ class UIImageFusionWindow(object):
                               "Selected files cannot be opened as they contain"
                               " unsupported DICOM classes.")
             self.progress_window.close()
+
+    def _on_fusion_mode_changed(self):
+        """
+        Called when the fusion mode radio button is toggled.
+        Re-checks the selected items and disables confirm if requirements are not met.
+        """
+        # Find the currently selected patient (if any)
+        root = self.open_patient_window_patients_tree.invisibleRootItem()
+        checked_nodes = self.get_checked_nodes(root)
+        # If any node is checked, find its top-level parent (the patient)
+        selected_patient = None
+        if checked_nodes:
+            selected_patient = checked_nodes[0]
+            while selected_patient.parent() is not None:
+                selected_patient = selected_patient.parent()
+        # Re-run the selection check
+        if selected_patient is not None:
+            self.check_selected_items(selected_patient)
+        else:
+            self.open_patient_window_confirm_button.setDisabled(True)
 
 
 # This is to allow for dropping a directory into the input text.
