@@ -66,7 +66,16 @@ class ManualFusionLoader(QtCore.QObject):
         # Wrap the progress_callback so it always runs in the main thread
         def main_thread_progress_callback(*args, **kwargs):
             if progress_callback is not None:
-                progress_callback(*args, **kwargs)
+                # If progress_callback happens to be a Qt Signal, use QMetaObject.invokeMethod to ensure main thread execution
+                if hasattr(progress_callback, "emit"):
+                    QtCore.QMetaObject.invokeMethod(
+                        progress_callback,
+                        "emit",
+                        QtCore.Qt.QueuedConnection,
+                        QtCore.Q_ARG(object, args if len(args) > 1 else args[0])
+                    )
+                else:
+                    progress_callback(*args, **kwargs)
 
         self._interrupt_flag = interrupt_flag
         try:
