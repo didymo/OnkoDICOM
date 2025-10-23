@@ -78,11 +78,9 @@ class ManualFusionLoader(QtCore.QObject):
                 return
             self._load_with_vtk(main_thread_progress_callback)
         except Exception as e:
-            import traceback
-            stack = traceback.format_exc()
             main_thread_progress_callback(("Error loading images", e))
-            logging.exception("Error loading images: %s\n%s", e, stack)
-            self.signal_error.emit((False, f"{e}\n{stack}"))
+            logging.exception("Error loading images: %s\n%s", e)
+            self.signal_error.emit((False, f"{e}"))
 
     def _load_with_vtk(self, progress_callback):
         """
