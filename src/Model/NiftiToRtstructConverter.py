@@ -231,7 +231,7 @@ def nifti_to_rtstruct_conversion(nifti_path: str, dicom_path: str, output_path: 
     try:
         for img_path in nifti_files_list:
             _process_nifti_file(str(img_path), dicom_img, rtstruct, segment_name_map)
-        rtstruct.save(rtss_path)
+        rtstruct.save(str(rtss_path))
         return True
     except Exception as e:
         logger.error(f"Conversion failed: {type(e).__name__}: {e}")

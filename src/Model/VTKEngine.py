@@ -140,7 +140,7 @@ def cleanup_old_dicom_temp_dirs(temp_root=None):
 
 # ------------------------------ VTK Processing Engine ------------------------------
 
-WINDOW_DEFAULT = 390
+WINDOW_DEFAULT = 400
 LEVEL_DEFAULT = 40
 
 class VTKEngine:
