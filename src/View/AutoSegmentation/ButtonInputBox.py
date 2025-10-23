@@ -91,11 +91,13 @@ class ButtonInputBox(QWidget):
 
         :returns: None
         """
-        if self.text is not None:
-            self.typed_text = self.text.text()
-        if self.delete_word:
-            self.typed_text = self.delete_word
-        return self._send(self.typed_text)
+        if self._send is not None:
+            if self.text is not None:
+                self.typed_text = self.text.text()
+            if self.delete_word:
+                self.typed_text = self.delete_word
+            return self._send(self.typed_text)
+        return None
 
     def _negative_action(self) -> None:
         """
@@ -103,4 +105,7 @@ class ButtonInputBox(QWidget):
 
         :returns: None
         """
-        self._close()
+        if self._close is not None:
+            self._close()
+        else:
+            self.close()
