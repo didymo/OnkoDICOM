@@ -39,6 +39,8 @@ from src.View.ImageFusion.ImageFusionSagittalView import \
 from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
+from src.View.util.PatientDictContainerHelper import read_dicom_image_to_sitk
+
 
 from src.Controller.PathHandler import resource_path
 from src.constants import INITIAL_FOUR_VIEW_ZOOM
@@ -648,6 +650,25 @@ class UIMainWindow:
         if vtk_engine is None and hasattr(self, "fixed_image_sitk") and hasattr(self, "moving_image_sitk"):
             import SimpleITK as sitk
             import numpy as np
+
+            # Ensure fixed_image_sitk and moving_image_sitk are present and valid
+            # If not, populate them from PatientDictContainer and MovingDictContainer
+            if not hasattr(self, "fixed_image_sitk") or self.fixed_image_sitk is None:
+                patient_dict_container = PatientDictContainer()
+                filepaths = getattr(patient_dict_container, "filepaths", None)
+                if filepaths:
+                    self.fixed_image_sitk = read_dicom_image_to_sitk(filepaths)
+                    
+            if not hasattr(self, "moving_image_sitk") or self.moving_image_sitk is None:
+                moving_dict_container = MovingDictContainer()
+                filepaths = getattr(moving_dict_container, "filepaths", None)
+                if filepaths:
+                    self.moving_image_sitk = read_dicom_image_to_sitk(filepaths)
+
+            # If still None, abort overlay setup
+            if self.fixed_image_sitk is None or self.moving_image_sitk is None:
+                logging.error("setup_static_overlays_if_no_vtk: Could not populate fixed/moving images for overlays.")
+                return
 
             fixed_arr = sitk.GetArrayFromImage(self.fixed_image_sitk)
             moving_arr = sitk.GetArrayFromImage(self.moving_image_sitk)
