@@ -25,19 +25,20 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, segmentation_list: list[str] = None, data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
+    def __init__(self, parent, segmentation_list: list[str] = None, data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Creates the list for the storage of the selected segments
         Generates Tree
         Sets up the layout of the Widget
 
+        :param parent: Parent widget
         :param segmentation_list: list[str]
         :param data_location: str
         :returns: None
         """
 
-        super(SegmentSelectorWidget, self).__init__()
+        super(SegmentSelectorWidget, self).__init__(parent)
         self.setStyleSheet(StyleSheetReader().get_stylesheet()) # To style the Widget
 
         # Class Members
@@ -66,7 +67,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
 
         # Only Really needed if view is destroyed.
         if segmentation_list:
-            self.load_selections(segmentation_list)
+            segmentation_list.clear()
 
     def sizeHint(self) -> QSize:
         """
