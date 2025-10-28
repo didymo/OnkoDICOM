@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QPushButton
 from src.Model.Configuration import Configuration, SqlError
 
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class UIFirstTimeWelcomeWindow(object):
@@ -14,12 +15,6 @@ class UIFirstTimeWelcomeWindow(object):
 
     # the ui constructor function
     def setup_ui(self, first_time_welcome_window_instance):
-        self.filepath = ""
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-
         window_icon = QtGui.QIcon()
         window_icon.addPixmap(QtGui.QPixmap(resource_path("res/images/icon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)  # adding icon
         first_time_welcome_window_instance.setObjectName("FirstTimeWelcomeWindowInstance")
@@ -198,8 +193,7 @@ class UIFirstTimeWelcomeWindow(object):
         first_time_welcome_window_instance.setCentralWidget(self.first_time_window_instance_central_widget)
 
         # Set the current stylesheet to the instance and connect it back to the caller through slot
-        _stylesheet = open(resource_path(self.stylesheet_path)).read()
-        first_time_welcome_window_instance.setStyleSheet(_stylesheet)
+        first_time_welcome_window_instance.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.retranslate_ui(first_time_welcome_window_instance)
         QtCore.QMetaObject.connectSlotsByName(first_time_welcome_window_instance)
 

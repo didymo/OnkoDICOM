@@ -1,3 +1,5 @@
+import contextlib
+import itertools
 import logging
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtGui import QPixmap, QIcon
@@ -5,10 +7,13 @@ from PySide6.QtWidgets import QGridLayout, QWidget, QVBoxLayout, QStackedWidget
 
 from src.Controller.ActionHandler import ActionHandler
 from src.Controller.AddOnOptionsController import AddOptions
+from src.Controller.AutoSegmentationController import AutoSegmentationController
 from src.Controller.MainPageController import MainPageCallClass
 from src.Controller.ROIOptionsController import ROIDrawOption
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.SUV2ROI import SUV2ROI
+from src.Model.Windowing import set_windowing_slider
+from src.View.ImageFusion.ImageFusionTabBuilder import ImageFusionTabBuilder
 from src.View.ImageFusion.ROITransferOptionView import ROITransferOptionView
 from src.View.StyleSheetReader import StyleSheetReader
 from src.View.mainpage.DVHTab import DVHTab
@@ -34,6 +39,7 @@ from src.View.ImageFusion.ImageFusionSagittalView import \
 from src.View.ImageFusion.ImageFusionCoronalView import ImageFusionCoronalView
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
+from src.View.util.PatientDictContainerHelper import read_dicom_image_to_sitk
 
 
 from src.Controller.PathHandler import resource_path
@@ -73,7 +79,7 @@ class UIMainWindow:
         ##########################################
         #  IMPLEMENTATION OF THE MAIN PAGE VIEW  #
         ##########################################
-        self.stylesheet = StyleSheetReader()
+        stylesheet = StyleSheetReader()
 
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path(
@@ -81,7 +87,7 @@ class UIMainWindow:
         self.main_window_instance.setMinimumSize(1080, 700)
         self.main_window_instance.setObjectName("MainOnkoDicomWindowInstance")
         self.main_window_instance.setWindowIcon(window_icon)
-        self.main_window_instance.setStyleSheet(self.stylesheet())
+        self.main_window_instance.setStyleSheet(stylesheet.get_stylesheet())
 
         self.setup_central_widget()
         self.setup_actions()
@@ -258,6 +264,9 @@ class UIMainWindow:
         self.central_widget.setLayout(self.central_widget_layout)
         self.main_window_instance.setCentralWidget(self.central_widget)
 
+        # creating controller for auto-Segmentation
+        self._create_autosegmentation_controller()
+
     def create_footer(self):
         self.footer.setFixedHeight(15)
         layout_footer = QtWidgets.QHBoxLayout(self.footer)
@@ -315,48 +324,32 @@ class UIMainWindow:
             if self.draw_roi is not None:
                 self.draw_roi.update_draw_roi_pixmaps()
 
-    def toggle_cut_lines(self):
-        if self.dicom_axial_view.horizontal_view is None or \
-                self.dicom_axial_view.vertical_view is None or \
-                self.dicom_coronal_view.horizontal_view is None or \
-                self.dicom_coronal_view.vertical_view is None or \
-                self.dicom_sagittal_view.horizontal_view is None or \
-                self.dicom_sagittal_view.vertical_view is None:
-            self.dicom_axial_view.set_views(self.dicom_coronal_view,
-                                            self.dicom_sagittal_view)
-            self.dicom_coronal_view.set_views(self.dicom_axial_view,
-                                              self.dicom_sagittal_view)
-            self.dicom_sagittal_view.set_views(self.dicom_axial_view,
-                                               self.dicom_coronal_view)
+    def _toggle_cut_lines_for_views(self, axial_view, coronal_view, sagittal_view):
+        """
+        Helper method to toggle cut lines for a set of three orthogonal views.
+        """
+        if axial_view.horizontal_view is None or \
+                axial_view.vertical_view is None or \
+                coronal_view.horizontal_view is None or \
+                coronal_view.vertical_view is None or \
+                sagittal_view.horizontal_view is None or \
+                sagittal_view.vertical_view is None:
+            axial_view.set_views(coronal_view, sagittal_view)
+            coronal_view.set_views(axial_view, sagittal_view)
+            sagittal_view.set_views(axial_view, coronal_view)
         else:
-            self.dicom_axial_view.set_views(None, None)
-            self.dicom_coronal_view.set_views(None, None)
-            self.dicom_sagittal_view.set_views(None, None)
+            axial_view.set_views(None, None)
+            coronal_view.set_views(None, None)
+            sagittal_view.set_views(None, None)
 
-        if hasattr(self, 'image_fusion_view'):
-            if self.image_fusion_view is not None:
-                if self.image_fusion_view_axial.horizontal_view is None or \
-                        self.image_fusion_view_axial.vertical_view is None or \
-                        self.image_fusion_view_coronal.horizontal_view is None \
-                        or self.image_fusion_view_coronal.vertical_view is None \
-                        or \
-                        self.image_fusion_view_sagittal.horizontal_view is None \
-                        or \
-                        self.image_fusion_view_sagittal.vertical_view is None:
-                    self.image_fusion_view_axial.set_views(
-                        self.image_fusion_view_coronal,
-                        self.image_fusion_view_sagittal)
-                    self.image_fusion_view_coronal.set_views(
-                        self.image_fusion_view_axial,
-                        self.image_fusion_view_sagittal)
-
-                    self.image_fusion_view_sagittal.set_views(
-                        self.image_fusion_view_axial,
-                        self.image_fusion_view_coronal)
-                else:
-                    self.image_fusion_view_axial.set_views(None, None)
-                    self.image_fusion_view_coronal.set_views(None, None)
-                    self.image_fusion_view_sagittal.set_views(None, None)
+    def toggle_cut_lines(self):
+        self._toggle_cut_lines_for_views(
+            self.dicom_axial_view, self.dicom_coronal_view, self.dicom_sagittal_view
+        )
+        if hasattr(self, 'image_fusion_view') and self.image_fusion_view is not None:
+            self._toggle_cut_lines_for_views(
+                self.image_fusion_view_axial, self.image_fusion_view_coronal, self.image_fusion_view_sagittal
+            )
 
     def zoom_in(self, is_four_view, image_reg_single, image_reg_four):
         """
@@ -420,155 +413,263 @@ class UIMainWindow:
         """
         self.dicom_axial_view.format_metadata(size)
 
+    #---- Create the Image fusion tab -------
     def create_image_fusion_tab(self, manual=False):
         """
-        This function is used to create the tab for image fusion.
-        For manual fusion, overlays the base and overlay images without autofusion.
-        Adds a "Fusion Options" tab with the Translate/Rotate menu.
-        Uses self.fixed_image_sitk and self.moving_image_sitk if available.
+        Creates and configures the Image Fusion tab, including all fusion views, options, and callbacks.
+        This method delegates the construction to a dedicated builder for clarity and maintainability.
         """
-        # Set a flag for Zooming
-        self.action_handler.has_image_registration_four = True
+        builder = ImageFusionTabBuilder(self, manual=manual)
+        builder.build()
 
-        # Instance of Moving Model
-        moving_dict_container = MovingDictContainer()
+    def _get_vtk_engine_from_images(self):
+        """
+            Retrieve the VTK engine from self.images if available.
 
-        # Only check for modality if dataset is not None
-        if moving_dict_container.dataset is not None and moving_dict_container.has_modality("rtss") and len(self.structures_tab.rois.items()) == 0:
-            self.structures_tab.update_ui(moving=True)
+            Returns:
+                vtk_engine: The VTKEngine instance stored in `self.images["vtk_engine"]`
+                            or None if not found.
+        """
+        # Ensure self.images always exists
+        if not hasattr(self, "images"):
+            self.images = {}
+        if isinstance(self.images, dict) and "vtk_engine" in self.images:
+            return self.images["vtk_engine"]
+        return None
 
-        # Define a callback that updates all three views for translation
-        def update_all_views(offset):
-            for view in [
-                self.image_fusion_single_view,
-                self.image_fusion_view_axial,
-                self.image_fusion_view_sagittal,
-                self.image_fusion_view_coronal,
-            ]:
-                view.update_overlay_offset(
-                    offset,
-                    orientation=self.last_fusion_slice_orientation,
-                    slice_idx=self.last_fusion_slice_idx
-                )
+    def _init_fusion_views(self, vtk_engine):
+        """
+            Initialize all fusion views and set their orientation.
 
+            Creates the axial, sagittal, and coronal fusion views as well as a
+            container (QStackedWidget) for switching between the 4-view layout
+            and single-view mode.
+        """
+        # Ensure fusion_options_tab exists as an attribute for all code paths
+        if not hasattr(self, "fusion_options_tab"):
+            self.fusion_options_tab = None
 
-        # Define a callback that updates all three views for rotation
-        def update_all_rotations(rotation_tuple):
-            for view in [
-                self.image_fusion_single_view,
-                self.image_fusion_view_axial,
-                self.image_fusion_view_sagittal,
-                self.image_fusion_view_coronal,
-            ]:
-                view.update_overlay_rotation(
-                    rotation_tuple,
-                    orientation=self.last_fusion_slice_orientation,
-                    slice_idx=self.last_fusion_slice_idx
-                )
-
-        # --- Connect color pair change to all fusion views ---
-        def propagate_color_pair_change(fixed_color, moving_color, coloring_enabled):
-            for view in [
-                self.image_fusion_single_view,
-                self.image_fusion_view_axial,
-                self.image_fusion_view_sagittal,
-                self.image_fusion_view_coronal,
-            ]:
-                if hasattr(view, "_on_color_pair_changed"):
-                    # Compose the text as in the combo box for compatibility
-                    if not coloring_enabled:
-                        text = "No Colors (Grayscale)"
-                    elif fixed_color == "Purple" and moving_color == "Green":
-                        text = "Purple + Green"
-                    elif fixed_color == "Blue" and moving_color == "Yellow":
-                        text = "Blue + Yellow"
-                    elif fixed_color == "Red" and moving_color == "Cyan":
-                        text = "Red + Cyan"
-                    else:
-                        text = "Purple + Green"
-                    view._on_color_pair_changed(text)
-
-        # Fusion Options Tab with Translate/Rotate Menu
-        self.fusion_options_tab = None
-
-        if manual:
-            self.fusion_options_tab = TranslateRotateMenu()
-            self.fusion_options_tab.set_offset_changed_callback(update_all_views)
-            self.fusion_options_tab.set_rotation_changed_callback(update_all_rotations)
-            self.fusion_options_tab.set_color_pair_changed_callback(propagate_color_pair_change)
-            self.fusion_options_tab.set_get_vtk_engine_callback(lambda: vtk_engine)
-            self.left_panel.addTab(self.fusion_options_tab, "Fusion Options")
-            self.left_panel.setCurrentWidget(self.fusion_options_tab)
-
-            # --- Set mouse mode changed callback to update ALL views ---
-            def propagate_mouse_mode_change(mode):
-                for view in [
-                    self.image_fusion_single_view,
-                    self.image_fusion_view_axial,
-                    self.image_fusion_view_sagittal,
-                    self.image_fusion_view_coronal,
-                ]:
-                    if hasattr(view, "_on_mouse_mode_changed"):
-                        view._on_mouse_mode_changed(mode)
-                        # Force overlay refresh so window appears immediately
-                        view.refresh_overlay_now()
-
-            self.fusion_options_tab.set_mouse_mode_changed_callback(propagate_mouse_mode_change)
-
-        # VTKEngine integration
-        vtk_engine = None
-        # Try to get vtk_engine from loader result (set by TopLevelController)
-        if hasattr(self, "images") and isinstance(self.images, dict) and "vtk_engine" in self.images:
-            vtk_engine = self.images["vtk_engine"]
-
-        # Pass the shared TranslateRotateMenu to all fusion views
+        # Single view (default axial orientation)
         self.image_fusion_single_view = ImageFusionAxialView(
             vtk_engine=vtk_engine, translation_menu=self.fusion_options_tab)
+
+        # Container that can switch between layouts (single vs. four-view)
         self.image_fusion_view = QStackedWidget()
+
+        # Axial, sagittal, coronal views with orientation-specific colors
         self.image_fusion_view_axial = ImageFusionAxialView(
             metadata_formatted=False,
             cut_line_color=QtGui.QColor(255, 0, 0),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
+        self.image_fusion_view_axial.orientation = "axial"
+
         self.image_fusion_view_sagittal = ImageFusionSagittalView(
             cut_line_color=QtGui.QColor(0, 255, 0),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
+        self.image_fusion_view_sagittal.orientation = "sagittal"
+
         self.image_fusion_view_coronal = ImageFusionCoronalView(
             cut_line_color=QtGui.QColor(0, 0, 255),
             vtk_engine=vtk_engine,
             translation_menu=self.fusion_options_tab)
+        self.image_fusion_view_coronal.orientation = "coronal"
+
+        # Store references for iteration
+        self._fusion_views = [
+            self.image_fusion_view_axial,
+            self.image_fusion_view_sagittal,
+            self.image_fusion_view_coronal
+        ]
+
+    def init_windowing_slider(self):
+        """
+            Create and configure the global windowing slider for fusion views.
+
+            The window/level settings are propagated to all fusion views to ensure
+            consistent visualization.
+        """
+
+        def propagate_window_level_change(window, level):
+            """
+                Propagate window/level changes to all fusion views.
+
+                Args:
+                    window (int): The new window value.
+                    level (int): The new level value.
+            """
+
+            for view in [
+                self.image_fusion_view_axial,
+                self.image_fusion_view_sagittal,
+                self.image_fusion_view_coronal,
+            ]:
+                if hasattr(view, "on_window_level_changed"):
+                    view.on_window_level_changed(window, level)
+
+        # Use the global singleton for the windowing slider
+        self.windowing_slider = WindowingSlider(dicom_view=self.image_fusion_view_axial, width=50)
+        set_windowing_slider(self.windowing_slider, fusion_views=self._fusion_views)
+
+        # Hook into the callback to propagate to all views
+        self.windowing_slider.fusion_window_level_callback = propagate_window_level_change
+
+    def init_roi_transfer_option_view(self):
+        """
+           Initialize the ROI transfer option view.
+
+           This provides controls for transferring ROIs between fixed and moving
+           images during fusion.
+        """
         self.image_fusion_roi_transfer_option_view = ROITransferOptionView(
             self.structures_tab.fixed_container_structure_modified,
-            self.structures_tab.moving_container_structure_modified)
+            self.structures_tab.moving_container_structure_modified
+        )
 
-        # Track the last interacted slice orientation and index for rotation axis
+    def init_fusion_slice_tracking(self):
+        """
+            Initialize variables for tracking the last interacted slice.
+
+            These values are used for determining rotation axes and applying
+            transformations relative to the correct slice orientation/index.
+            """
         self.last_fusion_slice_orientation = "axial"
         self.last_fusion_slice_idx = 0
+
+    def apply_transform_if_present(self, vtk_engine):
+        """
+            Apply a saved transform (from ManualFusionLoader) if present.
+
+            Args:
+                vtk_engine: The VTK engine to apply the transform to.
+
+            The transform data is expected to be stored in self.images["transform_data"].
+            If found, applies the matrix, translation, and rotation to both the VTK
+            engine and the GUI controls.
+        """
+
+        if (
+                not hasattr(self, "images")
+                or not isinstance(self.images, dict)
+                or "transform_data" not in self.images
+                or self.images["transform_data"] is None
+        ):
+            return
+        td = self.images["transform_data"]
+        menu = self.fusion_options_tab
+
+        self.apply_matrix_and_transform_to_engine(
+            vtk_engine=vtk_engine,
+            matrix=td["matrix"],
+            translation=td["translation"],
+            rotation=td["rotation"],
+            menu=menu
+        )
+
+    def apply_matrix_and_transform_to_engine(self, vtk_engine, matrix, translation, rotation, menu):
+        """
+        Apply a 4x4 matrix, translation, and rotation to the VTK engine and update the GUI sliders.
+        This method is shared by both the main page and TranslateRotateMenu to avoid code duplication.
+
+        Args:
+            vtk_engine: The VTKEngine instance to update.
+            matrix: 4x4 numpy array representing the transformation matrix.
+            translation: List or tuple of translation values [tx, ty, tz].
+            rotation: List or tuple of rotation values [rx, ry, rz].
+            menu: The TranslateRotateMenu instance (for updating sliders/labels).
+        """
+        import itertools
+        import vtk
+
+        # Convert numpy matrix to VTK matrix
+        vtkmat = vtk.vtkMatrix4x4()
+        for i, j in itertools.product(range(4), range(4)):
+            vtkmat.SetElement(i, j, matrix[i, j])
+
+        # Update engine with transform
+        if hasattr(vtk_engine, "transform"):
+            vtk_engine.transform.SetMatrix(vtkmat)
+            vtk_engine.reslice3d.SetResliceAxes(vtkmat)
+            vtk_engine.reslice3d.Modified()
+        if hasattr(vtk_engine, "set_translation"):
+            vtk_engine.set_translation(*translation)
+        if hasattr(vtk_engine, "set_rotation_deg"):
+            vtk_engine.set_rotation_deg(*rotation)
+
+        # Sync GUI sliders if menu is present
+        if menu is not None:
+            menu.set_offsets(translation)
+            for i in range(3):
+                menu.rotate_sliders[i].blockSignals(True)
+                menu.rotate_sliders[i].setValue(int(round(rotation[i] * 10)))
+                menu.rotate_labels[i].setText(f"{rotation[i]:.1f}°")
+                menu.rotate_sliders[i].blockSignals(False)
+            if menu.offset_changed_callback:
+                menu.offset_changed_callback(translation)
+            if menu.rotation_changed_callback:
+                menu.rotation_changed_callback(tuple(rotation))
+
+    def connect_slider_callbacks(self):
+        """
+            Connect slice slider callbacks to track orientation and index.
+
+            Ensures that interactions with slice sliders update the "last interacted"
+            orientation/index variables for use in transforms/rotations.
+        """
 
         def on_slider_changed(orientation, value):
             self.last_fusion_slice_orientation = orientation
             self.last_fusion_slice_idx = value
 
-        # Connect each fusion view's slider to update the last interacted orientation/index
         self.image_fusion_view_axial.slider.valueChanged.connect(
             lambda v: on_slider_changed("axial", v))
         self.image_fusion_view_coronal.slider.valueChanged.connect(
             lambda v: on_slider_changed("coronal", v))
         self.image_fusion_view_sagittal.slider.valueChanged.connect(
             lambda v: on_slider_changed("sagittal", v))
-        
-        # Set slider ranges to VTK extents for all fusion views 
+
+    def set_slider_ranges(self):
+        """
+           Fall back to static overlays if no VTK engine is available.
+
+           Uses SimpleITK arrays converted to QPixmaps for overlay display.
+           This is a lightweight fallback when VTK is not in use.
+        """
         for view in [self.image_fusion_view_axial, self.image_fusion_view_coronal, self.image_fusion_view_sagittal]:
             if hasattr(view, "set_slider_range_from_vtk"):
                 view.set_slider_range_from_vtk()
 
-        # If not using VTKEngine, fall back to static overlays
+    def setup_static_overlays_if_no_vtk(self, vtk_engine):
+        """
+            Fall back to static overlays if no VTK engine is available.
+
+            Uses SimpleITK arrays converted to QPixmaps for overlay display.
+            This is a lightweight fallback when VTK is not in use.
+        """
         if vtk_engine is None and hasattr(self, "fixed_image_sitk") and hasattr(self, "moving_image_sitk"):
             import SimpleITK as sitk
             import numpy as np
 
-            # Convert images to numpy arrays for display
+            # Ensure fixed_image_sitk and moving_image_sitk are present and valid
+            # If not, populate them from PatientDictContainer and MovingDictContainer
+            if not hasattr(self, "fixed_image_sitk") or self.fixed_image_sitk is None:
+                patient_dict_container = PatientDictContainer()
+                filepaths = getattr(patient_dict_container, "filepaths", None)
+                if filepaths:
+                    self.fixed_image_sitk = read_dicom_image_to_sitk(filepaths)
+                    
+            if not hasattr(self, "moving_image_sitk") or self.moving_image_sitk is None:
+                moving_dict_container = MovingDictContainer()
+                filepaths = getattr(moving_dict_container, "filepaths", None)
+                if filepaths:
+                    self.moving_image_sitk = read_dicom_image_to_sitk(filepaths)
+
+            # If still None, abort overlay setup
+            if self.fixed_image_sitk is None or self.moving_image_sitk is None:
+                logging.error("setup_static_overlays_if_no_vtk: Could not populate fixed/moving images for overlays.")
+                return
+
             fixed_arr = sitk.GetArrayFromImage(self.fixed_image_sitk)
             moving_arr = sitk.GetArrayFromImage(self.moving_image_sitk)
 
@@ -579,19 +680,16 @@ class UIMainWindow:
                 qimg = QImage(arr.data, w, h, w, QImage.Format_Grayscale8)
                 return QPixmap.fromImage(qimg)
 
-            # Axial: slices along z
+            # Generate static overlays for each orientation
             axial_images = [numpy_to_qpixmap(fixed_arr[i, :, :]) for i in range(fixed_arr.shape[0])]
-            # Coronal: slices along y
             coronal_images = [numpy_to_qpixmap(fixed_arr[:, i, :]) for i in range(fixed_arr.shape[1])]
-            # Sagittal: slices along x
             sagittal_images = [numpy_to_qpixmap(fixed_arr[:, :, i]) for i in range(fixed_arr.shape[2])]
 
-            # Store overlays for slider use
             self.image_fusion_view_axial.overlay_images = axial_images
             self.image_fusion_view_coronal.overlay_images = coronal_images
             self.image_fusion_view_sagittal.overlay_images = sagittal_images
 
-            # Connect slider to update overlay
+            # Connect sliders to update overlays
             self.image_fusion_view_axial.slider.valueChanged.connect(
                 lambda: self.image_fusion_view_axial.image_display())
             self.image_fusion_view_coronal.slider.valueChanged.connect(
@@ -604,44 +702,70 @@ class UIMainWindow:
             self.image_fusion_view_coronal.image_display()
             self.image_fusion_view_sagittal.image_display()
 
-        # Rescale the size of the scenes inside the 3-slice views
+    def rescale_and_update_fusion_views(self):
+        """
+           Rescale the scene sizes and refresh all fusion views.
+
+           Ensures consistent zoom factor and triggers a redraw of each slice view.
+        """
         self.image_fusion_view_axial.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_sagittal.zoom = INITIAL_FOUR_VIEW_ZOOM
         self.image_fusion_view_coronal.zoom = INITIAL_FOUR_VIEW_ZOOM
+
+        # Trigger redraw with zoom change flag
         self.image_fusion_view_axial.update_view(zoom_change=True)
         self.image_fusion_view_sagittal.update_view(zoom_change=True)
         self.image_fusion_view_coronal.update_view(zoom_change=True)
 
+    def setup_fusion_four_views_layout(self):
+        """
+            Set up the layout for the four fusion views.
+
+            Arranges axial, sagittal, coronal views, and ROI transfer options
+            in a 2x2 grid layout. Adds this layout to the QStackedWidget.
+        """
         self.image_fusion_four_views = QWidget()
         self.image_fusion_four_views_layout = QGridLayout()
+
+        # Ensure equal stretching in both rows and columns
         for i in range(2):
             self.image_fusion_four_views_layout.setColumnStretch(i, 1)
             self.image_fusion_four_views_layout.setRowStretch(i, 1)
+
+        # Place views into a grid
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_axial, 0, 0)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_sagittal, 0, 1)
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_view_coronal, 1, 0)
-
         self.image_fusion_four_views_layout.addWidget(
             self.image_fusion_roi_transfer_option_view, 1, 1
         )
-
+        # Finalize layout and add to stacked widget
         self.image_fusion_four_views.setLayout(
             self.image_fusion_four_views_layout)
-
         self.image_fusion_view.addWidget(self.image_fusion_four_views)
         self.image_fusion_view.addWidget(self.image_fusion_single_view)
         self.image_fusion_view.setCurrentWidget(self.image_fusion_four_views)
 
-        # Add Image Fusion Tab
+    def finalize_fusion_tab(self):
+        """
+            Add the completed Image Fusion tab to the right panel.
+
+            Also updates the Add-On Options controller so additional
+            features in the GUI can react to the presence of the fusion tab.
+        """
         self.right_panel.addTab(self.image_fusion_view, "Image Fusion")
         self.right_panel.setCurrentWidget(self.image_fusion_view)
-
-        # Update the Add On Option GUI
         self.add_on_options_controller.update_ui()
 
+    # Add Auto-Segmentation to the left panel
+    def _create_autosegmentation_controller(self):
+        # Obtain controller from auto segment tab
+        self.auto_segmentation_controller: AutoSegmentationController = AutoSegmentationController()
+        # Connect update structures signal to main slot
+        self.auto_segmentation_controller.update_structure_list.connect(self.structures_tab.update_ui)
 
     def perform_suv2roi(self):
         """
@@ -688,7 +812,7 @@ class UIMainWindow:
                     QtWidgets.QMessageBox.StandardButton.Ok, self)
             button_reply.button(
                 QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
-                self.stylesheet())
+                StyleSheetReader().get_stylesheet())
             button_reply.exec_()
 
         # Close progress window
@@ -723,4 +847,3 @@ class UIMainWindow:
         self.action_handler.action_four_views.setDisabled(disabled)
         self.action_handler.action_show_cut_lines.setDisabled(disabled)
         self.action_handler.action_image_fusion.setDisabled(disabled)
-

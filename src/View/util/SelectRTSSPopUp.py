@@ -1,5 +1,3 @@
-import platform
-
 from pydicom import dcmread
 
 from PySide6 import QtCore, QtGui
@@ -8,6 +6,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QWidget, QPushButton, \
 
 from src.Model.DICOM.Structure.DICOMSeries import Series
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 """
 This Class handles the RTSS Pop Up when users need to select a RTSS from a list
@@ -21,12 +20,7 @@ class SelectRTSSPopUp(QDialog):
     def __init__(self, existing_rtss, parent=None):
         QDialog.__init__(self, parent=parent)
 
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
-        self.setStyleSheet(stylesheet)
+        self.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         self.setWindowTitle("Multiple RTSTRUCTs detected!")
         self.setMinimumSize(350, 180)

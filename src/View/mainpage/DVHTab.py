@@ -13,6 +13,7 @@ from src.Model import ImageLoading
 from src.Model.CalculateDVHs import dvh2csv, dvh2rtdose, rtdose2dvh
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import Worker
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class DVHTab(QtWidgets.QWidget):
@@ -159,7 +160,7 @@ class DVHTab(QtWidgets.QWidget):
             ax.legend(loc='upper left', bbox_to_anchor=(-0.1, -0.15), ncol=4)
 
         plt.subplots_adjust(bottom=0.3)
-
+        plt.close()
         return fig
 
     def prompt_calc_dvh(self):
@@ -186,14 +187,6 @@ class DVHTab(QtWidgets.QWidget):
 
                 self.export_rtdose()
         else:
-            stylesheet_path = ""
-
-            # Select appropriate style sheet
-            if platform.system() == 'Darwin':
-                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
-            else:
-                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet-win-linux.qss')
-
             # Create a message box and add attributes
             mb = QtWidgets.QMessageBox()
             mb.setIcon(QtWidgets.QMessageBox.Question)
@@ -211,7 +204,7 @@ class DVHTab(QtWidgets.QWidget):
             mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
 
             # Apply stylesheet to the message box and add icon to the window
-            mb.setStyleSheet(open(stylesheet_path).read())
+            mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
 
             mb.exec_()

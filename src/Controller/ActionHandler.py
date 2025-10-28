@@ -1,3 +1,4 @@
+from src.View.AutoSegmentation.AutoSegmentWindow import AutoSegmentWindow
 from src.View.ImageFusion.ImageFusionAxialView import ImageFusionAxialView
 from PySide6 import QtGui, QtWidgets, QtCore
 from PySide6.QtWidgets import QStackedWidget
@@ -6,6 +7,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 from src.View.WindowingUI import Windowing
 from src.Model.Windowing import windowing_model
 
@@ -175,6 +177,21 @@ class ActionHandler:
         self.action_show_cut_lines.setText("Show Cut Lines")
         self.action_show_cut_lines.triggered.connect(self.cut_lines_handler)
 
+        # AutoSegmentation Action
+        self.autosegmentation_icon = QtGui.QIcon()
+        self.autosegmentation_icon.addPixmap(
+            QtGui.QPixmap(resource_path(
+                "res/images/btn-icons/auto_segmentaion_icon.png")),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.On
+        )
+        self.autosegmentation = QtGui.QAction()
+        self.autosegmentation.setIcon(self.autosegmentation_icon)
+        self.autosegmentation.setIconVisibleInMenu(True)
+        self.autosegmentation.setText("Auto-Segmentation")
+        self.autosegmentation.triggered.connect(self.auto_segmentation_handler)
+
+
         # Export Pyradiomics Action
         self.action_pyradiomics_export = QtGui.QAction()
         self.action_pyradiomics_export.setText("Export Pyradiomics")
@@ -209,6 +226,7 @@ class ActionHandler:
             QtGui.QIcon.On,
         )
         self.menu_export = QtWidgets.QMenu()
+        self.menu_export.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.menu_export.setTitle("Export")
         self.menu_export.addAction(self.action_pyradiomics_export)
         self.menu_export.addAction(self.action_dvh_export)
@@ -293,7 +311,11 @@ class ActionHandler:
         """
         ptct = PTCTDictContainer()
         mvd = MovingDictContainer()
-        if ptct.is_empty() and mvd.is_empty():
+
+        # Always show the windowing dialog if the manual fusion tab is open
+        manual_fusion_tab_open = hasattr(self.__main_page,
+                                         "image_fusion_view") and self.__main_page.image_fusion_view is not None
+        if (ptct.is_empty() and mvd.is_empty()) and not manual_fusion_tab_open:
             windowing_model(text, [True, False, False, False])
             self.update_views()
         else:
@@ -359,7 +381,7 @@ class ActionHandler:
             row_s = dt.PixelSpacing[0]
             col_s = dt.PixelSpacing[1]
             dt.convert_pixel_data()
-            pixmap = self.patient_dict_container.get("pixmaps_axial")[slider_id]
+            pixmap = self.patient_dict_container.get("pixmaps_axial")[ slider_id]
             self.__main_page.call_class.run_transect(
                 self.__main_page,
                 view,
@@ -411,6 +433,9 @@ class ActionHandler:
                 self.__main_page.image_fusion_view.setCurrentWidget(
                     self.__main_page.image_fusion_four_views)
                 self.__main_page.image_fusion_view_axial.update_view()
+
+    def auto_segmentation_handler(self):
+        self.__main_page.auto_segmentation_controller.show_view()
 
     def cut_lines_handler(self):
         self.__main_page.toggle_cut_lines()

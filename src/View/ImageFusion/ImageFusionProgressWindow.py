@@ -1,10 +1,13 @@
-import platform
+import platform, queue
 from pathlib import Path
+
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtCore, QtGui, QtWidgets
 from src.View.ProgressWindow import ProgressWindow
 from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Controller.PathHandler import resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class ImageFusionProgressWindow(ProgressWindow):
@@ -42,15 +45,6 @@ class ImageFusionProgressWindow(ProgressWindow):
             else:
                 self.signal_advise_calc_dvh.emit(False)
         else:
-            stylesheet_path = ""
-
-            # Select appropriate style sheet
-            if platform.system() == 'Darwin':
-                stylesheet_path = Path.cwd().joinpath('res', 'stylesheet.qss')
-            else:
-                stylesheet_path = Path.cwd().joinpath(
-                    'res', 'stylesheet-win-linux.qss')
-
             # Create a message box and add attributes
             mb = QMessageBox()
             mb.setIcon(QMessageBox.Question)
@@ -69,7 +63,7 @@ class ImageFusionProgressWindow(ProgressWindow):
             mb.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
 
             # Apply stylesheet to the message box and add icon to the window
-            mb.setStyleSheet(open(stylesheet_path).read())
+            mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath(
                 'res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
             mb.exec_()
@@ -78,3 +72,19 @@ class ImageFusionProgressWindow(ProgressWindow):
                 self.signal_advise_calc_dvh.emit(True)
             else:
                 self.signal_advise_calc_dvh.emit(False)
+
+    def set_progress_queue(self, progress_queue):
+        self._progress_queue = progress_queue
+        self._progress_timer = QTimer(self)
+        self._progress_timer.timeout.connect(self._poll_progress_queue)
+        self._progress_timer.start(100)  # poll every 100 ms
+
+    def _poll_progress_queue(self):
+        if not hasattr(self, "_progress_queue"):
+            return
+        try:
+            while True:
+                msg = self._progress_queue.get_nowait()
+                self.update_progress(msg)
+        except queue.Empty:
+            pass

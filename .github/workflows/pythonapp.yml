@@ -5,7 +5,7 @@ on: [pull_request]
 jobs:
   fetch_cache:
     name: fetch cache
-    runs-on: 'ubuntu-latest'
+    runs-on: 'ubuntu-24.04'
     env:
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
 
@@ -47,7 +47,7 @@ jobs:
       DISPLAY: ':99.0'
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
       # USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
-
+      
     steps:
     - uses: actions/checkout@v3
 

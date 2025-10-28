@@ -1,16 +1,15 @@
 import csv
-import platform
 
 from PySide6 import QtCore, QtGui
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, \
     QWidget, QPushButton, QHBoxLayout, QListWidget, QVBoxLayout
 
 from src.Controller.PathHandler import data_path, resource_path
+from src.View.StyleSheetReader import StyleSheetReader
 
 """
 This Class handles the ROI Pop Up functionalities       
 """
-
 
 class SelectROIPopUp(QDialog):
     signal_roi_name = QtCore.Signal(str)
@@ -18,12 +17,8 @@ class SelectROIPopUp(QDialog):
     def __init__(self):
         QDialog.__init__(self)
 
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-        stylesheet = open(resource_path(self.stylesheet_path)).read()
-        self.setStyleSheet(stylesheet)
+
+        self.setStyleSheet(StyleSheetReader().get_stylesheet())
         self.standard_names = []
         self.init_standard_names()
 

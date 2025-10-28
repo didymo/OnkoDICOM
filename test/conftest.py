@@ -6,9 +6,9 @@ import pytest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import qInstallMessageHandler
 import traceback
+import faulthandler, sys, threading
 
 from src.Model.Configuration import Configuration
-
 
 def qt_message_handler(msg_type, context, message):
     print(f"Qt Message - Type: {msg_type}")

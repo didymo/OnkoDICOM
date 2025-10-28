@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 from contextlib import contextmanager
 from math import ceil
@@ -59,9 +60,10 @@ class WindowingSlider(QWidget):
 
         super(WindowingSlider, self).__init__()
         self.action_handler = None
+        self.fusion_views = None
         if WindowingSlider.SINGLETON is None:
             WindowingSlider.SINGLETON = self
-            set_windowing_slider(self)
+            set_windowing_slider(self, None)
 
         self.set_dicom_view(dicom_view)
         patient_dict_container = PatientDictContainer()
@@ -274,7 +276,8 @@ class WindowingSlider(QWidget):
             # Functionally the bar will still be correct
             self.slider_bars[
                 max(self.bottom, WindowingSlider.MIN_BOTTOM_INDEX)
-            ].setColor("white")
+                ].setColor("white")
+
             self.bottom = index
             self.slider_bars[max(index, WindowingSlider.MIN_BOTTOM_INDEX)].setColor(
                 "red"
@@ -358,11 +361,28 @@ class WindowingSlider(QWidget):
         window = 2 * (bottom_bar - level)
         level = level - WindowingSlider.LEVEL_OFFSET
 
+        # Apply the window/level changes using the model
         with wait_cursor():
-            windowing_model_direct(level, window, send)
+            windowing_model_direct(window, level, send)
+
+            # Update fusion overlays if present
+            try:
+                pd = PatientDictContainer()
+                fusion_views = [
+                    self.action_handler.main_window.image_fusion_view_axial,
+                    self.action_handler.main_window.image_fusion_view_coronal,
+                    self.action_handler.main_window.image_fusion_view_sagittal
+                ]
+                for view in fusion_views:
+                    orientation = view.orientation  # 'axial', 'coronal', 'sagittal'
+                    view.overlay_images = pd.get(f"color_{orientation}")
+                    view.image_display()
+            except Exception as e:
+                logging.error(f"Error updating fusion overlays: {e}")
+
+            # Refresh all views in the main window
             if self.action_handler is not None:
                 self.action_handler.update_views()
-            pass
 
     def update_bar_position(self, event):
         # move selected bar to the closest valid position

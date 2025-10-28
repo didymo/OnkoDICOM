@@ -81,11 +81,12 @@ class TestStructureTab:
         self.curr_slice = self.dicom_view.patient_dict_container.get("dict_uid")[slider_id]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module", autouse=True)
 def test_object():
     """Function to pass a shared TestStructureTab object to each test."""
     test = TestStructureTab()
-    return test
+    yield test
+    test.main_window.close()
 
 
 def test_structure_tab_check_checkboxes(test_object):
@@ -220,6 +221,6 @@ def test_merge_rtss(qtbot, test_object):
 
     structure_tab.save_new_rtss_to_fixed_image_set(auto=True)
 
-    merged_rtss = pydicom.read_file(patient_dict_container.get("file_rtss"))
+    merged_rtss = pydicom.dcmread(patient_dict_container.get("file_rtss"))
     merged_rois = ImageLoading.get_roi_info(merged_rtss)
     assert (len(test_object.rois) + 1 == len(merged_rois))

@@ -4,8 +4,10 @@ from PySide6 import QtWidgets, QtGui
 from src.View.mainpage.DicomView import DicomView, GraphicsScene
 from src.View.ImageFusion.TranslateRotateMenu import TranslateRotateMenu
 from src.Model.VTKEngine import VTKEngine
+from src.Model.PatientDictContainer import PatientDictContainer
 from PySide6 import QtCore
 from src.View.ImageFusion.TranslateRotateMenu import get_color_pair_from_text
+from src.Model.DicomUtils import update_color_overlay_for_fusion
 
 
 class BaseFusionView(DicomView):
@@ -17,6 +19,8 @@ class BaseFusionView(DicomView):
         self.overlay_item = None
         self.overlay_images = None
         self.overlay_offset = (0, 0)
+        self._prev_mouse_mode = None
+        self._cut_line_active = False
 
         self.slice_view = slice_view
         self.vtk_engine = vtk_engine  # VTKEngine instance for manual fusion, or None
@@ -187,7 +191,7 @@ class BaseFusionView(DicomView):
             painter.drawText(qimg.rect(), QtCore.Qt.AlignCenter, "No Image")
             painter.end()
         pixmap = QtGui.QPixmap.fromImage(qimg)
-
+        
         # Recreate GraphicsScene so cut lines are kept in sync
         self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
         self.base_item.setPos(0,0)
@@ -195,6 +199,13 @@ class BaseFusionView(DicomView):
 
         self.scene = GraphicsScene(self.base_item, self.horizontal_view, self.vertical_view)
         self.view.setScene(self.scene)
+        
+        # Display as the base image (no overlay needed, since VTKEngine blends)
+        if self.base_item is None:
+            self.base_item = QtWidgets.QGraphicsPixmapItem(pixmap)
+            self.scene.addItem(self.base_item)
+        else:
+            self.base_item.setPixmap(pixmap)
         # Remove overlay item if present
         if self.overlay_item is not None:
             self.scene.removeItem(self.overlay_item)
@@ -308,29 +319,31 @@ class BaseFusionView(DicomView):
                 self.vtk_engine.set_translation(x, y, z)
         self.refresh_overlay()
 
-        # --- Propagate to all linked fusion views if in multi-view mode ---
-        # Only propagate if this view has a translation_menu and it is shared
-        if hasattr(self, "translation_menu") and hasattr(self.translation_menu, "offset_changed_callback"):
-            # Avoid infinite recursion: only propagate if this is the callback source
-            if getattr(self, "_is_propagating_offset", False):
-                return
-            self._is_propagating_offset = True
-            try:
-                # Call the callback to update all views (if set)
-                if callable(self.translation_menu.offset_changed_callback):
-                    self.translation_menu.offset_changed_callback(offset)
-            finally:
-                self._is_propagating_offset = False
-
         # --- Update matrix dialog if open ---
         if hasattr(self.translation_menu, "_matrix_dialog") and self.translation_menu._matrix_dialog is not None:
             engine = None
             if hasattr(self.translation_menu, "_get_vtk_engine_callback") and self.translation_menu._get_vtk_engine_callback:
                 engine = self.translation_menu._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self.translation_menu._matrix_dialog.set_matrix(engine.transform)
+                self.translation_menu._matrix_dialog.set_matrix(engine.sitk_matrix)
 
     def _on_mouse_mode_changed(self, mode):
+        """
+                Note: Interrogation window is the nickname Dr Miller calls the Window button in manual fusion.
+                everything inside the window shows the base layer while outside shows the overlay and base layers
+                 
+                Handles changes to the mouse interaction mode for the fusion view.
+
+                This method updates the internal mouse mode state and manages the interrogation window position.
+                When entering interrogation mode, it centers the interrogation window on the current image.
+                When leaving interrogation mode, it clears the interrogation position and refreshes the overlay.
+
+                Args:
+                    mode: The new mouse mode as a string (e.g., "interrogation", "translate", "rotate", or None).
+
+                Returns:
+                    None
+                """
         self.mouse_mode = mode
         if mode == "interrogation":
             # Set interrogation window to center of the image in image pixel coordinates
@@ -409,66 +422,146 @@ class BaseFusionView(DicomView):
             h = scene_size.height()
             self._handle_rotate_click(x, y, w, h)
 
+    def save_and_set_mouse_mode_none(self):
+        """
+               Save the current mouse mode and set it to 'none'.
+               Safe to call multiple times; only the first call has an effect.
+               """
+        # If already active ignore
+        if self._cut_line_active:
+            return
+
+        current_mode = self.get_mouse_mode()
+        self._prev_mouse_mode = current_mode if current_mode != "none" else None
+        self._cut_line_active = True
+        self.translation_menu.set_mouse_mode("none")
+
+    def restore_prev_mouse_mode(self):
+        """
+                Restore the previously saved mouse mode if available.
+                Safe to call multiple times; only the first call has an effect.
+                """
+        if not self._cut_line_active:
+            # Nothing to restore
+            return
+
+        if self._prev_mouse_mode is not None:
+            self.translation_menu.set_mouse_mode(self._prev_mouse_mode)
+        self._prev_mouse_mode = None
+        self._cut_line_active = False
+
     def _handle_translate_click(self, x, y, w, h):
+        """
+          Handles mouse clicks for translation mode in the fusion view.
+          Determines the translation direction based on the click position and updates the overlay offset accordingly.
+
+          Args:
+              x: The x-coordinate of the mouse click.
+              y: The y-coordinate of the mouse click.
+              w: The width of the scene.
+              h: The height of the scene.
+
+          Returns:
+              None
+          """
+
+        # Define translation logic for each orientation
         def axial_trans(x, y, w, h):
+            # Axial: left/right or up/down depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
                 return 0.0, 1.0 if y < h / 2 else -1.0, 0.0
 
         def sagittal_trans(x, y, w, h):
+            # Sagittal: up/down or in/out depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return 0.0, 1.0 if x < w / 2 else -1.0, 0.0
             else:
                 return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
 
         def coronal_trans(x, y, w, h):
+            # Coronal: left/right or in/out depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return 1.0 if x < w / 2 else -1.0, 0.0, 0.0
             else:
                 return 0.0, 0.0, 1.0 if y < h / 2 else -1.0
 
+        # Lookup for orientation-specific translation
         translate_lookup = {
             "axial": axial_trans,
             "sagittal": sagittal_trans,
             "coronal": coronal_trans,
         }
+
+        # Get translation direction based on click position and orientation
         dx, dy, dz = translate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
+
+        # Get current translation values from VTK engine, or default to zero
         curr = [self.vtk_engine._tx, self.vtk_engine._ty, self.vtk_engine._tz] if self.vtk_engine else [0.0, 0.0, 0.0]
+
+        # Compute new offset by adding direction to current translation
         new_offset = (curr[0] + dx, curr[1] + dy, curr[2] + dz)
+
+        # Update the translation sliders in the menu, apply the offest and update the view
         self.translation_menu.set_offsets(new_offset)
         self.update_overlay_offset(new_offset, orientation=self.slice_view, slice_idx=self.slider.value())
 
     def _handle_rotate_click(self, x, y, w, h):
+        """
+               Handles mouse clicks for rotation mode in the fusion view.
+               Determines the rotation direction and axis based on the click position and updates the overlay rotation accordingly.
+
+               Args:
+                   x: The x-coordinate of the mouse click.
+                   y: The y-coordinate of the mouse click.
+                   w: The width of the scene.
+                   h: The height of the scene.
+
+               Returns:
+                   None
+               """
+
+        # Define rotation logic for each orientation
         def axial_rot(x, y, w, h):
+            # Axial: rotate around Z or X depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return (0.0, 0.0, 0.5 if x < w / 2 else -0.5)
             else:
                 return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
 
         def sagittal_rot(x, y, w, h):
+            # Sagittal: rotate around X or Y depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return (0.5 if x < w / 2 else -0.5, 0.0, 0.0)
             else:
                 return (0.0, -0.5 if y < h / 2 else 0.5, 0.0)
 
         def coronal_rot(x, y, w, h):
+            # Coronal: rotate around Y or X depending on which half is clicked
             if abs(x - w / 2) > abs(y - h / 2):
                 return (0.0, -0.5 if x < w / 2 else 0.5, 0.0)
             else:
                 return (-0.5 if y < h / 2 else 0.5, 0.0, 0.0)
 
+        # Lookup for orientation-specific rotation
         rotate_lookup = {
             "axial": axial_rot,
             "sagittal": sagittal_rot,
             "coronal": coronal_rot,
         }
+        # Get rotation direction based on click position and orientation
         rx, ry, rz = rotate_lookup.get(self.slice_view, lambda *_: (0.0, 0.0, 0.0))(x, y, w, h)
+        # Get current rotation values from VTK engine, or default to zero
         curr = [self.vtk_engine._rx, self.vtk_engine._ry, self.vtk_engine._rz] if self.vtk_engine else [0.0, 0.0, 0.0]
+        # Compute new rotation by adding direction to current rotation
         new_rot = (curr[0] + rx, curr[1] + ry, curr[2] + rz)
+
+        # Update the rotation sliders in the menu
         self.translation_menu.rotate_sliders[0].setValue(int(round(new_rot[0] * 10)))
         self.translation_menu.rotate_sliders[1].setValue(int(round(new_rot[1] * 10)))
         self.translation_menu.rotate_sliders[2].setValue(int(round(new_rot[2] * 10)))
+        # Apply the new rotation to the overlay and update the view
         self.update_overlay_rotation(new_rot, orientation=self.slice_view, slice_idx=self.slider.value())
 
 
@@ -487,24 +580,13 @@ class BaseFusionView(DicomView):
             self.vtk_engine.set_rotation_deg(rx, ry, rz, orientation=orientation, slice_idx=slice_idx)
         self.refresh_overlay()
 
-        # --- Propagate to all linked fusion views if in multi-view mode ---
-        if hasattr(self, "translation_menu") and hasattr(self.translation_menu, "rotation_changed_callback"):
-            if getattr(self, "_is_propagating_rotation", False):
-                return
-            self._is_propagating_rotation = True
-            try:
-                if callable(self.translation_menu.rotation_changed_callback):
-                    self.translation_menu.rotation_changed_callback(rotation_tuple)
-            finally:
-                self._is_propagating_rotation = False
-
         # --- Update matrix dialog if open ---
         if hasattr(self.translation_menu, "_matrix_dialog") and self.translation_menu._matrix_dialog is not None:
             engine = None
             if hasattr(self.translation_menu, "_get_vtk_engine_callback") and self.translation_menu._get_vtk_engine_callback:
                 engine = self.translation_menu._get_vtk_engine_callback()
             if engine is not None and hasattr(engine, "transform"):
-                self.translation_menu._matrix_dialog.set_matrix(engine.transform)
+                self.translation_menu._matrix_dialog.set_matrix(engine.sitk_matrix)
 
     def update_view(self, zoom_change=False):
         """
@@ -560,3 +642,8 @@ class BaseFusionView(DicomView):
         if hasattr(self, "_interrogation_mouse_pos") and self._interrogation_mouse_pos is not None:
             self.refresh_overlay_now()
 
+    def update_color_overlay(self):
+        """
+                  Called when window/level changes; refreshes the displayed fusion colors.
+              """
+        update_color_overlay_for_fusion(self)

@@ -1,34 +1,134 @@
-from PySide6 import QtCore
+import time
+
+from PySide6 import QtCore, QtWidgets
 import logging
 import os
+import pydicom
+import platform
+import numpy as np
+from pydicom import dcmread
+from vtkmodules.util import numpy_support
+from pydicom.errors import InvalidDicomError
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.MovingDictContainer import MovingDictContainer
+from src.View.ImageFusion.MovingImageLoader import MovingImageLoader
 from src.Model.VTKEngine import VTKEngine
 
+"""
+    For all private tags 0x7777, 0x0020 / 0x7777, 0x0021 / etc
+    these are private dicom tags for extra info used as fallback if the normal registration tag for loading the saved transform fails. 
+    (saving normal rego first means it can be used by other programs. Private tags can only be read by onko dicom).
+    they must use an odd group number i.e 0x7777 and an element number i.e 0x0010, can be saved as any odd number group 
+    and must be consistent in the program as it needs to know it to read private tags
+    This is saved and set in Translate rotation menu _create_spatial_registration_dicom
+    9/10/25 in line 650 & 651
+    
+    # Save user translation/rotation as private tags for round-trip
+        ds.add_new((0x7777, 0x0020), 'LT', ",".join([str(v) for v in translation]))
+        ds.add_new((0x7777, 0x0021), 'LT', ",".join([str(v) for v in rotation]))
+
+
+    see links for more details
+        https://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_7.8.html
+        https://pydicom.github.io/pydicom/stable/guides/user/private_data_elements.html
+
+"""
+
 class ManualFusionLoader(QtCore.QObject):
+    """
+       Loads fixed and moving DICOM images for manual image fusion using VTK and manages transform extraction.
+       This class handles the loading process, extraction of any saved spatial registration transforms, and emits signals with the results or errors.
+       """
     signal_loaded = QtCore.Signal(object)
     signal_error = QtCore.Signal(object)
 
-    def __init__(self, selected_files, parent=None):
+    def __init__(self, selected_files, parent=None, patient_name=None, patient_id=None):
         super().__init__(parent)
         self.selected_files = selected_files
+        self.patient_name = patient_name
+        self.patient_id = patient_id
+        self.cancelled = False
+        self._interrupt_flag = None
 
     def load(self, interrupt_flag=None, progress_callback=None):
-        try:
-            self._load_with_vtk(progress_callback)
-        except Exception as e:
+        """
+               Loads the fixed and moving images for manual fusion using VTK and emits the result.
+               This method attempts to load the images and any associated transform, emitting progress updates and errors as needed.
+
+               Args:
+                   interrupt_flag: Optional flag to interrupt the loading process (not used).
+                   progress_callback: Optional callback function to report progress updates.
+
+               Returns:
+                   None. Emits the result via the signal_loaded or signal_error signals.
+               """
+
+        # Wrap the progress_callback so it always runs in the main thread
+        def main_thread_progress_callback(*args, **kwargs):
             if progress_callback is not None:
-                progress_callback.emit(("Error loading images", e))
-            self.signal_error.emit((False, e))
+                # If progress_callback happens to be a Qt Signal, use QMetaObject.invokeMethod to ensure main thread execution
+                if hasattr(progress_callback, "emit"):
+                    QtCore.QMetaObject.invokeMethod(
+                        progress_callback,
+                        "emit",
+                        QtCore.Qt.QueuedConnection,
+                        QtCore.Q_ARG(object, args if len(args) > 1 else args[0])
+                    )
+                else:
+                    progress_callback(*args, **kwargs)
+
+        self._interrupt_flag = interrupt_flag
+        try:
+            # Check for interrupt before starting
+            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+                main_thread_progress_callback(("Loading cancelled", 0))
+                if hasattr(progress_callback, "emit"):
+                    self.signal_error.emit((False, "Loading cancelled"))
+                return
+            self._load_with_vtk(main_thread_progress_callback)
+        except Exception as e:
+            main_thread_progress_callback(("Error loading images", e))
+            logging.exception("Error loading images: %s\n%s", e)
+            self.signal_error.emit((False, f"{e}"))
 
     def _load_with_vtk(self, progress_callback):
+        """
+                Loads the fixed and moving images using VTK for manual fusion and optionally extracts a saved transform.
+
+                This function loads the fixed and moving image series from the selected directories using VTKEngine,
+                validates that all selected files are from the same directory, and checks for a selected transform DICOM.
+                If a transform DICOM is found, it extracts the transformation data for use in restoring a previous session.
+                Emits the loaded VTKEngine and any extracted transform data via the signal_loaded signal.
+
+                Args:
+                    progress_callback: A callback function to report progress updates.
+
+                Returns:
+                    None. Emits the result via the signal_loaded signal.
+                """
+        # Check for interrupt before starting
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
+
         # Progress: loading fixed image
         if progress_callback is not None:
-            progress_callback.emit(("Loading fixed image (VTK)...", 10))
+            progress_callback(("Loading fixed image (VTK)...", 10))
+
+        # Check for interrupt before loading fixed
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
 
         # Gather fixed filepaths (directory)
         patient_dict_container = PatientDictContainer()
         fixed_dir = patient_dict_container.path
         moving_dir = None
+
+        # An array for the image files to filter out the transform file
+        selected_image_files = []
+        transform_file = None
+
         if self.selected_files:
             # Validate all selected files are from the same directory
             dirs = {os.path.dirname(f) for f in self.selected_files}
@@ -39,28 +139,237 @@ class ManualFusionLoader(QtCore.QObject):
                     "Manual fusion requires all files to be from the same directory."
                 )
                 if progress_callback is not None:
-                    progress_callback.emit(("Error loading images", error_msg))
+                    progress_callback(("Error loading images", error_msg))
+                    logging.error("manualFusionLoader.py_load_with_vtk: ", error_msg)
                 self.signal_error.emit((False, error_msg))
                 return
             moving_dir = dirs.pop()
 
+            # Separate image series and transform DICOMs
+            #NOTE: This needs to be here as moving load expects only image series so we need to filter out the transform (if selected)
+            # then only after that apply the transform
+            for f in self.selected_files:
+                try:
+                    ds = dcmread(f, stop_before_pixels=True)
+                    modality = getattr(ds, "Modality", "").upper()
+                    sop_class = getattr(ds, "SOPClassUID", "")
+                    if modality == "REG" or sop_class == "1.2.840.10008.5.1.4.1.1.66.1":
+                        transform_file = f
+                    else:
+                        selected_image_files.append(f)
+                except (InvalidDicomError, AttributeError, OSError) as e:
+                    logging.warning("<manualFusionLoader.py_load_with_vtk>Error reading DICOM file", e)
+                    continue
+
+
+        # Populate moving model container before processing with VTK so origin can be read the same way as ROI Transfer logic
+        moving_image_loader = MovingImageLoader(selected_image_files, None, self)
+        moving_model_populated = moving_image_loader.load_manual_mode(self._interrupt_flag,
+                                                                          progress_callback)
+
+        if not moving_model_populated:
+            # Check if interrupted, emit cancel signal immediately
+            if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+                self.signal_error.emit((False, "Loading cancelled"))
+                return
+            # Emit error if loading failed
+            logging.error("<manualFusionLoader.py_load_with_vtk> Failed to populate Moving Model Container")
+            raise RuntimeError("Failed to populate Moving Model Container")
+
         # Use VTKEngine to load images
         engine = VTKEngine()
+
         fixed_loaded = engine.load_fixed(fixed_dir)
         if not fixed_loaded:
+            logging.error("<manualFusionLoader.py>Could not load fixed image")
             raise RuntimeError("Failed to load fixed image with VTK.")
 
         if progress_callback is not None:
-            progress_callback.emit(("Loading overlay image (VTK)...", 50))
+            progress_callback(("Loading overlay image (VTK)...", 50))
+
+        # Check for interrupt before loading moving
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
 
         moving_loaded = engine.load_moving(moving_dir)
         if not moving_loaded:
+            logging.error("<manualFusionLoader.py_load_with_vtk>Failed to load moving image with VTK.")
             raise RuntimeError("Failed to load moving image with VTK.")
 
+        # If a transform DICOM was found and is ticked, extract transform data only
+        transform_data = None
+        if transform_file is not None:
+            try:
+                if progress_callback is not None:
+                    progress_callback(("Extracting saved transform...", 80))
+                ds = pydicom.dcmread(transform_file)
+
+                # See explanation at top for more details on private tags
+                if hasattr(ds, "RegistrationSequence") or (0x7777, 0x0020) in ds or (0x7777, 0x0021) in ds:
+                    transform_data = self._extracted_from__load_with_vtk_62(ds, np, transform_file)
+                else:
+                    raise ValueError("Selected transform.dcm is not a valid Spatial Registration Object.")
+            except Exception as e:
+                logging.error(f"Error extracting transform from {transform_file}: {e}")
+                if progress_callback is not None:
+                    progress_callback(("Error extracting transform", 80))
+                self.signal_error.emit((False, f"Error extracting transform: {e}"))
+                return
+
+        # Last message before overlay loaded
         if progress_callback is not None:
-            progress_callback.emit(("Finalising", 90))
+            progress_callback(("Preparing overlays...", 90))
+            QtCore.QCoreApplication.processEvents()
+            time.sleep(0.05)
+
+        # Final interrupt check before emitting loaded signal
+        if self._interrupt_flag is not None and self._interrupt_flag.is_set():
+            self.signal_error.emit((False, "Loading cancelled"))
+            return
 
         # Only emit the VTKEngine for downstream use; overlays will be generated on-the-fly
         self.signal_loaded.emit((True, {
             "vtk_engine": engine,
+            "transform_data": transform_data,
         }))
+
+        # Emit 100% progress just before closing/loading is complete
+        if progress_callback is not None:
+            progress_callback(("Complete", 100))
+            QtCore.QCoreApplication.processEvents()
+
+    def _extracted_from__load_with_vtk_62(self, ds, np, transform_file):
+        """
+                Extracts transformation matrix, translation, and rotation from a DICOM Spatial Registration Object (SRO).
+
+                This function reads the 4x4 transformation matrix from the SRO, and attempts to extract user-saved
+                translation and rotation from private tags if present. If not present, translation is taken from the
+                matrix and rotation defaults to zero. The extracted values are returned in a dictionary for use in
+                restoring a manual fusion session.
+
+                Args:
+                    ds: The loaded pydicom Dataset containing the SRO.
+                    np: The numpy module.
+                    transform_file: The filename of the loaded DICOM file.
+
+                Returns:
+                    dict: A dictionary containing the matrix, translation, rotation, and transform_file.
+                """
+        # Try to extract the 4x4 transformation matrix from the DICOM SRO
+        try:
+            reg_seq = ds.RegistrationSequence[0]
+            mat_seq = reg_seq.MatrixRegistrationSequence[0]
+            matrix_flat = mat_seq.FrameOfReferenceTransformationMatrix
+            matrix = np.array(matrix_flat, dtype=np.float32).reshape((4, 4))
+        except Exception as e:
+            logging.error(f"Error extracting transformation matrix from SRO: {e}")
+            raise
+
+        # Extract translation from private tag if present, else from matrix
+        try:
+            if (0x7777, 0x0020) in ds:
+                # User-saved translation (as comma-separated string)
+                translation = [float(x) for x in ds[(0x7777, 0x0020)].value.split(",")]
+            else:
+                # Default: use translation from the matrix
+                translation = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+        except Exception as e:
+            logging.error(f"Error extracting translation from SRO: {e}")
+            translation = [matrix[0, 3], matrix[1, 3], matrix[2, 3]]
+
+            # Extract rotation from private tag if present, else default to [0, 0, 0]
+        try:
+            if (0x7777, 0x0021) in ds:
+                # User-saved rotation (as comma-separated string)
+                rotation = [float(x) for x in ds[(0x7777, 0x0021)].value.split(",")]
+            else:
+                # Default: no rotation
+                rotation = [0, 0, 0]
+        except Exception as e:
+            logging.error(f"Error extracting rotation from SRO: {e}")
+            rotation = [0, 0, 0]
+
+        # Return all extracted transform data in a dictionary
+        return {
+            "matrix": matrix,
+            "translation": translation,
+            "rotation": rotation,
+            "transform_file": transform_file,
+        }
+
+    def on_manual_fusion_loaded(self, result):
+        """
+                Handles the completion of manual fusion image loading and updates the application state.
+
+                This method is called when manual fusion images have been loaded, either successfully or with an error.
+                It extracts the fixed and moving images from the VTK engine, stores them in the PatientDictContainer,
+                and ensures that the fusion window/level settings are initialized. It then triggers a refresh of the
+                fusion views by calling windowing_model_direct with the current or default window/level.
+
+                Args:
+                    result: A tuple (success, data) where success is a boolean indicating if loading succeeded,
+                        and data contains the loaded VTK engine and any additional information.
+
+                Returns:
+                    None
+                """
+        success, data = result
+        if not success:
+            logging.error("Manual fusion load failed:", data)
+            return
+
+        engine = data["vtk_engine"]
+
+        # Extract the fixed image from the VTK engine
+        if hasattr(engine, "get_fixed_image"):
+            fixed_image = engine.get_fixed_image()
+        elif hasattr(engine, "fixed_reader") and hasattr(engine.fixed_reader, "GetOutput"):
+            fixed_image = engine.fixed_reader.GetOutput()
+        else:
+            fixed_image = None
+
+        # Extract the moving image from the VTK engine
+        if hasattr(engine, "get_moving_image"):
+            moving_image = engine.get_moving_image()
+        elif hasattr(engine, "moving_reader") and hasattr(engine.moving_reader, "GetOutput"):
+            moving_image = engine.moving_reader.GetOutput()
+        else:
+            moving_image = None
+
+        # Save manual fusion in PatientDictContainer
+        patient_dict_container = PatientDictContainer()
+        # You can store a tuple (fixed, moving, optional tfm)
+        patient_dict_container.set("manual_fusion", (fixed_image, moving_image, None))
+
+        # Convert the fixed image to a numpy array if possible
+        if hasattr(fixed_image, "GetPointData"):  # VTK image
+            dims = fixed_image.GetDimensions()
+            scalars = fixed_image.GetPointData().GetScalars()
+            np_img = numpy_support.vtk_to_numpy(scalars).reshape(dims[::-1])
+            fixed_image_array = np_img
+        elif hasattr(fixed_image, "GetArrayFromImage"):  # SimpleITK image
+            fixed_image_array = fixed_image  # assume already numpy
+        else:
+            fixed_image_array = None
+            logging.error(
+                f"Unsupported image type for fixed_image: {type(fixed_image)}. "
+                "Image array extraction failed."
+            )
+
+        # Retrieve current window and level settings
+        window = patient_dict_container.get("fusion_window")
+        level = patient_dict_container.get("fusion_level")
+
+        if window is None or level is None:
+            # Instead of using min/max, use a clinical default (e.g. "Normal" or "Soft Tissue")
+            # You can also use the default from dict_windowing
+            dict_windowing = patient_dict_container.get("dict_windowing")
+            if dict_windowing and "Normal" in dict_windowing:
+                window, level = dict_windowing["Normal"]
+            else:
+                window = 400
+                level = 40
+            # Set these as the initial fusion window/level
+            patient_dict_container.set("fusion_window", window)
+            patient_dict_container.set("fusion_level", level)

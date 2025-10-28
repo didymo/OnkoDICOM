@@ -1,10 +1,9 @@
 import csv
 import pydicom
 from pathlib import Path
-from random import randint, seed
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import Qt
-
+import numpy as np
 from src.Controller.ROIOptionsController import ROIDelOption, \
     ROIManipulateOption
 from src.Model.DICOM.Structure.DICOMSeries import Series
@@ -50,7 +49,7 @@ class StructureTab(QtWidgets.QWidget):
         self.layout_content.setContentsMargins(0, 0, 0, 0)
         self.layout_content.setSpacing(0)
         self.layout_content.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignTop)
+            QtCore.Qt.AlignmentFlag.AlignTop)
 
         # Create list of standard organ and volume names
         self.standard_organ_names = []
@@ -65,7 +64,7 @@ class StructureTab(QtWidgets.QWidget):
         self.modified_indicator_widget.setContentsMargins(8, 5, 8, 5)
         modified_indicator_layout = QtWidgets.QHBoxLayout()
         modified_indicator_layout.setAlignment(
-            QtCore.Qt.AlignLeft | QtCore.Qt.AlignLeft)
+            QtCore.Qt.AlignmentFlag.AlignLeft)
 
         modified_indicator_icon = QtWidgets.QLabel()
         modified_indicator_icon.setPixmap(QtGui.QPixmap(
@@ -97,36 +96,44 @@ class StructureTab(QtWidgets.QWidget):
 
     def init_color_roi(self, dict_container):
         """
-        Create a dictionary containing the colors for each structure.
-        :param: either PatientDictContainer or MovingDictContainer
-        :return: Dictionary where the key is the ROI number and the value a
-        QColor object.
+        Generates a dictionary mapping ROI IDs to their display colors.
+        The function gets the ROI contour information from the dictionary container input,
+        assigns a color to each ROI (using the specified color if available, or a random color otherwise),
+        and returns a dictionary mapping ROI IDs to QColor objects.
+
+        Args:
+            dict_container: The container holding DICOM RTSS data (either PatientDict or MovingDict).
+
+        Returns:
+            dict: A dictionary mapping ROI IDs to QColor objects.
         """
-        roi_color = dict()
-        roi_contour_info = dict_container.get(
-            "dict_dicom_tree_rtss")['ROI Contour Sequence']
+        roi_color = {}
+        rtss = dict_container.get("dict_dicom_tree_rtss")
+        roi_contour_info = rtss.get("ROI Contour Sequence")
 
-        if len(roi_contour_info) > 0:
-            for item, roi_dict in roi_contour_info.items():
-                # Note: the keys of roiContourInfo are "item 0", "item 1",
-                # etc. As all the ROI structures are identified by the ROI
-                # numbers in the whole code, we get the ROI number 'roi_id'
-                # by using the member 'list_roi_numbers'
-                id = item.split()[1]
-                roi_id = dict_container.get(
-                    "list_roi_numbers")[int(id)]
-                if 'ROI Display Color' in roi_contour_info[item]:
-                    RGB_list = roi_contour_info[item]['ROI Display Color'][0]
-                    red = RGB_list[0]
-                    green = RGB_list[1]
-                    blue = RGB_list[2]
+        # Check if roi contour data dictionary exists
+        if isinstance(roi_contour_info, dict) and roi_contour_info:
+            for roi_key, roi_dict in roi_contour_info.items():
+                # Get roi numbers list if available
+                roi_numbers = roi_dict.get("Referenced ROI Number")
+
+                # Check exists and is list
+                if isinstance(roi_numbers, list) and roi_numbers:
+                    roi_id = roi_numbers[0]
                 else:
-                    seed(1)
-                    red = randint(0, 255)
-                    green = randint(0, 255)
-                    blue = randint(0, 255)
+                    continue  # skip if invalid
 
-                roi_color[roi_id] = QtGui.QColor(red, green, blue)
+                # Get ROI color list if available
+                roi_colors = roi_dict.get("ROI Display Color")
+
+                # Check ROI colors is a non-empty list of lists
+                if isinstance(roi_colors, list) and roi_colors and all(isinstance(color, list) for color in roi_colors)\
+                        and len(roi_colors[0]) == 3 and all(isinstance(color, (int, float)) for color in roi_colors[0]):
+                    r, g, b = roi_colors[0]     # Assign colors from roi color list
+                else:
+                    r, g, b = np.random.default_rng(seed=roi_id).integers(0, 256, 3) # Assign random colors
+
+                roi_color[roi_id] = QtGui.QColor(r, g, b)
 
         return roi_color
 
@@ -135,21 +142,27 @@ class StructureTab(QtWidgets.QWidget):
         Create two lists containing standard organ and standard volume names
         as set by the Add-On options.
         """
-        with open(data_path('organName.csv'), 'r') as f:
-            self.standard_organ_names = []
+        with open(data_path('organName.csv'), 'r') as file:
+            self.standard_organ_names = self._get_column_from_csv_file(file, 0)
+        with open(data_path('volumeName.csv'), 'r') as file:
+            self.standard_volume_names = self._get_column_from_csv_file(file, 1)
 
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_organ_names.append(row[0])
+    def _get_column_from_csv_file(self, file, col_num):
+        """
+        Extracts a specific column from a CSV file, skipping the header row.
+        This helper function reads the CSV input and returns a list
+        containing the values from the specified column index.
 
-        with open(data_path('volumeName.csv'), 'r') as f:
-            self.standard_volume_names = []
+        Args:
+            file: The file object to read from.
+            col_num: The column index to extract.
 
-            csv_input = csv.reader(f)
-            header = next(f)  # Ignore the "header" of the column
-            for row in csv_input:
-                self.standard_volume_names.append(row[1])
+        Returns:
+            list: A list of values from the specified column.
+        """
+        csv_input = csv.reader(file)
+        header = next(csv_input)  # Ignore the "header" of the column
+        return [row[col_num] for row in csv_input]
 
     def init_roi_buttons(self):
         icon_roi_delete = QtGui.QIcon()
@@ -214,18 +227,16 @@ class StructureTab(QtWidgets.QWidget):
         for i in reversed(range(self.layout_content.count())):
             self.layout_content.itemAt(i).widget().setParent(None)
 
-        row = 0
         for roi_id, roi_dict in self.rois.items():
             # Creates a widget representing each ROI
             color = self.color_dict[roi_id]
             color.setAlpha(255)
             structure = StructureWidget(roi_id, color, roi_dict['name'], self)
             if roi_id in self.patient_dict_container.get("selected_rois"):
-                structure.checkbox.setChecked(Qt.Checked)
+                structure.checkbox.setChecked(Qt.CheckState.Checked)
             structure.structure_renamed. \
                 connect(self.fixed_container_structure_modified)
             self.layout_content.addWidget(structure)
-            row += 1
 
         self.scroll_area.setStyleSheet(
             "QScrollArea {background-color: #ffffff; border-style: none;}")

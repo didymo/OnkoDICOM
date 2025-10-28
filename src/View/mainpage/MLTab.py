@@ -26,9 +26,6 @@ class MLTab(QtWidgets.QWidget):
 
         self.selected_model_directory = ""
 
-        # Get the stylesheet
-        self.stylesheet = StyleSheetReader()
-
         self.current_widgets = []
 
         self.clinical_data_csv_path = ""
@@ -211,26 +208,27 @@ class MLTab(QtWidgets.QWidget):
         Updates UI to show all options to select csv data inputs.
         """
         self.clear_current_widgets()
+        stylesheet = StyleSheetReader() # stylesheet Object
 
         self.label_clinical_data = QtWidgets.QLabel(
             "Please choose the CSV file location for Clinical Data:")
-        self.label_clinical_data.setStyleSheet(self.stylesheet())
+        self.label_clinical_data.setStyleSheet(stylesheet.get_stylesheet())
         self.current_widgets.append(self.label_clinical_data)
 
         self.label_DVG = QtWidgets.QLabel(
             "Please choose the CSV file location for DVH Data:")
-        self.label_DVG.setStyleSheet(self.stylesheet())
+        self.label_DVG.setStyleSheet(stylesheet.get_stylesheet())
         self.current_widgets.append(self.label_DVG)
 
         self.label_Pyrad = QtWidgets.QLabel(
             "Please choose the CSV file location for Pyradiomics Data:")
-        self.label_Pyrad.setStyleSheet(self.stylesheet())
+        self.label_Pyrad.setStyleSheet(stylesheet.get_stylesheet())
         self.current_widgets.append(self.label_Pyrad)
 
         # Directory text box for clinical Data
         self.directory_input_clinical_data = QtWidgets.QLineEdit(
             "No file selected")
-        self.directory_input_clinical_data.setStyleSheet(self.stylesheet())
+        self.directory_input_clinical_data.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_clinical_data.setEnabled(False)
         self.current_widgets.append(self.directory_input_clinical_data)
 
@@ -242,13 +240,13 @@ class MLTab(QtWidgets.QWidget):
             self.show_file_browser_clinical_data
             )
         self.change_button_clinical_data.setObjectName("NormalButton")
-        self.change_button_clinical_data.setStyleSheet(self.stylesheet())
+        self.change_button_clinical_data.setStyleSheet(stylesheet.get_stylesheet())
         self.current_widgets.append(self.change_button_clinical_data)
 
         # Directory text box for DVH Data
         self.directory_input_dvh_data = QtWidgets.QLineEdit(
             "No file selected")
-        self.directory_input_dvh_data.setStyleSheet(self.stylesheet())
+        self.directory_input_dvh_data.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_dvh_data.setEnabled(False)
         self.current_widgets.append(self.directory_input_dvh_data)
 
@@ -259,13 +257,13 @@ class MLTab(QtWidgets.QWidget):
             self.show_file_browser_dvh_data
             )
         self.change_button_dvh_data.setObjectName("NormalButton")
-        self.change_button_dvh_data.setStyleSheet(self.stylesheet())
+        self.change_button_dvh_data.setStyleSheet(stylesheet.get_stylesheet())
         self.current_widgets.append(self.change_button_dvh_data)
 
         # Directory text box for Pyradiomics Data
         self.directory_input_pyrad = QtWidgets.QLineEdit(
             "No file selected")
-        self.directory_input_pyrad.setStyleSheet(self.stylesheet())
+        self.directory_input_pyrad.setStyleSheet(stylesheet.get_stylesheet())
         self.directory_input_pyrad.setEnabled(False)
         self.current_widgets.append(self.directory_input_pyrad)
 
@@ -277,7 +275,7 @@ class MLTab(QtWidgets.QWidget):
             self.show_file_browser_pyrad
             )
         self.change_button_pyradiomicsData.setObjectName("NormalButton")
-        self.change_button_pyradiomicsData.setStyleSheet(self.stylesheet())
+        self.change_button_pyradiomicsData.setStyleSheet(stylesheet.get_stylesheet())
         self.current_widgets.append(self.change_button_pyradiomicsData)
 
         # Set Clinical Data

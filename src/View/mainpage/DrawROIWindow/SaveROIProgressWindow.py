@@ -12,8 +12,7 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
     thread where the new RTSTRUCT is modified.
     """
 
-    signal_roi_saved = QtCore.Signal(pydicom.Dataset)  # Emits the new dataset
-
+    #signal_roi_saved = QtCore.Signal(object)  # Emits the new dataset
     def __init__(self, *args, **kwargs):
         super(SaveROIProgressWindow, self).__init__(*args, **kwargs)
         layout = QtWidgets.QVBoxLayout()
@@ -22,7 +21,6 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
         self.setWindowTitle("Please wait...")
         self.setFixedWidth(150)
         self.setLayout(layout)
-
         self.threadpool = QtCore.QThreadPool()
 
     def start_saving(self, dataset_rtss, roi_name, roi_list):
@@ -42,5 +40,5 @@ class SaveROIProgressWindow(QtWidgets.QDialog):
         the new dataset object. :param result: The resulting dataset from
         the ROI.create_roi function.
         """
-        self.signal_roi_saved.emit(result)
+        #self.signal_roi_saved.emit(result)
         self.close()

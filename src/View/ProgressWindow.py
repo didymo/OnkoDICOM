@@ -1,4 +1,3 @@
-import platform
 import threading
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -8,6 +7,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout
 
 from src.Controller.PathHandler import resource_path
 from src.Model.Worker import Worker
+from src.View.StyleSheetReader import StyleSheetReader
 
 
 class ProgressWindow(QDialog):
@@ -19,6 +19,9 @@ class ProgressWindow(QDialog):
 
     # Signal that emits when calc dvh is advised
     signal_advise_calc_dvh = QtCore.Signal(bool)
+
+    # Signal that emits when incorrect slice is acknowledged
+    signal_acknowledge_incorrect_slice = QtCore.Signal()
 
     def __init__(self, *args, **kwargs):
         super(ProgressWindow, self).__init__(*args, **kwargs)
@@ -33,19 +36,12 @@ class ProgressWindow(QDialog):
 
         self.text_field = QLabel("Loading")
 
-        if platform.system() == 'Darwin':
-            self.stylesheet_path = "res/stylesheet.qss"
-        else:
-            self.stylesheet_path = "res/stylesheet-win-linux.qss"
-
-        self.stylesheet = open(resource_path(self.stylesheet_path)).read()
-
         window_icon = QIcon()
         window_icon.addPixmap(QPixmap(resource_path("res/images/icon.ico")),
                               QIcon.Normal, QIcon.Off)
 
         self.setWindowIcon(window_icon)
-        self.progress_bar.setStyleSheet(self.stylesheet)
+        self.progress_bar.setStyleSheet(StyleSheetReader().get_stylesheet())
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.text_field)
