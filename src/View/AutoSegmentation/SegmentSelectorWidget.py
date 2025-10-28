@@ -25,7 +25,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
     which returns a list[str]
     """
 
-    def __init__(self, parent, segmentation_list: list[str] = None, data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
+    def __init__(self, segmentation_list: list[str] = None, data_location="data/csv", update_callback: Callable[[], None] | None = None) -> None:
         """
         Initialisation of the SegmentSelectorWidget.
         Creates the list for the storage of the selected segments
@@ -38,7 +38,7 @@ class SegmentSelectorWidget(QtWidgets.QWidget):
         :returns: None
         """
 
-        super(SegmentSelectorWidget, self).__init__(parent)
+        super(SegmentSelectorWidget, self).__init__()
         self.setStyleSheet(StyleSheetReader().get_stylesheet()) # To style the Widget
 
         # Class Members
