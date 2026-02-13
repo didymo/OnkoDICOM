@@ -36,19 +36,25 @@ matplotlib.cbook.handle_exceptions = "ignore"
 # This variable holds the errors messages of the Clinical data form
 message = ""
 
+def _load_optional_csv(file_name):
+    csv_path = data_path(file_name)
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            rows = list(csv.reader(f))
+    except (OSError, csv.Error) as exc:
+        logging.warning("Unable to load %s from %s: %s",
+                        file_name, csv_path, exc)
+        return []
+
+    if rows:
+        rows.pop(0)
+    return rows
+
+
 # reading the csv files containing the available diseases
-with open(data_path('ICD10_Topography.csv'), 'r') as f:
-    reader = csv.reader(f)
-    icd = list(reader)
-    icd.pop(0)
-with open(data_path('ICD10_Topography_C.csv'), 'r') as f:
-    reader = csv.reader(f)
-    icdc = list(reader)
-    icdc.pop(0)
-with open(data_path('ICD10_Morphology.csv'), 'r') as f:
-    reader = csv.reader(f)
-    hist = list(reader)
-    hist.pop(0)
+icd = _load_optional_csv('ICD10_Topography.csv')
+icdc = _load_optional_csv('ICD10_Topography_C.csv')
+hist = _load_optional_csv('ICD10_Morphology.csv')
 
 # Creating the arrays containing the above data and formatting them
 # appropriately

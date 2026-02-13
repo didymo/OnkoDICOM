@@ -58,24 +58,69 @@ def data_path(relative_path):
     :param relative_path: relative path to get the absolute path of.
     """
     # Get the absolute path (hidden directory)
-    home_dir = Path.home()
-    hidden_dir = home_dir.joinpath('.OnkoDICOM', 'data')
+    hidden_dir = Path.home().joinpath('.OnkoDICOM', 'data')
     absolute_path = hidden_dir.joinpath(relative_path)
 
     # Check to see if the file exists in the hidden directory. Return if it
     # does.
-    if os.path.exists(absolute_path):
+    if absolute_path.exists():
         return absolute_path
 
-    # Get the file from the data folder
+    # Search from the current working directory.
     base_path = Path.cwd()
-    data_folder = base_path.joinpath(base_path)
+    for root, _, files in os.walk(str(base_path), topdown=True):
+        if relative_path in files:
+            return Path(root).joinpath(relative_path)
 
-    # Walk through directory
-    for root, dirs, files in os.walk(str(data_folder), topdown=True):
-        for name in files:
-            if name == relative_path:
-                return os.path.join(root, name)
+    # Search from the project root (PathHandler.py -> src -> project root).
+    project_root = Path(__file__).resolve().parents[2]
+    for root, _, files in os.walk(str(project_root), topdown=True):
+        if relative_path in files:
+            return Path(root).joinpath(relative_path)
+
+    # Never return None: fallback to hidden data path so callers get a valid
+    # path-like object even when the file is missing.
+    return absolute_path
+
+
+def _parse_config_int(elements, index, default_value):
+    try:
+        return int(elements[index].strip())
+    except (IndexError, ValueError, AttributeError):
+        return default_value
+
+
+def _parse_config_float(elements, index, default_value):
+    try:
+        return float(elements[index].strip())
+    except (IndexError, ValueError, AttributeError):
+        return default_value
+
+
+def read_line_fill_configuration():
+    """
+    Read line and fill configuration safely.
+
+    Returns:
+        tuple[int, int, int, int, float]:
+        (roi_line, roi_opacity, iso_line, iso_opacity, line_width)
+    """
+    defaults = (1, 10, 2, 5, 2.0)
+    config_path = data_path("line&fill_configuration")
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as stream:
+            elements = stream.readlines()
+    except OSError:
+        return defaults
+
+    roi_line = _parse_config_int(elements, 0, defaults[0])
+    roi_opacity = _parse_config_int(elements, 1, defaults[1])
+    iso_line = _parse_config_int(elements, 2, defaults[2])
+    iso_opacity = _parse_config_int(elements, 3, defaults[3])
+    line_width = _parse_config_float(elements, 4, defaults[4])
+
+    return roi_line, roi_opacity, iso_line, iso_opacity, line_width
 
 def database_path() -> Path:
     """

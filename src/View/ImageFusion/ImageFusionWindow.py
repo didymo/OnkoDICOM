@@ -802,11 +802,8 @@ class UIImageFusionWindowDragAndDropEvent(QLineEdit):
         data = event.mimeData()
         urls = data.urls()
         if urls and urls[0].scheme() == 'file':
-            # Removes the doubled intro slash
-            dicom_file_path = str(urls[0].path())[1:]
-            # add / for not Windows machines
-            if platform.system() != 'Windows':
-                dicom_file_path = "/" + dicom_file_path
+            # Use Qt's decoded local path handling for spaces/special chars.
+            dicom_file_path = urls[0].toLocalFile()
             # Pastes the directory into the text field
             self.setText(dicom_file_path)
             UIImageFusionWindow.scan_directory_for_patient(self.parent_window)

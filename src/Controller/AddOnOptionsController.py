@@ -11,7 +11,7 @@ from PySide6.QtCore import Slot
 
 from src.View.AddOnOptions import *
 from src.View.InputDialogs import *
-from src.Controller.PathHandler import data_path
+from src.Controller.PathHandler import data_path, read_line_fill_configuration
 
 
 # Create the Add-On Options class based on the UI from the file in
@@ -22,26 +22,10 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
     def __init__(self, window):  # initialization function
         super(AddOnOptions, self).__init__()
-        # read configuration file for line and fill options
-        with open(data_path("line&fill_configuration"), "r") \
-                as stream:
-            elements = stream.readlines()
-            # if file is not empty, each line represents the last saved
-            # configuration in the given order
-            if len(elements) > 0:
-                roi_line = int(elements[0].replace("\n", ""))
-                roi_opacity = int(elements[1].replace("\n", ""))
-                iso_line = int(elements[2].replace("\n", ""))
-                iso_opacity = int(elements[3].replace("\n", ""))
-                line_width = float(elements[4].replace("\n", ""))
-            else:  # if file is empty for some reason, use the default
-                # measures below
-                roi_line = 1
-                roi_opacity = 10
-                iso_line = 2
-                iso_opacity = 5
-                line_width = 2.0
-            stream.close()
+        # Read configuration safely and fallback to defaults if missing/corrupt.
+        roi_line, roi_opacity, iso_line, iso_opacity, line_width = (
+            read_line_fill_configuration()
+        )
 
         # initialise the UI
         self.window = window
@@ -675,9 +659,9 @@ class AddOnOptions(QtWidgets.QMainWindow, UIAddOnOptions):
 
         if path != "":
             with open(path, newline="") as stream:
-                next(stream)
+                next(stream, None)
                 for rowdata in csv.reader(stream):
-                    if len(rowdata) != 3 or len(rowdata) != 4:
+                    if len(rowdata) not in (3, 4):
                         button_reply = QMessageBox.warning(
                             self,
                             "Error Message",

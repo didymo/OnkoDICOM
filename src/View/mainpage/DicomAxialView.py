@@ -4,7 +4,10 @@ from skimage import measure
 from src.View.mainpage.DicomView import DicomView
 from src.Model.Isodose import get_dose_grid
 from src.Model.PatientDictContainer import PatientDictContainer
-from src.Controller.PathHandler import data_path, resource_path
+from src.Controller.PathHandler import (
+    read_line_fill_configuration,
+    resource_path,
+)
 
 
 class DicomAxialView(DicomView):
@@ -307,17 +310,9 @@ class DicomAxialView(DicomView):
                     self.patient_dict_container.get("dose_pixluts")[curr_slice_uid], contours)
 
                 brush_color = self.iso_color[sd]
-                with open(data_path('line&fill_configuration'), 'r') as stream:
-                    elements = stream.readlines()
-                    if len(elements) > 0:
-                        iso_line = int(elements[2].replace('\n', ''))
-                        iso_opacity = int(elements[3].replace('\n', ''))
-                        line_width = float(elements[4].replace('\n', ''))
-                    else:
-                        iso_line = 2
-                        iso_opacity = 5
-                        line_width = 2.0
-                    stream.close()
+                _, _, iso_line, iso_opacity, line_width = (
+                    read_line_fill_configuration()
+                )
                 iso_opacity = int((iso_opacity / 100) * 255)
                 brush_color.setAlpha(iso_opacity)
                 pen_color = QtGui.QColor(

@@ -75,14 +75,15 @@ class StructureWidget(QtWidgets.QWidget):
         menu = QtWidgets.QMenu(self)
         menu.setStyleSheet("QMenu::item::selected {background-color: #9370DB}")
         rename_action = menu.addAction("Rename")
+        suggestion_actions = []
+        suggestions = []
 
         if not self.standard_name:
             menu.addSeparator()
 
             suggestions = self.roi_suggestions()
-            suggested_action1 = menu.addAction(suggestions[0][0])
-            suggested_action2 = menu.addAction(suggestions[1][0])
-            suggested_action3 = menu.addAction(suggestions[2][0])
+            for suggestion_name, _ in suggestions:
+                suggestion_actions.append(menu.addAction(suggestion_name))
 
         # Part 2: Determine action taken
         action = menu.exec(self.mapToGlobal(event.pos()))
@@ -94,21 +95,16 @@ class StructureWidget(QtWidgets.QWidget):
             rename_window.exec_()
 
         if not self.standard_name:
-            if action == suggested_action1:
-                rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
-                                                self.structure_tab.standard_organ_names,
-                                                self.dataset_rtss,
-                                                self.roi_id, self.text, self.structure_renamed, suggestions[0][0])
-                rename_window.exec_()
-            elif action == suggested_action2:
-                rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
-                                                self.structure_tab.standard_organ_names,
-                                                self.dataset_rtss,
-                                                self.roi_id, self.text, self.structure_renamed, suggestions[1][0])
-                rename_window.exec_()
-            elif action == suggested_action3:
-                rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
-                                                self.structure_tab.standard_organ_names,
-                                                self.dataset_rtss,
-                                                self.roi_id, self.text, self.structure_renamed, suggestions[2][0])
-                rename_window.exec_()
+            for idx, suggested_action in enumerate(suggestion_actions):
+                if action == suggested_action:
+                    rename_window = RenameROIWindow(
+                        self.structure_tab.standard_volume_names,
+                        self.structure_tab.standard_organ_names,
+                        self.dataset_rtss,
+                        self.roi_id,
+                        self.text,
+                        self.structure_renamed,
+                        suggestions[idx][0],
+                    )
+                    rename_window.exec_()
+                    break

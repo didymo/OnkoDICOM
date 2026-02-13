@@ -3,7 +3,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from src.View.mainpage.DicomGraphicsScene import GraphicsScene
 from src.Model.PatientDictContainer import PatientDictContainer
 from src.constants import INITIAL_ONE_VIEW_ZOOM
-from src.Controller.PathHandler import data_path
+from src.Controller.PathHandler import read_line_fill_configuration
 
 class CustomGraphicsView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
@@ -159,17 +159,9 @@ class DicomView(QtWidgets.QWidget):
             color = self.roi_color[roi_id]
         else:
             color = roi_color[roi_id]
-        with open(data_path('line&fill_configuration'), 'r') as stream:
-            elements = stream.readlines()
-            if len(elements) > 0:
-                roi_line = int(elements[0].replace('\n', ''))
-                roi_opacity = int(elements[1].replace('\n', ''))
-                line_width = float(elements[4].replace('\n', ''))
-            else:
-                roi_line = 1
-                roi_opacity = 10
-                line_width = 2.0
-            stream.close()
+        roi_line, roi_opacity, _, _, line_width = (
+            read_line_fill_configuration()
+        )
         roi_opacity = int((roi_opacity / 100) * 255)
         color.setAlpha(roi_opacity)
         pen_color = QtGui.QColor(color.red(), color.green(), color.blue())

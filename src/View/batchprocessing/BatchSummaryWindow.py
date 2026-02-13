@@ -154,14 +154,15 @@ class BatchSummaryWindow(QtWidgets.QDialog):
         Function to handle the export button being clicked. Opens a file
         save dialog and saves the summary text to this text file.
         """
-        file_path = QtWidgets.QFileDialog.getSaveFileName(
+        file_path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save As...", '', 'Text Files (*.txt)')
 
-        if file_path:
-            text = self.summary_label.text()
-            f = open(file_path[0], "w")
+        if not file_path:
+            return
+
+        text = self.summary_label.text()
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(text)
-            f.close()
 
     def ok_button_clicked(self):
         """
