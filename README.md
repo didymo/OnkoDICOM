@@ -24,6 +24,20 @@ Installation instructions for Ubuntu and Windows can be located in [the project'
 
 Note that in order to utilise OnkoDICOM's radiomics toolset, the external program Plastimatch will need to be installed. [Plastimatch installation instructions](https://github.com/didymo/OnkoDICOM/wiki/Installation-Instructions#plastimatch).
 
+### Quick Setup For Clinical Testers (Linux)
+
+To avoid local Python/Poetry environment issues, use the bootstrap script:
+
+```
+./scripts/setup_doctor_env.sh
+```
+
+Then:
+
+```
+source .venv/bin/activate
+python main.py
+```
 
 ### Testing
 
@@ -48,4 +62,3 @@ To run the report:
 ```
 python -m pytest --cov=src test/
 ```
-
