@@ -24,7 +24,7 @@ scikit-build = "*"
 scipy = "<2.0"
 dicompyler-core = { git = "https://github.com/dicompyler/dicompyler-core.git" }
 # pydicom 3.x has changed some API and dicompyler-core breaks on that
-pydicom = "3.0.1"
+pydicom = "3.0.2"
 country-list = "*"
 scikit-image = "*"
 fuzzywuzzy = "*"
