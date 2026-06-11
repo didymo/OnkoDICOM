@@ -10,9 +10,9 @@ import shutil
 import pandas as pd
 from pathlib import Path
 from PySide6 import QtCore
-from pydicom import dcmread
 from radiomics import featureextractor
 from src.Model.DICOM import DICOMStructuredReport
+from src.Model import Radiomics
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
@@ -34,13 +34,13 @@ class PyradiExtended(QtCore.QThread):
         # Set progress bar percentage to 0
         # Set ROI name to empty string as ROI not being processed
         self.my_callback(0, '')
-        # Read one ct file, done to later obtain patient hash
-        ct_file = dcmread(self.filepaths[0], force=True)
         # Read RT-Struct file
         rtss_path = self.filepaths['rtss']
 
         if self.target_path == '':
-            patient_hash = os.path.basename(ct_file.PatientID)
+            _dataset = PatientDictContainer().dataset
+            _ref = _dataset.get(0) or _dataset.get('rtss') or next(iter(_dataset.values()))
+            patient_hash = Radiomics.clean_patient_id(_ref.PatientID)
             # Name of nrrd file
             nrrd_file_name = patient_hash + '.nrrd'
             # Location of folder where nrrd file saved
