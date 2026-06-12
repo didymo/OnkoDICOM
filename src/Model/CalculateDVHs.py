@@ -255,10 +255,11 @@ def dvh2rtdose(dict_dvh):
         new_ds.add_new(Tag("DVHNumberOfBins"), "IS", len(dict_dvh[ds].bins))
 
         # Calculate and add DVH data
+        # DS VR has a 16-char limit; use 6 significant figures to stay compliant
         dvh_data = []
         for i in range(len(dict_dvh[ds].counts)):
-            dvh_data.append(str(dict_dvh[ds].bins[1]))
-            dvh_data.append(str(dict_dvh[ds].counts[i]))
+            dvh_data.append(f"{float(dict_dvh[ds].bins[1]):.6g}")
+            dvh_data.append(f"{float(dict_dvh[ds].counts[i]):.6g}")
         new_ds.add_new(Tag("DVHData"), "DS", dvh_data)
 
         # Reference ROI sequence dataset/sequence
