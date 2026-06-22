@@ -50,3 +50,26 @@ lead before implementation.
 - **PyRadiomics export with no RTSS present** — crashes silently (KeyError: 'rtss').
   Proposal written at `docs/proposals/pyradiomics_missing_rtss.md`.
   Awaiting clinical lead approval before any code change is made.
+
+---
+
+## Known Dependency Warnings
+
+These warnings appear at runtime but originate in third-party packages, not in the
+OnkoDICOM source. Do not suppress them. Do not attempt to fix them in this codebase.
+The fix belongs upstream. Monitor each dependency for a release that resolves it.
+
+### `dicompyler-core` — pydicom pixel_data_handlers deprecation
+
+```
+WARNING - The 'pydicom.pixel_data_handlers' module will be removed in v4.0,
+please use 'from pydicom.pixels.utils import pixel_dtype' instead
+```
+
+- **Source:** `dicompylercore/dicomparser.py` line 16 imports `pixel_dtype` from
+  `pydicom.pixel_data_handlers.util` (old path).
+- **Root cause:** pydicom 3.x moved this to `pydicom.pixels.utils`. `dicompyler-core`
+  has not yet been updated to use the new path.
+- **Call chain:** OnkoDICOM → `dicompylercore` DVH calculations → `dicomparser.py`
+- **Action:** None required in OnkoDICOM. Watch `dicompyler-core` upstream for a fix.
+  Do not suppress this warning.
