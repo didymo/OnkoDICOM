@@ -15,3 +15,38 @@ This repository has a known compatibility risk with dependency churn around `pym
 - If `pymedphys` is added/updated/removed, require extra caution and manual review.
 
 When in doubt, prefer deferring dependency bumps over introducing a potential clinical/imaging workflow regression.
+
+---
+
+## Clinical Decision Boundary
+
+This application is used in a **radiation oncology research context** — specifically
+the pipeline from clinical DICOM data to radiomics research output. Changes that
+affect what data is produced, accepted, or rejected must be approved by the clinical
+lead before implementation.
+
+### Hard rules for agents
+
+- Do not implement behaviour changes that affect clinical output without a recorded
+  clinical decision. Write a proposal in `docs/proposals/` and wait for approval.
+- Do not treat a technically safe fix as automatically clinically appropriate.
+  "Safe from a software point of view" and "safe from a clinical point of view"
+  are not the same thing.
+- Do not add error messages, blocks, or fallbacks that silently alter what data
+  reaches the research pipeline without clinical sign-off.
+
+### DICOM standard context
+
+- DICOM datasets in this application reflect real-world clinical data, not idealised
+  test data. Required objects under the standard (e.g. RTSS, RTDOSE) may be absent
+  for valid clinical reasons.
+- Do not assume a missing DICOM object is an error. It may be the normal state for
+  a given patient at a given point in their treatment pathway.
+- Any code that gates functionality on the presence of a DICOM object (e.g. RTSS)
+  must have a recorded clinical rationale for that gate.
+
+### Known open decisions
+
+- **PyRadiomics export with no RTSS present** — crashes silently (KeyError: 'rtss').
+  Proposal written at `docs/proposals/pyradiomics_missing_rtss.md`.
+  Awaiting clinical lead approval before any code change is made.

@@ -24,3 +24,11 @@ dist/
 # Ignore Apple specific files
 .DS_Store
 
+# Ignore test files
+files
+./files/*
+files/*
+
+# Local documentation and proposals (copy-paste to issue tracker)
+docs/
+
