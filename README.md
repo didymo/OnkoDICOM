@@ -32,6 +32,8 @@ To avoid local Python/Poetry environment issues, use the bootstrap script:
 ./scripts/setup_doctor_env.sh
 ```
 
+For full step-by-step Ubuntu instructions, see [DOCTOR_SETUP.md](DOCTOR_SETUP.md).
+
 Then:
 
 ```
