@@ -66,7 +66,7 @@ class UIMainWindow:
     ActionHandler, then the instance of the ActionHandler itself can safely
     be passed into the class.
     """
-    pyradi_trigger = QtCore.Signal(str, dict, str)
+    pyradi_trigger = QtCore.Signal(str, object, str)
 
     # Connect to GUIController
     image_fusion_main_window = QtCore.Signal()

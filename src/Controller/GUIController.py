@@ -150,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
     # When a new patient file is opened from the main window
     open_patient_window = QtCore.Signal()
     # When the pyradiomics button is pressed
-    run_pyradiomics = QtCore.Signal(str, dict, str)
+    run_pyradiomics = QtCore.Signal(str, object, str)
     # When the image fusion button is pressed
     image_fusion_signal = QtCore.Signal()
     # When pt/ct button is pressed
