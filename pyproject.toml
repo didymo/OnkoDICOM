@@ -52,6 +52,10 @@ pyinstaller = "*"
 lifelines = "0.29.0"
 pyradiomics = { git = "https://github.com/AIM-Harvard/pyradiomics.git" }
 totalsegmentator = "^2.10.0"
+# torch: 2.9.1 is the first release with avg_pool3d on Apple MPS; on 2.8 TotalSegmentator's
+# lung_nodules task hangs on MPS (2.9.1 to 2.14.1 all complete it). Held below 2.10 so the
+# Linux lock keeps the CUDA 12 runtime libraries; later releases move to CUDA 13.
+torch = "~2.9.1"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "*"
