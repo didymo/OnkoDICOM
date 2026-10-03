@@ -28,7 +28,9 @@ pydicom = "3.0.1"
 country-list = "*"
 scikit-image = "*"
 fuzzywuzzy = "*"
-PyWavelets = "1.3.0"
+# 1.5.0 is the first PyWavelets release with Python 3.12 wheels; 1.3.0 (pinned in the move to Poetry, no stated
+# reason) has none, so installing on 3.12 built it from source and failed (PEP 517).
+PyWavelets = ">=1.5.0"
 networkx = "*"
 # pymedphys has reinstated psuedonymisation in 0.39
 # something in OnkoDICOM does a recursive import on pymedphys, so now installing all extras in pymedphys
