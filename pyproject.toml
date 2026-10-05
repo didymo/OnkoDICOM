@@ -28,7 +28,9 @@ pydicom = "3.0.1"
 country-list = "*"
 scikit-image = "*"
 fuzzywuzzy = "*"
-PyWavelets = "1.3.0"
+# 1.5.0 is the first PyWavelets release with Python 3.12 wheels; 1.3.0 (pinned in the move to Poetry, no stated
+# reason) has none, so installing on 3.12 built it from source and failed (PEP 517).
+PyWavelets = ">=1.5.0"
 networkx = "*"
 # pymedphys has reinstated psuedonymisation in 0.39
 # something in OnkoDICOM does a recursive import on pymedphys, so now installing all extras in pymedphys
@@ -52,6 +54,10 @@ pyinstaller = "*"
 lifelines = "0.29.0"
 pyradiomics = { git = "https://github.com/AIM-Harvard/pyradiomics.git" }
 totalsegmentator = "^2.10.0"
+# torch: 2.9.1 is the first release with avg_pool3d on Apple MPS; on 2.8 TotalSegmentator's
+# lung_nodules task hangs on MPS (2.9.1 to 2.14.1 all complete it). Held below 2.10 so the
+# Linux lock keeps the CUDA 12 runtime libraries; later releases move to CUDA 13.
+torch = "~2.9.1"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "*"

@@ -7,6 +7,7 @@ from src.Model.PatientDictContainer import PatientDictContainer
 from src.Model.Worker import SegmentationWorkerSignals
 from totalsegmentator.python_api import totalsegmentator
 from src.Model.NiftiToRtstructConverter import nifti_to_rtstruct_conversion
+from src.Model.AutoSegmentation.DeviceSelection import select_segmentation_device
 from src.View.util.RedirectStdOut import ConsoleOutputStream, redirect_output_to_gui, setup_logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -120,8 +121,10 @@ class AutoSegmentation:
     def _run_totalsegmentation(self, task, roi_subset, output_dir) -> None:
         """
         Runs the TotalSegmentator segmentation task and saves the results.
-        This method executes the segmentation process using the specified task and
-        speed, and stores the output in the given directory.
+        This method executes the segmentation process using the specified task,
+        on the device chosen by select_segmentation_device (CUDA, then Apple
+        MPS, then CPU, unless ONKODICOM_SEGMENTATION_DEVICE overrides it), and
+        stores the output in the given directory.
 
         Args:
             task: The segmentation task to perform.
@@ -131,13 +134,37 @@ class AutoSegmentation:
         Returns:
             None
         """
+        device, explicit = select_segmentation_device()
+        self.signals.progress_updated.emit(f"Running TotalSegmentator on device: {device}")
+        try:
+            self._call_totalsegmentator(task, roi_subset, output_dir, device)
+        except Exception as err:
+            # MPS still lacks some PyTorch operations. When MPS was chosen
+            # automatically, fall back to the CPU rather than failing; when the
+            # user asked for it explicitly, let the error stand.
+            if device != "mps" or explicit:
+                raise
+            self.signals.progress_updated.emit(f"Segmentation on MPS failed ({err}); retrying on CPU.")
+            logger.warning("TotalSegmentator failed on MPS, retrying on CPU", exc_info=True)
+            self._call_totalsegmentator(task, roi_subset, output_dir, "cpu")
+
+    def _call_totalsegmentator(self, task, roi_subset, output_dir, device) -> None:
+        """
+        Calls TotalSegmentator once on the given device.
+
+        Args:
+            task: The segmentation task to perform.
+            roi_subset: The ROI subset to use.
+            output_dir: Directory to store the segmentation results.
+            device: "gpu", "gpu:N", "mps" or "cpu".
+        """
         totalsegmentator(
             input=self.dicom_temp_dir.name,
             output=output_dir,
             task=task,
             roi_subset=list(set(copy.deepcopy(roi_subset))), # Deep copy to prevent changing to the selection after starting
             output_type="nifti",
-            device="gpu"
+            device=device
         )
 
     def _convert_to_rtstruct(self, nifti_dir, output_rt) -> None:

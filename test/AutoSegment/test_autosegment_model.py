@@ -124,7 +124,8 @@ def test_run_totalsegmentation_calls_totalsegmentator(controller_mock, patient_d
     auto = AutoSegmentation(controller_mock)
     auto.dicom_temp_dir = MagicMock()
     auto.dicom_temp_dir.name = "tempdir"
-    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator") as totalseg:
+    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator") as totalseg, \
+         patch("src.Model.AutoSegmentation.AutoSegmentation.select_segmentation_device", return_value=("gpu", False)):
         # Act
         auto._run_totalsegmentation("total", ["roi1", "roi2"], "outdir")
         # Assert
@@ -136,6 +137,66 @@ def test_run_totalsegmentation_calls_totalsegmentator(controller_mock, patient_d
         assert set(kwargs["roi_subset"]) == {"roi1", "roi2"}
         assert kwargs["output_type"] == "nifti"
         assert kwargs["device"] == "gpu"
+
+
+@pytest.mark.parametrize("device", ["gpu", "gpu:1", "mps", "cpu"])
+def test_run_totalsegmentation_uses_selected_device_and_reports_it(controller_mock, patient_dict_container_patch, signals_patch, device):
+    # Arrange
+    auto = AutoSegmentation(controller_mock)
+    auto.dicom_temp_dir = MagicMock()
+    auto.dicom_temp_dir.name = "tempdir"
+    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator") as totalseg, \
+         patch("src.Model.AutoSegmentation.AutoSegmentation.select_segmentation_device", return_value=(device, False)):
+        # Act
+        auto._run_totalsegmentation("total", ["roi1"], "outdir")
+    # Assert
+    assert totalseg.call_args.kwargs["device"] == device
+    signals_patch.progress_updated.emit.assert_any_call(f"Running TotalSegmentator on device: {device}")
+
+
+def test_run_totalsegmentation_retries_auto_selected_mps_on_cpu(controller_mock, patient_dict_container_patch, signals_patch):
+    # Arrange
+    auto = AutoSegmentation(controller_mock)
+    auto.dicom_temp_dir = MagicMock()
+    auto.dicom_temp_dir.name = "tempdir"
+    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator",
+               side_effect=[NotImplementedError("op not supported on MPS"), None]) as totalseg, \
+         patch("src.Model.AutoSegmentation.AutoSegmentation.select_segmentation_device", return_value=("mps", False)):
+        # Act
+        auto._run_totalsegmentation("total", ["roi1"], "outdir")
+    # Assert
+    assert [c.kwargs["device"] for c in totalseg.call_args_list] == ["mps", "cpu"]
+    messages = [c.args[0] for c in signals_patch.progress_updated.emit.call_args_list]
+    assert any("retrying on CPU" in m for m in messages)
+
+
+@pytest.mark.parametrize("device, explicit", [("mps", True), ("gpu", False), ("cpu", False), ("cpu", True)])
+def test_run_totalsegmentation_does_not_retry_otherwise(controller_mock, patient_dict_container_patch, signals_patch, device, explicit):
+    # Arrange
+    auto = AutoSegmentation(controller_mock)
+    auto.dicom_temp_dir = MagicMock()
+    auto.dicom_temp_dir.name = "tempdir"
+    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator",
+               side_effect=RuntimeError("boom")) as totalseg, \
+         patch("src.Model.AutoSegmentation.AutoSegmentation.select_segmentation_device", return_value=(device, explicit)):
+        # Act / Assert
+        with pytest.raises(RuntimeError, match="boom"):
+            auto._run_totalsegmentation("total", ["roi1"], "outdir")
+    assert totalseg.call_count == 1
+
+
+def test_run_totalsegmentation_cpu_retry_failure_propagates(controller_mock, patient_dict_container_patch, signals_patch):
+    # Arrange
+    auto = AutoSegmentation(controller_mock)
+    auto.dicom_temp_dir = MagicMock()
+    auto.dicom_temp_dir.name = "tempdir"
+    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator",
+               side_effect=[RuntimeError("mps"), RuntimeError("cpu too")]) as totalseg, \
+         patch("src.Model.AutoSegmentation.AutoSegmentation.select_segmentation_device", return_value=("mps", False)):
+        # Act / Assert
+        with pytest.raises(RuntimeError, match="cpu too"):
+            auto._run_totalsegmentation("total", ["roi1"], "outdir")
+    assert totalseg.call_count == 2
 
 def test_convert_to_rtstruct_calls_conversion_and_emits(controller_mock, patient_dict_container_patch, signals_patch):
     # Arrange
