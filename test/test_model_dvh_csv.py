@@ -68,3 +68,28 @@ def test_an_roi_with_no_volume_has_no_doses():
     # A curve that is 0% everywhere (an empty ROI) reaches only 0%: its other
     # cells stay blank, as before. What they should show is a clinical question.
     assert dvh_csv_doses(np.zeros(1)) == [''] * (len(DVH_CSV_PERCENTS) - 1) + ['0']
+
+
+# Curves whose answer is known (connor-227743e6, review of #11). On real curves a
+# sample rarely meets a percentage exactly, so these are where exact hits are
+# tested: a sample that met a percentage must be the one above for the next.
+def test_a_linear_curve_gives_every_dose_exactly():
+    # 1 cGy bins from 100% at 0 cGy to 0% at 1000 cGy: p% is received by at
+    # least (100 - p) * 10 cGy, and every percentage is a sample or exactly
+    # half-way between two, where even the export's mirrored interpolation (see
+    # dvh_csv_doses) is exact.
+    doses = dvh_csv_doses(np.linspace(100, 0, 1001))
+    for percent, dose in zip(DVH_CSV_PERCENTS, doses):
+        assert dose == str(round((100 - percent) * 10)), percent
+
+
+def test_a_steep_target_like_curve_gives_every_dose_within_one_step():
+    # 100% up to 500 cGy, then falling linearly to 0% at 520 cGy. Between two
+    # samples the export's interpolation is mirrored, so a dose can be off by up
+    # to one step (99.5% reads 510; the answer is 500.1), but never by more.
+    counts = np.concatenate([np.full(500, 100.0),
+                             np.linspace(100, 0, 21), np.zeros(10)])
+    doses = dvh_csv_doses(counts)
+    for percent, dose in zip(DVH_CSV_PERCENTS, doses):
+        assert abs(int(dose) - (500 + (100 - percent) * 0.2)) \
+            <= DVH_CSV_STEP, percent

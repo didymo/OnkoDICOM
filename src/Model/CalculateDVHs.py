@@ -162,9 +162,14 @@ def dvh_csv_doses(dose):
     DVH_CSV_PERCENTS, the dose that at least that much of the ROI receives.
 
     The curve is sampled every DVH_CSV_STEP bins, and a percentage that falls
-    between two samples is interpolated between them. So a value can differ
-    from the curve by up to DVH_CSV_STEP cGy, either way: measured on the test
-    data, within +/-10 cGy, mean +0.3 cGy.
+    between two samples is interpolated between them. The interpolation is
+    mirrored: it measures back from the sample below the percentage by the
+    distance it should measure forward from the sample above, so it is exact
+    only half-way between samples (on a curve falling from 100% at 500 cGy to
+    50% at 510 cGy, 99.5% reads 510 cGy; the answer is 500.1). So a value can
+    differ from the curve by up to DVH_CSV_STEP cGy, either way: measured on
+    the test data, within +/-10 cGy, mean +0.3 cGy. Correcting it moves most
+    values, so it waits for the same decision as the precision below.
 
     On going to 1 cGy precision (not done; Redmine 3093): the curve already has
     1 cGy bins, so the dose for a percentage could be read directly, as the
@@ -184,30 +189,24 @@ def dvh_csv_doses(dose):
     """
     values = []
     trough_i = 0
-    # The last sample above the percentage; None until there is one. (This was
-    # 0, which also meant "none", so a curve whose only sample above the
-    # percentage was the first one left the cell blank.)
+    # The last sample at or above the percentages so far: for the next, lower
+    # percentage it is the sample above. None until there is one. (This was 0,
+    # which also meant "none", so a curve whose only sample above a percentage
+    # was the first left the cell blank. And a sample that met a percentage
+    # exactly was not recorded, so after one the next percentage either found no
+    # sample above it (blank) or used an older one far up the curve.)
     peak_i = None
-    # The last sample equal to a higher percentage: it is above every lower one.
-    exact_i = None
     for percent in DVH_CSV_PERCENTS:
         last_volume = None
-        exact_this = None
         for cgy in range(trough_i, len(dose), DVH_CSV_STEP):
             trough_i = cgy
             if abs(dose[cgy] - percent) <= DVH_CSV_TOLERANCE:
                 last_volume = cgy
-                exact_this = cgy
+                peak_i = cgy
             elif dose[cgy] > percent:
                 peak_i = cgy
             else:
                 break
-        if last_volume is None and peak_i is None and exact_i is not None:
-            # The curve fell past this percentage within one step of where it
-            # met a higher one, so no sample was above it. The sample that met
-            # the higher percentage is: use it as the one above. (The cell
-            # was blank.)
-            peak_i = exact_i
         if last_volume is None and peak_i is not None:
             if dose[peak_i] != dose[trough_i]:
                 volume_per_drop = -10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
@@ -216,8 +215,6 @@ def dvh_csv_doses(dose):
                 last_volume = trough_i - substract_amount
             else:
                 last_volume = trough_i
-        if exact_this is not None:
-            exact_i = exact_this
         values.append('' if last_volume is None else str(round(last_volume)))
     return values
 
