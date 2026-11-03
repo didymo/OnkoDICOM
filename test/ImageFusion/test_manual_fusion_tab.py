@@ -258,8 +258,10 @@ def test_save_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
 
 def _assert_save_fusion_state_opens_file_dialog(options, filename):
     """Helper to check that save fusion state opens the file dialog and clicks the button."""
+    # The save is followed by a modal "Saved" box; unmocked, it blocks the test forever.
     with patch("src.View.ImageFusion.TranslateRotateMenu.QFileDialog.getSaveFileName",
-               return_value=(filename, None)) as mock_dialog:
+               return_value=(filename, None)) as mock_dialog, \
+            patch("src.View.ImageFusion.TranslateRotateMenu.QMessageBox.information") as mock_saved:
         save_btn = next(
             (btn for btn in options.findChildren(QPushButton) if "save" in btn.text().lower()),
             None,
@@ -267,6 +269,7 @@ def _assert_save_fusion_state_opens_file_dialog(options, filename):
         assert save_btn is not None
         save_btn.click()
         assert mock_dialog.called
+        assert mock_saved.called
 
 def test_load_fusion_state_opens_file_dialog(qtbot, fusion_test_object):
     """Test that clicking 'Load Fusion State' opens a file dialog (mocked)."""
