@@ -23,8 +23,9 @@ def set_up_hidden_dir(directory: str) -> None:
     if not os.path.exists(path):
         os.mkdir(path)
         if platform.system() == 'Windows':
-            # Hide the directory for Windows machines
-            ctypes.windll.kernel32.SetFileAttributesW(path, 2)
+            # Hide the directory for Windows machines. ctypes converts only
+            # str to LPCWSTR; a Path raises ctypes.ArgumentError.
+            ctypes.windll.kernel32.SetFileAttributesW(str(path), 2)
 
 
 class SqlError(Exception):
