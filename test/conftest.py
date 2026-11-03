@@ -77,9 +77,18 @@ def restore_mutable_dirs(tmp_path_factory):
             raise RuntimeError(
                 f"{target} became a symbolic link during the session; "
                 f"not restored. The snapshot is in {snapshot / rel}.")
-        if target.exists():
-            shutil.rmtree(target)
-        shutil.copytree(snapshot / rel, target, symlinks=True)
+        try:
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(snapshot / rel, target, symlinks=True)
+        except OSError as error:
+            raise RuntimeError(
+                f"could not restore {target}; the snapshot is kept in "
+                f"{snapshot / rel}") from error
+    # data/csv/patientHash.csv can hold real identifier-to-hash pairs (Anon.py
+    # appends to it), and pytest keeps old base temp directories, so no copy
+    # is left behind once the restore has succeeded.
+    shutil.rmtree(snapshot)
 
 
 def pytest_configure(config):
