@@ -13,16 +13,19 @@ from src.View.util.RedirectStdOut import ConsoleOutputStream, redirect_output_to
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Spline order TotalSegmentator uses to resample the input CT to the model's spacing. Up to 2.15 it
-# was fixed at 3 (cubic). 2.16 made it a parameter with default 1 (linear) "for faster resampling",
-# and its own help says 3 "may give slightly better segmentation accuracy". We keep 3, the order our
+# Spline order TotalSegmentator uses to resample the input CT to the model's spacing. Up to 2.14 it
+# was fixed at 3 (cubic); 2.15 made it a parameter, still defaulting to 3; 2.16 changed the default
+# to 1 (linear) "for faster resampling", and its own help says 3 "may give slightly better
+# segmentation accuracy". The parameter needs TotalSegmentator 2.15 or later (pyproject asks for
+# ^2.18, the version measured below). We keep 3, the order our
 # segmentations were made with before the move to 2.18 (Gitea #16). On the test patient, 2.18 at
 # order 3 is voxel-identical to 2.10 for the nine structures checked, while 2.18 at its default 1
 # moves the spinal cord by -3.8% (Dice 0.979).
 #
-# Not settable from here: since 2.18 the rough 6 mm "total" pass that finds the crop region uses a
-# tile step of 0.8 where 2.10 used 0.5. It is hard-coded in TotalSegmentator's nnunet.py. On the test
-# patient it changed nothing (the comparison above includes it).
+# Not settable from here: the rough 6 mm "total" pass that finds the crop region uses a tile step of
+# 0.8 in 2.18 where 2.10 used 0.5 (upstream commit fd81a3b, July 2026). It is hard-coded in
+# TotalSegmentator's nnunet.py. On the test patient it changed nothing (the comparison above
+# includes it).
 TOTALSEGMENTATOR_RESAMPLING_ORDER = 3
 
 
