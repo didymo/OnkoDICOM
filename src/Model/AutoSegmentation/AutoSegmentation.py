@@ -13,6 +13,18 @@ from src.View.util.RedirectStdOut import ConsoleOutputStream, redirect_output_to
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Spline order TotalSegmentator uses to resample the input CT to the model's spacing. Up to 2.15 it
+# was fixed at 3 (cubic). 2.16 made it a parameter with default 1 (linear) "for faster resampling",
+# and its own help says 3 "may give slightly better segmentation accuracy". We keep 3, the order our
+# segmentations were made with before the move to 2.18 (Gitea #16). On the test patient, 2.18 at
+# order 3 is voxel-identical to 2.10 for the nine structures checked, while 2.18 at its default 1
+# moves the spinal cord by -3.8% (Dice 0.979).
+#
+# Not settable from here: since 2.18 the rough 6 mm "total" pass that finds the crop region uses a
+# tile step of 0.8 where 2.10 used 0.5. It is hard-coded in TotalSegmentator's nnunet.py. On the test
+# patient it changed nothing (the comparison above includes it).
+TOTALSEGMENTATOR_RESAMPLING_ORDER = 3
+
 
 class AutoSegmentation:
     """Handles the automatic segmentation process.
@@ -164,7 +176,10 @@ class AutoSegmentation:
             task=task,
             roi_subset=list(set(copy.deepcopy(roi_subset))), # Deep copy to prevent changing to the selection after starting
             output_type="nifti",
-            device=device
+            device=device,
+            # Set explicitly, not left to TotalSegmentator's default, so an upstream default change
+            # cannot silently change our contours. See TOTALSEGMENTATOR_RESAMPLING_ORDER.
+            resampling_order=TOTALSEGMENTATOR_RESAMPLING_ORDER,
         )
 
     def _convert_to_rtstruct(self, nifti_dir, output_rt) -> None:
