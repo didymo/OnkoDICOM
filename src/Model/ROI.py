@@ -385,14 +385,14 @@ def calculate_matrix(img_ds):
             matrix_m,
             np.ndarray(shape=(4, 1), buffer=np.array([[i], [0], [0], [1]], dtype=float)),
         )
-        x.append(float(i_mat[0]))
+        x.append(float(i_mat[0, 0]))
 
     for j in range(0, img_ds.Rows):
         j_mat = np.matmul(
             matrix_m,
             np.ndarray(shape=(4, 1), buffer=np.array([[0], [j], [0], [1]], dtype=float)),
         )
-        y.append(float(j_mat[1]))
+        y.append(float(j_mat[1, 0]))
 
     return np.array(x), np.array(y)
 

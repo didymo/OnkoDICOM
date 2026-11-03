@@ -764,12 +764,12 @@ def calculate_matrix(img_ds):
 
     # Optimization attempt: use numpy to generate linearly spaced arrays in one go.
     # Calculate end points
-    x_end = float(origin[0]) + (img_ds.Columns - 1) * x_increment
-    y_end = float(origin[1]) + (img_ds.Rows - 1) * y_increment
+    x_end = float(origin[0, 0]) + (img_ds.Columns - 1) * x_increment
+    y_end = float(origin[1, 0]) + (img_ds.Rows - 1) * y_increment
 
     # Generate linearly spaced arrays in one operation
-    x = np.linspace(float(origin[0]), x_end, img_ds.Columns)
-    y = np.linspace(float(origin[1]), y_end, img_ds.Rows)
+    x = np.linspace(float(origin[0, 0]), x_end, img_ds.Columns)
+    y = np.linspace(float(origin[1, 0]), y_end, img_ds.Rows)
 
     return x, y
 
