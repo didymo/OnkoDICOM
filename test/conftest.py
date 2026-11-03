@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import sqlite3
 from pathlib import Path
 import pytest
@@ -41,6 +42,53 @@ def qapp_auto():
     yield app
     app.processEvents()
     app.quit()
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+# Directories the tests change in place: test_merge_rtss rewrites the RTSS in
+# test/testdata, the batch tests rewrite test/batchtestdata and delete the
+# tracked data/csv/dvh_data.csv and pyradiomics_data.csv.
+MUTABLE_DIRS = ("test/testdata", "test/batchtestdata", "data/csv")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def restore_mutable_dirs(tmp_path_factory):
+    """
+    Snapshot the directories the tests change, and put them back when the
+    session ends, so a second local run starts from the same data as the
+    first. A copy per test would cost ~185 MB for each of ~270 tests.
+    A session that is killed restores nothing.
+    """
+    snapshot = tmp_path_factory.mktemp("mutable_dirs")
+    saved = []
+    for rel in MUTABLE_DIRS:
+        target = REPO_ROOT / rel
+        if target.is_symlink():
+            raise RuntimeError(
+                f"{target} is a symbolic link; the restore would replace "
+                "what it points at. Use a real directory.")
+        if target.is_dir():
+            shutil.copytree(target, snapshot / rel, symlinks=True)
+            saved.append(rel)
+    yield
+    for rel in saved:
+        target = REPO_ROOT / rel
+        if target.is_symlink():
+            raise RuntimeError(
+                f"{target} became a symbolic link during the session; "
+                f"not restored. The snapshot is in {snapshot / rel}.")
+        try:
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(snapshot / rel, target, symlinks=True)
+        except OSError as error:
+            raise RuntimeError(
+                f"could not restore {target}; the snapshot is kept in "
+                f"{snapshot / rel}") from error
+    # data/csv/patientHash.csv can hold real identifier-to-hash pairs (Anon.py
+    # appends to it), and pytest keeps old base temp directories, so no copy
+    # is left behind once the restore has succeeded.
+    shutil.rmtree(snapshot)
 
 
 def pytest_configure(config):
