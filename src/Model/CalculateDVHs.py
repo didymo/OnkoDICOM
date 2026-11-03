@@ -145,6 +145,80 @@ def converge_to_zero_dvh(dict_dvh):
     return res
 
 
+# The dose columns of the DVH CSV export: the dose received by at least 100%,
+# 99.5%, ... 0% of the ROI's volume.
+DVH_CSV_PERCENTS = np.arange(100, -0.5, -0.5)
+# The curve is sampled every DVH_CSV_STEP bins (dicompyler's bins are 1 cGy).
+DVH_CSV_STEP = 10
+# Relative volumes are floats. A curve that is 100% at zero dose can come out as
+# 99.99999999999999%, and an exact comparison then never matches 100%: the
+# 100% cell was blank (Redmine 3093). Within this tolerance, values are equal.
+DVH_CSV_TOLERANCE = 1e-9
+
+
+def dvh_csv_doses(dose):
+    """
+    The DVH CSV export's dose columns for one ROI: for each percentage in
+    DVH_CSV_PERCENTS, the dose that at least that much of the ROI receives.
+
+    The curve is sampled every DVH_CSV_STEP bins, and a percentage that falls
+    between two samples is interpolated between them. The interpolation is
+    mirrored: it measures back from the sample below the percentage by the
+    distance it should measure forward from the sample above, so it is exact
+    only half-way between samples (on a curve falling from 100% at 500 cGy to
+    50% at 510 cGy, 99.5% reads 510 cGy; the answer is 500.1). So a value can
+    differ from the curve by up to DVH_CSV_STEP cGy, either way: measured on
+    the test data, within +/-10 cGy, mean +0.3 cGy. Correcting it moves most
+    values, so it waits for the same decision as the precision below.
+
+    On going to 1 cGy precision (not done; Redmine 3093): the curve already has
+    1 cGy bins, so the dose for a percentage could be read directly, as the
+    highest bin whose relative volume is at least that percentage (within
+    DVH_CSV_TOLERANCE). That gives 1 cGy precision and needs no interpolation.
+    But every value in the export would move, by up to 10 cGy, towards the
+    curve, so exports made before and after would disagree, and anything that
+    compares or thresholds them (research datasets, the ML preprocessing that
+    reads this CSV) would see the change. Whether to make it is the clinical
+    lead's decision.
+
+    :param dose: the cumulative relative volume (%) in each 1 cGy dose bin,
+                 non-increasing (dicompyler's DVH.relative_volume.counts).
+    :return: one string per percentage: the dose in cGy, or '' when no sample
+             of the curve reaches that percentage, which only happens for an
+             ROI with no volume (its curve is all 0).
+    """
+    values = []
+    trough_i = 0
+    # The last sample at or above the percentages so far: for the next, lower
+    # percentage it is the sample above. None until there is one. (This was 0,
+    # which also meant "none", so a curve whose only sample above a percentage
+    # was the first left the cell blank. And a sample that met a percentage
+    # exactly was not recorded, so after one the next percentage either found no
+    # sample above it (blank) or used an older one far up the curve.)
+    peak_i = None
+    for percent in DVH_CSV_PERCENTS:
+        last_volume = None
+        for cgy in range(trough_i, len(dose), DVH_CSV_STEP):
+            trough_i = cgy
+            if abs(dose[cgy] - percent) <= DVH_CSV_TOLERANCE:
+                last_volume = cgy
+                peak_i = cgy
+            elif dose[cgy] > percent:
+                peak_i = cgy
+            else:
+                break
+        if last_volume is None and peak_i is not None:
+            if dose[peak_i] != dose[trough_i]:
+                volume_per_drop = -10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
+                per_drop = dose[peak_i] - percent
+                substract_amount = per_drop/volume_per_drop * 10
+                last_volume = trough_i - substract_amount
+            else:
+                last_volume = trough_i
+        values.append('' if last_volume is None else str(round(last_volume)))
+    return values
+
+
 def dvh2pandas(dict_dvh, patient_id):
     """
     Convert dvh data to pandas Dataframe.
@@ -171,32 +245,7 @@ def dvh2pandas(dict_dvh, patient_id):
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
         
-        dose = dvh.relative_volume.counts
-        
-        trough_i = 0
-        peak_i = 0
-        for percent in np.arange(100, -0.5, -0.5):
-            last_volume = -1
-            for cgy in range(trough_i, len(dose), 10):
-                trough_i = cgy
-                if dose[cgy] == percent:
-                    last_volume = cgy
-                elif dose[cgy] > percent:
-                    peak_i = cgy
-                elif dose[cgy] < percent:
-                    break
-            if last_volume == -1 and peak_i != 0:
-                if dose[peak_i] != dose[trough_i]:
-                    volume_per_drop = -10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
-                    per_drop = dose[peak_i] - percent
-                    substract_amount = per_drop/volume_per_drop * 10
-                    last_volume = trough_i - substract_amount
-                else:
-                    last_volume = trough_i
-            if last_volume != -1:
-                dvh_roi_list.append(str(round(last_volume)))
-            else:
-                dvh_roi_list.append('')
+        dvh_roi_list.extend(dvh_csv_doses(dvh.relative_volume.counts))
         dvh_csv_list.append(dvh_roi_list)
             
     #Column in percentage %
