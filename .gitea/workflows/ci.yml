@@ -76,16 +76,13 @@ jobs:
       # Tests NOT run here, each by name. Remove a line when its reason is gone.
       #  - test_batch_pyrad2pyradsr, test_batch_pyrad2csv: need plastimatch, which this runner does not have and
       #    will not get: nothing is installed on the host (Stuart, 3 Nov). GitHub's Ubuntu jobs run them at push-up.
-      #  - test_save_fusion_state_opens_file_dialog: blocks on an unmocked modal box until #5 merges.
       # HOME is per job: the app creates ~/.OnkoDICOM (and TestConfig.db) on first run, and the runner
       # account's own home must not carry it from one job to the next.
       - name: Tests (pytest, offscreen; a hang is cut at 900 s with its stack)
         run: |
           home="$(mktemp -d)"
-          echo "DESELECTED (not run): test_batch_pyrad2pyradsr, test_batch_pyrad2csv (plastimatch);" \
-               "test_save_fusion_state_opens_file_dialog (until #5)"
+          echo "DESELECTED (not run): test_batch_pyrad2pyradsr, test_batch_pyrad2csv (plastimatch)"
           HOME="$home" .venv/bin/python -m pytest test/ -v --durations=10 \
             --timeout=900 --timeout-method=thread \
             --deselect test/test_model_batch_processes.py::test_batch_pyrad2pyradsr \
-            --deselect test/test_model_batch_processes.py::test_batch_pyrad2csv \
-            --deselect test/ImageFusion/test_manual_fusion_tab.py::test_save_fusion_state_opens_file_dialog
+            --deselect test/test_model_batch_processes.py::test_batch_pyrad2csv
