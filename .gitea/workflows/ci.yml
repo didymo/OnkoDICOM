@@ -74,8 +74,8 @@ jobs:
           unzip -q "$zip" -d test/testdata
           unzip -q "$zip" -d test/batchtestdata
       # Tests NOT run here, each by name. Remove a line when its reason is gone.
-      #  - test_batch_pyrad2pyradsr, test_batch_pyrad2csv: need plastimatch, which this runner does not have.
-      #    Open question to Stuart (via Cora, 3 Nov): use a plastimatch on the runner host, or skip these here.
+      #  - test_batch_pyrad2pyradsr, test_batch_pyrad2csv: need plastimatch, which this runner does not have and
+      #    will not get: nothing is installed on the host (Stuart, 3 Nov). GitHub's Ubuntu jobs run them at push-up.
       #  - test_save_fusion_state_opens_file_dialog: blocks on an unmocked modal box until #5 merges.
       # HOME is per job: the app creates ~/.OnkoDICOM (and TestConfig.db) on first run, and the runner
       # account's own home must not carry it from one job to the next.
