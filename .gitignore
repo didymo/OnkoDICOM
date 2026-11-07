@@ -8,6 +8,11 @@ venv/
 # Ignore testdata
 test/testdata
 test/batchtestdata
+# What the test session's restore leaves beside a directory when it fails
+# (test/conftest.py restore_dir). data/.csv.* can hold patientHash.csv.
+test/.testdata.*
+test/.batchtestdata.*
+data/.csv.*
 
 # Ignore .pyc
 *.pyc

@@ -63,10 +63,18 @@ def restore_dir(saved, target):
     target = Path(target)
     staging = target.with_name(f".{target.name}.restoring")
     old = target.with_name(f".{target.name}.replaced")
+    # A leftover old copy is data an earlier restore failed to put back, and
+    # its error said it is there (data/csv can hold real patient identifiers).
+    # Never delete it: a person decides.
+    if old.exists():
+        raise RuntimeError(
+            f"{old} is left from an earlier restore that failed, and may be the "
+            f"only copy of what was in {target}. Nothing restored; the snapshot "
+            f"is kept in {saved}. Move {old} back or remove it, then run again.")
     try:
-        for leftover in (staging, old):
-            if leftover.exists():
-                shutil.rmtree(leftover)
+        # A leftover staging copy is only a partial copy of a snapshot.
+        if staging.exists():
+            shutil.rmtree(staging)
         shutil.copytree(saved, staging, symlinks=True)
         if target.exists():
             target.rename(old)
