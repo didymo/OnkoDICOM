@@ -185,11 +185,12 @@ def dvh_csv_doses(dose):
                  non-increasing (dicompyler's DVH.relative_volume.counts).
     :return: one string per percentage: the dose in cGy, or '' when no sample
              of the curve reaches that percentage, which only happens when the
-             curve is all 0. A curve that has any voxel with a dose starts at
-             100%, so an all-0 curve has no voxel with a dose: the ROI has no
-             volume, or none of it lies in the dose grid. The cell is then
-             left blank, whatever volume the structure has, rather than given
-             a dose that was never calculated.
+             curve is all 0. A cumulative curve starts at 100% whenever any
+             dose-grid voxel is counted inside the ROI, whatever its dose, so an
+             all-0 curve means no voxel was counted: the ROI has no volume, lies
+             outside the dose grid, or is too small to contain a sample point.
+             The cell is then left blank, whatever volume the structure has,
+             rather than given a dose that was never calculated.
     """
     values = []
     trough_i = 0
