@@ -184,8 +184,12 @@ def dvh_csv_doses(dose):
     :param dose: the cumulative relative volume (%) in each 1 cGy dose bin,
                  non-increasing (dicompyler's DVH.relative_volume.counts).
     :return: one string per percentage: the dose in cGy, or '' when no sample
-             of the curve reaches that percentage, which only happens for an
-             ROI with no volume (its curve is all 0).
+             of the curve reaches that percentage, which only happens when the
+             curve is all 0. A curve that has any voxel with a dose starts at
+             100%, so an all-0 curve has no voxel with a dose: the ROI has no
+             volume, or none of it lies in the dose grid. The cell is then
+             left blank, whatever volume the structure has, rather than given
+             a dose that was never calculated.
     """
     values = []
     trough_i = 0
