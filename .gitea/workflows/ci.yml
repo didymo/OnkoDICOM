@@ -60,14 +60,17 @@ jobs:
           zip="$cache/DICOM-RT-02.zip"
           mkdir -p "$cache"
           if [ ! -f "$zip" ] || [ "$(md5 -q "$zip")" != "$TEST_DATA_MD5" ]; then
-            curl -fsSL --retry 3 -o "$zip.part" "$TEST_DATA_URL"
-            got="$(md5 -q "$zip.part")"
+            # A download path of this job's own, so two jobs downloading at once never write one file (#15).
+            # mv within the directory replaces the zip in one step.
+            part="$(mktemp "$cache/DICOM-RT-02.zip.XXXXXX")"
+            trap 'rm -f "$part"' EXIT
+            curl -fsSL --retry 3 -o "$part" "$TEST_DATA_URL"
+            got="$(md5 -q "$part")"
             if [ "$got" != "$TEST_DATA_MD5" ]; then
               echo "::error::DICOM-RT-02.zip md5 $got, expected $TEST_DATA_MD5"
-              rm -f "$zip.part"
               exit 1
             fi
-            mv "$zip.part" "$zip"
+            mv "$part" "$zip"
           fi
           rm -rf test/testdata test/batchtestdata
           mkdir -p test/testdata test/batchtestdata
@@ -81,6 +84,8 @@ jobs:
       - name: Tests (pytest, offscreen; a hang is cut at 900 s with its stack)
         run: |
           home="$(mktemp -d)"
+          # Removed however pytest ends, so the persistent runner does not collect one per run (#15).
+          trap 'rm -rf "$home"' EXIT
           echo "DESELECTED (not run): test_batch_pyrad2pyradsr, test_batch_pyrad2csv (plastimatch)"
           HOME="$home" .venv/bin/python -m pytest test/ -v --durations=10 \
             --timeout=900 --timeout-method=thread \
