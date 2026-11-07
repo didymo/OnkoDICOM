@@ -51,6 +51,43 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MUTABLE_DIRS = ("test/testdata", "test/batchtestdata", "data/csv")
 
 
+def restore_dir(saved, target):
+    """
+    Put the directory saved back at target, replacing what is there.
+
+    The copy is made beside target first, and target is replaced only once it
+    is complete, so a copy that fails or is interrupted leaves target as it
+    was. On failure the error names saved, which is not removed.
+    """
+    saved = Path(saved)
+    target = Path(target)
+    staging = target.with_name(f".{target.name}.restoring")
+    old = target.with_name(f".{target.name}.replaced")
+    # A leftover old copy is data an earlier restore failed to put back, and
+    # its error said it is there (data/csv can hold real patient identifiers).
+    # Never delete it: a person decides.
+    if old.exists():
+        raise RuntimeError(
+            f"{old} is left from an earlier restore that failed, and may be the "
+            f"only copy of what was in {target}. Nothing restored; the snapshot "
+            f"is kept in {saved}. Move {old} back or remove it, then run again.")
+    try:
+        # A leftover staging copy is only a partial copy of a snapshot.
+        if staging.exists():
+            shutil.rmtree(staging)
+        shutil.copytree(saved, staging, symlinks=True)
+        if target.exists():
+            target.rename(old)
+        staging.rename(target)
+        if old.exists():
+            shutil.rmtree(old)
+    except OSError as error:
+        raise RuntimeError(
+            f"could not restore {target}; the snapshot is kept in {saved}"
+            + (f", and the data that was there is in {old}" if old.exists() else "")
+        ) from error
+
+
 @pytest.fixture(scope="session", autouse=True)
 def restore_mutable_dirs(tmp_path_factory):
     """
@@ -77,14 +114,7 @@ def restore_mutable_dirs(tmp_path_factory):
             raise RuntimeError(
                 f"{target} became a symbolic link during the session; "
                 f"not restored. The snapshot is in {snapshot / rel}.")
-        try:
-            if target.exists():
-                shutil.rmtree(target)
-            shutil.copytree(snapshot / rel, target, symlinks=True)
-        except OSError as error:
-            raise RuntimeError(
-                f"could not restore {target}; the snapshot is kept in "
-                f"{snapshot / rel}") from error
+        restore_dir(snapshot / rel, target)
     # data/csv/patientHash.csv can hold real identifier-to-hash pairs (Anon.py
     # appends to it), and pytest keeps old base temp directories, so no copy
     # is left behind once the restore has succeeded.
