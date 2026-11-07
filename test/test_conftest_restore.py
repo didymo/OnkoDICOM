@@ -1,4 +1,5 @@
 """The session restore of the directories the tests change (Gitea #7)."""
+import re
 import subprocess
 
 import pytest
@@ -48,7 +49,7 @@ def test_a_failed_copy_leaves_the_directory_as_it_was(tmp_path):
     (target / "a.csv").write_text("still here")
     missing = tmp_path / "snapshot" / "csv"
 
-    with pytest.raises(RuntimeError, match=str(missing)):
+    with pytest.raises(RuntimeError, match=re.escape(str(missing))):
         restore_dir(missing, target)
 
     assert tree(target) == {"a.csv": "still here"}
@@ -61,7 +62,7 @@ def test_data_an_earlier_restore_left_aside_is_never_deleted(tmp_path, saved):
     left.mkdir()
     (left / "patientHash.csv").write_text("the only copy")
 
-    with pytest.raises(RuntimeError, match=str(left)):
+    with pytest.raises(RuntimeError, match=re.escape(str(left))):
         restore_dir(saved, target)
 
     assert tree(left) == {"patientHash.csv": "the only copy"}
