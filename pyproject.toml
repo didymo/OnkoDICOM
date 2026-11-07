@@ -16,7 +16,7 @@ in-project = true
 python = ">=3.10,<3.13"
 pip = "^25.2"
 cython = "*"
-numpy = "^1.26.0"
+numpy = "^2.1"
 platipy = "*"
 alphashape = "*"
 pandas = "^2.2.3"
@@ -34,7 +34,7 @@ PyWavelets = ">=1.5.0"
 networkx = "*"
 # pymedphys has reinstated psuedonymisation in 0.39
 # something in OnkoDICOM does a recursive import on pymedphys, so now installing all extras in pymedphys
-pymedphys = { extras = ["all"], version = "0.41.0" }
+pymedphys = "0.41.0"
 # until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
 # pyradiomics = [
 #    { version = "==3.0.1", python = "<3.10"},
@@ -45,15 +45,15 @@ vtk = "*"
 # shapely 1.8.3 through 1.8.5.post1 have build failures.  v2.0 has API changes.
 shapely = ">=2.0"
 python-Levenshtein = "*"
-opencv-python = "<4.6"
+opencv-python = ">=4.10"
 matplotlib = "*"
 scikit-learn = "*"
 imblearn = "*"
 kaplanmeier = "*"
 pyinstaller = "*"
-lifelines = "0.29.0"
+lifelines = ">=0.30"
 pyradiomics = { git = "https://github.com/AIM-Harvard/pyradiomics.git" }
-totalsegmentator = "^2.10.0"
+totalsegmentator = "^2.18"
 # torch: 2.9.1 is the first release with avg_pool3d on Apple MPS; on 2.8 TotalSegmentator's
 # lung_nodules task hangs on MPS (2.9.1 to 2.14.1 all complete it). Held below 2.10 so the
 # Linux lock keeps the CUDA 12 runtime libraries; later releases move to CUDA 13.
