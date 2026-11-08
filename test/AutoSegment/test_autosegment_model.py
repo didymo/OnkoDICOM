@@ -139,6 +139,27 @@ def test_run_totalsegmentation_calls_totalsegmentator(controller_mock, patient_d
         assert kwargs["device"] == "gpu"
 
 
+def test_run_totalsegmentation_pins_resampling_order_3_on_every_call(controller_mock, patient_dict_container_patch, signals_patch):
+    """Contract: every TotalSegmentator call passes resampling_order=3, the order our contours were
+    made with up to TotalSegmentator 2.15. 2.16 changed the default to 1, which moved the test
+    patient's spinal cord by -3.8% (Gitea #16, PR #17). Asserted as the literal 3, so neither
+    dropping the keyword nor changing the constant passes silently. Covers the MPS-to-CPU retry too.
+    """
+    # Arrange
+    auto = AutoSegmentation(controller_mock)
+    auto.dicom_temp_dir = MagicMock()
+    auto.dicom_temp_dir.name = "tempdir"
+    with patch("src.Model.AutoSegmentation.AutoSegmentation.totalsegmentator",
+               side_effect=[RuntimeError("MPS op unsupported"), None]) as totalseg, \
+         patch("src.Model.AutoSegmentation.AutoSegmentation.select_segmentation_device", return_value=("mps", False)):
+        # Act
+        auto._run_totalsegmentation("total", ["roi1"], "outdir")
+    # Assert
+    assert totalseg.call_count == 2
+    assert [c.kwargs["device"] for c in totalseg.call_args_list] == ["mps", "cpu"]
+    assert [c.kwargs.get("resampling_order") for c in totalseg.call_args_list] == [3, 3]
+
+
 @pytest.mark.parametrize("device", ["gpu", "gpu:1", "mps", "cpu"])
 def test_run_totalsegmentation_uses_selected_device_and_reports_it(controller_mock, patient_dict_container_patch, signals_patch, device):
     # Arrange
