@@ -76,9 +76,9 @@ jobs:
           mkdir -p test/testdata test/batchtestdata
           unzip -q "$zip" -d test/testdata
           unzip -q "$zip" -d test/batchtestdata
-      # Tests NOT run here, each by name. Remove a line when its reason is gone.
-      #  - test_batch_pyrad2pyradsr, test_batch_pyrad2csv: need plastimatch, which this runner does not have and
-      #    will not get: nothing is installed on the host (Stuart, 3 Nov). GitHub's Ubuntu jobs run them at push-up.
+      # Tests NOT run here: those marked plastimatch (pytest.ini), which need plastimatch. This runner does not have it
+      # and will not get it: nothing is installed on the host (Stuart, 3 Nov). They run on the Linux workflow (#26) and
+      # in GitHub's Ubuntu jobs at push-up.
       # HOME is per job: the app creates ~/.OnkoDICOM (and TestConfig.db) on first run, and the runner
       # account's own home must not carry it from one job to the next.
       - name: Tests (pytest, offscreen; a hang is cut at 900 s with its stack)
@@ -86,8 +86,6 @@ jobs:
           home="$(mktemp -d)"
           # Removed however pytest ends, so the persistent runner does not collect one per run (#15).
           trap 'rm -rf "$home"' EXIT
-          echo "DESELECTED (not run): test_batch_pyrad2pyradsr, test_batch_pyrad2csv (plastimatch)"
+          echo "DESELECTED (not run): the tests marked plastimatch"
           HOME="$home" .venv/bin/python -m pytest test/ -v --durations=10 \
-            --timeout=900 --timeout-method=thread \
-            --deselect test/test_model_batch_processes.py::test_batch_pyrad2pyradsr \
-            --deselect test/test_model_batch_processes.py::test_batch_pyrad2csv
+            --timeout=900 --timeout-method=thread -m "not plastimatch"
