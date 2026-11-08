@@ -29,6 +29,10 @@ jobs:
       POETRY_VIRTUALENVS_IN_PROJECT: "true"
       TEST_DATA_URL: https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
       TEST_DATA_MD5: fc63b61b121a57779345c60b92a32b15
+      # plastimatch for the two radiomics tests (#26): Stuart's macOS port, bundled self-contained (no Homebrew needed),
+      # in the org's generic package registry. Its README.md says how it was built and checked.
+      PLASTIMATCH_URL: http://gitea-server:3000/api/packages/The_Kindled/generic/plastimatch-macos-arm64/1.10.1-itk5/plastimatch-1.10.1-itk5-macos-arm64.tar.gz
+      PLASTIMATCH_SHA256: af8c29f239dc2fd297699719505bb593668aa250b2666de3b65eee9ad55e4f82
     steps:
       - name: Homebrew first on PATH
         run: |
@@ -76,9 +80,35 @@ jobs:
           mkdir -p test/testdata test/batchtestdata
           unzip -q "$zip" -d test/testdata
           unzip -q "$zip" -d test/batchtestdata
-      # Tests NOT run here: those marked plastimatch (pytest.ini), which need plastimatch. This runner does not have it
-      # and will not get it: nothing is installed on the host (Stuart, 3 Nov). They run on the Linux workflow (#26) and
-      # in GitHub's Ubuntu jobs at push-up.
+      # plastimatch is not installed on the host (Stuart, 3 Nov). The bundle is cached and unpacked under the runner's
+      # cache, checked against its sha256, and put on PATH for this job only.
+      # SCIFIO_PATH names an EMPTY directory (#26): the bundle's ITK has the SCIFIO module, whose ImageIO throws when it
+      # cannot find its JARs (they are not bundled: OnkoDICOM needs none of its formats). plastimatch swallows that and
+      # exits 0 without writing the image. An empty directory makes SCIFIO decline, and ITK's own writers do the work.
+      - name: plastimatch (cached bundle) and SCIFIO_PATH
+        run: |
+          cache="$HOME/.cache/kindled-ci/plastimatch"
+          dir="$cache/$PLASTIMATCH_SHA256"
+          mkdir -p "$cache/empty-scifio"
+          if [ ! -x "$dir/plastimatch-1.10.1-itk5-macos-arm64/bin/plastimatch" ]; then
+            # This job's own download and unpack paths, so two jobs at once never share one (#15); mv puts it in place.
+            part="$(mktemp "$cache/bundle.XXXXXX")"
+            unpack="$(mktemp -d "$cache/unpack.XXXXXX")"
+            trap 'rm -rf "$part" "$unpack"' EXIT
+            curl -fsSL --retry 3 -o "$part" "$PLASTIMATCH_URL"
+            got="$(shasum -a 256 "$part" | cut -d' ' -f1)"
+            if [ "$got" != "$PLASTIMATCH_SHA256" ]; then
+              echo "::error::plastimatch bundle sha256 $got, expected $PLASTIMATCH_SHA256"
+              exit 1
+            fi
+            tar -xzf "$part" -C "$unpack"
+            # mv onto an existing directory would nest inside it, so only when there is none yet.
+            if [ -e "$dir" ]; then echo "another job unpacked it first"; else mv "$unpack" "$dir"; fi
+          fi
+          bin="$dir/plastimatch-1.10.1-itk5-macos-arm64/bin"
+          "$bin/plastimatch" --version
+          echo "$bin" >> "$GITHUB_PATH"
+          echo "SCIFIO_PATH=$cache/empty-scifio" >> "$GITHUB_ENV"
       # HOME is per job: the app creates ~/.OnkoDICOM (and TestConfig.db) on first run, and the runner
       # account's own home must not carry it from one job to the next.
       - name: Tests (pytest, offscreen; a hang is cut at 900 s with its stack)
@@ -86,6 +116,5 @@ jobs:
           home="$(mktemp -d)"
           # Removed however pytest ends, so the persistent runner does not collect one per run (#15).
           trap 'rm -rf "$home"' EXIT
-          echo "DESELECTED (not run): the tests marked plastimatch"
           HOME="$home" .venv/bin/python -m pytest test/ -v --durations=10 \
-            --timeout=900 --timeout-method=thread -m "not plastimatch"
+            --timeout=900 --timeout-method=thread
