@@ -46,11 +46,28 @@ jobs:
         run: |
           uv python install 3.12
           echo "PY=$(uv python find 3.12)" >> "$GITHUB_ENV"
-      - name: Install dependencies (poetry.lock, in-project .venv)
+      - name: Runner disk (before)
         run: |
-          uvx --from poetry==1.8.5 poetry env use "$PY"
-          uvx --from poetry==1.8.5 poetry install --no-root
-          .venv/bin/python --version
+          df -h "$HOME" /
+          du -sh "$HOME"/.cache/* 2>/dev/null || true
+      # The versions are poetry.lock's, exported, with one exception: on Linux x86_64 the lock's torch brings 15 CUDA
+      # packages, several GB, which this GPU-less runner can't use. They are dropped, and torch comes from PyTorch's
+      # CPU index at the same version.
+      - name: Install dependencies (poetry.lock exported, torch CPU-only, in-project .venv)
+        run: |
+          req="$RUNNER_TEMP/requirements.txt"
+          uvx --from poetry==1.8.5 poetry export --with dev --without-hashes -o "$req.all"
+          grep -v -E '^(nvidia-|triton==)' "$req.all" > "$req"
+          echo "dropped: $(grep -c -E '^(nvidia-|triton==)' "$req.all") CUDA packages"
+          uv venv --python "$PY" .venv
+          uv pip install --python .venv/bin/python -r "$req" \
+            --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
+          .venv/bin/python -c 'import torch; print("torch", torch.__version__)'
+      - name: Runner disk (after)
+        if: always()
+        run: |
+          df -h "$HOME" /
+          du -sh "$HOME"/.cache/* 2>/dev/null || true
       # PySide6 needs some system libraries even offscreen. Name any that are missing before the tests fail obscurely.
       - name: PySide6 system libraries
         run: |
