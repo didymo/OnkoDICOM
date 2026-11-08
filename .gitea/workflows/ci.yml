@@ -80,35 +80,44 @@ jobs:
           mkdir -p test/testdata test/batchtestdata
           unzip -q "$zip" -d test/testdata
           unzip -q "$zip" -d test/batchtestdata
-      # plastimatch is not installed on the host (Stuart, 3 Nov). The bundle is cached and unpacked under the runner's
-      # cache, checked against its sha256, and put on PATH for this job only.
+      # plastimatch is not installed on the host (Stuart, 3 Nov). Only the tarball is cached. Its sha256 is checked on
+      # EVERY job, and it is unpacked into this job's own temporary directory, so nothing an earlier job left behind is
+      # trusted (#29).
       # SCIFIO_PATH names an EMPTY directory (#26): the bundle's ITK has the SCIFIO module, whose ImageIO throws when it
       # cannot find its JARs (they are not bundled: OnkoDICOM needs none of its formats). plastimatch swallows that and
       # exits 0 without writing the image. An empty directory makes SCIFIO decline, and ITK's own writers do the work.
-      - name: plastimatch (cached bundle) and SCIFIO_PATH
+      - name: plastimatch (cached bundle, checked every job) and SCIFIO_PATH
         run: |
           cache="$HOME/.cache/kindled-ci/plastimatch"
-          dir="$cache/$PLASTIMATCH_SHA256"
-          mkdir -p "$cache/empty-scifio"
-          if [ ! -x "$dir/plastimatch-1.10.1-itk5-macos-arm64/bin/plastimatch" ]; then
-            # This job's own download and unpack paths, so two jobs at once never share one (#15); mv puts it in place.
-            part="$(mktemp "$cache/bundle.XXXXXX")"
-            unpack="$(mktemp -d "$cache/unpack.XXXXXX")"
-            trap 'rm -rf "$part" "$unpack"' EXIT
-            curl -fsSL --retry 3 -o "$part" "$PLASTIMATCH_URL"
-            got="$(shasum -a 256 "$part" | cut -d' ' -f1)"
-            if [ "$got" != "$PLASTIMATCH_SHA256" ]; then
-              echo "::error::plastimatch bundle sha256 $got, expected $PLASTIMATCH_SHA256"
-              exit 1
+          tgz="$cache/$PLASTIMATCH_SHA256.tar.gz"
+          mkdir -p "$cache"
+          sha() { shasum -a 256 "$1" | cut -d' ' -f1; }
+          # The job's own directory first, and a private copy of the tarball in it: what is checked below is the very
+          # file that is unpacked, so a concurrent job replacing the shared cache file cannot slip in between (#29).
+          job="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/plastimatch.XXXXXX")"
+          echo "PLASTIMATCH_JOB_DIR=$job" >> "$GITHUB_ENV"
+          mine="$job/bundle.tar.gz"
+          [ -f "$tgz" ] && cp "$tgz" "$mine"
+          if [ ! -f "$mine" ] || [ "$(sha "$mine")" != "$PLASTIMATCH_SHA256" ]; then
+            curl -fsSL --retry 3 -o "$mine" "$PLASTIMATCH_URL"
+            # Refresh the shared cache from this copy only once it is verified; mv replaces it in one step (#15).
+            if [ "$(sha "$mine")" = "$PLASTIMATCH_SHA256" ]; then
+              part="$(mktemp "$cache/bundle.XXXXXX")"
+              cp "$mine" "$part" && mv "$part" "$tgz"
             fi
-            tar -xzf "$part" -C "$unpack"
-            # mv onto an existing directory would nest inside it, so only when there is none yet.
-            if [ -e "$dir" ]; then echo "another job unpacked it first"; else mv "$unpack" "$dir"; fi
           fi
-          bin="$dir/plastimatch-1.10.1-itk5-macos-arm64/bin"
+          got="$(sha "$mine")"
+          if [ "$got" != "$PLASTIMATCH_SHA256" ]; then
+            echo "::error::plastimatch bundle sha256 $got, expected $PLASTIMATCH_SHA256"
+            exit 1
+          fi
+          tar -xzf "$mine" -C "$job"
+          rm -f "$mine"
+          mkdir -p "$job/empty-scifio"
+          bin="$job/plastimatch-1.10.1-itk5-macos-arm64/bin"
           "$bin/plastimatch" --version
           echo "$bin" >> "$GITHUB_PATH"
-          echo "SCIFIO_PATH=$cache/empty-scifio" >> "$GITHUB_ENV"
+          echo "SCIFIO_PATH=$job/empty-scifio" >> "$GITHUB_ENV"
       # HOME is per job: the app creates ~/.OnkoDICOM (and TestConfig.db) on first run, and the runner
       # account's own home must not carry it from one job to the next.
       - name: Tests (pytest, offscreen; a hang is cut at 900 s with its stack)
@@ -118,3 +127,12 @@ jobs:
           trap 'rm -rf "$home"' EXIT
           HOME="$home" .venv/bin/python -m pytest test/ -v --durations=10 \
             --timeout=900 --timeout-method=thread
+      # The per-job plastimatch unpack (#29), removed however the job ended. Only a directory the bundle step made.
+      - name: Remove this job's plastimatch unpack
+        if: always()
+        run: |
+          case "${PLASTIMATCH_JOB_DIR:-}" in
+            */plastimatch.??????) rm -rf "$PLASTIMATCH_JOB_DIR" ;;
+            "") echo "no plastimatch unpack to remove" ;;
+            *) echo "::warning::not removing unexpected PLASTIMATCH_JOB_DIR=$PLASTIMATCH_JOB_DIR" ;;
+          esac
