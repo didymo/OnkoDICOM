@@ -92,26 +92,32 @@ jobs:
           tgz="$cache/$PLASTIMATCH_SHA256.tar.gz"
           mkdir -p "$cache"
           sha() { shasum -a 256 "$1" | cut -d' ' -f1; }
-          if [ ! -f "$tgz" ] || [ "$(sha "$tgz")" != "$PLASTIMATCH_SHA256" ]; then
-            # This job's own download path, so two jobs at once never write one file (#15); mv replaces in one step.
-            part="$(mktemp "$cache/bundle.XXXXXX")"
-            curl -fsSL --retry 3 -o "$part" "$PLASTIMATCH_URL" || { rm -f "$part"; exit 1; }
-            mv "$part" "$tgz"
+          # The job's own directory first, and a private copy of the tarball in it: what is checked below is the very
+          # file that is unpacked, so a concurrent job replacing the shared cache file cannot slip in between (#29).
+          job="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/plastimatch.XXXXXX")"
+          echo "PLASTIMATCH_JOB_DIR=$job" >> "$GITHUB_ENV"
+          mine="$job/bundle.tar.gz"
+          [ -f "$tgz" ] && cp "$tgz" "$mine"
+          if [ ! -f "$mine" ] || [ "$(sha "$mine")" != "$PLASTIMATCH_SHA256" ]; then
+            curl -fsSL --retry 3 -o "$mine" "$PLASTIMATCH_URL"
+            # Refresh the shared cache from this copy only once it is verified; mv replaces it in one step (#15).
+            if [ "$(sha "$mine")" = "$PLASTIMATCH_SHA256" ]; then
+              part="$(mktemp "$cache/bundle.XXXXXX")"
+              cp "$mine" "$part" && mv "$part" "$tgz"
+            fi
           fi
-          got="$(sha "$tgz")"
+          got="$(sha "$mine")"
           if [ "$got" != "$PLASTIMATCH_SHA256" ]; then
             echo "::error::plastimatch bundle sha256 $got, expected $PLASTIMATCH_SHA256"
             exit 1
           fi
-          # Unpacked fresh for this job, in the runner's temp area; removed in the post-job step below.
-          job="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/plastimatch.XXXXXX")"
-          tar -xzf "$tgz" -C "$job"
+          tar -xzf "$mine" -C "$job"
+          rm -f "$mine"
           mkdir -p "$job/empty-scifio"
           bin="$job/plastimatch-1.10.1-itk5-macos-arm64/bin"
           "$bin/plastimatch" --version
           echo "$bin" >> "$GITHUB_PATH"
           echo "SCIFIO_PATH=$job/empty-scifio" >> "$GITHUB_ENV"
-          echo "PLASTIMATCH_JOB_DIR=$job" >> "$GITHUB_ENV"
       # HOME is per job: the app creates ~/.OnkoDICOM (and TestConfig.db) on first run, and the runner
       # account's own home must not carry it from one job to the next.
       - name: Tests (pytest, offscreen; a hang is cut at 900 s with its stack)
