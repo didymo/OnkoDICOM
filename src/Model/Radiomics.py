@@ -1,35 +1,18 @@
 import os
 import pandas as pd
-import platform
 from radiomics import featureextractor
+
+from src.Model import Plastimatch
 
 
 def convert_to_nrrd(path, nrrd_output_path):
     """
     Convert dicom files to nrrd.
     :param path: Path to patient directory (str)
-    :param nrrd_file_path: Path to nrrd folder (str)
+    :param nrrd_output_path: Path to the nrrd file to write (str)
+    :raises PlastimatchError: the file was not written.
     """
-    path = '"' + path + '"'
-    nrrd_file_path = '"' + nrrd_output_path + '"'
-
-    # Command to convert dicom files to nrrd
-    # Writes the result from the processing into a temporary file
-    # rather than the terminal
-    cmd_for_nrrd = 'plastimatch convert --input ' + path + \
-                   ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
-
-    # Command to delete the temporary file generated before
-    cmd_del_nul = 'rm ' + path[:-1] + '/NUL' + '"'
-
-    os.system(cmd_for_nrrd)
-
-    if os.path.exists(path[1:-1] + '/NUL'):
-        if platform.system() != "Windows":
-            os.system(cmd_del_nul)
-        else:
-            cmd_del_nul = 'del ' + path[:-1] + '/NUL' + '"'
-            os.system(cmd_del_nul)
+    Plastimatch.convert_image(path, nrrd_output_path)
 
 
 def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
@@ -39,24 +22,9 @@ def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
     :param rtss_path:           Path to RT-Struct file (str)
     :param mask_folder_path:    Folder to which the segmentation masks
                                 will be saved(str)
+    :raises PlastimatchError: no mask was written.
     """
-    path = '"' + path + '"'
-    mask_folder_path = '"' + mask_folder_path + '"'
-    rtss_path = '"' + rtss_path + '"'
-    # Command for generating an nrrd file for each region of interest
-    cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + \
-        ' --output-prefix ' + mask_folder_path + \
-        ' --prefix-format nrrd --referenced-ct ' + path + ' 1>' + \
-        path + '/NUL'
-    cmd_del_nul = 'rm ' + path[:-1] + '/NUL' + '"'
-    os.system(cmd_for_segmask)
-
-    if os.path.exists(path[1:-1] + '/NUL'):
-        if platform.system() != "Windows":
-            os.system(cmd_del_nul)
-        else:
-            cmd_del_nul = 'del ' + path[:-1] + '/NUL' + '"'
-            os.system(cmd_del_nul)
+    Plastimatch.convert_structures(rtss_path, path, mask_folder_path)
 
 
 def get_radiomics_df(path, patient_hash, nrrd_file_path, mask_folder_path):
