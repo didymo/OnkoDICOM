@@ -52,14 +52,20 @@ def convert(args, written):
     command = ["plastimatch", "convert", *args]
     # A second's slack: some filesystems keep modification times in whole seconds.
     started = time.time() - 1
+    # mkdtemp's directory is new, private (0700) and removed afterwards.
     try:
-        # mkdtemp's directory is new, private (0700) and removed afterwards.
-        with tempfile.TemporaryDirectory(prefix="onkodicom-scifio-") as empty:
-            result = subprocess.run(command, capture_output=True, text=True,
-                                    env=_environment(empty), check=False)
+        scratch = tempfile.TemporaryDirectory(prefix="onkodicom-scifio-")
     except OSError as error:
         raise PlastimatchError(
-            f"could not run plastimatch: {error}") from error
+            f"could not make an empty directory for SCIFIO_PATH: {error}"
+        ) from error
+    with scratch as empty:
+        try:
+            result = subprocess.run(command, capture_output=True, text=True,
+                                    env=_environment(empty), check=False)
+        except OSError as error:
+            raise PlastimatchError(
+                f"could not run plastimatch: {error}") from error
     said = (result.stderr or result.stdout or "").strip()[-2000:]
     if result.returncode != 0:
         raise PlastimatchError(

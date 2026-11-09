@@ -140,24 +140,24 @@ def test_scifio_directory_is_new_each_run_and_removed(tmp_path, fake):
     assert not Path(first).exists() and not Path(second).exists()
 
 
-def test_a_planted_directory_of_the_old_fixed_name_is_not_used(tmp_path, fake):
-    """#32: JARs left in the name 0.x used must not reach SCIFIO."""
-    planted = Path(tempfile.gettempdir()) / "onkodicom-scifio-none"
-    created = not planted.exists()
-    planted.mkdir(exist_ok=True)
-    jar = planted / "bioformats_package.jar"
-    jar_created = not jar.exists()
-    jar.write_bytes(b"not a jar")
-    try:
-        seen = fake("write")
+def test_a_planted_directory_of_the_old_fixed_name_is_not_used(tmp_path, fake, monkeypatch):
+    """#32: JARs left in the name #30 used must not reach SCIFIO."""
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "tmp"))
+    planted = tmp_path / "tmp" / "onkodicom-scifio-none"
+    planted.mkdir(parents=True)
+    (planted / "bioformats_package.jar").write_bytes(b"not a jar")
+    seen = fake("write")
+    Plastimatch.convert_image(tmp_path, tmp_path / "a.nrrd")
+    assert Path(seen()["scifio"]).parent == tmp_path / "tmp"
+    assert Path(seen()["scifio"]) != planted
+    assert seen()["scifio_dir"]["entries"] == []
+
+
+def test_a_directory_that_cannot_be_made_is_said(tmp_path, fake, monkeypatch):
+    fake("write")
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "missing"))
+    with pytest.raises(PlastimatchError, match="could not make an empty directory"):
         Plastimatch.convert_image(tmp_path, tmp_path / "a.nrrd")
-        assert Path(seen()["scifio"]) != planted
-        assert seen()["scifio_dir"]["entries"] == []
-    finally:
-        if jar_created:
-            jar.unlink()
-        if created:
-            planted.rmdir()
 
 
 def test_no_plastimatch_at_all_is_said(tmp_path, monkeypatch):
