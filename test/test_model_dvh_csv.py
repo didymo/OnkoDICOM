@@ -86,13 +86,14 @@ def test_a_linear_curve_gives_every_dose_exactly():
 
 
 def test_a_steep_target_like_curve_reads_the_bin_not_the_next_sample():
-    # 100% up to 500 cGy, then 5% less per cGy to 0% at 520 cGy. The mirrored
+    # 100% up to 500 cGy, then 5% less per cGy to 5% at 519 cGy, where it ends:
+    # dicompyler's curves end at the maximum dose, with no zero bins after it
+    # (measured on DICOM-RT-02), so 0% reads the maximum. The mirrored
     # interpolation read 99.5% as 510 cGy (Gitea #13); the curve says 500.
-    counts = np.concatenate([np.full(500, 100.0),
-                             np.linspace(100, 0, 21), np.zeros(10)])
+    counts = np.concatenate([np.full(500, 100.0), np.linspace(100, 5, 20)])
     doses = dict(zip(DVH_CSV_PERCENTS, dvh_csv_doses(counts)))
     assert (doses[100.0], doses[99.5], doses[95.0], doses[94.5],
-            doses[50.0], doses[0.0]) == ('500', '500', '501', '501', '510', '530')
+            doses[50.0], doses[0.0]) == ('500', '500', '501', '501', '510', '519')
 
 
 def test_the_monotonicity_case_from_gitea_13():
