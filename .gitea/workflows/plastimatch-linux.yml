@@ -9,9 +9,18 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened]
+    # What decides whether these tests pass: plastimatch's runner and its call sites, the marked tests and the marker,
+    # and the dependencies.
     paths:
       - .gitea/workflows/plastimatch-linux.yml
       - src/Model/Plastimatch.py
+      - src/Model/Radiomics.py
+      - src/View/PyradiProgressBar.py
+      - src/Controller/GUIController.py
+      - test/test_model_batch_processes.py
+      - pytest.ini
+      - pyproject.toml
+      - poetry.lock
 concurrency:
   group: plastimatch-linux-${{ github.ref }}
   cancel-in-progress: true
