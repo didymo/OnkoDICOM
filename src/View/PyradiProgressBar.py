@@ -17,6 +17,10 @@ from src.Model.DICOM import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
+NO_ROIS_MESSAGE = ("The structure set has no structure with a contour, "
+                   "so there was nothing to calculate.")
+
+
 class PyradiExtended(QtCore.QThread):
 
     copied_percent_signal = QtCore.Signal(int, str)
@@ -69,6 +73,9 @@ class PyradiExtended(QtCore.QThread):
 
         # Location of folder where converted masks saved
         mask_folder_path = nrrd_folder_path + 'structures'
+        # As the batch path does: plastimatch writes into it, and a structure
+        # set with nothing to write leaves it empty rather than missing.
+        os.makedirs(mask_folder_path, exist_ok=True)
         self.convert_rois_to_nrrd(self.path, rtss_path, mask_folder_path,
                                   self.my_callback)
 
@@ -80,6 +87,13 @@ class PyradiExtended(QtCore.QThread):
         radiomics_df = self.get_radiomics_df(
             self.path, patient_hash, nrrd_file_path, mask_folder_path,
             self.my_callback)
+
+        # No structure with a contour, so no mask and nothing to calculate
+        # (#37): say so instead of writing an empty CSV and SR.
+        if radiomics_df is None:
+            shutil.rmtree(nrrd_folder_path)
+            self.my_callback(100, NO_ROIS_MESSAGE)
+            return
 
         self.convert_df_to_csv(radiomics_df, patient_hash,
                                csv_path, self.my_callback)
@@ -138,7 +152,9 @@ class PyradiExtended(QtCore.QThread):
         :param nrrd_file_path:      Path to folder with converted nrrd file
         :param mask_folder_path:    Path to ROI nrrd files
         :param callback:            Function to update progress bar
-        :return:                    Pandas dataframe
+        :return:                    Pandas dataframe, or None when there
+                                    are no masks (no structure with a
+                                    contour)
         """
 
         # Initialize feature extractor using default pyradiomics settings
@@ -153,6 +169,8 @@ class PyradiExtended(QtCore.QThread):
         extractor = featureextractor.RadiomicsFeatureExtractor()
 
         num_masks = len([file for file in os.listdir(mask_folder_path)])
+        if num_masks == 0:
+            return None
         progress_increment = (50/num_masks)
         progress_percent = 50
 
