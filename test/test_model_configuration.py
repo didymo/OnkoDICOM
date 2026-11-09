@@ -74,3 +74,33 @@ def test_error_handling(init_sqlite_config):
         configuration.get_default_directory()
     with pytest.raises(SqlError):
         configuration.update_default_directory('')
+
+@pytest.mark.parametrize("call", [
+    lambda c: c.get_default_directory(),
+    lambda c: c.update_default_directory(''),
+    lambda c: c.get_clinical_data_csv_dir(),
+    lambda c: c.update_clinical_data_csv_dir(''),
+])
+def test_a_failed_call_closes_its_connection(init_sqlite_config, monkeypatch, call):
+    """Gitea #19: a connection left open keeps the database file open, and
+    Windows then can't delete it. Checked on every platform: a closed sqlite
+    connection refuses to execute."""
+    configuration = Configuration()
+    opened = []
+    real_connect = sqlite3.connect
+
+    def connect(*args, **kwargs):
+        connection = real_connect(*args, **kwargs)
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr("src.Model.Configuration.sqlite3.connect", connect)
+    cursor = init_sqlite_config.cursor()
+    cursor.execute("""PRAGMA locking_mode = EXCLUSIVE;""")
+    cursor.execute("""BEGIN EXCLUSIVE;""")
+    with pytest.raises(SqlError):
+        call(configuration)
+    assert opened
+    for connection in opened:
+        with pytest.raises(sqlite3.ProgrammingError):
+            connection.execute("SELECT 1")

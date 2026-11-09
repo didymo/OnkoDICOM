@@ -19,18 +19,21 @@ class PlastimatchError(RuntimeError):
     """plastimatch convert failed, or reported success without its output."""
 
 
-def _environment():
+def _environment(empty_dir):
     """
-    The environment for plastimatch. SCIFIO_PATH, when unset, points at an
-    empty directory: SCIFIO then declines every format and ITK's own
-    writers do the work, so a SCIFIO without its JARs cannot fail the
-    write. A SCIFIO_PATH already set is left as it is.
+    The environment for plastimatch. SCIFIO_PATH, when unset, points at
+    empty_dir: SCIFIO then declines every format and ITK's own writers do
+    the work, so a SCIFIO without its JARs cannot fail the write. A
+    SCIFIO_PATH already set is left as it is.
+
+    :param empty_dir: a directory only this process can write to, created
+                      empty for this run (#32: a fixed name in a shared temp
+                      directory could be created first by another user, with
+                      JARs SCIFIO would then load).
     """
     env = dict(os.environ)
     if not env.get("SCIFIO_PATH"):
-        empty = Path(tempfile.gettempdir()) / "onkodicom-scifio-none"
-        empty.mkdir(exist_ok=True)
-        env["SCIFIO_PATH"] = str(empty)
+        env["SCIFIO_PATH"] = str(empty_dir)
     return env
 
 
@@ -49,12 +52,20 @@ def convert(args, written):
     command = ["plastimatch", "convert", *args]
     # A second's slack: some filesystems keep modification times in whole seconds.
     started = time.time() - 1
+    # mkdtemp's directory is new, private (0700) and removed afterwards.
     try:
-        result = subprocess.run(command, capture_output=True, text=True,
-                                env=_environment(), check=False)
+        scratch = tempfile.TemporaryDirectory(prefix="onkodicom-scifio-")
     except OSError as error:
         raise PlastimatchError(
-            f"could not run plastimatch: {error}") from error
+            f"could not make an empty directory for SCIFIO_PATH: {error}"
+        ) from error
+    with scratch as empty:
+        try:
+            result = subprocess.run(command, capture_output=True, text=True,
+                                    env=_environment(empty), check=False)
+        except OSError as error:
+            raise PlastimatchError(
+                f"could not run plastimatch: {error}") from error
     said = (result.stderr or result.stdout or "").strip()[-2000:]
     if result.returncode != 0:
         raise PlastimatchError(
