@@ -207,6 +207,7 @@ def test_batch_dvh2csv(test_object):
         assert len(rtdose.DVHSequence) > 0
 
 
+@pytest.mark.plastimatch
 def test_batch_pyrad2pyradsr(test_object):
     """
     Test that a DICOM file 'PyRadiomics-SR.dcm' is created from
@@ -237,6 +238,7 @@ def test_batch_pyrad2pyradsr(test_object):
         assert os.path.exists(str(path))
 
 
+@pytest.mark.plastimatch
 def test_batch_pyrad2csv(test_object):
     """
     Test asserts creation of CSV as result of PyRad2CSV conversion.

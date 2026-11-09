@@ -12,6 +12,7 @@ from pathlib import Path
 from PySide6 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
+from src.Model import Plastimatch
 from src.Model.DICOM import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
 
@@ -108,17 +109,7 @@ class PyradiExtended(QtCore.QThread):
         :param nrrd_file_path:  Path to nrrd folder (str)
         :param callback:        Function to update progress bar
         """
-        path = '"' + path + '"'
-        nrrd_file_path = '"' + nrrd_file_path + '"'
-        # Command to convert dicom files to nrrd
-        # Writes the result from the processing into a temporary file
-        # rather than the terminal
-        cmd_for_nrrd = 'plastimatch convert --input ' + path + \
-            ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
-        # Command to delete the temporary file generated before
-        cmd_del_nul = 'rm ' + path + '/NUL'
-        os.system(cmd_for_nrrd)
-        os.system(cmd_del_nul)
+        Plastimatch.convert_image(path, nrrd_file_path)
         # Set completed percentage to 25% and blank for ROI name
         callback(25, '')
 
@@ -132,17 +123,7 @@ class PyradiExtended(QtCore.QThread):
                                     will be saved(str)
         :param callback:            Function to update progress bar
         """
-        path = '"' + path + '"'
-        mask_folder_path = '"' + mask_folder_path + '"'
-        rtss_path = '"' + rtss_path + '"'
-        # Command for generating an nrrd file for each region of interest
-        cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + \
-            ' --output-prefix ' + mask_folder_path + \
-            ' --prefix-format nrrd --referenced-ct ' + path + ' 1>' + \
-            path + '/NUL'
-        cmd_del_nul = 'rm ' + path + '/NUL'
-        os.system(cmd_for_segmask)
-        os.system(cmd_del_nul)
+        Plastimatch.convert_structures(rtss_path, path, mask_folder_path)
         # Set progress bar percentage to 50%
         callback(50, '')
 
