@@ -46,16 +46,21 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           version: "0.9.9"
-      - name: Python 3.12 and dependencies (poetry.lock, in-project .venv)
+      - name: Python 3.12 and dependencies (poetry.lock exported, installed by uv)
         run: |
           $ErrorActionPreference = 'Stop'
           uv python install 3.12
           if ($LASTEXITCODE) { throw "uv python install failed" }
           $py = uv python find 3.12
-          uvx --from poetry==1.8.5 poetry env use $py
-          if ($LASTEXITCODE) { throw "poetry env use failed" }
-          uvx --from poetry==1.8.5 poetry install --no-root
-          if ($LASTEXITCODE) { throw "poetry install failed" }
+          # poetry.lock's versions, exported and installed by uv, as in plastimatch-linux.yml. Poetry's own install fails
+          # here: it can't build pyradiomics from its git checkout on Windows (cl.exe can't find radiomics/src/*.c).
+          $req = "$env:RUNNER_TEMP\requirements.txt"
+          uvx --from poetry==1.8.5 poetry export --with dev --without-hashes -o $req
+          if ($LASTEXITCODE) { throw "poetry export failed" }
+          uv venv --python $py .venv
+          if ($LASTEXITCODE) { throw "uv venv failed" }
+          uv pip install --python .venv\Scripts\python.exe -r $req
+          if ($LASTEXITCODE) { throw "uv pip install failed" }
           .venv\Scripts\python --version
       - name: plastimatch 1.9.4 (unpacked into this job's folder, not installed)
         run: |
