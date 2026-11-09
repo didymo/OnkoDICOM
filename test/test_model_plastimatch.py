@@ -13,6 +13,8 @@ import time
 from pathlib import Path
 
 import pytest
+from pydicom.dataset import Dataset, FileMetaDataset
+from pydicom.uid import ExplicitVRLittleEndian
 
 from src.Model import Plastimatch
 from src.Model.Plastimatch import PlastimatchError
@@ -44,7 +46,9 @@ if mode == "write":
     else:
         d = Path(args[args.index("--output-prefix") + 1])
         d.mkdir(parents=True, exist_ok=True)
-        (d / "Body.nrrd").write_bytes(b"NRRD0004")
+        for name in os.environ.get("FAKE_MASKS", "Body").split(","):
+            if name:
+                (d / f"{name}.nrrd").write_bytes(b"NRRD0004")
 print("done")
 '''
 
@@ -97,10 +101,37 @@ def test_a_failed_conversion_says_why(tmp_path, fake):
         Plastimatch.convert_image(tmp_path, tmp_path / "patient.nrrd")
 
 
+def rtss(path, contoured=("Body",), empty=()):
+    """A structure set: ROIs with a contour each, and ROIs with none."""
+    ds = Dataset()
+    ds.file_meta = FileMetaDataset()
+    ds.file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
+    ds.file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.481.3"
+    ds.file_meta.MediaStorageSOPInstanceUID = "1.2.3.4"
+    ds.SOPClassUID = ds.file_meta.MediaStorageSOPClassUID
+    ds.SOPInstanceUID = ds.file_meta.MediaStorageSOPInstanceUID
+    names = list(contoured) + list(empty)
+    ds.StructureSetROISequence = []
+    ds.ROIContourSequence = []
+    for number, name in enumerate(names, 1):
+        roi = Dataset()
+        roi.ROINumber, roi.ROIName = number, name
+        ds.StructureSetROISequence.append(roi)
+        item = Dataset()
+        item.ReferencedROINumber = number
+        if name in contoured:
+            contour = Dataset()
+            contour.ContourData = [0, 0, 0, 1, 0, 0, 1, 1, 0]
+            item.ContourSequence = [contour]
+        ds.ROIContourSequence.append(item)
+    ds.save_as(str(path), enforce_file_format=True)
+    return path
+
+
 def test_masks_that_are_written_are_accepted(tmp_path, fake):
     fake("write")
     masks = tmp_path / "nrrd" / "structures"
-    Plastimatch.convert_structures(tmp_path / "rtss.dcm", tmp_path, masks)
+    Plastimatch.convert_structures(rtss(tmp_path / "rtss.dcm"), tmp_path, masks)
     assert [m.name for m in masks.glob("*.nrrd")] == ["Body.nrrd"]
 
 
@@ -109,7 +140,51 @@ def test_success_without_any_mask_is_refused(tmp_path, fake):
     masks = tmp_path / "structures"
     masks.mkdir()
     with pytest.raises(PlastimatchError, match="wrote nothing"):
-        Plastimatch.convert_structures(tmp_path / "rtss.dcm", tmp_path, masks)
+        Plastimatch.convert_structures(rtss(tmp_path / "rtss.dcm"), tmp_path, masks)
+
+
+def test_fewer_masks_than_contoured_structures_is_refused(tmp_path, fake, monkeypatch):
+    """#31: plastimatch swallows each failed mask write, so some can be missing."""
+    fake("write")
+    monkeypatch.setenv("FAKE_MASKS", "Body,Liver")
+    path = rtss(tmp_path / "rtss.dcm", contoured=("Body", "Liver", "Spinal Cord"))
+    with pytest.raises(PlastimatchError, match=r"2 mask\(s\) for 3 structure\(s\)") as error:
+        Plastimatch.convert_structures(path, tmp_path, tmp_path / "structures")
+    assert "Spinal Cord" in str(error.value)
+
+
+def test_a_mask_left_by_an_earlier_run_does_not_make_up_the_count(tmp_path, fake, monkeypatch):
+    fake("write")
+    masks = tmp_path / "structures"
+    masks.mkdir()
+    old = masks / "Liver.nrrd"
+    old.write_bytes(b"old")
+    os.utime(old, (time.time() - 3600,) * 2)
+    monkeypatch.setenv("FAKE_MASKS", "Body")
+    with pytest.raises(PlastimatchError, match=r"1 mask\(s\) for 2"):
+        Plastimatch.convert_structures(rtss(tmp_path / "rtss.dcm", contoured=("Body", "Liver")),
+                                       tmp_path, masks)
+
+
+def test_a_structure_without_contours_is_not_expected(tmp_path, fake):
+    fake("write")
+    path = rtss(tmp_path / "rtss.dcm", contoured=("Body",), empty=("Marker",))
+    Plastimatch.convert_structures(path, tmp_path, tmp_path / "structures")
+
+
+def test_nothing_to_write_is_not_a_failure(tmp_path, fake):
+    """No contoured structure: an empty result is right, and radiomics reports no ROIs."""
+    fake("silent")
+    path = rtss(tmp_path / "rtss.dcm", contoured=(), empty=("Marker",))
+    Plastimatch.convert_structures(path, tmp_path, tmp_path / "structures")
+
+
+def test_an_unreadable_structure_set_is_said(tmp_path, fake):
+    fake("write")
+    bad = tmp_path / "rtss.dcm"
+    bad.write_bytes(b"not dicom")
+    with pytest.raises(PlastimatchError, match="could not read the structures"):
+        Plastimatch.convert_structures(bad, tmp_path, tmp_path / "structures")
 
 
 def test_paths_go_through_as_arguments_not_shell_words(tmp_path, fake):
@@ -164,3 +239,15 @@ def test_no_plastimatch_at_all_is_said(tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", str(tmp_path))
     with pytest.raises(PlastimatchError, match="could not run plastimatch"):
         Plastimatch.convert_image(tmp_path, tmp_path / "a.nrrd")
+
+
+@pytest.mark.plastimatch
+def test_real_plastimatch_writes_one_mask_per_contoured_structure(tmp_path):
+    """#31, on the real test data and the real plastimatch: the count the
+    check relies on is what plastimatch actually writes."""
+    data = Path.cwd() / "test" / "testdata" / "DICOM-RT-02"
+    structures = data / "20191031-215249_m.dcm"
+    expected = Plastimatch.contoured_roi_names(structures)
+    masks = tmp_path / "structures"
+    Plastimatch.convert_structures(structures, data, masks)
+    assert len(list(masks.glob("*.nrrd"))) == len(expected) == 9

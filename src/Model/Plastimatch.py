@@ -14,6 +14,9 @@ import tempfile
 import time
 from pathlib import Path
 
+import pydicom
+import pydicom.errors
+
 
 class PlastimatchError(RuntimeError):
     """plastimatch convert failed, or reported success without its output."""
@@ -89,13 +92,54 @@ def convert_image(dicom_dir, image_path):
             lambda since: _fresh(image, since))
 
 
+def contoured_roi_names(rtss_path):
+    """
+    The names of the structures in rtss_path that have at least one contour:
+    the ones plastimatch writes a mask for.
+
+    :raises PlastimatchError: the structure set cannot be read.
+    """
+    try:
+        rtss = pydicom.dcmread(str(rtss_path))
+        names = {roi.ROINumber: roi.ROIName
+                 for roi in rtss.StructureSetROISequence}
+        contoured = {item.ReferencedROINumber
+                     for item in rtss.ROIContourSequence
+                     if getattr(item, "ContourSequence", None)}
+    except (OSError, AttributeError, pydicom.errors.InvalidDicomError) \
+            as error:
+        raise PlastimatchError(
+            f"could not read the structures in {rtss_path}: {error}"
+        ) from error
+    return sorted(names[n] for n in contoured if n in names)
+
+
 def convert_structures(rtss_path, dicom_dir, mask_dir):
     """
     Write one nrrd mask per structure in rtss_path into mask_dir,
     referenced to the images in dicom_dir.
+
+    plastimatch swallows each failed mask write separately, so a run can
+    exit 0 having written only some of them (#31). Fewer fresh masks than
+    structures with contours is refused, since radiomics would otherwise
+    silently leave the rest out.
     """
+    expected = contoured_roi_names(rtss_path)
     masks = Path(mask_dir)
+    found = []
+
+    def written(since):
+        found[:] = sorted(m.name for m in masks.glob("*.nrrd")
+                          if _fresh(m, since)) if masks.is_dir() else []
+        # A structure set with nothing to write has written everything
+        # (radiomics then reports no ROIs, as before #30).
+        return bool(found) or not expected
+
     convert(["--input", str(rtss_path), "--output-prefix", str(masks),
              "--prefix-format", "nrrd", "--referenced-ct", str(dicom_dir)],
-            lambda since: masks.is_dir() and any(
-                _fresh(m, since) for m in masks.glob("*.nrrd")))
+            written)
+    if len(found) < len(expected):
+        raise PlastimatchError(
+            f"plastimatch wrote {len(found)} mask(s) for {len(expected)} "
+            f"structure(s) with contours. Structures: {', '.join(expected)}. "
+            f"Masks written: {', '.join(found)}")
