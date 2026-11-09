@@ -57,6 +57,9 @@ jobs:
           $req = "$env:RUNNER_TEMP\requirements.txt"
           uvx --from poetry==1.8.5 poetry export --with dev --without-hashes -o $req
           if ($LASTEXITCODE) { throw "poetry export failed" }
+          # uv builds some packages from source in its cache. Under the runner's own profile folder those paths pass
+          # Windows' 260-character limit (nnunetv2's build fails), so the cache gets a short folder of its own.
+          $env:UV_CACHE_DIR = 'C:\uvc'
           uv venv --python $py .venv
           if ($LASTEXITCODE) { throw "uv venv failed" }
           uv pip install --python .venv\Scripts\python.exe -r $req
