@@ -68,12 +68,14 @@ jobs:
         run: |
           df -h "$HOME" /
           du -sh "$HOME"/.cache/* 2>/dev/null || true
-      # PySide6 needs some system libraries even offscreen. Name any that are missing before the tests fail obscurely.
-      - name: PySide6 system libraries
+      # Offscreen Qt still needs some system libraries. Name any that are missing before the tests fail obscurely. Only
+      # the offscreen platform plugin and the Qt modules the app loads are checked: PySide6 also ships WebEngine,
+      # multimedia and xcb libraries whose dependencies an offscreen run never loads.
+      - name: PySide6 system libraries (offscreen)
         run: |
           qt="$(.venv/bin/python -c 'import PySide6, os; print(os.path.dirname(PySide6.__file__))')"
-          missing="$(find "$qt/Qt/plugins/platforms" "$qt/Qt/lib" -name '*.so*' -print0 \
-            | xargs -0 ldd 2>/dev/null | grep 'not found' | sort -u || true)"
+          missing="$(ldd "$qt/Qt/plugins/platforms/libqoffscreen.so" "$qt"/Qt/lib/libQt6{Core,Gui,Widgets,DBus,OpenGL}.so.6 \
+            | grep 'not found' | sort -u || true)"
           if [ -n "$missing" ]; then
             echo "::error::system libraries PySide6 needs are missing:"
             echo "$missing"
