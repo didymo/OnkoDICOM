@@ -17,8 +17,9 @@ from src.Model.DICOM import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
 
 
-NO_ROIS_MESSAGE = ("The structure set has no structure with a contour, "
-                   "so there was nothing to calculate.")
+NO_ROIS_MESSAGE = ("The structure set has no structure with a closed "
+                   "contour (only points or open lines, or none), so there "
+                   "was nothing to calculate.")
 
 
 class PyradiExtended(QtCore.QThread):
@@ -88,7 +89,7 @@ class PyradiExtended(QtCore.QThread):
             self.path, patient_hash, nrrd_file_path, mask_folder_path,
             self.my_callback)
 
-        # No structure with a contour, so no mask and nothing to calculate
+        # No structure with a closed contour, so no mask and nothing to calculate
         # (#37): say so instead of writing an empty CSV and SR.
         if radiomics_df is None:
             shutil.rmtree(nrrd_folder_path)
@@ -154,7 +155,7 @@ class PyradiExtended(QtCore.QThread):
         :param callback:            Function to update progress bar
         :return:                    Pandas dataframe, or None when there
                                     are no masks (no structure with a
-                                    contour)
+                                    closed contour)
         """
 
         # Initialize feature extractor using default pyradiomics settings

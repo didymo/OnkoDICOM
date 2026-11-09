@@ -1,6 +1,6 @@
 """
 The app's PyRadiomics run with a structure set that has no structure with a
-contour (Gitea #37): no masks, so nothing to calculate. It must say so and stop,
+closed contour, only points or open lines or none (Gitea #37): no masks, so nothing to calculate. It must say so and stop,
 not divide by the number of masks or write an empty CSV.
 """
 from pydicom.dataset import Dataset, FileMetaDataset
