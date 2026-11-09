@@ -8,6 +8,7 @@ fails. It records the arguments and SCIFIO_PATH it was given.
 import json
 import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -25,8 +26,14 @@ FAKE = r'''#!/usr/bin/env python3
 import json, os, sys
 from pathlib import Path
 args = sys.argv[1:]
+scifio = os.environ.get("SCIFIO_PATH")
+d = Path(scifio) if scifio else None
+state = None
+if d is not None and d.is_dir():
+    state = {"entries": sorted(p.name for p in d.iterdir()),
+             "mode": oct(d.stat().st_mode & 0o777)}
 Path(os.environ["FAKE_LOG"]).write_text(json.dumps(
-    {"args": args, "scifio": os.environ.get("SCIFIO_PATH")}))
+    {"args": args, "scifio": scifio, "scifio_dir": state}))
 mode = os.environ["FAKE_MODE"]
 if mode == "fail":
     print("cannot read input", file=sys.stderr)
@@ -115,11 +122,42 @@ def test_paths_go_through_as_arguments_not_shell_words(tmp_path, fake):
 def test_scifio_is_pointed_at_nothing_only_when_unset(tmp_path, fake, monkeypatch):
     seen = fake("write")
     Plastimatch.convert_image(tmp_path, tmp_path / "a.nrrd")
-    unset = seen()["scifio"]
-    assert unset and Path(unset).is_dir() and not any(Path(unset).iterdir())
+    unset = seen()
+    assert unset["scifio_dir"] == {"entries": [], "mode": "0o700"}
     monkeypatch.setenv("SCIFIO_PATH", "/opt/scifio/jars")
     Plastimatch.convert_image(tmp_path, tmp_path / "b.nrrd")
     assert seen()["scifio"] == "/opt/scifio/jars"
+
+
+def test_scifio_directory_is_new_each_run_and_removed(tmp_path, fake):
+    """#32: never a name another user could have created first."""
+    seen = fake("write")
+    Plastimatch.convert_image(tmp_path, tmp_path / "a.nrrd")
+    first = seen()["scifio"]
+    Plastimatch.convert_image(tmp_path, tmp_path / "b.nrrd")
+    second = seen()["scifio"]
+    assert first != second
+    assert not Path(first).exists() and not Path(second).exists()
+
+
+def test_a_planted_directory_of_the_old_fixed_name_is_not_used(tmp_path, fake):
+    """#32: JARs left in the name 0.x used must not reach SCIFIO."""
+    planted = Path(tempfile.gettempdir()) / "onkodicom-scifio-none"
+    created = not planted.exists()
+    planted.mkdir(exist_ok=True)
+    jar = planted / "bioformats_package.jar"
+    jar_created = not jar.exists()
+    jar.write_bytes(b"not a jar")
+    try:
+        seen = fake("write")
+        Plastimatch.convert_image(tmp_path, tmp_path / "a.nrrd")
+        assert Path(seen()["scifio"]) != planted
+        assert seen()["scifio_dir"]["entries"] == []
+    finally:
+        if jar_created:
+            jar.unlink()
+        if created:
+            planted.rmdir()
 
 
 def test_no_plastimatch_at_all_is_said(tmp_path, monkeypatch):
