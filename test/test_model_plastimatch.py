@@ -101,8 +101,17 @@ def test_a_failed_conversion_says_why(tmp_path, fake):
         Plastimatch.convert_image(tmp_path, tmp_path / "patient.nrrd")
 
 
-def rtss(path, contoured=("Body",), empty=()):
-    """A structure set: ROIs with a contour each, and ROIs with none."""
+def contour(kind="CLOSED_PLANAR"):
+    item = Dataset()
+    item.ContourGeometricType = kind
+    item.ContourData = [0, 0, 0, 1, 0, 0, 1, 1, 0] if kind != "POINT" else [0, 0, 0]
+    item.NumberOfContourPoints = len(item.ContourData) // 3
+    return item
+
+
+def rtss(path, contoured=("Body",), empty=(), contours=None):
+    """A structure set: ROIs with a closed contour each, and ROIs with none.
+    contours maps an ROI name to its own list of contour items."""
     ds = Dataset()
     ds.file_meta = FileMetaDataset()
     ds.file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
@@ -110,7 +119,8 @@ def rtss(path, contoured=("Body",), empty=()):
     ds.file_meta.MediaStorageSOPInstanceUID = "1.2.3.4"
     ds.SOPClassUID = ds.file_meta.MediaStorageSOPClassUID
     ds.SOPInstanceUID = ds.file_meta.MediaStorageSOPInstanceUID
-    names = list(contoured) + list(empty)
+    contours = contours or {}
+    names = list(contoured) + list(empty) + [n for n in contours if n not in contoured]
     ds.StructureSetROISequence = []
     ds.ROIContourSequence = []
     for number, name in enumerate(names, 1):
@@ -119,10 +129,10 @@ def rtss(path, contoured=("Body",), empty=()):
         ds.StructureSetROISequence.append(roi)
         item = Dataset()
         item.ReferencedROINumber = number
-        if name in contoured:
-            contour = Dataset()
-            contour.ContourData = [0, 0, 0, 1, 0, 0, 1, 1, 0]
-            item.ContourSequence = [contour]
+        if name in contours:
+            item.ContourSequence = contours[name]
+        elif name in contoured:
+            item.ContourSequence = [contour()]
         ds.ROIContourSequence.append(item)
     ds.save_as(str(path), enforce_file_format=True)
     return path
@@ -170,6 +180,32 @@ def test_a_structure_without_contours_is_not_expected(tmp_path, fake):
     fake("write")
     path = rtss(tmp_path / "rtss.dcm", contoured=("Body",), empty=("Marker",))
     Plastimatch.convert_structures(path, tmp_path, tmp_path / "structures")
+
+
+def test_a_structure_with_only_a_point_is_not_expected(tmp_path, fake):
+    """Clement, review of #38: plastimatch skips POINT contours, so a
+    reference point gets no mask and must not be counted."""
+    fake("write")
+    path = rtss(tmp_path / "rtss.dcm", contours={"Iso": [contour("POINT")]})
+    assert Plastimatch.contoured_roi_names(path) == ["Body"]
+    Plastimatch.convert_structures(path, tmp_path, tmp_path / "structures")
+
+
+def test_a_point_beside_a_closed_contour_is_expected(tmp_path, fake):
+    fake("write")
+    path = rtss(tmp_path / "rtss.dcm",
+                contours={"Liver": [contour("POINT"), contour()]})
+    assert Plastimatch.contoured_roi_names(path) == ["Body", "Liver"]
+    with pytest.raises(PlastimatchError, match=r"1 mask\(s\) for 2"):
+        Plastimatch.convert_structures(path, tmp_path, tmp_path / "structures")
+
+
+def test_open_and_pointless_contours_are_not_expected(tmp_path, fake):
+    no_points = contour()
+    no_points.NumberOfContourPoints = 0
+    path = rtss(tmp_path / "rtss.dcm", contoured=(),
+                contours={"Line": [contour("OPEN_PLANAR")], "Empty": [no_points]})
+    assert Plastimatch.contoured_roi_names(path) == []
 
 
 def test_nothing_to_write_is_not_a_failure(tmp_path, fake):
