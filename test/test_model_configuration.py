@@ -74,3 +74,48 @@ def test_error_handling(init_sqlite_config):
         configuration.get_default_directory()
     with pytest.raises(SqlError):
         configuration.update_default_directory('')
+
+
+def test_sqlite_connections_are_closed_on_error(init_sqlite_config, monkeypatch):
+    """The #19 regression: a query that raises (a locked database) must not leak
+    its connection open, or Windows cannot delete the file (WinError 32). Each
+    query method must close its connection even when the SQL raises."""
+    import src.Model.Configuration as configuration_module
+
+    closed = []
+
+    class TrackingConnection:
+        def __init__(self, connection):
+            self._connection = connection
+
+        def cursor(self):
+            return self._connection.cursor()
+
+        def execute(self, *args):
+            return self._connection.execute(*args)
+
+        def commit(self):
+            return self._connection.commit()
+
+        def close(self):
+            closed.append(True)
+            return self._connection.close()
+
+    real_connect = sqlite3.connect
+
+    def tracking_connect(*args, **kwargs):
+        return TrackingConnection(real_connect(*args, **kwargs))
+
+    monkeypatch.setattr(configuration_module.sqlite3, "connect", tracking_connect)
+
+    configuration = Configuration()
+    cursor = init_sqlite_config.cursor()
+    cursor.execute("PRAGMA locking_mode = EXCLUSIVE;")
+    cursor.execute("BEGIN EXCLUSIVE;")
+    with pytest.raises(SqlError):
+        configuration.get_default_directory()
+    with pytest.raises(SqlError):
+        configuration.update_default_directory('')
+    cursor.execute("ROLLBACK;")
+
+    assert closed, "a connection must be closed even when the query raises (WinError 32 on Windows)"

@@ -92,16 +92,15 @@ class Configuration(metaclass=Singleton):
         """
         Create the CONFIGURATION table inside the SQLite database
         """
-        connection = sqlite3.connect(self.db_file_path)
-        connection.execute("""
-                    CREATE TABLE IF NOT EXISTS CONFIGURATION (
-                        id INTEGER PRIMARY KEY,
-                        default_dir TEXT,
-                        csv_dir TEXT
-                    );
-                """)
-        connection.commit()
-        connection.close()
+        with _db_connection(self.db_file_path) as connection:
+            connection.execute("""
+                        CREATE TABLE IF NOT EXISTS CONFIGURATION (
+                            id INTEGER PRIMARY KEY,
+                            default_dir TEXT,
+                            csv_dir TEXT
+                        );
+                    """)
+            connection.commit()
 
     def copy_data_folder(self):
         """
