@@ -22,7 +22,8 @@ def convert_rois_to_nrrd(path, rtss_path, mask_folder_path):
     :param rtss_path:           Path to RT-Struct file (str)
     :param mask_folder_path:    Folder to which the segmentation masks
                                 will be saved(str)
-    :raises PlastimatchError: no mask was written.
+    :raises PlastimatchError: fewer masks were written than the structure
+                              set has structures with contours.
     """
     Plastimatch.convert_structures(rtss_path, path, mask_folder_path)
 

@@ -18,6 +18,7 @@ on:
       - src/View/PyradiProgressBar.py
       - src/Controller/GUIController.py
       - test/test_model_batch_processes.py
+      - test/test_model_plastimatch.py
       - pytest.ini
       - pyproject.toml
       - poetry.lock
