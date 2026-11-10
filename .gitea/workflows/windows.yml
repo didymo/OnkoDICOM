@@ -2,7 +2,8 @@
 # Upstream's GitHub workflow runs Windows with continue-on-error, which hides failures. This one doesn't.
 #
 # plastimatch 1.9.4 for Windows is unpacked into this job's own folder (msiexec /a), not installed, so nothing is
-# installed on the PC. uv provides Python 3.12, and Poetry builds the project's .venv in the checkout.
+# installed on the PC. uv provides Python 3.12, creates .venv in the checkout, and installs poetry.lock's versions
+# into it (exported by Poetry, which can't install here itself).
 name: windows
 on:
   workflow_dispatch:
@@ -29,7 +30,6 @@ jobs:
     timeout-minutes: 90
     env:
       QT_QPA_PLATFORM: offscreen
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
       TEST_DATA_URL: https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
       TEST_DATA_MD5: fc63b61b121a57779345c60b92a32b15
       PLASTIMATCH_URL: https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.4-win64.msi
