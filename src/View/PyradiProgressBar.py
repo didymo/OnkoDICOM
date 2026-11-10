@@ -13,9 +13,12 @@ from PySide6 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
 from src.Model import Plastimatch
+from src.Model.Plastimatch import PlastimatchError
 from src.Model.DICOM import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
 
+
+PLASTIMATCH_FAILED = "PyRadiomics could not run: plastimatch failed.\n\n"
 
 NO_ROIS_MESSAGE = ("The structure set has no structure with a closed "
                    "contour (only points or open lines, or none), so there "
@@ -70,15 +73,22 @@ class PyradiExtended(QtCore.QThread):
             # Create folder
             os.makedirs(nrrd_folder_path)
 
-        self.convert_to_nrrd(self.path, nrrd_file_path, self.my_callback)
-
         # Location of folder where converted masks saved
         mask_folder_path = nrrd_folder_path + 'structures'
-        # As the batch path does: plastimatch writes into it, and a structure
-        # set with nothing to write leaves it empty rather than missing.
-        os.makedirs(mask_folder_path, exist_ok=True)
-        self.convert_rois_to_nrrd(self.path, rtss_path, mask_folder_path,
-                                  self.my_callback)
+        try:
+            self.convert_to_nrrd(self.path, nrrd_file_path, self.my_callback)
+            # As the batch path does: plastimatch writes into it, and a
+            # structure set with nothing to write leaves it empty rather than
+            # missing.
+            os.makedirs(mask_folder_path, exist_ok=True)
+            self.convert_rois_to_nrrd(self.path, rtss_path, mask_folder_path,
+                                      self.my_callback)
+        except PlastimatchError as error:
+            # Say why and finish, rather than leave the window waiting. The
+            # next run removes what this one left (Plastimatch removes earlier
+            # outputs before converting).
+            self.my_callback(100, PLASTIMATCH_FAILED + str(error))
+            return
 
         # Something went wrong, in this case PyRadiomics will also log an error
         if nrrd_file_path is None or nrrd_folder_path is None:
