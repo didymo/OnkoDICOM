@@ -4,6 +4,7 @@ import ctypes
 import sqlite3
 import os
 import functools
+from contextlib import contextmanager
 from pathlib import Path
 
 from src.Model.Singleton import Singleton
@@ -30,6 +31,19 @@ def set_up_hidden_dir(directory: str) -> None:
 
 class SqlError(Exception):
     pass
+
+
+@contextmanager
+def _db_connection(db_file_path):
+    """Yield a sqlite3 connection to `db_file_path`, and close it when the block
+    leaves — including when the work raises. Without this, a query that raises
+    (e.g. a locked database) leaks the connection open, and on Windows the file
+    stays locked so it cannot be removed (issue #19: WinError 32)."""
+    connection = sqlite3.connect(db_file_path)
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 def error_handling(function):
@@ -151,11 +165,10 @@ class Configuration(metaclass=Singleton):
         """
         Get the default directory's path from the database
         """
-        connection = sqlite3.connect(self.db_file_path)
-        cursor = connection.cursor()
-        cursor.execute("SELECT default_dir FROM CONFIGURATION WHERE id = 1")
-        record = cursor.fetchone()
-        connection.close()
+        with _db_connection(self.db_file_path) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT default_dir FROM CONFIGURATION WHERE id = 1")
+            record = cursor.fetchone()
         if record is None:
             # no directory has been set as the default directory
             return None
@@ -166,20 +179,19 @@ class Configuration(metaclass=Singleton):
         """
         Change the default directory's path in the database
         """
-        connection = sqlite3.connect(self.db_file_path)
-        cursor = connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM CONFIGURATION;")
-        result = cursor.fetchone()
-        if result[0] == 0:
-            # insert a new default directory if there is none
-            connection.execute("""INSERT INTO configuration (id, default_dir) 
-                                VALUES (1, "%s");""" % new_dir)
-        else:
-            connection.execute("""UPDATE CONFIGURATION
-                            SET default_dir = "%s"
-                            WHERE id = 1;""" % new_dir)
-        connection.commit()
-        connection.close()
+        with _db_connection(self.db_file_path) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT COUNT(*) FROM CONFIGURATION;")
+            result = cursor.fetchone()
+            if result[0] == 0:
+                # insert a new default directory if there is none
+                connection.execute("""INSERT INTO configuration (id, default_dir)
+                                    VALUES (1, "%s");""" % new_dir)
+            else:
+                connection.execute("""UPDATE CONFIGURATION
+                                SET default_dir = "%s"
+                                WHERE id = 1;""" % new_dir)
+            connection.commit()
 
     @error_handling
     def check_csv_attribute(self, cursor):
@@ -203,15 +215,14 @@ class Configuration(metaclass=Singleton):
         Get the clinical data CSV directory from the database.
         """
         # Connect to the database
-        connection = sqlite3.connect(self.db_file_path)
-        cursor = connection.cursor()
+        with _db_connection(self.db_file_path) as connection:
+            cursor = connection.cursor()
 
-        self.check_csv_attribute(cursor)
+            self.check_csv_attribute(cursor)
 
-        # Get the data
-        cursor.execute("SELECT csv_dir FROM CONFIGURATION WHERE id = 1")
-        record = cursor.fetchone()
-        connection.close()
+            # Get the data
+            cursor.execute("SELECT csv_dir FROM CONFIGURATION WHERE id = 1")
+            record = cursor.fetchone()
 
         # If data does not exist, return nothing
         if record is None:
@@ -227,25 +238,24 @@ class Configuration(metaclass=Singleton):
         :param new_dir: the new CSV directory.
         """
         # Open database
-        connection = sqlite3.connect(self.db_file_path)
-        cursor = connection.cursor()
+        with _db_connection(self.db_file_path) as connection:
+            cursor = connection.cursor()
 
-        self.check_csv_attribute(cursor)
+            self.check_csv_attribute(cursor)
 
-        cursor.execute("SELECT COUNT(*) FROM CONFIGURATION;")
-        result = cursor.fetchone()
+            cursor.execute("SELECT COUNT(*) FROM CONFIGURATION;")
+            result = cursor.fetchone()
 
-        # Close the connection if no CSV dir set
-        if result[0] == 0:
-            # insert a new CSV dir if there is none
-            cursor.execute("""INSERT INTO configuration (id, csv_dir) 
-                                            VALUES (1, "%s");""" % new_dir)
-        else:
-            cursor.execute("""UPDATE CONFIGURATION
-                                    SET csv_dir = "%s"
-                                    WHERE id = 1;""" % new_dir)
-        connection.commit()
-        connection.close()
+            # Close the connection if no CSV dir set
+            if result[0] == 0:
+                # insert a new CSV dir if there is none
+                cursor.execute("""INSERT INTO configuration (id, csv_dir)
+                                                VALUES (1, "%s");""" % new_dir)
+            else:
+                cursor.execute("""UPDATE CONFIGURATION
+                                        SET csv_dir = "%s"
+                                        WHERE id = 1;""" % new_dir)
+            connection.commit()
 
     def set_db_file_path(self, new_path):
         self.db_file_path = new_path
