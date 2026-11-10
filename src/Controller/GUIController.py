@@ -371,9 +371,10 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.progress_bar.setValue(value)
 
         # When the percentage reaches 100, send a signal to close
-        # progress bar
+        # progress bar. Text at 100 is what the task has to say instead of
+        # success (#37: nothing to calculate).
         if value == 100:
             completion = QMessageBox.information(
-                self, "Complete", "Task has been completed successfully"
+                self, "Complete", text or "Task has been completed successfully"
             )
             self.progress_complete.emit()
