@@ -154,6 +154,26 @@ DVH_CSV_PERCENTS = np.arange(100, -0.5, -0.5)
 DVH_CSV_TOLERANCE = 1e-9
 
 
+def dvh_csv_curve(dvh):
+    """
+    The relative volume curve the DVH CSV export reads for one ROI.
+
+    dicompyler-core normalises relative_volume by the curve's maximum, except
+    when the maximum dose is 0: then it divides by 1, so an ROI inside the dose
+    grid that receives 0 cGy everywhere gets 100 x its volume in cm3 instead
+    of 100%. Under 1 cm3 the export's higher percentages were then blank
+    (Gitea #23). Such an ROI receives 0 cGy over all of its volume, so its
+    curve is 100% at 0 cGy. An ROI with no volume counted is left as it is:
+    no dose was calculated for it, and its cells stay blank.
+
+    :param dvh: a dicompyler-core DVH.
+    :return: the cumulative relative volume (%) in each 1 cGy bin.
+    """
+    if dvh.max == 0 and dvh.volume > 0:
+        return np.array([100.0])
+    return dvh.relative_volume.counts
+
+
 def dvh_csv_doses(dose):
     """
     The DVH CSV export's dose columns for one ROI: for each percentage in
@@ -178,11 +198,9 @@ def dvh_csv_doses(dose):
              is too small to contain a sample point. No dose was calculated,
              so the cell is left blank, whatever volume the structure has,
              rather than given a dose that was never calculated.
-             (2) Wrongly, for an ROI inside the grid whose dose is 0 cGy
-             everywhere: dicompyler-core does not normalise when the maximum
-             dose is 0, so the curve is 100 x the volume in cm3. Under 1 cm3
-             the cells above that value are blank; at 1 cm3 or more every
-             cell is 0 cGy, which is right (Gitea #23).
+             (2) A curve that does not reach 100%, which dicompyler-core
+             gives an ROI receiving 0 cGy everywhere; dvh_csv_curve corrects
+             that case before this is called (Gitea #23).
     """
     dose = np.asarray(dose)
     values = []
@@ -218,7 +236,7 @@ def dvh2pandas(dict_dvh, patient_id):
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
         
-        dvh_roi_list.extend(dvh_csv_doses(dvh.relative_volume.counts))
+        dvh_roi_list.extend(dvh_csv_doses(dvh_csv_curve(dvh)))
         dvh_csv_list.append(dvh_roi_list)
             
     #Column in percentage %

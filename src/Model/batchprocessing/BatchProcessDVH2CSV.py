@@ -165,7 +165,7 @@ class BatchProcessDVH2CSV(BatchProcess):
             dvh_roi_list.append(volume)
             
             dvh_roi_list.extend(
-                CalculateDVHs.dvh_csv_doses(dvh.relative_volume.counts))
+                CalculateDVHs.dvh_csv_doses(CalculateDVHs.dvh_csv_curve(dvh)))
             dvh_csv_list.append(dvh_roi_list)
                 
         #Column in percentage %

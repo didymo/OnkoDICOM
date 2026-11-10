@@ -9,8 +9,11 @@ import numpy as np
 import pydicom
 import pytest
 
+from dicompylercore import dvh as dcdvh
+
 from src.Model.CalculateDVHs import (DVH_CSV_PERCENTS, calc_dvhs,
-                                     dvh2pandas, dvh_csv_doses, get_roi_info)
+                                     dvh2pandas, dvh_csv_curve, dvh_csv_doses,
+                                     get_roi_info)
 
 DATA = Path.cwd().joinpath('test', 'testdata', 'DICOM-RT-02')
 
@@ -102,3 +105,32 @@ def test_the_monotonicity_case_from_gitea_13():
     counts = np.interp(np.arange(61), [0, 10, 20, 30, 60], [100, 99.7, 99.5, 98, 0])
     doses = dict(zip(DVH_CSV_PERCENTS, dvh_csv_doses(counts)))
     assert (doses[100.0], doses[99.5], doses[99.0], doses[98.0]) == ('0', '20', '23', '30')
+
+
+def zero_dose_dvh(volume_cm3):
+    """An ROI inside the dose grid that receives 0 cGy everywhere, as
+    dicompyler-core builds it: one bin at 0, holding the volume."""
+    return dcdvh.DVH(counts=np.array([volume_cm3]), bins=np.array([0.0, 0.01]),
+                     dvh_type='cumulative', dose_units='Gy',
+                     volume_units='cm3', name='Z')
+
+
+@pytest.mark.parametrize("volume_cm3", [0.5, 1.0, 3.0])
+def test_a_zero_dose_roi_has_0_cgy_in_every_cell(volume_cm3):
+    # Gitea #23: dicompyler-core leaves this curve at 100 x the volume, so
+    # under 1 cm3 the higher percentages were blank.
+    zero = zero_dose_dvh(volume_cm3)
+    assert zero.max == 0
+    assert dvh_csv_doses(dvh_csv_curve(zero)) == ['0'] * len(DVH_CSV_PERCENTS)
+
+
+def test_an_roi_with_no_volume_counted_stays_blank():
+    empty = zero_dose_dvh(0.0)
+    doses = dvh_csv_doses(dvh_csv_curve(empty))
+    assert doses == [''] * (len(DVH_CSV_PERCENTS) - 1) + ['0']
+
+
+def test_an_roi_with_dose_uses_its_own_curve(dvhs):
+    for dvh in dvhs.values():
+        assert dvh.max > 0
+        assert np.array_equal(dvh_csv_curve(dvh), dvh.relative_volume.counts)
