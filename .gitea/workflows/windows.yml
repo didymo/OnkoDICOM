@@ -42,10 +42,15 @@ jobs:
           "runner: $env:COMPUTERNAME, C: free $free GB"
           if ($free -lt 20) { throw "C: has $free GB free, below 20 GB: refusing" }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # uv's package cache is kept between jobs in a short folder of its own: under the runner's profile folder,
+      # the paths of packages uv builds from source pass Windows' 260-character limit (nnunetv2's build fails).
+      # enable-cache: false: no upload to Gitea's cache server, and no pruning.
       - name: uv, pinned
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           version: "0.9.9"
+          cache-local-path: C:\uvc
+          enable-cache: false
       - name: Python 3.12 and dependencies (poetry.lock exported, installed by uv)
         run: |
           $ErrorActionPreference = 'Stop'
@@ -57,9 +62,6 @@ jobs:
           $req = "$env:RUNNER_TEMP\requirements.txt"
           uvx --from poetry==1.8.5 poetry export --with dev --without-hashes -o $req
           if ($LASTEXITCODE) { throw "poetry export failed" }
-          # uv builds some packages from source in its cache. Under the runner's own profile folder those paths pass
-          # Windows' 260-character limit (nnunetv2's build fails), so the cache gets a short folder of its own.
-          $env:UV_CACHE_DIR = 'C:\uvc'
           uv venv --python $py .venv
           if ($LASTEXITCODE) { throw "uv venv failed" }
           uv pip install --python .venv\Scripts\python.exe -r $req
