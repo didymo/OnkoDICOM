@@ -159,7 +159,9 @@ jobs:
     env:
       DISPLAY: ':99.0' # do we need this in Windows?
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-      PlastimatchWindowsUrl: 'https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.0-win64.msi'
+      # OnkoDICOM requires plastimatch >= 1.9.4 (issue #20): with 1.9.0 the
+      # NRRD written for the batch PyRadiomics tests could not be read back.
+      PlastimatchWindowsUrl: 'https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.4-win64.msi'
 
     steps:
     - uses: actions/checkout@v3
