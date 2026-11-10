@@ -76,17 +76,28 @@ def test_error_handling(init_sqlite_config):
         configuration.update_default_directory('')
 
 
-def test_sqlite_connections_are_closed_on_error(init_sqlite_config, monkeypatch):
+@pytest.mark.parametrize("call,args", [
+    ("get_default_directory", ()),
+    ("update_default_directory", ("/tmp/new_dir",)),
+    ("get_clinical_data_csv_dir", ()),
+    ("update_clinical_data_csv_dir", ("/tmp/csv_dir",)),
+])
+def test_sqlite_connections_are_closed_on_error(init_sqlite_config, monkeypatch, call, args):
     """The #19 regression: a query that raises (a locked database) must not leak
     its connection open, or Windows cannot delete the file (WinError 32). Each
-    query method must close its connection even when the SQL raises."""
+    query method must close every connection it opens, even when the SQL raises.
+
+    Every connection the code opens is tracked; a leaked one stays in
+    open_connections, so the assertion fails with the fix removed — even if
+    another method's or __init__'s connection closes normally."""
     import src.Model.Configuration as configuration_module
 
-    closed = []
+    open_connections = set()
 
     class TrackingConnection:
         def __init__(self, connection):
             self._connection = connection
+            open_connections.add(self)
 
         def cursor(self):
             return self._connection.cursor()
@@ -98,7 +109,7 @@ def test_sqlite_connections_are_closed_on_error(init_sqlite_config, monkeypatch)
             return self._connection.commit()
 
         def close(self):
-            closed.append(True)
+            open_connections.discard(self)
             return self._connection.close()
 
     real_connect = sqlite3.connect
@@ -109,13 +120,19 @@ def test_sqlite_connections_are_closed_on_error(init_sqlite_config, monkeypatch)
     monkeypatch.setattr(configuration_module.sqlite3, "connect", tracking_connect)
 
     configuration = Configuration()
+    # Configuration() itself opens and closes a connection (set_up_config_db);
+    # forget it so a normally-closed __init__ connection can't satisfy the
+    # assertion while a query method leaks its own.
+    open_connections.clear()
+
     cursor = init_sqlite_config.cursor()
     cursor.execute("PRAGMA locking_mode = EXCLUSIVE;")
     cursor.execute("BEGIN EXCLUSIVE;")
-    with pytest.raises(SqlError):
-        configuration.get_default_directory()
-    with pytest.raises(SqlError):
-        configuration.update_default_directory('')
-    cursor.execute("ROLLBACK;")
+    try:
+        with pytest.raises(SqlError):
+            getattr(configuration, call)(*args)
+    finally:
+        cursor.execute("ROLLBACK;")
 
-    assert closed, "a connection must be closed even when the query raises (WinError 32 on Windows)"
+    assert not open_connections, \
+        "a connection opened by a query must be closed even when the SQL raises (WinError 32 on Windows)"
