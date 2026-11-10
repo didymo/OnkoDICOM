@@ -346,7 +346,16 @@ class PyradiProgressBar(QtWidgets.QWidget):
         self.progress_bar.setMaximum(100)
         self.ext = PyradiExtended(path, filepaths, target_path)
         self.ext.copied_percent_signal.connect(self.on_update)
+        self.ext.failed_signal.connect(self.on_failure)
         self.ext.start()
+
+    def on_failure(self, text):
+        """
+        The run failed: say so as a failure, then close the progress bar.
+        :param text: why it failed
+        """
+        QMessageBox.warning(self, "PyRadiomics failed", text)
+        self.progress_complete.emit()
 
     def on_update(self, value, text=""):
         """

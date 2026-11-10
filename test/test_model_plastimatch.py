@@ -176,6 +176,28 @@ def test_a_mask_left_by_an_earlier_run_does_not_make_up_the_count(tmp_path, fake
                                        tmp_path, masks)
 
 
+def test_a_mask_from_an_earlier_run_is_removed(tmp_path, fake, monkeypatch):
+    """Radiomics reads every file in the folder, so an old mask this run
+    didn't rewrite must not be left for it (Sourcery, review of the
+    upstream PR)."""
+    fake("write")
+    masks = tmp_path / "structures"
+    masks.mkdir()
+    (masks / "Liver.nrrd").write_bytes(b"old")
+    monkeypatch.setenv("FAKE_MASKS", "Body")
+    Plastimatch.convert_structures(rtss(tmp_path / "rtss.dcm"), tmp_path, masks)
+    assert sorted(m.name for m in masks.iterdir()) == ["Body.nrrd"]
+
+
+def test_an_earlier_image_is_removed_before_the_run(tmp_path, fake):
+    fake("silent")
+    out = tmp_path / "patient.nrrd"
+    out.write_bytes(b"old")
+    with pytest.raises(PlastimatchError, match="wrote nothing"):
+        Plastimatch.convert_image(tmp_path, out)
+    assert not out.exists()
+
+
 def test_a_structure_without_contours_is_not_expected(tmp_path, fake):
     fake("write")
     path = rtss(tmp_path / "rtss.dcm", contoured=("Body",), empty=("Marker",))

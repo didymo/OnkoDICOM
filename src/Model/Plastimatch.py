@@ -11,7 +11,6 @@ exit code is not enough: each conversion checks the file it was asked for.
 import os
 import subprocess
 import tempfile
-import time
 from pathlib import Path
 
 import pydicom
@@ -46,15 +45,13 @@ def convert(args, written):
 
     :param args: the arguments after "convert", as a list (no shell, so
                  paths with spaces or quotes need no quoting).
-    :param written: a function of the start time, returning True when the
-                    expected output exists, is not empty, and was written
-                    since then (a file left by an earlier run is not output).
+    :param written: a function returning True when the expected output
+                    exists and is not empty. The caller removes any earlier
+                    output first, so what exists afterwards is this run's.
     :raises PlastimatchError: plastimatch is missing, exited non-zero, or
                               exited 0 without writing its output.
     """
     command = ["plastimatch", "convert", *args]
-    # A second's slack: some filesystems keep modification times in whole seconds.
-    started = time.time() - 1
     # mkdtemp's directory is new, private (0700) and removed afterwards.
     try:
         scratch = tempfile.TemporaryDirectory(prefix="onkodicom-scifio-")
@@ -64,8 +61,11 @@ def convert(args, written):
         ) from error
     with scratch as empty:
         try:
-            result = subprocess.run(command, capture_output=True, text=True,
-                                    env=_environment(empty), check=False)
+            # An argument list run without a shell: a path is one argument
+            # and can't become a command (tested with quotes and ";").
+            result = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+                command, capture_output=True, text=True,
+                env=_environment(empty), check=False)
         except OSError as error:
             raise PlastimatchError(
                 f"could not run plastimatch: {error}") from error
@@ -73,23 +73,33 @@ def convert(args, written):
     if result.returncode != 0:
         raise PlastimatchError(
             f"plastimatch convert exited {result.returncode}: {said}")
-    if not written(started):
+    if not written():
         raise PlastimatchError(
             "plastimatch convert reported success but wrote nothing "
             f"(command: {' '.join(command)}). Its output: {said or '(none)'}")
 
 
-def _fresh(path, since):
-    """path is a non-empty file written at or after since."""
-    return path.is_file() and path.stat().st_size > 0 \
-        and path.stat().st_mtime >= since
+def _written(path):
+    """path is a non-empty file."""
+    return path.is_file() and path.stat().st_size > 0
+
+
+def _remove(path):
+    """Remove an output left by an earlier run, so it can't pass for this
+    run's."""
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as error:
+        raise PlastimatchError(
+            f"could not remove the earlier output {path}: {error}") from error
 
 
 def convert_image(dicom_dir, image_path):
     """Convert the DICOM images in dicom_dir to the image file image_path."""
     image = Path(image_path)
+    _remove(image)
     convert(["--input", str(dicom_dir), "--output-img", str(image)],
-            lambda since: _fresh(image, since))
+            lambda: _written(image))
 
 
 def contoured_roi_names(rtss_path):
@@ -131,17 +141,23 @@ def convert_structures(rtss_path, dicom_dir, mask_dir):
     referenced to the images in dicom_dir.
 
     plastimatch swallows each failed mask write separately, so a run can
-    exit 0 having written only some of them (#31). Fewer fresh masks than
+    exit 0 having written only some of them (#31). Fewer masks than
     structures with a closed contour is refused, since radiomics would otherwise
-    silently leave the rest out.
+    silently leave the rest out. Masks already in mask_dir are removed first,
+    so what radiomics reads afterwards is this run's.
     """
     expected = contoured_roi_names(rtss_path)
     masks = Path(mask_dir)
+    # Masks from an earlier run would be counted here and read by radiomics,
+    # which takes every file in the folder.
+    if masks.is_dir():
+        for old in masks.glob("*.nrrd"):
+            _remove(old)
     found = []
 
-    def written(since):
+    def written():
         found[:] = sorted(m.name for m in masks.glob("*.nrrd")
-                          if _fresh(m, since)) if masks.is_dir() else []
+                          if _written(m)) if masks.is_dir() else []
         # A structure set with nothing to write has written everything
         # (radiomics then reports no ROIs, as before #30).
         return bool(found) or not expected
