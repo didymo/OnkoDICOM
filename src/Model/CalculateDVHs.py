@@ -148,12 +148,30 @@ def converge_to_zero_dvh(dict_dvh):
 # The dose columns of the DVH CSV export: the dose received by at least 100%,
 # 99.5%, ... 0% of the ROI's volume.
 DVH_CSV_PERCENTS = np.arange(100, -0.5, -0.5)
-# The curve is sampled every DVH_CSV_STEP bins (dicompyler's bins are 1 cGy).
-DVH_CSV_STEP = 10
 # Relative volumes are floats. A curve that is 100% at zero dose can come out as
 # 99.99999999999999%, and an exact comparison then never matches 100%: the
 # 100% cell was blank (Redmine 3093). Within this tolerance, values are equal.
 DVH_CSV_TOLERANCE = 1e-9
+
+
+def dvh_csv_curve(dvh):
+    """
+    The relative volume curve the DVH CSV export reads for one ROI.
+
+    dicompyler-core normalises relative_volume by the curve's maximum, except
+    when the maximum dose is 0: then it divides by 1, so an ROI inside the dose
+    grid that receives 0 cGy everywhere gets 100 x its volume in cm3 instead
+    of 100%. Under 1 cm3 the export's higher percentages were then blank
+    (Gitea #23). Such an ROI receives 0 cGy over all of its volume, so its
+    curve is 100% at 0 cGy. An ROI with no volume counted is left as it is:
+    no dose was calculated for it, and its cells stay blank.
+
+    :param dvh: a dicompyler-core DVH.
+    :return: the cumulative relative volume (%) in each 1 cGy bin.
+    """
+    if dvh.max == 0 and dvh.volume > 0:
+        return np.array([100.0])
+    return dvh.relative_volume.counts
 
 
 def dvh_csv_doses(dose):
@@ -161,70 +179,34 @@ def dvh_csv_doses(dose):
     The DVH CSV export's dose columns for one ROI: for each percentage in
     DVH_CSV_PERCENTS, the dose that at least that much of the ROI receives.
 
-    The curve is sampled every DVH_CSV_STEP bins, and a percentage that falls
-    between two samples is interpolated between them. The interpolation is
-    mirrored: it measures back from the sample below the percentage by the
-    distance it should measure forward from the sample above, so it is exact
-    only half-way between samples (on a curve falling from 100% at 500 cGy to
-    50% at 510 cGy, 99.5% reads 510 cGy; the answer is 500.1). So a value can
-    differ from the curve by up to DVH_CSV_STEP cGy, either way: measured on
-    the test data, within +/-10 cGy, mean +0.3 cGy. Correcting it moves most
-    values, so it waits for the same decision as the precision below.
+    Read directly from the curve's 1 cGy bins: the highest bin whose relative
+    volume is at least the percentage (within DVH_CSV_TOLERANCE). So each value
+    is exact to 1 cGy, and a lower percentage never gets a lower dose.
 
-    On going to 1 cGy precision (not done; Redmine 3093): the curve already has
-    1 cGy bins, so the dose for a percentage could be read directly, as the
-    highest bin whose relative volume is at least that percentage (within
-    DVH_CSV_TOLERANCE). That gives 1 cGy precision and needs no interpolation.
-    But every value in the export would move, by up to 10 cGy, towards the
-    curve, so exports made before and after would disagree, and anything that
-    compares or thresholds them (research datasets, the ML preprocessing that
-    reads this CSV) would see the change. Whether to make it is the clinical
-    lead's decision.
+    Until Gitea #13 the curve was sampled every 10 cGy and a percentage between
+    two samples was interpolated, mirrored: it measured back from the sample
+    below by the distance it should have measured forward from the sample
+    above, so a value could be off by up to 10 cGy either way. Exports made
+    before this change can differ from later ones by that much.
 
     :param dose: the cumulative relative volume (%) in each 1 cGy dose bin,
                  non-increasing (dicompyler's DVH.relative_volume.counts).
-    :return: one string per percentage: the dose in cGy, or '' when no sample
-             of the curve reaches that percentage. That happens in two cases.
+    :return: one string per percentage: the dose in cGy, or '' when no bin of
+             the curve reaches that percentage. That happens in two cases.
              (1) The curve is all 0 because no dose-grid voxel was counted
              inside the ROI: it has no volume, lies outside the dose grid, or
              is too small to contain a sample point. No dose was calculated,
              so the cell is left blank, whatever volume the structure has,
              rather than given a dose that was never calculated.
-             (2) Wrongly, for an ROI inside the grid whose dose is 0 cGy
-             everywhere: dicompyler-core does not normalise when the maximum
-             dose is 0, so the curve is 100 x the volume in cm3. Under 1 cm3
-             the cells above that value are blank; at 1 cm3 or more every
-             cell is 0 cGy, which is right (Gitea #23).
+             (2) A curve that does not reach 100%, which dicompyler-core
+             gives an ROI receiving 0 cGy everywhere; dvh_csv_curve corrects
+             that case before this is called (Gitea #23).
     """
+    dose = np.asarray(dose)
     values = []
-    trough_i = 0
-    # The last sample at or above the percentages so far: for the next, lower
-    # percentage it is the sample above. None until there is one. (This was 0,
-    # which also meant "none", so a curve whose only sample above a percentage
-    # was the first left the cell blank. And a sample that met a percentage
-    # exactly was not recorded, so after one the next percentage either found no
-    # sample above it (blank) or used an older one far up the curve.)
-    peak_i = None
     for percent in DVH_CSV_PERCENTS:
-        last_volume = None
-        for cgy in range(trough_i, len(dose), DVH_CSV_STEP):
-            trough_i = cgy
-            if abs(dose[cgy] - percent) <= DVH_CSV_TOLERANCE:
-                last_volume = cgy
-                peak_i = cgy
-            elif dose[cgy] > percent:
-                peak_i = cgy
-            else:
-                break
-        if last_volume is None and peak_i is not None:
-            if dose[peak_i] != dose[trough_i]:
-                volume_per_drop = -10 * (dose[peak_i] - dose[trough_i])/(peak_i - trough_i)
-                per_drop = dose[peak_i] - percent
-                substract_amount = per_drop/volume_per_drop * 10
-                last_volume = trough_i - substract_amount
-            else:
-                last_volume = trough_i
-        values.append('' if last_volume is None else str(round(last_volume)))
+        reached = np.nonzero(dose >= percent - DVH_CSV_TOLERANCE)[0]
+        values.append(str(int(reached[-1])) if reached.size else '')
     return values
 
 
@@ -254,7 +236,7 @@ def dvh2pandas(dict_dvh, patient_id):
         dvh_roi_list.append(name)
         dvh_roi_list.append(volume)
         
-        dvh_roi_list.extend(dvh_csv_doses(dvh.relative_volume.counts))
+        dvh_roi_list.extend(dvh_csv_doses(dvh_csv_curve(dvh)))
         dvh_csv_list.append(dvh_roi_list)
             
     #Column in percentage %

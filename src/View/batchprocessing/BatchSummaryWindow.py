@@ -114,6 +114,11 @@ class BatchSummaryWindow(QtWidgets.QDialog):
                 elif patient_summary[process] == "NO_SR":
                     summary_text += process.upper() \
                         + " no PyRadSR file."
+                # plastimatch failed or wrote too little (the log says why)
+                elif patient_summary[process] == "PLASTIMATCH_FAILED":
+                    summary_text += process.upper() \
+                        + " failed: plastimatch could not convert the " \
+                          "images or structures (see the log)."
                 # PyRad no ROIs in RTSTRUCT
                 elif patient_summary[process] == "PYRAD_NO_DF":
                     summary_text += process.upper() \

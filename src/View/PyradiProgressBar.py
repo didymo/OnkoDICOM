@@ -12,13 +12,24 @@ from pathlib import Path
 from PySide6 import QtCore
 from pydicom import dcmread
 from radiomics import featureextractor
+from src.Model import Plastimatch
+from src.Model.Plastimatch import PlastimatchError
 from src.Model.DICOM import DICOMStructuredReport
 from src.Model.PatientDictContainer import PatientDictContainer
+
+
+PLASTIMATCH_FAILED = "PyRadiomics could not run: plastimatch failed.\n\n"
+
+NO_ROIS_MESSAGE = ("The structure set has no structure with a closed "
+                   "contour (only points or open lines, or none), so there "
+                   "was nothing to calculate.")
 
 
 class PyradiExtended(QtCore.QThread):
 
     copied_percent_signal = QtCore.Signal(int, str)
+    # A run that failed, with the reason: shown as a failure, not as completion.
+    failed_signal = QtCore.Signal(str)
 
     def __init__(self, path, filepaths, target_path):
         super().__init__()
@@ -64,12 +75,22 @@ class PyradiExtended(QtCore.QThread):
             # Create folder
             os.makedirs(nrrd_folder_path)
 
-        self.convert_to_nrrd(self.path, nrrd_file_path, self.my_callback)
-
         # Location of folder where converted masks saved
         mask_folder_path = nrrd_folder_path + 'structures'
-        self.convert_rois_to_nrrd(self.path, rtss_path, mask_folder_path,
-                                  self.my_callback)
+        try:
+            self.convert_to_nrrd(self.path, nrrd_file_path, self.my_callback)
+            # As the batch path does: plastimatch writes into it, and a
+            # structure set with nothing to write leaves it empty rather than
+            # missing.
+            os.makedirs(mask_folder_path, exist_ok=True)
+            self.convert_rois_to_nrrd(self.path, rtss_path, mask_folder_path,
+                                      self.my_callback)
+        except PlastimatchError as error:
+            # Say why and finish, rather than leave the window waiting. The
+            # next run removes what this one left (Plastimatch removes earlier
+            # outputs before converting).
+            self.failed_signal.emit(PLASTIMATCH_FAILED + str(error))
+            return
 
         # Something went wrong, in this case PyRadiomics will also log an error
         if nrrd_file_path is None or nrrd_folder_path is None:
@@ -79,6 +100,13 @@ class PyradiExtended(QtCore.QThread):
         radiomics_df = self.get_radiomics_df(
             self.path, patient_hash, nrrd_file_path, mask_folder_path,
             self.my_callback)
+
+        # No structure with a closed contour, so no mask and nothing to calculate
+        # (#37): say so instead of writing an empty CSV and SR.
+        if radiomics_df is None:
+            shutil.rmtree(nrrd_folder_path)
+            self.my_callback(100, NO_ROIS_MESSAGE)
+            return
 
         self.convert_df_to_csv(radiomics_df, patient_hash,
                                csv_path, self.my_callback)
@@ -108,17 +136,7 @@ class PyradiExtended(QtCore.QThread):
         :param nrrd_file_path:  Path to nrrd folder (str)
         :param callback:        Function to update progress bar
         """
-        path = '"' + path + '"'
-        nrrd_file_path = '"' + nrrd_file_path + '"'
-        # Command to convert dicom files to nrrd
-        # Writes the result from the processing into a temporary file
-        # rather than the terminal
-        cmd_for_nrrd = 'plastimatch convert --input ' + path + \
-            ' --output-img ' + nrrd_file_path + ' 1>' + path + '/NUL'
-        # Command to delete the temporary file generated before
-        cmd_del_nul = 'rm ' + path + '/NUL'
-        os.system(cmd_for_nrrd)
-        os.system(cmd_del_nul)
+        Plastimatch.convert_image(path, nrrd_file_path)
         # Set completed percentage to 25% and blank for ROI name
         callback(25, '')
 
@@ -132,17 +150,7 @@ class PyradiExtended(QtCore.QThread):
                                     will be saved(str)
         :param callback:            Function to update progress bar
         """
-        path = '"' + path + '"'
-        mask_folder_path = '"' + mask_folder_path + '"'
-        rtss_path = '"' + rtss_path + '"'
-        # Command for generating an nrrd file for each region of interest
-        cmd_for_segmask = 'plastimatch convert --input ' + rtss_path + \
-            ' --output-prefix ' + mask_folder_path + \
-            ' --prefix-format nrrd --referenced-ct ' + path + ' 1>' + \
-            path + '/NUL'
-        cmd_del_nul = 'rm ' + path + '/NUL'
-        os.system(cmd_for_segmask)
-        os.system(cmd_del_nul)
+        Plastimatch.convert_structures(rtss_path, path, mask_folder_path)
         # Set progress bar percentage to 50%
         callback(50, '')
 
@@ -157,7 +165,9 @@ class PyradiExtended(QtCore.QThread):
         :param nrrd_file_path:      Path to folder with converted nrrd file
         :param mask_folder_path:    Path to ROI nrrd files
         :param callback:            Function to update progress bar
-        :return:                    Pandas dataframe
+        :return:                    Pandas dataframe, or None when there
+                                    are no masks (no structure with a
+                                    closed contour)
         """
 
         # Initialize feature extractor using default pyradiomics settings
@@ -172,6 +182,8 @@ class PyradiExtended(QtCore.QThread):
         extractor = featureextractor.RadiomicsFeatureExtractor()
 
         num_masks = len([file for file in os.listdir(mask_folder_path)])
+        if num_masks == 0:
+            return None
         progress_increment = (50/num_masks)
         progress_percent = 50
 

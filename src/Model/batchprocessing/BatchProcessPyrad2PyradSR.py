@@ -1,11 +1,15 @@
 import csv
+import logging
 import os
 import shutil
 from pathlib import Path
 from src.Model.DICOM import DICOMStructuredReport
 from src.Model import Radiomics
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Plastimatch import PlastimatchError
 from src.Model.batchprocessing.BatchProcess import BatchProcess
+
+logger = logging.getLogger(__name__)
 
 
 class BatchProcessPyRad2PyRadSR(BatchProcess):
@@ -48,6 +52,18 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
         self.ready = self.load_images(patient_files, self.required_classes)
         self.output_path = ""
 
+    def plastimatch_failed(self):
+        """
+        A conversion failed: log why, record it for this patient and clear
+        the patient's state, as the other failures here do. The batch then
+        goes on to the next patient.
+        """
+        logger.exception("PyRad2PyRad-SR: plastimatch failed for %s",
+                         self.patient_dict_container.path)
+        self.patient_dict_container.clear()
+        self.summary = "PLASTIMATCH_FAILED"
+        return False
+
     def start(self):
         """
         Goes through the steps of the PyRad2Pyrad-SR conversion.
@@ -86,7 +102,10 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
         self.progress_callback.emit(("Converting dicom to nrrd..", 25))
 
         # Convert dicom files to nrrd for pyradiomics processing
-        Radiomics.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+        try:
+            Radiomics.convert_to_nrrd(patient_path, patient_nrrd_file_path)
+        except PlastimatchError:
+            return self.plastimatch_failed()
 
         # Stop loading
         if self.interrupt_flag.is_set():
@@ -102,8 +121,11 @@ class BatchProcessPyRad2PyRadSR(BatchProcess):
         self.progress_callback.emit(("Converting ROIs to nrrd..", 45))
 
         # Convert ROIs to nrrd
-        Radiomics.convert_rois_to_nrrd(patient_path, rtss_path,
-                                       mask_folder_path)
+        try:
+            Radiomics.convert_rois_to_nrrd(patient_path, rtss_path,
+                                           mask_folder_path)
+        except PlastimatchError:
+            return self.plastimatch_failed()
 
         # Stop loading
         if self.interrupt_flag.is_set():
