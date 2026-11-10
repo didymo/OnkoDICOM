@@ -61,8 +61,11 @@ def convert(args, written):
         ) from error
     with scratch as empty:
         try:
-            result = subprocess.run(command, capture_output=True, text=True,
-                                    env=_environment(empty), check=False)
+            # An argument list run without a shell: a path is one argument
+            # and can't become a command (tested with quotes and ";").
+            result = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+                command, capture_output=True, text=True,
+                env=_environment(empty), check=False)
         except OSError as error:
             raise PlastimatchError(
                 f"could not run plastimatch: {error}") from error
