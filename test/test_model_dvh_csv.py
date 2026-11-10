@@ -1,7 +1,7 @@
 """
 The DVH CSV export's dose columns (Redmine 3093: blank cells), on the real test
 data. Each ROI there with a volume must have a dose in every column, and each
-dose must agree with its curve to within the export's 10 cGy sampling step.
+dose is read from its curve's 1 cGy bins (Gitea #13).
 """
 from pathlib import Path
 
@@ -9,9 +9,8 @@ import numpy as np
 import pydicom
 import pytest
 
-from src.Model.CalculateDVHs import (DVH_CSV_PERCENTS, DVH_CSV_STEP,
-                                     calc_dvhs, dvh2pandas, dvh_csv_doses,
-                                     get_roi_info)
+from src.Model.CalculateDVHs import (DVH_CSV_PERCENTS, calc_dvhs,
+                                     dvh2pandas, dvh_csv_doses, get_roi_info)
 
 DATA = Path.cwd().joinpath('test', 'testdata', 'DICOM-RT-02')
 
@@ -24,9 +23,12 @@ def dvhs():
     return calc_dvhs(rtss, rtdose, get_roi_info(rtss))
 
 
-def curve_dose(counts, percent):
-    """The highest 1 cGy bin whose relative volume is at least percent."""
-    return np.nonzero(counts >= percent - 1e-9)[0][-1]
+def assert_is_the_curve_dose(counts, percent, dose):
+    """dose is the highest 1 cGy bin whose relative volume is at least percent:
+    that bin reaches it, and the next one (if any) does not."""
+    d = int(dose)
+    assert counts[d] >= percent - 1e-9, (percent, d)
+    assert d == len(counts) - 1 or counts[d + 1] < percent - 1e-9, (percent, d)
 
 
 def test_no_blank_cells_for_an_roi_with_volume(dvhs):
@@ -52,16 +54,20 @@ def test_the_cells_that_were_blank(dvhs, name, percent):
     counts = dvh.relative_volume.counts
     doses = dict(zip(DVH_CSV_PERCENTS, dvh_csv_doses(counts)))
     assert doses[percent] != ''
-    assert abs(int(doses[percent]) - curve_dose(counts, percent)) \
-        <= DVH_CSV_STEP
+    assert_is_the_curve_dose(counts, percent, doses[percent])
 
 
-def test_every_dose_is_within_one_step_of_the_curve(dvhs):
+def test_every_dose_is_read_from_the_curve(dvhs):
     for dvh in dvhs.values():
         counts = dvh.relative_volume.counts
         for percent, dose in zip(DVH_CSV_PERCENTS, dvh_csv_doses(counts)):
-            assert abs(int(dose) - curve_dose(counts, percent)) \
-                <= DVH_CSV_STEP, (dvh.name, percent)
+            assert_is_the_curve_dose(counts, percent, dose)
+
+
+def test_a_lower_percentage_never_gets_a_lower_dose(dvhs):
+    for dvh in dvhs.values():
+        doses = [int(d) for d in dvh_csv_doses(dvh.relative_volume.counts)]
+        assert doses == sorted(doses), dvh.name
 
 
 def test_an_roi_with_no_volume_has_no_doses():
@@ -70,26 +76,29 @@ def test_an_roi_with_no_volume_has_no_doses():
     assert dvh_csv_doses(np.zeros(1)) == [''] * (len(DVH_CSV_PERCENTS) - 1) + ['0']
 
 
-# Curves whose answer is known (connor-227743e6, review of #11). On real curves a
-# sample rarely meets a percentage exactly, so these are where exact hits are
-# tested: a sample that met a percentage must be the one above for the next.
+# Curves whose answer is known (connor-227743e6, review of #11).
 def test_a_linear_curve_gives_every_dose_exactly():
     # 1 cGy bins from 100% at 0 cGy to 0% at 1000 cGy: p% is received by at
-    # least (100 - p) * 10 cGy, and every percentage is a sample or exactly
-    # half-way between two, where even the export's mirrored interpolation (see
-    # dvh_csv_doses) is exact.
+    # least (100 - p) * 10 cGy.
     doses = dvh_csv_doses(np.linspace(100, 0, 1001))
     for percent, dose in zip(DVH_CSV_PERCENTS, doses):
         assert dose == str(round((100 - percent) * 10)), percent
 
 
-def test_a_steep_target_like_curve_gives_every_dose_within_one_step():
-    # 100% up to 500 cGy, then falling linearly to 0% at 520 cGy. Between two
-    # samples the export's interpolation is mirrored, so a dose can be off by up
-    # to one step (99.5% reads 510; the answer is 500.1), but never by more.
-    counts = np.concatenate([np.full(500, 100.0),
-                             np.linspace(100, 0, 21), np.zeros(10)])
-    doses = dvh_csv_doses(counts)
-    for percent, dose in zip(DVH_CSV_PERCENTS, doses):
-        assert abs(int(dose) - (500 + (100 - percent) * 0.2)) \
-            <= DVH_CSV_STEP, percent
+def test_a_steep_target_like_curve_reads_the_bin_not_the_next_sample():
+    # 100% up to 500 cGy, then 5% less per cGy to 5% at 519 cGy, where it ends:
+    # dicompyler's curves end at the maximum dose, with no zero bins after it
+    # (measured on DICOM-RT-02), so 0% reads the maximum. The mirrored
+    # interpolation read 99.5% as 510 cGy (Gitea #13); the curve says 500.
+    counts = np.concatenate([np.full(500, 100.0), np.linspace(100, 5, 20)])
+    doses = dict(zip(DVH_CSV_PERCENTS, dvh_csv_doses(counts)))
+    assert (doses[100.0], doses[99.5], doses[95.0], doses[94.5],
+            doses[50.0], doses[0.0]) == ('500', '500', '501', '501', '510', '519')
+
+
+def test_the_monotonicity_case_from_gitea_13():
+    # Cumulative DVH, linear between (0, 100), (10, 99.7), (20, 99.5), (30, 98)
+    # and (60, 0), in 1 cGy bins.
+    counts = np.interp(np.arange(61), [0, 10, 20, 30, 60], [100, 99.7, 99.5, 98, 0])
+    doses = dict(zip(DVH_CSV_PERCENTS, dvh_csv_doses(counts)))
+    assert (doses[100.0], doses[99.5], doses[99.0], doses[98.0]) == ('0', '20', '23', '30')
