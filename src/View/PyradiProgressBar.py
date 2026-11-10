@@ -28,6 +28,8 @@ NO_ROIS_MESSAGE = ("The structure set has no structure with a closed "
 class PyradiExtended(QtCore.QThread):
 
     copied_percent_signal = QtCore.Signal(int, str)
+    # A run that failed, with the reason: shown as a failure, not as completion.
+    failed_signal = QtCore.Signal(str)
 
     def __init__(self, path, filepaths, target_path):
         super().__init__()
@@ -87,7 +89,7 @@ class PyradiExtended(QtCore.QThread):
             # Say why and finish, rather than leave the window waiting. The
             # next run removes what this one left (Plastimatch removes earlier
             # outputs before converting).
-            self.my_callback(100, PLASTIMATCH_FAILED + str(error))
+            self.failed_signal.emit(PLASTIMATCH_FAILED + str(error))
             return
 
         # Something went wrong, in this case PyRadiomics will also log an error

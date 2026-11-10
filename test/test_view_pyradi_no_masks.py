@@ -9,6 +9,7 @@ import pytest
 from pydicom.dataset import Dataset, FileMetaDataset
 from pydicom.uid import ExplicitVRLittleEndian
 
+from src.Controller import GUIController
 from src.Model import Radiomics
 from src.Model.Plastimatch import PlastimatchError
 from src.Model.batchprocessing.BatchProcessPyrad2PyradSR import \
@@ -56,16 +57,32 @@ def test_a_plastimatch_failure_is_said_and_ends_the_run(qtbot, tmp_path, monkeyp
     target = tmp_path / "out"
     ext = PyradiExtended(str(tmp_path), {0: ct(tmp_path / "ct.dcm"), "rtss": "rtss.dcm"},
                          str(target))
-    said = []
+    said, failed = [], []
     monkeypatch.setattr(ext, "my_callback", lambda percent, text: said.append((percent, text)))
+    ext.failed_signal.connect(failed.append)
     monkeypatch.setattr(ext, "convert_to_nrrd", lambda *a: None)
 
     def fails(*a):
         raise PlastimatchError("plastimatch convert exited 3: cannot read input")
     monkeypatch.setattr(ext, "convert_rois_to_nrrd", fails)
     ext.run()
-    assert said[-1] == (100, PLASTIMATCH_FAILED + "plastimatch convert exited 3: cannot read input")
+    assert failed == [PLASTIMATCH_FAILED + "plastimatch convert exited 3: cannot read input"]
+    # Not reported as completion (clement-7074f29f, review of #46).
+    assert all(percent < 100 for percent, _ in said)
     assert not (target / "CSV").exists()
+
+
+def test_the_window_shows_a_failure_as_a_warning(monkeypatch):
+    shown, closed = [], []
+    monkeypatch.setattr(GUIController.QMessageBox, "warning",
+                        lambda parent, title, text: shown.append((title, text)))
+
+    class Window:
+        progress_complete = type("S", (), {"emit": lambda self: closed.append(True)})()
+
+    GUIController.PyradiProgressBar.on_failure(Window(), "plastimatch failed")
+    assert shown == [("PyRadiomics failed", "plastimatch failed")]
+    assert closed == [True]
 
 
 class Container:
