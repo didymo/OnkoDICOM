@@ -70,7 +70,8 @@ jobs:
       - name: Install dependencies (poetry.lock exported, torch CPU-only, in-project .venv)
         run: |
           req="$RUNNER_TEMP/requirements.txt"
-          uvx --from poetry==1.8.5 poetry export --with dev --without-hashes -o "$req.all"
+          # Poetry 2.5.1, which wrote the lock: 1.8.5 exports the Python 3.10 entries for 3.12 too (#51).
+          uvx --from poetry==2.5.1 --with poetry-plugin-export==1.10.1 poetry export --with dev --without-hashes -o "$req.all"
           grep -v -E '^(nvidia-|triton==)' "$req.all" > "$req"
           echo "dropped: $(grep -c -E '^(nvidia-|triton==)' "$req.all") CUDA packages"
           uv venv --python "$PY" .venv
