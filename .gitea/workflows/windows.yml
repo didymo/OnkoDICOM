@@ -71,12 +71,20 @@ jobs:
       - name: plastimatch 1.9.4 (unpacked into this job's folder, not installed)
         run: |
           $ErrorActionPreference = 'Stop'
-          $msi = "$env:RUNNER_TEMP\plastimatch.msi"
+          # The MSI is kept on the PC between jobs (SourceForge is a free service: download it once, not every run).
+          # A copy whose sha256 doesn't match is downloaded again; a download is checked before it replaces the copy.
+          $cache = 'C:\kindled-ci\onkodicom'
+          New-Item -ItemType Directory -Force $cache | Out-Null
+          $msi = "$cache\Plastimatch-1.9.4-win64.msi"
           $dir = "$env:RUNNER_TEMP\plastimatch"
-          curl.exe -fsSL --retry 3 -o $msi $env:PLASTIMATCH_URL
-          if ($LASTEXITCODE) { throw "plastimatch download failed" }
-          $got = (Get-FileHash $msi -Algorithm SHA256).Hash.ToLower()
-          if ($got -ne $env:PLASTIMATCH_SHA256) { throw "plastimatch MSI sha256 $got, expected $env:PLASTIMATCH_SHA256" }
+          if (-not (Test-Path $msi) -or (Get-FileHash $msi -Algorithm SHA256).Hash.ToLower() -ne $env:PLASTIMATCH_SHA256) {
+            $part = "$msi.$env:GITHUB_RUN_ID.part"
+            curl.exe -fsSL --retry 3 -o $part $env:PLASTIMATCH_URL
+            if ($LASTEXITCODE) { Remove-Item -Force -ErrorAction SilentlyContinue $part; throw "plastimatch download failed" }
+            $got = (Get-FileHash $part -Algorithm SHA256).Hash.ToLower()
+            if ($got -ne $env:PLASTIMATCH_SHA256) { Remove-Item -Force $part; throw "plastimatch MSI sha256 $got, expected $env:PLASTIMATCH_SHA256" }
+            Move-Item -Force $part $msi
+          }
           $p = Start-Process msiexec -Wait -PassThru -ArgumentList "/a `"$msi`" /qn TARGETDIR=`"$dir`""
           if ($p.ExitCode) { throw "msiexec /a exited $($p.ExitCode)" }
           $exe = Get-ChildItem $dir -Recurse -Filter plastimatch.exe | Select-Object -First 1
@@ -87,11 +95,19 @@ jobs:
       - name: Test data (DICOM-RT-02, unzipped fresh into both data directories)
         run: |
           $ErrorActionPreference = 'Stop'
-          $zip = "$env:RUNNER_TEMP\DICOM-RT-02.zip"
-          curl.exe -fsSL --retry 3 -o $zip $env:TEST_DATA_URL
-          if ($LASTEXITCODE) { throw "test data download failed" }
-          $got = (Get-FileHash $zip -Algorithm MD5).Hash.ToLower()
-          if ($got -ne $env:TEST_DATA_MD5) { throw "DICOM-RT-02.zip md5 $got, expected $env:TEST_DATA_MD5" }
+          # The zip is kept on the PC between jobs (Zenodo is a free service), checked against its md5, as on the
+          # Mac and Linux runners. The data is still unzipped fresh: the tests rewrite it.
+          $cache = 'C:\kindled-ci\onkodicom'
+          New-Item -ItemType Directory -Force $cache | Out-Null
+          $zip = "$cache\DICOM-RT-02.zip"
+          if (-not (Test-Path $zip) -or (Get-FileHash $zip -Algorithm MD5).Hash.ToLower() -ne $env:TEST_DATA_MD5) {
+            $part = "$zip.$env:GITHUB_RUN_ID.part"
+            curl.exe -fsSL --retry 3 -o $part $env:TEST_DATA_URL
+            if ($LASTEXITCODE) { Remove-Item -Force -ErrorAction SilentlyContinue $part; throw "test data download failed" }
+            $got = (Get-FileHash $part -Algorithm MD5).Hash.ToLower()
+            if ($got -ne $env:TEST_DATA_MD5) { Remove-Item -Force $part; throw "DICOM-RT-02.zip md5 $got, expected $env:TEST_DATA_MD5" }
+            Move-Item -Force $part $zip
+          }
           foreach ($d in 'test\testdata', 'test\batchtestdata') {
             if (Test-Path $d) { Remove-Item $d -Recurse -Force }
             Expand-Archive $zip -DestinationPath $d
