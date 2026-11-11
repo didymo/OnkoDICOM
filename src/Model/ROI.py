@@ -13,7 +13,7 @@ from pydicom.dataset import FileMetaDataset, validate_file_meta
 from pydicom.tag import Tag
 from pydicom.uid import ImplicitVRLittleEndian, generate_uid
 from PySide6 import QtCore, QtGui
-from scipy.spatial.qhull import QhullError
+from scipy.spatial import QhullError
 from shapely.geometry import GeometryCollection, MultiPolygon, Polygon
 from shapely.validation import make_valid
 
