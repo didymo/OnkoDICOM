@@ -46,7 +46,9 @@ vtk = "*"
 shapely = ">=2.0"
 python-Levenshtein = "*"
 opencv-python = ">=4.10"
-matplotlib = "*"
+# platipy 0.4.1 calls matplotlib.cm.get_cmap at import (default arguments), and matplotlib 3.11 removes it, so
+# image fusion would fail to import (#49). Lift this when a platipy release that supports pydicom 3 is in the lock.
+matplotlib = "<3.11"
 scikit-learn = "*"
 imblearn = "*"
 kaplanmeier = "*"
