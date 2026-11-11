@@ -44,15 +44,16 @@ jobs:
         with:
           version: "0.9.9"
       # pyproject requires Python <3.13; 3.12 is what Cora measured the suite on.
-      - name: Python 3.12 and Poetry 1.8.5 (the version GitHub's workflow uses)
+      # Poetry 2.5.1, the version that writes poetry.lock (#51). GitHub's workflow still has 1.8.5 until upstream moves.
+      - name: Python 3.12 and Poetry 2.5.1
         run: |
           uv python install 3.12
           echo "PY=$(uv python find 3.12)" >> "$GITHUB_ENV"
           echo "runner host: $(hostname)"
       - name: Install dependencies (poetry.lock, in-project .venv)
         run: |
-          uvx --from poetry==1.8.5 poetry env use "$PY"
-          uvx --from poetry==1.8.5 poetry install --no-root
+          uvx --from poetry==2.5.1 poetry env use "$PY"
+          uvx --from poetry==2.5.1 poetry install --no-root
           .venv/bin/python --version
       - name: Lint with flake8 (the error gate GitHub runs)
         run: .venv/bin/python -m flake8 . --exclude .venv --count --select=E9,F63,F7,F82 --show-source --statistics
