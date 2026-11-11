@@ -60,7 +60,8 @@ jobs:
           # poetry.lock's versions, exported and installed by uv, as in plastimatch-linux.yml. Poetry's own install fails
           # here: it can't build pyradiomics from its git checkout on Windows (cl.exe can't find radiomics/src/*.c).
           $req = "$env:RUNNER_TEMP\requirements.txt"
-          uvx --from poetry==1.8.5 poetry export --with dev --without-hashes -o $req
+          # Poetry 2.5.1, which wrote the lock: 1.8.5 exports the Python 3.10 entries for 3.12 too (#51).
+          uvx --from poetry==2.5.1 --with poetry-plugin-export==1.10.1 poetry export --with dev --without-hashes -o $req
           if ($LASTEXITCODE) { throw "poetry export failed" }
           uv venv --python $py .venv
           if ($LASTEXITCODE) { throw "uv venv failed" }
