@@ -140,7 +140,5 @@ def generate_dicom_sr(file_path, img_ds, data, series_description):
     dicom_sr.SOPClassUID = dicom_constants.COMPREHENSIVE_SR
     dicom_sr.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
 
-    dicom_sr.is_little_endian = True
-    dicom_sr.is_implicit_VR = True
 
     return dicom_sr

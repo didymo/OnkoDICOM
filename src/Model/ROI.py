@@ -962,8 +962,6 @@ def create_initial_rtss_from_ct(
     rt_ss.InstanceCreationDate = dicom_date
     rt_ss.InstanceCreationTime = dicom_time
 
-    rt_ss.is_little_endian = True
-    rt_ss.is_implicit_VR = True
     return rt_ss
 
 
