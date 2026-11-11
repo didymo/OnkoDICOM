@@ -90,7 +90,7 @@ class DicomTree(object):
         tree = QTreeView()
         tree.setModel(model)
         tree.show()
-        app.exec_()
+        app.exec()
         return tree
 
 

@@ -337,7 +337,7 @@ class PatientWeightDialog(QDialog):
                 button_reply.button(
                     QMessageBox.StandardButton.Ok).setStyleSheet(
                     StyleSheetReader().get_stylesheet())
-                button_reply.exec_()
+                button_reply.exec()
         # Make sure the patient weight is not blank
         else:
             button_reply = \
@@ -348,7 +348,7 @@ class PatientWeightDialog(QDialog):
             button_reply.button(
                 QMessageBox.StandardButton.Ok).setStyleSheet(
                 StyleSheetReader().get_stylesheet())
-            button_reply.exec_()
+            button_reply.exec()
 
     def rejecting(self):
         """
@@ -363,6 +363,6 @@ class PatientWeightDialog(QDialog):
         button_reply.button(
             QMessageBox.StandardButton.Ok).setStyleSheet(
             StyleSheetReader().get_stylesheet())
-        reply = button_reply.exec_()
+        reply = button_reply.exec()
         if reply == QMessageBox.Ok:
             self.close()

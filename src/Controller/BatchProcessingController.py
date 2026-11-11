@@ -777,14 +777,14 @@ class BatchProcessingController:
                                                 params)
             ml_results_window.set_df_scaling(self.machine_learning_process.
                                              scaling)
-            ml_results_window.exec_()
+            ml_results_window.exec()
 
             self.machine_learning_process = None
 
         # Create window to store summary info
         batch_summary_window = BatchSummaryWindow()
         batch_summary_window.set_summary_text(self.batch_summary)
-        batch_summary_window.exec_()
+        batch_summary_window.exec()
 
     def error_processing(self):
         """

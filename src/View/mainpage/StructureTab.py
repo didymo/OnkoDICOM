@@ -678,7 +678,7 @@ class StructureTab(QtWidgets.QWidget):
         """
         confirm_merge.addButton(button_no, QtWidgets.QMessageBox.AcceptRole)
         confirm_merge.addButton(button_yes, QtWidgets.QMessageBox.RejectRole)
-        confirm_merge.exec_()
+        confirm_merge.exec()
 
         if confirm_merge.clickedButton() == button_yes:
             return True

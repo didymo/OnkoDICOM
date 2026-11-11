@@ -537,4 +537,4 @@ class UIBatchProcessingWindow(object):
         button_reply.button(
             QtWidgets.QMessageBox.StandardButton.Ok).setStyleSheet(
             StyleSheetReader().get_stylesheet())
-        button_reply.exec_()
+        button_reply.exec()
