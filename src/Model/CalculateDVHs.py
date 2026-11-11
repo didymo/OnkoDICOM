@@ -576,6 +576,4 @@ def create_initial_rtdose_from_ct(img_ds: pydicom.dataset.Dataset,
     rt_dose.InstanceCreationDate = dicom_date
     rt_dose.InstanceCreationTime = dicom_time
 
-    rt_dose.is_little_endian = True
-    rt_dose.is_implicit_VR = True
     return rt_dose

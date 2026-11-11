@@ -66,7 +66,7 @@ class ProgressWindow(QDialog):
         worker.signals.progress.connect(self.update_progress)
 
         self.threadpool.start(worker)
-        self.exec_()
+        self.exec()
 
     def on_finish(self, result):
         """

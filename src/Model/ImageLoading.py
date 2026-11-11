@@ -697,7 +697,7 @@ def calculate_matrix(img_ds):
 
     # Equation C.7.6.2.1-1.
     # https://dicom.innolitics.com/ciods/rt-structure-set/roi-contour/30060039/30060040/30060050
-    matrix_m = np.matrix(
+    matrix_m = np.array(
         [
             [orientation[0] * dist_row, orientation[3] * dist_col, 0, position[0]],
             [orientation[1] * dist_row, orientation[4] * dist_col, 0, position[1]],
@@ -721,7 +721,7 @@ def calculate_matrix(img_ds):
 
     # Optimization attempt: avoid repeated matrix multiplications
     # Calculate base values (origin)
-    origin = matrix_m * np.matrix([[0], [0], [0], [1]])
+    origin = matrix_m @ np.array([[0], [0], [0], [1]])
 
     # Calculate increments (first column of matrix_m for x, second column for y)
     x_increment = matrix_m[0, 0]  # First column, first row element

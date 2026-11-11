@@ -91,7 +91,7 @@ class StructureWidget(QtWidgets.QWidget):
                                             self.structure_tab.standard_organ_names,
                                             self.dataset_rtss,
                                             self.roi_id, self.text, self.structure_renamed)
-            rename_window.exec_()
+            rename_window.exec()
 
         if not self.standard_name:
             if action == suggested_action1:
@@ -99,16 +99,16 @@ class StructureWidget(QtWidgets.QWidget):
                                                 self.structure_tab.standard_organ_names,
                                                 self.dataset_rtss,
                                                 self.roi_id, self.text, self.structure_renamed, suggestions[0][0])
-                rename_window.exec_()
+                rename_window.exec()
             elif action == suggested_action2:
                 rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                                 self.structure_tab.standard_organ_names,
                                                 self.dataset_rtss,
                                                 self.roi_id, self.text, self.structure_renamed, suggestions[1][0])
-                rename_window.exec_()
+                rename_window.exec()
             elif action == suggested_action3:
                 rename_window = RenameROIWindow(self.structure_tab.standard_volume_names,
                                                 self.structure_tab.standard_organ_names,
                                                 self.dataset_rtss,
                                                 self.roi_id, self.text, self.structure_renamed, suggestions[2][0])
-                rename_window.exec_()
+                rename_window.exec()
