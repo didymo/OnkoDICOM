@@ -9,16 +9,11 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened]
-    # What decides whether these tests pass: plastimatch's runner and its call sites, the marked tests and the marker,
-    # and the dependencies.
+    # Any change to the code, the tests or the dependencies. (A list of the plastimatch files missed new marked tests.)
     paths:
       - .gitea/workflows/plastimatch-linux.yml
-      - src/Model/Plastimatch.py
-      - src/Model/Radiomics.py
-      - src/View/PyradiProgressBar.py
-      - src/Controller/GUIController.py
-      - test/test_model_batch_processes.py
-      - test/test_model_plastimatch.py
+      - src/**
+      - test/**
       - pytest.ini
       - pyproject.toml
       - poetry.lock
