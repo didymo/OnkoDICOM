@@ -53,7 +53,7 @@ jobs:
 
     - name: Install Poetry
       run: |
-        curl -sSL https://install.python-poetry.org | python - --version 1.8.5
+        curl -sSL https://install.python-poetry.org | python - --version 2.5.1
         poetry --version
 
     - name: Set up Python ${{ matrix.python }}
@@ -169,7 +169,7 @@ jobs:
 
     - name: Install Poetry
       run: |
-        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py - --version 2.5.1
         Add-Content $env:GITHUB_PATH "$env:APPDATA\Python\Scripts"
 
     - name: Set up Python ${{ matrix.python }}
