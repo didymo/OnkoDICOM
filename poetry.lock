@@ -4839,7 +4839,10 @@ files = [
 ]
 
 [package.dependencies]
+pydicom = {version = ">=2.0.0", optional = true, markers = "extra == \"all\" or extra == \"dicom\" or extra == \"docs\" or extra == \"user\""}
+pynetdicom = {version = "*", optional = true, markers = "extra == \"all\" or extra == \"dicom\" or extra == \"user\""}
 setuptools = "*"
+toml = {version = "*", optional = true, markers = "extra == \"all\" or extra == \"cli\" or extra == \"docs\" or extra == \"mosaiq\" or extra == \"user\""}
 tomlkit = "*"
 typing-extensions = "*"
 
@@ -6260,7 +6263,7 @@ version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
@@ -7125,4 +7128,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "d913904bc9f0a47217e7c480035b793fa260083fad1a315fdec1dfe363074305"
+content-hash = "06a3dfc8364bfb85355428ef67c0c808b33ef9348829129ba7f95b07d31b149a"
