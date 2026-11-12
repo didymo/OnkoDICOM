@@ -136,3 +136,43 @@ def test_sqlite_connections_are_closed_on_error(init_sqlite_config, monkeypatch,
 
     assert not open_connections, \
         "a connection opened by a query must be closed even when the SQL raises (WinError 32 on Windows)"
+
+# Paths are stored as given, whatever characters they hold. Before the values were passed as
+# query parameters, a '"' made the statement fail, and a crafted path set other columns.
+DIRECTORY_PATHS = [
+    '/home/test/Dr "Smith" patients',
+    "/home/test/O'Brien",
+    '/home/test/x", csv_dir = "/elsewhere',
+    "/home/test/semi;colon -- dash",
+    "C:\\Users\\test\\Patients",
+]
+
+
+@pytest.mark.parametrize("new_dir", DIRECTORY_PATHS)
+@pytest.mark.parametrize("existing_row", [False, True], ids=["insert", "update"])
+def test_default_directory_is_stored_as_given(init_sqlite_config, new_dir, existing_row):
+    configuration = Configuration()
+    if existing_row:
+        configuration.update_default_directory("/home/test/first")
+    configuration.update_default_directory(new_dir)
+
+    assert configuration.get_default_directory() == new_dir
+    rows = init_sqlite_config.execute("SELECT id, default_dir, csv_dir FROM CONFIGURATION").fetchall()
+    assert rows == [(1, new_dir, None)]
+
+
+@pytest.mark.parametrize("new_dir", DIRECTORY_PATHS)
+@pytest.mark.parametrize("existing_row", [False, True], ids=["insert", "update"])
+def test_clinical_data_csv_dir_is_stored_as_given(init_sqlite_config, new_dir, existing_row):
+    configuration = Configuration()
+    if existing_row:
+        # The row exists, so update_clinical_data_csv_dir takes its UPDATE statement.
+        configuration.update_default_directory("/home/test/default")
+        configuration.update_clinical_data_csv_dir("/home/test/first")
+    # Otherwise there is no row, so it takes its INSERT statement.
+    configuration.update_clinical_data_csv_dir(new_dir)
+
+    assert configuration.get_clinical_data_csv_dir() == new_dir
+    rows = init_sqlite_config.execute("SELECT id, default_dir, csv_dir FROM CONFIGURATION").fetchall()
+    expected_default = "/home/test/default" if existing_row else None
+    assert rows == [(1, expected_default, new_dir)]

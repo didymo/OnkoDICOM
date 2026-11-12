@@ -153,8 +153,9 @@ jobs:
     name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 50
-    # Tests on Windows are unstable. We do not want it to fail the entire test result
-    continue-on-error: true
+    # Tests on Windows are unstable, so the test step (below) may fail without failing the check. The job may
+    # not: a failed plastimatch download or install, or any other setup step, stops the job before the tests run,
+    # and must fail the check rather than leave Windows untested behind a passing one.
 
     env:
       DISPLAY: ':99.0' # do we need this in Windows?
@@ -242,6 +243,7 @@ jobs:
         7z x DICOM-RT-02.zip -o${{ github.workspace }}\test\batchtestdata
 
     - name: Testing and Coverage with pytest
+      # Tests on Windows are unstable. We do not want them to fail the entire test result
       continue-on-error: true
       run: |
         # Append this for fail under x percent "--cov-fail-under=80"
