@@ -185,7 +185,8 @@ jobs:
       run: |
         Invoke-WebRequest -Uri ${{ env.PlastimatchWindowsUrl }} -OutFile Plastimatch.msi
         Start-Process -Wait msiexec -ArgumentList '/i Plastimatch.msi /passive'
-        Add-Content $env:GITHUB_PATH "C:\Program Files\Plastimatch"
+        # 1.9.4's MSI installs plastimatch.exe and its DLLs under bin\ (its file keys are CM_FP_bin.*).
+        Add-Content $env:GITHUB_PATH "C:\Program Files\Plastimatch\bin"
 
     - name: Install dependencies
       run: |
