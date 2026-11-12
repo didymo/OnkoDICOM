@@ -197,8 +197,8 @@ jobs:
         $null = $p.Handle
         $p.WaitForExit()
         if ($p.ExitCode -ne 0) { Get-Content plastimatch-msi.log -Tail 40; throw "msiexec /i exited '$($p.ExitCode)'" }
-        # Put on PATH the folder plastimatch.exe was actually installed in, wherever that is (1.9.4 is not at
-        # Program Files\Plastimatch\bin, as was assumed), and stop if there is none.
+        # Put on PATH the folder plastimatch.exe was actually installed in (Program Files\Plastimatch\bin, per
+        # plastimatch's CMake), found rather than assumed, and stop if there is none.
         $roots = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, "$env:LOCALAPPDATA\Programs") | Where-Object { $_ -and (Test-Path $_) }
         $dirs = @(Get-ChildItem $roots -Directory -Filter 'Plastimatch*')
         if (-not $dirs) { throw "no Plastimatch folder under $($roots -join ', ') after the install" }
