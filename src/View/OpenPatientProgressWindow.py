@@ -73,7 +73,7 @@ class OpenPatientProgressWindow(ProgressWindow):
             mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath(
                 'res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
-            mb.exec_()
+            mb.exec()
 
             if mb.clickedButton() == button_yes:
                 self.signal_advise_calc_dvh.emit(True)
@@ -107,7 +107,7 @@ class OpenPatientProgressWindow(ProgressWindow):
         msgbox.addButton(button_no, QtWidgets.QMessageBox.ButtonRole.AcceptRole)
         msgbox.addButton(button_yes, QtWidgets.QMessageBox.ButtonRole.RejectRole)
 
-        msgbox.exec_()
+        msgbox.exec()
 
         if msgbox.clickedButton() == button_yes:
             # Call to delete files pass slice_list
@@ -137,7 +137,7 @@ class OpenPatientProgressWindow(ProgressWindow):
         msgbox = self._styled_msgbox("Files Deleted", text)
         button_ok = QtWidgets.QPushButton("Ok")
         msgbox.addButton(button_ok, QtWidgets.QMessageBox.ButtonRole.AcceptRole)
-        msgbox.exec_()
+        msgbox.exec()
 
         if msgbox.clickedButton() == button_ok:
             self.signal_acknowledge_incorrect_slice.emit()

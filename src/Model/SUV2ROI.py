@@ -93,7 +93,7 @@ class SUV2ROI:
             # Since weight is not present, keep prompting the user for
             # it until they enter a valid number or close the dialog box
             dialog = PatientWeightDialog()
-            if dialog.exec_():
+            if dialog.exec():
                 self.patient_weight = dialog.get_input() * 1000
                 return
             else:

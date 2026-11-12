@@ -183,7 +183,7 @@ class DVHTab(QtWidgets.QWidget):
                 progress_window.signal_dvh_calculated.connect(
                     self.dvh_calculation_finished)
                 self.patient_dict_container.set("dvh_outdated", False)
-                progress_window.exec_()
+                progress_window.exec()
 
                 self.export_rtdose()
         else:
@@ -207,14 +207,14 @@ class DVHTab(QtWidgets.QWidget):
             mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath('res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
 
-            mb.exec_()
+            mb.exec()
 
             if mb.clickedButton() == button_yes:
                 progress_window = CalculateDVHProgressWindow(self,
                                                              QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
                 progress_window.signal_dvh_calculated.connect(self.dvh_calculation_finished)
                 self.patient_dict_container.set("dvh_outdated", False)
-                progress_window.exec_()
+                progress_window.exec()
 
                 self.export_rtdose()
 
