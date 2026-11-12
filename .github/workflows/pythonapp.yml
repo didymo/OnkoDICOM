@@ -183,10 +183,24 @@ jobs:
 
     - name: Install plastimatch
       run: |
+        $ErrorActionPreference = 'Stop'
         Invoke-WebRequest -Uri ${{ env.PlastimatchWindowsUrl }} -OutFile Plastimatch.msi
-        Start-Process -Wait msiexec -ArgumentList '/i Plastimatch.msi /passive'
-        # 1.9.4's MSI installs plastimatch.exe and its DLLs under bin\ (its file keys are CM_FP_bin.*).
-        Add-Content $env:GITHUB_PATH "C:\Program Files\Plastimatch\bin"
+        # The installer's own exit code and log: a failed install must stop here, not surface later as a missing exe.
+        $p = Start-Process -Wait -PassThru msiexec -ArgumentList '/i Plastimatch.msi /passive /l*v plastimatch-msi.log'
+        if ($p.ExitCode) { Get-Content plastimatch-msi.log -Tail 40; throw "msiexec /i exited $($p.ExitCode)" }
+        # Put on PATH the folder plastimatch.exe was actually installed in, wherever that is (1.9.4 is not at
+        # Program Files\Plastimatch\bin, as was assumed), and stop if there is none.
+        $roots = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, "$env:LOCALAPPDATA\Programs") | Where-Object { $_ -and (Test-Path $_) }
+        $dirs = @(Get-ChildItem $roots -Directory -Filter 'Plastimatch*')
+        if (-not $dirs) { throw "no Plastimatch folder under $($roots -join ', ') after the install" }
+        $exe = $dirs | Get-ChildItem -Recurse -Filter plastimatch.exe | Select-Object -First 1
+        if (-not $exe) {
+          Write-Host "Plastimatch folders found: $($dirs.FullName -join ', ')"
+          Select-String -Path plastimatch-msi.log -Pattern 'INSTALL_ROOT|INSTALLDIR|TARGETDIR' | Select-Object -First 10
+          throw "plastimatch.exe not found after the install"
+        }
+        Write-Host "plastimatch: $($exe.FullName)"
+        Add-Content $env:GITHUB_PATH $exe.DirectoryName
 
     - name: Install dependencies
       run: |
