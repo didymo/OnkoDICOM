@@ -185,11 +185,11 @@ class Configuration(metaclass=Singleton):
             if result[0] == 0:
                 # insert a new default directory if there is none
                 connection.execute("""INSERT INTO configuration (id, default_dir)
-                                    VALUES (1, "%s");""" % new_dir)
+                                    VALUES (1, ?);""", (str(new_dir),))
             else:
                 connection.execute("""UPDATE CONFIGURATION
-                                SET default_dir = "%s"
-                                WHERE id = 1;""" % new_dir)
+                                SET default_dir = ?
+                                WHERE id = 1;""", (str(new_dir),))
             connection.commit()
 
     @error_handling
@@ -249,11 +249,11 @@ class Configuration(metaclass=Singleton):
             if result[0] == 0:
                 # insert a new CSV dir if there is none
                 cursor.execute("""INSERT INTO configuration (id, csv_dir)
-                                                VALUES (1, "%s");""" % new_dir)
+                                                VALUES (1, ?);""", (str(new_dir),))
             else:
                 cursor.execute("""UPDATE CONFIGURATION
-                                        SET csv_dir = "%s"
-                                        WHERE id = 1;""" % new_dir)
+                                        SET csv_dir = ?
+                                        WHERE id = 1;""", (str(new_dir),))
             connection.commit()
 
     def set_db_file_path(self, new_path):
