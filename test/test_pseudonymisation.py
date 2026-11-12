@@ -213,18 +213,94 @@ def test_no_original_uid_in_written_file(known_config: Path, path: Path) -> None
     assert leaked == set()
 
 
-def test_non_conformant_date_in_dataset_is_refused(known_config: Path) -> None:
-    """Contract: DICOM-RT-02 as published (UUIDs in date elements) is refused, as by pymedphys (#61)."""
-    ds = pydicom.dcmread(DICOM_FILES[0])
+@pytest.mark.parametrize("path", DICOM_FILES, ids=[p.name for p in DICOM_FILES])
+def test_invalid_dates_are_emptied_and_logged(
+    known_config: Path, caplog: pytest.LogCaptureFixture, path: Path
+) -> None:
+    """Contract (#61): DICOM-RT-02 as published, with UUIDs in date elements, is pseudonymised.
+
+    pymedphys refuses it. Here each invalid date is emptied, with a warning naming the source,
+    the element, its tag and the value; everything else is as for the same data with valid dates.
+    """
+    raw = pydicom.dcmread(path)
+    invalid = {
+        e.keyword: str(e.value)
+        for e in raw
+        if e.VR == "DA" and e.value and not str(e.value).isdigit()
+    }
+    assert invalid  # the probe has something to find
     with pytest.raises(ValueError):
         pmp_anonymise(
-            ds,
+            copy.deepcopy(raw),
             keywords_to_leave_unchanged=LEAVE_UNCHANGED,
             replacement_strategy=pmp_pseudonymise.pseudonymisation_dispatch,
             identifying_keywords=pmp_pseudonymise.get_default_pseudonymisation_keywords(),
         )
-    with pytest.raises(ValueError):
-        pseudo.pseudonymise_dataset(ds, keywords_to_leave_unchanged=LEAVE_UNCHANGED)
+
+    with caplog.at_level("WARNING", logger="src.Model.Pseudonymisation"):
+        ours = pseudo.pseudonymise_dataset(raw, keywords_to_leave_unchanged=LEAVE_UNCHANGED, source=str(path))
+    for keyword in invalid:
+        assert ours[keyword].value == ""
+    warnings = [r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage()]
+    assert len(warnings) == len(invalid)
+    for keyword, value in invalid.items():
+        tag = str(raw[keyword].tag)
+        assert any(str(path) in w and keyword in w and tag in w and value in w for w in warnings), keyword
+
+    valid = pseudo.pseudonymise_dataset(
+        _with_conformant_dates(pydicom.dcmread(path)), keywords_to_leave_unchanged=LEAVE_UNCHANGED
+    )
+    for keyword in invalid:
+        del ours[keyword], valid[keyword]
+    assert ours == valid
+
+
+def test_invalid_value_inside_sequence_is_located(known_config: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """Contract (#61): the warning gives each sequence and item number down to the invalid element."""
+    ds = _small_dataset()
+    second_item = Dataset()
+    second_item.PatientBirthDate = "not-a-date"
+    ds.ReferencedStudySequence.append(second_item)
+    with caplog.at_level("WARNING", logger="src.Model.Pseudonymisation"):
+        ours = pseudo.pseudonymise_dataset(ds, source="patient/RS.dcm")
+    assert ours.ReferencedStudySequence[1].PatientBirthDate == ""
+    assert ours.StudyDate != "" and ours.StudyDate != ds.StudyDate  # valid dates still shifted
+    (warning,) = [r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage()]
+    assert "patient/RS.dcm: ReferencedStudySequence[1] > PatientBirthDate (0010,0030) VR DA" in warning
+    assert "'not-a-date'" in warning
+
+
+@pytest.mark.parametrize(
+    "keyword,value",
+    [
+        ("PatientWeight", MultiValue(DSfloat, ["1.5", "2.5"])),  # decimal.InvalidOperation
+        ("PatientAge", "005D"),  # ValueError: nothing smaller than days
+        ("AcquisitionDateTime", "not a date"),
+    ],
+)
+def test_other_invalid_values_are_emptied(known_config: Path, caplog: pytest.LogCaptureFixture, keyword: str, value) -> None:
+    """Contract (#61): any value invalid for its VR is emptied and logged, not passed through."""
+    ds = _small_dataset()
+    setattr(ds, keyword, value)
+    with caplog.at_level("WARNING", logger="src.Model.Pseudonymisation"):
+        ours = pseudo.pseudonymise_dataset(ds)
+    assert ours[keyword].value in ("", None)
+    assert any(keyword in r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage())
+
+
+@pytest.mark.parametrize(
+    "keyword,value,error",
+    [
+        ("InstitutionName", "Se\u00f1or", UnicodeEncodeError),  # valid DICOM text, but not ASCII
+        ("StudyInstanceUID", MultiValue(str, ["1.2.3", "1.2.4"]), AttributeError),  # multi-valued UI
+    ],
+)
+def test_values_that_are_not_invalid_still_refuse(known_config: Path, keyword: str, value, error) -> None:
+    """Contract: a value that is valid DICOM but cannot be hashed is not emptied as if invalid; it raises."""
+    ds = _small_dataset()
+    setattr(ds, keyword, value)
+    with pytest.raises(error):
+        pseudo.pseudonymise_dataset(ds)
 
 
 def _small_dataset() -> Dataset:
