@@ -165,11 +165,14 @@ def test_default_directory_is_stored_as_given(init_sqlite_config, new_dir, exist
 @pytest.mark.parametrize("existing_row", [False, True], ids=["insert", "update"])
 def test_clinical_data_csv_dir_is_stored_as_given(init_sqlite_config, new_dir, existing_row):
     configuration = Configuration()
-    configuration.update_default_directory("/home/test/default")
     if existing_row:
+        # The row exists, so update_clinical_data_csv_dir takes its UPDATE statement.
+        configuration.update_default_directory("/home/test/default")
         configuration.update_clinical_data_csv_dir("/home/test/first")
+    # Otherwise there is no row, so it takes its INSERT statement.
     configuration.update_clinical_data_csv_dir(new_dir)
 
     assert configuration.get_clinical_data_csv_dir() == new_dir
     rows = init_sqlite_config.execute("SELECT id, default_dir, csv_dir FROM CONFIGURATION").fetchall()
-    assert rows == [(1, "/home/test/default", new_dir)]
+    expected_default = "/home/test/default" if existing_row else None
+    assert rows == [(1, expected_default, new_dir)]
