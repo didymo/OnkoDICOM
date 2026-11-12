@@ -125,9 +125,7 @@ def test_age_step_covers_exactly_pymedphys_range() -> None:
         ("StudyDate", "61d6b371-5759-36d4-a66b-402c0333d1a9"),  # non-conformant date (DICOM-RT-02)
         ("AcquisitionDateTime", "not a date"),
         ("PatientWeight", MultiValue(DSfloat, ["1.5", "2.5"])),  # multi-valued DS
-        ("StudyInstanceUID", MultiValue(str, ["1.2.3", "1.2.4"])),  # multi-valued UI
         ("PatientAge", "005D"),  # nothing smaller than days
-        ("Manufacturer", "Señor"),  # not ASCII
     ],
 )
 def test_value_that_pymedphys_refuses_is_refused(known_config: Path, keyword: str, value) -> None:
@@ -288,19 +286,45 @@ def test_other_invalid_values_are_emptied(known_config: Path, caplog: pytest.Log
     assert any(keyword in r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage())
 
 
-@pytest.mark.parametrize(
-    "keyword,value,error",
-    [
-        ("InstitutionName", "Se\u00f1or", UnicodeEncodeError),  # valid DICOM text, but not ASCII
-        ("StudyInstanceUID", MultiValue(str, ["1.2.3", "1.2.4"]), AttributeError),  # multi-valued UI
-    ],
-)
-def test_values_that_are_not_invalid_still_refuse(known_config: Path, keyword: str, value, error) -> None:
-    """Contract: a value that is valid DICOM but cannot be hashed is not emptied as if invalid; it raises."""
+def test_pymedphys_refused_non_ascii_and_multi_valued_ui(known_config: Path) -> None:
+    """The reference for the two cases below: pymedphys had no pseudonym for either, so none can change."""
+    with pytest.raises(UnicodeEncodeError):
+        _pmp_value("InstitutionName", "Señor")
+    with pytest.raises(AttributeError):
+        _pmp_value("StudyInstanceUID", MultiValue(str, ["1.2.3", "1.2.4"]))
+
+
+@pytest.mark.parametrize("charset", ["ISO_IR 100", "ISO_IR 192"])
+def test_non_ascii_name_is_pseudonymised_the_same_in_any_character_set(known_config: Path, charset: str) -> None:
+    """Contract: a non-ASCII name is pseudonymised, and its file's character set does not change the pseudonym."""
     ds = _small_dataset()
-    setattr(ds, keyword, value)
-    with pytest.raises(error):
-        pseudo.pseudonymise_dataset(ds)
+    ds.SpecificCharacterSet = charset
+    ds.PatientName = "Müller^Jürgen"
+    ds.InstitutionName = "Hôpital Señor"
+    ds.file_meta = pydicom.dataset.FileMetaDataset()
+    ds.file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
+    written = io.BytesIO()
+    ds.save_as(written, enforce_file_format=False)
+    read_back = pydicom.dcmread(io.BytesIO(written.getvalue()), force=True)
+    assert str(read_back.PatientName) == "Müller^Jürgen"  # decoded from the file's character set
+
+    ours = pseudo.pseudonymise_dataset(read_back)
+    assert ours.PatientName == pseudo.pseudonymise_value("PatientName", "Müller^Jürgen")
+    assert ours.InstitutionName == pseudo.pseudonymise_value("InstitutionName", "Hôpital Señor")
+    assert "Müller" not in str(ours.PatientName) and ours.InstitutionName != "Hôpital Señor"
+    assert ours.PatientName.family_name.isascii() and ours.InstitutionName.isascii()
+
+
+def test_multi_valued_ui_is_pseudonymised_value_by_value(known_config: Path) -> None:
+    """Contract: each UID of a multi-valued UI maps to the same pseudonym it gets on its own."""
+    ds = _small_dataset()
+    ds.StudyInstanceUID = "1.2.3"
+    ours = pseudo.pseudonymise_dataset(ds)
+    single = ours.StudyInstanceUID
+    ds.StudyInstanceUID = MultiValue(str, ["1.2.3", "1.2.4"])
+    ours = pseudo.pseudonymise_dataset(ds)
+    assert list(ours.StudyInstanceUID) == [single, pseudo.pseudonymise_value("StudyInstanceUID", "1.2.4")]
+    assert "1.2.3" not in ours.StudyInstanceUID and "1.2.4" not in ours.StudyInstanceUID
 
 
 def _small_dataset() -> Dataset:

@@ -16,6 +16,8 @@ keywords, as OnkoDICOM called it before. The intended differences:
   ``file_meta.MediaStorageSOPInstanceUID`` of every file (#63).
 - A value that is not valid for its VR (for example a date that is not a date) is
   emptied and logged as a warning; pymedphys refused the whole dataset (#61).
+- Non-ASCII text is hashed (as UTF-8), and each value of a multi-valued UI is
+  pseudonymised separately; pymedphys refused both.
 
 No claim of conformance to any DICOM Application Level Confidentiality Profile is made.
 """
@@ -146,9 +148,6 @@ def _pseudonymise_elements(
                 continue
             try:
                 replacement = pseudonymise_value(keyword, current_value)
-            except UnicodeEncodeError:
-                # Not ASCII: valid DICOM text that the hash cannot take, not an invalid value.
-                raise
             except (ValueError, decimal.InvalidOperation) as error:
                 elem = ds[keyword]
                 logger.warning(
