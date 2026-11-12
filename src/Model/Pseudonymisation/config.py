@@ -4,6 +4,10 @@ The file, its ``[pseudo]`` table and the ``pepper`` and ``epoch_jitter`` keys ar
 ones pymedphys uses. A site that has already pseudonymised data with pymedphys keeps
 its pepper and jitter, and so keeps producing the same pseudonyms. Moving the file
 would silently change every pseudonym and break the link between old and new data.
+
+Where this differs from pymedphys it is only when the configuration cannot be read, or
+is read through a ``redirect``: pymedphys then created a new pepper and overwrote
+``~/.pymedphys/config.toml``, losing the redirect and every other setting in it.
 """
 
 import functools
@@ -22,37 +26,70 @@ def get_config_dir() -> pathlib.Path:
     return config_dir
 
 
-def get_config(path: pathlib.Path | None = None) -> dict:
-    """Read the configuration, following any ``redirect`` entries.
+class PseudonymisationConfigError(OSError):
+    """The configuration exists but cannot be read, so the pepper and jitter are unknown.
+
+    Pseudonymisation stops rather than create a new pepper: a new pepper would silently
+    change every pseudonym from then on, and writing it would overwrite the configuration
+    that could not be read (including any ``redirect`` to a shared configuration).
+    """
+
+
+def _read_config() -> tuple[dict, pathlib.Path] | None:
+    """Read the configuration, following ``redirect`` entries.
+
+    Returns:
+        ``(configuration, path of the file it came from)``, or ``None`` when there is no
+        ``~/.pymedphys/config.toml`` at all (a first run).
 
     Raises:
-        OSError: if a configuration file cannot be read.
+        PseudonymisationConfigError: if the file, or a file it redirects to, cannot be read.
     """
-    if path is None:
-        path = get_config_dir()
-    config_path = pathlib.Path(path).joinpath(CONFIG_FILENAME)
+    config_path = get_config_dir().joinpath(CONFIG_FILENAME)
+    if not config_path.exists():
+        return None
     while True:
-        with open(config_path) as f:
-            results = toml.load(f)
+        try:
+            with open(config_path) as f:
+                results = toml.load(f)
+        except (OSError, toml.TomlDecodeError) as error:
+            raise PseudonymisationConfigError(
+                f"Cannot read the pseudonymisation configuration {config_path}: {error}. "
+                "Pseudonymisation stopped so that the pepper and jitter are not replaced."
+            ) from error
         try:
             config_path = pathlib.Path(results["redirect"])
         except KeyError:
-            break
-    return results
+            return results, config_path
 
 
-def _store_pseudo_value(config: dict | None, key: str, value) -> None:
-    """Add ``[pseudo] key = value`` to the configuration and write it to ``~/.pymedphys``.
+def get_config() -> dict:
+    """Return the configuration (empty on a first run), following ``redirect`` entries.
 
-    Other keys in the configuration are kept. As in pymedphys, the write goes to
-    ``~/.pymedphys/config.toml`` even when the configuration was read through a redirect.
+    Raises:
+        PseudonymisationConfigError: if the configuration exists but cannot be read.
     """
-    if config is None:
-        config = {}
-    pseudo_config = config.setdefault("pseudo", {})
-    pseudo_config.setdefault(key, value)
-    with open(get_config_dir().joinpath(CONFIG_FILENAME), "w") as f:
+    read = _read_config()
+    return {} if read is None else read[0]
+
+
+def _get_or_create(key: str, create):
+    """Return ``[pseudo] key`` from the configuration, creating and storing it if it is missing.
+
+    A created value is stored in the file the configuration was read from: through a
+    ``redirect``, that is the shared file, and ``~/.pymedphys/config.toml`` keeps its redirect.
+    Every other key in that file is kept.
+    """
+    read = _read_config()
+    config, path = read if read is not None else ({}, get_config_dir().joinpath(CONFIG_FILENAME))
+    pseudo_config = config.get("pseudo", {})
+    if key in pseudo_config:
+        return pseudo_config[key]
+    value = create()
+    config.setdefault("pseudo", {})[key] = value
+    with open(path, "w") as f:
         toml.dump(config, f)
+    return value
 
 
 @functools.lru_cache()
@@ -61,28 +98,21 @@ def get_pepper() -> bytes:
 
     The pepper is not stored with the pseudonymised data, which makes a dictionary
     attack on the pseudonyms harder.
+
+    Raises:
+        PseudonymisationConfigError: if the configuration exists but cannot be read.
     """
-    config = None
-    try:
-        config = get_config()
-        return config["pseudo"]["pepper"].encode("ASCII")
-    except (KeyError, OSError):
-        pepper = secrets.token_urlsafe(32)
-        _store_pseudo_value(config, "pepper", pepper)
-        return pepper.encode("ASCII")
+    return _get_or_create("pepper", lambda: secrets.token_urlsafe(32)).encode("ASCII")
 
 
 @functools.lru_cache()
 def get_epoch_jitter() -> int:
-    """Return the number of days (0 to 999) added to shifted dates, creating and storing it if needed."""
-    config = None
-    try:
-        config = get_config()
-        return config["pseudo"]["epoch_jitter"]
-    except (KeyError, OSError):
-        epoch_jitter = secrets.randbelow(1000)
-        _store_pseudo_value(config, "epoch_jitter", epoch_jitter)
-        return epoch_jitter
+    """Return the number of days (0 to 999) added to shifted dates, creating and storing it if needed.
+
+    Raises:
+        PseudonymisationConfigError: if the configuration exists but cannot be read.
+    """
+    return _get_or_create("epoch_jitter", lambda: secrets.randbelow(1000))
 
 
 def clear_cache() -> None:
@@ -91,4 +121,4 @@ def clear_cache() -> None:
     get_epoch_jitter.cache_clear()
 
 
-__all__ = ["get_config", "get_config_dir", "get_epoch_jitter", "get_pepper", "clear_cache"]
+__all__ = ["PseudonymisationConfigError", "get_config", "get_config_dir", "get_epoch_jitter", "get_pepper", "clear_cache"]

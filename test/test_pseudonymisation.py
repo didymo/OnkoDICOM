@@ -90,6 +90,9 @@ VALUES = [
     ("StudyInstanceUID", "2.25.329800735698586629295641978511506172918"),  # UI, long
     ("PatientAge", "045Y"),  # AS, decade
     ("PatientAge", "095Y"),  # AS, over 80
+    ("PatientAge", "021Y"),  # AS, lowest age rounded to a decade
+    ("PatientAge", "080Y"),  # AS, decade and cap agree
+    ("PatientAge", "081Y"),  # AS, lowest capped age
 ]
 
 
@@ -418,5 +421,84 @@ def test_no_config_directory_at_all(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         jitter = config.get_epoch_jitter()
         stored = toml.loads((tmp_path / ".pymedphys" / "config.toml").read_text())
         assert stored == {"pseudo": {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}}
+    finally:
+        _clear_caches()
+
+
+def _redirected_home(tmp_path: Path, shared_content: str) -> tuple[Path, Path, Path]:
+    """A home whose ~/.pymedphys/config.toml redirects to a shared file, as a site might set up."""
+    home, share = tmp_path / "home", tmp_path / "share"
+    (home / ".pymedphys").mkdir(parents=True)
+    share.mkdir()
+    shared = share / "config.toml"
+    shared.write_text(shared_content)
+    main = home / ".pymedphys" / "config.toml"
+    main.write_text(toml.dumps({"redirect": str(shared), "other": {"setting": "kept"}}))
+    return home, main, shared
+
+
+def test_redirect_to_shared_pepper_is_followed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a redirect to a shared configuration supplies the site's pepper and jitter."""
+    home, main, _ = _redirected_home(tmp_path, toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
+    before = main.read_bytes()
+    _use_home(monkeypatch, home)
+    try:
+        assert config.get_pepper() == PEPPER.encode("ASCII")
+        assert config.get_epoch_jitter() == 7
+        assert main.read_bytes() == before
+    finally:
+        _clear_caches()
+
+
+def test_missing_pepper_is_stored_in_the_shared_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: through a redirect, a new pepper goes into the shared file; the redirect survives.
+
+    pymedphys wrote the shared file's content over ~/.pymedphys/config.toml instead.
+    """
+    home, main, shared = _redirected_home(tmp_path, toml.dumps({"shared": {"note": "site"}}))
+    before = main.read_bytes()
+    _use_home(monkeypatch, home)
+    try:
+        pepper = config.get_pepper()
+        jitter = config.get_epoch_jitter()
+        assert main.read_bytes() == before
+        stored = toml.loads(shared.read_text())
+        assert stored["shared"] == {"note": "site"}
+        assert stored["pseudo"] == {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}
+    finally:
+        _clear_caches()
+
+
+def test_unreachable_shared_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: if the shared configuration cannot be read (a share offline), nothing is pseudonymised
+    and nothing is written. A new pepper would change every pseudonym from then on, and pymedphys
+    wrote one over ~/.pymedphys/config.toml, losing the redirect.
+    """
+    home, main, shared = _redirected_home(tmp_path, toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
+    shared.unlink()
+    before = main.read_bytes()
+    _use_home(monkeypatch, home)
+    try:
+        with pytest.raises(config.PseudonymisationConfigError, match="share"):
+            config.get_pepper()
+        with pytest.raises(config.PseudonymisationConfigError):
+            pseudo.pseudonymise_dataset(_small_dataset())
+        assert main.read_bytes() == before
+        assert not shared.exists()
+    finally:
+        _clear_caches()
+
+
+def test_unparseable_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a configuration that is not valid TOML is reported, never replaced."""
+    (tmp_path / ".pymedphys").mkdir()
+    main = tmp_path / ".pymedphys" / "config.toml"
+    main.write_text("[pseudo\npepper = ")
+    before = main.read_bytes()
+    _use_home(monkeypatch, tmp_path)
+    try:
+        with pytest.raises(config.PseudonymisationConfigError):
+            config.get_epoch_jitter()
+        assert main.read_bytes() == before
     finally:
         _clear_caches()
