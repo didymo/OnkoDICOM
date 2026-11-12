@@ -7,6 +7,7 @@ pointing at a temporary directory holding a known configuration.
 
 import copy
 import decimal
+import io
 from pathlib import Path
 
 import pydicom
@@ -177,11 +178,39 @@ def test_dataset_matches_pymedphys(known_config: Path, path: Path) -> None:
         identifying_keywords=pmp_pseudonymise.get_default_pseudonymisation_keywords(),
     )
 
-    assert ours == reference
+    assert ours == reference  # Dataset equality does not include the file meta
+    # The file meta matches pymedphys's except where pymedphys left the original UID (#63).
+    ours_meta, reference_meta = copy.deepcopy(ours.file_meta), copy.deepcopy(reference.file_meta)
+    assert ours_meta.MediaStorageSOPInstanceUID == ours.SOPInstanceUID
+    assert reference_meta.MediaStorageSOPInstanceUID == before.SOPInstanceUID
+    del ours_meta.MediaStorageSOPInstanceUID, reference_meta.MediaStorageSOPInstanceUID
+    assert ours_meta == reference_meta
     assert ours.PatientID != before.PatientID  # it did pseudonymise
     assert original == before  # the input is not changed
+    assert original.file_meta == before.file_meta
     if ours.SOPClassUID.name != "Comprehensive SR Storage":
         assert pseudo.filename_for_dataset(ours, "out") == create_filename_from_dataset(reference, "out")
+
+
+@pytest.mark.parametrize("path", DICOM_FILES, ids=[p.name for p in DICOM_FILES])
+def test_no_original_uid_in_written_file(known_config: Path, path: Path) -> None:
+    """Contract: no original identifying UID survives anywhere in the written file (#63).
+
+    Searches the bytes save_as writes, file meta included, for every original value of an
+    identifying UID found anywhere in the source, sequences and file meta included.
+    """
+    source = _with_conformant_dates(pydicom.dcmread(path))
+    originals = {
+        str(elem.value): elem.keyword
+        for elem in [*source.iterall(), *source.file_meta]
+        if elem.keyword in pseudo.IDENTIFYING_UIDS and elem.value
+    }
+    assert str(source.SOPInstanceUID) in originals  # the probe has something to find
+    written = io.BytesIO()
+    pseudo.pseudonymise_dataset(source, keywords_to_leave_unchanged=LEAVE_UNCHANGED).save_as(written)
+    data = written.getvalue()
+    leaked = {keyword for uid, keyword in originals.items() if uid.encode("ASCII") in data}
+    assert leaked == set()
 
 
 def test_non_conformant_date_in_dataset_is_refused(known_config: Path) -> None:

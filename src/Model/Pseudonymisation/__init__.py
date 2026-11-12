@@ -7,10 +7,13 @@ Stuart Swerdloff, who wrote the pymedphys pseudonymisation code, agreed on
 
 For the same pepper and jitter, ``pseudonymise_dataset`` gives the same dataset as
 ``pymedphys.dicom.anonymise`` called with pymedphys's pseudonymisation strategy and
-keywords, as OnkoDICOM called it before. The one intended difference: an element is
-"known" if pydicom's data dictionary has it, where pymedphys used its own older copy of
-that dictionary. pydicom knows 838 more standard tags, and pymedphys refused a dataset
-containing any of them.
+keywords, as OnkoDICOM called it before. The intended differences:
+
+- An element is "known" if pydicom's data dictionary has it, where pymedphys used its
+  own older copy of that dictionary. pydicom knows 838 more standard tags, and pymedphys
+  refused a dataset containing any of them.
+- The file meta is pseudonymised too. pymedphys left the original SOP Instance UID in
+  ``file_meta.MediaStorageSOPInstanceUID`` of every file (#63).
 
 No claim of conformance to any DICOM Application Level Confidentiality Profile is made.
 """
@@ -157,6 +160,12 @@ def pseudonymise_dataset(
     ds_pseudo.remove_private_tags()
     keywords = [k for k in PSEUDONYMISATION_KEYWORDS if k not in keywords_to_leave_unchanged]
     _pseudonymise_elements(ds_pseudo, keywords)
+    # The file meta (group 0002) is a separate dataset. Its MediaStorageSOPInstanceUID holds
+    # the original SOP Instance UID, and pymedphys left it there (#63). UIDs are hashed
+    # without the pepper, so it becomes the same UID as the pseudonymised SOPInstanceUID.
+    file_meta = getattr(ds_pseudo, "file_meta", None)
+    if file_meta is not None:
+        _pseudonymise_elements(file_meta, keywords)
     return ds_pseudo
 
 
