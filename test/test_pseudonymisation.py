@@ -8,6 +8,7 @@ pointing at a temporary directory holding a known configuration.
 import copy
 import decimal
 import io
+import os
 from pathlib import Path
 
 import pydicom
@@ -500,5 +501,98 @@ def test_unparseable_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: 
         with pytest.raises(config.PseudonymisationConfigError):
             config.get_epoch_jitter()
         assert main.read_bytes() == before
+    finally:
+        _clear_caches()
+
+
+@pytest.mark.timeout(20)
+@pytest.mark.parametrize("loop", ["self", "two files"])
+def test_a_redirect_loop_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, loop: str) -> None:
+    """Contract (#69): a redirect back to a file already read is reported, not followed forever."""
+    (tmp_path / ".pymedphys").mkdir()
+    main = tmp_path / ".pymedphys" / "config.toml"
+    other = tmp_path / "other.toml"
+    if loop == "self":
+        main.write_text(toml.dumps({"redirect": str(main)}))
+    else:
+        main.write_text(toml.dumps({"redirect": str(other)}))
+        other.write_text(toml.dumps({"redirect": str(main)}))
+    before = main.read_bytes()
+    _use_home(monkeypatch, tmp_path)
+    try:
+        with pytest.raises(config.PseudonymisationConfigError, match="loop"):
+            config.get_pepper()
+        assert main.read_bytes() == before
+    finally:
+        _clear_caches()
+
+
+def test_a_failed_write_leaves_the_pepper_in_place(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract (#69): storing a new jitter fails part-way; the file still holds the pepper, whole.
+
+    Before, the file was truncated first, so the pepper was lost and the next run made a new one.
+    """
+    (tmp_path / ".pymedphys").mkdir()
+    main = tmp_path / ".pymedphys" / "config.toml"
+    main.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}, "other": {"setting": "kept"}}))
+    before = main.read_bytes()
+    _use_home(monkeypatch, tmp_path)
+
+    def fail_part_way(data: dict, f) -> None:
+        f.write("[pseudo]\n")  # some bytes reach the file, then the disk is full
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(config.toml, "dump", fail_part_way)
+    try:
+        with pytest.raises(OSError, match="No space left"):
+            config.get_epoch_jitter()
+        assert main.read_bytes() == before
+        assert sorted(p.name for p in main.parent.iterdir()) == ["config.toml"]  # no temporary file left
+    finally:
+        _clear_caches()
+
+
+def test_a_rewritten_config_keeps_its_permissions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: replacing the file does not change who can read it; a first file is the owner's only.
+
+    POSIX permission bits only: Windows keeps only a read-only flag, so chmod(0o640) reads back as 0o666 there.
+    """
+    (tmp_path / ".pymedphys").mkdir()
+    main = tmp_path / ".pymedphys" / "config.toml"
+    main.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}}))
+    main.chmod(0o640)
+    _use_home(monkeypatch, tmp_path)
+    try:
+        config.get_epoch_jitter()
+        if os.name == "posix":
+            assert main.stat().st_mode & 0o777 == 0o640
+        assert "epoch_jitter" in toml.loads(main.read_text())["pseudo"]
+    finally:
+        _clear_caches()
+    fresh = tmp_path / "fresh"
+    _use_home(monkeypatch, fresh)
+    fresh.mkdir()
+    try:
+        config.get_pepper()
+        if os.name == "posix":
+            assert (fresh / ".pymedphys" / "config.toml").stat().st_mode & 0o777 == 0o600
+    finally:
+        _clear_caches()
+
+
+def test_a_symlinked_config_is_written_through_the_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a config reached by a symlink (a site's shared file) gets the new value; the link stays a link."""
+    shared = tmp_path / "share" / "config.toml"
+    shared.parent.mkdir()
+    shared.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}}))
+    (tmp_path / "home" / ".pymedphys").mkdir(parents=True)
+    link = tmp_path / "home" / ".pymedphys" / "config.toml"
+    link.symlink_to(shared)
+    _use_home(monkeypatch, tmp_path / "home")
+    try:
+        jitter = config.get_epoch_jitter()
+        assert link.is_symlink() and link.resolve() == shared.resolve()
+        assert toml.loads(shared.read_text())["pseudo"] == {"pepper": PEPPER, "epoch_jitter": jitter}
+        assert sorted(p.name for p in shared.parent.iterdir()) == ["config.toml"]
     finally:
         _clear_caches()
