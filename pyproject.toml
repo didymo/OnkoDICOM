@@ -33,8 +33,9 @@ fuzzywuzzy = "*"
 PyWavelets = ">=1.5.0"
 networkx = "*"
 # pymedphys has reinstated psuedonymisation in 0.39
-# something in OnkoDICOM does a recursive import on pymedphys, so now installing all extras in pymedphys
-pymedphys = "0.41.0"
+# Anonymisation needs the "dicom" extra (pydicom, pynetdicom) and the "cli" extra (toml, which reads the
+# pseudonymisation pepper from ~/.pymedphys/config.toml). Not "all": its streamlit pin needs numpy < 2.
+pymedphys = {version = "0.41.0", extras = ["dicom", "cli"]}
 # until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
 # pyradiomics = [
 #    { version = "==3.0.1", python = "<3.10"},
@@ -46,7 +47,9 @@ vtk = "*"
 shapely = ">=2.0"
 python-Levenshtein = "*"
 opencv-python = ">=4.10"
-matplotlib = "*"
+# platipy 0.4.1 calls matplotlib.cm.get_cmap at import (default arguments), and matplotlib 3.11 removes it, so
+# image fusion would fail to import (#49). Lift this when a platipy release that supports pydicom 3 is in the lock.
+matplotlib = "<3.11"
 scikit-learn = "*"
 imblearn = "*"
 kaplanmeier = "*"

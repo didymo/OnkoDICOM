@@ -16,7 +16,7 @@ from src.Controller.PathHandler import resource_path
 from src.Model.DicomUtils import truncate_ds_fields
 from src.Model.PatientDictContainer import PatientDictContainer
 from pydicom.dataset import FileDataset
-from pydicom.uid import generate_uid
+from pydicom.uid import ImplicitVRLittleEndian, generate_uid
 from pydicom import dcmread
 from pydicom.dataset import Dataset
 from pydicom.uid import generate_uid
@@ -646,8 +646,6 @@ class TranslateRotateMenu(QtWidgets.QWidget):
 
         file_meta = self._create_file_meta()
         ds = FileDataset("transform.dcm", {}, file_meta=file_meta, preamble=b"\0" * 128)
-        ds.is_little_endian = True
-        ds.is_implicit_VR = True
 
         self._set_dicom_fields(ds, patient_name, patient_id, file_meta)
         self._add_referenced_series(ds, fixed_series_uid, fixed_image_uid)
@@ -756,6 +754,8 @@ class TranslateRotateMenu(QtWidgets.QWidget):
         file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.66.1"  # Spatial Registration Storage
         file_meta.MediaStorageSOPInstanceUID = generate_uid()
         file_meta.ImplementationClassUID = generate_uid()
+        # The transfer syntax the file is written in (implicit VR little endian), in place of the flags pydicom 4 removes.
+        file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
         return file_meta
 
     def _set_dicom_fields(self, ds, patient_name, patient_id, file_meta):

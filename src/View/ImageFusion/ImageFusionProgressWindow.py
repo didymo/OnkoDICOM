@@ -66,7 +66,7 @@ class ImageFusionProgressWindow(ProgressWindow):
             mb.setStyleSheet(StyleSheetReader().get_stylesheet())
             mb.setWindowIcon(QtGui.QIcon(resource_path(Path.cwd().joinpath(
                 'res', 'images', 'btn-icons', 'onkodicom_icon.png'))))
-            mb.exec_()
+            mb.exec()
 
             if mb.clickedButton() == button_yes:
                 self.signal_advise_calc_dvh.emit(True)

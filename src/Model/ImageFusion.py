@@ -304,13 +304,11 @@ def write_transform_to_dcm(affine_matrix):
     spatial_registration.Manufacturer = "OnkoDICOM"
     spatial_registration.StationName = patient_dataset.get("StationName")
 
-    spatial_registration.is_little_endian = True
-    spatial_registration.is_implicit_VR = True
-
     # Place path into Patient->Study folder
     filepath = os.path.join(patient_dict_container.path, 'transform.dcm')
 
-    spatial_registration.save_as(filepath)
+    # A plain Dataset without file meta: the encoding is given to save_as, not set as the flags pydicom 4 removes.
+    spatial_registration.save_as(filepath, implicit_vr=True, little_endian=True)
 
 
 def create_fused_model(old_images, new_image):

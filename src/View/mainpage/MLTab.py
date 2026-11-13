@@ -325,7 +325,7 @@ class MLTab(QtWidgets.QWidget):
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Error!")
             dlg.setText("Please Provide a path for each file")
-            button = dlg.exec_()
+            button = dlg.exec()
 
             if button == QMessageBox.Ok:
                 print("Try Again")
@@ -504,4 +504,4 @@ class MLTab(QtWidgets.QWidget):
         ml_results_window.set_results_values(results)
         ml_results_window.set_ml_tester(ml_tester)
 
-        ml_results_window.exec_()
+        ml_results_window.exec()

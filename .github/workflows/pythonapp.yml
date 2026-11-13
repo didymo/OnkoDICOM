@@ -53,7 +53,7 @@ jobs:
 
     - name: Install Poetry
       run: |
-        curl -sSL https://install.python-poetry.org | python - --version 1.8.5
+        curl -sSL https://install.python-poetry.org | python - --version 2.5.1
         poetry --version
 
     - name: Set up Python ${{ matrix.python }}
@@ -153,20 +153,24 @@ jobs:
     name: Build - ${{ matrix.os }} - Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 50
-    # Tests on Windows are unstable. We do not want it to fail the entire test result
-    continue-on-error: true
+    # Tests on Windows are unstable, so the test step (below) may fail without failing the check. The job may
+    # not: a failed plastimatch download or install, or any other setup step, stops the job before the tests run,
+    # and must fail the check rather than leave Windows untested behind a passing one.
 
     env:
       DISPLAY: ':99.0' # do we need this in Windows?
       TestDataUrl: 'https://zenodo.org/record/5147737/files/DICOM-RT-02.zip'
-      PlastimatchWindowsUrl: 'https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.0-win64.msi'
+      # OnkoDICOM requires plastimatch >= 1.9.4 (issue #20): with 1.9.0 the
+      # NRRD written for the batch PyRadiomics tests could not be read back.
+      PlastimatchWindowsUrl: 'https://downloads.sourceforge.net/project/plastimatch/Windows%20Binaries/Plastimatch-1.9.4-win64.msi'
+      PlastimatchWindowsSha256: 0bf179f058b7214969c5201991d07b3dbb67378175039e0fe92285e8c6e06daf
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Install Poetry
       run: |
-        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py - --version 2.5.1
         Add-Content $env:GITHUB_PATH "$env:APPDATA\Python\Scripts"
 
     - name: Set up Python ${{ matrix.python }}
@@ -181,9 +185,32 @@ jobs:
 
     - name: Install plastimatch
       run: |
-        Invoke-WebRequest -Uri ${{ env.PlastimatchWindowsUrl }} -OutFile Plastimatch.msi
-        Start-Process -Wait msiexec -ArgumentList '/i Plastimatch.msi /passive'
-        Add-Content $env:GITHUB_PATH "C:\Program Files\Plastimatch"
+        $ErrorActionPreference = 'Stop'
+        # curl, not Invoke-WebRequest: from SourceForge, Invoke-WebRequest saves the HTML download page (135 KB), and
+        # msiexec then fails with 1620. The download is checked against the MSI's sha256 before it is used (#20).
+        curl.exe -fsSL --retry 3 -o Plastimatch.msi "${{ env.PlastimatchWindowsUrl }}"
+        if ($LASTEXITCODE) { throw "plastimatch download failed (curl exit $LASTEXITCODE)" }
+        $got = (Get-FileHash Plastimatch.msi -Algorithm SHA256).Hash.ToLower()
+        if ($got -ne '${{ env.PlastimatchWindowsSha256 }}') { throw "Plastimatch.msi sha256 $got, expected ${{ env.PlastimatchWindowsSha256 }}" }
+        # The installer's own exit code and log: a failed install must stop here, not surface later as a missing exe.
+        # Compared with 0, so an exit code that could not be read stops it too (an empty one read as success before).
+        $p = Start-Process msiexec -ArgumentList '/i Plastimatch.msi /passive /l*v plastimatch-msi.log' -PassThru
+        $null = $p.Handle
+        $p.WaitForExit()
+        if ($p.ExitCode -ne 0) { Get-Content plastimatch-msi.log -Tail 40; throw "msiexec /i exited '$($p.ExitCode)'" }
+        # Put on PATH the folder plastimatch.exe was actually installed in (Program Files\Plastimatch\bin, per
+        # plastimatch's CMake), found rather than assumed, and stop if there is none.
+        $roots = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, "$env:LOCALAPPDATA\Programs") | Where-Object { $_ -and (Test-Path $_) }
+        $dirs = @(Get-ChildItem $roots -Directory -Filter 'Plastimatch*')
+        if (-not $dirs) { throw "no Plastimatch folder under $($roots -join ', ') after the install" }
+        $exe = $dirs | Get-ChildItem -Recurse -Filter plastimatch.exe | Select-Object -First 1
+        if (-not $exe) {
+          Write-Host "Plastimatch folders found: $($dirs.FullName -join ', ')"
+          Select-String -Path plastimatch-msi.log -Pattern 'INSTALL_ROOT|INSTALLDIR|TARGETDIR' | Select-Object -First 10
+          throw "plastimatch.exe not found after the install"
+        }
+        Write-Host "plastimatch: $($exe.FullName)"
+        Add-Content $env:GITHUB_PATH $exe.DirectoryName
 
     - name: Install dependencies
       run: |
@@ -216,6 +243,7 @@ jobs:
         7z x DICOM-RT-02.zip -o${{ github.workspace }}\test\batchtestdata
 
     - name: Testing and Coverage with pytest
+      # Tests on Windows are unstable. We do not want them to fail the entire test result
       continue-on-error: true
       run: |
         # Append this for fail under x percent "--cov-fail-under=80"
