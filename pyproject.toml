@@ -32,7 +32,7 @@ fuzzywuzzy = "*"
 # reason) has none, so installing on 3.12 built it from source and failed (PEP 517).
 PyWavelets = ">=1.5.0"
 networkx = "*"
-# Pseudonymisation (src/Model/Pseudonymisation) reads and writes its pepper and jitter in ~/.pymedphys/config.toml
+# Pseudonymisation (src/Model/Pseudonymisation) keeps its pepper and jitter in ~/.OnkoDICOM/pseudonymisation.toml
 toml = "^0.10.2"
 # until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
 # pyradiomics = [

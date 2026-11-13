@@ -1,16 +1,18 @@
-"""The pseudonymisation pepper and date jitter, kept in ``~/.pymedphys/config.toml``.
+"""The pseudonymisation pepper and date jitter, kept in OnkoDICOM's configuration.
 
-The file, its ``[pseudo]`` table and the ``pepper`` and ``epoch_jitter`` keys are the
-ones pymedphys uses. A site that has already pseudonymised data with pymedphys keeps
-its pepper and jitter, and so keeps producing the same pseudonyms. Moving the file
-would silently change every pseudonym and break the link between old and new data.
+They live in ``~/.OnkoDICOM/pseudonymisation.toml``, as ``pepper`` and ``epoch_jitter`` in a
+``[pseudo]`` table. A site that pseudonymised data with pymedphys, or with OnkoDICOM before
+this file existed, has them in ``~/.pymedphys/config.toml``. When OnkoDICOM's file lacks a
+value and pymedphys's has it, the value is copied into OnkoDICOM's file, so the site keeps
+producing the same pseudonyms; pymedphys's file is never changed. Only when neither has it
+is a new value created.
 
-Where this differs from pymedphys it is only when the configuration cannot be read, or
-is read through a ``redirect``: pymedphys then created a new pepper and overwrote
-``~/.pymedphys/config.toml``, losing the redirect and every other setting in it.
+Losing or replacing the pepper or jitter would silently change every pseudonym from then on,
+so a configuration that exists but cannot be read stops pseudonymisation instead.
 """
 
 import functools
+import logging
 import os
 import pathlib
 import secrets
@@ -19,86 +21,99 @@ import tempfile
 
 import toml
 
-CONFIG_FILENAME = "config.toml"
+logger = logging.getLogger(__name__)
 
-
-def get_config_dir() -> pathlib.Path:
-    """Return ``~/.pymedphys``, creating it if it does not exist."""
-    config_dir = pathlib.Path.home().joinpath(".pymedphys")
-    config_dir.mkdir(exist_ok=True)
-    return config_dir
+ONKODICOM_CONFIG_DIR = ".OnkoDICOM"
+ONKODICOM_CONFIG_FILENAME = "pseudonymisation.toml"
+PYMEDPHYS_CONFIG_DIR = ".pymedphys"
+PYMEDPHYS_CONFIG_FILENAME = "config.toml"
 
 
 class PseudonymisationConfigError(OSError):
-    """The configuration exists but cannot be read, so the pepper and jitter are unknown.
+    """A configuration exists but cannot be read, so the pepper and jitter are unknown.
 
-    Pseudonymisation stops rather than create a new pepper: a new pepper would silently
-    change every pseudonym from then on, and writing it would overwrite the configuration
-    that could not be read (including any ``redirect`` to a shared configuration).
+    Pseudonymisation stops rather than create a new pepper, which would silently change
+    every pseudonym from then on.
     """
 
 
-def _read_config() -> tuple[dict, pathlib.Path] | None:
-    """Read the configuration, following ``redirect`` entries.
+def onkodicom_config_path() -> pathlib.Path:
+    """``~/.OnkoDICOM/pseudonymisation.toml``, in the directory OnkoDICOM keeps its configuration."""
+    return pathlib.Path.home().joinpath(ONKODICOM_CONFIG_DIR, ONKODICOM_CONFIG_FILENAME)
 
-    Returns:
-        ``(configuration, path of the file it came from)``, or ``None`` when there is no
-        ``~/.pymedphys/config.toml`` at all (a first run).
+
+def pymedphys_config_path() -> pathlib.Path:
+    """``~/.pymedphys/config.toml``, where pymedphys kept the pepper and jitter."""
+    return pathlib.Path.home().joinpath(PYMEDPHYS_CONFIG_DIR, PYMEDPHYS_CONFIG_FILENAME)
+
+
+def _read_toml(path: pathlib.Path) -> dict:
+    """Read one TOML file.
 
     Raises:
-        PseudonymisationConfigError: if the file, or a file it redirects to, cannot be read.
+        PseudonymisationConfigError: if it cannot be read or is not valid TOML.
     """
-    config_path = get_config_dir().joinpath(CONFIG_FILENAME)
+    try:
+        with open(path) as f:
+            return toml.load(f)
+    except (OSError, toml.TomlDecodeError) as error:
+        raise PseudonymisationConfigError(
+            f"Cannot read the pseudonymisation configuration {path}: {error}. "
+            "Pseudonymisation stopped so that the pepper and jitter are not replaced."
+        ) from error
+
+
+def _read_onkodicom_config() -> dict:
+    """OnkoDICOM's configuration, or an empty one if the file does not exist yet."""
+    path = onkodicom_config_path()
+    return _read_toml(path) if path.exists() else {}
+
+
+def _read_pymedphys_config() -> dict:
+    """pymedphys's configuration, following its ``redirect`` entries; empty if there is none.
+
+    Raises:
+        PseudonymisationConfigError: if it, or a file it redirects to, cannot be read, or the
+            redirects loop.
+    """
+    config_path = pymedphys_config_path()
     if not config_path.exists():
-        return None
+        return {}
     read_already: set[pathlib.Path] = set()
     while True:
         resolved = config_path.resolve()
         if resolved in read_already:
             raise PseudonymisationConfigError(
-                f"The pseudonymisation configuration redirects in a loop back to {config_path}. "
+                f"The pymedphys configuration redirects in a loop back to {config_path}. "
                 "Pseudonymisation stopped so that the pepper and jitter are not replaced."
             )
         read_already.add(resolved)
-        try:
-            with open(config_path) as f:
-                results = toml.load(f)
-        except (OSError, toml.TomlDecodeError) as error:
-            raise PseudonymisationConfigError(
-                f"Cannot read the pseudonymisation configuration {config_path}: {error}. "
-                "Pseudonymisation stopped so that the pepper and jitter are not replaced."
-            ) from error
+        results = _read_toml(config_path)
         try:
             config_path = pathlib.Path(results["redirect"])
         except KeyError:
-            return results, config_path
+            return results
 
 
-def get_config() -> dict:
-    """Return the configuration (empty on a first run), following ``redirect`` entries.
+def _get_or_move_or_create(key: str, create):
+    """Return ``[pseudo] key``: from OnkoDICOM's configuration, else moved from pymedphys's, else new.
 
-    Raises:
-        PseudonymisationConfigError: if the configuration exists but cannot be read.
+    A value moved or created is written to OnkoDICOM's configuration, keeping its other keys.
     """
-    read = _read_config()
-    return {} if read is None else read[0]
-
-
-def _get_or_create(key: str, create):
-    """Return ``[pseudo] key`` from the configuration, creating and storing it if it is missing.
-
-    A created value is stored in the file the configuration was read from: through a
-    ``redirect``, that is the shared file, and ``~/.pymedphys/config.toml`` keeps its redirect.
-    Every other key in that file is kept.
-    """
-    read = _read_config()
-    config, path = read if read is not None else ({}, get_config_dir().joinpath(CONFIG_FILENAME))
-    pseudo_config = config.get("pseudo", {})
-    if key in pseudo_config:
-        return pseudo_config[key]
-    value = create()
-    config.setdefault("pseudo", {})[key] = value
-    _write_atomically(path, config)
+    onkodicom = _read_onkodicom_config()
+    if key in onkodicom.get("pseudo", {}):
+        return onkodicom["pseudo"][key]
+    pymedphys = _read_pymedphys_config().get("pseudo", {})
+    if key in pymedphys:
+        value = pymedphys[key]
+        logger.info("Pseudonymisation %s copied from the pymedphys configuration to %s", key, onkodicom_config_path())
+    else:
+        value = create()
+        logger.info("Pseudonymisation %s created in %s", key, onkodicom_config_path())
+    onkodicom.setdefault("pseudo", {})[key] = value
+    path = onkodicom_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _write_atomically(path, onkodicom)
     return value
 
 
@@ -106,11 +121,11 @@ def _write_atomically(path: pathlib.Path, config: dict) -> None:
     """Replace ``path`` with ``config`` in one step, so a failure part-way leaves the old file whole.
 
     Rewriting in place could leave the file empty or partial (a crash, a full disk), and the
-    next run would then find no pepper and create a new one, changing every pseudonym (#69).
-    The new file keeps the old one's permissions; a first file is readable by its owner only.
+    next run would then create a new pepper, changing every pseudonym (#69). The new file
+    keeps the old one's permissions; a first file is readable by its owner only.
     """
     # Through a symlink, the file to replace is its target: os.replace would replace the link
-    # itself, and a shared configuration reached by a link would stop being written (Connor).
+    # itself, and a configuration reached by a link would stop being written.
     path = path.resolve()
     mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600
     fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
@@ -129,25 +144,25 @@ def _write_atomically(path: pathlib.Path, config: dict) -> None:
 
 @functools.lru_cache()
 def get_pepper() -> bytes:
-    """Return the pepper added to every hashed value, creating and storing one if needed.
+    """Return the pepper added to every hashed value.
 
-    The pepper is not stored with the pseudonymised data, which makes a dictionary
-    attack on the pseudonyms harder.
+    The pepper is not stored with the pseudonymised data, which makes a dictionary attack on
+    the pseudonyms harder.
 
     Raises:
-        PseudonymisationConfigError: if the configuration exists but cannot be read.
+        PseudonymisationConfigError: if a configuration exists but cannot be read.
     """
-    return _get_or_create("pepper", lambda: secrets.token_urlsafe(32)).encode("ASCII")
+    return _get_or_move_or_create("pepper", lambda: secrets.token_urlsafe(32)).encode("ASCII")
 
 
 @functools.lru_cache()
 def get_epoch_jitter() -> int:
-    """Return the number of days (0 to 999) added to shifted dates, creating and storing it if needed.
+    """Return the number of days (0 to 999) added to shifted dates.
 
     Raises:
-        PseudonymisationConfigError: if the configuration exists but cannot be read.
+        PseudonymisationConfigError: if a configuration exists but cannot be read.
     """
-    return _get_or_create("epoch_jitter", lambda: secrets.randbelow(1000))
+    return _get_or_move_or_create("epoch_jitter", lambda: secrets.randbelow(1000))
 
 
 def clear_cache() -> None:
@@ -156,4 +171,11 @@ def clear_cache() -> None:
     get_epoch_jitter.cache_clear()
 
 
-__all__ = ["PseudonymisationConfigError", "get_config", "get_config_dir", "get_epoch_jitter", "get_pepper", "clear_cache"]
+__all__ = [
+    "PseudonymisationConfigError",
+    "clear_cache",
+    "get_epoch_jitter",
+    "get_pepper",
+    "onkodicom_config_path",
+    "pymedphys_config_path",
+]
