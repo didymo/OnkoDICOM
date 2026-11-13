@@ -11,28 +11,11 @@ import pandas as pd
 import pydicom
 import re
 
-try:
-    import pymedphys.experimental.pseudonymisation as pseudonymise
+from src.Model.Pseudonymisation import filename_for_dataset, \
+    pseudonymise_dataset
+from src.Model.Pseudonymisation.strategy import pseudonymise_LO
 
-    try:
-        # pymedphys 0.33.x
-        from pymedphys._dicom.anonymise import create_filename_from_dataset
-
-        logging.warning(
-            "Using deprecated version of pymedphys, please upgrade to "
-            "0.34.0 or newer"
-        )
-    except:
-        # pymedphys 0.34.x
-        from pymedphys._dicom.anonymise.core import \
-            create_filename_from_dataset
-    from pymedphys.dicom import anonymise as pmp_anonymise
-
-    FEATURE_TOGGLE_PSEUDONYMISE = True
-except ImportError as ePymedphysImportFailed:
-    FEATURE_TOGGLE_PSEUDONYMISE = False
-    logging.error(ePymedphysImportFailed)
-    raise
+FEATURE_TOGGLE_PSEUDONYMISE = True
 
 
 # ============================Anonymization code ==============================
@@ -769,8 +752,7 @@ def anonymize(path, datasets, file_paths, rawdvh):
     else:
         # not bothering to check if the data itself was already pseudonymised.
         # if it was, just  apply (another round of) pseudonymisation.
-        hashed_patient_id = anon_file_name(pseudonymise.pseudonymisation_dispatch["LO"](
-            original_p_id))
+        hashed_patient_id = anon_file_name(pseudonymise_LO(original_p_id))
         # hashed_patient_name = pseudonymise.pseudonymisation_dispatch[
         # "PN"](patient_name_in_dataset) changing the approach a bit with
         # pseudonymisation instead of using a hash of the patient name for
@@ -800,12 +782,10 @@ def anonymize(path, datasets, file_paths, rawdvh):
                 leave_unchanged = ["PatientSex", "PatientWeight",
                                    "PatientSize"]
 
-            ds_pseudo = pmp_anonymise(
+            ds_pseudo = pseudonymise_dataset(
                 dicom_object_as_dataset,
                 keywords_to_leave_unchanged=leave_unchanged,
-                replacement_strategy=pseudonymise.pseudonymisation_dispatch,
-                identifying_keywords=
-                pseudonymise.get_default_pseudonymisation_keywords(),
+                source=str(all_filepaths.get(key, key)),
             )
             # PatientSex has specific values that are valid.
             # pseudonymisation doesn't handle that any better than other
@@ -818,13 +798,13 @@ def anonymize(path, datasets, file_paths, rawdvh):
             # gender/PatientSex
 
             # Manually specify new name for comprehensive SR files, as
-            # pymedphys cannot handle them.
+            # filename_for_dataset has no prefix for them.
             if ds_pseudo.SOPClassUID.name == "Comprehensive SR Storage":
                 ds_pseudo_full_path = \
                     anonymised_patient_full_path.joinpath(
                         ("SR." + ds_pseudo.SOPInstanceUID + ".dcm"))
             else:
-                ds_pseudo_full_path = create_filename_from_dataset(
+                ds_pseudo_full_path = filename_for_dataset(
                     ds_pseudo, anonymised_patient_full_path)
             ds_pseudo.save_as(ds_pseudo_full_path)
 

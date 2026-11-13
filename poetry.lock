@@ -4672,7 +4672,7 @@ version = "3.0.1"
 description = "A pure Python package for reading and writing DICOM data"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "pydicom-3.0.1-py3-none-any.whl", hash = "sha256:db32f78b2641bd7972096b8289111ddab01fb221610de8d7afa835eb938adb41"},
     {file = "pydicom-3.0.1.tar.gz", hash = "sha256:7b8be344b5b62493c9452ba6f5a299f78f8a6ab79786c729b0613698209603ec"},
@@ -4832,7 +4832,7 @@ version = "0.41.0"
 description = "Medical Physics library"
 optional = false
 python-versions = "<3.13,>=3.10"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "pymedphys-0.41.0-py3-none-any.whl", hash = "sha256:9fd7ff9f60c8875ff207e2bf59e78bec4739008ed17a2c5f31ffeaf51e945463"},
     {file = "pymedphys-0.41.0.tar.gz", hash = "sha256:0d17a0ae42a2c8a16b9970ba652176866f5655cc3c785d57d416cfeb8961ed63"},
@@ -4866,7 +4866,7 @@ version = "3.0.4"
 description = "A Python implementation of the DICOM networking protocol"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "pynetdicom-3.0.4-py3-none-any.whl", hash = "sha256:bc3f8869db4c90634336dfb02d7b6c249771e8b167e841254997a315d8e16f72"},
     {file = "pynetdicom-3.0.4.tar.gz", hash = "sha256:567ef761d73b34a380a4350e0d10ae549d749c66da4f1bdf8793cab9a6a326e4"},
@@ -5978,7 +5978,7 @@ version = "78.1.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "setuptools-78.1.1-py3-none-any.whl", hash = "sha256:c3a9c4211ff4c309edb8b8c4f1cbfa7ae324c4ba9f91ff254e3d305b9fd54561"},
     {file = "setuptools-78.1.1.tar.gz", hash = "sha256:fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d"},
@@ -7128,4 +7128,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "06a3dfc8364bfb85355428ef67c0c808b33ef9348829129ba7f95b07d31b149a"
+content-hash = "9364c1952ee1f7feee310a9183586b77e1f710bd479e167099964fdeb85e3892"
