@@ -1,8 +1,8 @@
 """Contract: src.Model.Pseudonymisation gives the same results as pymedphys 0.41.0.
 
-pymedphys is the reference while it is still a dependency. Both read the pepper and
-jitter from ~/.pymedphys/config.toml, so every test that pseudonymises runs with HOME
-pointing at a temporary directory holding a known configuration.
+pymedphys is the reference while it is still a dependency. Every test that pseudonymises runs with HOME
+pointing at a temporary directory: pymedphys reads the pepper and jitter from ~/.pymedphys/config.toml
+there, and OnkoDICOM moves them into ~/.OnkoDICOM/pseudonymisation.toml, so both use the same values.
 """
 
 import copy
@@ -46,7 +46,8 @@ def _use_home(monkeypatch: pytest.MonkeyPatch, home: Path) -> None:
 
 @pytest.fixture
 def known_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """A home directory whose ~/.pymedphys/config.toml holds PEPPER and EPOCH_JITTER."""
+    """A home whose ~/.pymedphys/config.toml holds PEPPER and EPOCH_JITTER: pymedphys reads them there,
+    and OnkoDICOM moves them into its own configuration on first use, so both use the same values."""
     config_dir = tmp_path / ".pymedphys"
     config_dir.mkdir()
     (config_dir / "config.toml").write_text(
@@ -382,161 +383,166 @@ def test_tag_known_to_pydicom_but_not_to_pymedphys_is_accepted(known_config: Pat
     assert ours.PatientID != "123456789"
 
 
-def test_existing_pepper_and_jitter_are_read(known_config: Path) -> None:
-    """Contract: an existing site's pepper and jitter are used, so its pseudonyms do not change."""
-    assert config.get_pepper() == PEPPER.encode("ASCII")
-    assert config.get_epoch_jitter() == EPOCH_JITTER
 
 
-def test_missing_config_is_created_and_other_keys_kept(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Contract: without a pepper and jitter, new ones are stored; other configuration survives."""
-    config_dir = tmp_path / ".pymedphys"
-    config_dir.mkdir()
-    config_file = config_dir / "config.toml"
-    config_file.write_text(toml.dumps({"other": {"setting": "kept"}}))
-    _use_home(monkeypatch, tmp_path)
-    try:
-        pepper = config.get_pepper()
-        jitter = config.get_epoch_jitter()
-        stored = toml.loads(config_file.read_text())
-        assert stored["other"] == {"setting": "kept"}
-        assert stored["pseudo"]["pepper"].encode("ASCII") == pepper
-        assert stored["pseudo"]["epoch_jitter"] == jitter
-        assert 0 <= jitter < 1000
-        # pymedphys reads the same values from the file written here.
-        pmp_strategy._get_pepper.cache_clear()
-        pmp_strategy._get_epoch_jitter.cache_clear()
-        assert pmp_strategy._get_pepper() == pepper
-        assert pmp_strategy._get_epoch_jitter() == jitter
-    finally:
-        _clear_caches()
+# --- Where the pepper and jitter come from --------------------------------------------------------------------------
+# OnkoDICOM's own file first; else moved from pymedphys's (redirects followed); else created in OnkoDICOM's.
 
 
-def test_no_config_directory_at_all(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: a first run with no ~/.pymedphys creates it and stores both values."""
-    _use_home(monkeypatch, tmp_path)
-    try:
-        pepper = config.get_pepper()
-        jitter = config.get_epoch_jitter()
-        stored = toml.loads((tmp_path / ".pymedphys" / "config.toml").read_text())
-        assert stored == {"pseudo": {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}}
-    finally:
-        _clear_caches()
-
-
-def _redirected_home(tmp_path: Path, shared_content: str) -> tuple[Path, Path, Path]:
-    """A home whose ~/.pymedphys/config.toml redirects to a shared file, as a site might set up."""
-    home, share = tmp_path / "home", tmp_path / "share"
-    (home / ".pymedphys").mkdir(parents=True)
-    share.mkdir()
-    shared = share / "config.toml"
-    shared.write_text(shared_content)
-    main = home / ".pymedphys" / "config.toml"
-    main.write_text(toml.dumps({"redirect": str(shared), "other": {"setting": "kept"}}))
-    return home, main, shared
-
-
-def test_redirect_to_shared_pepper_is_followed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: a redirect to a shared configuration supplies the site's pepper and jitter."""
-    home, main, _ = _redirected_home(tmp_path, toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
-    before = main.read_bytes()
+def _home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, onkodicom: str | None = None, pymedphys: str | None = None):
+    """A home with the given OnkoDICOM and pymedphys configuration contents (None: no file)."""
+    home = tmp_path / "home"
+    onko_file = home / ".OnkoDICOM" / "pseudonymisation.toml"
+    pmp_file = home / ".pymedphys" / "config.toml"
+    for path, content in ((onko_file, onkodicom), (pmp_file, pymedphys)):
+        if content is not None:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
     _use_home(monkeypatch, home)
+    return home, onko_file, pmp_file
+
+
+def test_the_config_files_are_where_onkodicom_and_pymedphys_keep_theirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home, onko_file, pmp_file = _home(tmp_path, monkeypatch)
+    assert config.onkodicom_config_path() == onko_file
+    assert config.pymedphys_config_path() == pmp_file
+
+
+def test_onkodicom_config_comes_first(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: once OnkoDICOM holds the values, pymedphys's are not consulted."""
+    _, onko_file, pmp_file = _home(
+        tmp_path, monkeypatch,
+        onkodicom=toml.dumps({"pseudo": {"pepper": "onkodicom-pepper", "epoch_jitter": 11}}),
+        pymedphys=toml.dumps({"pseudo": {"pepper": "pymedphys-pepper", "epoch_jitter": 22}}),
+    )
+    try:
+        assert config.get_pepper() == b"onkodicom-pepper"
+        assert config.get_epoch_jitter() == 11
+    finally:
+        _clear_caches()
+
+
+def test_pymedphys_values_are_moved_to_onkodicom(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a site's existing pepper and jitter are copied over, so its pseudonyms do not change;
+    pymedphys's file is left exactly as it was."""
+    _, onko_file, pmp_file = _home(
+        tmp_path, monkeypatch, pymedphys=toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": EPOCH_JITTER}, "other": {"x": 1}})
+    )
+    before = pmp_file.read_bytes()
+    try:
+        assert config.get_pepper() == PEPPER.encode("ASCII")
+        assert config.get_epoch_jitter() == EPOCH_JITTER
+        assert toml.loads(onko_file.read_text()) == {"pseudo": {"pepper": PEPPER, "epoch_jitter": EPOCH_JITTER}}
+        assert pmp_file.read_bytes() == before
+        # And from now on pymedphys's file is not needed.
+        _clear_caches()
+        pmp_file.unlink()
+        assert config.get_pepper() == PEPPER.encode("ASCII")
+        assert config.get_epoch_jitter() == EPOCH_JITTER
+    finally:
+        _clear_caches()
+
+
+def test_a_missing_value_is_moved_while_the_others_are_kept(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: OnkoDICOM has the pepper and other settings, pymedphys the jitter: the jitter is moved over."""
+    _, onko_file, _ = _home(
+        tmp_path, monkeypatch,
+        onkodicom=toml.dumps({"pseudo": {"pepper": "onkodicom-pepper"}, "other": {"setting": "kept"}}),
+        pymedphys=toml.dumps({"pseudo": {"pepper": "pymedphys-pepper", "epoch_jitter": 33}}),
+    )
+    try:
+        assert config.get_epoch_jitter() == 33
+        assert config.get_pepper() == b"onkodicom-pepper"
+        assert toml.loads(onko_file.read_text()) == {
+            "pseudo": {"pepper": "onkodicom-pepper", "epoch_jitter": 33},
+            "other": {"setting": "kept"},
+        }
+    finally:
+        _clear_caches()
+
+
+def test_a_first_run_creates_the_values_in_onkodicom_only(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: with neither configuration, new values go into OnkoDICOM's file, readable by its owner only."""
+    home, onko_file, pmp_file = _home(tmp_path, monkeypatch)
+    try:
+        pepper = config.get_pepper()
+        jitter = config.get_epoch_jitter()
+        assert toml.loads(onko_file.read_text()) == {"pseudo": {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}}
+        assert 0 <= jitter < 1000
+        assert not (home / ".pymedphys").exists()
+        if os.name == "posix":
+            assert onko_file.stat().st_mode & 0o777 == 0o600
+    finally:
+        _clear_caches()
+
+
+def test_a_pymedphys_redirect_to_a_shared_config_is_followed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a site that shared its pepper through a pymedphys redirect gets that pepper moved over."""
+    shared = tmp_path / "share" / "config.toml"
+    shared.parent.mkdir()
+    shared.write_text(toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
+    _, onko_file, pmp_file = _home(tmp_path, monkeypatch, pymedphys=toml.dumps({"redirect": str(shared)}))
+    before = (pmp_file.read_bytes(), shared.read_bytes())
     try:
         assert config.get_pepper() == PEPPER.encode("ASCII")
         assert config.get_epoch_jitter() == 7
-        assert main.read_bytes() == before
+        assert (pmp_file.read_bytes(), shared.read_bytes()) == before
+        assert toml.loads(onko_file.read_text())["pseudo"] == {"pepper": PEPPER, "epoch_jitter": 7}
     finally:
         _clear_caches()
 
 
-def test_missing_pepper_is_stored_in_the_shared_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: through a redirect, a new pepper goes into the shared file; the redirect survives.
-
-    pymedphys wrote the shared file's content over ~/.pymedphys/config.toml instead.
-    """
-    home, main, shared = _redirected_home(tmp_path, toml.dumps({"shared": {"note": "site"}}))
-    before = main.read_bytes()
-    _use_home(monkeypatch, home)
+@pytest.mark.parametrize("broken", ["unreachable redirect", "unparseable pymedphys", "unparseable onkodicom"])
+def test_an_unreadable_config_stops_pseudonymisation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, broken: str
+) -> None:
+    """Contract: if a configuration that may hold the pepper cannot be read, nothing is pseudonymised and
+    nothing is written: a new pepper would change every pseudonym from then on."""
+    if broken == "unreachable redirect":
+        kwargs = {"pymedphys": toml.dumps({"redirect": str(tmp_path / "offline-share" / "config.toml")})}
+    elif broken == "unparseable pymedphys":
+        kwargs = {"pymedphys": "[pseudo\npepper = "}
+    else:
+        kwargs = {"onkodicom": "[pseudo\npepper = ", "pymedphys": toml.dumps({"pseudo": {"pepper": PEPPER}})}
+    home, onko_file, pmp_file = _home(tmp_path, monkeypatch, **kwargs)
+    before = {p: p.read_bytes() for p in (onko_file, pmp_file) if p.exists()}
     try:
-        pepper = config.get_pepper()
-        jitter = config.get_epoch_jitter()
-        assert main.read_bytes() == before
-        stored = toml.loads(shared.read_text())
-        assert stored["shared"] == {"note": "site"}
-        assert stored["pseudo"] == {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}
-    finally:
-        _clear_caches()
-
-
-def test_unreachable_shared_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: if the shared configuration cannot be read (a share offline), nothing is pseudonymised
-    and nothing is written. A new pepper would change every pseudonym from then on, and pymedphys
-    wrote one over ~/.pymedphys/config.toml, losing the redirect.
-    """
-    home, main, shared = _redirected_home(tmp_path, toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
-    shared.unlink()
-    before = main.read_bytes()
-    _use_home(monkeypatch, home)
-    try:
-        with pytest.raises(config.PseudonymisationConfigError, match="share"):
+        with pytest.raises(config.PseudonymisationConfigError):
             config.get_pepper()
         with pytest.raises(config.PseudonymisationConfigError):
             pseudo.pseudonymise_dataset(_small_dataset())
-        assert main.read_bytes() == before
-        assert not shared.exists()
-    finally:
-        _clear_caches()
-
-
-def test_unparseable_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: a configuration that is not valid TOML is reported, never replaced."""
-    (tmp_path / ".pymedphys").mkdir()
-    main = tmp_path / ".pymedphys" / "config.toml"
-    main.write_text("[pseudo\npepper = ")
-    before = main.read_bytes()
-    _use_home(monkeypatch, tmp_path)
-    try:
-        with pytest.raises(config.PseudonymisationConfigError):
-            config.get_epoch_jitter()
-        assert main.read_bytes() == before
+        assert {p: p.read_bytes() for p in (onko_file, pmp_file) if p.exists()} == before
     finally:
         _clear_caches()
 
 
 @pytest.mark.timeout(20)
 @pytest.mark.parametrize("loop", ["self", "two files"])
-def test_a_redirect_loop_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, loop: str) -> None:
+def test_a_pymedphys_redirect_loop_stops_pseudonymisation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, loop: str
+) -> None:
     """Contract (#69): a redirect back to a file already read is reported, not followed forever."""
-    (tmp_path / ".pymedphys").mkdir()
-    main = tmp_path / ".pymedphys" / "config.toml"
     other = tmp_path / "other.toml"
-    if loop == "self":
-        main.write_text(toml.dumps({"redirect": str(main)}))
-    else:
-        main.write_text(toml.dumps({"redirect": str(other)}))
-        other.write_text(toml.dumps({"redirect": str(main)}))
-    before = main.read_bytes()
-    _use_home(monkeypatch, tmp_path)
+    home = tmp_path / "home"
+    pmp_file = home / ".pymedphys" / "config.toml"
+    target = pmp_file if loop == "self" else other
+    _home(tmp_path, monkeypatch, pymedphys=toml.dumps({"redirect": str(target)}))
+    if loop == "two files":
+        other.write_text(toml.dumps({"redirect": str(pmp_file)}))
     try:
         with pytest.raises(config.PseudonymisationConfigError, match="loop"):
             config.get_pepper()
-        assert main.read_bytes() == before
+        assert not config.onkodicom_config_path().exists()
     finally:
         _clear_caches()
 
 
 def test_a_failed_write_leaves_the_pepper_in_place(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract (#69): storing a new jitter fails part-way; the file still holds the pepper, whole.
-
-    Before, the file was truncated first, so the pepper was lost and the next run made a new one.
-    """
-    (tmp_path / ".pymedphys").mkdir()
-    main = tmp_path / ".pymedphys" / "config.toml"
-    main.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}, "other": {"setting": "kept"}}))
-    before = main.read_bytes()
-    _use_home(monkeypatch, tmp_path)
+    """Contract (#69): storing a new jitter fails part-way; OnkoDICOM's file still holds the pepper, whole."""
+    _, onko_file, _ = _home(
+        tmp_path, monkeypatch, onkodicom=toml.dumps({"pseudo": {"pepper": PEPPER}, "other": {"setting": "kept"}})
+    )
+    before = onko_file.read_bytes()
 
     def fail_part_way(data: dict, f) -> None:
         f.write("[pseudo]\n")  # some bytes reach the file, then the disk is full
@@ -546,53 +552,42 @@ def test_a_failed_write_leaves_the_pepper_in_place(tmp_path: Path, monkeypatch: 
     try:
         with pytest.raises(OSError, match="No space left"):
             config.get_epoch_jitter()
-        assert main.read_bytes() == before
-        assert sorted(p.name for p in main.parent.iterdir()) == ["config.toml"]  # no temporary file left
+        assert onko_file.read_bytes() == before
+        assert sorted(p.name for p in onko_file.parent.iterdir()) == ["pseudonymisation.toml"]
     finally:
         _clear_caches()
 
 
 def test_a_rewritten_config_keeps_its_permissions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: replacing the file does not change who can read it; a first file is the owner's only.
+    """Contract: replacing the file does not change who can read it.
 
     POSIX permission bits only: Windows keeps only a read-only flag, so chmod(0o640) reads back as 0o666 there.
     """
-    (tmp_path / ".pymedphys").mkdir()
-    main = tmp_path / ".pymedphys" / "config.toml"
-    main.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}}))
-    main.chmod(0o640)
-    _use_home(monkeypatch, tmp_path)
+    _, onko_file, _ = _home(tmp_path, monkeypatch, onkodicom=toml.dumps({"pseudo": {"pepper": PEPPER}}))
+    onko_file.chmod(0o640)
     try:
         config.get_epoch_jitter()
         if os.name == "posix":
-            assert main.stat().st_mode & 0o777 == 0o640
-        assert "epoch_jitter" in toml.loads(main.read_text())["pseudo"]
-    finally:
-        _clear_caches()
-    fresh = tmp_path / "fresh"
-    _use_home(monkeypatch, fresh)
-    fresh.mkdir()
-    try:
-        config.get_pepper()
-        if os.name == "posix":
-            assert (fresh / ".pymedphys" / "config.toml").stat().st_mode & 0o777 == 0o600
+            assert onko_file.stat().st_mode & 0o777 == 0o640
+        assert "epoch_jitter" in toml.loads(onko_file.read_text())["pseudo"]
     finally:
         _clear_caches()
 
 
 def test_a_symlinked_config_is_written_through_the_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: a config reached by a symlink (a site's shared file) gets the new value; the link stays a link."""
-    shared = tmp_path / "share" / "config.toml"
+    """Contract: an OnkoDICOM config reached by a symlink (a site's shared file) gets the new value; the link stays."""
+    shared = tmp_path / "share" / "pseudonymisation.toml"
     shared.parent.mkdir()
     shared.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}}))
-    (tmp_path / "home" / ".pymedphys").mkdir(parents=True)
-    link = tmp_path / "home" / ".pymedphys" / "config.toml"
+    home = tmp_path / "home"
+    link = home / ".OnkoDICOM" / "pseudonymisation.toml"
+    link.parent.mkdir(parents=True)
     link.symlink_to(shared)
-    _use_home(monkeypatch, tmp_path / "home")
+    _use_home(monkeypatch, home)
     try:
         jitter = config.get_epoch_jitter()
         assert link.is_symlink() and link.resolve() == shared.resolve()
         assert toml.loads(shared.read_text())["pseudo"] == {"pepper": PEPPER, "epoch_jitter": jitter}
-        assert sorted(p.name for p in shared.parent.iterdir()) == ["config.toml"]
+        assert sorted(p.name for p in shared.parent.iterdir()) == ["pseudonymisation.toml"]
     finally:
         _clear_caches()
