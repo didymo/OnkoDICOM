@@ -11,8 +11,11 @@ is read through a ``redirect``: pymedphys then created a new pepper and overwrot
 """
 
 import functools
+import os
 import pathlib
 import secrets
+import stat
+import tempfile
 
 import toml
 
@@ -48,7 +51,15 @@ def _read_config() -> tuple[dict, pathlib.Path] | None:
     config_path = get_config_dir().joinpath(CONFIG_FILENAME)
     if not config_path.exists():
         return None
+    read_already: set[pathlib.Path] = set()
     while True:
+        resolved = config_path.resolve()
+        if resolved in read_already:
+            raise PseudonymisationConfigError(
+                f"The pseudonymisation configuration redirects in a loop back to {config_path}. "
+                "Pseudonymisation stopped so that the pepper and jitter are not replaced."
+            )
+        read_already.add(resolved)
         try:
             with open(config_path) as f:
                 results = toml.load(f)
@@ -87,9 +98,30 @@ def _get_or_create(key: str, create):
         return pseudo_config[key]
     value = create()
     config.setdefault("pseudo", {})[key] = value
-    with open(path, "w") as f:
-        toml.dump(config, f)
+    _write_atomically(path, config)
     return value
+
+
+def _write_atomically(path: pathlib.Path, config: dict) -> None:
+    """Replace ``path`` with ``config`` in one step, so a failure part-way leaves the old file whole.
+
+    Rewriting in place could leave the file empty or partial (a crash, a full disk), and the
+    next run would then find no pepper and create a new one, changing every pseudonym (#69).
+    The new file keeps the old one's permissions; a first file is readable by its owner only.
+    """
+    mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            toml.dump(config, f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(tmp_name, mode)
+        os.replace(tmp_name, path)
+    except BaseException:
+        if os.path.exists(tmp_name):
+            os.unlink(tmp_name)
+        raise
 
 
 @functools.lru_cache()
