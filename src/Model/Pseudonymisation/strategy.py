@@ -36,13 +36,16 @@ def hash_text(value) -> str:
     A value that is not a string is hashed as ``str(value)``. For a multi-valued element
     that is the text of the whole list, so the element gets one pseudonym, as in pymedphys.
 
-    Raises:
-        UnicodeEncodeError: if the value is not ASCII.
+    The text is encoded as UTF-8. For ASCII text that is the same bytes as pymedphys's ASCII
+    encoding, so every pseudonym pymedphys made is unchanged; pymedphys refused non-ASCII
+    text, so no earlier pseudonym of such text exists. pydicom has already decoded the value
+    from the file's character set, so the same name gives the same pseudonym whichever
+    character set its file used.
     """
     try:
-        encoded_value = value.encode("ASCII")
+        encoded_value = value.encode("UTF-8")
     except AttributeError:
-        encoded_value = str(value).encode("ASCII")
+        encoded_value = str(value).encode("UTF-8")
     hash_func = hashlib.new("sha3_256")
     hash_func.update(encoded_value)
     hash_func.update(get_pepper())
@@ -178,14 +181,15 @@ def pseudonymise_ST(value) -> str:
     return hash_text(value)[0:1024]
 
 
-def pseudonymise_UI(value) -> str:
+def pseudonymise_UI(value) -> str | list[str]:
     """Return a UID under PSEUDONYM_ROOT_UID made from the hash of ``value``.
 
-    The hash has no pepper, as in pymedphys.
-
-    Raises:
-        AttributeError: if the value is not a single string (for example a multi-valued element).
+    The hash has no pepper, as in pymedphys. A multi-valued element gets each UID
+    pseudonymised separately, so each still matches the same UID wherever else it appears;
+    pymedphys refused a multi-valued UI.
     """
+    if not isinstance(value, str):
+        return [pseudonymise_UI(uid) for uid in value]
     hex_digest = hashlib.new("sha3_256", value.encode("ASCII")).hexdigest()
     chars_available = 63 - len(PSEUDONYM_ROOT_UID)
     big_int = int(hex_digest[0:chars_available], 16)

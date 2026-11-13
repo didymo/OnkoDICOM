@@ -7,15 +7,23 @@ Stuart Swerdloff, who wrote the pymedphys pseudonymisation code, agreed on
 
 For the same pepper and jitter, ``pseudonymise_dataset`` gives the same dataset as
 ``pymedphys.dicom.anonymise`` called with pymedphys's pseudonymisation strategy and
-keywords, as OnkoDICOM called it before. The one intended difference: an element is
-"known" if pydicom's data dictionary has it, where pymedphys used its own older copy of
-that dictionary. pydicom knows 838 more standard tags, and pymedphys refused a dataset
-containing any of them.
+keywords, as OnkoDICOM called it before. The intended differences:
+
+- An element is "known" if pydicom's data dictionary has it, where pymedphys used its
+  own older copy of that dictionary. pydicom knows 838 more standard tags, and pymedphys
+  refused a dataset containing any of them.
+- The file meta is pseudonymised too. pymedphys left the original SOP Instance UID in
+  ``file_meta.MediaStorageSOPInstanceUID`` of every file (#63).
+- A value that is not valid for its VR (for example a date that is not a date) is
+  emptied and logged as a warning; pymedphys refused the whole dataset (#61).
+- Non-ASCII text is hashed (as UTF-8), and each value of a multi-valued UI is
+  pseudonymised separately; pymedphys refused both.
 
 No claim of conformance to any DICOM Application Level Confidentiality Profile is made.
 """
 
 import copy
+import decimal
 import logging
 import os
 
@@ -118,33 +126,67 @@ def unknown_tags(ds: pydicom.Dataset) -> list[pydicom.tag.BaseTag]:
     ]
 
 
-def _pseudonymise_elements(ds: pydicom.Dataset, keywords: list[str]) -> None:
-    """Replace each listed element of ``ds`` that has a value, then do the same inside every sequence."""
+def _location(path: tuple[str, ...], keyword: str) -> str:
+    """``ReferencedStudySequence[0] > StudyDate``: where an element sits, sequences and items included."""
+    return " > ".join((*path, keyword))
+
+
+def _pseudonymise_elements(
+    ds: pydicom.Dataset, keywords: list[str], path: tuple[str, ...] = (), source: str = ""
+) -> None:
+    """Replace each listed element of ``ds`` that has a value, then do the same inside every sequence.
+
+    A value that is not valid for its VR (for example a date that is not a date) cannot be
+    pseudonymised. It is emptied, so it does not pass through, and a warning names the
+    element, its tag and VR, the value, and where it is: the source, then each sequence and
+    item number leading to it. The value logged is the original, so the log is patient data.
+    """
     for keyword in keywords:
         if hasattr(ds, keyword):
             current_value = ds[keyword].value
             if current_value in ("", None, []):
                 continue
-            setattr(ds, keyword, pseudonymise_value(keyword, current_value))
+            try:
+                replacement = pseudonymise_value(keyword, current_value)
+            except (ValueError, decimal.InvalidOperation) as error:
+                elem = ds[keyword]
+                logger.warning(
+                    "Invalid value emptied during pseudonymisation: %s%s %s VR %s, value %r (%s)",
+                    f"{source}: " if source else "",
+                    _location(path, keyword),
+                    elem.tag,
+                    elem.VR,
+                    current_value,
+                    error,
+                )
+                replacement = ""
+            setattr(ds, keyword, replacement)
     # pymedphys skips a sequence whose *name* is in the keyword list. Names contain spaces
     # and keywords do not, so in practice it recursed into every sequence; so does this.
     for elem in [e for e in ds if e.VR == "SQ"]:
-        for item in elem.value:
-            _pseudonymise_elements(item, keywords)
+        for index, item in enumerate(elem.value):
+            _pseudonymise_elements(item, keywords, (*path, f"{elem.keyword}[{index}]"), source)
 
 
 def pseudonymise_dataset(
-    ds: pydicom.Dataset, keywords_to_leave_unchanged: tuple[str, ...] | list[str] = ()
+    ds: pydicom.Dataset,
+    keywords_to_leave_unchanged: tuple[str, ...] | list[str] = (),
+    source: str = "",
 ) -> pydicom.Dataset:
     """Return a pseudonymised copy of ``ds``; ``ds`` itself is not changed.
 
     Private elements are removed. Every element in PSEUDONYMISATION_KEYWORDS, other than
     those in ``keywords_to_leave_unchanged``, is replaced wherever it occurs, including
-    inside sequences.
+    inside sequences and the file meta. A value invalid for its VR is emptied and logged as
+    a warning (see ``_pseudonymise_elements``).
+
+    Args:
+        ds: the dataset to pseudonymise.
+        keywords_to_leave_unchanged: keywords whose elements keep their values.
+        source: names the dataset in warnings, for example its file path.
 
     Raises:
         UnknownTagsError: if ``ds`` has public elements that pydicom does not know.
-        ValueError: if a value cannot be pseudonymised, for example a non-conformant date.
     """
     ds_pseudo = copy.deepcopy(ds)
     unknown = unknown_tags(ds_pseudo)
@@ -156,7 +198,13 @@ def pseudonymise_dataset(
         )
     ds_pseudo.remove_private_tags()
     keywords = [k for k in PSEUDONYMISATION_KEYWORDS if k not in keywords_to_leave_unchanged]
-    _pseudonymise_elements(ds_pseudo, keywords)
+    _pseudonymise_elements(ds_pseudo, keywords, source=source)
+    # The file meta (group 0002) is a separate dataset. Its MediaStorageSOPInstanceUID holds
+    # the original SOP Instance UID, and pymedphys left it there (#63). UIDs are hashed
+    # without the pepper, so it becomes the same UID as the pseudonymised SOPInstanceUID.
+    file_meta = getattr(ds_pseudo, "file_meta", None)
+    if file_meta is not None:
+        _pseudonymise_elements(file_meta, keywords, ("file meta",), source)
     return ds_pseudo
 
 

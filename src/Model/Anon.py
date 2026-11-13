@@ -785,6 +785,7 @@ def anonymize(path, datasets, file_paths, rawdvh):
             ds_pseudo = pseudonymise_dataset(
                 dicom_object_as_dataset,
                 keywords_to_leave_unchanged=leave_unchanged,
+                source=str(all_filepaths.get(key, key)),
             )
             # PatientSex has specific values that are valid.
             # pseudonymisation doesn't handle that any better than other

@@ -7,6 +7,7 @@ pointing at a temporary directory holding a known configuration.
 
 import copy
 import decimal
+import io
 from pathlib import Path
 
 import pydicom
@@ -89,6 +90,9 @@ VALUES = [
     ("StudyInstanceUID", "2.25.329800735698586629295641978511506172918"),  # UI, long
     ("PatientAge", "045Y"),  # AS, decade
     ("PatientAge", "095Y"),  # AS, over 80
+    ("PatientAge", "021Y"),  # AS, lowest age rounded to a decade
+    ("PatientAge", "080Y"),  # AS, decade and cap agree
+    ("PatientAge", "081Y"),  # AS, lowest capped age
 ]
 
 
@@ -124,9 +128,7 @@ def test_age_step_covers_exactly_pymedphys_range() -> None:
         ("StudyDate", "61d6b371-5759-36d4-a66b-402c0333d1a9"),  # non-conformant date (DICOM-RT-02)
         ("AcquisitionDateTime", "not a date"),
         ("PatientWeight", MultiValue(DSfloat, ["1.5", "2.5"])),  # multi-valued DS
-        ("StudyInstanceUID", MultiValue(str, ["1.2.3", "1.2.4"])),  # multi-valued UI
         ("PatientAge", "005D"),  # nothing smaller than days
-        ("Manufacturer", "Señor"),  # not ASCII
     ],
 )
 def test_value_that_pymedphys_refuses_is_refused(known_config: Path, keyword: str, value) -> None:
@@ -177,25 +179,155 @@ def test_dataset_matches_pymedphys(known_config: Path, path: Path) -> None:
         identifying_keywords=pmp_pseudonymise.get_default_pseudonymisation_keywords(),
     )
 
-    assert ours == reference
+    assert ours == reference  # Dataset equality does not include the file meta
+    # The file meta matches pymedphys's except where pymedphys left the original UID (#63).
+    ours_meta, reference_meta = copy.deepcopy(ours.file_meta), copy.deepcopy(reference.file_meta)
+    assert ours_meta.MediaStorageSOPInstanceUID == ours.SOPInstanceUID
+    assert reference_meta.MediaStorageSOPInstanceUID == before.SOPInstanceUID
+    del ours_meta.MediaStorageSOPInstanceUID, reference_meta.MediaStorageSOPInstanceUID
+    assert ours_meta == reference_meta
     assert ours.PatientID != before.PatientID  # it did pseudonymise
     assert original == before  # the input is not changed
+    assert original.file_meta == before.file_meta
     if ours.SOPClassUID.name != "Comprehensive SR Storage":
         assert pseudo.filename_for_dataset(ours, "out") == create_filename_from_dataset(reference, "out")
 
 
-def test_non_conformant_date_in_dataset_is_refused(known_config: Path) -> None:
-    """Contract: DICOM-RT-02 as published (UUIDs in date elements) is refused, as by pymedphys (#61)."""
-    ds = pydicom.dcmread(DICOM_FILES[0])
+@pytest.mark.parametrize("path", DICOM_FILES, ids=[p.name for p in DICOM_FILES])
+def test_no_original_uid_in_written_file(known_config: Path, path: Path) -> None:
+    """Contract: no original identifying UID survives anywhere in the written file (#63).
+
+    Searches the bytes save_as writes, file meta included, for every original value of an
+    identifying UID found anywhere in the source, sequences and file meta included.
+    """
+    source = _with_conformant_dates(pydicom.dcmread(path))
+    originals = {
+        str(elem.value): elem.keyword
+        for elem in [*source.iterall(), *source.file_meta]
+        if elem.keyword in pseudo.IDENTIFYING_UIDS and elem.value
+    }
+    assert str(source.SOPInstanceUID) in originals  # the probe has something to find
+    written = io.BytesIO()
+    pseudo.pseudonymise_dataset(source, keywords_to_leave_unchanged=LEAVE_UNCHANGED).save_as(written)
+    data = written.getvalue()
+    leaked = {keyword for uid, keyword in originals.items() if uid.encode("ASCII") in data}
+    assert leaked == set()
+
+
+@pytest.mark.parametrize("path", DICOM_FILES, ids=[p.name for p in DICOM_FILES])
+def test_invalid_dates_are_emptied_and_logged(
+    known_config: Path, caplog: pytest.LogCaptureFixture, path: Path
+) -> None:
+    """Contract (#61): DICOM-RT-02 as published, with UUIDs in date elements, is pseudonymised.
+
+    pymedphys refuses it. Here each invalid date is emptied, with a warning naming the source,
+    the element, its tag and the value; everything else is as for the same data with valid dates.
+    """
+    raw = pydicom.dcmread(path)
+    invalid = {
+        e.keyword: str(e.value)
+        for e in raw
+        if e.VR == "DA" and e.value and not str(e.value).isdigit()
+    }
+    assert invalid  # the probe has something to find
     with pytest.raises(ValueError):
         pmp_anonymise(
-            ds,
+            copy.deepcopy(raw),
             keywords_to_leave_unchanged=LEAVE_UNCHANGED,
             replacement_strategy=pmp_pseudonymise.pseudonymisation_dispatch,
             identifying_keywords=pmp_pseudonymise.get_default_pseudonymisation_keywords(),
         )
-    with pytest.raises(ValueError):
-        pseudo.pseudonymise_dataset(ds, keywords_to_leave_unchanged=LEAVE_UNCHANGED)
+
+    with caplog.at_level("WARNING", logger="src.Model.Pseudonymisation"):
+        ours = pseudo.pseudonymise_dataset(raw, keywords_to_leave_unchanged=LEAVE_UNCHANGED, source=str(path))
+    for keyword in invalid:
+        assert ours[keyword].value == ""
+    warnings = [r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage()]
+    assert len(warnings) == len(invalid)
+    for keyword, value in invalid.items():
+        tag = str(raw[keyword].tag)
+        assert any(str(path) in w and keyword in w and tag in w and value in w for w in warnings), keyword
+
+    valid = pseudo.pseudonymise_dataset(
+        _with_conformant_dates(pydicom.dcmread(path)), keywords_to_leave_unchanged=LEAVE_UNCHANGED
+    )
+    for keyword in invalid:
+        del ours[keyword], valid[keyword]
+    assert ours == valid
+
+
+def test_invalid_value_inside_sequence_is_located(known_config: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """Contract (#61): the warning gives each sequence and item number down to the invalid element."""
+    ds = _small_dataset()
+    second_item = Dataset()
+    second_item.PatientBirthDate = "not-a-date"
+    ds.ReferencedStudySequence.append(second_item)
+    with caplog.at_level("WARNING", logger="src.Model.Pseudonymisation"):
+        ours = pseudo.pseudonymise_dataset(ds, source="patient/RS.dcm")
+    assert ours.ReferencedStudySequence[1].PatientBirthDate == ""
+    assert ours.StudyDate != "" and ours.StudyDate != ds.StudyDate  # valid dates still shifted
+    (warning,) = [r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage()]
+    assert "patient/RS.dcm: ReferencedStudySequence[1] > PatientBirthDate (0010,0030) VR DA" in warning
+    assert "'not-a-date'" in warning
+
+
+@pytest.mark.parametrize(
+    "keyword,value",
+    [
+        ("PatientWeight", MultiValue(DSfloat, ["1.5", "2.5"])),  # decimal.InvalidOperation
+        ("PatientAge", "005D"),  # ValueError: nothing smaller than days
+        ("AcquisitionDateTime", "not a date"),
+    ],
+)
+def test_other_invalid_values_are_emptied(known_config: Path, caplog: pytest.LogCaptureFixture, keyword: str, value) -> None:
+    """Contract (#61): any value invalid for its VR is emptied and logged, not passed through."""
+    ds = _small_dataset()
+    setattr(ds, keyword, value)
+    with caplog.at_level("WARNING", logger="src.Model.Pseudonymisation"):
+        ours = pseudo.pseudonymise_dataset(ds)
+    assert ours[keyword].value in ("", None)
+    assert any(keyword in r.getMessage() for r in caplog.records if "Invalid value emptied" in r.getMessage())
+
+
+def test_pymedphys_refused_non_ascii_and_multi_valued_ui(known_config: Path) -> None:
+    """The reference for the two cases below: pymedphys had no pseudonym for either, so none can change."""
+    with pytest.raises(UnicodeEncodeError):
+        _pmp_value("InstitutionName", "Señor")
+    with pytest.raises(AttributeError):
+        _pmp_value("StudyInstanceUID", MultiValue(str, ["1.2.3", "1.2.4"]))
+
+
+@pytest.mark.parametrize("charset", ["ISO_IR 100", "ISO_IR 192"])
+def test_non_ascii_name_is_pseudonymised_the_same_in_any_character_set(known_config: Path, charset: str) -> None:
+    """Contract: a non-ASCII name is pseudonymised, and its file's character set does not change the pseudonym."""
+    ds = _small_dataset()
+    ds.SpecificCharacterSet = charset
+    ds.PatientName = "Müller^Jürgen"
+    ds.InstitutionName = "Hôpital Señor"
+    ds.file_meta = pydicom.dataset.FileMetaDataset()
+    ds.file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
+    written = io.BytesIO()
+    ds.save_as(written, enforce_file_format=False)
+    read_back = pydicom.dcmread(io.BytesIO(written.getvalue()), force=True)
+    assert str(read_back.PatientName) == "Müller^Jürgen"  # decoded from the file's character set
+
+    ours = pseudo.pseudonymise_dataset(read_back)
+    assert ours.PatientName == pseudo.pseudonymise_value("PatientName", "Müller^Jürgen")
+    assert ours.InstitutionName == pseudo.pseudonymise_value("InstitutionName", "Hôpital Señor")
+    assert "Müller" not in str(ours.PatientName) and ours.InstitutionName != "Hôpital Señor"
+    assert ours.PatientName.family_name.isascii() and ours.InstitutionName.isascii()
+
+
+def test_multi_valued_ui_is_pseudonymised_value_by_value(known_config: Path) -> None:
+    """Contract: each UID of a multi-valued UI maps to the same pseudonym it gets on its own."""
+    ds = _small_dataset()
+    ds.StudyInstanceUID = "1.2.3"
+    ours = pseudo.pseudonymise_dataset(ds)
+    single = ours.StudyInstanceUID
+    ds.StudyInstanceUID = MultiValue(str, ["1.2.3", "1.2.4"])
+    ours = pseudo.pseudonymise_dataset(ds)
+    assert list(ours.StudyInstanceUID) == [single, pseudo.pseudonymise_value("StudyInstanceUID", "1.2.4")]
+    assert "1.2.3" not in ours.StudyInstanceUID and "1.2.4" not in ours.StudyInstanceUID
 
 
 def _small_dataset() -> Dataset:
@@ -289,5 +421,84 @@ def test_no_config_directory_at_all(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         jitter = config.get_epoch_jitter()
         stored = toml.loads((tmp_path / ".pymedphys" / "config.toml").read_text())
         assert stored == {"pseudo": {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}}
+    finally:
+        _clear_caches()
+
+
+def _redirected_home(tmp_path: Path, shared_content: str) -> tuple[Path, Path, Path]:
+    """A home whose ~/.pymedphys/config.toml redirects to a shared file, as a site might set up."""
+    home, share = tmp_path / "home", tmp_path / "share"
+    (home / ".pymedphys").mkdir(parents=True)
+    share.mkdir()
+    shared = share / "config.toml"
+    shared.write_text(shared_content)
+    main = home / ".pymedphys" / "config.toml"
+    main.write_text(toml.dumps({"redirect": str(shared), "other": {"setting": "kept"}}))
+    return home, main, shared
+
+
+def test_redirect_to_shared_pepper_is_followed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a redirect to a shared configuration supplies the site's pepper and jitter."""
+    home, main, _ = _redirected_home(tmp_path, toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
+    before = main.read_bytes()
+    _use_home(monkeypatch, home)
+    try:
+        assert config.get_pepper() == PEPPER.encode("ASCII")
+        assert config.get_epoch_jitter() == 7
+        assert main.read_bytes() == before
+    finally:
+        _clear_caches()
+
+
+def test_missing_pepper_is_stored_in_the_shared_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: through a redirect, a new pepper goes into the shared file; the redirect survives.
+
+    pymedphys wrote the shared file's content over ~/.pymedphys/config.toml instead.
+    """
+    home, main, shared = _redirected_home(tmp_path, toml.dumps({"shared": {"note": "site"}}))
+    before = main.read_bytes()
+    _use_home(monkeypatch, home)
+    try:
+        pepper = config.get_pepper()
+        jitter = config.get_epoch_jitter()
+        assert main.read_bytes() == before
+        stored = toml.loads(shared.read_text())
+        assert stored["shared"] == {"note": "site"}
+        assert stored["pseudo"] == {"pepper": pepper.decode("ASCII"), "epoch_jitter": jitter}
+    finally:
+        _clear_caches()
+
+
+def test_unreachable_shared_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: if the shared configuration cannot be read (a share offline), nothing is pseudonymised
+    and nothing is written. A new pepper would change every pseudonym from then on, and pymedphys
+    wrote one over ~/.pymedphys/config.toml, losing the redirect.
+    """
+    home, main, shared = _redirected_home(tmp_path, toml.dumps({"pseudo": {"pepper": PEPPER, "epoch_jitter": 7}}))
+    shared.unlink()
+    before = main.read_bytes()
+    _use_home(monkeypatch, home)
+    try:
+        with pytest.raises(config.PseudonymisationConfigError, match="share"):
+            config.get_pepper()
+        with pytest.raises(config.PseudonymisationConfigError):
+            pseudo.pseudonymise_dataset(_small_dataset())
+        assert main.read_bytes() == before
+        assert not shared.exists()
+    finally:
+        _clear_caches()
+
+
+def test_unparseable_config_stops_pseudonymisation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a configuration that is not valid TOML is reported, never replaced."""
+    (tmp_path / ".pymedphys").mkdir()
+    main = tmp_path / ".pymedphys" / "config.toml"
+    main.write_text("[pseudo\npepper = ")
+    before = main.read_bytes()
+    _use_home(monkeypatch, tmp_path)
+    try:
+        with pytest.raises(config.PseudonymisationConfigError):
+            config.get_epoch_jitter()
+        assert main.read_bytes() == before
     finally:
         _clear_caches()
