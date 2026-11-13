@@ -109,6 +109,9 @@ def _write_atomically(path: pathlib.Path, config: dict) -> None:
     next run would then find no pepper and create a new one, changing every pseudonym (#69).
     The new file keeps the old one's permissions; a first file is readable by its owner only.
     """
+    # Through a symlink, the file to replace is its target: os.replace would replace the link
+    # itself, and a shared configuration reached by a link would stop being written (Connor).
+    path = path.resolve()
     mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600
     fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:

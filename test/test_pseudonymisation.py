@@ -574,3 +574,21 @@ def test_a_rewritten_config_keeps_its_permissions(tmp_path: Path, monkeypatch: p
             assert (fresh / ".pymedphys" / "config.toml").stat().st_mode & 0o777 == 0o600
     finally:
         _clear_caches()
+
+
+def test_a_symlinked_config_is_written_through_the_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contract: a config reached by a symlink (a site's shared file) gets the new value; the link stays a link."""
+    shared = tmp_path / "share" / "config.toml"
+    shared.parent.mkdir()
+    shared.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}}))
+    (tmp_path / "home" / ".pymedphys").mkdir(parents=True)
+    link = tmp_path / "home" / ".pymedphys" / "config.toml"
+    link.symlink_to(shared)
+    _use_home(monkeypatch, tmp_path / "home")
+    try:
+        jitter = config.get_epoch_jitter()
+        assert link.is_symlink() and link.resolve() == shared.resolve()
+        assert toml.loads(shared.read_text())["pseudo"] == {"pepper": PEPPER, "epoch_jitter": jitter}
+        assert sorted(p.name for p in shared.parent.iterdir()) == ["config.toml"]
+    finally:
+        _clear_caches()
