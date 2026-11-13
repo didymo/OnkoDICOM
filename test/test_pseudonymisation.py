@@ -553,7 +553,10 @@ def test_a_failed_write_leaves_the_pepper_in_place(tmp_path: Path, monkeypatch: 
 
 
 def test_a_rewritten_config_keeps_its_permissions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Contract: replacing the file does not change who can read it; a first file is the owner's only."""
+    """Contract: replacing the file does not change who can read it; a first file is the owner's only.
+
+    POSIX permission bits only: Windows keeps only a read-only flag, so chmod(0o640) reads back as 0o666 there.
+    """
     (tmp_path / ".pymedphys").mkdir()
     main = tmp_path / ".pymedphys" / "config.toml"
     main.write_text(toml.dumps({"pseudo": {"pepper": PEPPER}}))
@@ -561,7 +564,8 @@ def test_a_rewritten_config_keeps_its_permissions(tmp_path: Path, monkeypatch: p
     _use_home(monkeypatch, tmp_path)
     try:
         config.get_epoch_jitter()
-        assert main.stat().st_mode & 0o777 == 0o640
+        if os.name == "posix":
+            assert main.stat().st_mode & 0o777 == 0o640
         assert "epoch_jitter" in toml.loads(main.read_text())["pseudo"]
     finally:
         _clear_caches()
