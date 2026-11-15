@@ -15,6 +15,14 @@ completed, since another OnkoDICOM could be completing it differently at the sam
 
 Losing or replacing the pepper or jitter would silently change every pseudonym from then on,
 so a configuration that exists but cannot be read, or is incomplete, stops pseudonymisation.
+
+Sharing the pepper and jitter, so that several users or machines produce linked pseudonyms
+(#72): copy ``~/.OnkoDICOM/pseudonymisation.toml`` from the first user's home directory into
+each other user's ``~/.OnkoDICOM/``, before that user pseudonymises anything. A user who
+pseudonymises first makes a pepper of their own, and their pseudonyms will not link to the
+others'. Keep the copy readable by its owner only. The same user on several machines with a
+networked home directory already shares the one file. The file has no ``redirect`` of its own,
+unlike pymedphys's; pymedphys's redirect is followed only to copy existing values on first use.
 """
 
 import contextlib
