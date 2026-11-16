@@ -35,6 +35,17 @@ if [ "$identity" = - ]; then
   entitlements=$adhoc_entitlements
 fi
 
+# Apple's timestamp server refuses some requests under load, and a Developer ID signature needs one per file
+# (about 1,350 here), so each file gets three tries before the build fails.
+sign() {
+  local try
+  for try in 1 2 3; do
+    codesign "${args[@]}" "$@" && return 0
+    [ "$try" = 3 ] || { echo "codesign failed on ${*: -1} (try $try of 3), retrying" >&2; sleep $((try * 10)); }
+  done
+  return 1
+}
+
 main="$app/Contents/MacOS/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
 
 # Mach-O files, by content rather than name (plastimatch's binary has no extension), excluding the main executable,
@@ -50,14 +61,14 @@ count=$(wc -l < "$machos" | tr -d ' ')
 [ "$count" -gt 0 ] || die "no Mach-O files found in $app"
 echo "signing $count Mach-O files"
 while IFS= read -r f; do
-  codesign "${args[@]}" "$f" || die "codesign failed on $f"
+  sign "$f" || die "codesign failed on $f"
 done < "$machos"
 
 while IFS= read -r -d '' fw; do
-  codesign "${args[@]}" "$fw" || die "codesign failed on $fw"
+  sign "$fw" || die "codesign failed on $fw"
 done < <(find "$app/Contents" -name '*.framework' -type d -print0)
 
-codesign "${args[@]}" --entitlements "$entitlements" "$app" || die "codesign failed on $app"
+sign --entitlements "$entitlements" "$app" || die "codesign failed on $app"
 
 codesign --verify --deep --strict --verbose=2 "$app" || die "verification failed for $app"
 echo "signed and verified: $app ($identity)"
