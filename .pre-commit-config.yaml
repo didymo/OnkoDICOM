@@ -1,4 +1,6 @@
 # Install once per clone: `uvx pre-commit install`. Run on everything: `uvx pre-commit run --all-files`.
+# Install it only AFTER the reformat to 127 has landed: before that, ruff-format and the whitespace fixers rewrite every
+# file a commit touches, so a small change would carry a reformat of the whole file (Cyril).
 # Best practice without nitpicking (Stuart, 16 Nov): the formatter, the CI lint gate, a lock that matches
 # pyproject.toml, and checks for mistakes nobody means to commit.
 repos:
