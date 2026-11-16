@@ -47,7 +47,7 @@ jobs:
       - name: uv, pinned
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
-          version: "0.9.9"
+          version: "0.13.8"
           cache-local-path: /var/lib/gitea-runner/.cache/uv
           enable-cache: false
       - name: Python 3.12
