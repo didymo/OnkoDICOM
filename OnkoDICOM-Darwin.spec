@@ -56,7 +56,7 @@ coll = COLLECT(exe,
 app = BUNDLE(coll,
              name='OnkoDICOM.app',
              icon='res/images/icon.icns',
-             bundle_identifier=None,
+             bundle_identifier='au.com.onkodicom',
              version=VERSION,
              info_plist={
                  'NSPrincipalClass': 'NSApplication',
