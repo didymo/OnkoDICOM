@@ -1,6 +1,9 @@
-# Install once per clone: `uvx pre-commit install`. Run on everything: `uvx pre-commit run --all-files`.
-# Install it only AFTER the reformat to 127 has landed: before that, ruff-format and the whitespace fixers rewrite every
-# file a commit touches, so a small change would carry a reformat of the whole file (Cyril).
+# Install once per clone: `uvx pre-commit install`.
+# Until the reformat to 127 has landed, the three hooks that rewrite whole files (ruff-format, trailing-whitespace,
+# end-of-file-fixer) are `stages: [manual]`: a commit does not run them, so a small change cannot carry a reformat of
+# the whole file it touches (Cyril, Connor). The reformat itself runs them by hand:
+#   uvx pre-commit run --all-files --hook-stage manual
+# The PR after the reformat removes the three `stages: [manual]` lines, so they run on every commit from then on.
 # Best practice without nitpicking (Stuart, 16 Nov): the formatter, the CI lint gate, a lock that matches
 # pyproject.toml, and checks for mistakes nobody means to commit.
 repos:
@@ -9,6 +12,7 @@ repos:
     hooks:
       - id: ruff-check  # ruff.toml's gate, the same one CI runs
       - id: ruff-format  # ruff.toml's [format]: 127 characters, double quotes
+        stages: [manual]
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.9.9  # the uv CI pins
     hooks:
@@ -17,7 +21,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        stages: [manual]
       - id: end-of-file-fixer
+        stages: [manual]
       - id: check-yaml
       - id: check-toml
       - id: check-merge-conflict
