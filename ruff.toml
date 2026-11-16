@@ -1,3 +1,12 @@
 line-length = 88
+extend-exclude = [".venv-oct"]
+
 [format]
 quote-style = "double"
+
+[lint]
+# The gate CI enforces, the same rules flake8 blocked on: syntax errors, comparison misuse, statement errors, undefined names.
+select = ["E9", "F63", "F7", "F82"]
+
+[lint.mccabe]
+max-complexity = 10
