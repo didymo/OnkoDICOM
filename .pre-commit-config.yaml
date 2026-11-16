@@ -1,0 +1,23 @@
+# Install once per clone: `uvx pre-commit install`. Run on everything: `uvx pre-commit run --all-files`.
+# Best practice without nitpicking (Stuart, 16 Nov): the formatter, the CI lint gate, a lock that matches
+# pyproject.toml, and checks for mistakes nobody means to commit.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5  # the ruff in uv.lock
+    hooks:
+      - id: ruff-check  # ruff.toml's gate, the same one CI runs
+      - id: ruff-format  # ruff.toml's [format]: 127 characters, double quotes
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.9.9  # the uv CI pins
+    hooks:
+      - id: uv-lock  # uv.lock must match pyproject.toml
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key

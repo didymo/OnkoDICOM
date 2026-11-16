@@ -1,4 +1,5 @@
-line-length = 88
+# 127, the length flake8's advisory run used (Stuart, 16 Nov). The reformat to it comes in a commit of its own.
+line-length = 127
 extend-exclude = [".venv-oct"]
 
 [format]
