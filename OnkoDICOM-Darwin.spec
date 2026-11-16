@@ -3,6 +3,7 @@
 # Package data is found through PyInstaller's helpers, so no site-packages path is written here: whatever environment
 # runs PyInstaller is the one bundled.
 import hashlib
+import os
 import shutil
 import tarfile
 import tomllib
@@ -14,11 +15,14 @@ from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 with open('pyproject.toml', 'rb') as f:
     VERSION = tomllib.load(f)['project']['version']
 
-# plastimatch, self-contained (Stuart's macOS port, #26), the same artifact and checksum as .gitea/workflows/ci.yml.
+# plastimatch, self-contained (Stuart's macOS port, #26): the asset of the v1.10.1-itk5 release on his GitLab, which is
+# also its source (the GPL source offer). The same file and checksum as .gitea/workflows/ci.yml uses from Gitea.
 # The app runs it from Contents/Frameworks/plastimatch/bin (src/Model/Plastimatch.executable), because an app opened
 # from the Finder has no shell PATH. Its rpath is @executable_path/../lib, so bin/ and lib/ keep their layout.
-PLASTIMATCH_URL = ('http://gitea-server:3000/api/packages/The_Kindled/generic/plastimatch-macos-arm64/1.10.1-itk5/'
-                   'plastimatch-1.10.1-itk5-macos-arm64.tar.gz')
+# PLASTIMATCH_URL may name another copy; the SHA-256 is what is trusted.
+PLASTIMATCH_URL = os.environ.get('PLASTIMATCH_URL') or (
+    'https://gitlab.com/sjswerdloff/plastimatch/-/releases/v1.10.1-itk5/downloads/'
+    'plastimatch-1.10.1-itk5-macos-arm64.tar.gz')
 PLASTIMATCH_SHA256 = 'af8c29f239dc2fd297699719505bb593668aa250b2666de3b65eee9ad55e4f82'
 PLASTIMATCH_TOP = 'plastimatch-1.10.1-itk5-macos-arm64'
 
