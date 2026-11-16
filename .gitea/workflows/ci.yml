@@ -52,7 +52,6 @@ jobs:
         run: |
           uv sync --locked --python "$PY"
           .venv/bin/python --version
-          .venv/bin/python --version
       - name: Lint with ruff (the error gate GitHub runs)
         run: uv run ruff check .
       # The zip is cached on the runner and checked against Zenodo's md5. The unzipped data is NOT cached:
