@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+Hardened-runtime exceptions for OnkoDICOM.app (#93). Each one is here because something in the bundle needs it, and
+should be removed if a signed, notarized build runs the full workflow (open a patient, radiomics) without it.
+- allow-unsigned-executable-memory: ctypes and cffi write callback trampolines into memory they then execute. The
+  app starts without it (ad hoc, hardened runtime, 17 Nov); whether radiomics and fusion need it is not yet tested.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+</dict>
+</plist>
