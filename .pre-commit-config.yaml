@@ -14,7 +14,7 @@ repos:
       - id: ruff-format  # ruff.toml's [format]: 127 characters, double quotes
         stages: [manual]
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.9  # the uv CI pins
+    rev: 0.13.8  # the uv CI pins
     hooks:
       - id: uv-lock  # uv.lock must match pyproject.toml
   - repo: https://github.com/pre-commit/pre-commit-hooks
