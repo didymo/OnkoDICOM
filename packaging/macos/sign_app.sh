@@ -64,9 +64,10 @@ while IFS= read -r f; do
   sign "$f" || die "codesign failed on $f"
 done < "$machos"
 
-while IFS= read -r -d '' fw; do
+# Frameworks deepest first too, so a framework nested in another is sealed before its parent (Connor, #95).
+while IFS= read -r fw; do
   sign "$fw" || die "codesign failed on $fw"
-done < <(find "$app/Contents" -name '*.framework' -type d -print0)
+done < <(find "$app/Contents" -name '*.framework' -type d | awk -F/ '{ print NF "\t" $0 }' | sort -rn | cut -f2-)
 
 sign --entitlements "$entitlements" "$app" || die "codesign failed on $app"
 
