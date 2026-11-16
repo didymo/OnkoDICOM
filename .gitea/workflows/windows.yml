@@ -2,8 +2,8 @@
 # Upstream's GitHub workflow runs Windows with continue-on-error, which hides failures. This one doesn't.
 #
 # plastimatch 1.9.4 for Windows is unpacked into this job's own folder (msiexec /a), not installed, so nothing is
-# installed on the PC. uv provides Python 3.12, creates .venv in the checkout, and installs poetry.lock's versions
-# into it (exported by Poetry, which can't install here itself).
+# installed on the PC. uv provides Python 3.12, creates .venv in the checkout, and installs uv.lock's versions
+# into it (exported by uv, then installed with uv pip).
 name: windows
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ on:
       - test/**
       - pytest.ini
       - pyproject.toml
-      - poetry.lock
+      - uv.lock
 concurrency:
   group: windows-${{ github.ref }}
   cancel-in-progress: true
@@ -51,18 +51,18 @@ jobs:
           version: "0.9.9"
           cache-local-path: C:\uvc
           enable-cache: false
-      - name: Python 3.12 and dependencies (poetry.lock exported, installed by uv)
+      - name: Python 3.12 and dependencies (uv.lock exported, installed by uv pip)
         run: |
           $ErrorActionPreference = 'Stop'
           uv python install 3.12
           if ($LASTEXITCODE) { throw "uv python install failed" }
           $py = uv python find 3.12
-          # poetry.lock's versions, exported and installed by uv, as in plastimatch-linux.yml. Poetry's own install fails
-          # here: it can't build pyradiomics from its git checkout on Windows (cl.exe can't find radiomics/src/*.c).
+          # uv.lock's versions, exported and installed by uv pip, as in plastimatch-linux.yml. Not `uv sync`: Poetry's
+          # install failed here because it couldn't build pyradiomics from its git checkout on Windows (cl.exe can't
+          # find radiomics/src/*.c), and uv sync has not been tried on this runner.
           $req = "$env:RUNNER_TEMP\requirements.txt"
-          # Poetry 2.5.1, which wrote the lock: 1.8.5 exports the Python 3.10 entries for 3.12 too (#51).
-          uvx --from poetry==2.5.1 --with poetry-plugin-export==1.10.1 poetry export --with dev --without-hashes -o $req
-          if ($LASTEXITCODE) { throw "poetry export failed" }
+          uv export --frozen --no-hashes --no-emit-project -o $req
+          if ($LASTEXITCODE) { throw "uv export failed" }
           uv venv --python $py .venv
           if ($LASTEXITCODE) { throw "uv venv failed" }
           uv pip install --python .venv\Scripts\python.exe -r $req

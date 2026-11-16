@@ -2,8 +2,8 @@
 # (apt 1.9.4, installed on the runner by Stuart). The macOS job in ci.yml runs the whole suite with Stuart's port;
 # this one runs only the tests marked `plastimatch`, against the build most Linux users will have.
 #
-# Host mode, as the `gitea-runner` account, with no sudo: uv provides Python 3.12, and Poetry builds the project's
-# own .venv in the checkout from poetry.lock. Nothing is installed into any Python the host uses.
+# Host mode, as the `gitea-runner` account, with no sudo: uv provides Python 3.12 and builds the project's
+# own .venv in the checkout from uv.lock. Nothing is installed into any Python the host uses.
 name: plastimatch-linux
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
       - test/**
       - pytest.ini
       - pyproject.toml
-      - poetry.lock
+      - uv.lock
 concurrency:
   group: plastimatch-linux-${{ github.ref }}
   cancel-in-progress: true
@@ -33,7 +33,6 @@ jobs:
     timeout-minutes: 45
     env:
       QT_QPA_PLATFORM: offscreen
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
       TEST_DATA_URL: https://zenodo.org/record/5147737/files/DICOM-RT-02.zip
       TEST_DATA_MD5: fc63b61b121a57779345c60b92a32b15
     steps:
@@ -51,7 +50,7 @@ jobs:
           version: "0.9.9"
           cache-local-path: /var/lib/gitea-runner/.cache/uv
           enable-cache: false
-      - name: Python 3.12 and Poetry 1.8.5
+      - name: Python 3.12
         run: |
           uv python install 3.12
           echo "PY=$(uv python find 3.12)" >> "$GITHUB_ENV"
@@ -59,14 +58,13 @@ jobs:
         run: |
           df -h "$HOME" /
           du -sh "$HOME"/.cache/* 2>/dev/null || true
-      # The versions are poetry.lock's, exported, with one exception: on Linux x86_64 the lock's torch brings 15 CUDA
+      # The versions are uv.lock's, exported, with one exception: on Linux x86_64 the lock's torch brings 15 CUDA
       # packages, several GB, which this GPU-less runner can't use. They are dropped, and torch comes from PyTorch's
       # CPU index at the same version.
-      - name: Install dependencies (poetry.lock exported, torch CPU-only, in-project .venv)
+      - name: Install dependencies (uv.lock exported, torch CPU-only, in-project .venv)
         run: |
           req="$RUNNER_TEMP/requirements.txt"
-          # Poetry 2.5.1, which wrote the lock: 1.8.5 exports the Python 3.10 entries for 3.12 too (#51).
-          uvx --from poetry==2.5.1 --with poetry-plugin-export==1.10.1 poetry export --with dev --without-hashes -o "$req.all"
+          uv export --frozen --no-hashes --no-emit-project -o "$req.all"
           grep -v -E '^(nvidia-|triton==)' "$req.all" > "$req"
           echo "dropped: $(grep -c -E '^(nvidia-|triton==)' "$req.all") CUDA packages"
           uv venv --python "$PY" .venv
