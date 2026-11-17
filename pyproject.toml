@@ -32,10 +32,8 @@ fuzzywuzzy = "*"
 # reason) has none, so installing on 3.12 built it from source and failed (PEP 517).
 PyWavelets = ">=1.5.0"
 networkx = "*"
-# pymedphys has reinstated psuedonymisation in 0.39
-# Anonymisation needs the "dicom" extra (pydicom, pynetdicom) and the "cli" extra (toml, which reads the
-# pseudonymisation pepper from ~/.pymedphys/config.toml). Not "all": its streamlit pin needs numpy < 2.
-pymedphys = {version = "0.41.0", extras = ["dicom", "cli"]}
+# Pseudonymisation (src/Model/Pseudonymisation) keeps its pepper and jitter in ~/.OnkoDICOM/pseudonymisation.toml
+toml = "^0.10.2"
 # until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
 # pyradiomics = [
 #    { version = "==3.0.1", python = "<3.10"},
@@ -63,6 +61,10 @@ totalsegmentator = "^2.18"
 torch = "~2.9.1"
 
 [tool.poetry.group.dev.dependencies]
+# OnkoDICOM's own code no longer imports pymedphys; it is the reference that test/test_pseudonymisation.py
+# compares against. It is still installed at run time, because platipy requires pymedphys >= 0.37.1.
+# Not "all": its streamlit pin needs numpy < 2.
+pymedphys = {version = "0.41.0", extras = ["dicom", "cli"]}
 pylint = "*"
 pytest = "*"
 pytest-black = "*"

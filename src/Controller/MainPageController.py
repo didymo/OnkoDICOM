@@ -399,7 +399,7 @@ class MainPageCallClass:
     # This function runs Anonymization on button click
     def run_anonymization(self, raw_dvh):
         if not FEATURE_TOGGLE_PSEUDONYMISE:
-            raise ImportError("Unable to import pymedphys")
+            raise ImportError("Unable to import src.Model.Anon (anonymisation)")
         path = self.patient_dict_container.path
         dataset = self.patient_dict_container.dataset
         filepaths = self.patient_dict_container.filepaths

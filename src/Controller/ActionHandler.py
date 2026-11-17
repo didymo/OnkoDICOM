@@ -4,6 +4,8 @@ from PySide6 import QtGui, QtWidgets, QtCore
 from PySide6.QtWidgets import QStackedWidget
 
 from src.Model.PatientDictContainer import PatientDictContainer
+from src.Model.Pseudonymisation import UnknownTagsError
+from src.Model.Pseudonymisation.config import PseudonymisationConfigError
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.PTCTDictContainer import PTCTDictContainer
 from src.Controller.PathHandler import resource_path
@@ -344,8 +346,20 @@ class ActionHandler:
 
         if save_reply == QtWidgets.QMessageBox.Yes:
             raw_dvh = self.patient_dict_container.get("raw_dvh")
-            hashed_path = self.__main_page.call_class.run_anonymization(
-                raw_dvh)
+            try:
+                hashed_path = self.__main_page.call_class.run_anonymization(
+                    raw_dvh)
+            except (PseudonymisationConfigError, UnknownTagsError) as error:
+                # Pseudonymisation refuses rather than replace the pepper or
+                # pass unknown elements through; say why, not a traceback.
+                QtWidgets.QMessageBox.critical(
+                    self.__main_page.main_window_instance,
+                    "Anonymization stopped",
+                    "Anonymization stopped part-way. Any anonymized files "
+                    "already written are incomplete; do not use them.\n\n"
+                    f"{error}"
+                )
+                return
             self.patient_dict_container.set("hashed_path", hashed_path)
             # now that the radiomics data can just get copied across...
             # maybe skip this?
