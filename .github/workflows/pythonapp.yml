@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: Cache Test Data
       id: cache-TestData
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         enableCrossOsArchive: true
         lookup-only: true
@@ -49,16 +49,16 @@ jobs:
       # USER_ONKODICOM_HIDDEN: '/tmp/.onkodicom'
       
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: uv, pinned
-      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       with:
         version: "0.13.8"
         enable-cache: false
 
     - name: Set up Python ${{ matrix.python }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: ${{ matrix.python }}
 
@@ -91,7 +91,7 @@ jobs:
         uv run ruff check . --select C901,E501 --line-length 127 --exit-zero --statistics
 
     - name: Download Cached Test Data
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         enableCrossOsArchive: true
         fail-on-cache-miss: true
@@ -166,16 +166,16 @@ jobs:
       PlastimatchWindowsSha256: 0bf179f058b7214969c5201991d07b3dbb67378175039e0fe92285e8c6e06daf
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: uv, pinned
-      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       with:
         version: "0.13.8"
         enable-cache: false
 
     - name: Set up Python ${{ matrix.python }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: ${{ matrix.python }}
 
@@ -231,7 +231,7 @@ jobs:
         uv run ruff check . --select C901,E501 --line-length 127 --exit-zero --statistics
 
     - name: Download Cached Test Data
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         enableCrossOsArchive: true
         fail-on-cache-miss: true
