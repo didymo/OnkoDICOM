@@ -7,6 +7,7 @@ import hashlib
 import os
 import shutil
 import tarfile
+import time
 import tomllib
 import urllib.request
 from pathlib import Path
@@ -26,6 +27,23 @@ PLASTIMATCH_URL = os.environ.get('PLASTIMATCH_URL') or (
     'plastimatch-1.10.1-itk5-macos-arm64.tar.gz')
 PLASTIMATCH_SHA256 = 'af8c29f239dc2fd297699719505bb593668aa250b2666de3b65eee9ad55e4f82'
 PLASTIMATCH_TOP = 'plastimatch-1.10.1-itk5-macos-arm64'
+# A stalled server fails the build instead of hanging it: each read waits at most this long, and the download is tried
+# this many times before the build stops with the last error.
+DOWNLOAD_TIMEOUT_S = 60
+DOWNLOAD_ATTEMPTS = 3
+
+
+def download(url, dest):
+    for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(url, timeout=DOWNLOAD_TIMEOUT_S) as response, open(dest, 'wb') as out:
+                shutil.copyfileobj(response, out)
+            return
+        except OSError as exc:  # URLError, timeouts and connection resets are all OSError
+            if attempt == DOWNLOAD_ATTEMPTS:
+                raise SystemExit(f'plastimatch download failed {attempt} times, last: {exc!r} ({url})') from exc
+            print(f'plastimatch download attempt {attempt} failed: {exc!r}; retrying')
+            time.sleep(5 * attempt)
 
 
 def plastimatch_bundle():
@@ -35,7 +53,7 @@ def plastimatch_bundle():
     tgz = work / f'{PLASTIMATCH_SHA256}.tar.gz'
     if not tgz.is_file():
         part = work / 'download.part'
-        urllib.request.urlretrieve(PLASTIMATCH_URL, part)
+        download(PLASTIMATCH_URL, part)
         part.replace(tgz)
     got = hashlib.sha256(tgz.read_bytes()).hexdigest()
     if got != PLASTIMATCH_SHA256:
