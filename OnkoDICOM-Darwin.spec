@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 # macOS (Apple silicon) app bundle. Build from the project environment:  uv run pyinstaller --noconfirm OnkoDICOM-Darwin.spec
+# Built only with the latest Python OnkoDICOM supports (3.12): one installer, not one per Python version.
 # Package data is found through PyInstaller's helpers, so no site-packages path is written here: whatever environment
 # runs PyInstaller is the one bundled.
 import hashlib
@@ -57,11 +58,32 @@ def plastimatch_bundle():
     return str(top)
 
 
+# Anonymisation writes real patient-name-and-ID-to-hash mappings to data/csv/patientHash.csv in the working directory,
+# which in a developer's checkout is this repository's copy. So data/ is bundled file by file: that file is replaced by
+# a header-only copy written here, and hidden entries (the test suite's data/.csv.* backups) are left out.
+PATIENT_HASH = 'patientHash.csv'
+PATIENT_HASH_HEADER = 'Pname and ID,Hashed_Pname\n'
+
+
+def distributable_data():
+    entries = []
+    for path in sorted(Path('data').rglob('*')):
+        rel = path.relative_to('data')
+        if not path.is_file() or any(part.startswith('.') for part in rel.parts) or path.name == PATIENT_HASH:
+            continue
+        entries.append((str(path), str(Path('data') / rel.parent)))
+    header_only = Path('build') / 'data-csv' / PATIENT_HASH
+    header_only.parent.mkdir(parents=True, exist_ok=True)
+    header_only.write_text(PATIENT_HASH_HEADER)
+    entries.append((str(header_only), 'data/csv'))
+    return entries
+
+
 block_cipher = None
 
 added_files = [
     ('res', 'res'),
-    ('data', 'data'),
+    *distributable_data(),
     *collect_data_files('country_list'),
     *collect_data_files('pymedphys', includes=['_trf/decode/config.json']),
     *collect_data_files('pymedphys', include_py_files=True, includes=['_imports/imports.py']),
