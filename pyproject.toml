@@ -1,81 +1,83 @@
-[tool.poetry]
+[project]
 name = "onkodicom"
 version = "0.6.1"
 description = "OnkoDICOM is an extensible open source radiation therapy research platform based on the DICOM standard"
-authors = ["Ashley Maher <ashley.maher@didymodesigns.com.au>"]
-license = "LGPL"
+authors = [{ name = "Ashley Maher", email = "ashley.maher@didymodesigns.com.au" }]
+license = { text = "LGPL" }
 readme = "README.md"
-homepage = "https://onkodicom.com.au/"
-repository = "https://github.com/didymo/OnkoDICOM"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "pip>=25.2,<26",
+    "cython",
+    "numpy>=2.1,<3",
+    "platipy",
+    "alphashape",
+    "pandas>=2.2.3,<3",
+    "scikit-build",
+    "scipy<2.0",
+    "dicompyler-core",
+    # pydicom 3.x has changed some API and dicompyler-core breaks on that
+    "pydicom==3.0.1",
+    "country-list",
+    "scikit-image",
+    "fuzzywuzzy",
+    # 1.5.0 is the first PyWavelets release with Python 3.12 wheels; 1.3.0 (pinned in the move to Poetry, no stated
+    # reason) has none, so installing on 3.12 built it from source and failed (PEP 517).
+    "PyWavelets>=1.5.0",
+    "networkx",
+    # Pseudonymisation (src/Model/Pseudonymisation) keeps its pepper and jitter in ~/.OnkoDICOM/pseudonymisation.toml
+    "toml>=0.10.2,<0.11",
+    # until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
+    # pyradiomics = [
+    #    { version = "==3.0.1", python = "<3.10"},
+    #    { version = "==3.0.1", python = ">=3.10"}
+    #]
+    "pyside6>=6.4.0,<6.9; python_version >= '3.10' and python_version < '3.13'",
+    "vtk",
+    # shapely 1.8.3 through 1.8.5.post1 have build failures.  v2.0 has API changes.
+    "shapely>=2.0",
+    "python-Levenshtein",
+    "opencv-python>=4.10",
+    # platipy 0.4.1 calls matplotlib.cm.get_cmap at import (default arguments), and matplotlib 3.11 removes it, so
+    # image fusion would fail to import (#49). Lift this when a platipy release that supports pydicom 3 is in the lock.
+    "matplotlib<3.11",
+    "scikit-learn",
+    "imblearn",
+    "kaplanmeier",
+    "pyinstaller",
+    "lifelines>=0.30",
+    "pyradiomics",
+    "totalsegmentator>=2.18,<3",
+    # torch: 2.9.1 is the first release with avg_pool3d on Apple MPS; on 2.8 TotalSegmentator's
+    # lung_nodules task hangs on MPS (2.9.1 to 2.14.1 all complete it). Held below 2.10 so the
+    # Linux lock keeps the CUDA 12 runtime libraries; later releases move to CUDA 13.
+    "torch>=2.9.1,<2.10",
+]
 
-[poetry.virtualenvs]
-create = true
-in-project = true
+[project.urls]
+Homepage = "https://onkodicom.com.au/"
+Repository = "https://github.com/didymo/OnkoDICOM"
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-pip = "^25.2"
-cython = "*"
-numpy = "^2.1"
-platipy = "*"
-alphashape = "*"
-pandas = "^2.2.3"
-scikit-build = "*"
-scipy = "<2.0"
-dicompyler-core = { git = "https://github.com/dicompyler/dicompyler-core.git" }
-# pydicom 3.x has changed some API and dicompyler-core breaks on that
-pydicom = "3.0.1"
-country-list = "*"
-scikit-image = "*"
-fuzzywuzzy = "*"
-# 1.5.0 is the first PyWavelets release with Python 3.12 wheels; 1.3.0 (pinned in the move to Poetry, no stated
-# reason) has none, so installing on 3.12 built it from source and failed (PEP 517).
-PyWavelets = ">=1.5.0"
-networkx = "*"
-# Pseudonymisation (src/Model/Pseudonymisation) keeps its pepper and jitter in ~/.OnkoDICOM/pseudonymisation.toml
-toml = "^0.10.2"
-# until 20230611, the pyradiomics does not have wheel for py3.10. Will install it with pip later.
-# pyradiomics = [
-#    { version = "==3.0.1", python = "<3.10"},
-#    { version = "==3.0.1", python = ">=3.10"}
-#]
-pyside6 = { version = ">=6.4.0,<6.9", python =">=3.10,<3.13" }
-vtk = "*"
-# shapely 1.8.3 through 1.8.5.post1 have build failures.  v2.0 has API changes.
-shapely = ">=2.0"
-python-Levenshtein = "*"
-opencv-python = ">=4.10"
-# platipy 0.4.1 calls matplotlib.cm.get_cmap at import (default arguments), and matplotlib 3.11 removes it, so
-# image fusion would fail to import (#49). Lift this when a platipy release that supports pydicom 3 is in the lock.
-matplotlib = "<3.11"
-scikit-learn = "*"
-imblearn = "*"
-kaplanmeier = "*"
-pyinstaller = "*"
-lifelines = ">=0.30"
-pyradiomics = { git = "https://github.com/AIM-Harvard/pyradiomics.git" }
-totalsegmentator = "^2.18"
-# torch: 2.9.1 is the first release with avg_pool3d on Apple MPS; on 2.8 TotalSegmentator's
-# lung_nodules task hangs on MPS (2.9.1 to 2.14.1 all complete it). Held below 2.10 so the
-# Linux lock keeps the CUDA 12 runtime libraries; later releases move to CUDA 13.
-torch = "~2.9.1"
+[dependency-groups]
+dev = [
+    # OnkoDICOM's own code no longer imports pymedphys; it is the reference that test/test_pseudonymisation.py
+    # compares against. It is still installed at run time, because platipy requires pymedphys >= 0.37.1.
+    # Not "all": its streamlit pin needs numpy < 2.
+    "pymedphys[dicom,cli]==0.41.0",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-pylint",
+    "pytest-mypy",
+    "pytest-qt",
+    "pytest-timeout",
+    "ruff==0.17.5",
+]
 
-[tool.poetry.group.dev.dependencies]
-# OnkoDICOM's own code no longer imports pymedphys; it is the reference that test/test_pseudonymisation.py
-# compares against. It is still installed at run time, because platipy requires pymedphys >= 0.37.1.
-# Not "all": its streamlit pin needs numpy < 2.
-pymedphys = {version = "0.41.0", extras = ["dicom", "cli"]}
-pylint = "*"
-pytest = "*"
-pytest-black = "*"
-pytest-cov = "*"
-pytest-pylint = "*"
-pytest-isort = "*"
-pytest-mypy = "*"
-pytest-qt = "*"
-pytest-timeout = "*"
-flake8 = "*"
+[tool.uv]
+# The application is run from source (main.py) and frozen with PyInstaller; it is not built as a package.
+package = false
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv.sources]
+dicompyler-core = { git = "https://github.com/dicompyler/dicompyler-core.git", rev = "0d5729d7a2412e1c3f1e4cb4f6b07f7407eb8b06" }
+pyradiomics = { git = "https://github.com/AIM-Harvard/pyradiomics.git", rev = "dea5faf55f486d6f7233561401d8da91d07ce0ad" }

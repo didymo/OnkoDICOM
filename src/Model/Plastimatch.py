@@ -9,7 +9,9 @@ file, and pyradiomics fails later with "Error reading image". So the
 exit code is not enough: each conversion checks the file it was asked for.
 """
 import os
+import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -19,6 +21,25 @@ import pydicom.errors
 
 class PlastimatchError(RuntimeError):
     """plastimatch convert failed, or reported success without its output."""
+
+
+# Where the macOS app carries plastimatch, relative to PyInstaller's sys._MEIPASS.
+BUNDLED = Path("plastimatch", "bin", "plastimatch")
+
+
+def executable():
+    """
+    The plastimatch to run: the copy inside the app when there is one, else
+    plastimatch on PATH. An app opened from the Finder gets no shell PATH, so
+    the macOS app carries its own; Windows and Linux are unchanged.
+
+    :return: the path to plastimatch, or None when there is none.
+    """
+    if getattr(sys, "frozen", False):
+        bundled = Path(getattr(sys, "_MEIPASS", "")) / BUNDLED
+        if bundled.is_file():
+            return str(bundled)
+    return shutil.which("plastimatch")
 
 
 def _environment(empty_dir):
@@ -51,7 +72,7 @@ def convert(args, written):
     :raises PlastimatchError: plastimatch is missing, exited non-zero, or
                               exited 0 without writing its output.
     """
-    command = ["plastimatch", "convert", *args]
+    command = [executable() or "plastimatch", "convert", *args]
     # mkdtemp's directory is new, private (0700) and removed afterwards.
     try:
         scratch = tempfile.TemporaryDirectory(prefix="onkodicom-scifio-")

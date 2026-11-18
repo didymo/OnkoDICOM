@@ -25,27 +25,30 @@ Installation instructions for Ubuntu and Windows can be located in [the project'
 Note that in order to utilise OnkoDICOM's radiomics toolset, the external program Plastimatch (version 1.9.4 or newer) will need to be installed. [Plastimatch installation instructions](https://github.com/didymo/OnkoDICOM/wiki/Installation-Instructions#plastimatch).
 
 
+### Linting
+
+CI's lint gate, from the root directory:
+```
+uv run ruff check .
+```
+
 ### Testing
 
-In the root directory, initiate the virtual environment using:
+In the root directory, install the dependencies (including the development group, which has pytest and pytest-cov) from `uv.lock` into `.venv` using:
 ```
-source venv/bin/activate
+uv sync --locked
 ```
 
 To run the tests run:
 ```
-python -m pytest test/
+uv run python -m pytest test/
 ```
 
 the code coverage reporting is done with
-```
-pip install pytest-cov
-```
-found here:
-https://pypi.org/project/pytest-cov/
+[pytest-cov](https://pypi.org/project/pytest-cov/), which `uv sync` has already installed.
 
 To run the report:
 ```
-python -m pytest --cov=src test/
+uv run python -m pytest --cov=src test/
 ```
 

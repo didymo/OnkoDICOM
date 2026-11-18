@@ -1,9 +1,9 @@
-from shutil import which
 
 from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtWidgets import QMessageBox
 
 from src.Controller.PathHandler import resource_path
+from src.Model import Plastimatch
 from src.Model.InitialModel import create_initial_model
 from src.Model.MovingDictContainer import MovingDictContainer
 from src.Model.MovingModel import read_images_for_fusion
@@ -216,7 +216,7 @@ class MainWindow(QtWidgets.QMainWindow, UIMainWindow):
         """
         Sends signal to initiate pyradiomics analysis
         """
-        if which('plastimatch') is not None:
+        if Plastimatch.executable() is not None:
             if hashed_path == '':
                 confirm_pyradi = QMessageBox.information(
                     self, "Confirmation",
